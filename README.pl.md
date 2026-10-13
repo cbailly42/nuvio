@@ -255,6 +255,9 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.2.1
+- Naprawione: HACS rejestrował jako zasób `nuvio.zip` zamiast `nuvio.js`, przez co strategia dashboardu się nie ładowała („Timeout waiting for strategy element”).
+
 ### 0.2.0
 - Poprawka: przyciski scen wywołują `scene.turn_on` (wcześniej nic nie robiły).
 - Poprawka: czujniki mocy w kW / MW są przeliczane na waty w kartach mocy, energii, faz i fotowoltaiki.
@@ -266,7 +269,7 @@ Wydania budują GitHub Actions na tagach `v*`.
 - Poprawka: strona nie wywraca się przy pustym `rail`; wyjście z trybu edycji przez nawigację zapisuje zmiany zamiast je odrzucać.
 - Nowe: angielski interfejs wszystkich kart, strony i trybu edycji.
 - Nowe: zmiana kolejności z klawiatury w trybie edycji; „Cofnij” po usunięciu kafla przywraca tylko ten kafel.
-- HACS: wydanie jako zip (`zip_release`), więc fonty, tła i ikony pogody instalują się razem z wtyczką.
+- HACS: fonty, tła i ikony pogody instalują się razem z wtyczką (cały folder `dist/`).
 - Wieloetapowy kreator; własne widoki (Wygląd → Widoki); komponenty i widoki Mapa i Kalendarz.
 - Komponenty ogólne: suwak, przycisk, lista encji, wybór, licznik, wskaźnik.
 - Podpowiedzi dla pustych stanów, tryby wyświetlania kart grupowych, edytowalny tytuł i podtytuł widoku, stos powiadomień.

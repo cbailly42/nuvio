@@ -255,6 +255,9 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.2.1
+- Fixed: HACS registered `nuvio.zip` instead of `nuvio.js` as the dashboard resource, so the dashboard strategy never loaded ("Timeout waiting for strategy element").
+
 ### 0.2.0
 - Fixed: scene buttons now call `scene.turn_on` (they did nothing before).
 - Fixed: kW / MW power sensors are converted to watts in the power, energy, phases and PV cards.
@@ -266,7 +269,7 @@ Releases are built by GitHub Actions on `v*` tags.
 - Fixed: page no longer crashes with an empty rail; leaving edit mode by navigation saves instead of discarding.
 - Added: English UI for all cards, the page and edit mode.
 - Added: keyboard reordering in edit mode; undo after removing a tile restores only that tile.
-- HACS: release zip (`zip_release`) so fonts, backgrounds and weather icons are installed with the plugin.
+- HACS: fonts, backgrounds and weather icons are installed with the plugin (whole `dist/` folder).
 - Multi-step onboarding wizard; custom views (Appearance → Views); Map and Calendar components and views.
 - General components: slider, button, entities, select, stepper, gauge.
 - Empty-state hint cards, display modes for group cards, editable view title and subtitle, stacked toaster.
