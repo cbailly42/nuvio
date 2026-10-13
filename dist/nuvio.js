@@ -218,7 +218,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.0+90a798d1';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.0+5c3e6a16';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -588,6 +588,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-e4e6e9:#E4E6E9;
   --hg-bg-e53935:#E53935;
   --hg-bg-e53935-010:rgba(229,57,53,0.1);
+  --hg-bg-e5484d:#E5484D;
   --hg-bg-e5484d-k:#E5484D;
   --hg-bg-e9e5df:#E9E5DF;
   --hg-bg-e9ecef:#E9ECEF;
@@ -6221,7 +6222,13 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-t{ flex:1; display:flex; flex-direction:column; min-width:0; } .hs-t b{ font-weight:500; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hs-t small{ font-size:12px; opacity:.72; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .hs-p{ flex:none; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-accent); color:var(--hg-on-accent); } .hs-p ha-icon{ width:18px; height:18px; }
 .hs-b{ flex:none; height:36px; padding:0 14px; border:0; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font:600 13px/1 inherit; cursor:pointer; }
-.hs-fl{ display:flex; flex-direction:column; gap:6px; } .hs-fl > span:not(.hs-s){ font-size:12px; opacity:.72; padding-left:18px; }
+.hs-fl{ display:flex; flex-direction:column; gap:6px; }
+.hs-er{ padding:0 6px 0 4px; gap:2px; position:relative; transition:box-shadow .15s; } .hs-er.drag{ z-index:2; box-shadow:0 10px 30px var(--hg-sh-000000-035), 0 0 0 2px var(--hg-accent); transition:none; }
+.hs-eb{ all:unset; cursor:pointer; flex:1; min-width:0; display:flex; align-items:center; gap:10px; min-height:56px; padding:0 4px; } .hs-eb:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:-2px; border-radius:14px; }
+.hs-dg{ flex:none; width:24px; height:40px; display:grid; place-items:center; cursor:grab; touch-action:none; opacity:.55; } .hs-dg:active{ cursor:grabbing; } .hs-dg ha-icon{ width:20px; height:20px; }
+.hs-del{ all:unset; cursor:pointer; flex:none; width:32px; height:32px; margin-left:6px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, currentColor 12%, transparent); } .hs-del:hover{ background:color-mix(in srgb, var(--hg-bg-e5484d) 30%, transparent); } .hs-del ha-icon{ width:18px; height:18px; }
+.hs-ix{ font-style:normal; display:inline-grid; place-items:center; min-width:18px; height:18px; padding:0 4px; margin-right:6px; border-radius:999px; font-size:11px; font-weight:600; vertical-align:2px; background:color-mix(in srgb, currentColor 14%, transparent); }
+.hs-add{ box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--hg-accent) 55%, transparent); background:transparent; } .hs-add .hs-i{ background:var(--hg-accent); color:var(--hg-on-accent); } .hs-fl > span:not(.hs-s){ font-size:12px; opacity:.72; padding-left:18px; }
 .hs-ac{ display:flex; justify-content:flex-end; gap:8px; padding-top:4px; } .hs-ac .hs-b{ height:42px; padding:0 20px; font-size:14px; }
 .hs-b2{ height:42px; padding:0 18px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; }
 .hs-pv{ display:flex; flex-direction:column; gap:6px; flex:none; } .hs-pv:empty{ display:none; } .hs-pv > small{ font-size:12px; opacity:.72; padding-left:4px; } .hs-pv .tg2{ grid-template-columns:1fr; pointer-events:none; }
@@ -6737,11 +6744,13 @@ const HG_EDIT = {
     if (a === 'addback') return this._eSheet('add', null, this._eSc);
     if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
       this._eSheet(false); this._eToast('Dodano: ' + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'NUVIO-TILES-CARD')); }
-    if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast('Zmieniono encję');
+    if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast(R.add ? 'Dodano encję' : 'Zmieniono encję');
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
       const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
     if (a === 'cfgsave') return this._eCfgSave();
     if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
+    if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
+    if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, 'Usunięto encję'); }
     if (a === 'cfgent') { this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.p, old: b.dataset.v }); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
     const d = b._d || b.closest('.hge'); if (!d) return;
@@ -6843,9 +6852,10 @@ const HG_EDIT = {
     if (sc === this._pageScope()) { const cc = (this._config.cards || [])[this._lkeys.indexOf(k)] || {}, ents = [];
       for (const [key, v] of Object.entries(cc)) { const cur = cf.set && cf.set[key] !== undefined ? cf.set[key] : v;
         if (ok(cur)) ents.push({ p: key, l: LBL[key] || key, v: cur });
-        else if (Array.isArray(cur)) cur.forEach((y, i) => { const yy = typeof y === 'string' ? y : y && y.entity; if (ok(yy)) ents.push({ p: key + '.' + i, l: `${LBL[key] || key} ${i + 1}`, v: yy }); }); }
+        else if (Array.isArray(cur)) cur.forEach((y, i) => { const yy = typeof y === 'string' ? y : y && y.entity; if (ok(yy)) ents.push({ p: key + '.' + i, l: `${LBL[key] || key} ${i + 1}`, v: yy, ak: key, ai: i }); });
+        if (Array.isArray(cur) && cur.length && cur.every((y) => ok(typeof y === 'string' ? y : y && y.entity))) ents.push({ add: key, doms: [...new Set(cur.map((y) => String(typeof y === 'string' ? y : y.entity).split('.')[0]))] }); }
       const main = (ents[0] || {}).v;
-      return { kind: 'card', cc, ents: ents.slice(0, 12), types: [['card', 'Normalny'], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: cf.t || 'card', n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
+      return { kind: 'card', cc, ents: ents.slice(0, 40), types: [['card', 'Normalny'], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: cf.t || 'card', n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
     if (sc === 'rooms') { const ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}, a = HGAreas.model(h, ac).byId[k] || {};
       return { kind: 'room', a, ents: [{ p: 'temp', l: 'Temperatura', v: cf.temp || (a.temp && a.temp.e) || '' }, { p: 'hum', l: 'Wilgotność', v: cf.hum || (a.hum && a.hum.e) || '' }],
         types: [['', 'Normalny'], ['compact', 'Kompaktowy'], ['minimal', 'Minimalny']], t: cf.t || '', n: cf.n || '', i: cf.i || '', dn: a.name || k }; }
@@ -6857,12 +6867,13 @@ const HG_EDIT = {
   _eCfg(ct, k) {
     const h = this._hass, sc = ct.scope, L = HGL.get(sc), z = L.size[k] || 's', canSz = ct.page ? !this._config.panel.areas : ct.sz;
     const S0 = this._eSubj(ct, k); this._eCfgR = { sc, k, ct, S: S0 }; this._eSheet('cfg');
-    const S = this._eSheetEl, ttl = { added: 'Ustawienia kafelka', card: 'Ustawienia karty', room: 'Ustawienia pokoju', sec: 'Ustawienia sekcji' }[S0.kind];
+    const S = this._eSheetEl, ttl = { added: 'Ustawienia kafelka', card: 'Ustawienia karty', room: 'Ustawienia pokoju', sec: 'Ustawienia sekcji' }[S0.kind]; requestAnimationFrame(() => this._eEntDrag());
     const ico = (v) => (h.states[v] && h.states[v].attributes.icon) || HG_DOM_ICON2[String(v).split('.')[0]] || 'mdi:circle-outline';
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${ttl}"><style>${HG_STY_CSS}</style><div class="hs-h"><b>${ttl}</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
       <div class="hs-sc">
       <div class="hs-pv"><small>Podgląd na żywo</small><div class="hs-pvb"></div></div>
-      ${S0.ents.length ? `<div class="hs-fl"><span>Encje</span>${S0.ents.map((x) => `<button class="hs-r" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(x.l)} · ${H.esc(x.v ? H.name(h, x.v) : 'wybierz')}</b><small>${H.esc(x.v || '—')}</small></span><span class="hs-p" title="Zmień">${H.icon('mdi:swap-horizontal')}</span></button>`).join('')}</div>` : ''}
+      ${S0.ents.length ? `<div class="hs-fl hs-ents"><span>Encje</span>${S0.ents.map((x) => x.add ? `<button class="hs-r hs-add" data-hge="cfgadd" data-k="${H.esc(x.add)}" data-d="${H.esc(x.doms.join(','))}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>Dodaj encję</b><small>${H.esc(x.doms.join(', '))}</small></span></button>`
+        : `<div class="hs-r hs-er" ${x.ak ? `data-ak="${H.esc(x.ak)}" data-ai="${x.ai}"` : ''}>${x.ak ? `<span class="hs-dg" data-hgdrag aria-label="Przeciągnij, aby zmienić kolejność" title="Przeciągnij">${H.icon('mdi:drag-vertical')}</span>` : ''}<button class="hs-eb" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${x.ak ? `<em class="hs-ix">${x.ai + 1}</em>` : ''}${H.esc(x.v ? H.name(h, x.v) : 'Wybierz encję')}</b><small>${H.esc(x.ak ? (x.v || '—') : x.l + ' · ' + (x.v || '—'))}</small></span><span class="hs-p" title="Zmień">${H.icon('mdi:swap-horizontal')}</span></button>${x.ak ? `<button class="hs-del" data-hge="cfgdel" data-k="${H.esc(x.ak)}" data-i="${x.ai}" aria-label="Usuń" title="Usuń">${H.icon('mdi:close')}</button>` : ''}</div>`).join('')}</div>` : ''}
       <div class="hs-fl"><span>Tryb wyświetlania</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
       <label class="hs-fl"><span>Nazwa</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>Ikona (np. mdi:sofa)</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
@@ -6893,11 +6904,28 @@ const HG_EDIT = {
     const sr = host.attachShadow({ mode: 'open' }); const src = R.ct.root; sr.innerHTML = [...src.querySelectorAll('style')].map((x) => x.outerHTML).join('');
     const wrap = document.createElement('div'); wrap.className = R.ct.el.className.replace('hge-on', ''); wrap.style.cssText = 'display:block;columns:auto;pointer-events:none'; wrap.appendChild(cl); sr.appendChild(wrap);
   },
+  /* tablice encji karty (sceny, kamery, …): nadpisanie cf.set[key] – dodaj / usuń / kolejność, potem odśwież widok i wróć do ustawień */
+  _eCfgArrGet(R, key) { const cf = HGL.get(R.sc).conf[R.k] || {}; return ((cf.set && cf.set[key]) || (R.S.cc && R.S.cc[key]) || []).slice(); },
+  _eCfgArr(R, key, fn, msg) { const A = this._eCfgArrGet(R, key); fn(A);
+    this._eSet(R.sc, (L) => { const cf = L.conf[R.k] = L.conf[R.k] || {}; cf.set = cf.set || {}; cf.set[key] = A; });
+    if (msg) this._eToast(msg); const pg = R.sc === this._pageScope(), re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, R.k), 120); };
+    const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); },
+  _eEntDrag() { const S = this._eSheetEl; if (!S) return;
+    for (const hd of S.querySelectorAll('[data-hgdrag]')) hd.addEventListener('pointerdown', (ev) => { const row = hd.closest('.hs-er'), key = row.dataset.ak, box = row.parentElement; ev.preventDefault(); ev.stopPropagation();
+      hd.setPointerCapture(ev.pointerId); row.classList.add('drag');
+      const mv = (e) => { const sib = [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)].filter((x) => x !== row); let ref = null;
+        for (const x of sib) { const r = x.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { ref = x; break; } }
+        const last = sib[sib.length - 1]; if (ref) { if (row.nextElementSibling !== ref) box.insertBefore(row, ref); } else if (last && last.nextElementSibling !== row) box.insertBefore(row, last.nextElementSibling); };
+      const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); row.classList.remove('drag');
+        const ord = [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)].map((x) => +x.dataset.ai); if (ord.every((v, i) => v === i)) return;
+        this._eCfgArr(this._eCfgR, key, (A) => { const src = A.slice(); A.length = 0; for (const i of ord) A.push(src[i]); for (let i = 0; i < src.length; i++) if (!ord.includes(i)) A.push(src[i]); }, 'Zmieniono kolejność'); };
+      hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up); });
+  },
   _eCfgSet(R, nv) {
     const S0 = R.S, p = R.path;
     this._eSet(R.sc, (L) => { const cf = L.conf[R.k] = L.conf[R.k] || {};
       if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { if (L.size[R.k]) { L.size[nv] = L.size[R.k]; delete L.size[R.k]; } x.e = nv; } L.order = L.order.map((k) => (k === R.k ? nv : k)); delete L.conf[R.k]; }
-      else if (S0.kind === 'card') { cf.set = cf.set || {}; const [key, idx] = p.split('.'); if (idx == null) cf.set[key] = nv; else { const base = (cf.set[key] || S0.cc[key] || []).slice(); base[+idx] = typeof base[+idx] === 'object' && base[+idx] ? Object.assign({}, base[+idx], { entity: nv }) : nv; cf.set[key] = base; } }
+      else if (S0.kind === 'card') { cf.set = cf.set || {}; const [key, idx] = p.split('.'); if (idx == null) cf.set[key] = nv; else { const base = (cf.set[key] || S0.cc[key] || []).slice(); if (R.add) { const o = base.find((y) => y && typeof y === 'object'), st = this._hass.states[nv]; base.push(o ? { entity: nv, name: (st && st.attributes.friendly_name) || nv, ...(st && st.attributes.icon ? { icon: st.attributes.icon } : {}) } : nv); } else base[+idx] = typeof base[+idx] === 'object' && base[+idx] ? Object.assign({}, base[+idx], { entity: nv }) : nv; cf.set[key] = base; } }
       else if (S0.kind === 'room') cf[p] = nv;
       else { const sw = L.conf._swap = L.conf._swap || {}; sw[R.old] = nv; }
     });
@@ -7009,7 +7037,7 @@ const HG_EDIT = {
     const skip = new Set(['zone', 'sun', 'persistent_notification', 'update', 'tts', 'stt', 'conversation', 'event', 'image', 'device_tracker', 'group', 'input_text', 'input_datetime', 'todo', 'calendar', 'weather', 'wake_word', 'assist_satellite', 'select', 'number', 'text', 'time', 'date', 'datetime', 'notify', 'ai_task']);
     const arr = [];
     for (const e of Object.keys(h.states)) {
-      const d = e.split('.')[0]; if (skip.has(d) || (!this._eRepl && shown.has(e))) continue;
+      const d = e.split('.')[0]; if (skip.has(d) || (!this._eRepl && shown.has(e))) continue; if (this._eRepl && ((this._eRepl.doms && !this._eRepl.doms.includes(d)) || (this._eRepl.excl && this._eRepl.excl.includes(e)))) continue;
       const r = reg[e]; if (r && (r.hidden || r.entity_category)) continue;
       const k = HG_TILE_KIND(e);
       if (f !== 'all' && !(f === 'light' ? d === 'light' : f === 'tog' ? k === 'tog' && d !== 'light' : f === k)) continue;
