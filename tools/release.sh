@@ -23,12 +23,13 @@ git push -q origin main "v$V"
 # (assets included) and registers /hacsfiles/nuvio/nuvio.js as the dashboard resource.
 rm -f /tmp/nuvio.zip && (cd dist && zip -qr /tmp/nuvio.zip nuvio.js assets)
 # tag uruchamia też .github/workflows/release.yml – jeśli wydanie już istnieje, tylko podmień pliki
-if gh release view "v$V" >/dev/null 2>&1; then gh release upload "v$V" /tmp/nuvio.zip --clobber
-else gh release create "v$V" /tmp/nuvio.zip --title "Nuvio $V" --generate-notes --verify-tag; fi
+if gh release view "v$V" >/dev/null 2>&1; then gh release upload "v$V" /tmp/nuvio.zip dist/nuvio.js --clobber
+else gh release create "v$V" /tmp/nuvio.zip dist/nuvio.js --title "Nuvio $V" --generate-notes --verify-tag; fi
 
 # weryfikacja: pobierz opublikowany nuvio.zip oraz dist/nuvio.js z tagu i sprawdź wersję paczki
 T=$(mktemp -d); sleep 3
-gh release download "v$V" -p nuvio.zip -D "$T" --clobber && unzip -p "$T/nuvio.zip" nuvio.js > "$T/a.js"
+gh release download "v$V" -p nuvio.zip -p nuvio.js -D "$T" --clobber && unzip -p "$T/nuvio.zip" nuvio.js > "$T/a.js"
 git show "v$V:dist/nuvio.js" > "$T/t.js"
-for f in "$T/a.js" "$T/t.js"; do grep -q "HG_BUILD = '$V+" "$f" || { echo "BŁĄD: $f nie ma wersji $V"; exit 1; }; done
+# HACS pobiera zasoby wydania zamiast dist/, więc nuvio.js musi być osobnym zasobem
+for f in "$T/a.js" "$T/t.js" "$T/nuvio.js"; do grep -q "HG_BUILD = '$V+" "$f" || { echo "BŁĄD: $f nie ma wersji $V"; exit 1; }; done
 echo "OK: asset i dist w tagu v$V mają HG_BUILD $V"
