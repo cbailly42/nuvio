@@ -7,9 +7,11 @@ const HG_P = (v) => `/${HG_DASH()}/${v}`;
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (assets/bg, CREDITS.md); gdy się nie wczyta – gradient */
 const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
 /* 10 teł do wyboru (CC0, assets/backgrounds/CREDITS.md); pierwsze = domyślne. Miniatury ~5 KB, pełne zdjęcia wczytywane dopiero po wyborze */
-const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', 'Dom w lesie'], ['domek-nad-woda', 'Domek nad wodą'], ['gwiazdzista-noc', 'Gwiaździsta noc'], ['zachod-slonca', 'Zachód słońca'], ['las-o-zmierzchu', 'Las o zmierzchu'],
-  ['jasny-salon', 'Jasny salon'], ['drewniane-wnetrze', 'Drewniane wnętrze'], ['kuchnia', 'Kuchnia'], ['mglisty-las', 'Mglisty las'], ['nad-mgla', 'Nad mgłą']]
-  .map(([id, l], i) => { const b = HG_ASSET + 'assets/backgrounds/' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
+/* nazwa tła rozwiązywana przy użyciu (String(l) / szablon) – hgTr powstaje dopiero w hg-core */
+const hgTrLazy = (pl, en) => ({ toString: () => (typeof hgTr === 'function' ? hgTr(pl, en) : pl) });
+const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', 'Dom w lesie', 'House in the woods'], ['domek-nad-woda', 'Domek nad wodą', 'Lakeside cabin'], ['gwiazdzista-noc', 'Gwiaździsta noc', 'Starry night'], ['zachod-slonca', 'Zachód słońca', 'Sunset'], ['las-o-zmierzchu', 'Las o zmierzchu', 'Forest at dusk'],
+  ['jasny-salon', 'Jasny salon', 'Bright living room'], ['drewniane-wnetrze', 'Drewniane wnętrze', 'Wooden interior'], ['kuchnia', 'Kuchnia', 'Kitchen'], ['mglisty-las', 'Mglisty las', 'Misty forest'], ['nad-mgla', 'Nad mgłą', 'Above the fog']]
+  .map(([id, pl, en], i) => { const l = hgTrLazy(pl, en), b = HG_ASSET + 'assets/backgrounds/' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
 const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'assets/bg/default-wide.webp', v2p: HG_ASSET + 'assets/bg/default-portrait.webp' };
 
 const HG_I18N = {
@@ -131,15 +133,15 @@ const HGWizard = {
 window.HGWizard = HGWizard;
 
 /* --- Wygląd → „Widoki” (włącz / wyłącz / kolejność, także widoki bez pasujących encji) i „Integracje” (opcjonalne pakiety HACS) --- */
-const HG_VIEW_DEF = [['dashboard', 'panel', 'mdi:view-dashboard-outline', ''], ['rooms', 'rooms', 'mdi:sofa-outline', 'obszarów (Ustawienia → Obszary)'],
-  ['multimedia', 'media', 'mdi:play-box-multiple-outline', 'odtwarzacza (media_player)'], ['kamery', 'cams', 'mdi:cctv', 'kamery (camera)'],
-  ['family', 'family', 'mdi:account-group-outline', 'osób (person)'], ['energia', 'energy', 'mdi:lightning-bolt-outline', 'czujnika mocy (sensor, W/kW)']];
+const HG_VIEW_DEF = [['dashboard', 'panel', 'mdi:view-dashboard-outline', ''], ['rooms', 'rooms', 'mdi:sofa-outline', ['obszarów (Ustawienia → Obszary)', 'areas (Settings → Areas)']],
+  ['multimedia', 'media', 'mdi:play-box-multiple-outline', ['odtwarzacza (media_player)', 'a media player (media_player)']], ['kamery', 'cams', 'mdi:cctv', ['kamery (camera)', 'a camera (camera)']],
+  ['family', 'family', 'mdi:account-group-outline', ['osób (person)', 'people (person)']], ['energia', 'energy', 'mdi:lightning-bolt-outline', ['czujnika mocy (sensor, W/kW)', 'a power sensor (sensor, W/kW)']]];
 const hgViewHas = (M) => ({ dashboard: true, rooms: Object.keys(M.areas || {}).length > 0, multimedia: M.media.length > 0, kamery: M.cams.length > 0, family: M.persons.length > 0, energia: M.power.length > 0 });
 /* pakiety: wykrycie po zarejestrowanym zasobie ORAZ faktycznie wczytanym kodzie (globalna / element) */
 const HG_PKGS = [
-  { id: 'kiosk', name: 'Kiosk Mode', re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: 'Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.' },
-  { id: 'sidebar', name: 'Custom Sidebar', re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: 'Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.' },
-  { id: 'cardmod', name: 'card-mod', re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: 'Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.' },
+  { id: 'kiosk', name: 'Kiosk Mode', re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: () => hgTr('Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.', 'Hides the HA header and sidebar. Install “Kiosk Mode” from HACS → Frontend.') },
+  { id: 'sidebar', name: 'Custom Sidebar', re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: () => hgTr('Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.', 'Custom order and hiding of sidebar items. Install “Custom Sidebar” from HACS → Frontend.') },
+  { id: 'cardmod', name: 'card-mod', re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: () => hgTr('Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.', 'Extra CSS styles for cards. Install “card-mod” from HACS → Frontend.') },
 ];
 const HGLookX = {
   M: null, res: null, pend: null, kio: null, busy: false,
@@ -155,24 +157,24 @@ const HGLookX = {
     return { order: ['dashboard', ...ord], on: new Set(['dashboard', ...on]) }; },
   pkg(p) { const reg = (this.res || []).some((u) => p.re.test(u)); let live = false; try { live = p.live(); } catch (e) { live = false; } return { reg, live, ok: reg && live }; },
   html(page) {
-    if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g"><h4>${H.icon('mdi:view-carousel-outline')}Widoki</h4><small class="lk-hn">Wczytywanie…</small></section>`; }
+    if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${hgTr('Wczytywanie…', 'Loading…')}</small></section>`; }
     const lang = hgLang(page._hass, (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), D = Object.fromEntries(HG_VIEW_DEF.map((v) => [v[0], v]));
     const auto = !!(page._config && page._config._hgAuto);
     const rows = V.order.map((v, i) => { const d = D[v], on = V.on.has(v), fx = v === 'dashboard';
-      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${t(d[1])}</b><small>${has[v] ? (fx ? 'Zawsze widoczny' : on ? 'Widoczny' : 'Ukryty') : 'Brak encji – wymaga ' + d[3]}</small></span>
-        ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="W górę" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="W dół" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
+      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${t(d[1])}</b><small>${has[v] ? (fx ? hgTr('Zawsze widoczny', 'Always visible') : on ? hgTr('Widoczny', 'Visible') : hgTr('Ukryty', 'Hidden')) : hgTr('Brak encji – wymaga ' + d[3][0], 'No entities – requires ' + d[3][1])}</small></span>
+        ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="${hgTr('W górę', 'Move up')}" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="${hgTr('W dół', 'Move down')}" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
         <button class="lx-sw" role="switch" data-hge="lx-v" data-v="${v}" aria-checked="${on}" aria-label="${t(d[1])}" ${fx ? 'disabled' : ''}><i></i></button></div>`; }).join('');
     const kio = this.kio || {}, P = Object.fromEntries(HG_PKGS.map((p) => [p.id, this.pkg(p)]));
     const tg = (k, l, sub, val) => `<div class="lx-r on"><span class="lx-t"><b>${l}</b><small>${sub}</small></span><button class="lx-sw" role="switch" data-hge="lx-k" data-k="${k}" aria-checked="${!!val}" aria-label="${l}"><i></i></button></div>`;
     const pk = HG_PKGS.map((p) => { const st = P[p.id];
-      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? 'Zainstalowany' : st.reg ? 'Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres' : p.hint}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>`;
+      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? hgTr('Zainstalowany', 'Installed') : st.reg ? hgTr('Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres', 'Resource registered but not loaded – refresh the page or check the URL') : p.hint()}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>`;
       if (!st.ok) return head;
-      if (p.id === 'kiosk') return head + `<div class="lx-sub">${tg('hide_header', 'Ukryj nagłówek HA', 'Pasek z tytułem pulpitu', kio.hide_header)}${tg('hide_sidebar', 'Ukryj panel boczny HA', 'Menu po lewej stronie', kio.hide_sidebar)}${tg('kiosk_users', 'Kiosk dla nie-administratorów', 'Nagłówek i panel ukryte dla zwykłych użytkowników', kio.non_admin_settings && kio.non_admin_settings.kiosk)}</div>`;
-      if (p.id === 'sidebar') return head + `<div class="lx-sub"><div class="lx-r on"><span class="lx-t"><b>Nuvio na górze panelu bocznego</b><small>Konfiguracja Custom Sidebar to plik /config/www/custom-sidebar-config.yaml – skopiuj gotowy fragment</small></span><button class="lk-mini" data-hge="lx-cs">Kopiuj</button></div></div>`;
+      if (p.id === 'kiosk') return head + `<div class="lx-sub">${tg('hide_header', hgTr('Ukryj nagłówek HA', 'Hide HA header'), hgTr('Pasek z tytułem pulpitu', 'The bar with the dashboard title'), kio.hide_header)}${tg('hide_sidebar', hgTr('Ukryj panel boczny HA', 'Hide HA sidebar'), hgTr('Menu po lewej stronie', 'The menu on the left'), kio.hide_sidebar)}${tg('kiosk_users', hgTr('Kiosk dla nie-administratorów', 'Kiosk for non-admins'), hgTr('Nagłówek i panel ukryte dla zwykłych użytkowników', 'Header and sidebar hidden for regular users'), kio.non_admin_settings && kio.non_admin_settings.kiosk)}</div>`;
+      if (p.id === 'sidebar') return head + `<div class="lx-sub"><div class="lx-r on"><span class="lx-t"><b>${hgTr('Nuvio na górze panelu bocznego', 'Nuvio at the top of the sidebar')}</b><small>${hgTr('Konfiguracja Custom Sidebar to plik /config/www/custom-sidebar-config.yaml – skopiuj gotowy fragment', 'Custom Sidebar is configured in /config/www/custom-sidebar-config.yaml – copy a ready-made snippet')}</small></span><button class="lk-mini" data-hge="lx-cs">${hgTr('Kopiuj', 'Copy')}</button></div></div>`;
       return head; }).join('');
-    return `<section class="lk-g lx"><h4>${H.icon('mdi:view-carousel-outline')}Widoki</h4><small class="lk-hn">${auto ? 'Włącz, wyłącz i ułóż karty pulpitu. Widoki bez encji też możesz włączyć.' : 'Ten pulpit ma własną konfigurację – widokami zarządzasz w jego YAML.'}</small>
-      ${auto ? `<div class="lx-l">${rows}</div>${this.pend ? '<button class="lk-mini lx-ap" data-hge="lx-apply">Zastosuj widoki</button>' : ''}` : ''}</section>
-      <section class="lk-g lx"><h4>${H.icon('mdi:puzzle-outline')}Integracje</h4><small class="lk-hn">Opcjonalne dodatki z HACS – Nuvio działa bez nich</small><div class="lx-l">${pk}</div>${this.kpend ? '<button class="lk-mini lx-ap" data-hge="lx-kapply">Zapisz ustawienia kiosku</button>' : ''}</section>
+    return `<section class="lk-g lx"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${auto ? hgTr('Włącz, wyłącz i ułóż karty pulpitu. Widoki bez encji też możesz włączyć.', 'Turn dashboard views on or off and reorder them. Views without entities can be enabled too.') : hgTr('Ten pulpit ma własną konfigurację – widokami zarządzasz w jego YAML.', 'This dashboard has its own configuration – manage views in its YAML.')}</small>
+      ${auto ? `<div class="lx-l">${rows}</div>${this.pend ? '<button class="lk-mini lx-ap" data-hge="lx-apply">' + hgTr('Zastosuj widoki', 'Apply views') + '</button>' : ''}` : ''}</section>
+      <section class="lk-g lx"><h4>${H.icon('mdi:puzzle-outline')}${hgTr('Integracje', 'Integrations')}</h4><small class="lk-hn">${hgTr('Opcjonalne dodatki z HACS – Nuvio działa bez nich', 'Optional HACS add-ons – Nuvio works without them')}</small><div class="lx-l">${pk}</div>${this.kpend ? '<button class="lk-mini lx-ap" data-hge="lx-kapply">' + hgTr('Zapisz ustawienia kiosku', 'Save kiosk settings') + '</button>' : ''}</section>
       <style>.lx-l{ display:flex; flex-direction:column; gap:6px; } .lx-r{ display:flex; align-items:center; gap:10px; min-height:52px; padding:6px 8px 6px 6px; border-radius:16px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); }
       .lx-r.na{ opacity:.62; } .lx-r.na .lx-t small{ font-style:italic; } .lx-sub{ display:flex; flex-direction:column; gap:6px; margin:-2px 0 4px 18px; } .lx-sub .lx-r{ min-height:46px; padding-left:12px; }
       .lx-i{ flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
@@ -189,19 +191,19 @@ const HGLookX = {
       this.pend = { order: o, on }; return page._eLook(); }
     if (a === 'lx-apply' && this.pend) { const w = HGL.data.wiz || { lang: hgLang(h), ts: Date.now() };
       HGL.data.wiz = Object.assign({}, w, { views: this.pend.order.filter((v) => this.pend.on.has(v)), ts: Date.now() }); this.pend = null; await HGL.save(h);
-      page._eToast('Zapisano widoki – odświeżanie…'); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
+      page._eToast(hgTr('Zapisano widoki – odświeżanie…', 'Views saved – reloading…')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
     if (a === 'lx-k') { const k = this.kio = Object.assign({}, this.kio || {}), key = b.dataset.k;
       if (key === 'kiosk_users') { const n = Object.assign({}, k.non_admin_settings || {}); n.kiosk = !n.kiosk; if (!n.kiosk) delete n.kiosk; if (Object.keys(n).length) k.non_admin_settings = n; else delete k.non_admin_settings; }
       else { k[key] = !k[key]; if (!k[key]) delete k[key]; }
       this.kpend = true; return page._eLook(); }
     if (a === 'lx-kapply') { this.kpend = false; const c = this.dash;
-      if (!c || !c.strategy) { page._eToast('Ten pulpit nie korzysta ze strategii Nuvio – dodaj kiosk_mode w jego YAML'); return page._eLook(); }
+      if (!c || !c.strategy) { page._eToast(hgTr('Ten pulpit nie korzysta ze strategii Nuvio – dodaj kiosk_mode w jego YAML', 'This dashboard does not use the Nuvio strategy – add kiosk_mode in its YAML')); return page._eLook(); }
       const nc = { ...c, strategy: { ...c.strategy } }; if (Object.keys(this.kio || {}).length) nc.strategy.kiosk_mode = this.kio; else delete nc.strategy.kiosk_mode;
-      if (!window.__hgDryRun) { try { await h.callWS({ type: 'lovelace/config/save', url_path: HG_DASH(), config: nc }); this.dash = nc; } catch (e) { page._eToast('Nie udało się zapisać (' + ((e && e.message) || e) + ')'); return page._eLook(); } } else this.dash = nc;
-      page._eToast('Zapisano ustawienia kiosku – odświeżanie…'); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
+      if (!window.__hgDryRun) { try { await h.callWS({ type: 'lovelace/config/save', url_path: HG_DASH(), config: nc }); this.dash = nc; } catch (e) { page._eToast(hgTr('Nie udało się zapisać (', 'Could not save (') + ((e && e.message) || e) + ')'); return page._eLook(); } } else this.dash = nc;
+      page._eToast(hgTr('Zapisano ustawienia kiosku – odświeżanie…', 'Kiosk settings saved – reloading…')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
     if (a === 'lx-cs') {
       const y = `# /config/www/custom-sidebar-config.yaml (Custom Sidebar)\norder:\n  - item: ${JSON.stringify('/' + HG_DASH())}\n    match: href\n    order: 1\n`;
-      try { await navigator.clipboard.writeText(y); page._eToast('Skopiowano – wklej do /config/www/custom-sidebar-config.yaml'); } catch (e) { page._eToast('Skopiuj ręcznie: ' + y.replace(/\n/g, ' ')); } return; }
+      try { await navigator.clipboard.writeText(y); page._eToast(hgTr('Skopiowano – wklej do /config/www/custom-sidebar-config.yaml', 'Copied – paste into /config/www/custom-sidebar-config.yaml')); } catch (e) { page._eToast(hgTr('Skopiuj ręcznie: ', 'Copy manually: ') + y.replace(/\n/g, ' ')); } return; }
   },
 };
 window.HGLookX = HGLookX;

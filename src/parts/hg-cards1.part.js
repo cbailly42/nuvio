@@ -7,9 +7,9 @@ const hgNKeysM = new WeakMap(), hgNKeys = (o) => { let n = hgNKeysM.get(o); if (
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
   defaults() {
-    return { title: 'Energia', icon: 'mdi:star-four-points', entities: [], max_power: 17250, thresholds: { low: 30, high: 70 },
-      labels: { low: 'Niskie zużycie', medium: 'Średnie zużycie', high: 'Wysokie zużycie' }, expand: null,
-      calc_label: 'Suma faz względem mocy maksymalnej' };
+    return { title: hgTr('Energia', 'Energy'), icon: 'mdi:star-four-points', entities: [], max_power: 17250, thresholds: { low: 30, high: 70 },
+      labels: { low: hgTr('Niskie zużycie', 'Low usage'), medium: hgTr('Średnie zużycie', 'Medium usage'), high: hgTr('Wysokie zużycie', 'High usage') }, expand: null,
+      calc_label: hgTr('Suma faz względem mocy maksymalnej', 'Sum of phases vs. maximum power') };
   }
   setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return this._config.entities; }
@@ -40,20 +40,20 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   render() {
     const c = this._config, d = this.data();
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
-    if (!d) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (!d) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${hgTr('Czujniki mocy niedostępne', 'Power sensors unavailable')}</div></ha-card>`;
     const pr = Math.round(d.pct);
     if (c.compact) {
       const kw = d.tot >= 1000 ? `${H.fmt(d.tot / 1000, 2)} kW` : `${H.fmt(d.tot, 0)} W`;
-      return `<ha-card class="glass warm cmp" title="${H.esc(`${c.calc_label}: ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`)}">${hd}
+      return `<ha-card class="glass warm cmp" title="${H.esc(`${c.calc_label}: ${H.fmt(d.tot, 0)} W ${hgTr('z', 'of')} ${H.fmt(c.max_power / 1000, 2)} kW`)}">${hd}
         <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
-        <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+        <div class="bar" role="meter" aria-label="${hgTr('Obciążenie', 'Load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
     }
-    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W ${hgTr('z', 'of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
       <div class="scale"><span>0</span><span>50</span><span>100</span></div>
-      <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+      <div class="bar" role="meter" aria-label="${hgTr('Obciążenie', 'Load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
@@ -65,20 +65,22 @@ hgReg('hg-energy-card', HGEnergyCard, 'Home Glass – Energia', 'Procent obcią�
    potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
 const HG_AC_MODE = {
   /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
-  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', l: 'Chłodzenie' }, heat: { c: 'var(--hg-accent)', on: '#1E2023', i: 'mdi:fire', t: 'heat', l: 'Grzanie' },
-  dry: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:water-percent', t: 'neu', l: 'Osuszanie' }, fan_only: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:fan', t: 'neu', l: 'Wentylacja' },
+  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } }, heat: { c: 'var(--hg-accent)', on: '#1E2023', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
+  dry: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:water-percent', t: 'neu', get l() { return hgTr('Osuszanie', 'Drying'); } }, fan_only: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
   heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
-  off: { c: '#C4C8CE', on: '#5A5E64', i: 'mdi:power', t: 'neu', l: 'Wyłączona' },
+  off: { c: '#C4C8CE', on: '#5A5E64', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
 };
 const HG_FAN_PL = { auto: 'Auto', low: 'Niski', medium: 'Średni', middle: 'Średni', mid: 'Średni', high: 'Wysoki', quiet: 'Cichy', silent: 'Cichy', turbo: 'Turbo', strong: 'Mocny', diffuse: 'Rozproszony', focus: 'Skupiony', on: 'Wł.', off: 'Wył.' };
 const HG_SWING_PL = { off: 'Stały', on: 'Ruch', horizontal: 'Poziomo', vertical: 'Pionowo', both: 'Oba', swing: 'Ruch' };
+const HG_FAN_EN = { auto: 'Auto', low: 'Low', medium: 'Medium', middle: 'Medium', mid: 'Medium', high: 'High', quiet: 'Quiet', silent: 'Silent', turbo: 'Turbo', strong: 'Strong', diffuse: 'Diffuse', focus: 'Focus', on: 'On', off: 'Off' };
+const HG_SWING_EN = { off: 'Fixed', on: 'Swing', horizontal: 'Horizontal', vertical: 'Vertical', both: 'Both', swing: 'Swing' };
 /* Klimatyzacja w stylu aplikacji Tesla: duża temperatura z chevronami, pasek temperatury (przeciągany), rząd dużych przycisków trybów */
 class HGACCard extends HGBase {
   defaults() {
-    return { title: 'Klimatyzacja', compact: false,
-      modes: [{ mode: 'heat_cool', label: 'Auto' }, { mode: 'auto', label: 'Auto' }, { mode: 'cool', label: 'Chłodzenie', short: 'Chłodz.' }, { mode: 'heat', label: 'Grzanie' },
-        { mode: 'dry', label: 'Osuszanie', short: 'Osusz.' }, { mode: 'fan_only', label: 'Wiatr' }],
-      compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: 'Wnętrze' };
+    return { title: hgTr('Klimatyzacja', 'Air conditioning'), compact: false,
+      modes: [{ mode: 'heat_cool', label: 'Auto' }, { mode: 'auto', label: 'Auto' }, { mode: 'cool', label: hgTr('Chłodzenie', 'Cooling'), short: hgTr('Chłodz.', 'Cool') }, { mode: 'heat', label: hgTr('Grzanie', 'Heating') },
+        { mode: 'dry', label: hgTr('Osuszanie', 'Drying'), short: hgTr('Osusz.', 'Dry') }, { mode: 'fan_only', label: hgTr('Wiatr', 'Fan') }],
+      compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: hgTr('Wnętrze', 'Indoor') };
   }
   css() {
     return U(`
@@ -163,11 +165,11 @@ ha-card.glass > *{ flex-shrink:0; }
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
   _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
-  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return 'Wyłączona'; return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : `${m.l} do ${H.fmt(t)}°`; }
+  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgTr('Wyłączona', 'Off'); return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgTr(`${m.l} do ${H.fmt(t)}°`, `${m.l} to ${H.fmt(t)}°`); }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    const kb = `<button class="ib kebab kb" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button>`;
-    if (!H.ok(s)) return `<ha-card class="glass off ${c.compact ? 'compact' : ''}" style="--mt:var(--hg-ac-neu-tx)"><div class="hd"><span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${kb}</div><div class="ph"><b>Niedostępna</b></div></ha-card>`;
+    const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button>`;
+    if (!H.ok(s)) return `<ha-card class="glass off ${c.compact ? 'compact' : ''}" style="--mt:var(--hg-ac-neu-tx)"><div class="hd"><span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${kb}</div><div class="ph"><b>${hgTr('Niedostępna', 'Unavailable')}</b></div></ha-card>`;
     const a = s.attributes, { st, t } = this._eff(s), on = st !== 'off';
     if (s.state !== 'off') this._last = s.state;
     const m = HG_AC_MODE[st] || HG_AC_MODE.cool, { mn, mx } = this._lim(s);
@@ -179,23 +181,23 @@ ha-card.glass > *{ flex-shrink:0; }
     const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
     const num = `<div class="num${rng ? ' rng' : ''}" aria-live="polite">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
     const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
-    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', 'Obniż temperaturę')}${num}${cv(1, 'mdi:chevron-right', 'Podwyższ temperaturę')}</div>`;
-    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
-    const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? 'Wyłącz klimatyzację' : 'Włącz klimatyzację'}" title="${on ? 'Wyłącz' : 'Włącz'}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? 'Włączona' : 'Wyłączona'}</span><span class="sh">${on ? 'Wł.' : 'Wył.'}</span></button>`;
+    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', hgTr('Obniż temperaturę', 'Lower temperature'))}${num}${cv(1, 'mdi:chevron-right', hgTr('Podwyższ temperaturę', 'Raise temperature'))}</div>`;
+    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? hgTr('Wyłącz klimatyzację', 'Turn off air conditioning') : hgTr('Włącz klimatyzację', 'Turn on air conditioning')}" title="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? hgTr('Włączona', 'On') : hgTr('Wyłączona', 'Off')}</span><span class="sh">${on ? hgTr('Wł.', 'On') : hgTr('Wył.', 'Off')}</span></button>`;
     const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
     const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
-    const fv = H.esc(HG_FAN_PL[fm] || fm), sv = H.esc(HG_SWING_PL[sw] || sw);
-    const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="Nawiew: ${fv} (zmień)" title="Nawiew: ${fv} – zmień prędkość"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">Nawiew</span><span class="sh">Nawiew</span></button>` : '';
-    const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="Kierunek nawiewu: ${sv} (zmień)" title="Kierunek nawiewu: ${sv} – zmień"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">Kierunek</span><span class="sh">Kier.</span></button>` : '';
+    const en = hgCurLang() === 'en', fv = H.esc((en ? HG_FAN_EN : HG_FAN_PL)[fm] || fm), sv = H.esc((en ? HG_SWING_EN : HG_SWING_PL)[sw] || sw);
+    const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="${hgTr(`Nawiew: ${fv} (zmień)`, `Fan: ${fv} (change)`)}" title="${hgTr(`Nawiew: ${fv} – zmień prędkość`, `Fan: ${fv} – change speed`)}"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">${hgTr('Nawiew', 'Fan')}</span><span class="sh">${hgTr('Nawiew', 'Fan')}</span></button>` : '';
+    const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="${hgTr(`Kierunek nawiewu: ${sv} (zmień)`, `Swing: ${sv} (change)`)}" title="${hgTr(`Kierunek nawiewu: ${sv} – zmień`, `Swing: ${sv} – change`)}"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">${hgTr('Kierunek', 'Swing')}</span><span class="sh">${hgTr('Kier.', 'Swing')}</span></button>` : '';
     const cls = `glass ${on ? 'on' : 'off'} ${c.compact ? 'compact' : ''}`;
     /* zwijane tryby: zwinięte = zasilanie + aktywny tryb + „Tryby”; rozwinięte = pełna siatka (+ Nawiew/Kierunek) */
     const open = this._isOpen();
     const am = on ? st : (this._last && hv.includes(this._last) ? this._last : null), amx = am && (modes.find((y) => y.mode === am) || { mode: am, label: (HG_AC_MODE[am] || {}).l || am });
     const actB = amx ? mb(amx).replace('class="mb ', 'class="mb cur ') : '';
-    const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? 'Zwiń tryby' : 'Wszystkie tryby'}" title="${open ? 'Zwiń tryby' : 'Wszystkie tryby'}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">Tryby</span><span class="sh">Tryby</span></button>`;
+    const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}" title="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">${hgTr('Tryby', 'Modes')}</span><span class="sh">${hgTr('Tryby', 'Modes')}</span></button>`;
     const xp = (inner) => `<div class="xp ${open ? 'open' : ''}"><div class="xi" ${open ? '' : 'inert'}>${inner}</div></div>`;
     if (c.compact) {
-      const sub = [this._stat(st, t), cur != null ? `wnętrze ${H.fmt(cur)}°` : ''].filter(Boolean).join(' · ');
+      const sub = [this._stat(st, t), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ');
       return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${tr}</div>
         ${bar}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
     }
@@ -212,7 +214,7 @@ ha-card.glass > *{ flex-shrink:0; }
     this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
     const R = this.$, card = R.querySelector('ha-card'), fr = (v - mn) / (mx - mn);
     if (card) { card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
-      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? `wnętrze ${H.fmt(cur)}°` : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
+      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
       const b = R.querySelector('.bar'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
       R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); }); }
     clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), commitMs);
@@ -286,7 +288,7 @@ ha-card.glass > *{ flex-shrink:0; }
     this._open = !!v; try { sessionStorage.setItem(this._okey(), v ? '1' : '0'); } catch (e) { /* prywatny tryb */ }
     const R = this.$, xp = R.querySelector('.xp'), xb = R.querySelector('.xb');
     if (xp) { xp.classList.toggle('open', this._open); xp.firstElementChild.toggleAttribute('inert', !this._open); }
-    if (xb) { xb.setAttribute('aria-expanded', this._open); const l = this._open ? 'Zwiń tryby' : 'Wszystkie tryby'; xb.setAttribute('aria-label', l); xb.title = l; }
+    if (xb) { xb.setAttribute('aria-expanded', this._open); const l = this._open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes'); xb.setAttribute('aria-label', l); xb.title = l; }
     this._html = null;                 // następne przerysowanie zbuduje DOM z nowym stanem
     if (!this._config.compact) this._fit();
   }
@@ -316,7 +318,7 @@ hgReg('hg-ac-card', HGACCard, 'Home Glass – Klimatyzacja', 'Klimatyzacja w sty
 
 /* ===================== OŚWIETLENIE ===================== */
 class HGLightCard extends HGBase {
-  defaults() { return { title: 'Oświetlenie', icon: 'mdi:lightbulb-outline', name: null }; }
+  defaults() { return { title: hgTr('Oświetlenie', 'Lighting'), icon: 'mdi:lightbulb-outline', name: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; padding:var(--s2) var(--s3) var(--s3); }
@@ -345,11 +347,11 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const c = this._config, s = H.st(this._hass, c.entity);
     const on = s && s.state === 'on', un = !s || s.state === 'unavailable', p = this.pct();
     const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
-    const hd = `<div class="hd"><button class="ib" data-act="toggle" aria-label="Przełącz ${H.esc(nm)}" title="${H.esc(nm)}" style="margin-left:calc(var(--k) * -4)">${H.icon(c.icon, 'ic' + (on ? ' on' : ''))}</button>
+    const hd = `<div class="hd"><button class="ib" data-act="toggle" aria-label="${hgTr('Przełącz', 'Toggle')} ${H.esc(nm)}" title="${H.esc(nm)}" style="margin-left:calc(var(--k) * -4)">${H.icon(c.icon, 'ic' + (on ? ' on' : ''))}</button>
       <span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      <button class="ib" data-act="more" aria-label="Rozwiń" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
-    return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? ' – niedostępne' : ''}">${hd}
-      <div class="trk" role="slider" aria-label="Jasność ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
+      <button class="ib" data-act="more" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
+    return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? hgTr(' – niedostępne', ' – unavailable') : ''}">${hd}
+      <div class="trk" role="slider" aria-label="${hgTr('Jasność', 'Brightness')} ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
         <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : p + '%'}</span></div></ha-card>`;
   }
   afterRender() {
@@ -412,12 +414,12 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
     const avail = ss.some((s) => s && s.state !== 'unavailable');
     const onN = ss.filter((s) => s && s.state === 'on').length, on = onN > 0;
     const title = c.title || H.name(this._hass, ids[0]);
-    let tip = `${title}: ${avail ? H.stateLabel(on ? 'on' : 'off') : 'niedostępne'}`;
-    if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ` · Internet: ${s && s.state === 'on' ? 'połączony' : 'brak'}`; }
+    let tip = `${title}: ${avail ? H.stateLabel(on ? 'on' : 'off') : hgTr('niedostępne', 'unavailable')}`;
+    if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ` · Internet: ${s && s.state === 'on' ? hgTr('połączony', 'connected') : hgTr('brak', 'disconnected')}`; }
     const tg = this.toggleHtml(on, 'toggle', !avail, title);
-    const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button>` : '';
+    const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button>` : '';
     if (c.layout === 'tile') {
-      const st = !avail ? 'niedostępne' : on ? (ids.length > 1 ? `Włączone · ${onN}/${ids.length}` : 'Włączone') : 'Wyłączone';
+      const st = !avail ? hgTr('niedostępne', 'unavailable') : on ? (ids.length > 1 ? `${hgTr('Włączone', 'On')} · ${onN}/${ids.length}` : hgTr('Włączone', 'On')) : hgTr('Wyłączone', 'Off');
       return `<ha-card class="glass tile ${on ? 'on' : ''}" title="${H.esc(tip)}"><div class="row">${H.icon(c.icon, 'ic')}<span class="sp"></span>${tg}${kb}</div>
         <div><div class="nm">${H.esc(title)}</div><div class="stt">${H.esc(st)}</div></div></ha-card>`;
     }

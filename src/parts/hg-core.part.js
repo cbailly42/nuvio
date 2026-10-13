@@ -35,7 +35,7 @@ const HGVer = window.__hgVer || {
       padding:8px 8px 8px 16px;border-radius:24px;font:400 14px/1.2 'HG DM Sans',system-ui,sans-serif;box-shadow:var(--hg-sh);
       -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
       background:${dark ? 'rgba(40,40,44,.88)' : 'rgba(255,255,255,.9)'};color:${dark ? '#fff' : '#1C1C1E'};border:1px solid ${dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)'}`;
-    d.innerHTML = `<span>Nowa wersja panelu</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">Odśwież</button><button type="button" data-x aria-label="Zamknij" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
+    d.innerHTML = `<span>${hgTr('Nowa wersja panelu', 'New dashboard version')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgTr('Odśwież', 'Reload')}</button><button type="button" data-x aria-label="${hgTr('Zamknij', 'Close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
     d.querySelector('[data-r]').onclick = () => location.reload();
     d.querySelector('[data-x]').onclick = () => d.remove();
     document.body.appendChild(d);
@@ -78,6 +78,11 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
   document.addEventListener('visibilitychange', f); f();
 })();
 
+/* język interfejsu kart (pl / en): wybór z kreatora (dane użytkownika), inaczej język profilu HA.
+   hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, (w && w.lang) || window.__hgLang); };
+const hgTr = (pl, en) => (hgCurLang() === 'en' ? en : pl);
+const HG_LOC = () => (hgCurLang() === 'en' ? 'en-GB' : 'pl-PL');
 const H = {
   st: (hass, e) => (hass && e ? hass.states[e] : undefined),
   ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
@@ -115,18 +120,22 @@ const H = {
     if (a.service) { const [d, s] = a.service.split('.'); return H.call(hass, d, s, a.data || {}); }
   },
   sig: (hass, ents) => ents.map((e) => { const s = H.st(hass, e); return s ? e + s.state + JSON.stringify(s.attributes) : e + '-'; }).join('|'),
-  fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximumFractionDigits: d, minimumFractionDigits: 0 })),
-  DAYS: ['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'],
-  stateLabel: (s) => ({ on: 'Włączone', off: 'Wyłączone', unavailable: 'niedostępne', unknown: 'nieznany', playing: 'Odtwarza', paused: 'Pauza', idle: 'Bezczynny',
+  fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString(HG_LOC(), { maximumFractionDigits: d, minimumFractionDigits: 0 })),
+  get DAYS() { return hgTr(['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']); },
+  stateLabel: (s) => hgCurLang() === 'en' ? ({ on: 'On', off: 'Off', unavailable: 'unavailable', unknown: 'unknown', playing: 'Playing', paused: 'Paused', idle: 'Idle',
+    standby: 'Standby', buffering: 'Buffering', home: 'Home', not_home: 'Away', disarmed: 'Disarmed', armed_home: 'Armed (home)', armed_away: 'Armed (away)', armed_night: 'Armed (night)',
+    armed_vacation: 'Armed (vacation)', arming: 'Arming', pending: 'Pending', triggered: 'Triggered!' }[s] || String(s).replace(/_/g, ' ')) : ({ on: 'Włączone', off: 'Wyłączone', unavailable: 'niedostępne', unknown: 'nieznany', playing: 'Odtwarza', paused: 'Pauza', idle: 'Bezczynny',
     standby: 'Czuwanie', buffering: 'Buforowanie', home: 'W domu', not_home: 'Poza domem', disarmed: 'Rozbrojony', armed_home: 'Uzbrojony (w domu)',
     armed_away: 'Uzbrojony (poza domem)', armed_night: 'Uzbrojony (noc)', armed_vacation: 'Uzbrojony (urlop)', arming: 'Uzbrajanie', pending: 'Oczekiwanie', triggered: 'Alarm!' }[s] || HG_PL[hgStN(s)] || s),
   /* stan encji po polsku: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik HG_PL; małe litery do wstawiania w zdania */
   t: (h, so, attr) => {
-    if (!so) return 'niedostępne';
+    const en = hgCurLang() === 'en';
+    if (!so) return en ? 'unavailable' : 'niedostępne';
     const raw = attr ? so.attributes[attr] : so.state;
     if (raw == null) return '';
     let r = String(raw); h = h || window.__hgHass;
     try { r = attr ? (h && h.formatEntityAttributeValue ? h.formatEntityAttributeValue(so, attr) : r) : (h && h.formatEntityState ? h.formatEntityState(so) : r); } catch (e) { /* starsze HA */ }
+    if (en) return (r === String(raw) ? r.replace(/_/g, ' ') : r).replace(/^[A-Z][a-z]+$/, (x) => x.toLowerCase());   // EN: tłumaczenie HA, bez słownika PL
     if (!attr && so.entity_id && so.entity_id.startsWith('binary_sensor.') && (raw === 'on' || raw === 'off')) {
       if (r !== raw) return r.toLowerCase();                                    // tłumaczenie HA zależne od device_class
       const bm = HG_BIN_PL[so.attributes.device_class]; if (bm) return bm[raw === 'on' ? 0 : 1];
@@ -163,7 +172,7 @@ class HGBase extends HTMLElement {
   }
   defaults() { return {}; }
   setConfig(c) {
-    if (!c) throw new Error('Brak konfiguracji');
+    if (!c) throw new Error(hgTr('Brak konfiguracji', 'Missing configuration'));
     this._config = Object.assign({}, this.defaults(), c);
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
@@ -223,7 +232,7 @@ class HGBase extends HTMLElement {
   getCardSize() { return 3; }
   getGridOptions() { return { columns: 6, rows: 3 }; }
   toggleHtml(on, act, disabled, label) {
-    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || 'przełącz')}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
+    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || hgTr('przełącz', 'toggle'))}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
   }
 }
 window.customCards = window.customCards || [];

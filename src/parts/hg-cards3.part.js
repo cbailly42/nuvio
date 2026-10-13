@@ -2,22 +2,22 @@
 const HG_PAL = ['#F9C80E', '#F0955A', '#B793EC', '#5AC8FA', '#34C759', '#FF6B8B', '#8E9AAF'];
 const hgRel = (d) => {
   const m = Math.max(0, Math.round((Date.now() - d) / 60000));
-  if (m < 1) return 'przed chwilą'; if (m < 60) return `${m} min temu`;
-  const h = Math.round(m / 60); if (h < 24) return `${h} godz. temu`;
-  const dd = Math.round(h / 24); return dd === 1 ? 'wczoraj' : `${dd} dni temu`;
+  if (m < 1) return hgTr('przed chwilą', 'just now'); if (m < 60) return hgTr(`${m} min temu`, `${m} min ago`);
+  const h = Math.round(m / 60); if (h < 24) return hgTr(`${h} godz. temu`, `${h} h ago`);
+  const dd = Math.round(h / 24); return dd === 1 ? hgTr('wczoraj', 'yesterday') : hgTr(`${dd} dni temu`, `${dd} days ago`);
 };
-const hgTime = (d) => d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+const hgTime = (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' });
 const hgDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const hgZoneName = (hass, st) => {
-  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || 'W domu';
-  if (st === 'not_home') return 'Poza strefami'; if (st === 'unknown' || st === 'unavailable') return 'Nieznana lokalizacja'; return st;
+  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || hgTr('W domu', 'Home');
+  if (st === 'not_home') return hgTr('Poza strefami', 'Away'); if (st === 'unknown' || st === 'unavailable') return hgTr('Nieznana lokalizacja', 'Unknown location'); return st;
 };
 
 /* --- mapa: natywna karta HA w szklanym kontenerze --- */
 class HGMapCard extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
   setConfig(c) {
-    this._config = Object.assign({ title: 'Mapa', icon: 'mdi:map-outline', entities: [], theme_mode: 'dark', hours_to_show: 0 }, c);
+    this._config = Object.assign({ title: hgTr('Mapa', 'Map'), icon: 'mdi:map-outline', entities: [], theme_mode: 'dark', hours_to_show: 0 }, c);
     const sr = this.shadowRoot;
     sr.innerHTML = `<style>${HG_BASE}${U(`
 ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) var(--s2); gap:var(--s2); }
@@ -25,7 +25,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
 .mw{ position:relative; flex:1; min-height:220u; border-radius:var(--r-sm); overflow:hidden; background:#e9e5df;
   --ha-card-border-radius: 0; --ha-card-box-shadow: none; --ha-card-border-width: 0; }
 .mw > *{ position:absolute; inset:0; display:block; height:100%; }
-`)}</style><ha-card class="glass"><div class="hd">${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._config.title)}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} os. · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} strefy</span></div><div class="mw"></div></ha-card>`;
+`)}</style><ha-card class="glass"><div class="hd">${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._config.title)}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} ${hgTr('os.', 'people')} · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} ${hgTr('strefy', 'zones')}</span></div><div class="mw"></div></ha-card>`;
     this._mw = sr.querySelector('.mw');
     this._make();
   }
@@ -40,7 +40,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
     const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
     if (mk !== this._mk) return;
     let el;
-    try { el = helpers.createCardElement(conf); } catch (e) { this._mw.innerHTML = `<div class="ph"><b>Mapa niedostępna</b>${H.esc(e.message)}</div>`; return; }
+    try { el = helpers.createCardElement(conf); } catch (e) { this._mw.innerHTML = `<div class="ph"><b>${hgTr('Mapa niedostępna', 'Map unavailable')}</b>${H.esc(e.message)}</div>`; return; }
     el.layout = 'grid'; el.setAttribute('layout', 'grid');
     this._map = el; if (this._hass) el.hass = this._hass;
     this._mw.appendChild(el);
@@ -68,7 +68,7 @@ hgReg('hg-map-card', HGMapCard, 'Home Glass – Mapa', 'Natywna mapa HA w szklan
 
 /* --- lista osób + strefy --- */
 class HGPeopleCard extends HGBase {
-  defaults() { return { title: 'Domownicy', icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
+  defaults() { return { title: hgTr('Domownicy', 'Household'), icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
   ents() { return this._config.persons.concat(this._config.zones); }
   _extraSig() { return Math.floor(Date.now() / 60000); }
   css() {
@@ -97,13 +97,13 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
     const rows = c.persons.map((e) => {
       const s = H.st(h, e); if (!s) return '';
       const home = s.state === 'home', since = new Date(s.last_changed);
-      return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – szczegóły">${hgAvatar(h, e, 'av')}
-        <div class="tx"><b>${H.esc(s.attributes.friendly_name)}</b><span title="Ostatnia zmiana: ${H.esc(since.toLocaleString('pl-PL'))}">${H.icon(home ? 'mdi:home-outline' : s.state === 'not_home' ? 'mdi:map-marker-outline' : 'mdi:map-marker-radius-outline')}${H.esc(hgZoneName(h, s.state))} <em>· ${hgRel(since)}</em></span></div></button>`;
+      return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – ${hgTr('szczegóły', 'details')}">${hgAvatar(h, e, 'av')}
+        <div class="tx"><b>${H.esc(s.attributes.friendly_name)}</b><span title="${hgTr('Ostatnia zmiana', 'Last changed')}: ${H.esc(since.toLocaleString(HG_LOC()))}">${H.icon(home ? 'mdi:home-outline' : s.state === 'not_home' ? 'mdi:map-marker-outline' : 'mdi:map-marker-radius-outline')}${H.esc(hgZoneName(h, s.state))} <em>· ${hgRel(since)}</em></span></div></button>`;
     }).join('');
     const zs = c.zones.map((z) => { const s = H.st(h, z); if (!s) return ''; const n = Number(s.state) || 0;
-      return `<button class="z ${n ? 'has' : ''}" data-act="more" data-e="${z}" title="${H.esc(s.attributes.friendly_name)}: ${n} os.">${H.esc(s.attributes.friendly_name)}<i>${n}</i></button>`; }).join('');
+      return `<button class="z ${n ? 'has' : ''}" data-act="more" data-e="${z}" title="${H.esc(s.attributes.friendly_name)}: ${n} ${hgTr('os.', 'people')}">${H.esc(s.attributes.friendly_name)}<i>${n}</i></button>`; }).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
-      <div class="lst">${rows}</div>${zs ? `<div class="sec">Strefy</div><div class="zs">${zs}</div>` : ''}</ha-card>`;
+      <div class="lst">${rows}</div>${zs ? `<div class="sec">${hgTr('Strefy', 'Zones')}</div><div class="zs">${zs}</div>` : ''}</ha-card>`;
   }
   onAct(a, el) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: el.dataset.e }); }
 }
@@ -116,16 +116,16 @@ const HGCal = {
     const ad = !!(e.start && e.start.date && !e.start.dateTime);
     const s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime || e.start);
     const en = ad ? new Date((e.end && e.end.date ? e.end.date : e.start.date) + 'T00:00:00') : new Date((e.end && (e.end.dateTime || e.end)) || s);
-    return { title: e.summary || '(bez tytułu)', start: s, end: en, allDay: ad, loc: e.location || '', cal };
+    return { title: e.summary || hgTr('(bez tytułu)', '(untitled)'), start: s, end: en, allDay: ad, loc: e.location || '', cal };
   },
   async fetch(hass, cals, start, end) {
     const key = cals.map((c) => c.entity).join(',') + start.toISOString() + end.toISOString();
     const hit = this.cache[key]; if (hit && Date.now() - hit.t < 300000) return hit.p;
     const p = Promise.all(cals.map(async (c) => {
       const s = H.st(hass, c.entity);
-      if (!s || s.state === 'unavailable') return { cal: c, err: 'niedostępny', ev: [] };
+      if (!s || s.state === 'unavailable') return { cal: c, err: hgTr('niedostępny', 'unavailable'), ev: [] };
       try { const r = await hass.callApi('GET', `calendars/${c.entity}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
-        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: 'błąd pobierania', ev: [] }; }
+        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: hgTr('błąd pobierania', 'fetch error'), ev: [] }; }
     }));
     this.cache[key] = { t: Date.now(), p }; return p;
   },
@@ -134,11 +134,12 @@ const HGCal = {
       o.color = o.color || HG_PAL[i % HG_PAL.length]; const s = H.st(hass, o.entity); o.name = o.name || (s ? s.attributes.friendly_name : o.entity); return o; });
   },
 };
-const HG_MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+const HG_MONTHS = () => hgTr(['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'],
+  ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']);
 
 /* --- mini-kalendarz miesiąca --- */
 class HGMonthCard extends HGBase {
-  defaults() { return { title: 'Kalendarz', icon: 'mdi:calendar-blank-outline', calendars: [] }; }
+  defaults() { return { title: hgTr('Kalendarz', 'Calendar'), icon: 'mdi:calendar-blank-outline', calendars: [] }; }
   ents() { return this._config.calendars.map((c) => (typeof c === 'string' ? c : c.entity)); }
   _extraSig() { return [this._off || 0, this._sel || '', this._n || 0, hgDayKey(new Date())]; }
   css() {
@@ -183,25 +184,25 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
       for (let i = 0; i < 62 && d <= last; i++) { (byDay[hgDayKey(d)] = byDay[hgDayKey(d)] || []).push(e); d.setDate(d.getDate() + 1); }
     }
     const first = (base.getDay() + 6) % 7, start = new Date(y, m, 1 - first);
-    let cells = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((d) => `<div class="wd">${d}</div>`).join('');
+    let cells = hgTr(['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'], ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']).map((d) => `<div class="wd">${d}</div>`).join('');
     const today = hgDayKey(now), sel = this._sel || today;
     for (let i = 0; i < 42; i++) {
       const d = new Date(start); d.setDate(start.getDate() + i); const k = hgDayKey(d), ev = byDay[k] || [];
       const cols = [...new Set(ev.map((e) => e.cal.color))].slice(0, 3);
-      cells += `<button class="d ${d.getMonth() !== m ? 'o' : ''} ${k === today ? 't' : ''} ${k === sel ? 's' : ''}" data-act="day" data-k="${k}" aria-label="${d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })}${ev.length ? `, wydarzenia: ${ev.length}` : ''}">
+      cells += `<button class="d ${d.getMonth() !== m ? 'o' : ''} ${k === today ? 't' : ''} ${k === sel ? 's' : ''}" data-act="day" data-k="${k}" aria-label="${d.toLocaleDateString(HG_LOC(), { day: 'numeric', month: 'long' })}${ev.length ? hgTr(`, wydarzenia: ${ev.length}`, `, events: ${ev.length}`) : ''}">
         <span>${d.getDate()}</span><div class="ds">${cols.map((cl) => `<i style="background:${cl}"></i>`).join('')}</div></button>`;
     }
     const leg = (res || HGCal.cals(this._hass, c.calendars).map((cal) => ({ cal }))).map((r) => `<span class="${r.err ? 'x' : ''}" title="${H.esc(r.cal.entity)}${r.err ? ' – ' + r.err : ''}"><i style="background:${r.err ? '#C9CCD0' : r.cal.color}"></i>${H.esc(r.cal.name)}</span>`).join('');
     const sd = new Date(sel + 'T00:00:00'), sev = (byDay[sel] || []).slice().sort((a, b) => a.start - b.start);
     const inMonth = sd.getMonth() === m && sd.getFullYear() === y;
-    const dl = inMonth ? `<div class="dl"><h4>${H.esc(sd.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>
-      ${sev.length ? sev.map((e) => `<div class="ev"><i style="background:${e.cal.color}"></i><small>${e.allDay ? 'cały dzień' : hgTime(e.start)}</small><span>${H.esc(e.title)}</span></div>`).join('') : `<div class="none">${res ? 'Brak wydarzeń' : 'Wczytywanie…'}</div>`}</div>` : '';
-    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>Brak kalendarzy</b>Dodaj integrację kalendarza w Home Assistant.</div></ha-card>`;
+    const dl = inMonth ? `<div class="dl"><h4>${H.esc(sd.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>
+      ${sev.length ? sev.map((e) => `<div class="ev"><i style="background:${e.cal.color}"></i><small>${e.allDay ? hgTr('cały dzień', 'all day') : hgTime(e.start)}</small><span>${H.esc(e.title)}</span></div>`).join('') : `<div class="none">${res ? hgTr('Brak wydarzeń', 'No events') : hgTr('Wczytywanie…', 'Loading…')}</div>`}</div>` : '';
+    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Brak kalendarzy', 'No calendars')}</b>${hgTr('Dodaj integrację kalendarza w Home Assistant.', 'Add a calendar integration in Home Assistant.')}</div></ha-card>`;
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-        <button class="ib" data-act="open" aria-label="Otwórz kalendarz HA" title="Otwórz kalendarz Home Assistant">${H.icon('mdi:arrow-expand')}</button></div>
-      <div class="mh"><b>${HG_MONTHS[m]} ${y}</b><button class="ib" data-act="prev" aria-label="Poprzedni miesiąc" title="Poprzedni miesiąc">${H.icon('mdi:chevron-left')}</button>
-        <button class="ib" data-act="today" aria-label="Dziś" title="Dziś">${H.icon('mdi:calendar-today-outline')}</button>
-        <button class="ib" data-act="next" aria-label="Następny miesiąc" title="Następny miesiąc">${H.icon('mdi:chevron-right')}</button></div>
+        <button class="ib" data-act="open" aria-label="${hgTr('Otwórz kalendarz HA', 'Open HA calendar')}" title="${hgTr('Otwórz kalendarz Home Assistant', 'Open Home Assistant calendar')}">${H.icon('mdi:arrow-expand')}</button></div>
+      <div class="mh"><b>${HG_MONTHS()[m]} ${y}</b><button class="ib" data-act="prev" aria-label="${hgTr('Poprzedni miesiąc', 'Previous month')}" title="${hgTr('Poprzedni miesiąc', 'Previous month')}">${H.icon('mdi:chevron-left')}</button>
+        <button class="ib" data-act="today" aria-label="${hgTr('Dziś', 'Today')}" title="${hgTr('Dziś', 'Today')}">${H.icon('mdi:calendar-today-outline')}</button>
+        <button class="ib" data-act="next" aria-label="${hgTr('Następny miesiąc', 'Next month')}" title="${hgTr('Następny miesiąc', 'Next month')}">${H.icon('mdi:chevron-right')}</button></div>
       <div class="g">${cells}</div><div class="leg">${leg}</div>${dl}</ha-card>`;
   }
   onAct(a, el) {
@@ -215,7 +216,7 @@ hgReg('hg-month-card', HGMonthCard, 'Home Glass – Miesiąc', 'Mini-kalendarz m
 
 /* --- agenda: najbliższe wydarzenia pogrupowane po dniach --- */
 class HGAgendaCard extends HGBase {
-  defaults() { return { title: 'Nadchodzące', icon: 'mdi:format-list-bulleted', calendars: [], days: 60 }; }
+  defaults() { return { title: hgTr('Nadchodzące', 'Upcoming'), icon: 'mdi:format-list-bulleted', calendars: [], days: 60 }; }
   ents() { return this._config.calendars.map((c) => (typeof c === 'string' ? c : c.entity)); }
   _extraSig() { return [this._n || 0, hgDayKey(new Date())]; }
   css() {
@@ -239,22 +240,22 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
   }
   render() {
     const c = this._config;
-    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>Brak kalendarzy</b>Nie znaleziono encji calendar.*</div></ha-card>`;
+    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Brak kalendarzy', 'No calendars')}</b>${hgTr('Nie znaleziono encji calendar.*', 'No calendar.* entities found')}</div></ha-card>`;
     this._load();
-    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><small class="note" style="margin-left:4u">${c.days} dni</small></div>`;
-    if (!this._res) return `<ha-card class="glass">${hd}<div class="none">Wczytywanie…</div></ha-card>`;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><small class="note" style="margin-left:4u">${hgTr(`${c.days} dni`, `${c.days} days`)}</small></div>`;
+    if (!this._res) return `<ha-card class="glass">${hd}<div class="none">${hgTr('Wczytywanie…', 'Loading…')}</div></ha-card>`;
     const now = new Date(), t0 = new Date(now); t0.setHours(0, 0, 0, 0);
     const ev = this._res.flatMap((r) => r.ev).filter((e) => (e.allDay ? e.end > t0 : e.end >= now)).sort((a, b) => a.start - b.start);
     const groups = {};
     for (const e of ev) { const d = e.start < t0 ? t0 : e.start; (groups[hgDayKey(d)] = groups[hgDayKey(d)] || []).push(e); }
     const tom = new Date(t0); tom.setDate(tom.getDate() + 1);
-    const lbl = (k) => { const d = new Date(k + 'T00:00:00'); const pre = k === hgDayKey(t0) ? 'Dziś' : k === hgDayKey(tom) ? 'Jutro' : '';
-      return `${pre ? `<em>${pre}</em>` : ''}${H.esc(d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}`; };
+    const lbl = (k) => { const d = new Date(k + 'T00:00:00'); const pre = k === hgDayKey(t0) ? hgTr('Dziś', 'Today') : k === hgDayKey(tom) ? hgTr('Jutro', 'Tomorrow') : '';
+      return `${pre ? `<em>${pre}</em>` : ''}${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}`; };
     const body = Object.keys(groups).map((k) => `<div class="day"><h4>${lbl(k)}</h4>${groups[k].map((e) => `<div class="ev lr" title="${H.esc(e.cal.name)}"><i style="background:${e.cal.color}"></i>
-      <span class="tm">${e.allDay ? 'cały dzień' : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(e.title)}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
+      <span class="tm">${e.allDay ? hgTr('cały dzień', 'all day') : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(e.title)}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
     const errs = this._res.filter((r) => r.err).map((r) => r.cal.name);
-    return `<ha-card class="glass">${hd}${body || `<div class="none">Brak wydarzeń w najbliższych ${c.days} dniach.</div>`}
-      ${errs.length ? `<div class="note" style="margin-top:8u">Niedostępne: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
+    return `<ha-card class="glass">${hd}${body || `<div class="none">${hgTr(`Brak wydarzeń w najbliższych ${c.days} dniach.`, `No events in the next ${c.days} days.`)}</div>`}
+      ${errs.length ? `<div class="note" style="margin-top:8u">${hgTr('Niedostępne', 'Unavailable')}: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
   }
 }
 hgReg('hg-agenda-card', HGAgendaCard, 'Home Glass – Agenda', 'Nadchodzące wydarzenia pogrupowane po dniach');

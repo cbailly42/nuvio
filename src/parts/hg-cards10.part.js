@@ -9,7 +9,11 @@ const HG_WX_COND = {
   'lightning-rainy': ['Burza z deszczem', 'thunderstorms-rain', 'thunderstorms-rain'], windy: ['Wietrznie', 'wind', 'wind'], 'windy-variant': ['Wietrznie, pochmurno', 'wind', 'wind'],
   exceptional: ['Zjawisko wyjątkowe', 'not-available', 'not-available'],
 };
-const HG_WX_SHORT = { 'Częściowe zachmurzenie': 'Częś. zachm.', 'Deszcz ze śniegiem': 'Deszcz/śnieg', 'Burza z deszczem': 'Burza, deszcz', 'Wietrznie, pochmurno': 'Wietrznie', 'Zjawisko wyjątkowe': 'Wyjątkowe' };
+/* etykiety EN (HG_WX_COND[x][0] to PL); wybór przy użyciu: HGWx.cn() */
+const HG_WX_COND_EN = { 'clear-night': 'Clear', sunny: 'Sunny', partlycloudy: 'Partly cloudy', cloudy: 'Cloudy', fog: 'Fog', rainy: 'Rain', pouring: 'Pouring', snowy: 'Snow', 'snowy-rainy': 'Sleet', hail: 'Hail',
+  lightning: 'Thunderstorm', 'lightning-rainy': 'Thunderstorm, rain', windy: 'Windy', 'windy-variant': 'Windy, cloudy', exceptional: 'Exceptional' };
+const HG_WX_SHORT = { 'Częściowe zachmurzenie': 'Częś. zachm.', 'Deszcz ze śniegiem': 'Deszcz/śnieg', 'Burza z deszczem': 'Burza, deszcz', 'Wietrznie, pochmurno': 'Wietrznie', 'Zjawisko wyjątkowe': 'Wyjątkowe',
+  'Thunderstorm, rain': 'Storm, rain', 'Windy, cloudy': 'Windy', Thunderstorm: 'Storm' };
 const HGWx = {
   subs: new Map(),   // key entity|type -> { data, cbs:Set, unsub, pending }
   sub(hass, entity, type, cb) {
@@ -25,6 +29,7 @@ const HGWx = {
     s.cbs.add(cb); if (s.data) cb(s.data);
     return () => { s.cbs.delete(cb); if (!s.cbs.size && s.unsub) { s.unsub(); this.subs.delete(k); } };
   },
+  cn: (k) => (HG_WX_COND[k] ? hgTr(HG_WX_COND[k][0], HG_WX_COND_EN[k]) : k),
   still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
   icon(cfg, cond, night, anim) {
     const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
@@ -36,10 +41,10 @@ const HGWx = {
     if (t <= st[0][0]) return `rgb(${st[0][1]})`; if (t >= st[st.length - 1][0]) return `rgb(${st[st.length - 1][1]})`;
     for (let i = 1; i < st.length; i++) if (t <= st[i][0]) { const [a, ca] = st[i - 1], [b, cb] = st[i], k = (t - a) / (b - a); return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(',')})`; }
   },
-  hm: (d) => d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
+  hm: (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' }),
 };
 class HGWeatherCard extends HGBase {
-  defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: 'Na zewnątrz', icon_base: HG_ASSET + 'assets/meteocons/', icon_v: '1', variant: 'card' }; }
+  defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgTr('Na zewnątrz', 'Outside'), icon_base: HG_ASSET + 'assets/meteocons/', icon_v: '1', variant: 'card' }; }
   ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun].filter(Boolean); }
   _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
   setConfig(c) { const o = this._config; if (o && this._u && ((c && c.entity) || '') !== o.entity) { for (const u of this._u) u(); this._u = null; this._hourly = this._daily = this._hf = this._df = null; }
@@ -152,8 +157,8 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${Math.round(pp)}%</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' ' + pu : '') : ''}</i>` : '';
       const wn = wide && ws != null ? `<i class="wn">${H.icon('mdi:weather-windy')}${H.fmt(ws, 0)}</i>` : '';
       const mmx = wide && pp != null && mm != null && mm > 0 ? `<i class="wet">${H.fmt(mm, 1)} ${pu}</i>` : '';
-      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? 'Teraz' : 'Godz. ' + d.getHours()}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(f.temperature, 0)}°${pp != null ? `, opady ${Math.round(pp)}%` : mm != null ? `, opady ${H.fmt(mm, 1)} ${pu}` : ''}`)}">
-        <small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy" decoding="async"><b>${H.fmt(f.temperature, 0)}°</b>${pr}${mmx}${wn}</div>`;
+      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? hgTr('Teraz', 'Now') : hgTr('Godz. ', 'Hour ') + d.getHours()}: ${HGWx.cn(f.condition)}, ${H.fmt(f.temperature, 0)}°${pp != null ? hgTr(`, opady ${Math.round(pp)}%`, `, precipitation ${Math.round(pp)}%`) : mm != null ? hgTr(`, opady ${H.fmt(mm, 1)} ${pu}`, `, precipitation ${H.fmt(mm, 1)} ${pu}`) : ''}`)}">
+        <small>${i === 0 ? hgTr('Teraz', 'Now') : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy" decoding="async"><b>${H.fmt(f.temperature, 0)}°</b>${pr}${mmx}${wn}</div>`;
     }).join('');
   }
   _tline(hr) {
@@ -179,8 +184,8 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const svg = `<svg viewBox="0 -2 100 40" preserveAspectRatio="none" aria-hidden="true"><line class="hz" x1="0" y1="30" x2="100" y2="30"/><polyline class="arc" points="${pts.join(' ')}"/>${done.length ? `<polyline class="arcd" points="${done.join(' ')}"/>` : ''}
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${night ? '#9AA6C8' : 'var(--hg-accent)'}" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" transform="scale(1 1)"/></svg>`;
     const c = this._config, ri = `${c.icon_base}static/sunrise.svg?v=${c.icon_v}`, si = `${c.icon_base}static/sunset.svg?v=${c.icon_v}`;
-    const lab = (t) => { const d = new Date(t), today = new Date().toDateString() === d.toDateString(); return HGWx.hm(d) + (today ? '' : ' jutro'); };
-    return `<div class="sun" aria-label="${H.esc(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`)}"><span><img src="${ri}" alt=""><span><b>${HGWx.hm(new Date(r))}</b> wschód${new Date().toDateString() === new Date(r).toDateString() ? '' : ' (jutro)'}</span></span>${svg}<span><span><b>${HGWx.hm(new Date(st))}</b> zachód${new Date().toDateString() === new Date(st).toDateString() ? '' : ' (jutro)'}</span><img src="${si}" alt=""></span></div>`;
+    const lab = (t) => { const d = new Date(t), today = new Date().toDateString() === d.toDateString(); return HGWx.hm(d) + (today ? '' : hgTr(' jutro', ' tomorrow')); };
+    return `<div class="sun" aria-label="${H.esc(hgTr(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`, `Sunrise ${lab(r)}, sunset ${lab(st)}`))}"><span><img src="${ri}" alt=""><span><b>${HGWx.hm(new Date(r))}</b> ${hgTr('wschód', 'sunrise')}${new Date().toDateString() === new Date(r).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span></span>${svg}<span><span><b>${HGWx.hm(new Date(st))}</b> ${hgTr('zachód', 'sunset')}${new Date().toDateString() === new Date(st).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span><img src="${si}" alt=""></span></div>`;
   }
   _minmax() {
     const d0 = (this._daily || [])[0];
@@ -191,28 +196,28 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   render() {
     const h = this._hass, c = this._config, w = h.states[c.entity];
     if (c.variant === 'hero') return this._hero(w);
-    const hd = (inner) => `<div class="hd"><button class="hdb" data-act="more" aria-label="${H.esc(c.title + ' – szczegóły pogody')}">${H.icon('mdi:weather-partly-cloudy', 'ic')}<span class="tt">${H.esc(c.title)}</span></button>${inner || ''}</div>`;
-    if (!H.ok(w)) return `<ha-card class="glass">${hd()}<div class="ph">Pogoda niedostępna</div></ha-card>`;
-    const tn = this._tNow(), cond = HG_WX_COND[w.state] || [w.state], mm = this._minmax(), night = this._night(new Date());
+    const hd = (inner) => `<div class="hd"><button class="hdb" data-act="more" aria-label="${H.esc(c.title + hgTr(' – szczegóły pogody', ' – weather details'))}">${H.icon('mdi:weather-partly-cloudy', 'ic')}<span class="tt">${H.esc(c.title)}</span></button>${inner || ''}</div>`;
+    if (!H.ok(w)) return `<ha-card class="glass">${hd()}<div class="ph">${hgTr('Pogoda niedostępna', 'Weather unavailable')}</div></ha-card>`;
+    const tn = this._tNow(), cond = [HGWx.cn(w.state)], mm = this._minmax(), night = this._night(new Date());
     const hr = this._hrs();
-    const exp = `<button class="ib" data-act="expand" aria-label="Prognoza szczegółowa" title="Prognoza 24 h i dni">${H.icon('mdi:arrow-expand')}</button>`;
+    const exp = `<button class="ib" data-act="expand" aria-label="${hgTr('Prognoza szczegółowa', 'Detailed forecast')}" title="${hgTr('Prognoza 24 h i dni', '24 h and daily forecast')}">${H.icon('mdi:arrow-expand')}</button>`;
     return `<ha-card class="glass">${hd(exp)}
-      <div class="now"><img src="${HGWx.icon(c, w.state, night, true)}" alt="" decoding="async"><div class="cd"><b>${H.esc(cond[0])}</b>${mm ? `<span>Maks ${H.fmt(mm[0], 0)}° · Min ${mm[1] != null ? H.fmt(mm[1], 0) + '°' : '–'}</span>` : ''}</div>
-        ${tn ? `<div class="tn" title="${tn.src === 'sensor' ? 'Czujnik zewnętrzny' : 'Prognoza (brak czujnika)'}">${H.fmt(tn.v, Math.abs(tn.v) < 10 ? 1 : 0)}<sup>°</sup></div>` : ''}</div>
-      ${hr.length ? `<div class="strip" tabindex="0" aria-label="Prognoza godzinowa"><div class="hrs" role="list">${this._hourCells(hr, false)}</div>${this._tline(hr)}</div>` : ''}
+      <div class="now"><img src="${HGWx.icon(c, w.state, night, true)}" alt="" decoding="async"><div class="cd"><b>${H.esc(cond[0])}</b>${mm ? `<span>${hgTr('Maks', 'High')} ${H.fmt(mm[0], 0)}° · ${hgTr('Min', 'Low')} ${mm[1] != null ? H.fmt(mm[1], 0) + '°' : '–'}</span>` : ''}</div>
+        ${tn ? `<div class="tn" title="${tn.src === 'sensor' ? hgTr('Czujnik zewnętrzny', 'Outdoor sensor') : hgTr('Prognoza (brak czujnika)', 'Forecast (no sensor)')}">${H.fmt(tn.v, Math.abs(tn.v) < 10 ? 1 : 0)}<sup>°</sup></div>` : ''}</div>
+      ${hr.length ? `<div class="strip" tabindex="0" aria-label="${hgTr('Prognoza godzinowa', 'Hourly forecast')}"><div class="hrs" role="list">${this._hourCells(hr, false)}</div>${this._tline(hr)}</div>` : ''}
       ${this._sun()}</ha-card>`;
   }
   _hero(w) {
     const c = this._config;
     if (!H.ok(w)) return '';
-    const t = parseFloat(w.attributes.temperature), cond = (HG_WX_COND[w.state] || [w.state])[0], mm = this._minmax(), night = this._night(new Date());
-    const lbl = `Na zewnątrz: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, maks ${H.fmt(mm[0], 0)}°, min ${H.fmt(mm[1], 0)}°` : ''} – prognoza szczegółowa`;
+    const t = parseFloat(w.attributes.temperature), cond = HGWx.cn(w.state), mm = this._minmax(), night = this._night(new Date());
+    const lbl = hgTr(`Na zewnątrz: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, maks ${H.fmt(mm[0], 0)}°, min ${H.fmt(mm[1], 0)}°` : ''} – prognoza szczegółowa`, `Outside: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, high ${H.fmt(mm[0], 0)}°, low ${H.fmt(mm[1], 0)}°` : ''} – detailed forecast`);
     const chip = `<button class="chip" data-act="expand" aria-label="${H.esc(lbl)}" title="${H.esc(cond)}"><img src="${HGWx.icon(c, w.state, night, false)}" alt=""><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''}</b><span class="f">${H.esc(cond)}</span><span class="s">${H.esc(HG_WX_SHORT[cond] || cond)}</span></button>`;
     if (this.hasAttribute('compact')) return chip;
     const first = !this._shown, pu = this._pu(); this._shown = true;
     const nx = this._hrs().slice(1, 6).map((f) => { const d = new Date(f.datetime);
       return `<span class="hc"><small>${String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt=""><b>${H.fmt(f.temperature, 0)}°</b>${f.precipitation > 0 ? `<em>${H.fmt(f.precipitation, 1)} ${pu}</em>` : ''}</span>`; }).join('');
-    return `<button class="hero ${first && !HGWx.still() ? 'anim' : ''}" data-act="expand" aria-label="${H.esc(lbl)}" title="Prognoza szczegółowa">
+    return `<button class="hero ${first && !HGWx.still() ? 'anim' : ''}" data-act="expand" aria-label="${H.esc(lbl)}" title="${hgTr('Prognoza szczegółowa', 'Detailed forecast')}">
       <span class="big">${isFinite(t) ? H.fmt(t, 0) : '–'}<sup>°</sup><img src="${HGWx.icon(c, w.state, night, true)}" alt=""></span>
       <span class="cd2">${H.esc(cond)}</span>${mm ? `<span class="mm"><span><i>↑</i>${H.fmt(mm[0], 0)}°</span>${mm[1] != null ? `<span><i>↓</i>${H.fmt(mm[1], 0)}°</span>` : ''}</span>` : ''}${nx ? `<span class="nx" aria-hidden="true">${nx}</span>` : ''}</button>`;
   }
@@ -315,41 +320,41 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   _xUpd() {
     if (!this._x) return;
     const c = this._config, h = this._hass, w = h.states[c.entity]; if (!w) return;
-    const at = w.attributes, pu = at.precipitation_unit || 'mm', cond = (HG_WX_COND[w.state] || [w.state])[0], t = parseFloat(at.temperature), night = this._night(new Date());
-    const DN = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-    const dl = (d) => { const t0 = new Date(); t0.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0); const n = Math.round((dd - t0) / 86400000); return n === 0 ? 'Dziś' : n === 1 ? 'Jutro' : DN[dd.getDay()]; };
+    const at = w.attributes, pu = at.precipitation_unit || 'mm', cond = HGWx.cn(w.state), t = parseFloat(at.temperature), night = this._night(new Date());
+    const DN = hgTr(['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'], ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']), TD = hgTr('Dziś', 'Today');
+    const dl = (d) => { const t0 = new Date(); t0.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0); const n = Math.round((dd - t0) / 86400000); return n === 0 ? TD : n === 1 ? hgTr('Jutro', 'Tomorrow') : DN[dd.getDay()]; };
     // kafle szczegółów (tylko prawdziwe atrybuty)
     const WD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], wd = at.wind_bearing == null || at.wind_bearing === '' ? '' : isFinite(at.wind_bearing) ? WD[((Math.round(at.wind_bearing / 45) % 8) + 8) % 8] : String(at.wind_bearing);
-    const det = [at.humidity != null ? ['mdi:water-percent', 'Wilgotność', H.fmt(at.humidity, 0), '%'] : null,
-      at.wind_speed != null ? ['mdi:weather-windy', 'Wiatr', H.fmt(at.wind_speed, 0), `${at.wind_speed_unit || 'km/h'}${wd ? ' ' + wd : ''}`] : null,
-      at.pressure != null ? ['mdi:gauge', 'Ciśnienie', H.fmt(at.pressure, 0), at.pressure_unit || 'hPa'] : null,
+    const det = [at.humidity != null ? ['mdi:water-percent', hgTr('Wilgotność', 'Humidity'), H.fmt(at.humidity, 0), '%'] : null,
+      at.wind_speed != null ? ['mdi:weather-windy', hgTr('Wiatr', 'Wind'), H.fmt(at.wind_speed, 0), `${at.wind_speed_unit || 'km/h'}${wd ? ' ' + wd : ''}`] : null,
+      at.pressure != null ? ['mdi:gauge', hgTr('Ciśnienie', 'Pressure'), H.fmt(at.pressure, 0), at.pressure_unit || 'hPa'] : null,
       at.uv_index != null ? ['mdi:white-balance-sunny', 'UV', H.fmt(at.uv_index, 1), ''] : null].filter(Boolean)
       .map(([i, l, v, u]) => `<div class="t"><span>${H.icon(i)}${l}</span><b>${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</b></div>`).join('');
     // godziny
     const hr = this._hrs();
     const hrs = hr.map((f, i) => { const d = new Date(f.datetime);
-      return `<div class="hc ${i === 0 ? 'nw' : ''}"><small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy"><b>${H.fmt(f.temperature, 0)}°</b>
+      return `<div class="hc ${i === 0 ? 'nw' : ''}"><small>${i === 0 ? hgTr('Teraz', 'Now') : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy"><b>${H.fmt(f.temperature, 0)}°</b>
         <span class="d" style="background:${HGWx.tcol(f.temperature)}"></span><i>${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</i></div>`; }).join('');
     // dni: pasek zakresu na wspólnej skali
     const D = (this._daily || []).slice(0, 7).filter((f) => f.temperature != null);
     const lo = Math.min(...D.map((f) => f.templow ?? f.temperature)), hi = Math.max(...D.map((f) => f.temperature)), sp = Math.max(1, hi - lo);
-    const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === 'Dziś';
+    const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === TD;
       const nowDot = isT && isFinite(t) ? `<u style="left:${Math.max(0, Math.min(100, ((t - lo) / sp) * 100)).toFixed(1)}%"></u>` : '';
-      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(a, 0)}° do ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, opady ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`)}">
-        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc((HG_WX_COND[f.condition] || [f.condition])[0])}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
+      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${HGWx.cn(f.condition)}, ${H.fmt(a, 0)}° ${hgTr('do', 'to')} ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, ${hgTr('opady', 'precipitation')} ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`)}">
+        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc(HGWx.cn(f.condition))}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
         <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
     // słońce
     const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static/${n}.svg?v=${c.icon_v}`;
-    const se = (o, lab, icn) => o ? `<div class="e"><img src="${ic(icn)}" alt=""><b>${HGWx.hm(new Date(o.t))}</b><span>${lab}${o.tm ? ' jutro' : ''}</span></div>` : '<div></div>';
-    this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="Pogoda – szczegóły">
-      <div class="top"><img src="${HGWx.icon(c, w.state, night, true)}" alt=""><div class="tx"><small>${H.esc(c.title)}</small><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''} <span>· ${H.esc(cond)}</span></b></div><button class="cls" data-act="xclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+    const se = (o, lab, icn) => o ? `<div class="e"><img src="${ic(icn)}" alt=""><b>${HGWx.hm(new Date(o.t))}</b><span>${lab}${o.tm ? hgTr(' jutro', ' tomorrow') : ''}</span></div>` : '<div></div>';
+    this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="${hgTr('Pogoda – szczegóły', 'Weather – details')}">
+      <div class="top"><img src="${HGWx.icon(c, w.state, night, true)}" alt=""><div class="tx"><small>${H.esc(c.title)}</small><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''} <span>· ${H.esc(cond)}</span></b></div><button class="cls" data-act="xclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       ${det ? `<div class="det">${det}</div>` : ''}
-      ${hrs ? `<div class="sec"><div class="sh">Najbliższe ${hr.length} h</div><div class="hs" tabindex="0" aria-label="Prognoza godzinowa"><div class="hr">${hrs}</div></div></div>` : ''}
-      ${days ? `<div class="sec"><div class="sh">Kolejne dni</div><div class="days">${days}</div></div>` : ''}
-      ${st && (st.rise || st.set) ? `<div class="sec"><div class="sh">Słońce</div><div class="sun">${se(st.rise, 'wschód', 'sunrise')}${svg || '<div></div>'}${se(st.set, 'zachód', 'sunset')}</div></div>` : ''}</div>`;
+      ${hrs ? `<div class="sec"><div class="sh">${hgTr(`Najbliższe ${hr.length} h`, `Next ${hr.length} h`)}</div><div class="hs" tabindex="0" aria-label="${hgTr('Prognoza godzinowa', 'Hourly forecast')}"><div class="hr">${hrs}</div></div></div>` : ''}
+      ${days ? `<div class="sec"><div class="sh">${hgTr('Kolejne dni', 'Next days')}</div><div class="days">${days}</div></div>` : ''}
+      ${st && (st.rise || st.set) ? `<div class="sec"><div class="sh">${hgTr('Słońce', 'Sun')}</div><div class="sun">${se(st.rise, hgTr('wschód', 'sunrise'), 'sunrise')}${svg || '<div></div>'}${se(st.set, hgTr('zachód', 'sunset'), 'sunset')}</div></div>` : ''}</div>`;
     const cl = this._x.shadowRoot.querySelector('.cls'); if (cl && !this._xFocused) { this._xFocused = true; cl.focus(); }
   }
   _closeX() { if (!this._x) return; this._x.remove(); this._x = null; this._xFocused = false; document.removeEventListener('keydown', this._xKey); }
   getCardSize() { return 5; }
 }
-hgReg('hg-weather-card', HGWeatherCard, 'Home Glass – Pogoda', 'Na zewnątrz: teraz, prognoza godzinowa, słońce; szczegóły z dniami');
+hgReg('hg-weather-card', HGWeatherCard, hgTr('Home Glass – Pogoda', 'Home Glass – Weather'), hgTr('Na zewnątrz: teraz, prognoza godzinowa, słońce; szczegóły z dniami', 'Outside: now, hourly forecast, sun; details with daily forecast'));

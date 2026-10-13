@@ -153,18 +153,20 @@ class HGPage extends HTMLElement {
   static getStubConfig() { return { view: 'dashboard', cards: [] }; }
   setConfig(c) {
     this._config = Object.assign({
-      view: 'dashboard', brand: 'Dom', title: 'Witaj, {name}!', subtitle: 'Steruj domem w jednym miejscu',
+      view: 'dashboard',   /* brand / title / subtitle: domyślne zależne od języka w miejscu użycia (_paintTop, _paintHead) */
       user: {}, tabs: [], rail: [], hub: null, toolbar: true, back: { back: true, fallback: '/' },
       panel: { columns: '1fr 1fr', rows: '150fr 92fr 48fr 152fr', areas: null, width: 438 }, cards: [], persons: [],
       notifications_action: { notifications: true }, mail_action: { notifications: true },
       menu: [], storage_key: 'home-glass', zoom: { min: 0.8, max: 1.3, step: 0.1 },
     }, c);
+    if (this._config._hgLang) window.__hgLang = this._config._hgLang;   /* język wybrany w strategii (kreator / opcja language) */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
     this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
     if (this._hass) this._build();
   }
   set hass(h) {
+    window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
@@ -365,12 +367,12 @@ class HGPage extends HTMLElement {
       <div class="page">
         <header class="top"></header>
         <section class="head"></section>
-        <nav class="rail" aria-label="Sekcje"></nav>
+        <nav class="rail" aria-label="${hgTr('Sekcje', 'Sections')}"></nav>
         <main class="panel" aria-label="${H.esc(c.view)}"></main>
         <div class="tools" role="toolbar"></div>
         <aside class="hub"></aside>
-        <button class="more" data-act="pmore" hidden aria-label="Przewiń w dół" title="Więcej poniżej">${H.icon('mdi:chevron-down')}</button>
-        ${c.back ? `<button class="back" data-act="back" aria-label="Wstecz" title="Wstecz">${H.icon('mdi:chevron-left')}</button>` : ''}
+        <button class="more" data-act="pmore" hidden aria-label="${hgTr('Przewiń w dół', 'Scroll down')}" title="${hgTr('Więcej poniżej', 'More below')}">${H.icon('mdi:chevron-down')}</button>
+        ${c.back ? `<button class="back" data-act="back" aria-label="${hgTr('Wstecz', 'Back')}" title="${hgTr('Wstecz', 'Back')}">${H.icon('mdi:chevron-left')}</button>` : ''}
       </div>
       <div class="layer menu-l"></div><div class="layer sheet-l"></div>`;
     this._menuL = sr.querySelector('.menu-l'); this._sheetL = sr.querySelector('.sheet-l');
@@ -495,7 +497,7 @@ class HGPage extends HTMLElement {
       this._pe = [u.id, pe || null];
     }
     const pe = this._pe[1] ? { entity_id: this._pe[1] } : null;
-    const full = c.user.full_name || u.name || 'Użytkownik';
+    const full = c.user.full_name || u.name || hgTr('Użytkownik', 'User');
     const first = c.user.name || full.split(/\s+/)[0];
     const handle = c.user.handle || '@' + first.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9_]/g, '_');
     return { full, first, handle, person: c.user.person || (pe && pe.entity_id) };
@@ -503,8 +505,8 @@ class HGPage extends HTMLElement {
   /* nagłówek widoku pokoju: przycisk „Pokoje”, ikona i nazwa pokoju, temperatura / wilgotność (adres ?area=<id>) */
   _roomHead() {
     const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()];
-    const back = `<button class="rback" data-act="roomback" aria-label="Wróć do pokoi">${H.icon('mdi:chevron-left')}<span>Pokoje</span></button>`;
-    if (!a) return `${back}<h1>Pokój</h1><p>Nie znaleziono pokoju</p>`;
+    const back = `<button class="rback" data-act="roomback" aria-label="${hgTr('Wróć do pokoi', 'Back to rooms')}">${H.icon('mdi:chevron-left')}<span>${hgTr('Pokoje', 'Rooms')}</span></button>`;
+    if (!a) return `${back}<h1>${hgTr('Pokój', 'Room')}</h1><p>${hgTr('Nie znaleziono pokoju', 'Room not found')}</p>`;
     const env = HGAreas.env(h, a), S = a.sec || {}, okS = (e) => H.ok(h.states[e]);
     // hero: duża temperatura + wilgotność; obok stan pokoju (obecność, włączone światła, otwarte drzwi/okna) – tylko z prawdziwych encji
     const big = env.t != null ? `<span class="rt">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}<sup>°</sup></span>` : '';
@@ -512,17 +514,18 @@ class HGPage extends HTMLElement {
     const occ = (S.mot || []).filter(okS), occOn = occ.some((e) => h.states[e].state === 'on');
     const lOn = (S.light || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
     const opn = (S.door || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
-    const pills = [occ.length ? `<span class="rp ${occOn ? 'on' : ''}"><i></i>${occOn ? 'Ktoś jest' : 'Pusto'}</span>` : '',
-      lOn ? `<span class="rp lt">${H.icon('mdi:lightbulb-on')}${hgPl(lOn, 'światło', 'światła', 'świateł')}</span>` : '',
-      opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? 'Otwarte' : `${opn} otwarte`}</span>` : ''].join('');
-    const sub = big || hum || pills ? `${big}${hum}${pills ? `<span class="rps">${pills}</span>` : ''}` : `<span>${a.devN ? hgPl(a.devN, 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak urządzeń'}</span>`;
+    const en = hgCurLang() === 'en', pl = (n, one, few, many, eo, em) => (en ? `${n} ${n === 1 ? eo : em}` : hgPl(n, one, few, many));
+    const pills = [occ.length ? `<span class="rp ${occOn ? 'on' : ''}"><i></i>${occOn ? hgTr('Ktoś jest', 'Occupied') : hgTr('Pusto', 'Clear')}</span>` : '',
+      lOn ? `<span class="rp lt">${H.icon('mdi:lightbulb-on')}${pl(lOn, 'światło', 'światła', 'świateł', 'light on', 'lights on')}</span>` : '',
+      opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? hgTr('Otwarte', 'Open') : hgTr(`${opn} otwarte`, `${opn} open`)}</span>` : ''].join('');
+    const sub = big || hum || pills ? `${big}${hum}${pills ? `<span class="rps">${pills}</span>` : ''}` : `<span>${a.devN ? pl(a.devN, 'urządzenie', 'urządzenia', 'urządzeń', 'device', 'devices') : hgTr('Brak urządzeń', 'No devices')}</span>`;
     return `${back}<h1 class="rh">${H.icon(a.icon, 'rhi')}<span>${H.esc(a.name)}</span></h1><p class="renv">${sub}</p>`;
   }
   _paintHead() {
     const c = this._config; if (!this._hass) return;
     if (c.room_head) { this._setHTML(this._headEl, this._roomHead()); return; }
     const ui = this._userInfo();
-    this._headEl.innerHTML = `<h1>${H.esc(c.title.replace('{name}', ui.first))}</h1><p>${H.esc(c.subtitle)}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? '<div class="fuel" role="list" aria-label="Ceny paliw"></div>' : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    this._headEl.innerHTML = `<h1>${H.esc((c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')).replace('{name}', ui.first))}</h1><p>${H.esc(c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place'))}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
     this._placeWx();
   }
@@ -546,9 +549,9 @@ class HGPage extends HTMLElement {
       const ch = H.st(this._hass, f.change), ca = (H.ok(ch) && ch.attributes) || {};
       const gr = Number(ca.roznica_gr), known = H.ok(ch) && isFinite(gr) && ca.cena_jutro != null;
       const dir = !known || gr === 0 ? 'eq' : gr > 0 ? 'up' : 'dn';
-      const price = `${v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
-      const tom = !known ? 'jutro: brak danych' : gr === 0 ? 'jutro bez zmian' : `jutro ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`;
-      chips.push(`<button class="fc" role="listitem" data-act="fuel" data-e="${H.esc(f.entity)}" title="${H.esc(`${f.label} ${price}/l · ${tom}`)}" aria-label="${H.esc(`${f.label} ${price} za litr, ${tom}`)}"><span class="fl ${H.esc(String(f.label).replace(/\W/g, '').toLowerCase())}">${H.esc(String(f.label).toUpperCase())}</span><b>${price}</b><i class="tr ${dir}" aria-hidden="true">${H.icon(dir === 'up' ? 'mdi:arrow-up' : dir === 'dn' ? 'mdi:arrow-down' : 'mdi:minus')}</i></button>`);
+      const price = `${v.toLocaleString(HG_LOC(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
+      const tom = !known ? hgTr('jutro: brak danych', 'tomorrow: no data') : gr === 0 ? hgTr('jutro bez zmian', 'no change tomorrow') : hgTr(`jutro ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`, `tomorrow ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`);
+      chips.push(`<button class="fc" role="listitem" data-act="fuel" data-e="${H.esc(f.entity)}" title="${H.esc(`${f.label} ${price}/l · ${tom}`)}" aria-label="${H.esc(hgTr(`${f.label} ${price} za litr, ${tom}`, `${f.label} ${price} per litre, ${tom}`))}"><span class="fl ${H.esc(String(f.label).replace(/\W/g, '').toLowerCase())}">${H.esc(String(f.label).toUpperCase())}</span><b>${price}</b><i class="tr ${dir}" aria-hidden="true">${H.icon(dir === 'up' ? 'mdi:arrow-up' : dir === 'dn' ? 'mdi:arrow-down' : 'mdi:minus')}</i></button>`);
     }
     el.hidden = !chips.length;
     if (force) el._hgHtml = null;
@@ -556,7 +559,7 @@ class HGPage extends HTMLElement {
   }
   _paintTop(force) {
     if (!this._built || !this._hass) return;
-    const c = this._config, ui = this._userInfo();
+    const c = this._config, ui = this._userInfo(), brand = c.brand ?? hgTr('Dom', 'Home');
     const path = location.pathname;
     const nCount = Object.keys(this._notif).length;
     const badgeOf = (t) => {
@@ -571,14 +574,14 @@ class HGPage extends HTMLElement {
     const ps = ui.person && H.st(this._hass, ui.person);
     const av = ps && ps.attributes.entity_picture ? hgAvatar(this._hass, ui.person, 'uav') : `<span class="uav ini">${H.esc(ui.first[0] || '?')}</span>`;
     this._setHTML(this._topEl, `
-      <button class="brand" data-act="nav" data-i="0" aria-label="${H.esc(c.brand)}">${HG_LOGO}<span>${H.esc(c.brand)}</span></button>
-      <div class="tabs" role="tablist">${tabs.map((t, i) => `<button role="tab" aria-selected="${!!t.act}" class="tab ${t.act ? 'act' : ''}" data-act="nav" data-i="${i}" title="${H.esc(t.label)}" aria-label="${H.esc(t.label)}">${t.icon ? H.icon(t.icon) : ''}<span class="tl">${H.esc(t.label)}</span>${t.b ? `<sup class="nb" aria-label="${t.b} aktywne">${t.b > 9 ? '9+' : t.b}</sup>` : ''}</button>`).join('')}<i class="ind" aria-hidden="true"></i></div>
+      <button class="brand" data-act="nav" data-i="0" aria-label="${H.esc(brand)}">${HG_LOGO}<span>${H.esc(brand)}</span></button>
+      <div class="tabs" role="tablist">${tabs.map((t, i) => `<button role="tab" aria-selected="${!!t.act}" class="tab ${t.act ? 'act' : ''}" data-act="nav" data-i="${i}" title="${H.esc(t.label)}" aria-label="${H.esc(t.label)}">${t.icon ? H.icon(t.icon) : ''}<span class="tl">${H.esc(t.label)}</span>${t.b ? `<sup class="nb" aria-label="${hgTr(`${t.b} aktywne`, `${t.b} active`)}">${t.b > 9 ? '9+' : t.b}</sup>` : ''}</button>`).join('')}<i class="ind" aria-hidden="true"></i></div>
       <div class="right">
-        ${this._isAdmin() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? 'Zakończ edycję układu' : 'Edytuj układ'}" title="${this._editing ? 'Gotowe' : 'Edytuj układ'}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
-        <button class="cir" data-act="mail" aria-label="Wiadomości" title="Wiadomości i powiadomienia">${H.icon('mdi:email')}</button>
-        <button class="cir" data-act="bell" aria-label="Powiadomienia (${nCount})" title="Powiadomienia: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
+        ${this._isAdmin() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? hgTr('Zakończ edycję układu', 'Finish editing layout') : hgTr('Edytuj układ', 'Edit layout')}" title="${this._editing ? hgTr('Gotowe', 'Done') : hgTr('Edytuj układ', 'Edit layout')}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
+        <button class="cir" data-act="mail" aria-label="${hgTr('Wiadomości', 'Messages')}" title="${hgTr('Wiadomości i powiadomienia', 'Messages and notifications')}">${H.icon('mdi:email')}</button>
+        <button class="cir" data-act="bell" aria-label="${hgTr('Powiadomienia', 'Notifications')} (${nCount})" title="${hgTr('Powiadomienia', 'Notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
-          <button class="uin" data-act="profile" aria-label="Profil" title="Profil">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
+          <button class="uin" data-act="profile" aria-label="${hgTr('Profil', 'Profile')}" title="${hgTr('Profil', 'Profile')}">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
           <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="Menu" title="Menu">${H.icon('mdi:chevron-down')}</button>
         </div>
       </div>`);
@@ -628,7 +631,7 @@ class HGPage extends HTMLElement {
     const mb = pop && this._railEl.querySelector('[data-act=railmore]'), mr = mb ? mb.getBoundingClientRect() : null;
     const pc = Math.min(3, Math.max(1, more.length)), pw = pc * 88 + (pc - 1) * 10 + 20;
     const pst = mr ? `style="--hg-pc:${pc}; left:${Math.round(Math.max(12, Math.min(mr.right + 14, innerWidth - pw - 12)))}px; top:${Math.round(Math.max(12, Math.min(mr.top - 12, innerHeight - 24 - Math.ceil(more.length / 3) * 88)))}px"` : '';
-    L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="Więcej"><i class="grab" aria-hidden="true"></i>
+    L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="${hgTr('Więcej', 'More')}"><i class="grab" aria-hidden="true"></i>
       <div class="sg">${more.map((m, i) => `<button class="st ${m.match && hgMatch(m.match, path) ? 'act' : ''}" data-act="sheetnav" data-i="${i}">${H.icon(m.icon)}<span>${H.esc(m.label)}</span></button>`).join('')}</div></div>`;
     requestAnimationFrame(() => requestAnimationFrame(() => L.classList.add('in')));
     this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape') { e.preventDefault(); this._openSheet(false); } });
@@ -674,7 +677,7 @@ class HGPage extends HTMLElement {
       }
       this._railEl.dataset.pn = '1';
       this._railEl.innerHTML = m.map((r, i) => `<button class="ri pn ${r.act ? 'act' : ''}" data-act="pnav" data-i="${i}" aria-label="${H.esc(r.label)}">${H.icon(r.icon)}<span>${H.esc(r.label)}</span></button>`).join('')
-        + `<button class="ri pn ${moreAct || open ? 'act' : ''}" data-act="more" aria-haspopup="dialog" aria-expanded="${!!open}" aria-label="Więcej">${H.icon('mdi:dots-horizontal')}<span>Więcej</span></button><i class="rind" aria-hidden="true"></i>`;
+        + `<button class="ri pn ${moreAct || open ? 'act' : ''}" data-act="more" aria-haspopup="dialog" aria-expanded="${!!open}" aria-label="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-horizontal')}<span>${hgTr('Więcej', 'More')}</span></button><i class="rind" aria-hidden="true"></i>`;
       this._placeInd(); return;
     }
     if (this._sheetOpen && this._sheetMode !== 'rail') this._openSheet(false);
@@ -692,7 +695,7 @@ class HGPage extends HTMLElement {
     const sig = JSON.stringify([items.map((r) => r.i + (r.act ? 'a' : '')), [...ov], moreAct]);
     if (!force && sig === this._sigRail) return; this._sigRail = sig;
     const btn = (r) => `<button class="ri ${r.act ? 'act' : ''}" data-act="rail" data-i="${r.i}" aria-label="${H.esc(r.label)}" title="${H.esc(r.label)}">${r.svg && HG_SVG[r.svg] ? HG_SVG[r.svg] : H.icon(r.icon)}</button>`;
-    const moreB = ov.size ? `<button class="ri ${moreAct ? 'act' : ''}" data-act="railmore" aria-haspopup="dialog" aria-expanded="${!!(this._sheetOpen && this._sheetMode === 'rail')}" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-grid')}</button>` : '';
+    const moreB = ov.size ? `<button class="ri ${moreAct ? 'act' : ''}" data-act="railmore" aria-haspopup="dialog" aria-expanded="${!!(this._sheetOpen && this._sheetMode === 'rail')}" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-grid')}</button>` : '';
     this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + (items.length ? btn(items[items.length - 1]) : '') + '<i class="rind" aria-hidden="true"></i>';
     this._placeInd();
     if (!this._rfChk) { this._rfChk = true; requestAnimationFrame(() => { this._rfChk = false; this._paintRail(); }); }   // ponowny pomiar po malowaniu
@@ -714,10 +717,10 @@ class HGPage extends HTMLElement {
     const c = this._config, hid = this.hasAttribute('panel-hidden');
     if (!c.toolbar) { this._toolsEl.style.display = 'none'; return; }
     this._toolsEl.innerHTML = `
-      <button class="tb" data-act="search" aria-label="Szukaj" title="Szukaj (szybki pasek)">${H.icon('mdi:magnify')}</button>
-      <button class="tb sm" data-act="zin" aria-label="Powiększ" title="Powiększ panel">${H.icon('mdi:plus-circle-outline')}</button>
-      <button class="tb sm" data-act="zout" aria-label="Pomniejsz" title="Pomniejsz panel">${H.icon('mdi:minus-circle')}</button>
-      <button class="tb" data-act="close" aria-label="${hid ? 'Pokaż panel' : 'Ukryj panel'}" title="${hid ? 'Pokaż panel' : 'Ukryj panel'}">${H.icon(hid ? 'mdi:view-dashboard-outline' : 'mdi:close')}</button>`;
+      <button class="tb" data-act="search" aria-label="${hgTr('Szukaj', 'Search')}" title="${hgTr('Szukaj (szybki pasek)', 'Search (quick bar)')}">${H.icon('mdi:magnify')}</button>
+      <button class="tb sm" data-act="zin" aria-label="${hgTr('Powiększ', 'Zoom in')}" title="${hgTr('Powiększ panel', 'Enlarge panel')}">${H.icon('mdi:plus-circle-outline')}</button>
+      <button class="tb sm" data-act="zout" aria-label="${hgTr('Pomniejsz', 'Zoom out')}" title="${hgTr('Pomniejsz panel', 'Shrink panel')}">${H.icon('mdi:minus-circle')}</button>
+      <button class="tb" data-act="close" aria-label="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}" title="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}">${H.icon(hid ? 'mdi:view-dashboard-outline' : 'mdi:close')}</button>`;
   }
   _paintHub(force) {
     if (!this._built || !this._hass) return;
@@ -725,7 +728,7 @@ class HGPage extends HTMLElement {
     const sig = JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
     if (!force && sig === this._sigHub) return; this._sigHub = sig;
     this._setHTML(this._hubEl, `<div class="ht"><b>${H.esc(hb.title)}</b><span>${H.esc(hb.subtitle)}</span></div>
-      <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || 'Rodzina')}">${H.icon('mdi:plus')}</button>
+      <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || hgTr('Rodzina', 'Family'))}">${H.icon('mdi:plus')}</button>
       <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.esc(H.name(this._hass, p))}: ${H.esc(s ? H.t(this._hass, s) : '')}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
   }
   _click(e) {

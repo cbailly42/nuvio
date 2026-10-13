@@ -2,7 +2,7 @@
 /* hg-scenes-card: skrypty jako duże pigułki. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
    gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
 class HGScenesCard extends HGBase {
-  defaults() { return { title: 'Sceny', icon: 'mdi:play-circle-outline', scripts: [] }; }
+  defaults() { return { title: hgTr('Sceny', 'Scenes'), icon: 'mdi:play-circle-outline', scripts: [] }; }
   ents() { return this._config.scripts.map((x) => x.entity); }
   _extraSig() { return [this._ok || '']; }
   css() {
@@ -35,7 +35,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const items = c.scripts.map((x, i) => {
       const s = H.st(this._hass, x.entity), un = !H.ok(s), run = s && s.state === 'on', ok = this._ok === x.entity && !run;
       const nm = x.name || (s && s.attributes.friendly_name) || x.entity;
-      const sub = un ? 'niedostępny' : run ? 'działa…' : ok ? 'uruchomiono' : 'uruchom';
+      const sub = un ? hgTr('niedostępny', 'unavailable') : run ? hgTr('działa…', 'running…') : ok ? hgTr('uruchomiono', 'started') : hgTr('uruchom', 'run');
       return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${sub}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ok ? 'mdi:check' : x.icon || (s && s.attributes.icon) || 'mdi:play')}</span><span class="tx">${H.esc(nm)}</span></button>`;
     }).join('');
@@ -52,11 +52,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-scenes-card', HGScenesCard, 'Home Glass – Sceny', 'Skrypty jako przyciski z animacją potwierdzenia');
+hgReg('hg-scenes-card', HGScenesCard, hgTr('Home Glass – Sceny', 'Home Glass – Scenes'), hgTr('Skrypty jako przyciski z animacją potwierdzenia', 'Scripts as buttons with a confirmation animation'));
 
 /* hg-power-card: moc teraz (suma faz) + linia z ostatnich godzin (statystyki 5-minutowe „mean”) + cienki pasek obciążenia */
 class HGPowerCard extends HGBase {
-  defaults() { return { title: 'Moc teraz', icon: 'mdi:flash-outline', entities: [], max_power: 17250, hours: 6, expand: null }; }
+  defaults() { return { title: hgTr('Moc teraz', 'Power now'), icon: 'mdi:flash-outline', entities: [], max_power: 17250, hours: 6, expand: null }; }
   ents() { return this._config.entities; }
   _extraSig() { return [this._sp ? this._sp.t : 0]; }
   connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(), 5 * 60 * 1000); }
@@ -94,11 +94,11 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
   render() {
     const c = this._config, h = this._hass;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Raporty" title="Raporty">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Raporty', 'Reports')}" title="${hgTr('Raporty', 'Reports')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     let tot = 0, n = 0; for (const e of c.entities) { const v = hgW(h, e); if (v != null) { tot += Math.abs(v); n++; } }
-    if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
+    if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${hgTr('Czujniki mocy niedostępne', 'Power sensors unavailable')}</div></ha-card>`;
     const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
-    const lvl = pct < 30 ? 'Niskie' : pct < 70 ? 'Średnie' : 'Wysokie';
+    const lvl = pct < 30 ? hgTr('Niskie', 'Low') : pct < 70 ? hgTr('Średnie', 'Medium') : hgTr('Wysokie', 'High');
     const kw = tot >= 1000 ? [H.fmt(tot / 1000, 2), 'kW'] : [H.fmt(tot, 0), 'W'];
     const pts = (this._sp ? this._sp.pts : []).concat([[Date.now(), tot]]);
     let svg = '';
@@ -113,21 +113,21 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
       svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
         <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/></svg>`;
     }
-    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% ${hgTr('z', 'of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% ${lvl}</span></div>
       <div class="gg" style="--p:${pct.toFixed(1)}%" title="${Math.round(pct)}% ${lvl}"><i></i></div><div class="gl"><span>0</span><span>100%</span></div>
-      <div class="spk">${svg}${svg ? `<span class="dot" style="left:100%;top:${this._lastY}%"></span><span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${kw[1]}</span>` : ''}</div>${svg ? `<div class="ax"><span>−${c.hours} h</span><span>teraz</span></div>` : ''}
+      <div class="spk">${svg}${svg ? `<span class="dot" style="left:100%;top:${this._lastY}%"></span><span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${kw[1]}</span>` : ''}</div>${svg ? `<div class="ax"><span>−${c.hours} h</span><span>${hgTr('teraz', 'now')}</span></div>` : ''}
       </ha-card>`;
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('hg-power-card', HGPowerCard, 'Home Glass – Moc', 'Moc teraz z linią z ostatnich godzin');
+hgReg('hg-power-card', HGPowerCard, hgTr('Home Glass – Moc', 'Home Glass – Power'), hgTr('Moc teraz z linią z ostatnich godzin', 'Current power with a line of recent hours'));
 
 /* hg-script-card: kafel uruchamiający skrypt. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
    gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
 class HGScriptCard extends HGBase {
-  defaults() { return { name: null, icon: null, subtitle: 'Dotknij, aby uruchomić', color: 'var(--hg-accent)' }; }
+  defaults() { return { name: null, icon: null, subtitle: hgTr('Dotknij, aby uruchomić', 'Tap to run'), color: 'var(--hg-accent)' }; }
   _extraSig() { return [this._ok ? 1 : 0]; }
   css() {
     return U(`
@@ -153,7 +153,7 @@ ha-card.glass{ padding:0; }
     const un = !H.ok(s), run = s && s.state === 'on', ok = this._ok && !run;
     const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
     const ic = ok ? 'mdi:check' : c.icon || (s && s.attributes.icon) || 'mdi:script-text-play-outline';
-    const sub = un ? 'Skrypt niedostępny' : run ? 'Działa…' : ok ? 'Uruchomiono' : c.subtitle;
+    const sub = un ? hgTr('Skrypt niedostępny', 'Script unavailable') : run ? hgTr('Działa…', 'Running…') : ok ? hgTr('Uruchomiono', 'Started') : c.subtitle;
     return `<ha-card class="glass ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${c.color}">
       <button class="b" data-act="run" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${H.esc(sub)}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ic)}</span><span class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></span></button></ha-card>`;
@@ -168,14 +168,14 @@ ha-card.glass{ padding:0; }
   }
   getGridOptions() { return { columns: 3, rows: 2 }; }
 }
-hgReg('hg-script-card', HGScriptCard, 'Home Glass – Skrypt', 'Kafel uruchamiający skrypt z animacją potwierdzenia');
+hgReg('hg-script-card', HGScriptCard, hgTr('Home Glass – Skrypt', 'Home Glass – Script'), hgTr('Kafel uruchamiający skrypt z animacją potwierdzenia', 'Tile that runs a script with a confirmation animation'));
 
 /* hg-week-card: zużycie z sieci i produkcja PV z 7 dni (statystyki długoterminowe, typ „change”, okres dzień, dni wg strefy HA).
    Te same statystyki co panel Energia HA (energy/get_prefs: grid stat_energy_from, solar stat_energy_from). */
 class HGWeekCard extends HGBase {
   defaults() {
-    return { title: 'Energia · tydzień', icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
-      labels: { consumption: 'Zużycie', production: 'Produkcja' }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
+    return { title: hgTr('Energia · tydzień', 'Energy · week'), icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
+      labels: { consumption: hgTr('Zużycie', 'Consumption'), production: hgTr('Produkcja', 'Production') }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
   }
   setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
@@ -230,9 +230,9 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   render() {
     const c = this._config;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Panel energii" title="Panel energii">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
-    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>Brak źródła danych</b>${H.esc(this._err)}</div></ha-card>`;
-    if (!this._data) return `<ha-card class="glass">${hd}<div class="ph">Wczytywanie statystyk…</div></ha-card>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Panel energii', 'Energy dashboard')}" title="${hgTr('Panel energii', 'Energy dashboard')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${H.esc(this._err)}</div></ha-card>`;
+    if (!this._data) return `<ha-card class="glass">${hd}<div class="ph">${hgTr('Wczytywanie statystyk…', 'Loading statistics…')}</div></ha-card>`;
     const { days, byId, present } = this._data.v, n = days.length;
     const ser = ['consumption', 'production'].filter((k) => c[k].length).map((k) => {
       const vals = days.map((d) => c[k].reduce((a, id) => a + Math.max(0, (byId[id] || {})[d.__k] || 0), 0));
@@ -241,20 +241,20 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     });
     const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
     const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
-    const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: pokaż/ukryj na wykresie">
-      <small><i></i>${H.esc(s.label)} · ${n} dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
-    const dayName = (d, i) => (i === n - 1 ? 'dziś' : H.DAYS[d.getDay()]);
+    const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: ${hgTr('pokaż/ukryj na wykresie', 'show/hide on chart')}">
+      <small><i></i>${H.esc(s.label)} · ${n} ${hgTr('dni', 'days')}</small><b>${H.fmt(s.tot, 1)}<em>kWh · ${hgTr('dziś', 'today')} ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+    const dayName = (d, i) => (i === n - 1 ? hgTr('dziś', 'today') : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));
-      const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="brak danych"></i>` : `<i style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
-      const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? ' (do teraz)' : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.esc(s.label)}: <b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : 'brak danych'}</b>`).join('<br>')}</span>` : '';
+      const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="${hgTr('brak danych', 'no data')}"></i>` : `<i style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
+      const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? hgTr(' (do teraz)', ' (so far)') : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.esc(s.label)}: <b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : hgTr('brak danych', 'no data')}</b>`).join('<br>')}</span>` : '';
       const top = vis[0] && vis[0].has[i] ? `<span class="val">${H.fmt(vis[0].vals[i], 1)}</span>` : '';
       const pair = `<span class="pr" style="height:${(pm / mx) * 100}%">${top}${bars}</span>`;
-      return `<button class="d ${sel === i ? 'sel' : ''} ${i === n - 1 ? 'today' : ''}" data-act="day" data-i="${i}" aria-label="${H.esc(d.toLocaleDateString('pl-PL'))}: ${ser.map((s) => `${s.label} ${s.has[i] ? H.fmt(s.vals[i], 1) + ' kWh' : 'brak danych'}`).join(', ')}">${tip}<span class="bs"><span class="bw">${pair}</span></span><small>${dayName(d, i)}</small></button>`;
+      return `<button class="d ${sel === i ? 'sel' : ''} ${i === n - 1 ? 'today' : ''}" data-act="day" data-i="${i}" aria-label="${H.esc(d.toLocaleDateString(HG_LOC()))}: ${ser.map((s) => `${s.label} ${s.has[i] ? H.fmt(s.vals[i], 1) + ' kWh' : hgTr('brak danych', 'no data')}`).join(', ')}">${tip}<span class="bs"><span class="bw">${pair}</span></span><small>${dayName(d, i)}</small></button>`;
     }).join('');
     const pv = ser.find((s) => s.k === 'production');
     const gaps = pv ? days.filter((d, i) => !pv.has[i]).map((d, i) => d) : [];
-    const note = gaps.length ? `<div class="note" title="W te dni falownik nie przesłał danych do HA"><i></i>brak danych z falownika (${gaps.map((d) => H.DAYS[d.getDay()]).join(', ')})</div>` : '';
+    const note = gaps.length ? `<div class="note" title="${hgTr('W te dni falownik nie przesłał danych do HA', 'The inverter sent no data to HA on these days')}"><i></i>${hgTr('brak danych z falownika', 'no inverter data')} (${gaps.map((d) => H.DAYS[d.getDay()]).join(', ')})</div>` : '';
     return `<ha-card class="glass">${hd}<div class="sums">${sums}</div><div class="ch" style="--n:${n}">${cols}</div>${note}</ha-card>`;
   }
   onAct(a, t) {
@@ -264,4 +264,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   }
   getGridOptions() { return { columns: 12, rows: 3 }; }
 }
-hgReg('hg-week-card', HGWeekCard, 'Home Glass – Energia tydzień', 'Zużycie z sieci i produkcja PV z 7 dni (statystyki)');
+hgReg('hg-week-card', HGWeekCard, hgTr('Home Glass – Energia tydzień', 'Home Glass – Energy week'), hgTr('Zużycie z sieci i produkcja PV z 7 dni (statystyki)', 'Grid consumption and PV production over 7 days (statistics)'));
