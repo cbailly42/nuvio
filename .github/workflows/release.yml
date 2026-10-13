@@ -1,0 +1,39 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Set version from tag
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          python - <<PY
+          import json; p=json.load(open('package.json')); p['version']='$V'; json.dump(p, open('package.json','w'), indent=2)
+          PY
+      - name: Build
+        run: python tools/build.py && node --check dist/nuvio.js
+      - name: Hardcode guard
+        run: python tools/guard.py
+      - name: Package
+        run: cd dist && zip -r ../nuvio.zip nuvio.js assets
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/nuvio.js
+            nuvio.zip
+          generate_release_notes: true
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with: { category: plugin }

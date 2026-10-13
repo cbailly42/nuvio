@@ -1,0 +1,6933 @@
+/* ===== nuvio (wersja dystrybucyjna): baza zasobów, ścieżki, i18n, strategia pulpitu, kreator pierwszego uruchomienia ===== */
+const HG_ASSET = (() => { try { const s = document.currentScript && document.currentScript.src; if (s) return s.replace(/[^/]*(\?.*)?$/, ''); } catch (e) { /* brak */ }
+  const r = [...document.querySelectorAll('script[src*="nuvio"]')].map((x) => x.src)[0]; return r ? r.replace(/[^/]*(\?.*)?$/, '') : '/hacsfiles/nuvio/'; })();
+window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
+const HG_DASH = () => (location.pathname.split('/')[1] || 'nuvio');
+const HG_P = (v) => `/${HG_DASH()}/${v}`;
+window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+
+const HG_I18N = {
+  pl: { panel: 'Panel', rooms: 'Pokoje', room: 'Pokój', media: 'Multimedia', cams: 'Kamery', family: 'Rodzina', energy: 'Energia', settings: 'Ustawienia', profile: 'Profil',
+    hello: 'Witaj, {name}!', hello_sub: 'Steruj domem w jednym miejscu', rooms_sub: 'Każdy pokój w zasięgu ręki', media_sub: 'Co gra w domu', cams_sub: 'Podgląd na żywo po dotknięciu',
+    family_sub: 'Kto jest teraz w domu', energy_sub: 'Moc na żywo', scenes: 'Sceny', power: 'Moc teraz', outside: 'Na zewnątrz', more: 'Więcej', home: 'Dom', climate: 'Klimatyzacja',
+    wiz_t: 'Witaj w Nuvio', wiz_s: 'Zbudujemy pulpit z Twoich obszarów, urządzeń i encji. Wszystko zmienisz później w trybie edycji.', wiz_lang: 'Język', wiz_views: 'Widoki', wiz_rooms: 'Pokoje',
+    wiz_go: 'Utwórz pulpit', wiz_skip: 'Pomiń', wiz_none: 'Nie znaleziono obszarów – pokoje dodasz w Ustawieniach HA → Obszary.', ents: 'encji',
+    hub: 'Domownicy', hub_sub: 'Kto jest teraz w domu' },
+  en: { panel: 'Home', rooms: 'Rooms', room: 'Room', media: 'Media', cams: 'Cameras', family: 'Family', energy: 'Energy', settings: 'Settings', profile: 'Profile',
+    hello: 'Welcome, {name}!', hello_sub: 'Your whole home in one place', rooms_sub: 'Every room at your fingertips', media_sub: 'What is playing', cams_sub: 'Tap for live view',
+    family_sub: 'Who is home right now', energy_sub: 'Live power', scenes: 'Scenes', power: 'Power now', outside: 'Outside', more: 'More', home: 'Home', climate: 'Climate',
+    wiz_t: 'Welcome to Nuvio', wiz_s: 'We will build a dashboard from your areas, devices and entities. You can change everything later in edit mode.', wiz_lang: 'Language', wiz_views: 'Views', wiz_rooms: 'Rooms',
+    wiz_go: 'Create dashboard', wiz_skip: 'Skip', wiz_none: 'No areas found – add rooms in HA Settings → Areas.', ents: 'entities',
+    hub: 'Household', hub_sub: 'Who is home right now' },
+};
+const hgLang = (h, pref) => { const l = pref || (h && ((h.locale && h.locale.language) || h.language)) || navigator.language || 'en'; return /^pl/i.test(l) ? 'pl' : 'en'; };
+const hgI = (lang, k) => (HG_I18N[lang] || HG_I18N.en)[k] || HG_I18N.en[k] || k;
+
+/* --- model domu z rejestrów HA (bez żadnych encji „na sztywno”) --- */
+const HGModel = {
+  async load(hass) {
+    let areas = hass.areas, devices = hass.devices, ents = hass.entities;
+    try { if (!areas || !Object.keys(areas).length) { const a = await hass.callWS({ type: 'config/area_registry/list' }); areas = Object.fromEntries(a.map((x) => [x.area_id, x])); } } catch (e) { areas = areas || {}; }
+    try { if (!ents || !Object.keys(ents).length) { const a = await hass.callWS({ type: 'config/entity_registry/list_for_display' }); ents = Object.fromEntries((a.entities || []).map((x) => [x.ei, { entity_id: x.ei, area_id: x.ai, device_id: x.di, hidden: !!x.hb, entity_category: x.ec != null ? x.ec : null }])); } } catch (e) { ents = ents || {}; }
+    devices = devices || {};
+    const ok = (e) => { const s = hass.states[e]; const r = ents[e]; return s && s.state !== 'unavailable' && !(r && (r.hidden || r.entity_category)); };
+    const all = Object.keys(hass.states).filter(ok), dom = (d) => all.filter((e) => e.startsWith(d + '.'));
+    const num = (e) => isFinite(Number(hass.states[e].state));
+    const power = dom('sensor').filter((e) => { const a = hass.states[e].attributes; return a.device_class === 'power' && num(e) && /^(k?W)$/.test(a.unit_of_measurement || ''); })
+      .sort((a, b) => Math.abs(Number(hass.states[b].state)) - Math.abs(Number(hass.states[a].state)));
+    const areaOf = (e) => { const r = ents[e]; return r && (r.area_id || (r.device_id && devices[r.device_id] && devices[r.device_id].area_id)) || null; };
+    const roomCount = {}; for (const e of all) { const a = areaOf(e); if (a) roomCount[a] = (roomCount[a] || 0) + 1; }
+    return { areas, devices, ents, all, roomCount, weather: dom('weather')[0] || null, climate: dom('climate'), media: dom('media_player'), cams: dom('camera'), persons: dom('person'),
+      scenes: [...dom('scene'), ...dom('script')].slice(0, 6), power, vacuums: dom('vacuum'), alarm: dom('alarm_control_panel')[0] || null, sun: hass.states['sun.sun'] ? 'sun.sun' : null };
+  },
+};
+
+/* --- generator konfiguracji (strategia pulpitu) --- */
+async function hgGenerate(hass, opt) {
+  opt = opt || {}; let wiz = null;
+  try { const r = await hass.callWS({ type: 'frontend/get_user_data', key: 'nuvio_layout' }); wiz = r && r.value && r.value.wiz; } catch (e) { /* brak */ }
+  const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M = await HGModel.load(hass);
+  const want = (v) => !wiz || !wiz.views || wiz.views.includes(v);
+  const V = [['dashboard', t('panel'), 'mdi:view-dashboard-outline', true], ['rooms', t('rooms'), 'mdi:sofa-outline', Object.keys(M.areas).length > 0],
+    ['multimedia', t('media'), 'mdi:play-box-multiple-outline', M.media.length > 0], ['kamery', t('cams'), 'mdi:cctv', M.cams.length > 0],
+    ['family', t('family'), 'mdi:account-group-outline', M.persons.length > 0], ['energia', t('energy'), 'mdi:lightning-bolt-outline', M.power.length > 0]].filter((x) => x[3] && want(x[0]));
+  const nav = (v) => ({ icon: v[2], label: v[1], action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
+  const tabs = V.slice(0, 5).map((v) => ({ label: v[1], icon: v[2], path: HG_P(v[0]), ...(v[0] === 'rooms' ? { match: [HG_P('rooms'), HG_P('pokoj')] } : {}) }));
+  const set = { icon: 'mdi:cog-outline', label: t('settings'), action: { navigate: '/config' }, match: '/config' };
+  const rail = [...V.map(nav), set], phone = { main: V.slice(0, 4).map(nav), more: [...V.slice(4).map(nav), set] };
+  const areasCfg = { hide: (wiz && wiz.hiddenRooms) || [] };
+  const weather = M.weather ? { entity: M.weather, sun: M.sun, hours: 24, variant: 'hero', title: t('outside') } : null;
+  const brand = (hass.config && hass.config.location_name) || t('home');
+  const base = (view, title, sub, cards, panel, extra) => ({ type: 'custom:nuvio-page', view, brand, title, subtitle: sub, user: {}, tabs, rail, phone_nav: phone, rail_overflow: V.slice(5).map((v) => v[1]),
+    menu: [{ label: t('profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: t('settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
+    hub: M.persons.length ? { title: t('hub'), subtitle: t('hub_sub'), persons: M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : null,
+    back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, ...(extra || {}) });
+  const scroll = { scroll: true, columns: '1fr 1fr', auto_rows: 'auto', phone_columns: '1fr', tablet: { columns: '1fr 1fr' } };
+  const one = (a) => ({ wide: true, scroll: true, columns: '1fr', auto_rows: 'auto', areas: `"${a}"`, phone_areas: `"${a}"`, phone_columns: '1fr', tablet: { columns: '1fr' } });
+  const dash = [];
+  if (M.climate[0]) dash.push({ type: 'custom:nuvio-ac-card', entity: M.climate[0], title: t('climate'), min_h: 253 });
+  if (M.scenes.length) dash.push({ type: 'custom:nuvio-scenes-card', title: t('scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
+  if (M.power.length) dash.push({ type: 'custom:nuvio-power-card', title: t('power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
+  const views = [];
+  const view = (path, title, card, sub) => ({ title, path, type: 'panel', ...(sub ? { subview: true } : {}), cards: [card] });
+  views.push(view('dashboard', t('panel'), base('dashboard', t('hello'), t('hello_sub'), dash, scroll, weather ? { weather } : {})));
+  if (V.some((v) => v[0] === 'rooms')) {
+    views.push(view('rooms', t('rooms'), base('rooms', t('rooms'), t('rooms_sub'), [{ type: 'custom:nuvio-areas-card', area: 'grid', min_h: 200, room_path: HG_P('pokoj'), areas: areasCfg }], one('grid'))));
+    views.push(view('pokoj', t('room'), base('pokoj', t('room'), '', [{ type: 'custom:nuvio-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms') }), true));
+  }
+  if (V.some((v) => v[0] === 'multimedia')) views.push(view('multimedia', t('media'), base('multimedia', t('media'), t('media_sub'), [{ type: 'custom:nuvio-players-card', area: 'm', entities: M.media }], one('m'))));
+  if (V.some((v) => v[0] === 'kamery')) views.push(view('kamery', t('cams'), base('kamery', t('cams'), t('cams_sub'), [{ type: 'custom:nuvio-cameras-card', area: 'c', entities: M.cams }], one('c'))));
+  if (V.some((v) => v[0] === 'family')) views.push(view('family', t('family'), base('family', t('family'), t('family_sub'), M.persons.map((p) => ({ type: 'custom:nuvio-person-card', entity: p })), scroll)));
+  if (V.some((v) => v[0] === 'energia')) views.push(view('energia', t('energy'), base('energia', t('energy'), t('energy_sub'), M.power.slice(0, 4).map((e) => ({ type: 'custom:nuvio-power-card', title: hass.states[e].attributes.friendly_name || e, entities: [e], max_power: 10000, hours: 24 })), scroll)));
+  return { title: brand, views, _hgWizard: !wiz };
+}
+class HGStrategy extends HTMLElement { static async generate(config, hass) { return hgGenerate(hass, config || {}); } }
+if (!customElements.get('ll-strategy-dashboard-nuvio')) customElements.define('ll-strategy-dashboard-nuvio', HGStrategy);
+window.hgGenerate = hgGenerate;
+
+/* --- kreator pierwszego uruchomienia (widoczny, gdy pulpit z strategii i brak zapisanych wyborów) --- */
+const HGWizard = {
+  async open(page) {
+    const h = page._hass; if (!h || document.getElementById('hg-wiz')) return; const M = await HGModel.load(h);
+    let lang = hgLang(h); const all = [['dashboard', 'panel'], ['rooms', 'rooms'], ['multimedia', 'media'], ['kamery', 'cams'], ['family', 'family'], ['energia', 'energy']];
+    const has = { dashboard: true, rooms: Object.keys(M.areas).length > 0, multimedia: M.media.length > 0, kamery: M.cams.length > 0, family: M.persons.length > 0, energia: M.power.length > 0 };
+    const sel = new Set(all.map((x) => x[0]).filter((v) => has[v])), hid = new Set();
+    const d = document.createElement('div'); d.id = 'hg-wiz'; document.body.appendChild(d);
+    const draw = () => { const t = (k) => hgI(lang, k);
+      const areas = Object.values(M.areas).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      d.innerHTML = `<style>
+#hg-wiz{ position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:var(--hg-bg-06090c-055); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-family:'DM Sans',system-ui,sans-serif; color:var(--hg-tx-eef2f5); }
+#hg-wiz .w{ width:min(560px, calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; box-sizing:border-box; padding:22px; border-radius:28px; background:var(--hg-bg-1e242c-072); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-012), 0 24px 60px var(--hg-ac-000000-040); display:flex; flex-direction:column; gap:16px; }
+#hg-wiz h2{ margin:0; font-size:22px; font-weight:600; } #hg-wiz p{ margin:0; opacity:.75; font-size:14px; line-height:1.45; }
+#hg-wiz h3{ margin:0 0 8px; font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; opacity:.65; }
+#hg-wiz .r{ display:flex; flex-wrap:wrap; gap:8px; } #hg-wiz button{ all:unset; cursor:pointer; box-sizing:border-box; height:38px; padding:0 14px; border-radius:999px; background:var(--hg-bg-ffffff-008); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-012); font-size:14px; display:inline-flex; align-items:center; gap:6px; }
+#hg-wiz button[aria-pressed=true]{ background:var(--hg-accent,var(--hg-bg-63d71e)); color:var(--hg-on-accent,var(--hg-tx-0b0f0a-on)); box-shadow:none; font-weight:600; } #hg-wiz button:disabled{ opacity:.35; cursor:default; }
+#hg-wiz button:focus-visible{ outline:2px solid var(--hg-accent,var(--hg-tx-63d71e)); outline-offset:2px; }
+#hg-wiz .f{ display:flex; justify-content:flex-end; gap:10px; } #hg-wiz .ok{ background:var(--hg-accent,var(--hg-bg-63d71e)); color:var(--hg-on-accent,var(--hg-tx-0b0f0a-on)); font-weight:600; height:44px; padding:0 22px; box-shadow:none; } #hg-wiz .gh{ height:44px; }
+#hg-wiz small{ opacity:.6; font-size:12px; }</style>
+<div class="w" role="dialog" aria-modal="true" aria-label="${t('wiz_t')}"><h2>${t('wiz_t')}</h2><p>${t('wiz_s')}</p>
+<div><h3>${t('wiz_lang')}</h3><div class="r"><button data-l="pl" aria-pressed="${lang === 'pl'}">Polski</button><button data-l="en" aria-pressed="${lang === 'en'}">English</button></div></div>
+<div><h3>${t('wiz_views')}</h3><div class="r">${all.map(([v, k]) => `<button data-v="${v}" aria-pressed="${sel.has(v)}" ${has[v] && v !== 'dashboard' ? '' : 'disabled'}>${t(k)}</button>`).join('')}</div></div>
+<div><h3>${t('wiz_rooms')}</h3>${areas.length ? `<div class="r">${areas.map((a) => `<button data-a="${H.esc(a.area_id)}" aria-pressed="${!hid.has(a.area_id)}">${H.esc(a.name)} <small>${M.roomCount[a.area_id] || 0}</small></button>`).join('')}</div>` : `<p>${t('wiz_none')}</p>`}</div>
+<div class="f"><button class="gh" data-x="skip">${t('wiz_skip')}</button><button class="ok" data-x="go">${t('wiz_go')}</button></div></div>`; };
+    draw();
+    d.addEventListener('click', async (e) => { const b = e.target.closest('button'); if (!b || b.disabled) return;
+      if (b.dataset.l) { lang = b.dataset.l; return draw(); }
+      if (b.dataset.v) { sel.has(b.dataset.v) ? sel.delete(b.dataset.v) : sel.add(b.dataset.v); return draw(); }
+      if (b.dataset.a) { hid.has(b.dataset.a) ? hid.delete(b.dataset.a) : hid.add(b.dataset.a); return draw(); }
+      if (b.dataset.x) { HGL.data.wiz = b.dataset.x === 'go' ? { lang, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { lang, ts: Date.now() };
+        await HGL.save(page._hass); d.remove(); if (!window.__hgDryRun) location.reload(); } });
+  },
+};
+window.HGWizard = HGWizard;
+
+/* Nuvio – glassmorphism dashboard components for Home Assistant
+ * Plik: /local/nuvio/nuvio.js   (generowany z www/*.part.js przez build.py)
+ * Karty: nuvio-page, nuvio-energy-card, nuvio-ac-card, nuvio-light-card, nuvio-switch-card,
+ *        nuvio-solar-card, nuvio-bars-card, nuvio-media-card, nuvio-person-card, nuvio-link-card
+ */
+/* binary_sensor: stany wg device_class (zapas, gdy HA nie zwróci tłumaczenia) */
+const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowanie', 'nie ładuje'], carbon_monoxide: ['wykryto', 'brak'], cold: ['zimno', 'normalnie'], connectivity: ['połączono', 'rozłączono'],
+  door: ['otwarte', 'zamknięte'], garage_door: ['otwarte', 'zamknięte'], gas: ['wykryto', 'brak'], heat: ['gorąco', 'normalnie'], light: ['wykryto światło', 'brak światła'], lock: ['otwarte', 'zamknięte'],
+  moisture: ['mokro', 'sucho'], motion: ['wykryto', 'brak'], moving: ['w ruchu', 'nieruchome'], occupancy: ['wykryto', 'brak'], opening: ['otwarte', 'zamknięte'], plug: ['podłączono', 'odłączono'],
+  power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
+  sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
+const HG_VER = '1.0.0';
+const HG_BUILD = '0.1.0+f65e9b2a';   /* build.py wstawia hash paczki = ?v= zasobu */
+/* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
+   -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
+const HGVer = window.__hgVer || {
+  t: 0, shown: false,
+  async check(hass, force) {
+    if (!hass || !hass.callWS || this.shown || window.__hgNoVer || HG_BUILD.startsWith('__') || (window.__hgLocal && !window.__hgVerTest)) return;   // testy lokalne: kod celowo nowszy niż zasób
+    if (!force && Date.now() - this.t < 300000) return;
+    this.t = Date.now();
+    try {
+      const res = await hass.callWS({ type: 'lovelace/resources' });
+      const r = (res || []).find((x) => /nuvio\.js/.test(x.url || ''));
+      const v = r && (/[?&]v=([^&]+)/.exec(r.url) || [])[1];
+      if (v && v !== HG_BUILD) this.toast(v);
+    } catch (e) { /* brak uprawnień admina do listy zasobów -> bez kontroli */ }
+  },
+  toast(v) {
+    if (this.shown || document.getElementById('hg-ver-toast')) return;
+    this.shown = true;
+    const d = document.createElement('div'); d.id = 'hg-ver-toast'; d.setAttribute('role', 'status');
+    const dark = document.documentElement.getAttribute('data-hg-scheme') === 'dark';
+    d.style.cssText = `position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;
+      padding:8px 8px 8px 16px;border-radius:24px;font:400 14px/1.2 'HG DM Sans',system-ui,sans-serif;box-shadow:var(--hg-sh);
+      -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
+      background:${dark ? 'rgba(40,40,44,.88)' : 'rgba(255,255,255,.9)'};color:${dark ? '#fff' : '#1C1C1E'};border:1px solid ${dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)'}`;
+    d.innerHTML = `<span>Nowa wersja panelu</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">Odśwież</button><button type="button" data-x aria-label="Zamknij" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
+    d.querySelector('[data-r]').onclick = () => location.reload();
+    d.querySelector('[data-x]').onclick = () => d.remove();
+    document.body.appendChild(d);
+    console.info('nuvio: wczytany', HG_BUILD, 'zasób', v);
+  },
+};
+window.__hgVer = HGVer;
+(function hgFonts() {
+  if (document.getElementById('hg-fonts')) return;
+  const s = document.createElement('style');
+  s.id = 'hg-fonts';
+  const b = HG_ASSET + 'assets/fonts/';
+  s.textContent = `
+@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}`;
+  document.head.appendChild(s);
+})();
+
+/* "12u" -> calc(var(--k) * 12): jednostka skalowana względem referencji (912x597) */
+/* słownik zapasowy stanów (surowe wartości i angielskie formy z HA bez tłumaczenia) */
+const hgStN = (v) => String(v).trim().toLowerCase().replace(/[\s-]+/g, '_');
+const HG_PL = {
+  normal: 'normalny', fault: 'błąd', standby: 'czuwanie', waiting: 'oczekiwanie', idle: 'bezczynny', charging: 'ładowanie', charged: 'naładowany', discharging: 'rozładowanie',
+  cleaning: 'sprzątanie', docked: 'w stacji', returning: 'powrót do stacji', returning_home: 'powrót do stacji', paused: 'wstrzymany', error: 'błąd', mowing: 'koszenie',
+  online: 'online', offline: 'offline', connected: 'połączony', disconnected: 'rozłączony', home: 'w domu', not_home: 'poza domem', away: 'poza domem',
+  on: 'wł.', off: 'wył.', open: 'otwarte', closed: 'zamknięte', opening: 'otwieranie', closing: 'zamykanie', locked: 'zamknięty', unlocked: 'otwarty', jammed: 'zablokowany',
+  unavailable: 'niedostępne', unknown: 'nieznany', playing: 'odtwarza', buffering: 'buforowanie', heating: 'grzanie', cooling: 'chłodzenie', drying: 'osuszanie',
+  fan: 'wentylator', fan_only: 'wentylator', heat: 'grzanie', cool: 'chłodzenie', dry: 'osuszanie', auto: 'auto', heat_cool: 'grzanie/chłodzenie', preheating: 'podgrzewanie',
+  detected: 'wykryto', clear: 'brak', running: 'pracuje', stopped: 'zatrzymany', sleeping: 'uśpiony', sleep: 'uśpiony', ok: 'OK', low: 'niski', medium: 'średni', high: 'wysoki',
+  above_horizon: 'nad horyzontem', below_horizon: 'pod horyzontem', recording: 'nagrywa', streaming: 'transmisja', armed: 'uzbrojony', disarmed: 'rozbrojony',
+  pending: 'oczekiwanie', starting: 'uruchamianie', finished: 'zakończono', completed: 'zakończono', ready: 'gotowy', working: 'pracuje', busy: 'zajęty',
+  upgrading: 'aktualizacja', provisioning: 'konfiguracja', heartbeat_missed: 'brak odpowiedzi', adopting: 'adopcja', firmware_mismatch: 'niezgodne oprogramowanie', isolated: 'odizolowany',
+  sunny: 'słonecznie', cloudy: 'pochmurno', partlycloudy: 'częściowe zachmurzenie', rainy: 'deszcz', clear_night: 'pogodna noc', none: 'brak', true: 'tak', false: 'nie', yes: 'tak', no: 'nie',
+};
+const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k) * ${n})`);
+
+/* ukryta karta przeglądarki: wstrzymaj animacje ciągłe (zmienna dziedziczona przez wszystkie shadow DOM) */
+(function hgPlay() {
+  const f = () => document.documentElement.style.setProperty('--hg-play', document.hidden ? 'paused' : 'running');
+  document.addEventListener('visibilitychange', f); f();
+})();
+
+const H = {
+  st: (hass, e) => (hass && e ? hass.states[e] : undefined),
+  ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
+  num: (hass, e) => { const s = H.st(hass, e); const v = s ? parseFloat(s.state) : NaN; return isFinite(v) ? v : null; },
+  esc: (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
+  fire: (node, type, detail) => node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true })),
+  navigate: (path) => {
+    const nav = () => { history.pushState(null, '', path); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); };
+    return typeof HGNav !== 'undefined' ? HGNav.go(path, nav) : nav();
+  },
+  /* jedyne miejsce wywołań usług; window.__hgDryRun=true -> tylko zapis (testy bez przełączania urządzeń) */
+  call: (hass, domain, service, data) => {
+    if (window.__hgDryRun) { (window.__hgCalls = window.__hgCalls || []).push([domain, service, data]); return Promise.resolve(); }
+    return hass.callService(domain, service, data);
+  },
+  icon: (i, cls = '') => `<ha-icon class="${cls}" icon="${H.esc(i)}"></ha-icon>`,
+  name: (hass, e, fb) => { const s = H.st(hass, e); return (s && s.attributes.friendly_name) || fb || e; },
+  action(node, hass, a) {
+    if (!a) return;
+    if (window.__hgDryRun && !a.navigate && !a.back) { (window.__hgActions = window.__hgActions || []).push(a); }
+    if (a.navigate) return H.navigate(a.navigate);
+    if (a.url) return a.url.startsWith('/') ? H.navigate(a.url) : window.open(a.url, '_blank', 'noopener');
+    if (a.more_info) return H.fire(node, 'hass-more-info', { entityId: a.more_info });
+    if (a.notifications) return H.fire(node, 'hass-show-notifications');
+    if (a.quickbar) {
+      // HA czyta e.composedPath() -> zdarzenie klawiatury musi być w trakcie dispatchu
+      const fwd = (ev) => window.dispatchEvent(new CustomEvent('hass-quick-bar-trigger', { detail: ev }));
+      node.addEventListener('keydown', fwd, { once: true });
+      node.dispatchEvent(new KeyboardEvent('keydown', { key: a.quickbar, bubbles: false, composed: false }));
+      return;
+    }
+    if (a.back) return history.length > 1 ? history.back() : H.navigate(a.fallback || '/');
+    if (a.service) { const [d, s] = a.service.split('.'); return H.call(hass, d, s, a.data || {}); }
+  },
+  sig: (hass, ents) => ents.map((e) => { const s = H.st(hass, e); return s ? e + s.state + JSON.stringify(s.attributes) : e + '-'; }).join('|'),
+  fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximumFractionDigits: d, minimumFractionDigits: 0 })),
+  DAYS: ['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'],
+  stateLabel: (s) => ({ on: 'Włączone', off: 'Wyłączone', unavailable: 'niedostępne', unknown: 'nieznany', playing: 'Odtwarza', paused: 'Pauza', idle: 'Bezczynny',
+    standby: 'Czuwanie', buffering: 'Buforowanie', home: 'W domu', not_home: 'Poza domem', disarmed: 'Rozbrojony', armed_home: 'Uzbrojony (w domu)',
+    armed_away: 'Uzbrojony (poza domem)', armed_night: 'Uzbrojony (noc)', armed_vacation: 'Uzbrojony (urlop)', arming: 'Uzbrajanie', pending: 'Oczekiwanie', triggered: 'Alarm!' }[s] || HG_PL[hgStN(s)] || s),
+  /* stan encji po polsku: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik HG_PL; małe litery do wstawiania w zdania */
+  t: (h, so, attr) => {
+    if (!so) return 'niedostępne';
+    const raw = attr ? so.attributes[attr] : so.state;
+    if (raw == null) return '';
+    let r = String(raw); h = h || window.__hgHass;
+    try { r = attr ? (h && h.formatEntityAttributeValue ? h.formatEntityAttributeValue(so, attr) : r) : (h && h.formatEntityState ? h.formatEntityState(so) : r); } catch (e) { /* starsze HA */ }
+    if (!attr && so.entity_id && so.entity_id.startsWith('binary_sensor.') && (raw === 'on' || raw === 'off')) {
+      if (r !== raw) return r.toLowerCase();                                    // tłumaczenie HA zależne od device_class
+      const bm = HG_BIN_PL[so.attributes.device_class]; if (bm) return bm[raw === 'on' ? 0 : 1];
+    }
+    const pl = HG_PL[hgStN(raw)] || HG_PL[hgStN(r)];
+    if (pl) return pl;
+    return /^[A-Z][a-z]/.test(r) && !/\d/.test(r) && r === String(raw) ? r.toLowerCase() : r;
+  },
+  /* samodzielna wartość (kafel/wiersz): wielka litera na początku */
+  T: (h, so, attr) => { const r = H.t(h, so, attr); return r && r !== 'wł.' && r !== 'wył.' ? r.charAt(0).toUpperCase() + r.slice(1) : r === 'wł.' ? 'Włączone' : r === 'wył.' ? 'Wyłączone' : r; },
+  dayKey: (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+};
+window.__hg = H;
+
+/* zamrożenie przerysowań na czas animacji panelu (ukryj/pokaż) – po zwolnieniu zaległe karty odświeżają się raz */
+const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q: new Set(),
+  release() { this.on = false; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) c._doUpdate(false); } });
+class HGBase extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._sig = null;
+    const down = () => { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); };
+    const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }, 60); };
+    this.shadowRoot.addEventListener('pointerdown', down, { passive: true });
+    this.shadowRoot.addEventListener('pointerup', up, { passive: true });
+    this.shadowRoot.addEventListener('pointercancel', up, { passive: true });
+    this.shadowRoot.addEventListener('click', (e) => {
+      const t = e.composedPath().find((n) => n.dataset && n.dataset.act);
+      if (!t || t.hasAttribute('disabled')) return;
+      e.stopPropagation();
+      this.onAct(t.dataset.act, t, e);
+    });
+  }
+  defaults() { return {}; }
+  setConfig(c) {
+    if (!c) throw new Error('Brak konfiguracji');
+    this._config = Object.assign({}, this.defaults(), c);
+    this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
+    if (!this._styled) {
+      const st = document.createElement('style');
+      st.textContent = HG_BASE + this.css();
+      this.shadowRoot.appendChild(st);
+      this.$ = document.createElement('div');
+      this.$.className = 'root';
+      this.$.style.height = '100%';
+      this.shadowRoot.appendChild(this.$);
+      this._styled = true;
+    }
+    if (this._hass) this._update();
+  }
+  set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
+  get hass() { return this._hass; }
+  ents() { return [this._config.entity].filter(Boolean); }
+  /* szybka ścieżka: HA podmienia obiekt stanu tylko dla zmienionej encji -> porównanie referencji, bez JSON */
+  _changed() {
+    const ents = this._entsC || (this._entsC = this.ents());
+    const st = this._hass.states, prev = this._prevStates;
+    const ex = JSON.stringify(this._extraSig ? this._extraSig() : '');
+    let ch = !prev || ex !== this._prevEx;
+    if (!ch) for (let i = 0; i < ents.length; i++) if (st[ents[i]] !== prev[i]) { ch = true; break; }
+    if (ch) { this._prevStates = ents.map((e) => st[e]); this._prevEx = ex; }
+    return ch;
+  }
+  /* rAF: kilka zmian hass w jednej klatce -> jedno przerysowanie; pierwsze malowanie synchronicznie (View Transition czeka na gotowy widok).
+     Odłączona karta (ukryty widok w pamięci HA) nie liczy niczego; nadrabia przy ponownym podłączeniu. */
+  _update(force) {
+    if (!this._config || !this._hass || this._busy) return;
+    if (this._html != null && !this.isConnected) { this._stale = true; return; }
+    if (this._html != null && !force) {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => { this._raf = 0; this._doUpdate(false); });
+      return;
+    }
+    this._doUpdate(force);
+  }
+  connectedCallback() { if (this._stale) { this._stale = false; this._update(true); } }
+  _doUpdate(force) {
+    if (!this._config || !this._hass || this._busy) return;
+    if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); return; }           // panel w trakcie animacji: przerysuj po jej końcu
+    if (!force && !this._changed()) return;
+    // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
+    if (this._touching) { this._pendingUpd = true; return; }
+    const html = this.render();
+    if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
+    this._html = html;
+    this.$.innerHTML = html;
+    if (this.afterRender) this.afterRender();
+  }
+  rerender() { this._prevStates = null; this._update(true); }
+  onAct() {}
+  css() { return ''; }
+  render() { return ''; }
+  getCardSize() { return 3; }
+  getGridOptions() { return { columns: 6, rows: 3 }; }
+  toggleHtml(on, act, disabled, label) {
+    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || 'przełącz')}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
+  }
+}
+window.customCards = window.customCards || [];
+const hgReg = (tag, cls, name, desc) => {
+  if (!customElements.get(tag)) customElements.define(tag, cls);
+  if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, name, description: desc, preview: false });
+};
+
+/* ===== SCHEMAT JASNY / CIEMNY =====
+   Wszystkie kolory kart i strony to tokeny CSS (--hg-<rola>-<kolor>) zdefiniowane na :root: jeden zestaw dla jasnego,
+   drugi (tylko różnice) dla :root[data-hg-scheme=dark]. Zmienne dziedziczą się przez shadow DOM, więc przełączenie
+   atrybutu na <html> przemalowuje wszystko (karty, warstwy menu/arkusza, nakładkę kamery) bez przeładowania.
+   Wybór: hass.themes.darkMode (profil HA: auto / jasny / ciemny) -> przy „auto” prefers-color-scheme na żywo.
+   Nadpisanie do testów: localStorage nuvio:scheme = light | dark.
+   Tokeny wygenerowane przez theme_tokens.py z dawnych literałów; ręczne strojenie w theme_overrides.json. */
+(function hgTokens() {
+  const id = 'hg-tokens';
+  let s = document.getElementById(id);
+  if (!s) { s = document.createElement('style'); s.id = id; document.head.appendChild(s); }
+  s.textContent = `:root{
+  --r-lg:31px; --r-md:21px; --r-sm:16px; --s1:10px; --s2:16px; --s3:21px; --s4:31px; --fs-xs:11px; --fs-sm:13px; --fs-md:15.5px;
+  --hg-sh: 0 10px 30px var(--hg-glass-sh, rgba(0,0,0,.18)); --hg-sh-sm: 0 1px 3px rgba(0,0,0,.08); --hg-sh-hover: 0 10px 28px var(--hg-glass-sh-h, rgba(20,35,60,.16)); --hg-hover-fill: rgba(255,255,255,.06);
+  --hg-accent: #63D71E; --hg-accent-hi: #9BF24A; --hg-accent-lo: #3E9A10; --hg-accent-soft: rgba(99,215,30,.22); --hg-accent-faint: rgba(99,215,30,.10); --hg-accent-glow: rgba(125,246,48,.30); --hg-accent-tx: #1A4607; --hg-on-accent: #0B0F0A; --hg-thumb: #FFFFFF; --hg-thumb-sh: 0 1px 3px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18);
+  --hg-night: transparent; --hg-photo-filter: none; --hg-chrome-sat: 60%; --hg-tools-tint: rgba(240,242,245,.48); --hg-tools-sat: 30%; --hg-scheme: light; --hg-ink: #000; --hg-ink-p: 40%;
+  /* pływające kontrolki (szyna, zakładki, pasek narzędzi, hub, wstecz): neutralne szare szkło, bez niebieskiego odcienia */
+  --hg-chrome-bg: var(--hg-glass-bg); --hg-chrome-bd: transparent; --hg-chrome-lite: rgba(246,246,248,.86);
+  --hg-chrome-blur: 14px; --hg-chrome-sat: 70%; --hg-chrome-lite-sat: 40%; --hg-chrome-sh: 0 4px 18px rgba(0,0,0,.08); --hg-chrome-solid: rgba(242,242,245,.92);
+  --hg-chrome-fx: brightness(1.1); --hg-chrome-fg: #1C1C1E; --hg-chrome-ts: none; --hg-chrome-hover: rgba(0,0,0,.06); --hg-chrome-btn: rgba(255,255,255,.6);
+  --hg-chrome-badge: var(--hg-accent); --hg-chrome-pill-sh: 0 1px 4px rgba(0,0,0,.18);
+  /* powierzchnie szkła (ręcznie, nie z generatora) */
+  --hg-glass-bg: rgba(226,232,238,.38); --hg-ov-bg: #F2F3F5; --hg-glass-blur: 14px; --hg-glass-sat: 120%; --hg-glass-bri: 1; --hg-spec: transparent;
+  --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(20,30,40,.10);
+  /* liquid glass: ostry wewnętrzny obrys jaśniejszy u góry/lewej, ciemniejszy u dołu/prawej + miękka poświata krawędzi */
+  --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.30);
+  --hg-lens: saturate(100%);
+  --hg-warm-bg: var(--hg-glass-bg);
+  --hg-panel-bg: rgba(210,218,226,.30); --hg-panel-flat: rgba(236,238,242,.82); --hg-warn: #931F18; --hg-trend-up: #7A1A14; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(30,32,35,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #3C4045; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  /* tryb lekki (dotyk): karty bez rozmycia, półprzezroczyste jednolite tło */
+  --hg-glass-lite-c: rgba(232,237,242,.80); --hg-warm-lite-c: var(--hg-glass-lite-c);
+  --hg-ac-000000:#000000;
+  --hg-ac-000000-008:rgba(0,0,0,0.08);
+  --hg-ac-000000-010:rgba(0,0,0,0.1);
+  --hg-ac-000000-012:rgba(0,0,0,0.12);
+  --hg-ac-000000-028:rgba(0,0,0,0.28);
+  --hg-ac-000000-040:rgba(0,0,0,0.4);
+  --hg-ac-000000-085:rgba(0,0,0,0.85);
+  --hg-ac-1e2023:#1E2023;
+  --hg-ac-34c759:#34C759;
+  --hg-ac-5a5e64:#5A5E64;
+  --hg-ac-5ac8fa:#5AC8FA;
+  --hg-ac-6e747a:#6E747A;
+  --hg-ac-8e9aaf:#8E9AAF;
+  --hg-ac-9aa0a6:#9AA0A6;
+  --hg-ac-9aa6c8:#9AA6C8;
+  --hg-ac-a3a9b1:#A3A9B1;
+  --hg-ac-b793ec:#B793EC;
+  --hg-ac-c4c8ce:#C4C8CE;
+  --hg-ac-c62828:#C62828;
+  --hg-ac-c9ccd0:#C9CCD0;
+  --hg-ac-e53935:#E53935;
+  --hg-ac-e5484d:#E5484D;
+  --hg-ac-f0955a:#F0955A;
+  --hg-ac-f9c80e:#F9C80E;
+  --hg-ac-ff6b8b:#FF6B8B;
+  --hg-ac-ffffff:#FFFFFF;
+  --hg-ac-ffffff-035:rgba(255,255,255,0.35);
+  --hg-ac-ffffff-k:#FFFFFF;
+  --hg-bd-000000-005:rgba(0,0,0,0.05);
+  --hg-bd-000000-006:rgba(0,0,0,0.06);
+  --hg-bd-000000-007:rgba(0,0,0,0.07);
+  --hg-bd-000000-008:rgba(0,0,0,0.08);
+  --hg-bd-000000-010:rgba(0,0,0,0.1);
+  --hg-bd-1f2125:#1F2125;
+  --hg-bd-e53935:#E53935;
+  --hg-bd-ffffff-016-k:rgba(255,255,255,0.16);
+  --hg-bd-ffffff-018:rgba(255,255,255,0.18);
+  --hg-bd-ffffff-022:rgba(255,255,255,0.22);
+  --hg-bd-ffffff-030:rgba(255,255,255,0.3);
+  --hg-bd-ffffff-042-k:rgba(255,255,255,0.42);
+  --hg-bd-ffffff-045:rgba(255,255,255,0.45);
+  --hg-bd-ffffff-055:rgba(255,255,255,0.55);
+  --hg-bd-ffffff-070:rgba(255,255,255,0.7);
+  --hg-bd-ffffff-075:rgba(255,255,255,0.75);
+  --hg-bd-ffffff-080:rgba(255,255,255,0.8);
+  --hg-bd-ffffff-085:rgba(255,255,255,0.85);
+  --hg-bg-000000:#000000;
+  --hg-bg-000000-000:rgba(0,0,0,0);
+  --hg-bg-000000-004:rgba(0,0,0,0.035);
+  --hg-bg-000000-005:rgba(0,0,0,0.05);
+  --hg-bg-000000-006:rgba(0,0,0,0.06);
+  --hg-bg-000000-007:rgba(0,0,0,0.07);
+  --hg-bg-000000-008:rgba(0,0,0,0.08);
+  --hg-bg-000000-009:rgba(0,0,0,0.09);
+  --hg-bg-000000-010:rgba(0,0,0,0.1);
+  --hg-bg-000000-012:rgba(0,0,0,0.12);
+  --hg-bg-000000-014:rgba(0,0,0,0.14);
+  --hg-bg-000000-018:rgba(0,0,0,0.18);
+  --hg-bg-000000-020:rgba(0,0,0,0.2);
+  --hg-bg-000000-028:rgba(0,0,0,0.28);
+  --hg-bg-000000-028-k:rgba(0,0,0,0.28);
+  --hg-bg-000000-030:rgba(0,0,0,0.3);
+  --hg-bg-000000-045:rgba(0,0,0,0.45);
+  --hg-bg-000000-045-k:rgba(0,0,0,0.45);
+  --hg-bg-000000-k:#000000;
+  --hg-bg-06090c-055:rgba(6,9,12,0.55);
+  --hg-bg-080c12-036:rgba(8,12,18,0.36);
+  --hg-bg-08101e-038-k:rgba(8,16,30,0.38);
+  --hg-bg-0a0e14-032:rgba(10,14,20,0.32);
+  --hg-bg-0b0f0a:#0B0F0A;
+  --hg-bg-0e1014-026-k:rgba(14,16,20,0.26);
+  --hg-bg-0e1014-032:rgba(14,16,20,0.32);
+  --hg-bg-0e1014-036:rgba(14,16,20,0.36);
+  --hg-bg-0e1014-042:rgba(14,16,20,0.42);
+  --hg-bg-181e28-074:rgba(24,30,40,0.74);
+  --hg-bg-1c1c1e-k:#1C1C1E;
+  --hg-bg-1e1e1e-055:rgba(30,30,30,0.55);
+  --hg-bg-1e2023:#1E2023;
+  --hg-bg-1e2024-012:rgba(30,32,36,0.12);
+  --hg-bg-1e2024-030:rgba(30,32,36,0.3);
+  --hg-bg-1e242c-022-k:rgba(30,36,44,0.22);
+  --hg-bg-1e242c-072:rgba(30,36,44,0.72);
+  --hg-bg-1e242e-008:rgba(30,36,46,0.08);
+  --hg-bg-1e242e-018:rgba(30,36,46,0.18);
+  --hg-bg-1f2125:#1F2125;
+  --hg-bg-282828-030:rgba(40,40,40,0.3);
+  --hg-bg-2a2d31:#2A2D31;
+  --hg-bg-2b3038:#2B3038;
+  --hg-bg-2c2f33:#2C2F33;
+  --hg-bg-636366-k:#636366;
+  --hg-bg-63d71e:#63D71E;
+  --hg-bg-6a6e74:#6A6E74;
+  --hg-bg-767680-012:rgba(118,118,128,0.12);
+  --hg-bg-785f50-008:rgba(120,95,80,0.08);
+  --hg-bg-787880-024:rgba(120,120,128,0.24);
+  --hg-bg-80868c-022:rgba(128,134,140,0.22);
+  --hg-bg-80868c-025:rgba(128,134,140,0.25);
+  --hg-bg-80868c-030:rgba(128,134,140,0.3);
+  --hg-bg-80868c-035:rgba(128,134,140,0.35);
+  --hg-bg-80868c-055:rgba(128,134,140,0.55);
+  --hg-bg-969a9e-060:rgba(150,154,158,0.6);
+  --hg-bg-96a0a6-055:rgba(150,160,166,0.55);
+  --hg-bg-9aa0a6:#9AA0A6;
+  --hg-bg-9aa3ad:#9AA3AD;
+  --hg-bg-9be15d:#9BE15D;
+  --hg-bg-a0a4a8-055:rgba(160,164,168,0.55);
+  --hg-bg-a0e63c-008:rgba(160,230,60,0.08);
+  --hg-bg-a9adb2:#A9ADB2;
+  --hg-bg-c3c6ca:#C3C6CA;
+  --hg-bg-c62828:#C62828;
+  --hg-bg-c8cdd2-080:rgba(200,205,210,0.8);
+  --hg-bg-cccccc:#CCCCCC;
+  --hg-bg-cccccc-k:#CCCCCC;
+  --hg-bg-d6dae0-055:rgba(214,218,224,0.55);
+  --hg-bg-e2dceb:#E2DCEB;
+  --hg-bg-e4e5e7:#E4E5E7;
+  --hg-bg-e4e6e9:#E4E6E9;
+  --hg-bg-e53935:#E53935;
+  --hg-bg-e53935-010:rgba(229,57,53,0.1);
+  --hg-bg-e5484d-k:#E5484D;
+  --hg-bg-e9e5df:#E9E5DF;
+  --hg-bg-e9ecef:#E9ECEF;
+  --hg-bg-ecedee:#ECEDEE;
+  --hg-bg-ecedef-090:rgba(236,237,239,0.9);
+  --hg-bg-eceef2-094:rgba(236,238,242,0.94);
+  --hg-bg-ee3333:#EE3333;
+  --hg-bg-f9d13a:#F9D13A;
+  --hg-bg-ff3b30:#FF3B30;
+  --hg-bg-ff5a52-016:rgba(255,90,82,0.16);
+  --hg-bg-ff6b5b:#FF6B5B;
+  --hg-bg-ffe3de:#FFE3DE;
+  --hg-bg-ffe3df:#FFE3DF;
+  --hg-bg-ffffff:#FFFFFF;
+  --hg-bg-ffffff-008:rgba(255,255,255,0.08);
+  --hg-bg-ffffff-012:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-012-k:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-013-k:rgba(255,255,255,0.13);
+  --hg-bg-ffffff-014-k:rgba(255,255,255,0.14);
+  --hg-bg-ffffff-018-k:rgba(255,255,255,0.18);
+  --hg-bg-ffffff-022:rgba(255,255,255,0.22);
+  --hg-bg-ffffff-030:rgba(255,255,255,0.3);
+  --hg-bg-ffffff-032:rgba(255,255,255,0.32);
+  --hg-bg-ffffff-035:rgba(255,255,255,0.35);
+  --hg-bg-ffffff-042:rgba(255,255,255,0.42);
+  --hg-bg-ffffff-045:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-050:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-055:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-058:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-060:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-060-k:rgba(255,255,255,0.6);
+  --hg-bg-ffffff-062:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-065:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-070:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-072:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-075:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-080:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-085:rgba(255,255,255,0.85);
+  --hg-bg-ffffff-090:rgba(255,255,255,0.9);
+  --hg-bg-ffffff-095:rgba(255,255,255,0.95);
+  --hg-bg-ffffff-k:#FFFFFF;
+  --hg-gx-000000-007:rgba(0,0,0,0.07);
+  --hg-gx-000000-012:rgba(0,0,0,0.12);
+  --hg-gx-000000-014:rgba(0,0,0,0.14);
+  --hg-gx-000000-018:rgba(0,0,0,0.18);
+  --hg-gx-000000-022:rgba(0,0,0,0.22);
+  --hg-gx-80868c-025:rgba(128,134,140,0.25);
+  --hg-gx-9aa6c8:#9AA6C8;
+  --hg-gx-fbd9c4:#FBD9C4;
+  --hg-gx-ffffff:#FFFFFF;
+  --hg-sh-000000-004-k:rgba(0,0,0,0.04);
+  --hg-sh-000000-006:rgba(0,0,0,0.06);
+  --hg-sh-000000-008:rgba(0,0,0,0.08);
+  --hg-sh-000000-012:rgba(0,0,0,0.12);
+  --hg-sh-000000-018:rgba(0,0,0,0.18);
+  --hg-sh-000000-018-k:rgba(0,0,0,0.18);
+  --hg-sh-000000-020:rgba(0,0,0,0.2);
+  --hg-sh-000000-020-k:rgba(0,0,0,0.2);
+  --hg-sh-000000-022:rgba(0,0,0,0.22);
+  --hg-sh-000000-025:rgba(0,0,0,0.25);
+  --hg-sh-000000-025-k:rgba(0,0,0,0.25);
+  --hg-sh-000000-028:rgba(0,0,0,0.28);
+  --hg-sh-000000-028-k:rgba(0,0,0,0.28);
+  --hg-sh-000000-030:rgba(0,0,0,0.3);
+  --hg-sh-000000-030-k:rgba(0,0,0,0.3);
+  --hg-sh-000000-032:rgba(0,0,0,0.32);
+  --hg-sh-000000-035:rgba(0,0,0,0.35);
+  --hg-sh-000000-040:rgba(0,0,0,0.4);
+  --hg-sh-0a141e-018:rgba(10,20,30,0.18);
+  --hg-sh-282828-080:rgba(40,40,40,0.8);
+  --hg-sh-96a0a6-090-k:rgba(150,160,166,0.9);
+  --hg-sh-eceef2:#ECEEF2;
+  --hg-sh-ffffff-012:rgba(255,255,255,0.12);
+  --hg-sh-ffffff-014:rgba(255,255,255,0.14);
+  --hg-sh-ffffff-018-k:rgba(255,255,255,0.18);
+  --hg-sh-ffffff-025:rgba(255,255,255,0.25);
+  --hg-sh-ffffff-085:rgba(255,255,255,0.85);
+  --hg-sh-ffffff-090:rgba(255,255,255,0.9);
+  --hg-tx-000000:#111111;
+  --hg-tx-0b0f0a-on:#111111;
+  --hg-tx-111111:#111111;
+  --hg-tx-111214-k:#111111;
+  --hg-tx-16181b:#111111;
+  --hg-tx-1e2023:#111111;
+  --hg-tx-1e2023-k:#111111;
+  --hg-tx-1e2023-on:#111111;
+  --hg-tx-1f2125:#111111;
+  --hg-tx-1f2125-k:#111111;
+  --hg-tx-2a2d31:#3A3D42;
+  --hg-tx-2b2e33:#3A3D42;
+  --hg-tx-3a3d42:#3A3D42;
+  --hg-tx-3a3e44:#3A3D42;
+  --hg-tx-3b3f45:#3A3D42;
+  --hg-tx-45494f:#3A3D42;
+  --hg-tx-4a4e54:#3A3D42;
+  --hg-tx-4d5157:#3A3D42;
+  --hg-tx-5a5e64:#3A3D42;
+  --hg-tx-63d71e:#63D71E;
+  --hg-tx-6a6e74:#3A3D42;
+  --hg-tx-6a6e75:#3A3D42;
+  --hg-tx-7a7e84:#3A3D42;
+  --hg-tx-7a7e85:#3A3D42;
+  --hg-tx-8a1c0c-on:#8A1C0C;
+  --hg-tx-8a8e94:#3A3D42;
+  --hg-tx-9a9ea4:#3A3D42;
+  --hg-tx-9aa0a6:#3A3D42;
+  --hg-tx-a4a8ae:#3A3D42;
+  --hg-tx-b3261e:#931F18;
+  --hg-tx-b3261e-on:#931F18;
+  --hg-tx-eef2f5:#EEF2F5;
+  --hg-tx-ff3b30:#FF3B30;
+  --hg-tx-ffffff:#FFFFFF;
+  --hg-tx-ffffff-055-k:rgba(255,255,255,0.55);
+  --hg-tx-ffffff-060:rgba(255,255,255,0.6);
+  --hg-tx-ffffff-065:rgba(255,255,255,0.65);
+  --hg-tx-ffffff-070:rgba(255,255,255,0.7);
+  --hg-tx-ffffff-095:rgba(255,255,255,0.95);
+  --hg-tx-ffffff-095-k:rgba(255,255,255,0.95);
+  --hg-tx-ffffff-inv:#FFFFFF;
+  --hg-tx-ffffff-k:#FFFFFF;
+}
+:root[data-hg-scheme=dark]{
+  --hg-accent-tx: #9BF24A;
+  --hg-night: rgba(6,8,12,.25);
+  --hg-photo-filter: brightness(.78) saturate(.9); --hg-chrome-sat: 60%; --hg-tools-tint: rgba(22,26,32,.18); --hg-scheme: dark; --hg-ink: #fff; --hg-ink-p: 0%;
+  --hg-chrome-bg: var(--hg-glass-bg); --hg-chrome-blur: 14px; --hg-chrome-sat: 15%; --hg-chrome-lite-sat: 10%; --hg-chrome-sh: none; --hg-chrome-bd: transparent; --hg-chrome-lite: rgba(120,128,136,.50); --hg-chrome-solid: rgba(30,30,33,.92);
+  --hg-chrome-fx: brightness(1); --hg-chrome-fg: #FFFFFF; --hg-chrome-ts: 0 1px 6px rgba(0,0,0,.28); --hg-chrome-hover: rgba(255,255,255,.12); --hg-chrome-btn: rgba(255,255,255,.10);
+  --hg-chrome-badge: var(--hg-accent); --hg-chrome-pill-sh: 0 2px 8px rgba(0,0,0,.15);
+  --hg-glass-bg: rgba(255,255,255,.13); --hg-ov-bg: #24252A; --hg-spec: transparent; --hg-glass-bri: 1;
+  --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(0,0,0,.18);
+  --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.12); --hg-glass-sh-h: rgba(0,0,0,.40); --hg-hover-fill: rgba(255,255,255,.035);
+  --hg-warm-bg: var(--hg-glass-bg);
+  --hg-panel-bg: rgba(20,26,32,.22); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-glass-lite-c: rgba(120,128,136,.42); --hg-warm-lite-c: var(--hg-glass-lite-c);
+  --hg-bd-000000-005:rgba(255,255,255,0.07);
+  --hg-bd-000000-006:rgba(255,255,255,0.084);
+  --hg-bd-000000-007:rgba(255,255,255,0.098);
+  --hg-bd-000000-008:rgba(255,255,255,0.112);
+  --hg-bd-000000-010:rgba(255,255,255,0.14);
+  --hg-bd-1f2125:rgba(255,255,255,0.14);
+  --hg-bd-ffffff-018:rgba(255,255,255,0.05);
+  --hg-bd-ffffff-022:rgba(255,255,255,0.05);
+  --hg-bd-ffffff-030:rgba(255,255,255,0.05);
+  --hg-bd-ffffff-045:rgba(255,255,255,0.063);
+  --hg-bd-ffffff-055:rgba(255,255,255,0.077);
+  --hg-bd-ffffff-070:rgba(255,255,255,0.098);
+  --hg-bd-ffffff-075:rgba(255,255,255,0.105);
+  --hg-bd-ffffff-080:rgba(255,255,255,0.112);
+  --hg-bd-ffffff-085:rgba(255,255,255,0.119);
+  --hg-bg-000000-000:rgba(255,255,255,0);
+  --hg-bg-000000-004:rgba(255,255,255,0.046);
+  --hg-bg-000000-005:rgba(255,255,255,0.065);
+  --hg-bg-000000-006:rgba(255,255,255,0.078);
+  --hg-bg-000000-007:rgba(255,255,255,0.091);
+  --hg-bg-000000-008:rgba(255,255,255,0.104);
+  --hg-bg-000000-009:rgba(255,255,255,0.117);
+  --hg-bg-000000-010:rgba(255,255,255,0.13);
+  --hg-bg-000000-012:rgba(255,255,255,0.156);
+  --hg-bg-000000-014:rgba(255,255,255,0.16);
+  --hg-bg-000000-018:rgba(255,255,255,0.16);
+  --hg-bg-000000-020:rgba(255,255,255,0.16);
+  --hg-bg-000000-028:rgba(255,255,255,0.16);
+  --hg-bg-0b0f0a:#ECECEF;
+  --hg-bg-1e2023:#ECECEF;
+  --hg-bg-1e2024-012:rgba(255,255,255,0.156);
+  --hg-bg-1e242e-008:rgba(255,255,255,0.104);
+  --hg-bg-1e242e-018:rgba(255,255,255,0.16);
+  --hg-bg-1f2125:#ECECEF;
+  --hg-bg-2a2d31:#ECECEF;
+  --hg-bg-2b3038:#1F2328;
+  --hg-bg-2c2f33:#ECECEF;
+  --hg-bg-6a6e74:#8B8F95;
+  --hg-bg-767680-012:rgba(127,127,137,0.12);
+  --hg-bg-785f50-008:rgba(120,95,80,0.128);
+  --hg-bg-787880-024:rgba(127,127,135,0.24);
+  --hg-bg-80868c-022:rgba(115,121,127,0.22);
+  --hg-bg-80868c-025:rgba(115,121,127,0.25);
+  --hg-bg-80868c-030:rgba(115,121,127,0.3);
+  --hg-bg-80868c-035:rgba(115,121,127,0.35);
+  --hg-bg-80868c-055:rgba(115,121,127,0.55);
+  --hg-bg-969a9e-060:rgba(97,101,105,0.6);
+  --hg-bg-96a0a6-055:rgba(89,99,105,0.55);
+  --hg-bg-9aa0a6:#595F65;
+  --hg-bg-9aa3ad:#525B65;
+  --hg-bg-a0a4a8-055:rgba(87,91,95,0.55);
+  --hg-bg-a0e63c-008:rgba(160,230,60,0.128);
+  --hg-bg-a9adb2:#4D5156;
+  --hg-bg-c3c6ca:#393D41;
+  --hg-bg-c8cdd2-080:rgba(255,255,255,0.1);
+  --hg-bg-cccccc:#3D3D3D;
+  --hg-bg-d6dae0-055:rgba(255,255,255,0.075);
+  --hg-bg-e2dceb:#2E2E33;
+  --hg-bg-e4e5e7:#3A3A3F;
+  --hg-bg-e4e6e9:#2E2E33;
+  --hg-bg-e53935-010:rgba(229,57,53,0.16);
+  --hg-bg-e9e5df:#2E2E33;
+  --hg-bg-e9ecef:#2E2E33;
+  --hg-bg-ecedee:#2E2E33;
+  --hg-bg-ecedef-090:rgba(46,46,51,0.9);
+  --hg-bg-eceef2-094:rgba(46,46,51,0.94);
+  --hg-bg-ff5a52-016:rgba(255,90,82,0.256);
+  --hg-bg-ffe3de:#5C281F;
+  --hg-bg-ffe3df:#5C261F;
+  --hg-bg-ffffff:#2E2E33;
+  --hg-bg-ffffff-008:rgba(255,255,255,0.048);
+  --hg-bg-ffffff-012:rgba(255,255,255,0.072);
+  --hg-bg-ffffff-022:rgba(255,255,255,0.132);
+  --hg-bg-ffffff-030:rgba(255,255,255,0.05);
+  --hg-bg-ffffff-032:rgba(255,255,255,0.052);
+  --hg-bg-ffffff-035:rgba(255,255,255,0.055);
+  --hg-bg-ffffff-042:rgba(255,255,255,0.062);
+  --hg-bg-ffffff-045:rgba(255,255,255,0.065);
+  --hg-bg-ffffff-050:rgba(255,255,255,0.07);
+  --hg-bg-ffffff-055:rgba(255,255,255,0.075);
+  --hg-bg-ffffff-058:rgba(255,255,255,0.078);
+  --hg-bg-ffffff-060:rgba(255,255,255,0.08);
+  --hg-bg-ffffff-062:rgba(255,255,255,0.082);
+  --hg-bg-ffffff-065:rgba(255,255,255,0.085);
+  --hg-bg-ffffff-070:rgba(255,255,255,0.09);
+  --hg-bg-ffffff-072:rgba(255,255,255,0.092);
+  --hg-bg-ffffff-075:rgba(255,255,255,0.095);
+  --hg-bg-ffffff-080:rgba(255,255,255,0.1);
+  --hg-bg-ffffff-085:rgba(46,46,51,0.85);
+  --hg-bg-ffffff-090:rgba(46,46,51,0.9);
+  --hg-bg-ffffff-095:rgba(46,46,51,0.95);
+  --hg-gx-000000-007:rgba(255,255,255,0.088);
+  --hg-gx-000000-012:rgba(255,255,255,0.15);
+  --hg-gx-000000-014:rgba(255,255,255,0.175);
+  --hg-gx-000000-018:rgba(255,255,255,0.225);
+  --hg-gx-000000-022:rgba(255,255,255,0.275);
+  --hg-gx-80868c-025:rgba(120,126,132,0.25);
+  --hg-gx-ffffff:#2C2C30;
+  --hg-sh-000000-006:rgba(0,0,0,0.132);
+  --hg-sh-000000-008:rgba(0,0,0,0.176);
+  --hg-sh-000000-012:rgba(0,0,0,0.264);
+  --hg-sh-000000-018:rgba(0,0,0,0.396);
+  --hg-sh-000000-020:rgba(0,0,0,0.44);
+  --hg-sh-000000-022:rgba(0,0,0,0.484);
+  --hg-sh-000000-025:rgba(0,0,0,0.55);
+  --hg-sh-000000-028:rgba(0,0,0,0.6);
+  --hg-sh-000000-030:rgba(0,0,0,0.6);
+  --hg-sh-000000-032:rgba(0,0,0,0.6);
+  --hg-sh-000000-035:rgba(0,0,0,0.6);
+  --hg-sh-000000-040:rgba(0,0,0,0.6);
+  --hg-sh-0a141e-018:rgba(0,0,0,0.396);
+  --hg-sh-282828-080:rgba(0,0,0,0.6);
+  --hg-sh-eceef2:rgba(255,255,255,0.08);
+  --hg-sh-ffffff-012:rgba(255,255,255,0.012);
+  --hg-sh-ffffff-014:rgba(255,255,255,0.014);
+  --hg-sh-ffffff-025:rgba(255,255,255,0.025);
+  --hg-sh-ffffff-085:rgba(255,255,255,0.08);
+  --hg-sh-ffffff-090:rgba(255,255,255,0.08);
+  --hg-tx-000000:#FFFFFF;
+  --hg-tx-111111:#F9F9F9;
+  --hg-tx-16181b:#F5F5F7;
+  --hg-tx-1e2023:#F2F2F4;
+  --hg-tx-1f2125:#F1F2F3;
+  --hg-tx-2a2d31:#ECEEEF;
+  --hg-tx-2b2e33:#ECEDEF;
+  --hg-tx-3a3d42:#E6E7E9;
+  --hg-tx-3a3e44:#E5E7E9;
+  --hg-tx-3b3f45:#E5E6E9;
+  --hg-tx-45494f:#E1E3E5;
+  --hg-tx-4a4e54:#DFE1E3;
+  --hg-tx-4d5157:#DEDFE2;
+  --hg-tx-5a5e64:#D9DBDD;
+  --hg-tx-63d71e:#AAEE82;
+  --hg-tx-6a6e74:#D3D4D7;
+  --hg-tx-6a6e75:#D3D4D7;
+  --hg-tx-7a7e84:#CDCED1;
+  --hg-tx-7a7e85:#CCCED1;
+  --hg-tx-8a8e94:#B4B8BE;
+  --hg-tx-9a9ea4:#B4B8BE;
+  --hg-tx-9aa0a6:#B4B8BE;
+  --hg-tx-a4a8ae:#B4B8BE;
+  --hg-tx-b3261e:#FF9B94;
+  --hg-tx-b3261e-on:#B3261E;
+  --hg-tx-ff3b30:#FF7870;
+  --hg-tx-ffffff-inv:#1C1C1E;
+}`;
+  /* soczewka SVG usunięta (szwy/tęczowe smugi w Chrome); sprzątanie po starej wersji */
+  try { document.documentElement.removeAttribute('data-hg-lens'); const o = document.getElementById('hg-liquid-svg'); if (o) o.remove(); } catch (e) {}
+})();
+/* jedna instancja na stronę (moduł może zostać wczytany dwa razy, np. podgląd + zasób) */
+const HGTheme = window.__hgTheme || {
+  dark: null, _h: null,
+  mq: window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null,
+  apply(d) {
+    d = !!d; if (d === this.dark) return;
+    this.dark = d;
+    document.documentElement.setAttribute('data-hg-scheme', d ? 'dark' : 'light');
+    window.dispatchEvent(new CustomEvent('hg-scheme', { detail: { dark: d } }));
+  },
+  _ov() { try { const v = localStorage.getItem('nuvio:scheme'); return v === 'dark' || v === 'light' ? v : null; } catch (e) { return null; } },
+  pick(h) {
+    if (h) this._h = h;
+    const ov = this._ov(); if (ov) return this.apply(ov === 'dark');
+    const t = this._h && this._h.themes;
+    if (t && typeof t.darkMode === 'boolean') return this.apply(t.darkMode);
+    this.apply(this.mq && this.mq.matches);
+  },
+  /* zmiana systemowa: przy profilu „auto” od razu (HA i tak zaktualizuje hass chwilę później), przy wymuszonym – bez zmian */
+  _sys() {
+    if (this._ov()) return;
+    const sel = this._h && this._h.selectedTheme;
+    if (!sel || sel.dark === undefined || sel.dark === null) this.apply(this.mq.matches);
+  },
+};
+if (HGTheme.mq && !HGTheme._bound) {
+  HGTheme._bound = true;
+  const f = () => HGTheme._sys();
+  HGTheme.mq.addEventListener ? HGTheme.mq.addEventListener('change', f) : HGTheme.mq.addListener(f);
+}
+HGTheme.pick();
+window.__hgTheme = HGTheme;
+
+/* ===== WSPÓLNE STYLE kart Nuvio (szkło, nagłówek karty, przełącznik, animacje ikon) ===== */
+const HG_BASE = U(`
+:host{ --k: var(--hg-u, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); display:block; font-family:'HG DM Sans','DM Sans',-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; color:var(--hg-tx-1e2023); height:100%; font-weight:400; }
+*{ box-sizing:border-box; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+button *, [data-act] ha-icon{ pointer-events:none; }
+ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }
+/* szkło: domyślnie jasnoszare, .warm = kremowo-beżowe jak Energy/AC w projekcie */
+ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, 18u);
+  /* szkło: przezroczyste wypełnienie + delikatny refleks (135°, biel -> przezroczystość 40%), bez kolorowych gradientów */
+  background: var(--hg-glass-lite, var(--hg-glass-bg));
+  /* bez własnego backdrop-filter: karta leży na szklanym panelu, który już rozmywa tło (jedno rozmycie zamiast zagnieżdżonych) */
+  border:0;
+  /* własne rozmycie tylko gdy panel nie ma tła (panel_backdrop: false) */
+  -webkit-backdrop-filter: var(--hg-card-bf, none); backdrop-filter: var(--hg-card-bf, none);
+  box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  color:var(--hg-tx-1e2023); padding:var(--s2); contain: layout paint style; }
+ha-card.glass.warm{
+  background: var(--hg-warm-lite, var(--hg-warm-bg)); }
+.hd{ display:flex; align-items:center; gap:var(--s1); min-height:20u; position:relative; z-index:2; }
+.hd .ic{ width:12u; height:12u; color:var(--hg-tx-2a2d31); flex:none; }
+.hd .tt{ font-size:var(--fs-md); font-weight:600; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd .tt small{ font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-5a5e64); margin-left:4u; }
+.hd .sp{ flex:1; }
+/* wspólny wiersz listy: min. 44px, odstęp tokenowy, separator 1px między wierszami */
+.lr{ display:flex; align-items:center; gap:var(--s2); min-height:max(calc(var(--k) * 34), 44px); padding:var(--s1) 0; }
+.lr + .lr{ border-top:1px solid var(--hg-bd-000000-006); }
+.note{ font-size:var(--fs-xs); color:var(--hg-tx-8a8e94); white-space:nowrap; }
+.ib{ width:30u; height:30u; margin:-5u; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; color:var(--hg-tx-1e2023); position:relative; flex:none; }
+.ib ha-icon{ width:15u; height:15u; }
+/* wspólny hover kafli szklanych: lekkie uniesienie, minimalnie jaśniejsze szkło, mocniejszy miękki cień; tylko mysz (bez „przyklejonego” hovera na dotyku) */
+.lift{ transition: transform .16s ease, box-shadow .16s ease; }
+.lift::after{ content:''; position:absolute; inset:0; border-radius:inherit; background:var(--hg-hover-fill); opacity:0; transition:opacity .16s ease; pointer-events:none; }
+@media (hover:hover) and (pointer:fine){ .lift:hover{ transform:translateY(-2px); box-shadow: var(--hg-sh-hover); } .lift:hover::after{ opacity:1; } }
+.ib:hover{ background:var(--hg-bg-000000-005); }
+.kebab{ width:24u; } .kebab ha-icon{ width:15u; height:15u; }
+/* przełącznik jak w projekcie: pomarańczowy włączony, biało-szary wyłączony */
+.tg{ position:relative; width:34u; height:20u; border-radius:999px; flex:none; transition: background .25s ease;
+  background:var(--hg-bg-787880-024); box-shadow:none; }
+.tg i{ position:absolute; top:2u; left:2u; width:16u; height:16u; border-radius:50%; background:var(--hg-bg-ffffff-k);
+  box-shadow: 0 1px 3px var(--hg-sh-000000-020-k), 0 0 0 .5px var(--hg-sh-000000-004-k); transition: transform .25s cubic-bezier(.3,.7,.3,1); }
+.tg.on{ background:var(--hg-accent); box-shadow:0 0 10px var(--hg-accent-glow); }
+.tg.on i{ transform: translateX(14u); }
+.tg[disabled]{ opacity:.5; cursor:not-allowed; }
+@media (pointer:coarse){ .tg::before{ content:''; position:absolute; inset:-13px -6px; } .ib::before{ content:''; position:absolute; inset:-4px; } }
+.ph{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3u; height:calc(100% - 24u); color:var(--hg-tx-6a6e74); font-size:var(--fs-sm); }
+.ph b{ font-size:var(--fs-sm); color:var(--hg-tx-1e2023); font-weight:400; }
+@keyframes hgspin{ to{ transform: rotate(360deg); } }
+@keyframes hgpulse{ 0%,100%{ transform:scale(1); opacity:1 } 50%{ transform:scale(1.15); opacity:.75 } }
+@keyframes hgflick{ 0%,100%{ transform: scale(1) rotate(0) } 25%{ transform: scale(1.1,.94) rotate(-4deg) } 50%{ transform: scale(.95,1.08) rotate(3deg) } 75%{ transform: scale(1.05,.97) rotate(-2deg) } }
+@keyframes hgwave{ 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(2u) } }
+@keyframes hgglow{ 0%,100%{ filter: drop-shadow(0 0 0 var(--hg-accent-faint)) } 50%{ filter: drop-shadow(0 0 3u var(--hg-accent)) } }
+*, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
+@media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+`);
+
+/* ===================== ENERGIA ===================== */
+class HGEnergyCard extends HGBase {
+  defaults() {
+    return { title: 'Energia', icon: 'mdi:star-four-points', entities: [], max_power: 17250, thresholds: { low: 30, high: 70 },
+      labels: { low: 'Niskie zużycie', medium: 'Średnie zużycie', high: 'Wysokie zużycie' }, expand: null,
+      calc_label: 'Suma faz względem mocy maksymalnej' };
+  }
+  ents() { return this._config.entities; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) var(--s3); }
+.hd .ic{ color:var(--hg-accent-tx); width:11u; height:11u; }
+.sub{ font-size:var(--fs-sm); font-weight:400; margin-top:5u; }
+.grow{ flex:1; min-height:6u; }
+.scale{ display:flex; justify-content:space-between; font-size:var(--fs-sm); color:var(--hg-tx-2b2e33); padding:0 1u; margin-bottom:7u; }
+.bar{ position:relative; height:46u; border-radius:var(--r-sm); background:var(--hg-bg-ffffff); overflow:hidden; }
+.fill{ position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-sm); background:var(--hg-accent); min-width:18u; transition: width .6s cubic-bezier(.3,.7,.3,1); }
+.fill i{ position:absolute; right:12u; top:30%; bottom:30%; width:2u; border-radius:2u; background:var(--hg-bg-ffffff); }
+/* compact: wiersz „Moc teraz” z cienkim paskiem (główny widok) */
+ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
+.cmp .row{ display:flex; align-items:baseline; gap:var(--s1); margin-top:6u; }
+.cmp .row b{ font-size:calc(17u * var(--hg-fsv, 1)); font-weight:600; letter-spacing:-.01em; } .cmp .row span{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); }
+.cmp .bar{ height:10u; border-radius:5u; margin-top:8u; } .cmp .fill{ border-radius:5u; min-width:6u; } .cmp .fill i{ display:none; }
+`);
+  }
+  data() {
+    const c = this._config; let tot = 0, n = 0;
+    for (const e of c.entities) { const v = H.num(this._hass, e); if (v != null) { tot += Math.abs(v); n++; } }   // obciążenie fazy = |P| (eksport PV też płynie przez zabezpieczenie)
+    if (!n) return null;
+    const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
+    return { tot, pct, lvl: pct < c.thresholds.low ? 'low' : pct < c.thresholds.high ? 'medium' : 'high' };
+  }
+  render() {
+    const c = this._config, d = this.data();
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (!d) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
+    const pr = Math.round(d.pct);
+    if (c.compact) {
+      const kw = d.tot >= 1000 ? `${H.fmt(d.tot / 1000, 2)} kW` : `${H.fmt(d.tot, 0)} W`;
+      return `<ha-card class="glass warm cmp" title="${H.esc(`${c.calc_label}: ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`)}">${hd}
+        <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
+        <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+    }
+    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(H.num(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
+      <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
+      <div class="scale"><span>0</span><span>50</span><span>100</span></div>
+      <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+  }
+  onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
+}
+hgReg('nuvio-energy-card', HGEnergyCard, 'Nuvio – Energia', 'Procent obciążenia mocy (suma faz / moc maks.)');
+
+/* ===================== KLIMATYZACJA ===================== */
+/* stan widoczny od razu, bez zmiany powierzchni szkła: mała pełna kropka trybu z ikoną (subtelna animacja), aktywny chip,
+   podświetlenie łuku i tekst „Chłodzi · 21°”. Wyłączona: wszystko szare i przygaszone. Dotknięcie: stan od razu (optymistycznie),
+   potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
+const HG_AC_MODE = {
+  /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
+  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', l: 'Chłodzenie' }, heat: { c: 'var(--hg-accent)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fire', t: 'heat', l: 'Grzanie' },
+  dry: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:water-percent', t: 'neu', l: 'Osuszanie' }, fan_only: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fan', t: 'neu', l: 'Wentylacja' },
+  heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
+  off: { c: 'var(--hg-ac-c4c8ce)', on: 'var(--hg-ac-5a5e64)', i: 'mdi:power', t: 'neu', l: 'Wyłączona' },
+};
+const HG_FAN_PL = { auto: 'Auto', low: 'Niski', medium: 'Średni', middle: 'Średni', mid: 'Średni', high: 'Wysoki', quiet: 'Cichy', silent: 'Cichy', turbo: 'Turbo', strong: 'Mocny', diffuse: 'Rozproszony', focus: 'Skupiony', on: 'Wł.', off: 'Wył.' };
+const HG_SWING_PL = { off: 'Stały', on: 'Ruch', horizontal: 'Poziomo', vertical: 'Pionowo', both: 'Oba', swing: 'Ruch' };
+/* Klimatyzacja w stylu aplikacji Tesla: duża temperatura z chevronami, pasek temperatury (przeciągany), rząd dużych przycisków trybów */
+class HGACCard extends HGBase {
+  defaults() {
+    return { title: 'Klimatyzacja', compact: false,
+      modes: [{ mode: 'heat_cool', label: 'Auto' }, { mode: 'auto', label: 'Auto' }, { mode: 'cool', label: 'Chłodzenie', short: 'Chłodz.' }, { mode: 'heat', label: 'Grzanie' },
+        { mode: 'dry', label: 'Osuszanie', short: 'Osusz.' }, { mode: 'fan_only', label: 'Wiatr' }],
+      compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: 'Wnętrze' };
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; container-type:inline-size; padding:14px var(--s2); gap:var(--s1); min-height:0; user-select:none; -webkit-user-select:none; }
+ha-card.glass > *{ flex-shrink:0; }
+.hd{ min-height:32px; gap:var(--s1); } .hd .tt{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-2a2d31); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hd .tt span{ font-weight:400; color:var(--hg-tx-5a5e64); }
+/* temperatura */
+.temp{ flex:1 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:0; }
+.temp + .bw{ margin-top:-6px; }
+.lab{ font-size:var(--fs-xs); letter-spacing:.12em; text-transform:uppercase; color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.tr{ display:grid; grid-template-columns:var(--cv, 56px) minmax(0, auto) var(--cv, 56px); align-items:center; justify-content:center; gap:var(--s1); width:100%; }
+.num{ font-size:var(--ts, 72px); font-weight:200; letter-spacing:-.04em; line-height:1; color:var(--hg-tx-16181b); font-variant-numeric:tabular-nums; text-align:center; white-space:nowrap; transition: color .2s; padding-right:.18em; position:relative; }
+.num sup{ position:absolute; top:.06em; right:0; font-size:.34em; font-weight:400; }
+.cv{ width:var(--cv, 56px); height:var(--cv, 56px); border-radius:50%; display:flex; align-items:center; justify-content:center; background:transparent; color:var(--hg-tx-2a2d31); transition: background .15s, transform .1s; touch-action:manipulation; }
+.cv ha-icon{ width:32px; height:32px; --mdc-icon-size:32px; } .cv:active, .cv.prs{ background:var(--hg-bg-000000-006); } .cv[disabled]{ opacity:.3; }
+@media (hover:hover) and (pointer:fine){ .cv:not([disabled]):hover{ background:var(--hg-bg-000000-004); } }
+.st{ font-size:var(--fs-sm); font-weight:600; color:var(--mt); white-space:nowrap; transition: color .2s; }
+/* pasek temperatury: zimny błękit -> ciepły pomarańcz (min..max), gałka nastawy, kreska bieżącej */
+.bw{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); }
+.bw small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; }
+.bar{ position:relative; height:44px; cursor:pointer; touch-action:none; outline:none; }
+.bar .tk{ position:absolute; left:0; right:0; top:10px; height:24px; background:repeating-linear-gradient(90deg, var(--hg-bg-80868c-055) 0 1px, transparent 1px calc(100% / 28)); -webkit-mask:linear-gradient(90deg, transparent, var(--hg-ac-000000) 12%, var(--hg-ac-000000) 88%, transparent); mask:linear-gradient(90deg, transparent, var(--hg-ac-000000) 12%, var(--hg-ac-000000) 88%, transparent); transition: opacity .2s; }
+.bar .cu{ position:absolute; top:8px; width:2px; height:28px; margin-left:-1px; border-radius:1px; background:var(--hg-accent); opacity:.9; left:var(--pc); }
+.bar .kn{ position:absolute; top:0; left:var(--pp); width:22px; height:44px; margin-left:-11px; border-radius:11px; background:var(--hg-tile-bg); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 4px 14px var(--hg-sh-000000-022); transition: transform .12s; }
+.bar .kn::before{ content:''; position:absolute; left:50%; top:9px; bottom:9px; width:2px; margin-left:-1px; border-radius:1px; background:var(--hg-ink, var(--hg-bg-000000)); opacity:.75; }
+.bar.drag .kn{ transform:scale(1.15); } .bar:focus-visible .kn{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+/* przyciski trybów (styl dolnych kontrolek Tesli) */
+.mr{ display:grid; grid-template-columns:repeat(auto-fit, minmax(max(var(--bs, 56px), calc((100% - 3 * var(--s1)) / 4)), 1fr)); gap:var(--s1); }
+.mb i em{ display:block; font-style:normal; font-size:11px; font-weight:600; line-height:1.1; max-width:calc(100% - 6px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mb i.v{ flex-direction:column; gap:0; } .mb i.v ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; } .mb i.v em{ font-size:10px; }
+.mb{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; font-size:var(--fs-xs); line-height:1.15; color:var(--hg-tx-4a4e54); }
+.mb i{ width:var(--bs, 56px); height:var(--bs, 56px); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:var(--hg-tx-2a2d31); font-style:normal; transition: background .2s, color .2s, transform .1s; }
+.mb i ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; } .mb:active i{ transform:scale(.94); }
+.mb span{ max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mb .sh{ display:none; }
+.mb.act i{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); box-shadow:0 0 18px var(--hg-accent-faint); } .mb.act{ color:var(--hg-tx-1e2023); font-weight:600; }
+.mb.pw.on i{ background:var(--hg-bg-000000-008); color:var(--hg-tx-1e2023); } .mb.pw.off i{ background:var(--hg-bg-6a6e74); color:var(--hg-tx-ffffff); } .mb.pw.off{ color:var(--hg-tx-1e2023); font-weight:600; }
+.tight .mb span{ display:none; } .nolab .lab, .nolab .bw small{ display:none; } .nolab .bw{ grid-template-columns:1fr; }
+/* desktop bez przewijania: rozwinięte tryby jako warstwa nad temperaturą (karta ma stałą wysokość) */
+.ov .xp{ position:absolute; left:var(--s2); right:var(--s2); top:var(--xt, 48px); bottom:var(--xbm, 90px); display:block; z-index:3; border-radius:var(--r-md); padding:var(--s1);
+  background:var(--hg-ov-bg); box-shadow:0 8px 24px var(--hg-sh-000000-018); overflow:auto; scrollbar-width:none;
+  opacity:0; transform:translateY(8px) scale(.98); visibility:hidden; transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s; }
+.ov .xp.open{ opacity:1; transform:none; visibility:visible; transition: opacity .18s ease, transform .18s ease; }
+.ov .xi{ overflow:visible; } .ov .xi > *{ opacity:1; transform:none; padding-top:0; } .ovt .xp .mb span{ display:none; }
+.mw{ display:flex; flex-direction:column; }
+.mr.top{ grid-template-columns:repeat(auto-fit, minmax(var(--bs, 56px), calc((100% - 3 * var(--s1)) / 4))); justify-content:start; }
+.xp{ display:grid; grid-template-rows:0fr; transition: grid-template-rows .18s ease; } .xp.open{ grid-template-rows:1fr; }
+.xi{ min-height:0; overflow:hidden; } .xi > *{ padding-top:var(--s1); opacity:0; transform:translateY(-6px); transition: opacity .18s ease, transform .18s ease; } .xp.open .xi > *{ opacity:1; transform:none; }
+.xb i ha-icon{ transition: transform .18s ease; } .xb[aria-expanded=true] i ha-icon{ transform:rotate(180deg); } .xb[aria-expanded=true] i{ background:var(--hg-bg-000000-008); }
+.xp.open ~ * .fanc, .mw:has(.xp.open) .fanc{ display:none; }
+@container (max-width: 268px){ .fanc{ display:none; } }
+@media (prefers-reduced-motion: reduce){ .xp, .xi > *, .xb i ha-icon{ transition:none; } }
+.mm.mx{ flex-wrap:wrap; }
+@container (max-width: 460px){ .mb .fl{ display:none; } .mb .sh{ display:inline; } }
+/* wyłączona */
+.off .num{ color:var(--hg-tx-6a6e74); } .off .bar .tk{ background:var(--hg-bg-000000-012); } .off .bar .kn{ box-shadow:0 0 0 1px var(--hg-sh-000000-012); background:var(--hg-bg-e4e6e9); }
+/* ----- kompakt (strony pokoi) ----- */
+.c1{ display:flex; align-items:center; gap:var(--s1); min-height:44px; }
+.c1 .nm{ flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25; }
+.c1 .nm b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.c1 .nm span{ font-size:var(--fs-xs); font-weight:600; color:var(--mt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.c1 .tr{ width:auto; grid-template-columns:44px auto 44px; gap:0; }
+.c1 .cv{ width:44px; height:44px; } .c1 .cv ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; }
+.c1 .num{ font-size:32px; }
+.c2{ display:flex; align-items:center; gap:var(--s1); } .c2 .bar{ flex:1; } .c2 .kb{ margin-left:auto; }
+.mm{ display:flex; gap:6px; flex:none; } .mm .mb span{ display:none; } .mm .mb i{ width:44px; height:44px; border-radius:var(--r-sm); } .mm .mb i ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
+`);
+  }
+  _eff(s) {
+    const o = this._opt, a = s.attributes;
+    let st = s.state, t = a.temperature != null ? Number(a.temperature) : null;
+    if (o) {
+      const done = (o.state == null || o.state === s.state || (o.any && s.state !== 'off')) && (o.t == null || o.t === t);
+      if (done || Date.now() - o.ts > 8000) this._opt = null;
+      else { if (o.state != null) st = o.state; if (o.t != null) t = o.t; }
+    }
+    return { st, t };
+  }
+  _extraSig() { return this._opt ? JSON.stringify(this._opt) : ''; }
+  _room() {
+    const c = this._config, h = this._hass; if (c.room !== undefined) return c.room;
+    const e = h.entities && h.entities[c.entity], dv = e && e.device_id && h.devices ? h.devices[e.device_id] : null, ar = (e && e.area_id) || (dv && dv.area_id);
+    return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
+  }
+  _lim(s) { const a = s.attributes; return { step: a.target_temp_step || 1, mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
+  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return 'Wyłączona'; return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : `${m.l} do ${H.fmt(t)}°`; }
+  render() {
+    const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    const kb = `<button class="ib kebab kb" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button>`;
+    if (!H.ok(s)) return `<ha-card class="glass off ${c.compact ? 'compact' : ''}" style="--mt:var(--hg-ac-neu-tx)"><div class="hd"><span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${kb}</div><div class="ph"><b>Niedostępna</b></div></ha-card>`;
+    const a = s.attributes, { st, t } = this._eff(s), on = st !== 'off';
+    if (s.state !== 'off') this._last = s.state;
+    const m = HG_AC_MODE[st] || HG_AC_MODE.cool, { mn, mx } = this._lim(s);
+    const cur = a.current_temperature != null ? Number(a.current_temperature) : null;
+    const fr = (v) => Math.max(0, Math.min(1, (v - mn) / (mx - mn)));
+    const hv = a.hvac_modes || [], seen = new Set();
+    const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
+    const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
+    const num = `<div class="num" aria-live="polite">${t != null ? H.fmt(t) : '–'}<sup>°</sup></div>`;
+    const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
+    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', 'Obniż temperaturę')}${num}${cv(1, 'mdi:chevron-right', 'Podwyższ temperaturę')}</div>`;
+    const bar = `<div class="bar" role="slider" tabindex="${on ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? 'Wyłącz klimatyzację' : 'Włącz klimatyzację'}" title="${on ? 'Wyłącz' : 'Włącz'}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? 'Włączona' : 'Wyłączona'}</span><span class="sh">${on ? 'Wł.' : 'Wył.'}</span></button>`;
+    const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
+    const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
+    const fv = H.esc(HG_FAN_PL[fm] || fm), sv = H.esc(HG_SWING_PL[sw] || sw);
+    const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="Nawiew: ${fv} (zmień)" title="Nawiew: ${fv} – zmień prędkość"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">Nawiew</span><span class="sh">Nawiew</span></button>` : '';
+    const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="Kierunek nawiewu: ${sv} (zmień)" title="Kierunek nawiewu: ${sv} – zmień"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">Kierunek</span><span class="sh">Kier.</span></button>` : '';
+    const cls = `glass ${on ? 'on' : 'off'} ${c.compact ? 'compact' : ''}`;
+    /* zwijane tryby: zwinięte = zasilanie + aktywny tryb + „Tryby”; rozwinięte = pełna siatka (+ Nawiew/Kierunek) */
+    const open = this._isOpen();
+    const am = on ? st : (this._last && hv.includes(this._last) ? this._last : null), amx = am && (modes.find((y) => y.mode === am) || { mode: am, label: (HG_AC_MODE[am] || {}).l || am });
+    const actB = amx ? mb(amx).replace('class="mb ', 'class="mb cur ') : '';
+    const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? 'Zwiń tryby' : 'Wszystkie tryby'}" title="${open ? 'Zwiń tryby' : 'Wszystkie tryby'}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">Tryby</span><span class="sh">Tryby</span></button>`;
+    const xp = (inner) => `<div class="xp ${open ? 'open' : ''}"><div class="xi" ${open ? '' : 'inert'}>${inner}</div></div>`;
+    if (c.compact) {
+      const sub = [this._stat(st, t), cur != null ? `wnętrze ${H.fmt(cur)}°` : ''].filter(Boolean).join(' · ');
+      return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${tr}</div>
+        ${bar}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
+    }
+    const room = this._room();
+    return `<ha-card class="${cls}" style="${sty}"><div class="hd"><span class="tt">${H.esc(c.title)}${room ? ` <span>· ${H.esc(room)}</span>` : ''}</span><span class="sp"></span>${kb}</div>
+      <div class="temp">${cur != null ? `<div class="lab">${H.esc(c.room_label)} ${H.fmt(cur)}°</div>` : ''}${tr}<div class="st" role="status">${H.esc(this._stat(st, t))}</div></div>
+      <div class="bw"><small>${H.fmt(mn)}°</small>${bar}<small>${H.fmt(mx)}°</small></div>
+      <div class="mw"><div class="mr top">${pw}${actB}${fan ? fan.replace('class="mb"', 'class="mb fanc"') : ''}${xb}</div>${xp(`<div class="mr">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
+  }
+  /* zmiana nastawy w miejscu (bez przerysowania pod palcem), zatwierdzenie z opóźnieniem */
+  _setT(v, commitMs) {
+    const s = H.st(this._hass, this._config.entity); if (!s) return;
+    const { step, mn, mx } = this._lim(s); v = Math.max(mn, Math.min(mx, Math.round((v - mn) / step) * step + mn)); v = +v.toFixed(1);
+    this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
+    const R = this.$, card = R.querySelector('ha-card'), fr = (v - mn) / (mx - mn);
+    if (card) { card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
+      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? `wnętrze ${H.fmt(cur)}°` : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
+      const b = R.querySelector('.bar'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
+      R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); }); }
+    clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), commitMs);
+  }
+  _commit() {
+    const s = H.st(this._hass, this._config.entity); if (!s || !this._opt || this._opt.t == null) return;
+    if (Number(s.attributes.temperature) !== this._opt.t) H.call(this._hass, 'climate', 'set_temperature', { entity_id: this._config.entity, temperature: this._opt.t });
+    this._opt.ts = Date.now();
+  }
+  afterRender() {
+    if (!this._wired) {
+      this._wired = true;
+      const R = this.shadowRoot;
+      const valAt = (bar, x) => { const s = H.st(this._hass, this._config.entity), { mn, mx } = this._lim(s), r = bar.getBoundingClientRect(); return mn + Math.max(0, Math.min(1, (x - r.left) / r.width)) * (mx - mn); };
+      R.addEventListener('pointerdown', (e) => {
+        const p = e.composedPath(), bar = p.find((n) => n.classList && n.classList.contains('bar')), cv = p.find((n) => n.classList && n.classList.contains('cv'));
+        const card = R.querySelector('ha-card'); if (!card || card.classList.contains('off')) return;
+        if (bar) { e.preventDefault(); this._touching = true; bar.setPointerCapture && bar.setPointerCapture(e.pointerId); bar.classList.add('drag'); this._drag = bar; this._setT(valAt(bar, e.clientX), 60000); return; }
+        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
+          go(); clearInterval(this._rp); clearTimeout(this._rd); this._rd = setTimeout(() => { this._rp = setInterval(go, 160); }, 420); this._cvEl = cv; }
+      });
+      R.addEventListener('pointermove', (e) => { if (this._drag) this._setT(valAt(this._drag, e.clientX), 60000); });
+      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
+        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp); };
+      R.addEventListener('pointerup', end); R.addEventListener('pointercancel', end);
+      R.addEventListener('keydown', (e) => { const b = e.composedPath()[0]; if (!b.classList || !b.classList.contains('bar')) return; const s = H.st(this._hass, this._config.entity), { step } = this._lim(s), t = this._eff(s).t; if (t == null) return;
+        const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key]; if (d) { e.preventDefault(); this._setT(t + d * step, 700); } });
+    }
+    if (!this._config.compact) { if (!this._ro && window.ResizeObserver) { this._ro = new ResizeObserver(() => this._fit()); this._ro.observe(this); } this._fit(); }
+  }
+  /* rozmiar: cyfry ≈ szerokość × 0,28 (56–96 px), przyciski 56/64; na desktopie bez przewijania zmniejsza, aż treść się zmieści */
+  _fit() {
+    const card = this.$.querySelector('ha-card'); if (!card || !card.querySelector('.temp')) return;
+    const pg = this.getRootNode() && this.getRootNode().host, fixedH = !!(pg && pg.getAttribute && pg.getAttribute('mode') === 'wide' && !pg.hasAttribute('scroll'));
+    const cs = getComputedStyle(card), W = card.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); if (W <= 0) return;
+    let ts = Math.round(Math.max(56, Math.min(80, W * 0.27))), bs = W >= 420 ? 64 : 56, cvs = W >= 340 ? 64 : 56, tight = false, nolab = false;
+    const apply = () => { this.style.setProperty('--ts', ts + 'px'); this.style.setProperty('--bs', bs + 'px'); this.style.setProperty('--cv', cvs + 'px'); card.classList.toggle('tight', tight); card.classList.toggle('nolab', nolab); };
+    card.classList.remove('ov', 'ovt'); apply();
+    /* wysokość docelowa (niezależna od trwającej animacji rozwijania) */
+    const xp = card.querySelector('.xp'), xi = xp && xp.firstElementChild;
+    const over = () => card.scrollHeight - card.clientHeight - (xp ? xp.getBoundingClientRect().height : 0) + (xp && xp.classList.contains('open') && xi.firstElementChild ? xi.firstElementChild.offsetHeight : 0);
+    const isOpen = !!(xp && xp.classList.contains('open'));
+    if (fixedH) {
+      const shrink = (f) => { let n = 0; while (f() > 1 && n++ < 16) { if (ts > 56) ts = Math.max(56, ts - 6); else if (!tight) tight = true; else if (!nolab) nolab = true; else if (bs > 48) bs -= 4; else if (cvs > 48) cvs -= 4; else return false; apply(); } return f() <= 1; };
+      const closed = () => card.scrollHeight - card.clientHeight - (xp ? xp.getBoundingClientRect().height : 0);
+      shrink(closed);
+      if (isOpen) {
+        const S = [ts, tight, nolab, bs, cvs];
+        /* rozwinięcie w układzie tylko kosztem cyfr; inaczej warstwa nad temperaturą (wymiary jak po zwinięciu) */
+        let n = 0; while (over() > 1 && n++ < 6 && ts > 56) { ts = Math.max(56, ts - 6); apply(); }
+        if (over() > 1) {
+          [ts, tight, nolab, bs, cvs] = S; apply(); card.classList.add('ov');
+          const top = card.querySelector('.mr.top'), hd = card.querySelector('.hd'), cr = card.getBoundingClientRect();
+          card.style.setProperty('--xt', Math.round(hd.getBoundingClientRect().bottom - cr.top + 4) + 'px');
+          card.style.setProperty('--xbm', Math.round(cr.bottom - top.getBoundingClientRect().top + 8) + 'px');
+          if (xi.firstElementChild.offsetHeight > xp.clientHeight - 16) card.classList.add('ovt');
+        }
+      }
+    }
+  }
+  _set(o) { this._opt = { ...o, ts: Date.now() }; this.rerender(); }
+  _okey() { return 'nuvio:ac-open:' + this._config.entity + (this._config.compact ? ':c' : ''); }
+  _isOpen() { if (this._open == null) { try { this._open = sessionStorage.getItem(this._okey()) === '1'; } catch (e) { this._open = false; } } return this._open; }
+  _setOpen(v) {
+    this._open = !!v; try { sessionStorage.setItem(this._okey(), v ? '1' : '0'); } catch (e) { /* prywatny tryb */ }
+    const R = this.$, xp = R.querySelector('.xp'), xb = R.querySelector('.xb');
+    if (xp) { xp.classList.toggle('open', this._open); xp.firstElementChild.toggleAttribute('inert', !this._open); }
+    if (xb) { xb.setAttribute('aria-expanded', this._open); const l = this._open ? 'Zwiń tryby' : 'Wszystkie tryby'; xb.setAttribute('aria-label', l); xb.title = l; }
+    this._html = null;                 // następne przerysowanie zbuduje DOM z nowym stanem
+    if (!this._config.compact) this._fit();
+  }
+  onAct(a, el, ev) {
+    const c = this._config, s = H.st(this._hass, c.entity); if (!s) return;
+    const id = { entity_id: c.entity };
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: c.entity });
+    if (a === 'step') { if (this._ptrStep) { this._ptrStep = false; return; } const t = this._eff(s).t; if (t != null) this._setT(t + (+el.dataset.d) * this._lim(s).step, 700); return; }
+    if (a === 'toggle') {
+      const sf = s.attributes.supported_features || 0, cur = this._eff(s).st;
+      if (cur === 'off') {
+        const back = c.default_mode || this._last || (s.attributes.hvac_modes || []).find((x) => x !== 'off') || 'cool';
+        this._set({ state: back, any: true });
+        return sf & 256 ? H.call(this._hass, 'climate', 'turn_on', id) : H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: back });
+      }
+      this._set({ state: 'off' });
+      return sf & 128 ? H.call(this._hass, 'climate', 'turn_off', id) : H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: 'off' });
+    }
+    if (a === 'fan') { const L = s.attributes.fan_modes || [], i = L.indexOf(s.attributes.fan_mode); return H.call(this._hass, 'climate', 'set_fan_mode', { ...id, fan_mode: L[(i + 1) % L.length] }); }
+    if (a === 'swing') { const L = s.attributes.swing_modes || [], i = L.indexOf(s.attributes.swing_mode); return H.call(this._hass, 'climate', 'set_swing_mode', { ...id, swing_mode: L[(i + 1) % L.length] }); }
+    if (a === 'xp') return this._setOpen(!this._isOpen());
+    if (a === 'mode') { if (this._isOpen() && !el.classList.contains('cur')) { this._open = false; try { sessionStorage.setItem(this._okey(), '0'); } catch (e) { /* */ } } this._set({ state: el.dataset.m }); return H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: el.dataset.m }); }
+  }
+  getGridOptions() { return { columns: 6, rows: 5 }; }
+}
+hgReg('nuvio-ac-card', HGACCard, 'Nuvio – Klimatyzacja', 'Klimatyzacja w stylu Tesli: temperatura, pasek, tryby');
+
+/* ===================== OŚWIETLENIE ===================== */
+class HGLightCard extends HGBase {
+  defaults() { return { title: 'Oświetlenie', icon: 'mdi:lightbulb-outline', name: null }; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; padding:var(--s2) var(--s3) var(--s3); }
+.hd .tt{ font-weight:400; }
+.hd .ic.on{ color:var(--hg-accent-tx); }
+.trk{ position:relative; height:max(calc(var(--k) * 28), var(--hg-tgt, 0px)); border-radius:var(--r-md); background: var(--hg-bg-ffffff-060);
+  box-shadow: inset 0 1px 2px var(--hg-sh-000000-006); touch-action:none; cursor:pointer; overflow:hidden; }
+.fl{ position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-md); min-width:28u; background:var(--hg-accent-faint); transition: width .25s ease; }
+.drag .fl{ transition:none; }
+.fl .sun{ position:absolute; left:9u; top:50%; transform:translateY(-50%); width:10u; height:10u; color:var(--hg-tx-ffffff); }
+.fl i{ position:absolute; right:10u; top:32%; bottom:32%; width:2u; border-radius:2u; background:var(--hg-bg-ffffff-095); }
+.pc{ position:absolute; right:12u; top:50%; transform:translateY(-50%); font-size:var(--fs-sm); color:var(--hg-tx-2b2e33); pointer-events:none; }
+.off .fl{ background:var(--hg-bg-e2dceb); }
+.un .trk{ cursor:not-allowed; } .un .pc{ color:var(--hg-tx-9a9ea4); } .un .fl i{ display:none; }
+`);
+  }
+  pct() {
+    if (this._drag != null) return this._drag;
+    if (this._pending != null) return this._pending;
+    const s = H.st(this._hass, this._config.entity);
+    if (!s || s.state !== 'on') return 0;
+    const b = s.attributes.brightness; return b == null ? 100 : Math.round((b / 255) * 100);
+  }
+  _extraSig() { return [this._drag, this._pending]; }
+  render() {
+    const c = this._config, s = H.st(this._hass, c.entity);
+    const on = s && s.state === 'on', un = !s || s.state === 'unavailable', p = this.pct();
+    const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
+    const hd = `<div class="hd"><button class="ib" data-act="toggle" aria-label="Przełącz ${H.esc(nm)}" title="${H.esc(nm)}" style="margin-left:calc(var(--k) * -4)">${H.icon(c.icon, 'ic' + (on ? ' on' : ''))}</button>
+      <span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+      <button class="ib" data-act="more" aria-label="Rozwiń" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
+    return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? ' – niedostępne' : ''}">${hd}
+      <div class="trk" role="slider" aria-label="Jasność ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
+        <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : p + '%'}</span></div></ha-card>`;
+  }
+  afterRender() {
+    const t = this.$.querySelector('.trk'); if (!t || t.getAttribute('aria-disabled')) return;
+    const calc = (ev) => { const r = t.getBoundingClientRect(); return Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * 100); };
+    const send = (v) => {
+      const id = { entity_id: this._config.entity }; this._pending = v;
+      clearTimeout(this._pt); this._pt = setTimeout(() => { this._pending = null; this.rerender(); }, 4000);
+      if (v <= 0) H.call(this._hass, 'light', 'turn_off', id); else H.call(this._hass, 'light', 'turn_on', { ...id, brightness_pct: v });
+      this.rerender();
+    };
+    t.addEventListener('pointerdown', (ev) => { t.setPointerCapture(ev.pointerId); this._drag = calc(ev); t.classList.add('drag'); this._paint(t); this._busy = true; });
+    t.addEventListener('pointermove', (ev) => { if (this._drag == null) return; this._drag = calc(ev); this._paint(t); });
+    const end = () => { if (this._drag == null) return; const v = this._drag; this._drag = null; this._busy = false; send(v); };
+    t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end);
+    t.addEventListener('keydown', (ev) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(ev.key)) return;
+      ev.preventDefault(); send(Math.max(0, Math.min(100, this.pct() + (ev.key === 'ArrowRight' ? 10 : -10))));
+    });
+  }
+  _paint(t) { const p = this._drag; t.querySelector('.fl').style.width = p + '%'; t.querySelector('.pc').textContent = p + '%'; t.setAttribute('aria-valuenow', p); }
+  set hass(h) {
+    const old = this._hass; this._hass = h;
+    if (this._pending != null && old && this._config) { const s = H.st(h, this._config.entity), o = H.st(old, this._config.entity); if (s && o && s.last_updated !== o.last_updated) this._pending = null; }
+    this._update();
+  }
+  get hass() { return this._hass; }
+  onAct(a) {
+    const e = this._config.entity;
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (a === 'toggle') { const s = H.st(this._hass, e); if (!s || s.state === 'unavailable') return; return H.call(this._hass, 'light', 'toggle', { entity_id: e }); }
+  }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-light-card', HGLightCard, 'Nuvio – Oświetlenie', 'Suwak jasności światła');
+
+/* ===================== PRZEŁĄCZNIK (Wi-Fi / Kuchnia / pokoje) ===================== */
+class HGSwitchCard extends HGBase {
+  defaults() { return { title: null, subtitle: null, icon: 'mdi:toggle-switch-outline', layout: 'row', more: true, info_entity: null }; }
+  list() { const c = this._config; return c.entities || [c.entity]; }
+  ents() { return this.list().concat(this._config.info_entity ? [this._config.info_entity] : []); }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; align-items:center; gap:var(--s1); padding:0 var(--s1) 0 var(--s3); }
+.ic{ width:12u; height:12u; flex:none; color:var(--hg-tx-2a2d31); }
+.tt{ font-size:var(--fs-md); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.tt small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-left:5u; }
+.sp{ flex:1; }
+ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-between; padding:var(--s2) var(--s1) var(--s2) var(--s3); gap:0; }
+.tile .row{ display:flex; align-items:center; gap:var(--s1); }
+.tile .ic{ width:15u; height:15u; }
+.tile.on .ic{ color:var(--hg-accent-tx); }
+.tile .nm{ font-size:var(--fs-md); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tile .stt{ font-size:var(--fs-xs); color:var(--hg-tx-7a7e84); margin-top:2u; }
+`);
+  }
+  render() {
+    const c = this._config, ids = this.list();
+    const ss = ids.map((e) => H.st(this._hass, e));
+    const avail = ss.some((s) => s && s.state !== 'unavailable');
+    const onN = ss.filter((s) => s && s.state === 'on').length, on = onN > 0;
+    const title = c.title || H.name(this._hass, ids[0]);
+    let tip = `${title}: ${avail ? H.stateLabel(on ? 'on' : 'off') : 'niedostępne'}`;
+    if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ` · Internet: ${s && s.state === 'on' ? 'połączony' : 'brak'}`; }
+    const tg = this.toggleHtml(on, 'toggle', !avail, title);
+    const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button>` : '';
+    if (c.layout === 'tile') {
+      const st = !avail ? 'niedostępne' : on ? (ids.length > 1 ? `Włączone · ${onN}/${ids.length}` : 'Włączone') : 'Wyłączone';
+      return `<ha-card class="glass tile ${on ? 'on' : ''}" title="${H.esc(tip)}"><div class="row">${H.icon(c.icon, 'ic')}<span class="sp"></span>${tg}${kb}</div>
+        <div><div class="nm">${H.esc(title)}</div><div class="stt">${H.esc(st)}</div></div></ha-card>`;
+    }
+    return `<ha-card class="glass ${on ? 'on' : ''}" title="${H.esc(tip)}">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(title)}${c.subtitle ? `<small>(${H.esc(c.subtitle)})</small>` : ''}</span><span class="sp"></span>${tg}${kb}</ha-card>`;
+  }
+  onAct(a) {
+    const ids = this.list();
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: this._config.more_entity || ids[0] });
+    if (a === 'toggle') {
+      const on = ids.some((e) => { const s = H.st(this._hass, e); return s && s.state === 'on'; });
+      return H.call(this._hass, 'homeassistant', on ? 'turn_off' : 'turn_on', { entity_id: ids.filter((e) => { const s = H.st(this._hass, e); return s && s.state !== 'unavailable'; }) });
+    }
+  }
+  getGridOptions() { return { columns: 6, rows: 1 }; }
+}
+hgReg('nuvio-switch-card', HGSwitchCard, 'Nuvio – Przełącznik', 'Przełącznik w stylu glass (wiersz lub kafel)');
+
+/* ===================== statystyki (wspólne) ===================== */
+const HGStats = {
+  cache: {},
+  async daily(hass, ids, days) {
+    const key = ids.join(',') + days;
+    const now = Date.now(), c = this.cache[key];
+    if (c && now - c.t < 5 * 60 * 1000) return c.v;
+    if (this.inflight && this.inflight[key]) return this.inflight[key];
+    (this.inflight = this.inflight || {})[key] = this._fetch(hass, ids, days, key, now).finally(() => { delete this.inflight[key]; });
+    return this.inflight[key];
+  },
+  /* granice dni w strefie HA (Europe/Warsaw), niezależnie od strefy przeglądarki */
+  tz(hass) { return (hass && hass.config && hass.config.time_zone) || Intl.DateTimeFormat().resolvedOptions().timeZone; },
+  key(d, tz) { return new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); },
+  midnight(ms, tz) {   // północ w strefie tz dla dnia zawierającego ms
+    const k = this.key(new Date(ms), tz), [y, m, d] = k.split('-').map(Number);
+    let t = Date.UTC(y, m - 1, d);
+    for (let i = 0; i < 3; i++) { const off = this.offset(t, tz); t = Date.UTC(y, m - 1, d) - off; }
+    return t;
+  },
+  offset(ms, tz) { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000; },
+  async _fetch(hass, ids, days, key, now) {
+    const tz = this.tz(hass);
+    const t0 = this.midnight(Date.now(), tz);
+    const dayStarts = [...Array(days)].map((_, i) => this.midnight(t0 - (days - 1 - i) * 86400000 + 43200000, tz));
+    const start = new Date(dayStarts[0]);
+    const r = await hass.callWS({ type: 'recorder/statistics_during_period', start_time: start.toISOString(), statistic_ids: ids, period: 'day', types: ['change'], units: { energy: 'kWh' } });
+    const out = {};
+    for (const id of ids) {
+      const m = {};
+      for (const row of r[id] || []) { const d = new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)); m[this.key(d, tz)] = row.change || 0; }
+      out[id] = m;
+    }
+    // dni jako Date w południe danego dnia (getDay/getDate poprawne także poza strefą HA); klucz = data w strefie HA
+    const dd = dayStarts.map((t) => { const k = this.key(new Date(t + 43200000), tz), [y, mo, da] = k.split('-').map(Number); const d = new Date(y, mo - 1, da, 12); d.__k = k; return d; });
+    const v = { days: dd, keys: dd.map((d) => d.__k), byId: out, has: ids.some((id) => (r[id] || []).length), present: Object.fromEntries(ids.map((id) => [id, new Set((r[id] || []).map((row) => this.key(new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)), tz)))])) };
+    this.cache[key] = { t: now, v };
+    return v;
+  },
+};
+
+/* ===================== SOLAR ===================== */
+class HGSolarCard extends HGBase {
+  defaults() {
+    return { title: 'Energia słoneczna dziś', icon: 'mdi:solar-panel', statistic: null, today_entity: null, days: 7,
+      caption: 'kWh czystej energii', offline_label: 'falownik offline', locale: 'pl-PL', expand: null, no_data: 'Brak źródła danych' };
+  }
+  ents() { return [this._config.today_entity, this._config.status_entity].filter(Boolean); }
+  _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._w]; }
+  connectedCallback() { super.connectedCallback();
+    this._load();
+    this._iv = setInterval(() => this._load(true), 5 * 60 * 1000);
+    this._ro = new ResizeObserver(() => { const w = Math.round(this.getBoundingClientRect().width); if (w && w !== this._w) { this._w = w; this.rerender(); } });
+    this._ro.observe(this);
+  }
+  disconnectedCallback() { clearInterval(this._iv); this._ro && this._ro.disconnect(); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._load(); this._update(); }
+  get hass() { return this._hass; }
+  async _load(force) {
+    if (!this._hass || !this._config || !this._config.statistic || (this._loading && !force)) return;
+    this._loading = true;
+    try {
+      if (force) HGStats.cache = {};
+      const v = await HGStats.daily(this._hass, [this._config.statistic], this._config.days);
+      this._data = { t: Date.now(), v }; this._err = null;
+    } catch (e) { this._err = String(e && e.message || e); }
+    this._loading = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ padding:0; display:flex; flex-direction:column; }
+.top{ padding:var(--s2) var(--s3) 0 var(--s3); position:relative; z-index:3; }
+.v{ display:flex; align-items:baseline; gap:var(--s1); margin-top:9u; }
+.v b{ font-size:calc(15u * var(--hg-fsv, 1)); font-weight:400; letter-spacing:-.01em; }
+.v span{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
+
+.ch{ position:relative; flex:1; min-height:60u; }
+svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; }
+.ln{ fill:none; stroke:var(--hg-accent); stroke-width:1.4; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.band{ position:absolute; top:0; bottom:0; right:0; background: var(--hg-bg-785f50-008); }
+.lb{ position:absolute; left:0; right:0; bottom:9u; height:12u; }
+.lb button{ position:absolute; top:50%; transform:translate(-50%,-50%); font-size:var(--fs-xs); color:var(--hg-tx-3b3f45); padding:var(--s1) var(--s1); min-height:var(--hg-tgt, 0px); min-width:var(--hg-tgt, 0px); }
+.lb button.sel{ font-weight:400; }
+.dot{ position:absolute; width:5u; height:5u; border-radius:50%; background:var(--hg-bg-ffffff); border:1px solid var(--hg-accent); transform:translate(-50%,-50%); }
+.tip{ position:absolute; transform:translate(-50%,-100%); margin-top:-8u; background:var(--hg-bg-ffffff); border:1px solid var(--hg-bd-000000-006); border-radius:var(--r-sm); padding:var(--s1) var(--s2); font-size:var(--fs-xs); line-height:1.4; white-space:nowrap; color:var(--hg-tx-2b2e33); box-shadow:var(--hg-sh); z-index:4; }
+.tip b{ font-weight:400; } .tip .dl{ color:var(--hg-tx-9a9ea4); }
+.tip::after{ content:''; position:absolute; left:50%; bottom:-3u; width:4u; height:4u; background:var(--hg-bg-ffffff); border-right:1px solid var(--hg-bd-000000-006); border-bottom:1px solid var(--hg-bd-000000-006); transform:translateX(-50%) rotate(45deg); }
+.hit{ position:absolute; inset:0; }
+`);
+  }
+  render() {
+    const c = this._config;
+    const ts0 = H.st(this._hass, c.today_entity);
+    const off0 = c.today_entity && (!ts0 || ts0.state === 'unavailable');
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.esc(c.today_entity)}: niedostępny">${H.esc(c.offline_label)}</span>` : ''}
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (!c.statistic || this._err || (this._data && !this._data.v.has)) {
+      return `<ha-card class="glass"><div class="top">${hd}</div><div class="ph" style="padding:0 14px"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || c.statistic || '')}</div></ha-card>`;
+    }
+    if (!this._data) return `<ha-card class="glass"><div class="top">${hd}<div class="v"><span>…</span></div></div></ha-card>`;
+    const { days, byId } = this._data.v; const m = byId[c.statistic];
+    const vals = days.map((d) => Math.max(0, m[d.__k || H.dayKey(d)] || 0));
+    const ts = H.st(this._hass, c.today_entity);
+    const todayState = ts && H.ok(ts) ? parseFloat(ts.state) : null;
+    if (todayState != null && isFinite(todayState) && todayState > vals[vals.length - 1]) vals[vals.length - 1] = todayState;
+    const n = vals.length, sel = this._sel == null ? n - 1 : this._sel;
+    const W = this._w || 400, Hh = 100;
+    const pad = 0.06, xs = vals.map((_, i) => (pad + (i * (1 - 2 * pad)) / (n - 1)) * 100);
+    const mx = Math.max(...vals, 0.001) * 1.15;
+    const yv = (v) => 70 - (v / mx) * 58;   // % wysokości wykresu
+    const pts = vals.map((v, i) => [xs[i], yv(v)]);
+    const line = [[0, pts[0][1]], ...pts, [100, pts[n - 1][1]]];
+    const dl = line.map((p, i) => `${i ? 'L' : 'M'}${(p[0] * W / 100).toFixed(1)},${p[1].toFixed(2)}`).join(' ');
+    const area = `${dl} L${W},${Hh} L0,${Hh} Z`;
+    const prev = sel > 0 ? vals[sel - 1] : null, cur = vals[sel];
+    const delta = prev ? ((cur - prev) / prev) * 100 : null;
+    const dd = days[sel];
+    const dlab = `<b>${dd.getDate()}</b> ${H.esc(dd.toLocaleDateString(c.locale, { day: 'numeric', month: 'long' }).replace(/^\d+\s*/, ''))}`;
+    const today = vals[n - 1];
+    return `<ha-card class="glass"><div class="top">${hd}
+      <div class="v"><b>${H.fmt(today, 1)}</b><span>${H.esc(c.caption)}</span></div></div>
+      <div class="ch">
+        <svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".75"/><stop offset="1" style="stop-color:var(--hg-gx-fbd9c4)" stop-opacity=".55"/></linearGradient></defs>
+          <path d="${area}" fill="url(#g)"/><path class="ln" d="${dl}"/></svg>
+        <div class="band" style="left:${xs[sel]}%"></div>
+        <span class="dot" style="left:${xs[sel]}%;top:${pts[sel][1]}%"></span>
+        <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.fmt(Math.abs(delta), 2) + '%'}</span></div>
+        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.esc(d.toLocaleDateString(c.locale))}: ${H.fmt(vals[i], 1)} kWh">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
+      </div></ha-card>`;
+  }
+  onAct(a, el) {
+    if (a === 'sel') { this._sel = Number(el.dataset.i); this.rerender(); }
+    if (a === 'expand') H.action(this, this._hass, this._config.expand);
+  }
+  getGridOptions() { return { columns: 12, rows: 3 }; }
+}
+hgReg('nuvio-solar-card', HGSolarCard, 'Nuvio – Solar', 'Produkcja PV z ostatnich dni (statystyki)');
+
+/* ===================== BARS (raport zużycia) ===================== */
+class HGBarsCard extends HGBase {
+  defaults() { return { title: 'Zużycie z sieci', icon: 'mdi:transmission-tower', statistics: [], labels: [], colors: ['var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)'], days: 7, unit: 'kWh', locale: 'pl-PL', expand: null, no_data: 'Brak źródła danych' }; }
+  ents() { return []; }
+  _extraSig() { return [this._data ? this._data.t : 0]; }
+  connectedCallback() { super.connectedCallback(); this._load(); this._iv = setInterval(() => this._load(), 15 * 60 * 1000); }
+  disconnectedCallback() { clearInterval(this._iv); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._load(); this._update(); }
+  get hass() { return this._hass; }
+  async _load() {
+    if (!this._hass || !this._config || this._loading) return; this._loading = true;
+    try { this._data = { t: Date.now(), v: await HGStats.daily(this._hass, this._config.statistics, this._config.days) }; this._err = null; }
+    catch (e) { this._err = String(e && e.message || e); }
+    this._loading = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; }
+.sum{ display:flex; align-items:baseline; gap:var(--s1); margin-top:8u; } .sum b{ font-size:calc(15u * var(--hg-fsv, 1)); font-weight:400; } .sum span{ font-size:var(--fs-sm); color:var(--hg-tx-4d5157); }
+.lg{ display:flex; gap:var(--s2); flex-wrap:wrap; font-size:var(--fs-xs); color:var(--hg-tx-4d5157); margin-top:6u; } .lg i{ display:inline-block; width:8u; height:8u; border-radius:3u; margin-right:4u; vertical-align:-1u; }
+.bars{ flex:1; display:flex; align-items:flex-end; gap:var(--s1); margin-top:10u; min-height:80u; }
+.b{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4u; height:100%; justify-content:flex-end; }
+.st{ width:100%; max-width:30u; display:flex; flex-direction:column-reverse; border-radius:var(--r-sm); overflow:hidden; background:var(--hg-bg-ffffff-050); }
+.st div{ width:100%; }
+.b small{ font-size:var(--fs-xs); color:var(--hg-tx-3b3f45); } .b em{ font-style:normal; font-size:var(--fs-xs); color:var(--hg-tx-6a6e75); }
+`);
+  }
+  render() {
+    const c = this._config;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (this._err || (this._data && !this._data.v.has)) return `<ha-card class="glass">${hd}<div class="ph"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || '')}</div></ha-card>`;
+    if (!this._data) return `<ha-card class="glass">${hd}</ha-card>`;
+    const { days, byId } = this._data.v;
+    const rows = days.map((d) => c.statistics.map((id) => Math.max(0, byId[id][d.__k || H.dayKey(d)] || 0)));
+    const tot = rows.map((r) => r.reduce((a, b) => a + b, 0)); const mx = Math.max(...tot, 0.001);
+    const week = tot.reduce((a, b) => a + b, 0);
+    return `<ha-card class="glass">${hd}
+      <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${c.days} dni</span></div>
+      <div class="lg">${c.statistics.map((id, i) => `<span><i style="background:${c.colors[i % c.colors.length]}"></i>${H.esc(c.labels[i] || id)}</span>`).join('')}</div>
+      <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.esc(days[i].toLocaleDateString(c.locale))}: ${H.fmt(tot[i], 1)} ${c.unit}"><em>${H.fmt(tot[i], 1)}</em>
+        <div class="st" style="height:${Math.max(3, (tot[i] / mx) * 100)}%">${r.map((v, j) => `<div style="height:${tot[i] ? (v / tot[i]) * 100 : 0}%;background:${c.colors[j % c.colors.length]}"></div>`).join('')}</div>
+        <small>${H.DAYS[days[i].getDay()]}</small></div>`).join('')}</div></ha-card>`;
+  }
+  onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
+}
+hgReg('nuvio-bars-card', HGBarsCard, 'Nuvio – Bars', 'Dzienne zużycie z statystyk (słupki)');
+
+/* ===================== MEDIA ===================== */
+class HGMediaCard extends HGBase {
+  defaults() { return { name: null, icon: 'mdi:speaker' }; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
+.row{ display:flex; align-items:center; gap:var(--s2); min-width:0; }
+.art{ width:44u; height:44u; border-radius:var(--r-sm); flex:none; background:var(--hg-bg-ffffff-075) center/cover; display:flex; align-items:center; justify-content:center; box-shadow:var(--hg-sh); }
+.art ha-icon{ width:20u; height:20u; color:var(--hg-tx-4d5157); }
+.tx{ min-width:0; flex:1; } .tx b{ display:block; font-size:var(--fs-md); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tx span{ display:block; font-size:var(--fs-sm); color:var(--hg-tx-4d5157); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ctl{ display:flex; align-items:center; justify-content:center; gap:var(--s2); margin-top:auto; }
+.cb{ width:max(30u, 40px); height:max(30u, 40px); border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ffffff-075); position:relative; }
+.cb ha-icon{ width:20px; height:20px; } .cb.pp{ width:max(34u, 44px); height:max(34u, 44px); background:var(--hg-accent); } .cb.pp ha-icon{ width:24px; height:24px; }
+@media (pointer:coarse){ .cb::before{ content:''; position:absolute; inset:-7px; } }
+.playing .art{ animation: hgpulse 3s ease-in-out infinite; }
+`);
+  }
+  render() {
+    const c = this._config, s = H.st(this._hass, c.entity);
+    const nm = c.name || H.name(this._hass, c.entity);
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>brak encji</div></ha-card>`;
+    const a = s.attributes, sf = a.supported_features || 0, st = s.state;
+    const pic = a.entity_picture ? `style="background-image:url('${H.esc(a.entity_picture)}')"` : '';
+    const sub = [a.media_title, a.media_artist].filter(Boolean).join(' · ') || H.stateLabel(st);
+    const AL = { prev: 'Poprzedni', next: 'Następny', on: 'Włącz', off: 'Wyłącz' };
+    const b = (f, act, ic, cls = '') => (sf & f ? `<button class="cb ${cls}" data-act="${act}" aria-label="${AL[act]}" title="${AL[act]}">${H.icon(ic)}</button>` : '');
+    const unav = st === 'unavailable';
+    return `<ha-card class="glass ${st === 'playing' ? 'playing' : ''}"><div class="row"><div class="art" ${pic}>${pic ? '' : H.icon(c.icon)}</div>
+      <div class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></div>
+      <button class="ib kebab" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button></div>
+      ${unav ? '' : `<div class="ctl">${b(16, 'prev', 'mdi:skip-previous')}${(sf & 1) || (sf & 16384) ? `<button class="cb pp" data-act="pp" aria-label="Odtwórz/pauza">${H.icon(st === 'playing' ? 'mdi:pause' : 'mdi:play')}</button>` : ''}${b(32, 'next', 'mdi:skip-next')}
+        ${st === 'off' ? b(128, 'on', 'mdi:power') : b(256, 'off', 'mdi:power')}</div>`}</ha-card>`;
+  }
+  onAct(a) {
+    const e = this._config.entity, id = { entity_id: e };
+    const m = { prev: 'media_previous_track', next: 'media_next_track', pp: 'media_play_pause', on: 'turn_on', off: 'turn_off' };
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (m[a]) return H.call(this._hass, 'media_player', m[a], id);
+  }
+}
+hgReg('nuvio-media-card', HGMediaCard, 'Nuvio – Media', 'Odtwarzacz w stylu glass');
+
+/* ===================== PERSON ===================== */
+const hgAvatar = (hass, e, cls = 'av') => {
+  const s = H.st(hass, e); const nm = H.name(hass, e, e);
+  const pic = s && s.attributes.entity_picture;
+  const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
+  const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
+  return pic ? `<span class="${cls}" style="background-image:url('${H.esc(pic)}')"></span>`
+    : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
+};
+class HGPersonCard extends HGBase {
+  defaults() { return { home_label: 'W domu', away_label: 'Poza domem', locale: 'pl-PL' }; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
+.av{ width:52u; height:52u; border-radius:var(--r-md); background:center/cover; flex:none; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff); font-weight:600; font-size:calc(17u * var(--hg-fsv, 1));
+  box-shadow: 0 0 0 2u var(--hg-sh-ffffff-090); }
+.home .av{ box-shadow: 0 0 0 2u var(--hg-accent); }
+.tx b{ display:block; font-size:var(--fs-md); font-weight:400; } .tx span{ display:flex; align-items:center; gap:4u; font-size:var(--fs-sm); color:var(--hg-tx-4d5157); margin-top:3u; }
+.tx span ha-icon{ width:11u; height:11u; } .tx small{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-7a7e85); margin-top:2u; }
+`);
+  }
+  render() {
+    const c = this._config, s = H.st(this._hass, c.entity);
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(c.entity)}</b>brak encji</div></ha-card>`;
+    const home = s.state === 'home';
+    const zone = home ? c.home_label : s.state === 'not_home' ? c.away_label : H.stateLabel(s.state);
+    const since = new Date(s.last_changed);
+    const mins = Math.round((Date.now() - since) / 60000);
+    const rel = mins < 60 ? `${mins} min` : mins < 1440 ? `${Math.round(mins / 60)} godz.` : Math.round(mins / 1440) === 1 ? '1 dnia' : `${Math.round(mins / 1440)} dni`;
+    return `<ha-card class="glass ${home ? 'home' : ''}" data-act="more">${hgAvatar(this._hass, c.entity)}
+      <div class="tx"><b>${H.esc(c.name || s.attributes.friendly_name)}</b><span>${H.icon(home ? 'mdi:home' : 'mdi:map-marker')}${H.esc(zone)}</span><small>od ${rel}</small></div></ha-card>`;
+  }
+  _extraSig() { return Math.floor(Date.now() / 60000); }
+  onAct() { H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
+}
+hgReg('nuvio-person-card', HGPersonCard, 'Nuvio – Person', 'Osoba z awatarem i strefą');
+
+/* ===================== LINK ===================== */
+class HGLinkCard extends HGBase {
+  defaults() { return { title: 'Otwórz', subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
+.bub{ width:34u; height:34u; border-radius:var(--r-sm); background:var(--hg-bg-ffffff-085); display:flex; align-items:center; justify-content:center; flex:none; }
+.bub ha-icon{ width:18u; height:18u; }
+b{ display:block; font-size:var(--fs-md); font-weight:400; } span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); margin-top:2u; }
+.chev{ margin-left:auto; width:16u; height:16u; color:var(--hg-tx-4d5157); }
+`);
+  }
+  render() {
+    const c = this._config; const s = c.entity && H.st(this._hass, c.entity);
+    const sub = c.subtitle || (s ? H.T(this._hass, s) : '');
+    return `<ha-card class="glass" data-act="go" role="link" tabindex="0"><span class="bub">${H.icon(c.icon)}</span><div><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${H.icon('mdi:chevron-right', 'chev')}</ha-card>`;
+  }
+  onAct() { H.action(this, this._hass, this._config.action); }
+}
+hgReg('nuvio-link-card', HGLinkCard, 'Nuvio – Link', 'Kafel nawigacji / akcji');
+
+/* ===================== MAPA + KALENDARZ ===================== */
+const HG_PAL = ['var(--hg-ac-f9c80e)', 'var(--hg-ac-f0955a)', 'var(--hg-ac-b793ec)', 'var(--hg-ac-5ac8fa)', 'var(--hg-ac-34c759)', 'var(--hg-ac-ff6b8b)', 'var(--hg-ac-8e9aaf)'];
+const hgRel = (d) => {
+  const m = Math.max(0, Math.round((Date.now() - d) / 60000));
+  if (m < 1) return 'przed chwilą'; if (m < 60) return `${m} min temu`;
+  const h = Math.round(m / 60); if (h < 24) return `${h} godz. temu`;
+  const dd = Math.round(h / 24); return dd === 1 ? 'wczoraj' : `${dd} dni temu`;
+};
+const hgTime = (d) => d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+const hgDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const hgZoneName = (hass, st) => {
+  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || 'W domu';
+  if (st === 'not_home') return 'Poza strefami'; if (st === 'unknown' || st === 'unavailable') return 'Nieznana lokalizacja'; return st;
+};
+
+/* --- mapa: natywna karta HA w szklanym kontenerze --- */
+class HGMapCard extends HTMLElement {
+  constructor() { super(); this.attachShadow({ mode: 'open' }); }
+  setConfig(c) {
+    this._config = Object.assign({ title: 'Mapa', icon: 'mdi:map-outline', entities: [], theme_mode: 'dark', hours_to_show: 0 }, c);
+    const sr = this.shadowRoot;
+    sr.innerHTML = `<style>${HG_BASE}${U(`
+ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) var(--s2); gap:var(--s2); }
+.hd{ padding:0 2u; }
+.mw{ position:relative; flex:1; min-height:220u; border-radius:var(--r-sm); overflow:hidden; background:var(--hg-bg-e9e5df);
+  --ha-card-border-radius: 0; --ha-card-box-shadow: none; --ha-card-border-width: 0; }
+.mw > *{ position:absolute; inset:0; display:block; height:100%; }
+`)}</style><ha-card class="glass"><div class="hd">${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._config.title)}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} os. · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} strefy</span></div><div class="mw"></div></ha-card>`;
+    this._mw = sr.querySelector('.mw');
+    this._make();
+  }
+  async _make() {
+    const c = this._config;
+    // theme_mode: auto -> jasna/ciemna mapa razem ze schematem dashboardu (HGTheme), przełączana na żywo
+    const tm = c.theme_mode === 'auto' ? (typeof HGTheme !== 'undefined' && HGTheme.dark ? 'dark' : 'light') : c.theme_mode;
+    this._tm = tm;
+    if (this._map) { this._map.remove(); this._map = null; }
+    const conf = { type: 'map', entities: c.entities.map((e) => (typeof e === 'string' ? { entity: e } : e)), theme_mode: tm, hours_to_show: c.hours_to_show, fit_zones: true };
+    const mk = this._mk = (this._mk || 0) + 1;
+    const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
+    if (mk !== this._mk) return;
+    let el;
+    try { el = helpers.createCardElement(conf); } catch (e) { this._mw.innerHTML = `<div class="ph"><b>Mapa niedostępna</b>${H.esc(e.message)}</div>`; return; }
+    el.layout = 'grid'; el.setAttribute('layout', 'grid');
+    this._map = el; if (this._hass) el.hass = this._hass;
+    this._mw.appendChild(el);
+    // wewnętrzna karta mapy ma własny współczynnik proporcji – wymuszamy wypełnienie kontenera
+    const fix = () => {
+      const r = el.shadowRoot; if (!r) return false;
+      if (!r.getElementById('hg-fill')) { const s = document.createElement('style'); s.id = 'hg-fill';
+        s.textContent = 'ha-card{height:100%!important;border-radius:0!important;border:0!important;box-shadow:none!important} #root{height:100%!important;padding-bottom:0!important} ha-map{position:absolute;inset:0;height:100%!important}';
+        r.appendChild(s); }
+      return true;
+    };
+    let n = 0; const t = setInterval(() => { if (fix() || ++n > 40) clearInterval(t); }, 150);
+  }
+  set hass(h) { this._hass = h; if (this._map) this._map.hass = h; }
+  get hass() { return this._hass; }
+  connectedCallback() {
+    this._onScheme = this._onScheme || (() => { if (this._config && this._config.theme_mode === 'auto' && this._tm !== (HGTheme.dark ? 'dark' : 'light')) this._make(); });
+    window.addEventListener('hg-scheme', this._onScheme); this._onScheme();
+  }
+  disconnectedCallback() { window.removeEventListener('hg-scheme', this._onScheme); }
+  getCardSize() { return 6; }
+  getGridOptions() { return { columns: 12, rows: 6 }; }
+}
+hgReg('nuvio-map-card', HGMapCard, 'Nuvio – Mapa', 'Natywna mapa HA w szklanej ramce');
+
+/* --- lista osób + strefy --- */
+class HGPeopleCard extends HGBase {
+  defaults() { return { title: 'Domownicy', icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
+  ents() { return this._config.persons.concat(this._config.zones); }
+  _extraSig() { return Math.floor(Date.now() / 60000); }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto; padding:var(--s3) var(--s3); }
+.lst{ display:flex; flex-direction:column; gap:2u; margin-top:4u; }
+.p{ display:flex; align-items:center; gap:var(--s2); padding:var(--s1) var(--s1); margin:0 -8u; border-radius:var(--r-sm); text-align:left; width:calc(100% + 16u); min-height:max(calc(var(--k) * 50), var(--hg-tgt, 0px)); }
+.p:hover{ background:var(--hg-bg-ffffff-045); }
+.p .av{ width:34u; height:34u; border-radius:var(--r-sm); background:center/cover var(--hg-bg-9aa3ad); flex:none; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff); font-size:var(--fs-md); font-weight:400;
+  box-shadow: 0 0 0 2u var(--hg-sh-ffffff-085); }
+.p.home .av{ box-shadow: 0 0 0 2u var(--hg-accent); }
+.p .tx{ min-width:0; flex:1; display:flex; flex-direction:column; gap:3u; }
+.p b{ display:block; font-size:var(--fs-md); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.p span{ display:block; font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.p span ha-icon{ width:10u; height:10u; vertical-align:-1u; margin-right:3u; }
+.p span em{ font-style:normal; color:var(--hg-tx-8a8e94); }
+.sec{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); margin-top:8u; text-transform:uppercase; letter-spacing:.06em; }
+.zs{ display:flex; flex-wrap:wrap; gap:5u; }
+.z{ display:inline-flex; align-items:center; gap:4u; padding:0 var(--s1); height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-070); font-size:var(--fs-sm); }
+.z i{ font-style:normal; min-width:14u; height:14u; border-radius:var(--r-sm); background:var(--hg-bg-e4e5e7); display:inline-flex; align-items:center; justify-content:center; font-size:var(--fs-xs); }
+.z.has i{ background:var(--hg-accent); color:var(--hg-on-accent); }
+`);
+  }
+  render() {
+    const c = this._config, h = this._hass;
+    const rows = c.persons.map((e) => {
+      const s = H.st(h, e); if (!s) return '';
+      const home = s.state === 'home', since = new Date(s.last_changed);
+      return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – szczegóły">${hgAvatar(h, e, 'av')}
+        <div class="tx"><b>${H.esc(s.attributes.friendly_name)}</b><span title="Ostatnia zmiana: ${H.esc(since.toLocaleString('pl-PL'))}">${H.icon(home ? 'mdi:home-outline' : s.state === 'not_home' ? 'mdi:map-marker-outline' : 'mdi:map-marker-radius-outline')}${H.esc(hgZoneName(h, s.state))} <em>· ${hgRel(since)}</em></span></div></button>`;
+    }).join('');
+    const zs = c.zones.map((z) => { const s = H.st(h, z); if (!s) return ''; const n = Number(s.state) || 0;
+      return `<button class="z ${n ? 'has' : ''}" data-act="more" data-e="${z}" title="${H.esc(s.attributes.friendly_name)}: ${n} os.">${H.esc(s.attributes.friendly_name)}<i>${n}</i></button>`; }).join('');
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
+      <div class="lst">${rows}</div>${zs ? `<div class="sec">Strefy</div><div class="zs">${zs}</div>` : ''}</ha-card>`;
+  }
+  onAct(a, el) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: el.dataset.e }); }
+}
+hgReg('nuvio-people-card', HGPeopleCard, 'Nuvio – Domownicy', 'Lista osób z awatarem, strefą i czasem zmiany');
+
+/* --- kalendarze: wspólne pobieranie (REST /api/calendars, tylko odczyt) --- */
+const HGCal = {
+  cache: {},
+  parse(e, cal) {
+    const ad = !!(e.start && e.start.date && !e.start.dateTime);
+    const s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime || e.start);
+    const en = ad ? new Date((e.end && e.end.date ? e.end.date : e.start.date) + 'T00:00:00') : new Date((e.end && (e.end.dateTime || e.end)) || s);
+    return { title: e.summary || '(bez tytułu)', start: s, end: en, allDay: ad, loc: e.location || '', cal };
+  },
+  async fetch(hass, cals, start, end) {
+    const key = cals.map((c) => c.entity).join(',') + start.toISOString() + end.toISOString();
+    const hit = this.cache[key]; if (hit && Date.now() - hit.t < 300000) return hit.p;
+    const p = Promise.all(cals.map(async (c) => {
+      const s = H.st(hass, c.entity);
+      if (!s || s.state === 'unavailable') return { cal: c, err: 'niedostępny', ev: [] };
+      try { const r = await hass.callApi('GET', `calendars/${c.entity}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
+        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: 'błąd pobierania', ev: [] }; }
+    }));
+    this.cache[key] = { t: Date.now(), p }; return p;
+  },
+  cals(hass, list) {
+    return (list || []).map((c, i) => { const o = typeof c === 'string' ? { entity: c } : Object.assign({}, c);
+      o.color = o.color || HG_PAL[i % HG_PAL.length]; const s = H.st(hass, o.entity); o.name = o.name || (s ? s.attributes.friendly_name : o.entity); return o; });
+  },
+};
+const HG_MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+
+/* --- mini-kalendarz miesiąca --- */
+class HGMonthCard extends HGBase {
+  defaults() { return { title: 'Kalendarz', icon: 'mdi:calendar-blank-outline', calendars: [] }; }
+  ents() { return this._config.calendars.map((c) => (typeof c === 'string' ? c : c.entity)); }
+  _extraSig() { return [this._off || 0, this._sel || '', this._n || 0, hgDayKey(new Date())]; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto; }
+.mh{ display:flex; align-items:center; gap:4u; margin-top:2u; }
+.mh b{ font-size:calc(15u * var(--hg-fsv, 1)); font-weight:400; flex:1; }
+.g{ display:grid; grid-template-columns:repeat(7,1fr); gap:2u; text-align:center; }
+.wd{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); padding:2u 0 4u; }
+.d{ position:relative; height:max(calc(var(--k) * 30), var(--hg-tgt, 0px)); border-radius:var(--r-sm); font-size:var(--fs-sm); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2u; }
+.d:hover{ background:var(--hg-bg-ffffff-050); }
+.d.o{ color:var(--hg-tx-a4a8ae); }
+.d.t span{ background:var(--hg-bg-f9d13a); color:var(--hg-tx-1e2023-on); border-radius:50%; width:20u; height:20u; display:inline-flex; align-items:center; justify-content:center; }
+.d.s{ background:var(--hg-bg-ffffff-085); }
+.d .ds{ display:flex; gap:2u; height:4u; } .d .ds i{ width:4u; height:4u; border-radius:50%; }
+.leg{ display:flex; flex-wrap:wrap; gap:4u 10u; font-size:var(--fs-xs); color:var(--hg-tx-4d5157); margin-top:2u; }
+.leg span{ display:inline-flex; align-items:center; gap:4u; } .leg i{ width:7u; height:7u; border-radius:50%; }
+.leg .x{ color:var(--hg-tx-a4a8ae); }
+.dl{ border-top:1px solid var(--hg-bd-000000-006); padding-top:8u; display:flex; flex-direction:column; gap:5u; }
+.dl h4{ margin:0; font-size:var(--fs-sm); font-weight:400; }
+.ev{ display:flex; gap:var(--s1); align-items:center; font-size:var(--fs-sm); } .ev i{ width:3u; align-self:stretch; border-radius:2u; } .ev small{ color:var(--hg-tx-6a6e74); font-size:var(--fs-xs); min-width:52u; }
+.none{ font-size:var(--fs-sm); color:var(--hg-tx-8a8e94); }
+`);
+  }
+  async _load(y, m) {
+    const k = `${y}-${m}`; if (this._k === k) return; this._k = k;
+    const cals = HGCal.cals(this._hass, this._config.calendars);
+    const res = await HGCal.fetch(this._hass, cals, new Date(y, m, 1), new Date(y, m + 1, 1));
+    if (this._k !== k) return; this._res = res; this._n = (this._n || 0) + 1; this.rerender();
+  }
+  render() {
+    const c = this._config, now = new Date(), base = new Date(now.getFullYear(), now.getMonth() + (this._off || 0), 1);
+    const y = base.getFullYear(), m = base.getMonth();
+    this._load(y, m);
+    const res = this._k === `${y}-${m}` ? this._res : null;
+    const byDay = {};
+    for (const r of res || []) for (const e of r.ev) {
+      const d = new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate());
+      const last = e.allDay ? new Date(e.end - 1) : e.end;
+      for (let i = 0; i < 62 && d <= last; i++) { (byDay[hgDayKey(d)] = byDay[hgDayKey(d)] || []).push(e); d.setDate(d.getDate() + 1); }
+    }
+    const first = (base.getDay() + 6) % 7, start = new Date(y, m, 1 - first);
+    let cells = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((d) => `<div class="wd">${d}</div>`).join('');
+    const today = hgDayKey(now), sel = this._sel || today;
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i); const k = hgDayKey(d), ev = byDay[k] || [];
+      const cols = [...new Set(ev.map((e) => e.cal.color))].slice(0, 3);
+      cells += `<button class="d ${d.getMonth() !== m ? 'o' : ''} ${k === today ? 't' : ''} ${k === sel ? 's' : ''}" data-act="day" data-k="${k}" aria-label="${d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })}${ev.length ? `, wydarzenia: ${ev.length}` : ''}">
+        <span>${d.getDate()}</span><div class="ds">${cols.map((cl) => `<i style="background:${cl}"></i>`).join('')}</div></button>`;
+    }
+    const leg = (res || HGCal.cals(this._hass, c.calendars).map((cal) => ({ cal }))).map((r) => `<span class="${r.err ? 'x' : ''}" title="${H.esc(r.cal.entity)}${r.err ? ' – ' + r.err : ''}"><i style="background:${r.err ? 'var(--hg-ac-c9ccd0)' : r.cal.color}"></i>${H.esc(r.cal.name)}</span>`).join('');
+    const sd = new Date(sel + 'T00:00:00'), sev = (byDay[sel] || []).slice().sort((a, b) => a.start - b.start);
+    const inMonth = sd.getMonth() === m && sd.getFullYear() === y;
+    const dl = inMonth ? `<div class="dl"><h4>${H.esc(sd.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>
+      ${sev.length ? sev.map((e) => `<div class="ev"><i style="background:${e.cal.color}"></i><small>${e.allDay ? 'cały dzień' : hgTime(e.start)}</small><span>${H.esc(e.title)}</span></div>`).join('') : `<div class="none">${res ? 'Brak wydarzeń' : 'Wczytywanie…'}</div>`}</div>` : '';
+    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>Brak kalendarzy</b>Dodaj integrację kalendarza w Home Assistant.</div></ha-card>`;
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+        <button class="ib" data-act="open" aria-label="Otwórz kalendarz HA" title="Otwórz kalendarz Home Assistant">${H.icon('mdi:arrow-expand')}</button></div>
+      <div class="mh"><b>${HG_MONTHS[m]} ${y}</b><button class="ib" data-act="prev" aria-label="Poprzedni miesiąc" title="Poprzedni miesiąc">${H.icon('mdi:chevron-left')}</button>
+        <button class="ib" data-act="today" aria-label="Dziś" title="Dziś">${H.icon('mdi:calendar-today-outline')}</button>
+        <button class="ib" data-act="next" aria-label="Następny miesiąc" title="Następny miesiąc">${H.icon('mdi:chevron-right')}</button></div>
+      <div class="g">${cells}</div><div class="leg">${leg}</div>${dl}</ha-card>`;
+  }
+  onAct(a, el) {
+    if (a === 'prev') this._off = (this._off || 0) - 1; else if (a === 'next') this._off = (this._off || 0) + 1;
+    else if (a === 'today') { this._off = 0; this._sel = null; } else if (a === 'day') this._sel = el.dataset.k;
+    else if (a === 'open') return H.navigate('/calendar');
+    this.rerender();
+  }
+}
+hgReg('nuvio-month-card', HGMonthCard, 'Nuvio – Miesiąc', 'Mini-kalendarz miesiąca z kropkami wydarzeń');
+
+/* --- agenda: najbliższe wydarzenia pogrupowane po dniach --- */
+class HGAgendaCard extends HGBase {
+  defaults() { return { title: 'Nadchodzące', icon: 'mdi:format-list-bulleted', calendars: [], days: 60 }; }
+  ents() { return this._config.calendars.map((c) => (typeof c === 'string' ? c : c.entity)); }
+  _extraSig() { return [this._n || 0, hgDayKey(new Date())]; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto; }
+.day{ margin-top:8u; } .day h4{ margin:0 0 5u; font-size:10px; font-size:var(--fs-sm); font-weight:400; color:var(--hg-tx-4d5157); text-transform:none; }
+.day h4 em{ font-style:normal; color:var(--hg-tx-1e2023); margin-right:4u; }
+.ev{ gap:var(--s2); }
+.ev i{ width:4u; align-self:stretch; border-radius:2u; flex:none; }
+.ev .tm{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); min-width:58u; }
+.ev .tx{ min-width:0; flex:1; } .ev b{ display:block; font-size:var(--fs-sm); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ev small{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-8a8e94); margin-top:1u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.none{ margin-top:10u; font-size:var(--fs-sm); color:var(--hg-tx-6a6e74); }
+`);
+  }
+  async _load() {
+    const k = hgDayKey(new Date()); if (this._k === k) return; this._k = k;
+    const t0 = new Date(); t0.setHours(0, 0, 0, 0); const t1 = new Date(t0); t1.setDate(t1.getDate() + this._config.days);
+    this._res = await HGCal.fetch(this._hass, HGCal.cals(this._hass, this._config.calendars), t0, t1); this._n = (this._n || 0) + 1; this.rerender();
+    clearTimeout(this._rt); this._rt = setTimeout(() => { this._k = null; this.rerender(); }, 300000);
+  }
+  render() {
+    const c = this._config;
+    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>Brak kalendarzy</b>Nie znaleziono encji calendar.*</div></ha-card>`;
+    this._load();
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><small class="note" style="margin-left:4u">${c.days} dni</small></div>`;
+    if (!this._res) return `<ha-card class="glass">${hd}<div class="none">Wczytywanie…</div></ha-card>`;
+    const now = new Date(), t0 = new Date(now); t0.setHours(0, 0, 0, 0);
+    const ev = this._res.flatMap((r) => r.ev).filter((e) => (e.allDay ? e.end > t0 : e.end >= now)).sort((a, b) => a.start - b.start);
+    const groups = {};
+    for (const e of ev) { const d = e.start < t0 ? t0 : e.start; (groups[hgDayKey(d)] = groups[hgDayKey(d)] || []).push(e); }
+    const tom = new Date(t0); tom.setDate(tom.getDate() + 1);
+    const lbl = (k) => { const d = new Date(k + 'T00:00:00'); const pre = k === hgDayKey(t0) ? 'Dziś' : k === hgDayKey(tom) ? 'Jutro' : '';
+      return `${pre ? `<em>${pre}</em>` : ''}${H.esc(d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}`; };
+    const body = Object.keys(groups).map((k) => `<div class="day"><h4>${lbl(k)}</h4>${groups[k].map((e) => `<div class="ev lr" title="${H.esc(e.cal.name)}"><i style="background:${e.cal.color}"></i>
+      <span class="tm">${e.allDay ? 'cały dzień' : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(e.title)}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
+    const errs = this._res.filter((r) => r.err).map((r) => r.cal.name);
+    return `<ha-card class="glass">${hd}${body || `<div class="none">Brak wydarzeń w najbliższych ${c.days} dniach.</div>`}
+      ${errs.length ? `<div class="note" style="margin-top:8u">Niedostępne: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
+  }
+}
+hgReg('nuvio-agenda-card', HGAgendaCard, 'Nuvio – Agenda', 'Nadchodzące wydarzenia pogrupowane po dniach');
+
+/* ===================== KAMERY ===================== */
+/* nuvio-camera-card  = jeden kafel kamery: migawka (camera_proxy) co N s tylko gdy widoczna, podmiana bez mrugnięcia (preload + decode),
+                     natywne proporcje klatki (naturalWidth/Height, zapamiętane w localStorage -> brak skoku układu),
+                     shimmer zamiast czarnego pola, sterowanie (Na żywo, pełny ekran) jako szklana nakładka po najechaniu / dotknięciu.
+   nuvio-cameras-card = grupa: działające kamery jako duże kafle, niedostępne zwinięte do rzędu chipów „Niedostępne: …”.
+   Na żywo = natywna karta picture-entity (camera_view: live), najwyżej jedna transmisja naraz (HGLive). */
+const HGLive = { cur: null, set(card) { if (this.cur && this.cur !== card) this.cur._stopLive(); this.cur = card; }, clear(card) { if (this.cur === card) this.cur = null; } };
+/* Nakładka pełnoekranowa kamery: w shadowRoot <home-assistant> (poza warstwami z backdrop-filter, które psują position:fixed),
+   czarne tło 100vw × 100dvh z safe-area, strumień na żywo (picture-entity camera_view: live), zamykanie: X, Escape, przesunięcie w dół. */
+const HGCamFS = {
+  el: null, card: null,
+  css: `.hg-camfs{position:fixed;inset:0;z-index:2147483000;background:var(--hg-bg-000000-k);display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;height:100dvh;
+    touch-action:none;opacity:0;transition:opacity .2s ease, transform .25s ease;overscroll-behavior:contain;-webkit-user-select:none;user-select:none}
+  .hg-camfs.in{opacity:1}
+  .hg-camfs .st{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
+  .hg-camfs .box{width:min(100%, calc((100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * var(--a)));aspect-ratio:var(--a);max-height:100%;position:relative}
+  .hg-camfs .box > *{display:block;width:100%;height:100%;--ha-card-border-radius:0;--ha-card-border-width:0;--ha-card-background:var(--hg-bg-000000-k);--ha-card-box-shadow:none}
+  .hg-camfs .bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 12px) 24px calc(env(safe-area-inset-left) + 16px);
+    background:var(--hg-bg-000000-045-k);color:var(--hg-tx-ffffff-k);font:400 15px/1.2 'HG DM Sans',system-ui,sans-serif;pointer-events:none}
+  .hg-camfs .bar b{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hg-camfs .bar i{font-style:normal;font-size:11px;padding:3px 8px;border-radius:9px;background:var(--hg-bg-e5484d-k);letter-spacing:.04em}
+  .hg-camfs .x{pointer-events:auto;width:48px;height:48px;border-radius:50%;border:0;background:var(--hg-bg-ffffff-018-k);color:var(--hg-tx-ffffff-k);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .hg-camfs .x ha-icon{--mdc-icon-size:26px}
+  .hg-camfs .hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);color:var(--hg-tx-ffffff-055-k);font:12px system-ui,sans-serif;pointer-events:none}
+  @media (prefers-reduced-motion: reduce){.hg-camfs{transition:none}}`,
+  async open(card) {
+    if (this.el) this.close(true);
+    card._stopLive && card._liveOn && card._stopLive(true);
+    const c = card._config, a = hgAsp.get(c.entity) || c.aspect || 16 / 9, name = c.name || H.name(card._hass, c.entity);
+    const el = document.createElement('div'); el.className = 'hg-camfs'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Kamera ' + name + ' – pełny ekran');
+    el.style.setProperty('--a', a);
+    el.innerHTML = `<style>${this.css}</style><div class="st"><div class="box"></div></div><div class="bar"><b>${H.esc(name)}</b><i>NA ŻYWO</i><button class="x" aria-label="Zamknij pełny ekran" title="Zamknij (Esc)"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="hint">Przesuń w dół, aby zamknąć</div>`;
+    // w drzewie <home-assistant> (ale poza panelem z backdrop-filter): elementy HA (ha-camera-stream) biorą hass z kontekstu dostawcy
+    const ha = document.querySelector('home-assistant');
+    (ha && ha.shadowRoot ? ha.shadowRoot : document.body).appendChild(el); this.el = el; this.card = card; this.entity = c.entity; this._prevFocus = document.activeElement;
+    // zmiana widoku zamyka nakładkę; obrót / przebudowa kafli kamer – nie (hass dostarcza dowolna karta tej samej kamery)
+    this._loc = () => { if (!location.pathname.endsWith('/' + (this._view || ''))) this.close(true); };
+    this._view = location.pathname.split('/').pop(); window.addEventListener('location-changed', this._loc); window.addEventListener('popstate', this._loc);
+    this._prevOverflow = document.documentElement.style.overflow; document.documentElement.style.overflow = 'hidden';
+    requestAnimationFrame(() => el.classList.add('in'));
+    const x = el.querySelector('.x'); x.addEventListener('click', (e) => { e.stopPropagation(); this.close(); }); x.focus({ preventScroll: true });
+    this._key = (e) => { if (e.key === 'Escape') { e.preventDefault(); this.close(); } }; document.addEventListener('keydown', this._key, true);
+    // przesunięcie w dół (dotyk lub mysz): zamyka po > 90 px w pionie
+    let y0 = null, x0 = 0;
+    el.addEventListener('pointerdown', (e) => { if (e.target.closest('.x')) return; y0 = e.clientY; x0 = e.clientX; }, { passive: true });
+    el.addEventListener('pointermove', (e) => { if (y0 == null) return; const dy = e.clientY - y0; if (dy > 0 && Math.abs(dy) > Math.abs(e.clientX - x0)) { el.style.transform = `translateY(${dy * 0.6}px)`; el.style.opacity = String(Math.max(0.35, 1 - dy / 500)); } }, { passive: true });
+    const end = (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; if (dy > 90) this.close(); else { el.style.transform = ''; el.style.opacity = ''; } };
+    el.addEventListener('pointerup', end, { passive: true }); el.addEventListener('pointercancel', () => { y0 = null; el.style.transform = ''; el.style.opacity = ''; }, { passive: true });
+    this._rs = () => { if (this.el) this.el.style.setProperty('--a', a); }; window.addEventListener('orientationchange', this._rs);
+    try {
+      const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
+      if (!helpers || this.el !== el) return;
+      if (card._nl ? card._nl() : c.no_live) {   // bez strumienia: powiększona migawka podglądu odświeżana co 2 s
+        const box = el.querySelector('.box'), img = document.createElement('img'); img.alt = ''; img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block';
+        box.appendChild(img); const lb = el.querySelector('.bar i'); if (lb) lb.textContent = 'PODGLĄD';
+        const tick = () => { const s = H.st(this.card ? this.card._hass : card._hass, card._ent ? card._ent() : c.entity); if (!s || !s.attributes.entity_picture) return;
+          const u = s.attributes.entity_picture, pre = new Image(); pre.onload = () => { if (pre.naturalWidth >= 16) img.src = pre.src; }; pre.src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(); };
+        tick(); this._pv = setInterval(() => { if (this.el === el) tick(); }, 2000); return;
+      }
+      const fe = c.fs_entity && H.ok(card._hass.states[c.fs_entity]) ? c.fs_entity : (card._ent ? card._ent() : c.entity);   // pełny ekran: strumień główny (main), kafel: sub/podgląd
+      const live = helpers.createCardElement({ type: 'picture-entity', entity: fe, camera_view: 'live', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' } });
+      live.hass = card._hass; this.live = live; el.querySelector('.box').appendChild(live);
+    } catch (err) { el.querySelector('.box').textContent = 'Nie można uruchomić podglądu'; }
+  },
+  hass(h) { if (this.live) this.live.hass = h; },
+  close(now) {
+    clearInterval(this._pv); this._pv = 0;
+    const el = this.el; if (!el) return;
+    this.el = null; this.live = null; const card = this.card; this.card = null;
+    document.removeEventListener('keydown', this._key, true); window.removeEventListener('orientationchange', this._rs);
+    window.removeEventListener('location-changed', this._loc); window.removeEventListener('popstate', this._loc); this.entity = null;
+    document.documentElement.style.overflow = this._prevOverflow || '';
+    const rm = () => el.remove();
+    if (now || hgReduced()) rm(); else { el.classList.remove('in'); el.style.opacity = '0'; setTimeout(rm, 220); }
+    if (card && card.isConnected && card._snap) card._snap();
+    try { this._prevFocus && this._prevFocus.focus && this._prevFocus.focus({ preventScroll: true }); } catch (e) { /* */ }
+  },
+};
+if (!window.HGCamFS) window.HGCamFS = HGCamFS;   // diagnostyka / testy (pierwsza załadowana kopia)
+const hgCamUn = (s) => !s || s.state === 'unavailable' || s.state === 'unknown';
+const hgAsp = {
+  get(e) { try { const v = parseFloat(localStorage.getItem('nuvio:asp:' + e)); return v > 0.3 && v < 4 ? v : null; } catch (err) { return null; } },
+  set(e, v) { try { localStorage.setItem('nuvio:asp:' + e, v.toFixed(4)); } catch (err) { /* prywatny tryb */ } },
+};
+const HG_CAM_CSS = `
+.tile{ display:flex; flex-direction:column; gap:var(--s1); height:100%; min-width:0; }
+.hd{ padding:0 2u; min-height:18u; }
+.hd .ic{ width:11u; height:11u; color:var(--hg-tx-5a5e64); }
+.st{ font-size:var(--fs-xs); line-height:1; padding:4u var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-072); color:var(--hg-tx-5a5e64); white-space:nowrap; display:inline-flex; align-items:center; gap:4u; }
+.hd .st{ display:none !important; } .chips[hidden]{ display:none !important; }
+.st::before{ content:''; width:5u; height:5u; border-radius:50%; background:var(--hg-bg-9aa0a6); }
+.st.ok::before{ background:var(--hg-accent); }
+.st.rec{ color:var(--hg-tx-b3261e); } .st.rec::before{ background:var(--hg-bg-e53935); animation:hgpulse 1.6s infinite; }
+.st.live{ color:var(--hg-on-accent); background:var(--hg-accent); } .st.live::before{ background:var(--hg-bg-ffffff); animation:hgpulse 1.2s infinite; }
+.fr{ position:relative; border-radius:var(--r-sm); overflow:hidden; background:var(--hg-bg-1e242e-018); width:min(100%, calc(var(--frmax, 100000px) * var(--aspn))); aspect-ratio: var(--aspn);
+  margin:0 auto; flex:none; cursor:pointer; touch-action:manipulation; isolation:isolate; transform:translateZ(0); }
+.fr img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity .35s ease; }
+.fr.ok img{ opacity:1; }
+.shim{ position:absolute; inset:0; overflow:hidden; background:var(--hg-bg-d6dae0-055); transition:opacity .4s ease; animation:hgshim 1.6s ease-in-out infinite; }
+.shim::after{ content:none; }
+.fr.ok .shim{ opacity:0; animation:none; }
+@keyframes hgshim{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+.fr .live{ position:absolute; inset:0; display:none; background:var(--hg-bg-000000); }
+.fr.err .shim{ animation:none; display:flex; align-items:center; justify-content:center; }
+.fr.err .shim::after{ content:'Brak obrazu z kamery'; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.fr.on .live{ display:block; } .fr.on img, .fr.on .shim{ visibility:hidden; }
+.fr .live > *{ display:block; height:100%; --ha-card-border-radius:0; --ha-card-border-width:0; --ha-card-box-shadow:none; --ha-card-background:var(--hg-bg-000000); }
+.ov{ position:absolute; left:0; right:0; bottom:0; display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s1); padding:var(--s1); z-index:3;
+  background:var(--hg-bg-0a0e14-032); opacity:0; transform:translateY(4u); transition:opacity .25s ease, transform .25s cubic-bezier(.2,.8,.2,1); }
+.fr.show .ov, .fr.on .ov{ opacity:1; transform:none; }
+@media (hover:hover){ .fr:hover .ov{ opacity:1; transform:none; } }
+.pb{ position:relative; height:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); min-width:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); justify-content:center; padding:0 var(--s2); border-radius:999px;
+  background:var(--hg-bg-ffffff-022); border:0; color:var(--hg-tx-ffffff); font-size:var(--fs-sm); font-weight:400; display:inline-flex; align-items:center; gap:5u;
+  -webkit-backdrop-filter: var(--hg-inner-bf, blur(10px) saturate(140%)); backdrop-filter: var(--hg-inner-bf, blur(10px) saturate(140%)); box-shadow:var(--hg-card-sh, var(--hg-sh)); }
+.pb.ic{ padding:0; width:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); }
+.pb ha-icon{ width:20px; height:20px; }
+.pb:hover{ background:var(--hg-bg-ffffff-032); }
+.fr:fullscreen{ border-radius:0; width:100%; height:100%; background:var(--hg-bg-000000); aspect-ratio:auto; }
+.fr:-webkit-full-screen{ border-radius:0; width:100%; height:100%; background:var(--hg-bg-000000); aspect-ratio:auto; }
+.fr:-webkit-full-screen{ border-radius:0; width:100%; height:100%; background:var(--hg-bg-000000); }
+.un{ display:flex; align-items:center; gap:var(--s1); color:var(--hg-tx-6a6e74); font-size:var(--fs-sm); padding:4u 2u; }
+.un ha-icon{ width:16u; height:16u; }
+`;
+class HGCameraCard extends HGBase {
+  defaults() { return { name: null, refresh: 10, aspect: 16 / 9, embedded: false, cover: false, fs_entity: null, fallback: null, no_live: false, live_needs_fs: false }; }
+  // bez strumienia: no_live albo (live_needs_fs i encja pełnego ekranu niedostępna -> sam podgląd MQTT nie ma strumienia)
+  _nl() { const c = this._config; return !!c.no_live || (!!c.live_needs_fs && !(c.fs_entity && this._hass && H.ok(this._hass.states[c.fs_entity]))); }
+  /* źródło miniatury: entity (np. podgląd MQTT), a gdy niedostępne – fallback (np. _sub) */
+  _ent() { const c = this._config, h = this._hass, L = [c.entity, ...[].concat(c.fallback || [])]; return (h && L.find((e) => !hgCamUn(H.st(h, e)))) || c.entity; }   // encje mogą jeszcze nie istnieć
+  _liveEnt() { const c = this._config; return c.fs_entity && this._hass && H.ok(this._hass.states[c.fs_entity]) ? c.fs_entity : this._ent(); }
+  css() { return U(HG_CAM_CSS + `ha-card.glass{ padding:var(--s1) var(--s1) var(--s2); } ha-card.glass.bare{ padding:var(--s1); }
+/* kafel w siatce Kamer: obraz na całą szerokość 16:9 (cover), wysokość karty = obraz + smukły nagłówek */
+ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .tile{ height:auto; } .cv .hd{ min-height:max(18u, 28px); }
+.cv .fr{ width:100% !important; aspect-ratio:var(--aspn, 16 / 9) !important; }
+.cv .un{ aspect-ratio:16 / 9; color:var(--hg-tx-45494f); flex-direction:column; justify-content:center; gap:var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-1e242e-008); padding:0; } .cv .un ha-icon{ width:28px; height:28px; opacity:.7; } .cv .fr img{ object-fit:cover; }
+.fr:fullscreen img, .fr:-webkit-full-screen img{ object-fit:contain; }`); }
+  /* szkielet budowany raz; zmiany stanu aktualizują tylko tekst/klasy (bez podmiany <img> -> bez mrugania) */
+  _update() {
+    if (!this._config || !this._hass) return;
+    const c = this._config, s = H.st(this._hass, this._ent()), un = hgCamUn(s);
+    if (!this._sk || this._skUn !== un) this._skeleton(un);
+    const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
+    const live = !!this._liveOn;
+    const stl = un ? (this._nl() || c.cover ? 'offline' : 'niedostępna') : live ? 'na żywo' : { recording: 'nagrywa', streaming: 'transmisja', idle: 'bezczynna' }[s.state] || H.stateLabel(s.state);
+    const cls = 'st ' + (un ? '' : live ? 'live' : s.state === 'recording' ? 'rec' : 'ok');
+    if (this._ttl.textContent !== nm) this._ttl.textContent = nm;
+    if (this._st.textContent !== stl) this._st.textContent = stl;
+    if (this._st.className !== cls) this._st.className = cls;
+    if (!un) {
+      const pic = s.attributes.entity_picture;
+      if (pic && !this._loaded && pic !== this._lastPic) { this._lastPic = pic; this._snap(); }
+    }
+  }
+  _skeleton(un) {
+    const c = this._config, asp = hgAsp.get(c.entity) || c.aspect;
+    this._sk = true; this._skUn = un; this._loaded = false; this._lastPic = null; this._snapErr = 0;
+    if (this._liveOn) this._stopLive(true);
+    const hd = `<div class="hd">${H.icon('mdi:cctv', 'ic')}<span class="tt"></span><span class="sp"></span><span class="st"></span>
+      <button class="ib kebab" data-act="more" aria-label="Szczegóły kamery" title="Szczegóły">${H.icon('mdi:dots-vertical')}</button></div>`;
+    const body = un ? `<div class="un">${H.icon('mdi:cctv-off')}<span>${c.cover ? 'Brak połączenia z kamerą' : 'Kamera niedostępna'}</span></div>`
+      : `<div class="fr" data-act="frame" style="--aspn:${asp}"><div class="shim"></div><img alt="" decoding="async"><div class="live"></div>
+          <div class="ov">${this._nl() ? '<span></span>' : `<button class="pb" data-act="live" aria-label="Podgląd na żywo">${H.icon('mdi:play')}<span>Na żywo</span></button>`}
+          <button class="pb ic" data-act="full" aria-label="Pełny ekran" title="Pełny ekran">${H.icon('mdi:fullscreen')}</button></div></div>`;
+    this.$.innerHTML = `<ha-card class="glass ${c.embedded ? 'bare' : ''} ${c.cover ? 'cv' : ''}"><div class="tile">${hd}${body}</div></ha-card>`;
+    this._ttl = this.$.querySelector('.tt');   /* nie _tt: to pole timera dotyku w HGBase */ this._st = this.$.querySelector('.st');
+    this._fr = this.$.querySelector('.fr'); this._img = this.$.querySelector('img'); this._lb = this.$.querySelector('[data-act=live]');
+    if (this._io) this._io.disconnect();
+    if (this._fr) {
+      this._io = new IntersectionObserver((en) => { this._vis = en.some((e) => e.isIntersecting); if (this._vis) this._snap(); });
+      this._io.observe(this._fr);
+    }
+  }
+  _snap() {
+    const s = H.st(this._hass, this._ent());
+    if (!this._img || hgCamUn(s) || !s.attributes.entity_picture || document.hidden || this._vis === false || this._liveOn || this._loading) return;
+    const u = s.attributes.entity_picture, src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    const pre = new Image(); this._loading = true;
+    const done = () => { this._loading = false; };
+    // migawka nie działa (np. błąd uwierzytelnienia kamery): zamiast wiecznego shimmera komunikat; „Na żywo” nadal dostępne
+    const fail = () => { done(); if (++this._snapErr >= 2 && !this._loaded && this._fr) this._fr.classList.add('err'); };
+    pre.onload = () => {
+      const fin = () => {
+        done(); if (!this._img) return;
+        if (!pre.naturalWidth || pre.naturalWidth < 16 || pre.naturalHeight < 16) return fail();   // pusta/uszkodzona migawka: zostaw ostatnią dobrą klatkę
+        this._img.src = src;
+        if (pre.naturalWidth && pre.naturalHeight) {
+          const a = pre.naturalWidth / pre.naturalHeight;
+          if (Math.abs(a - (parseFloat(this._fr.style.getPropertyValue('--aspn')) || 0)) > 0.01) { this._fr.style.setProperty('--aspn', a.toFixed(4)); hgAsp.set(this._config.entity, a); }
+        }
+        this._snapErr = 0; this._fr.classList.remove('err'); if (!this._loaded) { this._loaded = true; this._fr.classList.add('ok'); }
+      };
+      pre.decode ? pre.decode().then(fin, fin) : fin();
+    };
+    pre.onerror = fail;
+    pre.src = src;
+  }
+  connectedCallback() { super.connectedCallback();
+    clearInterval(this._iv);
+    // tyk co 2 s: miniatura co `refresh` s; na pełnym ekranie (Fullscreen API) co 2 s
+    this._iv = setInterval(() => { const fs = document.fullscreenElement === this._fr || document.webkitFullscreenElement === this._fr;
+      if (fs || Date.now() - (this._lastSnap || 0) >= Math.max(2, this._config ? this._config.refresh : 10) * 1000 - 300) { this._lastSnap = Date.now(); this._snap(); } }, 2000);
+    if (this._fr && this._io) this._io.observe(this._fr);
+  }
+  disconnectedCallback() { clearInterval(this._iv); this._stopLive(); this._io && this._io.disconnect(); }
+  _ctl(show) {
+    if (!this._fr) return;
+    clearTimeout(this._ctlT);
+    this._fr.classList.toggle('show', show);
+    if (show && !this._liveOn) this._ctlT = setTimeout(() => this._fr && this._fr.classList.remove('show'), 4000);
+  }
+  _paintLive() {
+    if (this._fr) this._fr.classList.toggle('on', !!this._liveOn);
+    if (this._lb) { this._lb.innerHTML = `${H.icon(this._liveOn ? 'mdi:stop' : 'mdi:play')}<span>${this._liveOn ? 'Stop' : 'Na żywo'}</span>`; this._lb.setAttribute('aria-label', this._liveOn ? 'Zatrzymaj podgląd na żywo' : 'Podgląd na żywo'); }
+    this._update();
+  }
+  async _startLive() {
+    if (this._nl()) return this._full();
+    const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null; if (!helpers || !this._fr) return;
+    HGLive.set(this);
+    this._liveEl = helpers.createCardElement({ type: 'picture-entity', entity: this._liveEnt(), camera_view: 'live', show_name: false, show_state: false, tap_action: { action: 'none' } });
+    this._liveEl.hass = this._hass; this._liveOn = true;
+    this._fr.querySelector('.live').appendChild(this._liveEl);
+    this._paintLive();
+  }
+  _stopLive(silent) {
+    if (!this._liveOn) return; this._liveOn = false;
+    if (this._liveEl) this._liveEl.remove(); this._liveEl = null; HGLive.clear(this);
+    if (!silent) { this._paintLive(); this._ctl(false); this._snap(); }
+  }
+  set hass(h) { this._hass = h; if (this._liveEl) this._liveEl.hass = h; if (HGCamFS.entity && this._config && HGCamFS.entity === this._config.entity) { HGCamFS.card = this; HGCamFS.hass(h); } this._update(); }
+  get hass() { return this._hass; }
+  onAct(a) {
+    const e = this._liveEnt();
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (a === 'frame' && this._nl()) return this._full();   // tylko podgląd (bez strumienia): powiększony obraz
+    if (a === 'frame') {
+      // mysz: klik = na żywo; dotyk: 1. dotknięcie pokazuje sterowanie, 2. włącza podgląd na żywo
+      const hover = window.matchMedia && matchMedia('(hover:hover)').matches;
+      if (this._liveOn) return this._ctl(!this._fr.classList.contains('show'));
+      if (!hover && !this._fr.classList.contains('show')) return this._ctl(true);
+      return this._startLive();
+    }
+    if (a === 'live') return this._liveOn ? this._stopLive() : this._startLive();
+    if (a === 'full') return this._full();
+  }
+  /* Pełny ekran: Fullscreen API tylko tam, gdzie naprawdę działa (Chromium/Firefox/Safari na Macu). iPhone/iPad Safari
+     i aplikacja HA (WKWebView/Android WebView) często nie mają API albo odrzucają je w shadow DOM -> własna nakładka
+     na całe okno (HGCamFS). Jeśli API nie wejdzie w pełny ekran w 450 ms, też przechodzimy na nakładkę: nigdy martwy przycisk. */
+  _full() {
+    const fr = this._fr, d = document;
+    const req = fr && (fr.requestFullscreen || fr.webkitRequestFullscreen);
+    const enabled = d.fullscreenEnabled || d.webkitFullscreenEnabled;
+    const touchWebKit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Firefox/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
+    const app = /Home Assistant|HomeAssistant/i.test(navigator.userAgent) || !!window.externalApp || !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.getExternalAuth);
+    if (!req || !enabled || touchWebKit || app || window.__hgForceFsOverlay) return HGCamFS.open(this);
+    let fell = false; const fall = () => { if (fell) return; fell = true; HGCamFS.open(this); };
+    if (!this._liveOn) this._startLive();
+    try {
+      const r = req.call(fr);
+      if (r && r.then) r.then(() => {}, fall);
+      setTimeout(() => { if (!(d.fullscreenElement || d.webkitFullscreenElement)) fall(); }, 450);
+    } catch (err) { fall(); }
+  }
+  getCardSize() { return 4; }
+  getGridOptions() { return { columns: 6, rows: 4 }; }
+}
+hgReg('nuvio-camera-card', HGCameraCard, 'Nuvio – Kamera', 'Migawka odświeżana co kilka sekund, podgląd na żywo po dotknięciu');
+
+class HGCamerasCard extends HGBase {
+  defaults() { return { entities: [], names: {}, fs: {}, fb: {}, refresh_map: {}, nolive: [], pin: [], refresh: 10 }; }
+  css() {
+    return U(`
+ha-card.wrap{ background:none; border:0; box-shadow:none; padding:0; height:auto; display:flex; flex-direction:column; gap:var(--s2); }
+/* liczba kolumn wg szerokości kontenera (panel), nie okna: ~1280 -> 2, 1440–1640 -> 3, 1920+ -> 4, bardzo szerokie -> 5 */
+ha-card.wrap{ container-type:inline-size; }
+.grid{ display:grid; gap:var(--s2); align-items:start; grid-template-columns:repeat(var(--cols, 1), minmax(0, 1fr)); }
+@container (min-width: 560px){ .grid{ --cols:2; } }
+@container (min-width: 1200px){ .grid{ --cols:3; } }
+@container (min-width: 1600px){ .grid{ --cols:4; } }
+@container (min-width: 2400px){ .grid{ --cols:5; } }
+.grid.n1{ grid-template-columns:minmax(0, min(100%, 720px)); justify-content:center; }
+.empty{ display:flex; align-items:center; gap:var(--s2); padding:var(--s3); border-radius:var(--r-md); background:var(--hg-bg-ffffff-055); color:var(--hg-tx-5a5e64); font-size:var(--fs-sm); }
+.empty ha-icon{ width:20u; height:20u; }
+.chips{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); padding:0 2u; }
+.chips:empty{ display:none; }
+.lbl{ display:inline-flex; align-items:center; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-062); font-size:var(--fs-sm); color:var(--hg-tx-3a3e44); font-weight:400; margin-right:2u; }
+.chip{ position:relative; display:inline-flex; align-items:center; gap:5u; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s2); border-radius:var(--r-sm); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54);
+  background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-075); box-shadow:var(--hg-sh); transition:background .2s; }
+.chip:hover{ background:var(--hg-bg-ffffff-080); }
+.chip ha-icon{ width:12u; height:12u; color:var(--hg-tx-8a8e94); }
+`);
+  }
+  _update() {
+    if (!this._config || !this._hass) return;
+    const c = this._config, h = this._hass;
+    const dn = (e) => !(c.pin || []).includes(e) && hgCamUn(H.st(h, e)) && ![].concat((c.fb || {})[e] || []).some((f) => !hgCamUn(H.st(h, f)));   // przypięte: zawsze kafel   // niedostępna, gdy też brak zapasowej
+    const av = c.entities.filter((e) => !dn(e)), un = c.entities.filter(dn);
+    const sig = av.join(',') + '|' + un.map((e) => e + H.name(h, e)).join(',');
+    if (sig !== this._lsig) { this._lsig = sig; this._layoutCams(av, un); }
+    for (const t of this._tiles.values()) t.hass = h;
+  }
+  _layoutCams(av, un) {
+    const c = this._config, h = this._hass;
+    if (!this._tiles) this._tiles = new Map();
+    if (!this._grid) {
+      this.$.innerHTML = `<ha-card class="wrap"><div class="grid"></div><div class="chips"></div></ha-card>`;
+      this._grid = this.$.querySelector('.grid'); this._chips = this.$.querySelector('.chips');
+    }
+    for (const [e, t] of this._tiles) if (!av.includes(e)) { t.remove(); this._tiles.delete(e); }
+    for (const e of av) {
+      let t = this._tiles.get(e);
+      if (!t) { t = document.createElement('nuvio-camera-card'); t.setConfig({ type: 'custom:nuvio-camera-card', entity: e, name: c.names[e] || null, refresh: (c.refresh_map && c.refresh_map[e]) || c.refresh, embedded: true, cover: true, no_live: (c.nolive || []).includes(e), live_needs_fs: (c.needfs || []).includes(e), ...(c.fb && c.fb[e] ? { fallback: c.fb[e] } : {}), ...(c.fs && c.fs[e] ? { fs_entity: c.fs[e] } : {}) }); t.hass = h; this._tiles.set(e, t); }
+      this._grid.appendChild(t);     // appendChild przenosi istniejący kafel (zachowuje stan i obraz)
+    }
+    const empty = this._grid.querySelector('.empty'); if (empty) empty.remove();
+    if (!av.length) this._grid.insertAdjacentHTML('beforeend', `<div class="empty">${H.icon('mdi:cctv-off')}<span>Żadna kamera nie jest teraz dostępna</span></div>`);
+    const n = av.length, rows = n <= 2 ? 1 : Math.ceil(n / 2);
+    this._grid.className = `grid n${Math.min(n, 4)} ${n > 1 ? 'multi' : ''}`;
+    this._grid.style.setProperty('--rows', rows);
+    this._grid.style.setProperty('--chips-h', '0px');   // bez plakietek pod kamerami (decyzja użytkownika)
+    this._chips.innerHTML = ''; this._chips.hidden = true;
+  }
+  onAct(a, t) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: t.dataset.e }); }
+  getCardSize() { return 6; }
+  getGridOptions() { return { columns: 12, rows: 6 }; }
+}
+hgReg('nuvio-cameras-card', HGCamerasCard, 'Nuvio – Kamery', 'Działające kamery jako duże kafle, niedostępne jako chipy');
+
+/* ===================== BEZPIECZEŃSTWO: alarm + czujniki ===================== */
+const HG_ALARM_ST = {
+  disarmed: ['Rozbrojony', 'var(--hg-accent)', 'mdi:shield-off-outline'], armed_home: ['Uzbrojony · w domu', 'var(--hg-accent)', 'mdi:shield-home'],
+  armed_away: ['Uzbrojony · poza domem', 'var(--hg-accent)', 'mdi:shield-lock'], armed_night: ['Uzbrojony · noc', 'var(--hg-accent)', 'mdi:shield-moon'],
+  armed_vacation: ['Uzbrojony · urlop', 'var(--hg-accent)', 'mdi:shield-airplane'], armed_custom_bypass: ['Uzbrojony · własny', 'var(--hg-accent)', 'mdi:shield-edit'],
+  arming: ['Uzbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync'], pending: ['Oczekuje…', 'var(--hg-accent)', 'mdi:shield-alert-outline'],
+  disarming: ['Rozbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync'], triggered: ['Alarm!', 'var(--hg-ac-e53935)', 'mdi:bell-ring'],
+  unavailable: ['Niedostępny', 'var(--hg-ac-9aa0a6)', 'mdi:shield-remove-outline'], unknown: ['Nieznany', 'var(--hg-ac-9aa0a6)', 'mdi:shield-remove-outline'],
+};
+/* supported_features (AlarmControlPanelEntityFeature): 1 ARM_HOME, 2 ARM_AWAY, 4 ARM_NIGHT, 8 TRIGGER (bez przycisku), 16 ARM_CUSTOM_BYPASS, 32 ARM_VACATION */
+const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home'], [2, 'arm_away', 'Poza domem', 'mdi:lock', 'armed_away'],
+  [4, 'arm_night', 'Noc', 'mdi:weather-night', 'armed_night'], [32, 'arm_vacation', 'Urlop', 'mdi:airplane', 'armed_vacation'],
+  [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass']];
+class HGAlarmCard extends HGBase {
+  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: 'Alarm · Dom' }; }
+  _extraSig() { return [this._pend || '', (this._code || '').length, Math.floor(Date.now() / 60000)]; }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3) var(--s3); overflow:auto; }
+.big{ display:flex; align-items:center; gap:var(--s3); padding:4u 0; }
+.ring{ position:relative; width:clamp(56px, calc(var(--k) * 46), 64px); height:clamp(56px, calc(var(--k) * 46), 64px); border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff);
+  background:var(--c); box-shadow:var(--hg-sh); }
+.ring ha-icon{ width:28px; height:28px; --mdc-icon-size:28px; }
+.ring::before, .ring::after{ content:''; position:absolute; inset:-6u; border-radius:50%; border:2u solid var(--c); opacity:0; pointer-events:none; }
+.anim .ring::before{ animation:hgring 1.6s cubic-bezier(.2,.8,.2,1) infinite; }
+.anim .ring::after{ animation:hgring 1.6s cubic-bezier(.2,.8,.2,1) .8s infinite; }
+.trig .ring{ animation:hgpulse 1s infinite; }
+@keyframes hgring{ 0%{ transform:scale(.9); opacity:.7 } 100%{ transform:scale(1.45); opacity:0 } }
+.st{ min-width:0; } .st b{ display:block; font-size:clamp(20px, calc(var(--k) * 17), 24px); font-weight:600; letter-spacing:-.01em; color:var(--hg-tx-1e2023); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.st span{ display:block; font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); margin-top:3u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.acts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap:var(--s1); }
+.ab{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:max(64px, var(--hg-tgt, 0px)); padding:var(--s1) var(--s1); border-radius:var(--r-sm); font-size:var(--fs-sm); font-weight:400;
+  background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-080); color:var(--hg-tx-2a2d31); transition:background .2s, transform .15s; text-align:center; }
+.ab ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; } .ab span{ max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ab:hover{ background:var(--hg-bg-ffffff-085); } .ab:active{ transform:scale(.97); }
+.ab.sel{ background:var(--c, var(--hg-accent)); color:var(--hg-tx-ffffff); border-color:transparent; }
+.ab.dis{ grid-column:1 / -1; flex-direction:row; min-height:max(48px, var(--hg-tgt, 0px)); gap:var(--s1); background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); border-color:var(--hg-bd-1f2125); }
+.kp{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-050); }
+.kp .q{ display:flex; align-items:center; justify-content:space-between; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.dots{ display:flex; gap:var(--s1); justify-content:center; min-height:12u; }
+.dots i{ width:9u; height:9u; border-radius:50%; background:var(--hg-bg-2a2d31); }
+.dots em{ font-style:normal; font-size:var(--fs-sm); color:var(--hg-tx-8a8e94); }
+.keys{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s1); }
+.k{ position:relative; min-height:max(calc(var(--k) * 34), var(--hg-tgt, 0px)); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-075); font-size:var(--fs-md); font-weight:400; display:flex; align-items:center; justify-content:center; }
+.k:active{ background:var(--hg-bg-ffffff); transform:scale(.96); } .k ha-icon{ width:16u; height:16u; }
+.k.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .k.ok[disabled]{ opacity:.45; }
+.pw{ height:max(calc(var(--k) * 34), var(--hg-tgt, 0px)); border-radius:var(--r-sm); border:1px solid var(--hg-bd-000000-010); padding:0 var(--s2); font:inherit; font-size:var(--fs-md); background:var(--hg-bg-ffffff); }
+.x{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); padding:4u var(--s1); border-radius:var(--r-sm); position:relative; min-height:var(--hg-tgt, 0px); }
+`);
+  }
+  _needCode(act) { const a = (H.st(this._hass, this._config.entity) || { attributes: {} }).attributes; return !!a.code_format && (act === 'disarm' || !!a.code_arm_required); }
+  render() {
+    const c = this._config, s = H.st(this._hass, c.entity);
+    const stt = s ? s.state : 'unavailable', [lbl, col, ic] = HG_ALARM_ST[stt] || [H.stateLabel(stt), 'var(--hg-accent)', 'mdi:shield'];
+    const un = !H.ok(s), feat = s ? Number(s.attributes.supported_features) || 0 : 0;
+    const anim = ['arming', 'pending', 'disarming', 'triggered'].includes(stt);
+    const by = s && s.attributes.changed_by ? ` · ${H.esc(s.attributes.changed_by)}` : '';
+    const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="Uzbrój: ${a[2]}" title="Uzbrój: ${a[2]}">${H.icon(a[3])}<span>${a[2]}</span></button>`).join('')
+      + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="Rozbrój">${H.icon('mdi:shield-off-outline')}<span>Rozbrój</span></button>` : '');
+    let kp = '';
+    if (this._pend) {
+      const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
+      const nm = this._pend === 'disarm' ? 'Rozbrój' : (HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój'])[2];
+      kp = `<div class="kp"><div class="q"><span>Kod do: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="Anuluj">Anuluj</button></div>
+        ${txt ? `<input class="pw" type="password" autocomplete="off" aria-label="Kod alarmu" placeholder="Kod">`
+        : `<div class="dots" aria-live="polite">${n ? '<i></i>'.repeat(n) : '<em>Wpisz kod</em>'}</div>
+        <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}
+          <button class="k" data-act="kdel" aria-label="Usuń cyfrę">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button>
+          <button class="k ok" data-act="kok" aria-label="Zatwierdź" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button></div>`}
+        ${txt ? `<button class="k ok" data-act="kok" aria-label="Zatwierdź">${H.icon('mdi:check')}</button>` : ''}</div>`;
+    }
+    return `<ha-card class="glass ${anim ? 'anim' : ''} ${stt === 'triggered' ? 'trig' : ''}" style="--c:${col}">
+      <div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+        <button class="ib kebab" data-act="more" aria-label="Szczegóły alarmu" title="Szczegóły i historia">${H.icon('mdi:dots-vertical')}</button></div>
+      <div class="big"><div class="ring">${H.icon(ic)}</div><div class="st"><b>${H.esc(lbl)}</b>
+        <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), 'zmiana ' + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : 'Brak encji ' + H.esc(c.entity)}</span></div></div>
+      ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
+  }
+  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); }; } }
+  _send(m, code) {
+    const d = { entity_id: this._config.entity }; if (code) d.code = code;
+    this._pend = null; this._code = '';
+    H.call(this._hass, 'alarm_control_panel', 'alarm_' + m, d);
+    this.rerender();
+  }
+  onAct(a, t) {
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: this._config.entity });
+    if (a === 'arm') { const m = t.dataset.m; if (this._needCode(m)) { this._pend = m; this._code = ''; return this.rerender(); } return this._send(m); }
+    if (a === 'key') { if ((this._code || '').length < 12) this._code = (this._code || '') + t.dataset.k; return this.rerender(); }
+    if (a === 'kdel') { this._code = (this._code || '').slice(0, -1); return this.rerender(); }
+    if (a === 'kcancel') { this._pend = null; this._code = ''; return this.rerender(); }
+    if (a === 'kok') { if (this._pend && this._code) this._send(this._pend, this._code); }
+  }
+  getCardSize() { return 5; }
+}
+hgReg('nuvio-alarm-card', HGAlarmCard, 'Nuvio – Alarm', 'Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu');
+
+/* --- czujniki: automatyczne wykrywanie (reguły w CFG['security'] w build.py, opis w README) --- */
+const HG_SENS = {
+  motion: ['ruch', 'mdi:motion-sensor', 'mdi:motion-sensor-off', 'Wykryto', 'Brak'], occupancy: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Wykryto', 'Brak'],
+  presence: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Obecny', 'Brak'],
+  door: ['otw', 'mdi:door-open', 'mdi:door-closed', 'Otwarte', 'Zamknięte'], window: ['otw', 'mdi:window-open-variant', 'mdi:window-closed-variant', 'Otwarte', 'Zamknięte'],
+  opening: ['otw', 'mdi:square-rounded-outline', 'mdi:square-rounded', 'Otwarte', 'Zamknięte'], garage_door: ['otw', 'mdi:garage-open-variant', 'mdi:garage-variant', 'Otwarta', 'Zamknięta'],
+  smoke: ['inne', 'mdi:smoke-detector-variant-alert', 'mdi:smoke-detector-variant', 'Dym!', 'OK'], gas: ['inne', 'mdi:meter-gas', 'mdi:meter-gas-outline', 'Gaz!', 'OK'],
+  moisture: ['inne', 'mdi:water-alert', 'mdi:water-off-outline', 'Zalanie!', 'Sucho'], tamper: ['inne', 'mdi:shield-alert', 'mdi:shield-check-outline', 'Sabotaż!', 'OK'],
+  vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', 'Wibracje', 'Spokój'],
+};
+const HG_SENS_TABS = [['all', 'Wszystkie'], ['ruch', 'Ruch / obecność'], ['otw', 'Drzwi / okna'], ['inne', 'Inne']];
+const hgGlob = (pat) => new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+class HGSensorsCard extends HGBase {
+  defaults() {
+    return { title: 'Czujniki', icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
+      exclude: [], include: [], names: {}, name_strip: [' Zajętość', ' occupancy'], extras: true };
+  }
+  _extraSig() { return [this._tab || 'all', !!this._showUn, Math.floor(Date.now() / 60000), this._disc && this._disc.key]; }
+  /* wykrywanie tylko gdy zmieni się liczba encji lub rejestr (nie przy każdym hass) */
+  _discover() {
+    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
+    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) return this._disc;
+    const reg = h.entities || {}, dev = h.devices || {};
+    const exc = c.exclude.map(hgGlob), inc = c.include.map(hgGlob);
+    const list = [];
+    for (const e of Object.keys(h.states)) {
+      if (!e.startsWith('binary_sensor.')) continue;
+      const s = h.states[e], dc = s.attributes.device_class, r = reg[e] || {};
+      const forced = inc.some((x) => x.test(e));
+      if (!forced) {
+        if (!c.device_classes.includes(dc)) continue;
+        if (r.hidden || r.entity_category) continue;                       // ukryte, diagnostyczne, konfiguracyjne
+        if (c.exclude_platforms.includes(r.platform)) continue;            // przeglądarki, telefony, grupy-agregaty
+        if (exc.some((x) => x.test(e))) continue;
+      } else if (exc.some((x) => x.test(e)) && !c.include.includes(e)) continue;
+      const area = r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id);
+      list.push({ e, dc: HG_SENS[dc] ? dc : 'motion', dev: r.device_id, area: area && h.areas && h.areas[area] ? h.areas[area].name : null });
+    }
+    // dodatki: natężenie światła z tego samego urządzenia (np. czujnik obecności mmWave Sonoff: sensor.*_illumination)
+    if (c.extras) {
+      const byDev = {};
+      for (const [id, r] of Object.entries(reg)) {
+        if (!r.device_id || !id.startsWith('sensor.') || r.hidden) continue;
+        const st = h.states[id]; if (!st) continue;
+        if (st.attributes.device_class === 'illuminance' || /illumin/.test(id)) (byDev[r.device_id] = byDev[r.device_id] || []).push(id);
+      }
+      for (const x of list) if (x.dev && byDev[x.dev]) x.lux = byDev[x.dev][0];
+    }
+    this._entsC = null;
+    return (this._disc = { key, ent: h.entities, list });
+  }
+  ents() { if (!this._hass) return []; return this._discover().list.flatMap((x) => (x.lux ? [x.e, x.lux] : [x.e])); }
+  _changed() { const k = this._disc && this._disc.key; this._discover(); if (this._disc.key !== k) { this._entsC = null; this._prevStates = null; } return super._changed(); }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s3) var(--s3); overflow:auto; }
+.sum{ display:flex; flex-wrap:wrap; gap:var(--s1); }
+.sum span{ display:inline-flex; align-items:center; gap:5u; height:22u; padding:0 var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-065); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.sum span b{ font-weight:600; color:var(--hg-tx-1e2023); } .sum .a b{ color:var(--hg-accent-tx); } .sum .o b{ color:var(--hg-accent-tx); }
+.tabs{ display:flex; gap:4u; padding:3u; border-radius:var(--r-md); background:var(--hg-bg-ffffff-045); align-self:flex-start; flex-wrap:nowrap; max-width:100%; overflow-x:auto; scrollbar-width:none; flex:none; }
+.tb{ position:relative; height:max(calc(var(--k) * 26), var(--hg-tgt, 0px)); padding:0 var(--s2); border-radius:var(--r-sm); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); transition:background .2s, color .2s; flex:none; white-space:nowrap; }
+.tb.sel{ background:var(--hg-bg-ffffff); color:var(--hg-tx-1e2023); box-shadow:var(--hg-sh-sm); } .tb i{ font-style:normal; color:inherit; opacity:1; font-weight:600; margin-left:3u; }
+.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(max(calc(var(--k) * 148), 10.5em), 1fr)); gap:var(--s1); }
+.t{ position:relative; display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s2); border-radius:var(--r-sm); text-align:left; min-height:max(calc(var(--k) * 48), var(--hg-tgt, 0px));
+  background:var(--hg-bg-ffffff-055); border:1px solid var(--hg-bd-ffffff-070); transition:background .2s; min-width:0; }
+.t .ic{ position:relative; width:28u; height:28u; border-radius:var(--r-sm); flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ecedee); color:var(--hg-tx-5a5e64); }
+.t .ic ha-icon{ width:15u; height:15u; }
+.t.on .ic{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.t.on.otw .ic{ background:var(--hg-accent); }
+.t.on.inne .ic{ background:var(--hg-bg-e53935); }
+.t.on .ic::after{ content:''; position:absolute; inset:0; border-radius:inherit; border:2u solid currentColor; color:inherit; background:none; animation:hgsring 1.8s cubic-bezier(.2,.8,.2,1) infinite; }
+.t.on .ic::after{ border-color:var(--hg-accent); } .t.on.otw .ic::after{ border-color:var(--hg-accent); } .t.on.inne .ic::after{ border-color:var(--hg-bd-e53935); }
+@keyframes hgsring{ 0%{ transform:scale(1); opacity:.6 } 100%{ transform:scale(1.55); opacity:0 } }
+.t .tx{ min-width:0; flex:1; display:flex; flex-direction:column; gap:2u; }
+.t b{ font-size:var(--fs-sm); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.t span{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.t span em{ font-style:normal; font-weight:600; color:var(--hg-tx-2a2d31); } .t.on span em{ color:var(--hg-alert-tx); }
+.t.un{ opacity:.6; } .t.un .ic{ background:var(--hg-bg-e4e5e7); color:var(--hg-tx-9aa0a6); }
+.sec{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); text-transform:uppercase; letter-spacing:.06em; margin-top:4u; }
+.sec button{ position:relative; text-transform:none; letter-spacing:0; font-size:var(--fs-sm); color:var(--hg-tx-2a2d31); padding:3u var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-060); min-height:var(--hg-tgt, 0px); }
+.none{ font-size:var(--fs-sm); color:var(--hg-tx-6a6e74); padding:var(--s1) 2u; }
+@media (max-width:600px){ .grid{ grid-template-columns:minmax(0, 1fr); } }
+`);
+  }
+  _nm(e) {
+    const c = this._config; if (c.names[e]) return c.names[e];
+    let n = H.name(this._hass, e, e);
+    for (const x of c.name_strip) if (n.endsWith(x)) n = n.slice(0, -x.length);
+    return n.replace(/^(.*?) Czujnik drzwi Drzwi$/, '$1 · drzwi').replace(/ Drzwi$/, '');
+  }
+  render() {
+    const h = this._hass, c = this._config, list = this._discover().list;
+    const it = list.map((x) => { const s = H.st(h, x.e); return { ...x, s, un: !H.ok(s), on: s && s.state === 'on', cat: HG_SENS[x.dc][0], t: s ? new Date(s.last_changed).getTime() : 0 }; });
+    const act = it.filter((x) => x.on), opn = act.filter((x) => x.cat === 'otw').length, mot = act.filter((x) => x.cat === 'ruch').length, alr = act.filter((x) => x.cat === 'inne').length;
+    const unN = it.filter((x) => x.un).length;
+    const cnt = (k) => it.filter((x) => k === 'all' || x.cat === k).length;
+    const tab = this._tab || 'all';
+    const sel = it.filter((x) => tab === 'all' || x.cat === tab).sort((a, b) => (b.on - a.on) || (a.un - b.un) || (b.t - a.t));
+    const tile = (x) => {
+      const d = HG_SENS[x.dc], lux = x.lux && H.st(h, x.lux);
+      const luxT = lux && H.ok(lux) ? ({ bright: 'jasno', dim: 'ciemno', dark: 'ciemno' }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
+      const st = x.un ? 'Niedostępny' : x.on ? d[3] : d[4];
+      const sub = [`<em>${H.esc(st)}</em>`, x.s && !x.un ? hgRel(new Date(x.s.last_changed)) : '', x.area ? H.esc(x.area) : '', luxT ? H.esc(luxT) : ''].filter(Boolean).join(' · ');
+      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – historia" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
+        <span class="ic">${H.icon(x.on ? d[1] : d[2])}</span><span class="tx"><b>${H.esc(this._nm(x.e))}</b><span>${sub}</span></span></button>`;
+    };
+    const ok = sel.filter((x) => !x.un), un = sel.filter((x) => x.un);
+    const sum = [`<span class="a"><b>${act.length}</b> ${act.length === 1 ? 'aktywny' : 'aktywne'}</span>`, mot ? `<span><b>${mot}</b> ruch</span>` : '',
+      `<span class="o"><b>${opn}</b> ${opn === 1 ? 'otwarte' : 'otwartych'}</span>`.replace('otwartych', opn > 1 && opn < 5 ? 'otwarte' : 'otwartych'), alr ? `<span class="a"><b>${alr}</b> alarm</span>` : '',
+      unN ? `<span><b>${unN}</b> niedostępnych</span>` : ''].join('');
+    const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${l}<i>${cnt(k)}</i></button>`).join('');
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
+      <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="Filtr czujników">${tabs}</div>
+      ${ok.length ? `<div class="grid">${ok.map(tile).join('')}</div>` : `<div class="none">Brak dostępnych czujników w tej grupie</div>`}
+      ${un.length ? `<div class="sec">Niedostępne · ${un.length}<button data-act="unv" aria-expanded="${!!this._showUn}">${this._showUn ? 'Ukryj' : 'Pokaż'}</button></div>${this._showUn ? `<div class="grid">${un.map(tile).join('')}</div>` : ''}` : ''}
+    </ha-card>`;
+  }
+  onAct(a, t) {
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: t.dataset.e });
+    if (a === 'tab') { this._tab = t.dataset.k; return this.rerender(); }
+    if (a === 'unv') { this._showUn = !this._showUn; return this.rerender(); }
+  }
+  getCardSize() { return 8; }
+}
+hgReg('nuvio-sensors-card', HGSensorsCard, 'Nuvio – Czujniki', 'Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne');
+
+/* ===================== SCENY + MOC + TYDZIEŃ ENERGII (główny widok) ===================== */
+/* nuvio-scenes-card: skrypty jako duże pigułki. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
+   gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
+class HGScenesCard extends HGBase {
+  defaults() { return { title: 'Sceny', icon: 'mdi:play-circle-outline', scripts: [] }; }
+  ents() { return this._config.scripts.map((x) => x.entity); }
+  _extraSig() { return [this._ok || '']; }
+  css() {
+    return U(`
+.hd{ min-height:16u; }
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2) var(--s2) var(--s2); height:auto; }
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
+.p{ position:relative; overflow:hidden; display:flex; align-items:center; gap:10px; height:52px; padding:0 12px 0 10px; border-radius:var(--r-md); min-width:0;
+  background:var(--hg-tile-bg); border:0; box-shadow:0 4px 14px var(--hg-sh-000000-012); text-align:left; cursor:pointer; transition:background .3s, transform .15s cubic-bezier(.2,0,0,1), box-shadow .2s; }
+.p:focus-visible{ outline:none; box-shadow:0 0 0 2px var(--hg-accent); }
+.p.ok{ background:var(--hg-accent-soft); } .p.ok .ic{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; }
+.p:active{ transform:scale(.96); } .p[disabled]{ cursor:default; }
+.ic{ position:relative; width:32px; height:32px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-accent-faint); color:var(--hg-accent-tx); transition:background .3s; }
+.ic ha-icon{ width:18px; height:18px; }
+.run .ic::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:2px solid transparent; border-top-color:var(--c); border-right-color:var(--c); animation:hgspin 1s linear infinite; }
+.run{ opacity:.85; }
+ .ok .ic ha-icon{ animation:hgpop .45s cubic-bezier(.2,.8,.2,1.4); }
+@keyframes hgpop{ 0%{ transform:scale(.3); opacity:0 } 100%{ transform:scale(1); opacity:1 } }
+.tx{ min-width:0; font-size:min(var(--fs-md), 15px); font-weight:600; letter-spacing:-.005em; line-height:1.15; white-space:nowrap; }
+.row{ container-type:inline-size; }
+/* za wąsko na ikonę obok etykiety (każdy przycisk < ~135px): ikona nad etykietą, bez ucinania */
+@container (max-width: 280px){ .p{ flex-direction:column; justify-content:center; gap:4px; padding:6px 4px; height:auto; min-height:64px; text-align:center; } .tx{ font-size:min(var(--fs-sm), 13px); } }
+.rp{ position:absolute; width:20u; height:20u; margin:-10u 0 0 -10u; border-radius:50%; background:var(--c); opacity:.3; pointer-events:none; transform:scale(0); animation:hgrip .6s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes hgrip{ to{ transform:scale(16); opacity:0 } }
+.un{ opacity:.5; }
+`);
+  }
+  render() {
+    const c = this._config;
+    const items = c.scripts.map((x, i) => {
+      const s = H.st(this._hass, x.entity), un = !H.ok(s), run = s && s.state === 'on', ok = this._ok === x.entity && !run;
+      const nm = x.name || (s && s.attributes.friendly_name) || x.entity;
+      const sub = un ? 'niedostępny' : run ? 'działa…' : ok ? 'uruchomiono' : 'uruchom';
+      return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${sub}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
+        <span class="ic">${H.icon(ok ? 'mdi:check' : x.icon || (s && s.attributes.icon) || 'mdi:play')}</span><span class="tx">${H.esc(nm)}</span></button>`;
+    }).join('');
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div><div class="row">${items}</div></ha-card>`;
+  }
+  onAct(a, t, e) {
+    if (a !== 'run') return;
+    const x = this._config.scripts[Number(t.dataset.i)]; if (!x) return;
+    const r = t.getBoundingClientRect(), px = (e && e.clientX ? e.clientX : r.left + r.width / 2) - r.left, py = (e && e.clientY ? e.clientY : r.top + r.height / 2) - r.top;
+    const rp = document.createElement('i'); rp.className = 'rp'; rp.style.left = px + 'px'; rp.style.top = py + 'px'; t.appendChild(rp);
+    H.call(this._hass, 'script', 'turn_on', { entity_id: x.entity });
+    clearTimeout(this._okT); clearTimeout(this._okT2);
+    this._okT2 = setTimeout(() => { this._ok = x.entity; this.rerender(); this._okT = setTimeout(() => { this._ok = ''; this.rerender(); }, 2200); }, 420);
+  }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-scenes-card', HGScenesCard, 'Nuvio – Sceny', 'Skrypty jako przyciski z animacją potwierdzenia');
+
+/* nuvio-power-card: moc teraz (suma faz) + linia z ostatnich godzin (statystyki 5-minutowe „mean”) + cienki pasek obciążenia */
+class HGPowerCard extends HGBase {
+  defaults() { return { title: 'Moc teraz', icon: 'mdi:flash-outline', entities: [], max_power: 17250, hours: 6, expand: null }; }
+  ents() { return this._config.entities; }
+  _extraSig() { return [this._sp ? this._sp.t : 0]; }
+  connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(), 5 * 60 * 1000); }
+  disconnectedCallback() { clearInterval(this._iv); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._load(); this._update(); }
+  get hass() { return this._hass; }
+  async _load() {
+    const c = this._config; if (!this._hass || !c || this._loading) return; this._loading = true;
+    try {
+      const start = new Date(Date.now() - c.hours * 3600000);
+      const r = await this._hass.callWS({ type: 'recorder/statistics_during_period', start_time: start.toISOString(), period: '5minute', statistic_ids: c.entities, types: ['mean'], units: { power: 'W' } });
+      const m = new Map();
+      for (const id of c.entities) for (const row of r[id] || []) { const t = typeof row.start === 'number' ? row.start : Date.parse(row.start); m.set(t, (m.get(t) || 0) + Math.abs(row.mean || 0)); }
+      this._sp = { t: Date.now(), pts: [...m.entries()].sort((a, b) => a[0] - b[0]) };
+    } catch (e) { this._sp = { t: Date.now(), pts: [] }; }
+    this._loading = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) var(--s2); }
+
+.v{ display:flex; align-items:baseline; gap:var(--s1); margin-top:5u; } .v b{ font-size:calc(24u * var(--hg-fsv, 1)); font-weight:300; letter-spacing:-.03em; } .v span{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); }
+.spk{ position:relative; flex:1; min-height:26u; max-height:150u; margin:4u 0 6u; }
+.spk svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.gg{ position:relative; height:18u; border-radius:999px; margin-top:6u; overflow:hidden; background:repeating-linear-gradient(-55deg, var(--hg-bg-80868c-035) 0 2px, transparent 2px 6px); }
+.gg i{ position:absolute; left:0; top:0; bottom:0; width:var(--p); min-width:18u; border-radius:999px; background:linear-gradient(90deg, var(--hg-accent), var(--hg-accent-hi)); box-shadow:0 0 12px var(--hg-accent-glow); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+.gl{ display:flex; justify-content:space-between; font-size:var(--fs-xs); color:var(--hg-tx-8a8e94); margin-top:3u; }
+.tipb{ position:absolute; transform:translate(-100%,-130%); background:var(--hg-bg-ffffff); color:var(--hg-tx-1e2023); font-size:var(--fs-xs); font-weight:600; padding:3u 7u; border-radius:999px; white-space:nowrap; box-shadow:0 4px 12px var(--hg-sh-000000-018); pointer-events:none; }
+.dot{ position:absolute; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 0 0 3px var(--hg-accent-soft); }
+.ln{ fill:none; stroke:var(--hg-accent); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.ax{ display:flex; justify-content:space-between; font-size:var(--fs-xs); color:var(--hg-tx-8a8e94); }
+.bar{ height:4u; border-radius:2u; background:var(--hg-bg-000000-007); overflow:hidden; margin-top:6u; } .bar i{ display:block; height:100%; border-radius:2u; background:var(--hg-accent); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+`);
+  }
+  render() {
+    const c = this._config, h = this._hass;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Raporty" title="Raporty">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    let tot = 0, n = 0; for (const e of c.entities) { const v = H.num(h, e); if (v != null) { tot += Math.abs(v); n++; } }
+    if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
+    const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
+    const lvl = pct < 30 ? 'Niskie' : pct < 70 ? 'Średnie' : 'Wysokie';
+    const kw = tot >= 1000 ? [H.fmt(tot / 1000, 2), 'kW'] : [H.fmt(tot, 0), 'W'];
+    const pts = (this._sp ? this._sp.pts : []).concat([[Date.now(), tot]]);
+    let svg = '';
+    if (pts.length > 2) {
+      const t0 = pts[0][0], t1 = pts[pts.length - 1][0], mx = Math.max(...pts.map((p) => p[1]), 1) * 1.1;
+      const xy = pts.map((p) => [((p[0] - t0) / Math.max(1, t1 - t0)) * 100, 100 - (p[1] / mx) * 100]);
+      const f = (v) => v.toFixed(2);
+      let d = `M${f(xy[0][0])},${f(xy[0][1])}`;
+      for (let i = 0; i < xy.length - 1; i++) { const p0 = xy[i - 1] || xy[i], p1 = xy[i], p2 = xy[i + 1], p3 = xy[i + 2] || p2;
+        d += ` C${f(p1[0] + (p2[0] - p0[0]) / 6)},${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)},${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])},${f(p2[1])}`; }
+      this._lastY = xy[xy.length - 1][1];
+      svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
+        <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/></svg>`;
+    }
+    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(H.num(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
+      <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% ${lvl}</span></div>
+      <div class="gg" style="--p:${pct.toFixed(1)}%" title="${Math.round(pct)}% ${lvl}"><i></i></div><div class="gl"><span>0</span><span>100%</span></div>
+      <div class="spk">${svg}${svg ? `<span class="dot" style="left:100%;top:${this._lastY}%"></span><span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${kw[1]}</span>` : ''}</div>${svg ? `<div class="ax"><span>−${c.hours} h</span><span>teraz</span></div>` : ''}
+      </ha-card>`;
+  }
+  onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
+}
+hgReg('nuvio-power-card', HGPowerCard, 'Nuvio – Moc', 'Moc teraz z linią z ostatnich godzin');
+
+/* nuvio-script-card: kafel uruchamiający skrypt. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
+   gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
+class HGScriptCard extends HGBase {
+  defaults() { return { name: null, icon: null, subtitle: 'Dotknij, aby uruchomić', color: 'var(--hg-accent)' }; }
+  _extraSig() { return [this._ok ? 1 : 0]; }
+  css() {
+    return U(`
+ha-card.glass{ padding:0; }
+.b{ position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:var(--s1); padding:var(--s2) var(--s2); text-align:left; overflow:hidden; border-radius:inherit; }
+.b[disabled]{ cursor:default; }
+.ic{ position:relative; width:34u; height:34u; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ffffff); color:var(--c); box-shadow:var(--hg-sh); transition:background .3s, color .3s; }
+.ic ha-icon{ width:18u; height:18u; transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+.run .ic{ background:var(--c); color:var(--hg-tx-ffffff); }
+.run .ic::after{ content:''; position:absolute; inset:-4u; border-radius:var(--r-md); border:2u solid transparent; border-top-color:var(--c); border-right-color:var(--c); animation:hgspin 1s linear infinite; }
+.ok .ic{ background:var(--hg-accent); color:var(--hg-on-accent); } .ok .ic ha-icon{ animation:hgpop .45s cubic-bezier(.2,.8,.2,1.4); }
+@keyframes hgpop{ 0%{ transform:scale(.3); opacity:0 } 100%{ transform:scale(1); opacity:1 } }
+.tx b{ display:block; font-size:var(--fs-md); font-weight:600; letter-spacing:-.01em; }
+.tx span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-top:2u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.run .tx span{ color:var(--c); font-weight:400; } .ok .tx span{ color:var(--hg-accent-tx); font-weight:400; }
+.rp{ position:absolute; width:20u; height:20u; margin:-10u 0 0 -10u; border-radius:50%; background:var(--c); opacity:.35; pointer-events:none; transform:scale(0); animation:hgrip .6s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes hgrip{ to{ transform:scale(18); opacity:0 } }
+.un{ opacity:.55; }
+`);
+  }
+  render() {
+    const c = this._config, s = H.st(this._hass, c.entity);
+    const un = !H.ok(s), run = s && s.state === 'on', ok = this._ok && !run;
+    const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
+    const ic = ok ? 'mdi:check' : c.icon || (s && s.attributes.icon) || 'mdi:script-text-play-outline';
+    const sub = un ? 'Skrypt niedostępny' : run ? 'Działa…' : ok ? 'Uruchomiono' : c.subtitle;
+    return `<ha-card class="glass ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${c.color}">
+      <button class="b" data-act="run" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${H.esc(sub)}" aria-busy="${!!run}">
+        <span class="ic">${H.icon(ic)}</span><span class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></span></button></ha-card>`;
+  }
+  onAct(a, t, e) {
+    if (a !== 'run') return;
+    const r = t.getBoundingClientRect(), x = (e && e.clientX ? e.clientX : r.left + r.width / 2) - r.left, y = (e && e.clientY ? e.clientY : r.top + r.height / 2) - r.top;
+    const rp = document.createElement('i'); rp.className = 'rp'; rp.style.left = x + 'px'; rp.style.top = y + 'px'; t.appendChild(rp); setTimeout(() => rp.remove(), 650);
+    H.call(this._hass, 'script', 'turn_on', { entity_id: this._config.entity });
+    clearTimeout(this._okT);
+    setTimeout(() => { this._ok = true; this.rerender(); this._okT = setTimeout(() => { this._ok = false; this.rerender(); }, 2200); }, 280);
+  }
+  getGridOptions() { return { columns: 3, rows: 2 }; }
+}
+hgReg('nuvio-script-card', HGScriptCard, 'Nuvio – Skrypt', 'Kafel uruchamiający skrypt z animacją potwierdzenia');
+
+/* nuvio-week-card: zużycie z sieci i produkcja PV z 7 dni (statystyki długoterminowe, typ „change”, okres dzień, dni wg strefy HA).
+   Te same statystyki co panel Energia HA (energy/get_prefs: grid stat_energy_from, solar stat_energy_from). */
+class HGWeekCard extends HGBase {
+  defaults() {
+    return { title: 'Energia · tydzień', icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
+      labels: { consumption: 'Zużycie', production: 'Produkcja' }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
+  }
+  ents() { return []; }
+  _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._hide ? [...this._hide].join() : '']; }
+  connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000);
+    this._vis = () => { if (!document.hidden) this._load(); }; document.addEventListener('visibilitychange', this._vis); }
+  disconnectedCallback() { clearInterval(this._iv); document.removeEventListener('visibilitychange', this._vis); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._load(); this._update(); }
+  get hass() { return this._hass; }
+  async _load(force) {
+    const c = this._config; if (!this._hass || !c || this._loading) return;
+    this._loading = true;
+    try {
+      const ids = c.consumption.concat(c.production);
+      if (force) delete HGStats.cache[ids.join(',') + c.days];
+      const v = await HGStats.daily(this._hass, ids, c.days);
+      this._data = { t: Date.now(), v }; this._err = null;
+    } catch (e) { this._err = String(e && e.message || e); }
+    this._loading = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2) var(--s3) var(--s2); }
+.sums{ display:flex; gap:var(--s3); flex-wrap:wrap; }
+.sm{ position:relative; display:flex; flex-direction:column; align-items:flex-start; text-align:left; min-height:var(--hg-tgt, 0px); justify-content:center; transition:opacity .2s; }
+.sm.off{ opacity:.4; }
+.sm small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); display:flex; align-items:center; gap:4u; } .sm small i{ width:6u; height:6u; border-radius:50%; background:var(--c); }
+.sm b{ font-size:calc(18u * var(--hg-fsv, 1)); font-weight:300; letter-spacing:-.01em; } .sm b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-5a5e64); margin-left:3u; }
+.ch{ position:relative; flex:1; min-height:60u; max-height:200u; display:grid; grid-template-columns:repeat(var(--n), 1fr); }
+.ch::after{ content:''; position:absolute; left:0; right:0; bottom:15u; height:1px; background:var(--hg-bg-1e2024-012); pointer-events:none; }
+.d{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5u; border-radius:var(--r-sm); padding-top:3u; min-width:0; }
+.d.sel{ background:var(--hg-tile-bg); }
+.bs{ position:relative; flex:1; min-height:0; width:100%; }
+/* absolutnie pozycjonowany kontener => procentowe wysokości słupków liczone od stałej wysokości wykresu */
+.bw{ position:absolute; left:0; right:0; top:13u; bottom:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+.pr{ position:relative; display:flex; align-items:flex-end; justify-content:center; gap:3u; min-height:1px; }
+.pr i{ display:block; width:7u; height:var(--h); min-height:2px; border-radius:999px; background:linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 25%, transparent)); transform-origin:bottom; animation:hgbar .6s cubic-bezier(.2,.8,.2,1) both; }
+.today .pr i{ opacity:.5; }
+.pr i.nd{ width:5u; height:5u; min-height:0; border-radius:50%; background:var(--hg-bg-c3c6ca); animation:none; margin:0 1u -2.5u; }
+@keyframes hgbar{ from{ transform:scaleY(0) } }
+.d small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); line-height:10u; height:10u; } .d.today small{ color:var(--hg-tx-1e2023); font-weight:600; }
+.val{ position:absolute; bottom:calc(100% + 1u); left:50%; transform:translateX(-50%); font-size:var(--fs-xs); color:var(--hg-tx-3b3f45); white-space:nowrap; line-height:12u; }
+.today .val{ font-weight:600; }
+.tip{ position:absolute; bottom:calc(100% + 2u); left:50%; transform:translateX(-50%); background:var(--hg-bg-ffffff); border:1px solid var(--hg-bd-000000-006); border-radius:var(--r-sm); padding:var(--s1) var(--s2); font-size:var(--fs-xs); line-height:1.4; white-space:nowrap; color:var(--hg-tx-2b2e33); box-shadow:var(--hg-sh);
+  z-index:5; pointer-events:none; text-align:left; }
+.tip b{ font-weight:600; } .tip i{ display:inline-block; width:6u; height:6u; border-radius:50%; margin-right:4u; }
+.d:nth-child(-n+2) .tip{ left:0; transform:none; } .d:nth-last-child(-n+2) .tip{ left:auto; right:0; transform:none; }
+.note{ font-size:var(--fs-xs); color:var(--hg-tx-8a8e94); display:flex; align-items:center; gap:5u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.note i{ width:5u; height:5u; border-radius:50%; background:var(--hg-bg-c3c6ca); flex:none; }
+`);
+  }
+  render() {
+    const c = this._config;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Panel energii" title="Panel energii">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>Brak źródła danych</b>${H.esc(this._err)}</div></ha-card>`;
+    if (!this._data) return `<ha-card class="glass">${hd}<div class="ph">Wczytywanie statystyk…</div></ha-card>`;
+    const { days, byId, present } = this._data.v, n = days.length;
+    const ser = ['consumption', 'production'].filter((k) => c[k].length).map((k) => {
+      const vals = days.map((d) => c[k].reduce((a, id) => a + Math.max(0, (byId[id] || {})[d.__k] || 0), 0));
+      const has = days.map((d) => c[k].some((id) => present[id] && present[id].has(d.__k)));
+      return { k, vals, has, tot: vals.reduce((a, b) => a + b, 0), color: c.colors[k], label: c.labels[k] };
+    });
+    const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
+    const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
+    const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: pokaż/ukryj na wykresie">
+      <small><i></i>${H.esc(s.label)} · 7 dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+    const dayName = (d, i) => (i === n - 1 ? 'dziś' : H.DAYS[d.getDay()]);
+    const cols = days.map((d, i) => {
+      const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));
+      const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="brak danych"></i>` : `<i style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
+      const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? ' (do teraz)' : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.esc(s.label)}: <b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : 'brak danych'}</b>`).join('<br>')}</span>` : '';
+      const top = vis[0] && vis[0].has[i] ? `<span class="val">${H.fmt(vis[0].vals[i], 1)}</span>` : '';
+      const pair = `<span class="pr" style="height:${(pm / mx) * 100}%">${top}${bars}</span>`;
+      return `<button class="d ${sel === i ? 'sel' : ''} ${i === n - 1 ? 'today' : ''}" data-act="day" data-i="${i}" aria-label="${H.esc(d.toLocaleDateString('pl-PL'))}: ${ser.map((s) => `${s.label} ${s.has[i] ? H.fmt(s.vals[i], 1) + ' kWh' : 'brak danych'}`).join(', ')}">${tip}<span class="bs"><span class="bw">${pair}</span></span><small>${dayName(d, i)}</small></button>`;
+    }).join('');
+    const pv = ser.find((s) => s.k === 'production');
+    const gaps = pv ? days.filter((d, i) => !pv.has[i]).map((d, i) => d) : [];
+    const note = gaps.length ? `<div class="note" title="W te dni falownik nie przesłał danych do HA"><i></i>brak danych z falownika (${gaps.map((d) => H.DAYS[d.getDay()]).join(', ')})</div>` : '';
+    return `<ha-card class="glass">${hd}<div class="sums">${sums}</div><div class="ch" style="--n:${n}">${cols}</div>${note}</ha-card>`;
+  }
+  onAct(a, t) {
+    if (a === 'day') { const i = Number(t.dataset.i); this._sel = this._sel === i ? null : i; return this.rerender(); }
+    if (a === 'ser') { const h = this._hide = this._hide || new Set(); const k = t.dataset.k; if (h.has(k)) h.delete(k); else { h.clear(); h.add(k); } return this.rerender(); }   // nigdy oba ukryte: druga seria przełącza widok
+    if (a === 'expand') H.action(this, this._hass, this._config.expand);
+  }
+  getGridOptions() { return { columns: 12, rows: 3 }; }
+}
+hgReg('nuvio-week-card', HGWeekCard, 'Nuvio – Energia tydzień', 'Zużycie z sieci i produkcja PV z 7 dni (statystyki)');
+
+/* ===================== MULTIMEDIA + ENERGIA ===================== */
+/* --- nuvio-players-card: odtwarzacze (konfigurowane + wykryte), aktywne duże z okładką, bezczynne kompaktowe, niedostępne jako chipy --- */
+const HG_MP = { PAUSE: 1, SEEK: 2, VOL_SET: 4, MUTE: 8, PREV: 16, NEXT: 32, ON: 128, OFF: 256, VOL_STEP: 1024, SOURCE: 2048, STOP: 4096, PLAY: 16384 };
+const HG_MP_ST = { playing: 'Odtwarza', paused: 'Wstrzymano', idle: 'Bezczynny', on: 'Włączony', off: 'Wyłączony', standby: 'Czuwanie', buffering: 'Buforowanie…', unavailable: 'Niedostępny', unknown: 'Nieznany' };
+/* aktywny = coś gra / jest wstrzymane albo urządzenie włączone z treścią (np. dekoder Enigma2 ma stan „on” z kanałem) */
+const hgMpActive = (s) => !!s && (['playing', 'paused', 'buffering'].includes(s.state) || (s.state === 'on' && !!(s.attributes.media_title || s.attributes.media_channel)));
+class HGPlayersCard extends HGBase {
+  defaults() {
+    return { title: 'Multimedia', icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
+      exclude_platforms: ['browser_mod'], exclude: [] };
+  }
+  _list() {
+    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
+    if (this._lc && this._lc.key === key) return this._lc.list;
+    const reg = h.entities || {}, seen = new Set(), names = new Map(), out = [];
+    const nm = (e) => c.names[e] || (h.states[e] && h.states[e].attributes.friendly_name) || e;
+    const add = (e, forced) => {
+      const s = h.states[e], r = reg[e] || {};
+      if (!s || seen.has(e)) return;
+      if (!forced && (r.hidden || r.entity_category || c.exclude_platforms.includes(r.platform) || c.exclude.includes(e) || !H.ok(s))) return;
+      const n = nm(e).trim().toLowerCase().replace(/\+$/, '');
+      // duplikaty (ta sama nazwa / to samo urządzenie z kilku integracji, np. Cast + Music Assistant) -> zostaje pierwszy
+      if (!forced && (names.has(n) || (r.device_id && seen.has('dev:' + r.device_id)))) return;
+      seen.add(e); names.set(n, e); if (r.device_id) seen.add('dev:' + r.device_id);
+      out.push(e);
+    };
+    for (const e of c.entities) add(e, true);
+    if (c.discover) for (const e of Object.keys(h.states)) if (e.startsWith('media_player.')) add(e, false);
+    this._lc = { key, list: out }; this._entsC = null;
+    return out;
+  }
+  ents() { return this._hass ? this._list() : this._config.entities; }
+  _extraSig() { return [this._lc && this._lc.key]; }
+  _update(force) {
+    // nie przerysowuj, gdy użytkownik ma otwartą listę źródeł / przeciąga głośność
+    const a = this.shadowRoot.activeElement;
+    if (a && (a.tagName === 'SELECT' || a.tagName === 'INPUT') && this._config && this._hass) { if (this._changed()) this._pendingUpd = true; return; }
+    super._update(force);
+  }
+  connectedCallback() { super.connectedCallback();
+    if (this._wired) return; this._wired = true;
+    this.shadowRoot.addEventListener('change', (e) => {
+      const t = e.target, en = t.dataset && t.dataset.e; if (!en) return;
+      if (t.dataset.act === 'vol') H.call(this._hass, 'media_player', 'volume_set', { entity_id: en, volume_level: Number(t.value) / 100 });
+      if (t.dataset.act === 'src' && t.value) H.call(this._hass, 'media_player', 'select_source', { entity_id: en, source: t.value });
+      t.blur(); if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); }
+    });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+    this.shadowRoot.addEventListener('focusout', () => { if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); } });
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
+.hd .cnt{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-weight:400; }
+.big{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 250)), 1fr)); gap:var(--s2); }
+.pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-085); overflow:hidden; min-width:0; contain:layout paint; }
+.pl .art{ position:relative; display:flex; gap:var(--s2); align-items:center; min-width:0; }
+.cov{ width:64u; height:64u; border-radius:var(--r-sm); flex:none; background:var(--hg-bg-e9ecef) center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-8a8e94); box-shadow:var(--hg-sh); }
+.cov ha-icon{ width:28u; height:28u; }
+.meta{ min-width:0; flex:1; display:flex; flex-direction:column; gap:2u; }
+.meta .who{ display:flex; align-items:center; gap:5u; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); min-width:0; }
+.meta .who b{ font-weight:600; color:var(--hg-tx-2a2d31); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.meta .ttl{ font-size:var(--fs-md); font-weight:600; line-height:1.2; color:var(--hg-tx-16181b); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.meta .sub{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); line-height:1.25; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.dot{ width:6u; height:6u; border-radius:50%; background:var(--hg-bg-9aa0a6); flex:none; } .playing .dot, .on .dot{ background:var(--hg-accent); } .playing .dot{ animation:hgpulse 1.6s infinite; } .paused .dot{ background:var(--hg-accent); }
+.pg{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; }
+.pg .tr{ position:relative; flex:1; height:4u; border-radius:2u; background:var(--hg-bg-000000-008); overflow:hidden; }
+.pg .tr i{ position:absolute; left:0; top:0; bottom:0; border-radius:2u; background:var(--hg-accent); width:var(--p0); }
+.playing .pg .tr i{ animation:hgprog var(--dur) linear forwards; }
+@keyframes hgprog{ to{ width:100% } }
+.ctl{ display:flex; align-items:center; gap:4u; }
+.cb{ position:relative; width:max(calc(var(--k) * 30), 40px, var(--hg-tgt, 0px)); height:max(calc(var(--k) * 30), 40px, var(--hg-tgt, 0px)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-2a2d31); flex:none; transition:background .2s, transform .15s; }
+.cb:hover{ background:var(--hg-bg-000000-005); } .cb:active{ transform:scale(.92); } .cb ha-icon{ width:20px; height:20px; }
+.cb.main{ background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); } .cb.main ha-icon{ width:24px; height:24px; }
+.cb.pw.on{ color:var(--hg-accent-tx); } .cb.soft{ background:var(--hg-bg-000000-006); }
+.sp2{ flex:1; }
+.vol{ display:flex; align-items:center; gap:var(--s1); flex:1; min-width:calc(var(--k) * 90); }
+.vol ha-icon{ width:14u; height:14u; color:var(--hg-tx-5a5e64); flex:none; }
+.vol output{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); width:24u; text-align:right; font-variant-numeric:tabular-nums; }
+input[type=range]{ -webkit-appearance:none; appearance:none; flex:1; min-width:0; height:max(calc(var(--k) * 20), var(--hg-tgt, 0px)); background:transparent; margin:0; touch-action:pan-y; }
+input[type=range]::-webkit-slider-runnable-track{ height:4u; border-radius:2u; background:linear-gradient(90deg, var(--hg-accent) var(--v), var(--hg-ac-000000-010) var(--v)); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14u; height:14u; margin-top:-5u; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
+input[type=range]::-moz-range-track{ height:4u; border-radius:2u; background:var(--hg-bg-000000-010); } input[type=range]::-moz-range-progress{ height:4u; border-radius:2u; background:var(--hg-accent); }
+input[type=range]::-moz-range-thumb{ width:14u; height:14u; border:0; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
+.row2{ display:flex; align-items:center; gap:var(--s1); flex-wrap:wrap; }
+select{ font:inherit; font-size:var(--fs-sm); color:var(--hg-tx-2a2d31); height:max(calc(var(--k) * 26), var(--hg-tgt, 0px)); max-width:100%; min-width:0; flex:0 1 calc(var(--k) * 150); padding:0 var(--s4) 0 var(--s1); border-radius:var(--r-sm); border:1px solid var(--hg-bd-000000-008);
+  background:var(--hg-bg-ffffff-075) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%235A5E64' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 5px center/16px; -webkit-appearance:none; appearance:none; }
+.sm{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 190)), 1fr)); gap:var(--s1); }
+.ci{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s1); border-radius:var(--r-md); background:var(--hg-bg-ffffff-050); border:1px solid var(--hg-bd-ffffff-075); min-width:0; }
+.ci .cov{ width:34u; height:34u; border-radius:var(--r-sm); box-shadow:none; } .ci .cov ha-icon{ width:17u; height:17u; }
+.ci .meta .ttl{ font-size:var(--fs-sm); -webkit-line-clamp:1; } .ci .meta .sub{ font-size:var(--fs-xs); }
+.un{ display:flex; flex-wrap:wrap; gap:5u; align-items:center; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
+.un span{ padding:3u var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-045); }
+.empty{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); padding:var(--s2) 2u; }
+`);
+  }
+  _ctl(e, s, big) {
+    const f = Number(s.attributes.supported_features) || 0, st = s.state, ic = (x) => H.icon(x);
+    const playing = st === 'playing';
+    const btn = (act, icon, lbl, cls = '') => `<button class="cb ${cls}" data-act="${act}" data-e="${e}" aria-label="${lbl}" title="${lbl}">${ic(icon)}</button>`;
+    let h = '';
+    if (big && (f & HG_MP.PREV)) h += btn('prev', 'mdi:skip-previous', 'Poprzedni');
+    if (!big && ['off', 'standby'].includes(st)) return h;          // wyłączony: tylko przycisk zasilania
+    if (f & (HG_MP.PAUSE | HG_MP.PLAY)) h += btn('pp', playing ? 'mdi:pause' : 'mdi:play', playing ? 'Pauza' : 'Odtwarzaj', big ? 'main' : 'soft');
+    else if (playing && (f & HG_MP.STOP)) h += btn('stop', 'mdi:stop', 'Stop', 'main');
+    if (big && (f & HG_MP.NEXT)) h += btn('next', 'mdi:skip-next', 'Następny');
+    return h;
+  }
+  _pw(e, s) {
+    const f = Number(s.attributes.supported_features) || 0, on = !['off', 'standby'].includes(s.state);
+    if (!(f & (on ? HG_MP.OFF : HG_MP.ON))) return '';
+    return `<button class="cb pw ${on ? 'on' : ''}" data-act="power" data-e="${e}" aria-label="${on ? 'Wyłącz' : 'Włącz'}" aria-pressed="${on}" title="${on ? 'Wyłącz' : 'Włącz'}">${H.icon('mdi:power')}</button>`;
+  }
+  _cov(e, s, cls = '') {
+    const a = s.attributes, pic = a.entity_picture, icon = this._config.icons[e] || (/tv|dekoder|tele/.test(e) ? 'mdi:television-box' : /nest|gh|home/.test(e) ? 'mdi:cast-audio' : 'mdi:speaker');
+    return pic ? `<span class="cov ${cls}" style="background-image:url('${H.esc(pic)}')" aria-hidden="true"></span>` : `<span class="cov ${cls}" aria-hidden="true">${H.icon(icon)}</span>`;
+  }
+  render() {
+    const c = this._config, h = this._hass, list = this._list(), nm = (e) => c.names[e] || H.name(h, e);
+    const act = [], idle = [], un = [];
+    for (const e of list) { const s = h.states[e]; if (!H.ok(s)) un.push(e); else if (hgMpActive(s)) act.push(e); else idle.push(e); }
+    const fmtT = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), ss = x % 60; return (hh ? hh + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0'); };
+    const big = act.map((e) => {
+      const s = h.states[e], a = s.attributes, f = Number(a.supported_features) || 0;
+      const title = a.media_title || a.media_channel || a.app_name || HG_MP_ST[s.state] || s.state;
+      const sub = [a.media_artist || a.media_series_title, a.media_album_name].filter(Boolean).join(' · ') || (a.app_name && a.app_name !== title ? a.app_name : '') || (a.media_start_time ? `${a.media_start_time}–${a.media_end_time || ''}` : '');
+      let pg = '';
+      if (a.media_duration > 0 && a.media_position != null) {
+        const upd = Date.parse(a.media_position_updated_at || s.last_updated), pos = Math.min(a.media_duration, a.media_position + (s.state === 'playing' ? (Date.now() - upd) / 1000 : 0));
+        pg = `<div class="pg"><span>${fmtT(pos)}</span><span class="tr"><i style="--p0:${((pos / a.media_duration) * 100).toFixed(2)}%;--dur:${Math.max(0, a.media_duration - pos).toFixed(0)}s"></i></span><span>${fmtT(a.media_duration)}</span></div>`;
+      } else if (a.media_start_time && a.media_end_time) {
+        // program TV (Enigma2): postęp audycji wg godzin z EPG
+        const [sh, sm] = a.media_start_time.split(':').map(Number), [eh, em] = a.media_end_time.split(':').map(Number);
+        const now = new Date(), st0 = new Date(now); st0.setHours(sh, sm, 0, 0); const en = new Date(now); en.setHours(eh, em, 0, 0); if (en <= st0) en.setDate(en.getDate() + 1);
+        const dur = (en - st0) / 1000, pos = Math.min(dur, Math.max(0, (now - st0) / 1000));
+        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${a.media_start_time}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${a.media_end_time}</span></div>`;
+      }
+      const vol = (f & HG_MP.VOL_SET) && a.volume_level != null ? Math.round(a.volume_level * 100) : null;
+      const volH = vol != null ? `<label class="vol">${H.icon(a.is_volume_muted ? 'mdi:volume-off' : 'mdi:volume-high')}<input type="range" min="0" max="100" step="1" value="${vol}" style="--v:${vol}%" data-act="vol" data-e="${e}" aria-label="Głośność: ${H.esc(nm(e))}"><output>${vol}%</output></label>`
+        : (f & HG_MP.VOL_STEP) ? `<span class="vol">${H.icon('mdi:volume-high')}<button class="cb" data-act="vdn" data-e="${e}" aria-label="Ciszej">${H.icon('mdi:minus')}</button><button class="cb" data-act="vup" data-e="${e}" aria-label="Głośniej">${H.icon('mdi:plus')}</button></span>` : '';
+      const srcs = (f & HG_MP.SOURCE) && Array.isArray(a.source_list) && a.source_list.length ? a.source_list : null;
+      const srcH = srcs ? `<select data-act="src" data-e="${e}" aria-label="Źródło: ${H.esc(nm(e))}">${(a.source && !srcs.includes(a.source) ? [a.source] : []).concat(srcs).map((x) => `<option ${x === a.source || x === a.app_name ? 'selected' : ''}>${H.esc(x)}</option>`).join('')}${!a.source && !srcs.includes(a.app_name) ? '<option selected value="">Źródło…</option>' : ''}</select>` : '';
+      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${HG_MP_ST[s.state] || s.state}</span></span>
+          <span class="ttl">${H.esc(title)}</span>${sub ? `<span class="sub">${H.esc(sub)}</span>` : ''}</div></div>
+        ${pg}<div class="ctl">${this._ctl(e, s, true)}<span class="sp2"></span>${this._pw(e, s)}<button class="cb" data-act="more" data-e="${e}" aria-label="Szczegóły" title="Szczegóły">${H.icon('mdi:dots-horizontal')}</button></div>
+        ${volH || srcH ? `<div class="row2">${volH}${srcH}</div>` : ''}</div>`;
+    }).join('');
+    const sm = idle.map((e) => { const s = h.states[e], a = s.attributes;
+      return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${HG_MP_ST[s.state] || s.state}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
+        ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
+    const unN = [...new Set(un.map(nm))];
+    const unH = unN.length ? `<div class="un">Niedostępne:${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? `${act.length} aktywne` : 'nic nie gra'}</span></div>
+      ${big ? `<div class="big">${big}</div>` : ''}${sm ? `<div class="sm">${sm}</div>` : ''}${!big && !sm ? '<div class="empty">Brak dostępnych odtwarzaczy</div>' : ''}${unH}</ha-card>`;
+  }
+  onAct(a, t) {
+    const e = t.dataset.e, s = H.st(this._hass, e), m = (sv, d = {}) => H.call(this._hass, 'media_player', sv, { entity_id: e, ...d });
+    if (a === 'pp') return m(s && s.state === 'playing' ? 'media_pause' : 'media_play');
+    if (a === 'stop') return m('media_stop');
+    if (a === 'prev') return m('media_previous_track');
+    if (a === 'next') return m('media_next_track');
+    if (a === 'vup') return m('volume_up');
+    if (a === 'vdn') return m('volume_down');
+    if (a === 'power') return m(s && !['off', 'standby'].includes(s.state) ? 'turn_off' : 'turn_on');
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+  }
+  getCardSize() { return 6; }
+}
+hgReg('nuvio-players-card', HGPlayersCard, 'Nuvio – Multimedia', 'Odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność, źródło');
+
+/* --- nuvio-phases-card: moc teraz na fazach (zużycie), napięcia, prądy; kolor wg obciążenia --- */
+const hgLoadCol = (p) => (p < 30 ? 'var(--hg-accent)' : p < 70 ? 'var(--hg-accent)' : 'var(--hg-ac-e5484d)');
+class HGPhasesCard extends HGBase {
+  defaults() { return { title: 'Moc teraz', icon: 'mdi:flash-outline', phases: [], max_power: 17250, phase_max: 5750 }; }
+  ents() { return this._config.phases.flatMap((p) => [p.power, p.voltage, p.current]).filter(Boolean); }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); }
+.hd .ic{ color:var(--hg-accent-tx); }
+.tot{ display:flex; align-items:baseline; gap:var(--s1); flex-wrap:wrap; } .tot span{ white-space:nowrap; } .tot b{ font-size:calc(28u * var(--hg-fsv, 1)); font-weight:600; letter-spacing:-.02em; color:var(--hg-tx-16181b); } .tot span{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); }
+.lv{ font-style:normal; font-size:var(--fs-xs); font-weight:600; padding:2u var(--s1); border-radius:var(--r-sm); color:var(--hg-tx-111214-k); background:var(--c); white-space:nowrap; }
+.ph{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; column-gap:10u; row-gap:2u; padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-055); }
+.ph .n{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-2a2d31); } .ph .w{ font-size:var(--fs-md); font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+.ph .b{ height:5u; border-radius:3u; background:var(--hg-bg-000000-008); overflow:hidden; } .ph .b i{ display:block; height:100%; border-radius:3u; background:var(--c); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+.ph .va{ grid-column:1 / -1; display:flex; gap:var(--s2); font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; }
+.ph.na{ opacity:.55; }
+.lst{ display:flex; flex-direction:column; gap:var(--s1); }
+`);
+  }
+  render() {
+    const c = this._config, h = this._hass;
+    let tot = 0, n = 0;
+    const rows = c.phases.map((p) => {
+      const w = H.num(h, p.power), v = H.num(h, p.voltage), a = H.num(h, p.current);
+      if (w == null) return `<div class="ph na"><span class="n">${H.esc(p.name)}</span><span class="b"></span><span class="w">–</span><div class="va">niedostępna</div></div>`;
+      const ww = Math.abs(w); tot += ww; n++;
+      const pct = Math.min(100, (ww / c.phase_max) * 100);
+      return `<div class="ph" style="--c:${hgLoadCol(pct)}" title="${H.esc(p.name)}: ${H.fmt(ww, 0)} W · ${Math.round(pct)}% z ${H.fmt(c.phase_max, 0)} W"><span class="n">${H.esc(p.name)}</span>
+        <span class="b" role="meter" aria-label="Obciążenie ${H.esc(p.name)}" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(1.5, pct).toFixed(1)}%"></i></span><span class="w">${H.fmt(ww, 0)} W</span>
+        <div class="va"><span>${v != null ? H.fmt(v, 1) + ' V' : '– V'}</span><span>${a != null ? H.fmt(a, 2) + ' A' : '– A'}</span><span>${Math.round(pct)}% obciążenia</span></div></div>`;
+    }).join('');
+    const pct = Math.min(100, (tot / c.max_power) * 100), lvl = pct < 30 ? 'niskie' : pct < 70 ? 'średnie' : 'wysokie';
+    const kw = tot >= 1000 ? [H.fmt(tot / 1000, 2), 'kW'] : [H.fmt(tot, 0), 'W'];
+    return `<ha-card class="glass warm"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${n ? `<em class="lv" style="--c:${hgLoadCol(pct)}">obciążenie ${lvl}</em>` : ''}</div>
+      ${n ? `<div class="tot"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW</span></div>` : '<div class="ph"><b>Brak źródła danych</b></div>'}
+      <div class="lst">${rows}</div></ha-card>`;
+  }
+  getCardSize() { return 4; }
+}
+hgReg('nuvio-phases-card', HGPhasesCard, 'Nuvio – Fazy', 'Moc, napięcie i prąd na fazach');
+
+/* --- wspólne: preferencje panelu Energia HA (energy/get_prefs) --- */
+const HGEnergyPrefs = {
+  async get(hass) {
+    if (this._v && Date.now() - this._t < 10 * 60 * 1000) return this._v;
+    if (this._p) return this._p;
+    this._p = hass.callWS({ type: 'energy/get_prefs' }).then((p) => {
+      const src = p.energy_sources || [];
+      const grid = src.filter((s) => s.type === 'grid'), solar = src.filter((s) => s.type === 'solar');
+      // HA 2025+: grid ma flow_from[]; starsze wersje: stat_energy_from bezpośrednio
+      const cons = grid.flatMap((g) => (g.flow_from ? g.flow_from.map((f) => f.stat_energy_from) : [g.stat_energy_from])).filter(Boolean);
+      const prices = grid.flatMap((g) => (g.flow_from ? g.flow_from : [g])).map((f) => f.number_energy_price).filter((x) => x != null);
+      const v = { consumption: cons, production: solar.map((s) => s.stat_energy_from).filter(Boolean),
+        price: prices.length && prices.every((x) => x === prices[0]) ? prices[0] : null };
+      this._v = v; this._t = Date.now(); return v;
+    }).finally(() => { this._p = null; });
+    return this._p;
+  },
+};
+/* --- nuvio-energy-stats-card: dziś / ten tydzień / ten miesiąc (jak panel Energia HA) + wykres z przełącznikiem dzień/tydzień/miesiąc --- */
+class HGEnergyStatsCard extends HGBase {
+  defaults() {
+    return { title: 'Zużycie i produkcja', icon: 'mdi:chart-bar', consumption: null, production: null, price: null, currency: 'zł',
+      colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent)' }, link: '/energy' };
+  }
+  ents() { return []; }
+  _extraSig() { return [this._d ? this._d.t : 0, this._mode || 'week', this._sel]; }
+  connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000); }
+  disconnectedCallback() { clearInterval(this._iv); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._load(); this._update(); }
+  get hass() { return this._hass; }
+  async _load(force) {
+    const c = this._config, h = this._hass; if (!h || !c || this._loading) return; this._loading = true;
+    try {
+      let pr = {}; try { pr = await HGEnergyPrefs.get(h); } catch (e) { /* bez prefs -> konfiguracja karty */ }
+      const cons = c.consumption || pr.consumption || [], prod = c.production || pr.production || [], price = c.price != null ? c.price : pr.price;
+      const ids = cons.concat(prod), tz = HGStats.tz(h), now = Date.now();
+      const t0 = HGStats.midnight(now, tz), key = HGStats.key(new Date(now), tz), [y, mo, da] = key.split('-').map(Number);
+      const dow = (new Date(Date.UTC(y, mo - 1, da)).getUTCDay() + 6) % 7;            // 0 = poniedziałek (tydzień jak w HA)
+      const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+      const nDays = Math.max(da, dow + 1);
+      if (force) delete HGStats.cache[ids.join(',') + nDays];
+      const daily = await HGStats.daily(h, ids, nDays);
+      const hr = await h.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(t0).toISOString(), statistic_ids: ids, period: 'hour', types: ['change'], units: { energy: 'kWh' } });
+      const hours = [...Array(24)].map((_, i) => ({ c: 0, p: 0, hc: false, hp: false }));
+      const hourOf = (ms) => Number(new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(new Date(ms)));
+      for (const id of ids) for (const row of hr[id] || []) { const t = typeof row.start === 'number' ? row.start : Date.parse(row.start); const k = hourOf(t); if (!hours[k]) continue;
+        if (cons.includes(id)) { hours[k].c += Math.max(0, row.change || 0); hours[k].hc = true; } else { hours[k].p += Math.max(0, row.change || 0); hours[k].hp = true; } }
+      const day = (k, set) => set.reduce((a, id) => a + Math.max(0, (daily.byId[id] || {})[k] || 0), 0);
+      const has = (k, set) => set.some((id) => daily.present[id] && daily.present[id].has(k));
+      const D = daily.days.map((d) => ({ d, k: d.__k, c: day(d.__k, cons), p: day(d.__k, prod), hc: has(d.__k, cons), hp: has(d.__k, prod) }));
+      const sum = (arr, f) => arr.reduce((a, x) => a + x[f], 0);
+      const today = D[D.length - 1], week = D.slice(-(dow + 1)), month = D.slice(-da);
+      // ostatni dzień z produkcją (do notki o falowniku)
+      const lastP = [...D].reverse().find((x) => x.hp && x.p > 0);
+      this._d = { t: now, cons, prod, price, dow, dim, da, y, mo, hours, D, today, week, month, lastP,
+        tot: { day: [today.c, today.p], week: [sum(week, 'c'), sum(week, 'p')], month: [sum(month, 'c'), sum(month, 'p')] },
+        hasP: { day: today.hp, week: week.some((x) => x.hp), month: month.some((x) => x.hp) } };
+      this._err = null;
+    } catch (e) { this._err = String((e && e.message) || e); }
+    this._loading = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s2); }
+.tiles{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s1); }
+.tl{ display:flex; flex-direction:column; gap:3u; padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-055); text-align:left; min-width:0; position:relative; transition:background .2s; }
+.tl.sel{ background:var(--hg-bg-ffffff-090); box-shadow:var(--hg-sh); }
+.tl small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-weight:400; }
+.tl .r{ display:flex; align-items:baseline; gap:4u; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.tl .r i{ width:6u; height:6u; border-radius:50%; background:var(--c); flex:none; align-self:center; }
+.tl .r b{ font-size:var(--fs-md); font-weight:600; letter-spacing:-.01em; } .tl .r span{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
+.tl .r.p b{ font-size:var(--fs-md); font-weight:400; }
+.tl .cost{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); }
+.sw{ display:flex; gap:2u; padding:2u; border-radius:var(--r-sm); background:var(--hg-bg-767680-012); }
+.sw button{ position:relative; padding:0 var(--s2); height:max(calc(var(--k) * 22), var(--hg-tgt, 0px)); border-radius:calc(var(--r-sm) - 2u); font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-4a4e54); }
+.sw button.act{ background:var(--hg-bg-ffffff); color:var(--hg-tx-16181b); font-weight:600; box-shadow:var(--hg-sh-sm); }
+.lg{ display:flex; gap:var(--s2); font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); align-items:center; } .lg i{ display:inline-block; width:6u; height:6u; border-radius:50%; margin-right:4u; }
+.ch{ position:relative; flex:1; min-height:120u; max-height:230u; display:grid; grid-template-columns:repeat(var(--n), minmax(0, 1fr)); gap:var(--g); }
+.ch::after{ content:''; position:absolute; left:0; right:0; bottom:13u; height:1px; background:var(--hg-bg-1e2024-012); pointer-events:none; }
+.d{ position:relative; display:flex; flex-direction:column; align-items:center; gap:3u; min-width:0; border-radius:var(--r-sm); }
+.d.sel{ background:var(--hg-bg-ffffff-045); }
+.bs{ position:relative; flex:1; width:100%; }
+.bw{ position:absolute; left:0; right:0; top:4u; bottom:0; display:flex; align-items:flex-end; justify-content:center; gap:var(--bg); }
+.bw i{ display:block; width:var(--bw); max-width:9u; height:var(--h); min-height:1px; border-radius:3u 3u 1px 1px; background:var(--c); transform-origin:bottom; animation:hgbar .5s cubic-bezier(.2,.8,.2,1) both; }
+.bw i.z{ height:0; min-height:0; } .bw i.nd{ width:4u; height:4u; min-height:0; border-radius:50%; background:var(--hg-bg-a9adb2); animation:none; margin-bottom:-2u; }
+.fut .bw{ opacity:.0; } .today .bw i{ opacity:.55; }
+.d small{ font-size:max(7.5u, var(--hg-fs-min, 0px)); color:var(--hg-tx-5a5e64); line-height:10u; height:10u; white-space:nowrap; } .d.today small{ color:var(--hg-tx-16181b); font-weight:600; }
+.d.lbl-skip small{ visibility:hidden; }
+.tip{ position:absolute; bottom:calc(100% - 6u); left:50%; transform:translateX(-50%); background:var(--hg-bg-ffffff); border:1px solid var(--hg-bd-000000-006); border-radius:var(--r-sm); padding:var(--s1) var(--s2); font-size:var(--fs-xs); line-height:1.4; white-space:nowrap; color:var(--hg-tx-2b2e33); box-shadow:var(--hg-sh);
+  z-index:5; pointer-events:none; text-align:left; }
+.tip i{ display:inline-block; width:6u; height:6u; border-radius:50%; margin-right:4u; }
+.d.l .tip{ left:0; transform:none; } .d.r .tip{ left:auto; right:0; transform:none; }
+.ft{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); flex-wrap:wrap; }
+.ft a{ margin-left:auto; color:var(--hg-accent-tx); font-weight:600; text-decoration:none; display:flex; align-items:center; gap:3u; min-height:var(--hg-tgt, 0px); } .ft a ha-icon{ width:12u; height:12u; }
+.ctl{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; justify-content:space-between; }
+`);
+  }
+  _bars() {
+    const d = this._d, m = this._mode || 'week', DAYS = H.DAYS;
+    if (m === 'day') {
+      const nowH = Number(new Intl.DateTimeFormat('en-GB', { timeZone: HGStats.tz(this._hass), hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+      return d.hours.map((x, i) => ({ lbl: String(i), skip: i % 3 !== 0, c: x.c, p: x.p, hc: x.hc, hp: x.hp, fut: i > nowH, today: i === nowH, name: `${i}:00–${i + 1}:00` }));
+    }
+    if (m === 'week') {
+      const wk = d.week;
+      return [...Array(7)].map((_, i) => { const x = wk[i]; return x ? { lbl: DAYS[x.d.getDay()], c: x.c, p: x.p, hc: x.hc, hp: x.hp, today: i === wk.length - 1, name: x.d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }) }
+        : { lbl: DAYS[(i + 1) % 7], fut: true, c: 0, p: 0, name: '' }; });
+    }
+    const mo = d.month;
+    return [...Array(d.dim)].map((_, i) => { const x = mo[i]; return x ? { lbl: String(i + 1), skip: (i + 1) % 5 !== 0 && i !== 0, c: x.c, p: x.p, hc: x.hc, hp: x.hp, today: i === mo.length - 1, name: x.d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }) }
+      : { lbl: String(i + 1), skip: (i + 1) % 5 !== 0, fut: true, c: 0, p: 0, name: '' }; });
+  }
+  render() {
+    const c = this._config, col = c.colors;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>`;
+    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>Brak źródła danych</b>${H.esc(this._err)}</div></ha-card>`;
+    if (!this._d) return `<ha-card class="glass">${hd}<div class="ph">Wczytywanie statystyk…</div></ha-card>`;
+    const d = this._d, m = this._mode || 'week', price = d.price;
+    const T = [['day', 'Dziś'], ['week', 'Ten tydzień'], ['month', 'Ten miesiąc']];
+    const tiles = T.map(([k, l]) => { const [cv, pv] = d.tot[k];
+      return `<button class="tl ${m === k ? 'sel' : ''}" data-act="mode" data-m="${k}" aria-pressed="${m === k}" aria-label="${l}: zużycie ${H.fmt(cv, 1)} kWh, produkcja ${H.fmt(pv, 1)} kWh">
+        <small>${l}</small><span class="r" style="--c:${col.consumption}"><i></i><b>${H.fmt(cv, cv < 10 ? 2 : 1)}</b><span>kWh</span></span>
+        <span class="r p" style="--c:${col.production}"><i></i>${d.hasP[k] ? `<b>${H.fmt(pv, pv < 10 ? 2 : 1)}</b><span>kWh PV</span>` : '<b>–</b><span>PV brak danych</span>'}</span>
+        ${price != null ? `<span class="cost">≈ ${H.fmt(cv * price, 2)} ${H.esc(c.currency)}</span>` : ''}</button>`; }).join('');
+    const bars = this._bars(), n = bars.length;
+    const mx = Math.max(0.001, ...bars.map((b) => Math.max(b.c, b.p)));
+    const bw = m === 'month' ? 'calc(var(--k) * 3.2)' : m === 'day' ? 'calc(var(--k) * 4)' : 'calc(var(--k) * 8)';
+    const sel = this._sel;
+    const cols = bars.map((b, i) => {
+      const bar = (v, hasV, cc) => (b.fut ? '' : !hasV ? `<i class="nd"></i>` : `<i class="${v <= 0 ? 'z' : ''}" style="--c:${cc};--h:${((v / mx) * 100).toFixed(1)}%;animation-delay:${Math.min(i * 15, 300)}ms"></i>`);
+      const tip = sel === i && !b.fut ? `<span class="tip">${H.esc(b.name)}<br><i style="background:${col.consumption}"></i>Zużycie: <b>${b.hc ? H.fmt(b.c, 2) + ' kWh' : 'brak danych'}</b><br><i style="background:${col.production}"></i>Produkcja: <b>${b.hp ? H.fmt(b.p, 2) + ' kWh' : 'brak danych'}</b>${price != null && b.hc ? `<br>Koszt ≈ <b>${H.fmt(b.c * price, 2)} ${H.esc(c.currency)}</b>` : ''}</span>` : '';
+      const side = i < n * 0.2 ? 'l' : i > n * 0.8 ? 'r' : '';
+      return `<button class="d ${side} ${b.today ? 'today' : ''} ${b.fut ? 'fut' : ''} ${b.skip ? 'lbl-skip' : ''} ${sel === i ? 'sel' : ''}" data-act="bar" data-i="${i}" ${b.fut ? 'disabled tabindex="-1"' : ''} aria-label="${H.esc(b.name || b.lbl)}${b.fut ? '' : `: zużycie ${H.fmt(b.c, 2)} kWh, produkcja ${b.hp ? H.fmt(b.p, 2) + ' kWh' : 'brak danych'}`}">${tip}<span class="bs"><span class="bw">${bar(b.c, b.hc, col.consumption)}${bar(b.p, b.hp, col.production)}</span></span><small>${b.today ? (m === 'day' ? 'teraz' : 'dziś') : b.lbl}</small></button>`;
+    }).join('');
+    const sw = `<div class="sw" role="tablist">${T.map(([k, l]) => `<button role="tab" class="${m === k ? 'act' : ''}" data-act="mode" data-m="${k}" aria-selected="${m === k}">${['Dzień', 'Tydzień', 'Miesiąc'][T.findIndex((x) => x[0] === k)]}</button>`).join('')}</div>`;
+    const anyNd = bars.some((b) => !b.fut && !b.hp);
+    return `<ha-card class="glass">${hd}<div class="tiles">${tiles}</div>
+      <div class="ctl">${sw}<span class="lg"><span><i style="background:${col.consumption}"></i>Zużycie z sieci</span><span><i style="background:${col.production}"></i>Produkcja PV</span></span></div>
+      <div class="ch" style="--n:${n};--g:${m === 'week' ? 'calc(var(--k) * 6)' : '1px'};--bw:${bw};--bg:${m === 'week' ? 'calc(var(--k) * 3)' : '1px'}">${cols}</div>
+      <div class="ft">${anyNd ? '<span>● szara kropka = brak danych z falownika</span>' : ''}${price != null ? `<span>cena ${H.fmt(price, 2)} ${H.esc(c.currency)}/kWh (z ustawień Energii)</span>` : ''}
+        <a href="${H.esc(c.link)}" data-act="link">Panel Energia HA ${H.icon('mdi:arrow-top-right')}</a></div></ha-card>`;
+  }
+  onAct(a, t, e) {
+    if (a === 'mode') { this._mode = t.dataset.m; this._sel = null; return this.rerender(); }
+    if (a === 'bar') { const i = Number(t.dataset.i); this._sel = this._sel === i ? null : i; return this.rerender(); }
+    if (a === 'link') { e.preventDefault(); H.navigate(this._config.link); }
+  }
+  getCardSize() { return 7; }
+}
+hgReg('nuvio-energy-stats-card', HGEnergyStatsCard, 'Nuvio – Energia (statystyki)', 'Dziś / tydzień / miesiąc i wykres zużycia vs produkcji');
+
+/* --- nuvio-pv-card: stan falownika, produkcja teraz i dziś, ostatnia aktywność --- */
+class HGPvCard extends HGBase {
+  defaults() { return { title: 'Fotowoltaika', icon: 'mdi:solar-power-variant-outline', power: null, today: null, state: null, temperature: null, strings: [], extra: [] }; }
+  ents() { const c = this._config; return [c.power, c.today, c.state, c.temperature, ...c.strings.map((s) => s.entity || s.power), ...c.extra].filter(Boolean); }
+  _extraSig() { return [Math.floor(Date.now() / 60000), this._last ? this._last.t : 0]; }
+  connectedCallback() { super.connectedCallback(); this._ld(); }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first) this._ld(); this._update(); }
+  get hass() { return this._hass; }
+  async _ld() {
+    // ostatni dzień z produkcją wg statystyk panelu Energia (gdy falownik offline)
+    const h = this._hass; if (!h || this._ldg) return; this._ldg = true;
+    try { const pr = await HGEnergyPrefs.get(h); if (pr.production.length) { const v = await HGStats.daily(h, pr.production, 30);
+      const days = [...v.days].reverse(), sum = (d) => pr.production.reduce((a, id) => a + Math.max(0, (v.byId[id] || {})[d.__k] || 0), 0);
+      this._today = days.length && days[0].toDateString() === new Date().toDateString() ? sum(days[0]) : null;   // dziś wg liczników całkowitych (dzienny czujnik falownika zeruje się po rozłączeniu)
+      for (const d of days) { const s = pr.production.reduce((a, id) => a + Math.max(0, (v.byId[id] || {})[d.__k] || 0), 0); if (s > 0.05) { this._last = { t: Date.now(), d, s }; break; } }
+      if (!this._last) this._last = { t: Date.now(), d: null, s: 0 }; else this._last.t = Date.now(); } } catch (e) { this._last = { t: Date.now(), d: null, s: 0 }; }
+    // dziś wg historii czujnika dziennego: suma odcinków między zerowaniami (falownik zeruje licznik po każdym ponownym uruchomieniu;
+    // licznik całkowity po powrocie skacze o produkcję z okresów, których HA nie widział -> zawyża)
+    try { const c = this._config; if (c.today) { const m0 = new Date(); m0.setHours(0, 0, 0, 0);
+      const r = await h.callWS({ type: 'history/history_during_period', start_time: m0.toISOString(), entity_ids: [c.today], minimal_response: true, no_attributes: true });
+      const arr = (r && r[c.today]) || []; let tot = 0, seg = 0, any = false;
+      for (const x of arr) { const v = parseFloat(x.s != null ? x.s : x.state); if (!isFinite(v)) continue; any = true; if (v + 0.001 < seg) { tot += seg; seg = v; } else seg = v; }
+      this._dsum = any ? tot + seg : null; } } catch (e) { this._dsum = null; }
+    this._ldg = false; this.rerender();
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); }
+.hd .ic{ color:var(--hg-accent-tx); }
+.st{ display:flex; align-items:center; gap:var(--s2); }
+.bd{ width:40u; height:40u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff); background:var(--c); }
+.off .st b{ color:var(--hg-tx-4a4e54); }
+.on .bd{ color:var(--hg-tx-1e2023-k); } .bd ha-icon{ width:20u; height:20u; } .on .bd ha-icon{ animation:hgspin 8s linear infinite; }
+.st b{ display:block; font-size:var(--fs-md); font-weight:600; color:color-mix(in srgb, var(--c), var(--hg-ink, var(--hg-tx-000000)) calc(var(--hg-ink-p, 40%) * 1.7)); } .st div span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-top:2u; }
+.kv{ display:grid; grid-template-columns:repeat(auto-fit, minmax(max(calc(var(--k) * 84), 112px), 1fr)); gap:var(--s1); }
+@media (max-width:600px){ .kv{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+.kv[hidden]{ display:none; } .kv div{ padding:var(--s1) var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-055); min-width:0; } .kv small{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); overflow:hidden; line-height:1.25; min-height:2.5em; }
+.kv b{ font-size:var(--fs-md); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; } .kv b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-5a5e64); margin-left:2u; }
+.pvn{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); line-height:1.45; padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:var(--hg-accent-faint); white-space:normal; }
+`);
+  }
+  render() {
+    const c = this._config, h = this._hass, s = H.st(h, c.power), on = H.ok(s);
+    const w = H.num(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
+    const col = on ? (w > 0 ? 'var(--hg-accent)' : 'var(--hg-ac-6e747a)') : 'var(--hg-ac-6e747a)';
+    const since = s ? hgRel(new Date(s.last_changed)) : '';
+    const lbl = on ? (w > 0 ? 'Produkuje' : 'Brak produkcji (noc / zachmurzenie)') : 'Falownik offline';
+    if (this._last && Date.now() - this._last.t > 15 * 60000 && !this._ldg) { this._last.t = Date.now(); setTimeout(() => this._ld(), 0); }
+    // „Dziś”: większa z wartości czujnika dziennego i przyrostu liczników całkowitych; 0 przy produkcji = brak danych
+    // czujnik dzienny ma rozdzielczość 0,1 kWh: 0 przy produkcji = „< 0,1”; bez czujnika dziennego -> przyrost licznika całkowitego
+    const dsum = this._dsum != null ? Math.max(this._dsum, td || 0) : td;
+    const tday = dsum != null ? dsum : this._today;
+    const dz = tday == null ? ['–', ''] : tday < 0.05 && w > 0 ? ['< 0,1', 'kWh'] : [H.fmt(tday, 1), 'kWh'];
+    const kv = [['Teraz', w != null ? [H.fmt(w, 0), 'W'] : ['–', '']], ['Dziś', dz]];
+    for (const st of c.strings) { const v = H.num(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
+    if (c.temperature) kv.push(['Temperatura falownika', tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
+    const L = this._last;
+    const last = L && L.d ? `Ostatnia produkcja: <b>${H.esc(L.d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.` : L ? 'Brak produkcji w statystykach z ostatnich 30 dni.' : '';
+    const note = !on ? `<div class="pvn">${last} Dni bez danych z falownika są na wykresach szarą kropką (nie zerem).</div>`
+      : dst && H.ok(dst) ? `<div class="pvn" style="background:var(--hg-accent-faint)">Stan falownika: ${H.esc(H.t(h, dst))}</div>` : '';
+    return `<ha-card class="glass warm ${on ? 'on' : 'off'}" style="--c:${col}"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
+        <button class="ib kebab" data-act="more" aria-label="Szczegóły falownika" title="Szczegóły i historia">${H.icon('mdi:dots-vertical')}</button></div>
+      <div class="st"><span class="bd">${H.icon(on ? 'mdi:white-balance-sunny' : 'mdi:solar-panel')}</span><div><b>${lbl}</b><span>${on ? 'aktualizacja ' + H.esc(since) : since ? 'brak danych od ' + H.esc(since) : 'brak encji'}</span></div></div>
+      ${on ? '' : ''}<div class="kv" ${on ? '' : 'hidden'}>${kv.map(([k, [v, u]]) => `<div><small>${H.esc(k)}</small><b>${v}<em>${u}</em></b></div>`).join('')}</div>${note}</ha-card>`;
+  }
+  onAct(a) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.power }); }
+  getCardSize() { return 4; }
+}
+hgReg('nuvio-pv-card', HGPvCard, 'Nuvio – Fotowoltaika', 'Stan falownika, produkcja teraz i dziś');
+
+/* ===================== ROBOTY: nuvio-robots-card (vacuum.* + lawn_mower.*, wykrywane automatycznie) =====================
+   Encje powiązane (bateria, mapa camera.*, select ssania/trybu, czujniki eksploatacji) z tego samego urządzenia (hass.entities.device_id).
+   Mapa: camera_proxy z wstępnym wczytaniem, odświeżana tylko gdy kafel jest widoczny i karta przeglądarki aktywna (5 s przy pracy, 30 s w spoczynku). */
+const HG_VF = { PAUSE: 4, STOP: 8, HOME: 16, FAN: 32, LOCATE: 512, START: 8192 };
+const HG_MF = { START: 1, PAUSE: 2, DOCK: 4 };
+const HG_OPT = { quiet: 'Cicho', silent: 'Cicho', standard: 'Standard', basic: 'Standard', strong: 'Mocno', turbo: 'Turbo', 'full speed': 'Turbo', max: 'Max',
+  mopping: 'Mop', sweeping: 'Odkurzanie', sweeping_and_mopping: 'Odkurzanie + mop', mopping_after_sweeping: 'Mop po odkurzaniu', low: 'Niski', medium: 'Średni', high: 'Wysoki' };
+const HG_SEL_LBL = [[/suction_level$|_mode_p_\d+_\d+$|fan_speed$/, 'Moc ssania'], [/cleaning_mode$/, 'Tryb'], [/water_volume$/, 'Woda']];
+const HG_CONS = [[/main_brush_left$/, 'Szczotka gł.'], [/side_brush_left$/, 'Szczotka boczna'], [/filter_left$/, 'Filtr'], [/mop(_pad)?_left$/, 'Mop'], [/sensor_dirty_left$/, 'Czujniki']];
+const hgRobotState = (s) => {
+  const a = s.attributes, st = s.state;
+  if (st === 'cleaning' || st === 'mowing') return [st === 'mowing' ? 'Kosi' : 'Sprząta', 'work'];
+  if (st === 'returning') return ['Wraca do stacji', 'ret'];
+  if (st === 'paused') return ['Pauza', 'pause'];
+  if (st === 'error') return ['Błąd', 'err'];
+  if (st === 'docked') return a.charging ? ['Ładuje', 'chg'] : ['W stacji', 'dock'];
+  if (st === 'idle') return ['Bezczynny', 'idle'];
+  return [H.T(window.__hgHass, s), 'idle'];
+};
+const hgAgo = (iso) => {
+  const t = Date.parse(iso); if (!isFinite(t)) return '';
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return 'przed chwilą'; if (m < 60) return `${m} min temu`;
+  const h = Math.round(m / 60); if (h < 24) return `${h} godz. temu`;
+  const d = Math.round(h / 24); return d === 1 ? 'wczoraj' : `${d} dni temu`;
+};
+class HGRobotsCard extends HGBase {
+  defaults() { return { title: 'Roboty', icon: 'mdi:robot-vacuum', entities: [], exclude: [], names: {}, refresh_idle: 30, refresh_work: 5 }; }
+  _disc() {
+    const h = this._hass, c = this._config, reg = h.entities || {};
+    const key = Object.keys(h.states).length + ':' + Object.keys(reg).length;
+    if (this._d && this._d.key === key) return this._d;
+    const ids = (c.entities.length ? c.entities : Object.keys(h.states).filter((e) => /^(vacuum|lawn_mower)\./.test(e)).sort())
+      .filter((e) => !c.exclude.includes(e) && h.states[e] && !(reg[e] && reg[e].hidden));
+    const byDev = {};
+    for (const [e, r] of Object.entries(reg)) if (r.device_id) (byDev[r.device_id] = byDev[r.device_id] || []).push(e);
+    const robots = ids.map((e) => {
+      const dev = reg[e] && reg[e].device_id, rel = (dev && byDev[dev] || []).filter((x) => x !== e && h.states[x]);
+      const cat = (x) => reg[x] && reg[x].entity_category;
+      const cams = rel.filter((x) => x.startsWith('camera.')).sort((a, b) => a.length - b.length);
+      const sels = rel.filter((x) => x.startsWith('select.') && !/room_\d+_|map/.test(x) && !cat(x) && HG_SEL_LBL.some(([re]) => re.test(x)))
+        .sort((a, b) => HG_SEL_LBL.findIndex(([re]) => re.test(a)) - HG_SEL_LBL.findIndex(([re]) => re.test(b)));
+      const sens = (re) => rel.find((x) => x.startsWith('sensor.') && re.test(x));
+      const bat = rel.find((x) => x.startsWith('sensor.') && (h.states[x].attributes.device_class === 'battery'));
+      const cons = HG_CONS.map(([re, nm]) => { const x = sens(re); return x ? { e: x, nm, t: sens(new RegExp(re.source.replace('_left$', '_time_left$'))) } : null; }).filter(Boolean);
+      return { e, cam: c.map && c.map[e] || cams[0], sels, bat, cons, hist: sens(/cleaning_history$/), time: sens(/_cleaning_time$/), area: sens(/_cleaned_area$/),
+        count: sens(/cleaning_count$/), total: sens(/total_cleaned_area$/), room: sens(/current_room$/) };
+    });
+    this._entsC = null;
+    return (this._d = { key, robots });
+  }
+  ents() { const d = this._disc(); return d.robots.flatMap((r) => [r.e, r.cam, r.bat, r.hist, r.time, r.area, r.count, r.room, ...r.sels, ...r.cons.map((x) => x.e)]).filter(Boolean); }
+  _extraSig() { return [this._d && this._d.key, Math.floor(Date.now() / 60000), [...(this._sel || new Map())].map(([k, v]) => k + [...v].join(','))]; }
+  css() {
+    return U(`
+ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); }
+.list{ display:flex; flex-direction:column; gap:var(--s2); }
+.rb{ container-type:inline-size; border-radius:var(--r-md); background:var(--hg-bg-ffffff-058); border:1px solid var(--hg-bd-ffffff-085); padding:var(--s2); }
+.g{ display:grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap:var(--s2); align-items:start; }
+.g.nomap{ grid-template-columns: minmax(0,1fr); }
+/* ilustracja stanu dla robota bez mapy (widoczna tylko w układzie dwóch kolumn, wyrównuje wysokość z kartą z mapą) */
+.ill{ display:none; position:relative; border-radius:var(--r-sm); overflow:hidden; flex-direction:column; align-items:center; justify-content:center; gap:4u;
+  background: var(--hg-bg-ecedef-090); color:var(--hg-tx-2a2d31); }
+.ill .ring{ position:relative; width:96u; height:96u; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background: conic-gradient(var(--hg-accent) calc(var(--p, 0) * 1%), var(--hg-ac-000000-008) 0); }
+.ill .ring .in{ position:absolute; inset:5u; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow: inset 0 1u 4u var(--hg-sh-000000-006); display:flex; align-items:center; justify-content:center; }
+.ill .ring ha-icon{ position:relative; width:46u; height:46u; color:var(--hg-tx-2a2d31); }
+.work .ill .ring ha-icon{ animation: hgrb 2.4s ease-in-out infinite; } .ret .ill .ring ha-icon{ animation: hgrb-ret 1.6s ease-in-out infinite; }
+.ill b{ font-size:var(--fs-md); font-weight:600; margin-top:6u; } .ill small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
+.ill .dock{ position:absolute; right:10u; bottom:8u; width:16u; height:16u; color:var(--hg-tx-6a6e74); }
+/* desktop / tablet poziomo: roboty obok siebie (2 równe kolumny), w każdej mapa u góry i sterowanie pod spodem */
+@media (min-width: 1000px) and (orientation: landscape){
+  .list.two{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); align-items:stretch; }
+  .list.two .rb{ display:flex; flex-direction:column; }
+  .list.two .g{ grid-template-columns: minmax(0,1fr); gap:var(--s1); }
+  .list.two .media{ height: clamp(140px, 27vh, 330px); flex:none; }
+  .list.two .map{ aspect-ratio:auto; height:100%; max-height:none; }
+  .list.two .ill{ display:flex; }
+  .list.two .side{ gap:var(--s1); }
+  .list.two .cb{ flex-direction:row; gap:5u; height:40px; font-size:var(--fs-xs); }
+  .list.two .seg button, .list.two .rc{ height:34px; }
+  .list.two .sec{ margin-bottom:3u; }
+  .list.two .cs, .list.two .kv div{ padding:5u var(--s1); }
+}
+@container (max-width: 560px){ .g{ grid-template-columns: minmax(0,1fr); } }
+.top{ display:flex; align-items:center; gap:var(--s1); min-width:0; }
+.av{ width:34u; height:34u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ffffff); color:var(--hg-tx-2a2d31); box-shadow:var(--hg-sh-sm); }
+.av ha-icon{ width:19u; height:19u; }
+.work .av{ background:var(--hg-accent); } .work .av ha-icon{ animation: hgrb 2.4s ease-in-out infinite; }
+.ret .av ha-icon{ animation: hgrb-ret 1.6s ease-in-out infinite; }
+.err .av{ background:var(--hg-bg-ff6b5b); color:var(--hg-tx-ffffff); }
+@keyframes hgrb{ 0%{ transform:translateX(-2px) rotate(-12deg); } 50%{ transform:translateX(2px) rotate(12deg); } 100%{ transform:translateX(-2px) rotate(-12deg); } }
+@keyframes hgrb-ret{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-3px); } }
+.nm{ min-width:0; flex:1; } .nm b{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:var(--fs-md); font-weight:600; line-height:1.15; overflow:hidden; overflow-wrap:anywhere; }
+.nm span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-top:1u; }
+.pill{ display:inline-flex; align-items:center; gap:4u; height:20u; padding:0 var(--s1); border-radius:var(--r-sm); font-size:var(--fs-xs); font-weight:400; background:var(--hg-bg-000000-006); color:var(--hg-tx-2a2d31); flex:none; white-space:nowrap; }
+.pill i{ width:6u; height:6u; border-radius:50%; background:var(--hg-bg-9aa0a6); }
+.work .pill i{ background:var(--hg-accent); animation:hgpulse 1.6s infinite; } .chg .pill i{ background:var(--hg-accent); } .err .pill{ background:var(--hg-bg-ffe3df); color:var(--hg-tx-b3261e-on); } .err .pill i{ background:var(--hg-bg-ff3b30); }
+.bat{ display:inline-flex; align-items:center; gap:3u; font-size:var(--fs-sm); font-weight:600; flex:none; } .bat ha-icon{ width:13u; height:13u; color:var(--hg-accent-tx); } .bat.low ha-icon{ color:var(--hg-tx-ff3b30); }
+.map{ position:relative; border-radius:var(--r-sm); overflow:hidden; background:var(--hg-bg-2b3038); aspect-ratio: var(--a, 1.25); max-height:46vh; margin:0 auto; width:100%; }
+.map img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity .3s; }
+.map img.ok{ opacity:1; }
+.map .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff-060); font-size:var(--fs-sm); }
+.map .rm{ position:absolute; left:8u; bottom:8u; padding:3u var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-000000-045); color:var(--hg-tx-ffffff); font-size:var(--fs-xs); }
+.side{ display:flex; flex-direction:column; gap:var(--s1); min-width:0; }
+.ctl{ display:flex; gap:var(--s1); flex-wrap:wrap; }
+.cb{ position:relative; flex:1 1 0; min-width:max(calc(var(--k) * 54), 56px); height:max(calc(var(--k) * 40), 48px); border-radius:var(--r-sm); background:var(--hg-bg-ffffff); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2u;
+  font-size:var(--fs-xs); color:var(--hg-tx-2a2d31); box-shadow:var(--hg-sh-sm); transition: transform .15s, background .2s; }
+.cb ha-icon{ width:20px; height:20px; } .cb:active{ transform:scale(.96); }
+.cb.pri{ background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); } .cb[disabled]{ opacity:.35; }
+.sec{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); margin-bottom:4u; text-transform:none; }
+.seg{ display:flex; gap:2u; padding:2u; border-radius:var(--r-sm); background:var(--hg-bg-767680-012); }
+.seg button{ flex:1 1 0; min-width:0; height:max(calc(var(--k) * 26), 40px); border-radius:calc(var(--r-sm) - 2u); font-size:var(--fs-xs); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4u; color:var(--hg-tx-3a3d42); }
+.seg button.on{ background:var(--hg-bg-ffffff); color:var(--hg-tx-16181b); font-weight:600; box-shadow:var(--hg-sh-sm); }
+.rooms{ display:flex; flex-wrap:wrap; gap:5u; }
+.rc{ display:inline-flex; align-items:center; gap:4u; height:max(calc(var(--k) * 26), 40px); padding:0 var(--s2); border-radius:var(--r-sm); background:var(--hg-bg-ffffff); font-size:var(--fs-xs); color:var(--hg-tx-2a2d31); border:1px solid var(--hg-bd-000000-006); }
+.rc ha-icon{ width:12u; height:12u; } .rc.on{ background:var(--hg-accent); border-color:var(--hg-accent); font-weight:600; }
+.rc.go{ background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); border-color:var(--hg-bd-1f2125); } .rc.go[disabled]{ opacity:.35; }
+.cons, .list.two .cons{ display:grid; grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); gap:var(--s1); }
+.cs{ display:flex; flex-direction:column; gap:3px; padding:var(--s1) 10px; border-radius:var(--r-sm); background:var(--hg-bg-ffffff-070); min-width:0; font-variant-numeric:tabular-nums; }
+.cs .cl{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cs .cv{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; min-width:0; } .cs .cv b{ color:var(--hg-tx-16181b); font-size:var(--fs-md); font-weight:600; white-space:nowrap; }
+.cs .cv em{ font-style:normal; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cs .hint{ font-size:var(--fs-xs); font-weight:600; color:var(--hg-warn, var(--hg-tx-b3261e)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cs .tr{ height:4u; border-radius:2u; background:var(--hg-bg-000000-008); margin-top:4u; overflow:hidden; } .cs .tr i{ display:block; height:100%; border-radius:2u; background:var(--hg-accent); }
+.cs.warn .tr i{ background:var(--hg-accent); } .cs.bad .tr i{ background:var(--hg-bg-ff3b30); }
+.kv, .list.two .kv{ display:grid; grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); gap:var(--s1); }
+.kv div{ padding:var(--s1) 10px; border-radius:var(--r-sm); background:var(--hg-bg-ffffff-070); min-width:0; overflow:hidden; font-variant-numeric:tabular-nums; }
+.kv small{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kv p{ margin:0; display:flex; align-items:baseline; min-width:0; white-space:nowrap; overflow:hidden; }
+.kv b{ font-size:var(--fs-md); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; } .kv em{ flex:none; font-style:normal; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-left:2u; }
+.empty{ padding:var(--s4); text-align:center; color:var(--hg-tx-5a5e64); font-size:var(--fs-sm); }
+@media (prefers-reduced-motion: reduce){ .av ha-icon{ animation:none !important; } }`);
+  }
+  _opt(v) { return HG_OPT[String(v).toLowerCase()] || v; }
+  render() {
+    const h = this._hass, c = this._config, d = this._disc();
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="note">${d.robots.length} ${d.robots.length === 1 ? 'robot' : 'roboty'}</span></div>`;
+    if (!d.robots.length) return `<ha-card class="glass">${hd}<div class="empty">Brak encji vacuum.* ani lawn_mower.*</div></ha-card>`;
+    this._sel = this._sel || new Map();
+    return `<ha-card class="glass">${hd}<div class="list ${d.robots.length > 1 ? 'two' : ''}">${d.robots.map((r) => this._robot(r)).join('')}</div></ha-card>`;
+  }
+  _robot(r) {
+    const h = this._hass, c = this._config, s = h.states[r.e], a = s.attributes, mower = r.e.startsWith('lawn_mower.');
+    const nm = c.names[r.e] || (a.friendly_name || r.e).replace(/^(.+?)\s+\1$/, '$1').replace(/\s{2,}/g, ' ');
+    if (!H.ok(s)) return `<div class="rb idle"><div class="top"><span class="av">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span><span class="nm"><b>${H.esc(nm)}</b><span>Niedostępny</span></span></div></div>`;
+    const [lbl, cls] = hgRobotState(s), f = a.supported_features || 0, working = cls === 'work';
+    const batV = a.battery ?? a.battery_level ?? H.num(h, r.bat);
+    const bat = batV != null ? `<span class="bat ${batV < 20 ? 'low' : ''}">${H.icon(a.charging ? 'mdi:battery-charging' : batV > 90 ? 'mdi:battery' : `mdi:battery-${Math.max(10, Math.round(batV / 10) * 10)}`)}${Math.round(batV)}%</span>` : '';
+    const err = cls === 'err' && a.error && a.error !== 'No error' ? ` · ${a.error}` : '';
+    const room = r.room && H.ok(h.states[r.room]) && working ? h.states[r.room].state : '';
+    const sub = room ? `Pokój: ${room}` : (r.hist && H.ok(h.states[r.hist]) ? `Ostatnio ${hgAgo(h.states[r.hist].state)}` : (mower ? 'Kosiarka' : 'Odkurzacz'));
+    const top = `<div class="top"><span class="av">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span><span class="nm"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></span>
+      ${bat}<span class="pill" title="${H.esc(lbl + err)}"><i></i>${H.esc(lbl)}</span><button class="ib" data-act="more" data-e="${r.e}" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button></div>`;
+    // przyciski: tylko obsługiwane funkcje
+    const B = (act, icon, label, on, pri) => `<button class="cb ${pri ? 'pri' : ''}" data-act="${act}" data-e="${r.e}" aria-label="${label}">${H.icon(icon)}<span>${label}</span></button>`;
+    let ctl = '';
+    if (mower) {
+      if (working && (f & HG_MF.PAUSE)) ctl += B('pause', 'mdi:pause', 'Pauza', 0, 1); else if (f & HG_MF.START) ctl += B('start', 'mdi:play', 'Start', 0, 1);
+      if (f & HG_MF.DOCK) ctl += B('home', 'mdi:home-import-outline', 'Do stacji');
+    } else {
+      if (working && (f & HG_VF.PAUSE)) ctl += B('pause', 'mdi:pause', 'Pauza', 0, 1);
+      else if (f & HG_VF.START) ctl += B('start', 'mdi:play', cls === 'pause' ? 'Wznów' : 'Start', 0, 1);
+      if ((f & HG_VF.STOP) && (working || cls === 'pause' || cls === 'ret')) ctl += B('stop', 'mdi:stop', 'Stop');
+      if (f & HG_VF.HOME) ctl += B('home', 'mdi:home-import-outline', 'Do stacji');
+      if (f & HG_VF.LOCATE) ctl += B('locate', 'mdi:map-marker-radius-outline', 'Zlokalizuj');
+    }
+    // moc ssania / tryb: select z urządzenia, a bez niego fan_speed_list
+    let opts = '';
+    const seg = (title, cur, list, act, e) => `<div><div class="sec">${title}</div><div class="seg" role="radiogroup" aria-label="${title}">${list.map((o) =>
+      `<button class="${o === cur ? 'on' : ''}" role="radio" aria-checked="${o === cur}" data-act="${act}" data-e="${e}" data-o="${H.esc(o)}" title="${H.esc(this._opt(o))}">${H.esc(this._opt(o))}</button>`).join('')}</div></div>`;
+    const sels = r.sels.filter((x) => H.ok(h.states[x]) && (h.states[x].attributes.options || []).length);
+    for (const x of sels) { const ss = h.states[x]; opts += seg((HG_SEL_LBL.find(([re]) => re.test(x)) || [0, 'Ustawienie'])[1], ss.state, ss.attributes.options, 'sel', x); }
+    if (!sels.some((x) => /suction|_mode_p_|fan/.test(x)) && (f & HG_VF.FAN) && (a.fan_speed_list || []).length) opts = seg('Moc ssania', a.fan_speed, a.fan_speed_list, 'fan', r.e) + opts;
+    // pokoje (Dreame: rooms[selected_map] + dreame_vacuum.vacuum_clean_segment)
+    let rooms = '';
+    const rl = a.rooms && (a.rooms[a.selected_map] || Object.values(a.rooms)[0]);
+    if (Array.isArray(rl) && rl.length && h.services && h.services.dreame_vacuum && h.services.dreame_vacuum.vacuum_clean_segment) {
+      const sel = this._sel.get(r.e) || new Set();
+      rooms = `<div><div class="sec">Sprzątanie pokoi</div><div class="rooms">${rl.map((x) => `<button class="rc ${sel.has(x.id) ? 'on' : ''}" data-act="room" data-e="${r.e}" data-id="${x.id}" aria-pressed="${sel.has(x.id)}">${H.icon(x.icon || 'mdi:floor-plan')}${H.esc(x.name)}</button>`).join('')}
+        <button class="rc go" data-act="seg" data-e="${r.e}" ${sel.size && !working ? '' : 'disabled'} aria-label="Sprzątaj wybrane pokoje">${H.icon('mdi:play')}Sprzątaj${sel.size ? ` (${sel.size})` : ''}</button></div></div>`;
+    }
+    // eksploatacja
+    const cons = r.cons.filter((x) => H.ok(h.states[x.e])).map((x) => {
+      const v = H.num(h, x.e), t = x.t && H.num(h, x.t);
+      const full = { 'Szczotka gł.': 'Szczotka główna' }[x.nm] || x.nm, dirty = /Czujnik/.test(x.nm) && v <= 0;
+      return `<div class="cs ${v < 10 ? 'bad' : v <= 30 ? 'warn' : ''}" title="${H.esc(`${full}: ${Math.round(v)}%${t != null ? `, zostało ${H.fmt(t, 0)} h` : ''}`)}"><span class="cl">${H.esc(x.nm)}</span>
+        <div class="cv"><b>${Math.round(v)}%</b>${t != null ? `<em>${H.fmt(t, 0)} h</em>` : ''}</div><div class="tr"><i style="width:${Math.max(2, Math.min(100, v))}%"></i></div>${dirty ? `<span class="hint">Do wyczyszczenia</span>` : ''}</div>`;
+    }).join('');
+    // ostatnie sprzątanie
+    const kv = [];
+    const val = (e, attr) => (e && H.ok(h.states[e]) ? H.num(h, e) : (a[attr] != null ? Number(a[attr]) : null));
+    const tm = val(r.time, 'cleaning_time'), ar = val(r.area, 'cleaned_area'), cnt = val(r.count, 'cleaning_count'), tot = val(r.total, 'total_cleaned_area');
+    if (tm != null) kv.push(['Czas', H.fmt(tm, 0), 'min']); if (ar != null) kv.push(['Powierzchnia', H.fmt(ar, 0), 'm²']);
+    if (r.hist && H.ok(h.states[r.hist])) { const dt = new Date(h.states[r.hist].state); if (isFinite(dt)) {
+      const d0 = new Date(); d0.setHours(0, 0, 0, 0); const dd = new Date(dt); dd.setHours(0, 0, 0, 0); const n = Math.round((d0 - dd) / 86400000);
+      const hm = dt.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+      kv.push(['Kiedy', n === 0 ? `dziś ${hm}` : n === 1 ? `wczoraj ${hm}` : `${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}, ${hm}`, '']); } }
+    if (cnt != null) kv.push(['Sprzątań', H.fmt(cnt, 0), '']); if (tot != null) kv.push(['Łącznie', H.fmt(tot, 0), 'm²']);
+    const last = kv.length ? `<div><div class="sec">Ostatnie sprzątanie</div><div class="kv">${kv.map(([k, v, u]) => `<div title="${H.esc(`${k}: ${v}${u ? ' ' + u : ''}`)}"><small>${k}</small><p><b>${H.esc(v)}</b>${u ? `<em>${u}</em>` : ''}</p></div>`).join('')}</div></div>` : '';
+    const cam = r.cam && h.states[r.cam];
+    const map = cam ? `<div class="map" data-cam="${r.cam}" style="--a:${this._asp && this._asp[r.cam] || 1.25}"><div class="ph">${H.ok(cam) ? 'Wczytywanie mapy…' : 'Mapa niedostępna'}</div><img alt="Mapa ${H.esc(nm)}" ${this._src && this._src[r.cam] ? `src="${this._src[r.cam]}" class="ok"` : ''}>${room ? `<span class="rm">${H.esc(room)}</span>` : ''}</div>` : '';
+    const ill = map ? '' : `<div class="media ill" aria-hidden="true"><span class="ring" style="--p:${batV != null ? Math.round(batV) : 0}"><span class="in">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span></span><b>${H.esc(lbl)}</b><small>${batV != null ? `Bateria ${Math.round(batV)}%` : H.esc(sub)}</small>${cls === 'chg' || cls === 'dock' ? H.icon('mdi:home-lightning-bolt-outline', 'dock') : ''}</div>`;
+    return `<div class="rb ${cls}">${top}<div class="g ${map ? '' : 'nomap'}" style="margin-top:10px">${map ? `<div class="media">${map}</div>` : ill}<div class="side">
+      ${ctl ? `<div class="ctl">${ctl}</div>` : ''}${opts}${rooms}${cons ? `<div><div class="sec">Eksploatacja</div><div class="cons">${cons}</div></div>` : ''}${last}</div></div></div>`;
+  }
+  afterRender() {
+    if (this._io) this._io.disconnect();
+    this._maps = [...this.$.querySelectorAll('.map[data-cam]')];
+    this._io = new IntersectionObserver((en) => { for (const e of en) e.target.__vis = e.isIntersecting; this._snap(); });
+    this._maps.forEach((m) => this._io.observe(m));
+    this._sched();
+  }
+  _sched() {
+    clearTimeout(this._mt);
+    if (!this.isConnected) return;
+    const work = this._d && this._d.robots.some((r) => ['cleaning', 'mowing', 'returning'].includes((this._hass.states[r.e] || {}).state));
+    this._mt = setTimeout(() => { this._snap(); this._sched(); }, (work ? this._config.refresh_work : this._config.refresh_idle) * 1000);
+  }
+  _snap() {
+    if (document.hidden || !this.isConnected) return;
+    this._src = this._src || {}; this._asp = this._asp || {}; this._ld = this._ld || {};
+    for (const m of this._maps || []) {
+      const e = m.dataset.cam, s = this._hass.states[e];
+      if (m.__vis === false || !H.ok(s) || !s.attributes.entity_picture || this._ld[e]) continue;
+      const u = s.attributes.entity_picture, src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(), pre = new Image();
+      this._ld[e] = true;
+      pre.onload = () => {
+        this._ld[e] = false; this._src[e] = src;
+        if (pre.naturalWidth) this._asp[e] = +(pre.naturalWidth / pre.naturalHeight).toFixed(3);
+        for (const mm of this.$.querySelectorAll(`.map[data-cam="${e}"]`)) { const img = mm.querySelector('img'); img.src = src; img.classList.add('ok'); mm.style.setProperty('--a', this._asp[e]); const ph = mm.querySelector('.ph'); if (ph) ph.remove(); }
+      };
+      pre.onerror = () => { this._ld[e] = false; };
+      pre.src = src;
+    }
+  }
+  connectedCallback() { super.connectedCallback(); if (this._maps) { this._maps.forEach((m) => this._io && this._io.observe(m)); this._snap(); this._sched(); } }
+  disconnectedCallback() { clearTimeout(this._mt); this._io && this._io.disconnect(); }
+  onAct(act, el) {
+    const h = this._hass, e = el.dataset.e, mower = e && e.startsWith('lawn_mower.');
+    if (act === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (act === 'start') return mower ? H.call(h, 'lawn_mower', 'start_mowing', { entity_id: e }) : H.call(h, 'vacuum', 'start', { entity_id: e });
+    if (act === 'pause') return H.call(h, mower ? 'lawn_mower' : 'vacuum', 'pause', { entity_id: e });
+    if (act === 'stop') return H.call(h, 'vacuum', 'stop', { entity_id: e });
+    if (act === 'home') return mower ? H.call(h, 'lawn_mower', 'dock', { entity_id: e }) : H.call(h, 'vacuum', 'return_to_base', { entity_id: e });
+    if (act === 'locate') return H.call(h, 'vacuum', 'locate', { entity_id: e });
+    if (act === 'fan') return H.call(h, 'vacuum', 'set_fan_speed', { entity_id: e, fan_speed: el.dataset.o });
+    if (act === 'sel') return H.call(h, 'select', 'select_option', { entity_id: e, option: el.dataset.o });
+    if (act === 'room') {
+      const s = this._sel.get(e) || new Set(), id = Number(el.dataset.id);
+      s.has(id) ? s.delete(id) : s.add(id); this._sel.set(e, s); return this._update(true);
+    }
+    if (act === 'seg') {
+      const s = this._sel.get(e); if (!s || !s.size) return;
+      const p = H.call(h, 'dreame_vacuum', 'vacuum_clean_segment', { entity_id: e, segments: [...s] });
+      this._sel.set(e, new Set()); this._update(true); return p;
+    }
+  }
+  getCardSize() { return 8; }
+}
+hgReg('nuvio-robots-card', HGRobotsCard, 'Nuvio: Roboty', 'Odkurzacze i kosiarki: stan, mapa, sterowanie, pokoje, eksploatacja');
+
+/* ===================== POKOJE (obszary HA) ===================== */
+/* Model pokoi: rejestr obszarów + rejestr encji/urządzeń z hass (hass.areas / hass.entities / hass.devices, bez dodatkowych zapytań).
+   Encja należy do obszaru: CFG assign (tylko wyświetlanie, rejestr HA bez zmian) > area_id encji > area_id urządzenia; merge łączy duplikaty obszarów.
+   Pomijane: ukryte, diagnostyczne/konfiguracyjne (entity_category), wyłączone (nie ma ich w hass.entities), platformy z exclude_platforms. */
+const HG_AREA_ICONS = [[/salon|living|wypoczyn/, 'mdi:sofa-outline'], [/kuchni|kitchen/, 'mdi:countertop-outline'], [/lazienk|bath|toalet|\bwc\b/, 'mdi:shower-head'],
+  [/sypialni|bedroom/, 'mdi:bed-king-outline'], [/biur|office|gabinet/, 'mdi:desk'], [/garaz|garage/, 'mdi:garage-variant'], [/ogrod|garden/, 'mdi:flower-outline'],
+  [/taras|balkon|balcony/, 'mdi:balcony'], [/ganek|weranda|porch/, 'mdi:home-import-outline'], [/wejsc|entrance|przedpok|hall/, 'mdi:door-open'],
+  [/piwnic|basement/, 'mdi:stairs-down'], [/pralni|laundry/, 'mdi:washing-machine'], [/korytarz|schod|stairs/, 'mdi:stairs'], [/parter|ground/, 'mdi:home-floor-0'],
+  [/pietro|poddasz|floor/, 'mdi:home-floor-1'], [/eliann|dziec|kids/, 'mdi:teddy-bear'], [/siec|network/, 'mdi:lan'], [/jadal|dining/, 'mdi:silverware-fork-knife']];
+const hgNorm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
+const HG_SKIP_DOM = new Set(['event', 'notify', 'update', 'device_tracker', 'tts', 'stt', 'conversation', 'ai_task', 'assist_satellite', 'infrared', 'zone', 'person',
+  'automation', 'script', 'sun', 'weather', 'calendar', 'image', 'todo', 'wake_word', 'tag', 'input_text', 'input_datetime', 'input_number', 'input_select', 'counter',
+  'timer', 'schedule', 'remote', 'group', 'persistent_notification', 'alarm_control_panel', 'date', 'time', 'datetime']);
+const HG_CTRL_DOM = new Set(['light', 'switch', 'climate', 'cover', 'fan', 'lock', 'humidifier', 'media_player', 'vacuum', 'water_heater', 'valve', 'lawn_mower', 'siren', 'camera']);
+const HG_LIGHTISH = /(swiatl|swiatel|oswietl|lamp|\bled\b|light|wlacznik|zarowk|kinkiet|zyrandol)/;
+const HG_TEMP_BAD = /(water|woda|wody|kettle|czajnik|boiler|bojler|heater|cpu|chip|procesor|battery|bateri|inverter|falownik|motor|silnik|pralk|washer|dryer|suszark|lodowk|fridge|zamrazark|freezer|piekarnik|oven|soc\b|core)/;
+const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline'], ['clim', 'Klimatyzacja', 'mdi:thermostat'], ['media', 'Media', 'mdi:speaker'],
+  ['cover', 'Rolety', 'mdi:window-shutter'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline'], ['sens', 'Czujniki', 'mdi:gauge'],
+  ['mot', 'Ruch i obecność', 'mdi:motion-sensor'], ['door', 'Drzwi i okna', 'mdi:door'], ['cam', 'Kamery', 'mdi:cctv'], ['rob', 'Roboty', 'mdi:robot-vacuum'],
+  ['misc', 'Inne', 'mdi:tune-variant']];
+const HG_DC_ICON = { temperature: 'mdi:thermometer', humidity: 'mdi:water-percent', illuminance: 'mdi:brightness-5', power: 'mdi:flash-outline', energy: 'mdi:lightning-bolt-outline',
+  battery: 'mdi:battery-outline', voltage: 'mdi:sine-wave', current: 'mdi:current-ac', pm25: 'mdi:blur', pm10: 'mdi:blur', carbon_dioxide: 'mdi:molecule-co2',
+  volatile_organic_compounds: 'mdi:air-filter', pressure: 'mdi:gauge', aqi: 'mdi:air-filter', duration: 'mdi:timer-outline', timestamp: 'mdi:clock-outline',
+  signal_strength: 'mdi:wifi', moisture: 'mdi:water', water: 'mdi:water', gas: 'mdi:meter-gas-outline', problem: 'mdi:alert-circle-outline', running: 'mdi:play-circle-outline',
+  plug: 'mdi:power-plug-outline', power_factor: 'mdi:angle-acute', connectivity: 'mdi:lan-connect', heat: 'mdi:fire', lock: 'mdi:lock-outline' };
+const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', humidifier: 'mdi:air-humidifier', lock: 'mdi:lock-outline',
+  valve: 'mdi:valve', siren: 'mdi:bullhorn-outline', input_boolean: 'mdi:toggle-switch-outline', water_heater: 'mdi:water-boiler', media_player: 'mdi:speaker',
+  cover: 'mdi:window-shutter', camera: 'mdi:cctv', vacuum: 'mdi:robot-vacuum', lawn_mower: 'mdi:robot-mower', sensor: 'mdi:eye-outline', binary_sensor: 'mdi:checkbox-blank-circle-outline',
+  climate: 'mdi:thermostat', select: 'mdi:form-dropdown', number: 'mdi:numeric', button: 'mdi:gesture-tap-button', text: 'mdi:form-textbox', scene: 'mdi:palette-outline' };
+const hgPl = (n, one, few, many) => `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
+
+const HGAreas = {
+  _memo: new WeakMap(),
+  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas) albo liczba encji */
+  model(h, cfg) {
+    cfg = cfg || {};
+    const key = [h.entities, h.devices, h.areas, Object.keys(h.states).length];
+    const m0 = this._memo.get(cfg);
+    if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
+    const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
+    const merge = cfg.merge || {}, assign = Object.assign({}, cfg.assign || {}), names = cfg.names || {}, icons = cfg.icons || {};
+    const exP = new Set(cfg.exclude_platforms || ['browser_mod']);
+    const exc = (cfg.exclude || []).map(hgGlob), unEx = (cfg.unassigned_exclude || []).map(hgGlob);
+    const list = [], byId = {};
+    const add = (id, name, icon, virtual) => {
+      if (byId[id] || (cfg.hide || []).includes(id)) return;
+      const a = { id, name, icon: icon || (HG_AREA_ICONS.find(([re]) => re.test(hgNorm(name) + ' ' + id)) || [0, 'mdi:home-outline'])[1], virtual: !!virtual, ents: [], strip: [name] };
+      byId[id] = a; list.push(a);
+    };
+    for (const a of Object.values(areasReg)) if (!merge[a.area_id]) add(a.area_id, names[a.area_id] || a.name, icons[a.area_id] || a.icon);
+    for (const [from, to] of Object.entries(merge)) { const a = areasReg[from]; if (a && byId[to]) byId[to].strip.push(a.name); }
+    for (const v of cfg.virtual || []) add(v.id, v.name, v.icon, true);
+    for (const v of cfg.virtual || []) for (const e of v.entities || []) if (!assign[e]) assign[e] = v.id;
+    const un = [];
+    for (const e of Object.keys(h.states)) {
+      const dom = e.slice(0, e.indexOf('.')), r = reg[e];
+      const forced = assign[e];
+      if (!forced) {
+        if (!r || r.hidden || r.entity_category || exP.has(r.platform) || HG_SKIP_DOM.has(dom) || exc.some((x) => x.test(e))) continue;
+      }
+      let aid = forced || (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null;
+      if (aid && merge[aid]) aid = merge[aid];
+      if (aid && byId[aid]) byId[aid].ents.push(e);
+      else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
+    }
+    if (cfg.unassigned !== false && un.length) { add('_none', 'Bez pokoju', 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
+    for (const a of list) this._classify(h, a, cfg);
+    const coll = new Intl.Collator('pl');
+    const ord = cfg.order || [];
+    list.sort((a, b) => {
+      const oa = ord.indexOf(a.id), ob = ord.indexOf(b.id);
+      if (oa >= 0 || ob >= 0) return (oa < 0 ? 999 : oa) - (ob < 0 ? 999 : ob);
+      const ta = a.id === '_none' ? 3 : a.id === 'siec' ? 2 : a.ents.length ? 0 : 1, tb = b.id === '_none' ? 3 : b.id === 'siec' ? 2 : b.ents.length ? 0 : 1;
+      return ta - tb || coll.compare(a.name, b.name);
+    });
+    // stała lista pokoi z CFG (kolejność jak w CFG); bez niej – wszystkie obszary
+    const rooms = Array.isArray(cfg.rooms) ? cfg.rooms.map((id) => byId[id]).filter(Boolean) : list;
+    const inRoom = new Set(rooms.flatMap((a) => a.ents));
+    const others = (cfg.others || []).filter((e, i, arr) => h.states[e] && arr.indexOf(e) === i && !inRoom.has(e));
+    const m = { key, list, byId, rooms, others };
+    this._memo.set(cfg, m);
+    return m;
+  },
+  _classify(h, a, cfg) {
+    const reg = h.entities || {}, sec = {};
+    for (const [k] of HG_SEC) sec[k] = [];
+    const robDev = new Set(a.ents.filter((e) => /^(vacuum|lawn_mower)\./.test(e)).map((e) => reg[e] && reg[e].device_id).filter(Boolean));
+    const misc = new Map(), inA = new Set(a.ents);
+    // ta sama fizyczna lampa raz: grupa (light z atrybutem entity_id) pomijana, gdy jej członek jest w tym pokoju
+    a.ents = a.ents.filter((e) => { const m = e.startsWith('light.') && h.states[e].attributes.entity_id; return !(Array.isArray(m) && m.some((x) => x !== e && inA.has(x))); });
+    for (const e of a.ents) {
+      const s = h.states[e], dom = e.slice(0, e.indexOf('.')), r = reg[e] || {}, at = s.attributes, dc = at.device_class;
+      const nmN = hgNorm((at.friendly_name || '') + ' ' + e);
+      if (r.device_id && robDev.has(r.device_id) && dom !== 'vacuum' && dom !== 'lawn_mower') continue;     // robot: jedna pozycja zamiast kilkudziesięciu encji
+      if (cfg.room_robots === false && (dom === 'vacuum' || dom === 'lawn_mower')) continue;               // roboty tylko w widoku Roboty
+      let k = 'misc';
+      if (dom === 'light') k = 'light';
+      else if (dom === 'switch') k = HG_LIGHTISH.test(nmN) ? 'light' : 'sw';
+      else if (['fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'].includes(dom)) k = 'sw';
+      else if (dom === 'climate' || dom === 'water_heater') k = 'clim';
+      else if (dom === 'media_player') k = 'media';
+      else if (dom === 'cover') k = 'cover';
+      else if (dom === 'camera') k = 'cam';
+      else if (dom === 'vacuum' || dom === 'lawn_mower') k = 'rob';
+      else if (dom === 'binary_sensor') k = ['motion', 'occupancy', 'presence'].includes(dc) ? 'mot' : ['door', 'window', 'opening', 'garage_door'].includes(dc) ? 'door' : 'sens';
+      else if (dom === 'sensor') k = dc || at.unit_of_measurement || isFinite(parseFloat(s.state)) ? 'sens' : 'misc';
+      if (k === 'misc') {
+        const g = r.device_id || e;
+        if (!misc.has(g)) misc.set(g, { dev: r.device_id || null, ents: [] });
+        misc.get(g).ents.push(e);
+      } else sec[k].push(e);
+    }
+    sec.misc = [...misc.values()];
+    // to samo urządzenie pod kilkoma encjami o tej samej nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
+    for (const k of ['light', 'sw', 'media']) {
+      const best = new Map();
+      for (const e of sec[k]) { const n = hgNorm(this.name(h, e, a, cfg)), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
+      sec[k] = sec[k].filter((e) => best.get(hgNorm(this.name(h, e, a, cfg))) === e);
+    }
+    a.sec = sec;
+    // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
+    const ov = (cfg.sensors || {})[a.id] || {};
+    const pick = (dcx) => sec.sens.filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dcx && !HG_TEMP_BAD.test(hgNorm(h.states[e].attributes.friendly_name + ' ' + e)));
+    const ts = pick('temperature'), hs = pick('humidity');
+    const cl = sec.clim.filter((e) => e.startsWith('climate.'));
+    a.temp = ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
+    a.hum = ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
+    if (a.id === '_none') { a.temp = null; a.hum = null; }
+    const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
+    a.lights = sec.light;
+    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+  },
+  val(h, ref) {
+    if (!ref) return null;
+    const s = h.states[ref.e]; if (!H.ok(s)) return null;
+    const v = parseFloat(ref.attr ? s.attributes[ref.attr] : s.state);
+    return isFinite(v) ? v : null;
+  },
+  env(h, a) {
+    const t = this.val(h, a.temp), u = this.val(h, a.hum);
+    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
+  },
+  /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
+  name(h, e, a, cfg, fb) {
+    const n0 = (cfg && cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e);
+    let n = n0;
+    // prefiks nazwy urządzenia („Mi Air Purifier 3/3H Temperatura” -> „Temperatura”), jeśli coś zostaje
+    const r = !(cfg && cfg.entity_names && cfg.entity_names[e]) && h.entities && h.entities[e], d = r && r.device_id && h.devices && h.devices[r.device_id];
+    const dn = d && (d.name_by_user || d.name);
+    if (dn && n.toLowerCase().startsWith(dn.toLowerCase() + ' ')) { const rest = n.slice(dn.length).replace(/^[\s\-–·:*]+/, ''); if (rest) n = rest; }
+    n = n.replace(/^\*\s*/, '').replace(/\s\*\s/g, ' ');
+    for (const p of (a && a.strip) || []) {
+      const re = new RegExp('^\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\-–·:_]*', 'i');
+      n = n.replace(re, '');
+    }
+    for (const p of (a && a.strip) || []) n = n.replace(new RegExp('\\s+[-–·:]?\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$)', 'ig'), ' ');
+    n = n.replace(/\s+(zajętość|occupancy|contact|kontakt)$/i, '').replace(/\b(\p{L}+)\s+\1$/iu, '$1').replace(/^[\s\-–·:]+|[\s\-–·:]+$/g, '');
+    n = n.replace(/\s{2,}/g, ' ').trim();
+    if (!n) n = fb || n0;
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  },
+  areaFromUrl() { try { return new URLSearchParams(location.search).get('area'); } catch (e) { return null; } },
+};
+window.__hgAreas = HGAreas;
+
+/* --- siatka pokoi --- */
+class HGAreasCard extends HGBase {
+  defaults() { return { room_path: HG_P('pokoj'), areas: {} }; }
+  constructor() {
+    super();
+    this.shadowRoot.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.act === 'open') { e.preventDefault(); this.onAct('open', e.target); }
+    });
+  }
+  _m() { return HGAreas.model(this._hass, this._config.areas); }
+  connectedCallback() { super.connectedCallback(); this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub); }
+  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); }
+  _extraSig() { return HGL.data.s.rooms || null; }
+  /* pokoje po nadpisaniach układu: kolejność, ukryte, dodane obszary HA */
+  _rooms(m) { const L = HGL.get('rooms'), hid = new Set(L.hidden);
+    const add = L.added.map((x) => m.byId[x.e]).filter((a) => a && !m.rooms.includes(a));
+    return HGL.sort([...m.rooms, ...add].filter((a) => !hid.has(a.id)), (a) => a.id, L.order).map((a) => { const cf = L.conf[a.id]; if (!cf) return a;
+      const o = Object.assign({}, a, cf.temp ? { temp: { e: cf.temp } } : {}, cf.hum ? { hum: { e: cf.hum } } : {}, cf.n ? { name: cf.n } : {}, cf.i ? { icon: cf.i } : {}, { mode: cf.t || '' });
+      o.watch = [...new Set([...(a.watch || []), cf.temp, cf.hum].filter(Boolean))]; return o; }); }
+  ents() { if (!this._hass) return []; const m = this._m(); return [...this._rooms(m).flatMap((a) => a.watch || []), ...m.others]; }
+  _changed() { const m = this._mm; this._mm = this._m(); if (m !== this._mm) { this._entsC = null; this._prevStates = null; } return super._changed(); }
+  css() {
+    return U(`
+:host{ height:auto; container-type:inline-size; }
+.grid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:var(--s2); }
+@container (min-width: 700px){ .grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+@container (min-width: 1000px){ .grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+.tile{ position:relative; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto auto 1fr; column-gap:var(--s1); min-width:0; height:max(calc(var(--k) * 116), 150px); padding:var(--s2); border-radius:var(--r-md); cursor:pointer;
+  background: var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  color:var(--hg-tx-1e2023); text-align:left; transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s, background .4s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; outline:none; }
+.tile:active{ transform: scale(.98); }
+.tile.hgm-compact{ height:auto; min-height:104px; grid-template-rows:auto auto auto; } .tile.hgm-compact .mt{ display:none; } .tile.hgm-compact .env .t{ font-size:24px; }
+.tile.hgm-minimal{ height:auto; min-height:72px; grid-template-rows:auto auto; align-items:center; } .tile.hgm-minimal .env, .tile.hgm-minimal .mt{ display:none; } .tile.hgm-minimal .nm{ margin-top:6px; }
+.tile.hgsz-m{ grid-column:span 2; } .tile.hgsz-l{ grid-column:1 / -1; }
+.tile:focus-visible{ box-shadow: 0 0 0 2px var(--hg-accent); }
+.tile *{ pointer-events:none; } .tile button, .tile button *{ pointer-events:auto; } .tile button ha-icon{ pointer-events:none; }
+.ic{ grid-column:1; grid-row:1; position:relative; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:var(--hg-tx-2a2d31); transition: background .2s, color .2s; }
+.ic ha-icon{ width:20px; height:20px; }
+.tile.lit .ic{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); }
+.tr{ grid-column:2; grid-row:1; display:flex; align-items:center; gap:6px; }
+.pr{ width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-004); color:var(--hg-tx-7a7e84); transition: background .2s, color .2s; }
+.pr ha-icon{ width:18px; height:18px; } .pr.on{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.lb{ position:relative; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-005); color:var(--hg-tx-3a3d42); transition: background .2s, color .2s; }
+.lb ha-icon{ width:20px; height:20px; } .lb.on{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.lb:active{ transform:scale(.92); }
+.nm{ grid-column:1 / -1; grid-row:2; margin-top:var(--s1); font-size:var(--fs-md); font-weight:500; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.25; }
+.env{ grid-column:1 / -1; grid-row:3; display:flex; align-items:baseline; gap:10px; min-width:0; margin-top:2px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.env .t{ display:inline-flex; align-items:center; gap:2px; font-size:clamp(28px, calc(var(--k) * 24), 36px); font-weight:200; color:var(--hg-tx-1e2023); letter-spacing:-.02em; line-height:1.15; }
+.env .u{ display:inline-flex; align-items:center; gap:2px; font-size:var(--fs-sm); font-weight:400; color:var(--hg-tx-4a4e54); line-height:1.15; }
+.env ha-icon{ align-self:center; } .env .t ha-icon{ display:none; } .env .u ha-icon{ width:14px; height:14px; color:inherit; }
+.mt{ grid-column:1 / -1; grid-row:4; align-self:end; display:flex; align-items:center; gap:5u; min-width:0; height:max(14u, 17px); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; }
+.mt > span{ overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.mt .lt{ color:var(--hg-accent-tx); } .mt .xp{ margin-left:auto; flex:none; width:16px; height:16px; opacity:.8; transition:transform .25s cubic-bezier(.2,0,0,1), opacity .25s; } @media (hover:hover) and (pointer:fine){ .tile:hover .xp{ opacity:1; transform:translate(2px,-2px); } }
+.dot{ width:7px; height:7px; border-radius:50%; flex:none; background:var(--c); }
+.cl{ display:inline-flex; align-items:center; gap:4u; flex:none; color:var(--hg-tx-3a3d42); }
+.oth{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); margin-top:var(--s2); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.oth b{ font-weight:600; color:var(--hg-tx-2a2d31); margin-right:2u; display:inline-flex; align-items:center; height:32px; padding:0 var(--s2); border-radius:16px; background:var(--hg-glass-lite, var(--hg-glass-bg)); }
+.oth button{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s2) 0 10px; border-radius:20px; background:var(--hg-glass-lite, var(--hg-glass-bg)); border:1px solid var(--hg-glass-bd); color:var(--hg-tx-2a2d31); font-size:var(--fs-sm); font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition: background .2s, color .2s; }
+.oth button ha-icon{ width:20px; height:20px; pointer-events:none; } .oth button span{ pointer-events:none; }
+.oth button.on{ background:var(--hg-accent); border-color:transparent; color:var(--hg-on-accent); }
+.oth button:disabled{ opacity:.5; cursor:default; }
+.oth button:active{ transform:scale(.97); }
+`);
+  }
+  render() {
+    const h = this._hass, c = this._config, m = this._m();
+    const lbl = { cool: 'Chłodzi', heat: 'Grzeje', fan_only: 'Wentyluje', dry: 'Osusza', heat_cool: 'Auto', auto: 'Auto' };
+    const tiles = [], rest = [];
+    const LZ = HGL.get('rooms').size;
+    for (const a of this._rooms(m)) {
+      const env = HGAreas.env(h, a);
+      const okL = a.lights.filter((e) => H.ok(h.states[e]));
+      const on = a.lights.filter((e) => h.states[e].state === 'on').length;
+      const cl = a.sec.clim.map((e) => h.states[e]).find((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off');
+      const clm = cl && (HG_AC_MODE[cl.state] || HG_AC_MODE.cool);
+      // pokój bez niczego, co da się pokazać lub obsłużyć -> zwinięty do wiersza "Pozostałe"
+      // obecność / ruch: tylko prawdziwe, dostępne czujniki pokoju (occupancy/presence ma pierwszeństwo przed motion)
+      const prs = a.sec.mot.filter((e) => H.ok(h.states[e]));
+      const occ = prs.some((e) => ['occupancy', 'presence'].includes(h.states[e].attributes.device_class));
+      const prOn = prs.some((e) => h.states[e].state === 'on');
+      const pr = prs.length ? `<span class="pr ${prOn ? 'on' : ''}" role="img" aria-label="${H.esc(prOn ? (occ ? 'Ktoś jest w pokoju' : 'Wykryto ruch') : (occ ? 'Brak obecności' : 'Brak ruchu'))}" title="${prOn ? (occ ? 'Obecność' : 'Ruch') : (occ ? 'Brak obecności' : 'Brak ruchu')}">${H.icon(occ ? (prOn ? 'mdi:account' : 'mdi:account-outline') : 'mdi:motion-sensor')}</span>` : '';
+      const envH = env.t != null || env.u != null ? `<div class="env">${env.t != null ? `<span class="t">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}°</span>` : ''}${env.u != null ? `<span class="u">${H.icon('mdi:water-percent')}${H.fmt(env.u, 0)}%</span>` : ''}</div>` : '';
+      const mt = [on ? `<span class="lt">${hgPl(on, 'światło', 'światła', 'świateł')}</span>` : '',
+        cl ? `<span class="cl"><i class="dot" style="--c:${clm.c}"></i>${H.esc(lbl[cl.state] || H.stateLabel(cl.state))}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
+      const lb = okL.length ? `<button class="lb ${on ? 'on' : ''}" data-act="lights" data-a="${H.esc(a.id)}" aria-pressed="${!!on}" aria-label="${H.esc(`Światła: ${a.name} – ${on ? 'wyłącz' : 'włącz'}`)}" title="${on ? 'Wyłącz światła' : 'Włącz światła'}">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</button>` : '';
+      const al = [a.name, ...env.txt, on ? hgPl(on, 'światło włączone', 'światła włączone', 'świateł włączonych') : '', prs.length ? (prOn ? (occ ? 'obecność' : 'ruch') : '') : '', cl ? (lbl[cl.state] || cl.state) : ''].filter(Boolean).join(', ');
+      tiles.push(`<div class="tile lift ${on ? 'lit' : ''} ${HGL.szc(LZ[a.id])} ${a.mode ? 'hgm-' + a.mode : ''}" data-hgk="${H.esc(a.id)}" role="button" tabindex="0" data-act="open" data-a="${H.esc(a.id)}" aria-label="${H.esc(al)}">
+        <span class="ic">${H.icon(a.icon)}</span><span class="tr">${pr}${lb}</span><b class="nm">${H.esc(a.name)}</b>${envH}<div class="mt">${mt}<span class="xp">${H.icon('mdi:arrow-top-right')}</span></div></div>`);
+    }
+    // „Pozostałe”: kompaktowe przełączniki encji spoza 6 pokoi (każda raz)
+    const oth = m.others.length ? `<div class="oth" role="group" aria-label="Pozostałe"><b>Pozostałe</b>${m.others.map((e) => {
+      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, c.areas);
+      const ic = /schod|stair/.test(e) ? 'mdi:stairs-down' : /taras|balkon|balcony|terrace/.test(e) ? 'mdi:balcony' : 'mdi:lightbulb-outline';
+      return `<button class="pl ${on ? 'on' : ''}" data-act="tog" data-e="${H.esc(e)}" ${ok ? '' : 'disabled'} aria-pressed="${on}" aria-label="${H.esc(`${nm} – ${ok ? (on ? 'wyłącz' : 'włącz') : 'niedostępne'}`)}">${H.icon(ic)}<span>${H.esc(nm)}</span></button>`;
+    }).join('')}</div>` : '';
+    return `<div class="grid" role="list" aria-label="Pokoje" data-hgl="rooms" data-hgsz="1">${tiles.join('')}</div>${oth}`;
+  }
+  onAct(act, t) {
+    const h = this._hass, c = this._config;
+    if (act === 'tog') { const e = t.dataset.e, s = h.states[e]; if (!H.ok(s)) return; return H.call(h, 'homeassistant', s.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
+    const a = this._m().byId[t.dataset.a]; if (!a) return;
+    if (act === 'open') return H.navigate(`${c.room_path}?area=${encodeURIComponent(a.id)}`);
+    if (act === 'lights') {
+      const on = a.lights.filter((e) => h.states[e].state === 'on'), av = a.lights.filter((e) => H.ok(h.states[e]));
+      if (on.length) return H.call(h, 'homeassistant', 'turn_off', { entity_id: on });
+      if (av.length) return H.call(h, 'homeassistant', 'turn_on', { entity_id: av });
+    }
+  }
+  getCardSize() { return 8; }
+}
+hgReg('nuvio-areas-card', HGAreasCard, 'Nuvio – Pokoje', 'Wszystkie obszary HA: temperatura, wilgotność, światła, ruch, klimatyzacja');
+
+/* --- komponenty urządzeń w widoku pokoju: jedna karta na fizyczne urządzenie (rejestr urządzeń), encje połączone wizualnie ---
+   Profile (czajnik, poidełko, frytkownica, oczyszczacz) dobierane po modelu/nazwie urządzenia; pozostałe urządzenia: karta ogólna
+   (główny przełącznik + do 3 kluczowych odczytów + „Więcej”). Pokazywane tylko dostępne encje z prawdziwymi wartościami. */
+const HG_ST_PL = { standby: 'Gotowość', idle: 'Bezczynny', heating: 'Grzeje', boiling: 'Gotuje', 'keep warm': 'Utrzymuje temperaturę', 'keep-warm': 'Utrzymuje temperaturę',
+  warming: 'Utrzymuje temperaturę', cooking: 'Gotuje', preheat: 'Rozgrzewa', preheating: 'Rozgrzewa', appointment: 'Zaplanowane', reservation: 'Zaplanowane', paused: 'Pauza', pause: 'Pauza',
+  completed: 'Gotowe', done: 'Gotowe', finished: 'Gotowe', running: 'Pracuje', working: 'Pracuje', shutdown: 'Wyłączone', off: 'Wyłączone', on: 'Włączone', auto: 'Automatyczny',
+  silent: 'Cichy', sleep: 'Nocny', favorite: 'Ulubiony', manual: 'Ręczny', normal: 'Normalny', smart: 'Inteligentny', 'intermittent': 'Przerywany' };
+const HG_FAULT_OK = /^(0|no ?errors?|no ?faults?|none|normal|ok|brak)$/i;
+const HG_DEV_PROF = [
+  { id: 'washer', re: /washer|pralk|DA_WM/i, icon: 'mdi:washing-machine', name: 'Pralka', metrics: [] },
+  { id: 'kettle', re: /kettle|czajnik/i, icon: 'mdi:kettle-outline', name: 'Czajnik', main: /(_on_p_|switch_status)/, status: /_status_p_|status$/, fault: /fault/,
+    metrics: [{ re: /_temperature_p_2_3|current.*water.*temp/, dom: 'sensor', label: 'Woda', big: true }, { re: /target_temperature/, label: 'Cel' }, { re: /keep_warm_temperature/, label: 'Utrzymanie' }],
+    warn: [{ re: /kettle_lifting/, on: 'Zdjęty z podstawy', icon: 'mdi:arrow-up-bold-box-outline' }] },
+  { id: 'fountain', re: /pet_waterer|fountain|poidl/i, icon: 'mdi:fountain', name: 'Poidełko', main: /_on_p_/, status: /_mode_p_/, fault: /fault/,
+    metrics: [{ re: /filter_left_time/, label: 'Filtr' }, { re: /cotton_left_time/, label: 'Wkład' }, { re: /remain_clean_time/, label: 'Do mycia' }],
+    warn: [{ re: /no_water_flag/, on: 'Brak wody', icon: 'mdi:water-off-outline' }, { re: /pump_block/, on: 'Pompa zablokowana', icon: 'mdi:pump-off' }, { re: /lid_up/, on: 'Pokrywa otwarta', icon: 'mdi:alert-outline' }] },
+  { id: 'fryer', re: /fryer|frytk/i, icon: 'mdi:pot-steam-outline', name: 'Frytkownica', status: /_status_p_|status$/, fault: /fault/,
+    metrics: [{ re: /_left_time_p_/, label: 'Pozostało', active: true, big: true }, { re: /target_temperature/, label: 'Temperatura' }, { re: /target_time/, label: 'Czas' }] },
+  { id: 'purifier', re: /airpurifier|air_purifier|purifier|oczyszcz/i, icon: 'mdi:air-purifier', name: 'Oczyszczacz', mainDom: 'fan', fault: /fault/,
+    metrics: [{ dc: 'pm25', label: 'PM2,5', big: true }, { re: /filter_life_level/, label: 'Filtr' }, { dc: 'temperature', label: 'Temperatura' }, { dc: 'humidity', label: 'Wilgotność' }] },
+];
+const HGDev = {
+  /* grupy urządzeń z encji pokoju (bez świateł, mediów, klimatyzacji, kamer, robotów – te mają własne komponenty) */
+  groups(h, a, skipDev) {
+    const reg = h.entities || {}, S = a.sec, g = new Map(), loose = [];
+    const pool = [...S.sw, ...S.sens, ...S.misc.flatMap((x) => x.ents)];
+    for (const e of pool) {
+      const d = reg[e] && reg[e].device_id;
+      if (d && skipDev.has(d)) continue;                       // np. Apple TV: czujnik „keyboard focus” należy do odtwarzacza
+      if (!d) { loose.push(e); continue; }
+      if (!g.has(d)) g.set(d, []);
+      g.get(d).push(e);
+    }
+    return { devs: [...g.entries()].map(([d, ents]) => ({ d, ents })), loose };
+  },
+  prof(h, d, ents) {
+    const dv = (h.devices || {})[d] || {}, key = [dv.model, dv.name, dv.name_by_user, ...ents].join(' ');
+    return HG_DEV_PROF.find((p) => p.re.test(key)) || null;
+  },
+  ok: (s) => H.ok(s) && s.state !== '',
+  stPl: (v) => HG_ST_PL[String(v).toLowerCase()] || String(v),
+};
+
+
+/* --- pralka (SmartThings): bęben animowany wg fazy; tylko istniejące encje --- */
+const HG_WM_JOB = { wash: 'Pranie', ai_wash: 'Pranie AI', pre_wash: 'Pranie wstępne', air_wash: 'Odświeżanie', rinse: 'Płukanie', ai_rinse: 'Płukanie AI', spin: 'Wirowanie', ai_spin: 'Wirowanie AI',
+  drying: 'Suszenie', cooling: 'Chłodzenie', weight_sensing: 'Ważenie prania', delay_wash: 'Opóźniony start', wrinkle_prevent: 'Ochrona przed zagnieceniem', freeze_protection: 'Ochrona przed mrozem', finish: 'Zakończone', none: '' };
+const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
+const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
+/* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
+class HGRoomCard extends HGBase {
+  defaults() { return { areas: {}, refresh: 10, robots_path: HG_P('roboty') }; }
+  constructor() {
+    super();
+    this._ac = new Map();
+    this._onLoc = () => { if (this._aid !== HGAreas.areaFromUrl()) { this._showUn = false; this.rerender(); } };
+    this.shadowRoot.addEventListener('change', (e) => {
+      const t = e.target; if (t.dataset && t.dataset.act === 'vol') return H.call(this._hass, 'media_player', 'volume_set', { entity_id: t.dataset.e, volume_level: Number(t.value) / 100 });
+      if (!t.dataset || t.dataset.act !== 'bri') return;
+      const v = Number(t.value), en = t.dataset.e;
+      return v <= 0 ? H.call(this._hass, 'light', 'turn_off', { entity_id: en }) : H.call(this._hass, 'light', 'turn_on', { entity_id: en, brightness_pct: v });
+    });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && (t.dataset.act === 'bri' || t.dataset.act === 'vol')) { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+  }
+  connectedCallback() {
+    window.addEventListener('location-changed', this._onLoc); window.addEventListener('popstate', this._onLoc);
+    super.connectedCallback(); this._onLoc(); this._camTimer();
+    this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub);
+  }
+  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._ct); this._ct = 0; clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
+  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; }
+  get hass() { return this._hass; }
+  _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = HGAreas.areaFromUrl(); return m.byId[this._aid] || null; }
+  ents() {
+    if (!this._hass) return [];
+    const a = this._area(); if (!a) return [];
+    const ad = HGL.get('room:' + a.id).added.map((x) => x.e).filter((e) => !/^(climate|camera)\./.test(e));
+    return [...new Set([...a.ents.filter((e) => !e.startsWith('climate.') && !e.startsWith('camera.')), ...ad, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+  }
+  _extraSig() { const id = HGAreas.areaFromUrl(); return [id, !!this._showUn, [...(this._devOpen || [])].join(','), HGL.data.s['room:' + id] || null]; }
+  _changed() { const m = this._mm; this._mm = HGAreas.model(this._hass, this._config.areas); if (m !== this._mm || this._lastAid !== HGAreas.areaFromUrl()) { this._lastAid = HGAreas.areaFromUrl(); this._entsC = null; this._prevStates = null; } return super._changed(); }
+  css() {
+    return U(`
+:host{ height:auto; }
+.wrap{ column-width: max(280px, calc(var(--k) * 250)); column-gap:11u; }
+.blk{ break-inside:avoid; -webkit-column-break-inside:avoid; display:block; margin:0 0 11u; }
+.wrap.gsz{ columns:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, max(280px, calc(var(--k) * 250))), 1fr)); gap:11u; align-items:start; }
+.wrap.gsz > .blk{ margin:0; min-width:0; } .wrap.gsz > .blk.hgsz-m{ grid-column:span 2; } .wrap.gsz > .blk.hgsz-l{ grid-column:1 / -1; }
+@container (max-width: 600px){ .wrap.gsz > .blk.hgsz-m{ grid-column:1 / -1; } }
+${HG_TILE_CSS}
+.tg2.one{ grid-template-columns:1fr; }
+.blk.hgm-compact ha-card{ padding:10px !important; } .blk.hgm-compact .row, .blk.hgm-compact .lt, .blk.hgm-compact .sc{ min-height:44px; padding-top:4px; padding-bottom:4px; } .blk.hgm-compact .tx span, .blk.hgm-compact .ltx span{ display:none; }
+.blk.hgm-minimal .sh{ display:none; } .blk.hgm-minimal .tx span, .blk.hgm-minimal .ltx span, .blk.hgm-minimal .st2 small{ display:none; } .blk.hgm-minimal ha-card{ padding:8px !important; }
+.blk > ha-card.glass{ height:auto; min-height:0; display:flex; flex-direction:column; gap:4u; padding:var(--s2) var(--s2); }
+.acslot{ min-height:0; }
+.camslot{ height:auto; } .camslot > *{ display:block; height:auto; }
+/* stan pokoju: chipy */
+/* światła: kafle (dotknięcie = przełącz), jasność pod spodem gdy włączone */
+.lg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(176px, 100%), 1fr)); gap:var(--s1); }
+.lt{ position:relative; display:flex; flex-direction:column; border-radius:var(--r-sm); background:var(--hg-bg-ffffff-030); box-shadow:inset 0 0 0 1px var(--hg-glass-bd); transition:background .3s cubic-bezier(.2,0,0,1), box-shadow .3s; min-width:0; }
+.lt.on{ background:var(--hg-bg-ffffff-055); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--hg-accent) 40%, transparent); }
+.ltb{ display:flex; align-items:center; gap:10px; min-height:60px; padding:10px 36px 10px 10px; background:none; color:inherit; text-align:left; border-radius:inherit; min-width:0; transition:transform .15s cubic-bezier(.2,0,0,1); }
+.ltb:active{ transform:scale(.96); }
+.lti{ flex:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:var(--hg-tx-4a4e54); box-shadow:none; transition:background .3s, color .3s; }
+.lti ha-icon{ width:20px; height:20px; } .lt.on .lti{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:0 2px 10px color-mix(in srgb, var(--hg-accent) 45%, transparent); }
+.ltx{ display:flex; flex-direction:column; gap:1px; min-width:0; } .ltx b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ltx span{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; }
+.ltm{ position:absolute; top:6px; right:4px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:none; color:var(--hg-tx-6a6e74); }
+.ltm ha-icon{ width:18px; height:18px; } @media (pointer:coarse){ .ltm::before{ content:''; position:absolute; inset:-6px; } }
+.lt .br{ padding:0 12px 8px 12px; }
+/* niedostępne: cicha zwijana linia bez karty */
+.unb > ha-card.quiet{ background:none !important; border:0 !important; box-shadow:none !important; padding:0 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; margin:0 !important; width:100% !important; }
+.unb > ha-card.quiet::after, .unb > ha-card.quiet::before{ display:none !important; }
+.unb .unh{ min-height:40px; padding:0 var(--s3); font-size:var(--fs-sm); color:var(--hg-tx-ffffff); opacity:.85; text-shadow:0 1px 2px var(--hg-sh-000000-035); }
+.unb .unh ha-icon{ color:inherit; }
+/* odtwarzacz */
+ha-card.mpc{ position:relative; overflow:hidden; display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); }
+.mpbg{ position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1s; background:radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--mt) 34%, transparent), color-mix(in srgb, var(--mt) 8%, transparent) 60%, transparent); }
+.mpc[style*="--mt"] .mpbg{ opacity:1; }
+.mpc > *:not(.mpbg){ position:relative; }
+.mph{ display:flex; align-items:center; gap:var(--s2); min-width:0; }
+.mpa{ width:72px; height:72px; border-radius:14px; flex:none; object-fit:cover; box-shadow:0 8px 24px var(--hg-sh-000000-018); background:var(--hg-bg-ffffff-055); transition:transform .5s cubic-bezier(.2,.7,.2,1); }
+.mpc.pl .mpa{ transform:scale(1.04); } .mpa.ic{ display:grid; place-items:center; color:var(--hg-tx-3a3d42); --mdc-icon-size:34px; }
+.mpi{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; text-align:left; color:inherit; }
+.mpi .mpd{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); font-weight:600; letter-spacing:.02em; }
+.mpc .mpi b{ font-size:calc(var(--fs-md) * 1.35); font-weight:700; line-height:1.2; color:var(--hg-tx-111111); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpc .mpi > span:last-child{ font-size:var(--fs-sm); color:var(--hg-tx-3a3d42); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpg{ display:flex; flex-direction:column; gap:4px; }
+.mpt{ height:5px; border-radius:3px; background:var(--hg-bg-000000-012); overflow:hidden; } .mpt i{ display:block; height:100%; background:var(--hg-bg-1e2023); transform-origin:left; transition:transform 1s linear; }
+.mpn{ display:flex; justify-content:space-between; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); font-variant-numeric:tabular-nums; }
+.mpk{ display:flex; align-items:center; justify-content:center; gap:var(--s3); }
+.mb{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; color:var(--hg-tx-1e2023); background:transparent; flex:none; transition:transform .15s, background .2s; }
+.mb:active{ transform:scale(.92); } .mb:hover{ background:var(--hg-bg-000000-006); }
+.mb.big{ width:56px; height:56px; background:var(--hg-bg-1e2023); color:var(--hg-tx-ffffff-inv); --mdc-icon-size:30px; box-shadow:0 6px 18px var(--hg-sh-000000-018); } .mb.big:hover{ background:var(--hg-bg-2c2f33); }
+.mpf{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+.mpv{ flex:1 1 220px; display:flex; align-items:center; gap:var(--s1); min-width:0; color:var(--hg-tx-3a3d42); }
+.mpv input{ flex:1; min-width:0; height:24px; -webkit-appearance:none; appearance:none; background:transparent; }
+.mpc .mpv input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:3px; background:linear-gradient(90deg, var(--hg-bg-1e2023) var(--v), var(--hg-bg-000000-014) var(--v)); }
+.mpc .mpv input[type=range]::-moz-range-progress{ background:var(--hg-bg-1e2023); }
+.mpc .mpv input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px; height:18px; margin-top:-6.5px; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
+.mpv output{ width:3.2em; text-align:right; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); font-variant-numeric:tabular-nums; }
+.mpch{ display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border-radius:999px; background:var(--hg-bg-ffffff-045); box-shadow:inset 0 0 0 1px var(--hg-glass-bd); font-size:var(--fs-xs); font-weight:600; color:var(--hg-tx-1e2023); --mdc-icon-size:16px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpc.off .mpa{ filter:grayscale(1); opacity:.7; }
+.mb ha-icon{ width:24px; height:24px; } .mb.big ha-icon{ width:30px; height:30px; } .mb.sm{ width:40px; height:40px; background:transparent !important; box-shadow:none !important; border:0 !important; } .mb.sm ha-icon{ width:20px; height:20px; }
+.mpa.ic ha-icon{ width:34px; height:34px; } .mpch ha-icon{ width:16px; height:16px; flex:none; } .mpv > ha-icon{ width:20px; height:20px; }
+@media (max-width:600px){ .mpa{ width:60px; height:60px; } .mpk{ gap:var(--s2); } }
+@media (prefers-reduced-motion: reduce){ .mpa, .mpt i, .mpbg{ transition:none; } }
+/* schody – dwie karty lamp (Dół/Góra) + tor sekwencji między nimi, chipy czujników, przełącznik grupy i automatyzacji; jeden akcent */
+.stb{ column-span:all; } ha-card.stc{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); }
+.sth{ display:flex; align-items:center; gap:var(--s2); } .sth > div{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.sth b{ font-size:var(--fs-md); font-weight:500; letter-spacing:-.01em; } .stf{ font-size:var(--fs-xs); opacity:.62; font-variant-numeric:tabular-nums; }
+.lit .stf{ color:var(--hg-accent-tx); opacity:1; }
+.sgl{ display:inline-flex; align-items:center; gap:var(--s1); font-size:var(--fs-sm); opacity:.9; }
+.stl{ display:grid; grid-template-columns:minmax(0,1fr) minmax(48px, 120px) minmax(0,1fr); align-items:center; gap:var(--s2); }
+.lp{ position:relative; overflow:hidden; isolation:isolate; display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); border-radius:var(--r-md); background:var(--hg-tile-bg); min-width:0; cursor:pointer; text-align:left; color:inherit; }
+.lp::before{ content:''; position:absolute; inset:-30%; z-index:-1; background:radial-gradient(50% 50% at 30% 20%, var(--hg-accent-soft), transparent 70%); opacity:0; transform:scale(.7); transition:opacity 1.8s cubic-bezier(.25,.6,.3,1), transform 1.8s cubic-bezier(.25,.6,.3,1); }
+.lp.on::before{ opacity:var(--g); transform:scale(1); }
+.lp .lh{ display:flex; align-items:center; gap:10px; }
+.lp .li{ width:36px; height:36px; flex:none; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); transition:background 1.2s, color 1.2s; } .lp .li ha-icon{ width:20px; height:20px; }
+.lp.on .li{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); }
+.lp .ln2{ flex:1; min-width:0; display:flex; flex-direction:column; } .lp .ln2 b{ font-size:var(--fs-sm); font-weight:500; } .lp .ln2 small{ font-size:var(--fs-xs); opacity:.62; }
+.lp .lv{ font-size:calc(var(--fs-md) * 2.6); font-weight:200; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; } .lp .lv small{ font-size:.38em; font-weight:300; opacity:.62; margin-left:2px; letter-spacing:0; }
+.lp .gb{ position:relative; height:10px; border-radius:999px; overflow:hidden; background:repeating-linear-gradient(-55deg, var(--hg-bg-80868c-030) 0 2px, transparent 2px 6px); }
+.lp .gb i{ position:absolute; left:0; top:0; bottom:0; width:calc(var(--b) * 100%); border-radius:999px; background:linear-gradient(90deg, var(--hg-accent), var(--hg-accent-hi)); transition:width 1.8s cubic-bezier(.25,.6,.3,1); }
+.lp.na{ opacity:.45; cursor:default; }
+.lp .tg{ pointer-events:none; }
+.trk2{ position:relative; height:4px; border-radius:2px; background:var(--hg-bg-80868c-025); }
+.trk2 .f{ position:absolute; top:0; bottom:0; border-radius:2px; background:var(--hg-accent); opacity:0; transition:opacity 1.8s cubic-bezier(.25,.6,.3,1); }
+.trk2 .f.a{ left:0; width:50%; } .trk2 .f.b{ right:0; width:50%; } .trk2 .f.on{ opacity:.85; }
+.trk2 .dt{ position:absolute; top:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 10px var(--hg-accent-glow); opacity:0; }
+.trk2.up .dt{ animation:var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite); } .trk2.dn .dt{ animation:var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite reverse); }
+.trk2 .ar{ position:absolute; left:50%; top:-18px; transform:translateX(-50%); width:16px; height:16px; opacity:.5; } .trk2.dn .ar{ transform:translateX(-50%) scaleX(-1); }
+@keyframes stTr{ 0%{ left:0; opacity:0 } 15%{ opacity:1 } 85%{ opacity:1 } 100%{ left:100%; opacity:0 } }
+.str{ position:relative; width:40px; height:40px; flex:none; display:grid; place-items:center; }
+.str svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+.str .rb{ fill:none; stroke:var(--hg-gx-80868c-025); stroke-width:3; }
+.str .rf{ fill:none; stroke:var(--hg-accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:100; stroke-dashoffset:var(--o0); animation:stRing linear forwards; }
+@keyframes stRing{ from{ stroke-dashoffset:var(--o0) } to{ stroke-dashoffset:100 } }
+.stn{ position:absolute; inset:0; display:grid; place-items:center; line-height:1; font-size:var(--fs-sm); font-weight:300; font-variant-numeric:tabular-nums; }
+.stg{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap:var(--s1); }
+.sm, .sta.tl{ position:relative; display:flex; align-items:center; gap:10px; min-height:52px; padding:8px 14px; border-radius:999px; background:var(--hg-tile-bg); color:inherit; text-align:left; min-width:0; }
+.sta.tl{ justify-content:space-between; font-size:var(--fs-sm); }
+.sm > ha-icon{ width:18px; height:18px; flex:none; opacity:.7; } .sm.on > ha-icon{ color:var(--hg-accent-tx); opacity:1; }
+.sm > span{ flex:1; display:flex; flex-direction:column; min-width:0; } .sm b{ font-size:var(--fs-sm); font-weight:500; } .sm small{ font-size:var(--fs-xs); opacity:.62; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sm.on small{ color:var(--hg-accent-tx); opacity:1; } .sm > i{ width:6px; height:6px; border-radius:50%; flex:none; background:var(--hg-accent); opacity:0; } .sm.on > i{ opacity:1; }
+@container (max-width: 560px){ .stl{ grid-template-columns:1fr; } .trk2{ width:4px; height:40px; justify-self:center; } .trk2 .f.a{ top:auto; bottom:0; left:0; right:0; width:auto; height:50%; } .trk2 .f.b{ top:0; bottom:auto; left:0; right:0; width:auto; height:50%; } .trk2 .ar{ display:none; } .trk2 .dt{ left:50% !important; animation-name:stTrV !important; } }
+@keyframes stTrV{ 0%{ top:100%; opacity:0 } 15%{ opacity:1 } 85%{ opacity:1 } 100%{ top:0; opacity:0 } }
+ha-card.stc{ container-type:inline-size; }
+@media (prefers-reduced-motion: reduce){ .lp::before, .lp .gb i, .trk2 .f{ transition:none; } .trk2 .dt, .str .rf{ animation:none; } }
+
+.sv3{ position:relative; border-radius:var(--r-md); background:var(--hg-tile-bg); padding:var(--s2); overflow:hidden; }
+.sv3 svg{ display:block; width:100%; max-width:720px; margin:0 auto; max-height:320px; overflow:visible; }
+.sv3 .tread{ fill:currentColor; fill-opacity:.26; } .sv3 .riser{ fill:currentColor; fill-opacity:.12; } .sv3 .side{ fill:currentColor; fill-opacity:.06; }
+.sv3 .edge{ stroke:currentColor; stroke-opacity:.35; stroke-width:1; fill:none; }
+.sv3 .gl{ fill:var(--hg-accent); opacity:0; transition:opacity 1.2s cubic-bezier(.25,.6,.3,1); transition-delay:var(--d, 0s); }
+.sv3 .gl.on{ opacity:var(--o); }
+.sv3 .cone{ opacity:0; transition:opacity 1.8s cubic-bezier(.25,.6,.3,1); } .sv3 .lmp.on .cone{ opacity:calc(var(--g) * .8); }
+.sv3 .halo{ opacity:0; transform-box:fill-box; transform-origin:center; transform:scale(.5); transition:opacity 1.8s, transform 1.8s cubic-bezier(.25,.6,.3,1); } .sv3 .lmp.on .halo{ opacity:var(--g); transform:scale(1); }
+.sv3 .bulb{ fill:currentColor; fill-opacity:.3; stroke:currentColor; stroke-opacity:.25; stroke-width:1.5; transition:fill 1.8s, fill-opacity 1.8s; } .sv3 .lmp.on .bulb{ fill:var(--hg-accent-hi); fill-opacity:1; stroke:var(--hg-accent); stroke-opacity:1; }
+.sv3 .lmp{ cursor:pointer; } .sv3 .lmp .hit{ fill:transparent; } .sv3 .lmp:focus-visible .bulb{ stroke-width:3; }
+.sv3 text{ fill:currentColor; font-size:11px; } .sv3 .tl{ fill-opacity:.9; font-weight:500; } .sv3 .ts{ fill-opacity:.55; font-size:10px; } .sv3 .mk.on .ts{ fill:var(--hg-accent-tx); fill-opacity:1; }
+.sv3 .mk .dt{ fill:currentColor; fill-opacity:.35; } .sv3 .mk.on .dt{ fill:var(--hg-accent); fill-opacity:1; }
+.sv3 .mk .rp{ fill:none; stroke:var(--hg-accent); stroke-width:1.5; opacity:0; transform-box:fill-box; transform-origin:center; } .sv3 .mk.on .rp{ animation:var(--hg-sc-anim, scRipple 1.8s cubic-bezier(.2,0,0,1) infinite); } .sv3 .mk.on .rp.r2{ animation-delay:.9s; }
+.stg2{ display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; gap:var(--s1); }
+.stg2 .cp{ flex:0 0 auto; width:auto; justify-content:flex-start; gap:10px; }
+.cp{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 6px 0 14px; border-radius:999px; background:var(--hg-tile-bg); font-size:var(--fs-sm); color:inherit; }
+.cp b{ font-weight:500; } .cp small{ font-size:var(--fs-xs); opacity:.62; font-variant-numeric:tabular-nums; } .cp.on small{ color:var(--hg-accent-tx); opacity:1; }
+@media (prefers-reduced-motion: reduce){ .sv3 .gl, .sv3 .cone, .sv3 .halo{ transition:none; } }
+
+ha-card.cwc{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); container-type:inline-size; }
+.cwm{ display:grid; grid-template-columns:auto minmax(200px,1fr) minmax(0,1.3fr); min-height:150px; gap:var(--s3); align-items:center; }
+@container (max-width: 560px){ .cwm{ grid-template-columns:auto 1fr; } .cwi{ grid-column:1 / -1; } }
+.cwt{ position:relative; width:56px; height:150px; border-radius:28px; background:repeating-linear-gradient(-55deg, var(--hg-bg-80868c-022) 0 2px, transparent 2px 6px), var(--hg-tile-bg); overflow:hidden; }
+.cwt .fl{ position:absolute; left:0; right:0; bottom:0; height:calc(var(--f) * 100%); background:linear-gradient(0deg, var(--hg-accent), var(--hg-accent-hi)); border-radius:0 0 28px 28px; transition:height 1.2s cubic-bezier(.2,.8,.2,1); box-shadow:0 0 18px var(--hg-accent-glow); }
+.cwt .tg2{ position:absolute; left:8px; right:8px; bottom:calc(var(--tf) * 100%); height:2px; border-radius:1px; background:var(--hg-thumb, var(--hg-bg-ffffff)); opacity:.9; box-shadow:0 0 0 1px var(--hg-sh-000000-008); }
+.cwt .bb{ position:absolute; bottom:6px; width:6px; height:6px; border-radius:50%; background:var(--hg-bg-ffffff-075); animation:var(--hg-sc-anim, cwB 2.4s ease-in infinite); }
+.cwt .b1{ left:14px; } .cwt .b2{ left:26px; animation-delay:.8s; } .cwt .b3{ left:38px; animation-delay:1.6s; }
+@keyframes cwB{ 0%{ transform:translateY(0) scale(.6); opacity:0 } 20%{ opacity:.9 } 100%{ transform:translateY(calc(var(--f) * -150px)) scale(1); opacity:0 } }
+.cwv{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.cwn{ font-size:calc(var(--fs-md) * 4.4); font-weight:200; letter-spacing:-.05em; line-height:.95; font-variant-numeric:tabular-nums; } .cwn sup{ font-size:.28em; font-weight:300; vertical-align:1.9em; margin-left:2px; letter-spacing:0; opacity:.7; }
+.cws{ display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-sm); opacity:.7; } .cws ha-icon{ width:16px; height:16px; } .heat .cws{ color:var(--hg-accent-tx); opacity:1; } .heat .cws ha-icon{ animation:var(--hg-sc-anim, hgwave 1.6s ease-in-out infinite); }
+.cwa{ display:inline-flex; align-items:center; gap:6px; margin-top:4px; padding:4px; border-radius:999px; background:var(--hg-tile-bg); align-self:flex-start; }
+.cv2{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .cv2 ha-icon{ width:18px; height:18px; } .cv2:active{ transform:scale(.92); } .cv2[disabled]{ opacity:.35; }
+.cwg{ display:flex; flex-direction:column; align-items:center; min-width:56px; line-height:1.1; } .cwg small{ font-size:var(--fs-xs); opacity:.6; } .cwg b{ font-size:var(--fs-md); font-weight:400; font-variant-numeric:tabular-nums; }
+.cwi{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:var(--s1); align-self:stretch; align-content:center; }
+.cwi > div{ container-type:inline-size; overflow:hidden; display:flex; flex-direction:column; justify-content:center; gap:4px; min-height:96px; padding:14px 16px; border-radius:var(--r-sm); background:var(--hg-tile-bg); min-width:0; }
+.cwi b{ font-size:calc(var(--fs-md) * 1.3); font-weight:300; letter-spacing:-.02em; font-variant-numeric:tabular-nums; } .cwi small{ font-size:var(--fs-xs); opacity:.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cwi .cwp b{ font-size:min(calc(var(--fs-md) * 2.2), 28cqi); white-space:nowrap; font-weight:200; letter-spacing:-.04em; line-height:1; } .cwi .cwp b em{ font-style:normal; font-size:.4em; font-weight:300; opacity:.65; margin-left:3px; letter-spacing:0; } .cwi .cwp.on b{ color:var(--hg-accent-tx); }
+.stg2 .cwl{ align-self:center; font-size:var(--fs-xs); opacity:.6; text-transform:uppercase; letter-spacing:.08em; margin-right:4px; }
+.cwc.off .cwt .fl{ opacity:.35; box-shadow:none; }
+@media (prefers-reduced-motion: reduce){ .cwt .bb{ animation:none; display:none; } .cwt .fl{ transition:none; } }
+/* czujniki pokoju: kafle z animowaną ikoną stanu (drzwi/okno uchylają się, obecność – „oddychający” pierścień, ruch – fale) */
+ha-card.chips{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(210px, 100%), 1fr)); gap:var(--s1); padding:var(--s2); }
+.sc{ position:relative; display:flex; align-items:center; gap:12px; min-height:64px; padding:10px 14px 10px 10px; border-radius:var(--r-sm); background:var(--hg-tile-bg); box-shadow:none; color:var(--hg-tx-3a3d42); text-align:left; min-width:0; overflow:hidden; isolation:isolate;
+  transition:background .3s cubic-bezier(.2,0,0,1), box-shadow .3s cubic-bezier(.2,0,0,1), transform .15s cubic-bezier(.2,0,0,1); --c:transparent; }
+.sc::before{ content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; opacity:0; transition:opacity .4s cubic-bezier(.2,0,0,1);
+  background:radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--c) 22%, transparent), transparent 60%); }
+.sc.opn{ --c:var(--hg-accent); } .sc.act{ --c:var(--hg-accent); }
+.sc.opn, .sc.act{ box-shadow:none; background:var(--hg-tile-bg); } .sc.opn::before, .sc.act::before{ opacity:0; } .sc.opn::after, .sc.act::after{ content:''; position:absolute; top:10px; right:10px; width:6px; height:6px; border-radius:50%; background:var(--hg-accent); }
+.sb{ position:relative; flex:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:var(--hg-tx-4a4e54); box-shadow:none; transition:background .3s cubic-bezier(.2,0,0,1), color .3s; }
+.sb ha-icon{ width:22px; height:22px; transition:transform .5s cubic-bezier(.2,0,0,1); }
+.sc.opn .sb{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); box-shadow:none; }
+.sc.act .sb{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); box-shadow:none; }
+.rg{ position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--c); opacity:0; pointer-events:none; }
+.st2{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.st2 b{ font-size:var(--fs-md); font-weight:600; color:var(--hg-tx-1e2023); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+.st2 > span{ display:flex; align-items:baseline; gap:6px; min-width:0; font-size:var(--fs-xs); white-space:nowrap; }
+.st2 em{ font-style:normal; font-weight:600; color:var(--hg-tx-4a4e54); } .st2 small{ font-size:inherit; color:var(--hg-tx-6a6e74); overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.sc.opn .st2 em, .sc.act .st2 em{ color:var(--hg-accent-tx); }
+/* animacje stanu (transform/opacity) */
+.sc.opn.k-door .sb ha-icon{ animation:var(--hg-sc-anim, scSwing 2.8s cubic-bezier(.45,0,.55,1) infinite); transform-origin:30% 50%; }
+.sc.act.k-occ .rg{ animation:var(--hg-sc-anim, scBreath 3s cubic-bezier(.2,0,0,1) infinite); }
+.sc.act.k-mot .rg{ animation:var(--hg-sc-anim, scRipple 2s cubic-bezier(.2,0,0,1) infinite); } .sc.act.k-mot .rg.r2{ animation-delay:1s; }
+@keyframes scSwing{ 0%,100%{ transform:perspective(60px) rotateY(0deg); } 50%{ transform:perspective(60px) rotateY(-28deg); } }
+@keyframes scBreath{ 0%{ transform:scale(1); opacity:.7; } 70%,100%{ transform:scale(1.55); opacity:0; } }
+@keyframes scRipple{ 0%{ transform:scale(1); opacity:.8; } 100%{ transform:scale(1.8); opacity:0; } }
+@media (hover:hover) and (pointer:fine){ .sc:hover{ background:var(--hg-bg-ffffff-042); } }
+.sc:active{ transform:scale(.96); }
+@media (prefers-reduced-motion: reduce){ .sc *, .sc{ animation:none !important; transition:none !important; } }
+/* komponent urządzenia */
+ha-card.dv{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3); }
+.dh{ display:flex; align-items:center; gap:var(--s2); min-width:0; }
+.dh .ri{ width:40px; height:40px; border-radius:50%; flex:none; }
+.dv.on .dh .ri{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.dh .tx{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:2px; background:none; padding:0; text-align:left; color:inherit; cursor:pointer; }
+.dh .tx b{ font-size:var(--fs-md); font-weight:600; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dh .tx span{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.mx{ display:grid; grid-template-columns:repeat(auto-fit, minmax(92px, 1fr)); gap:var(--s1); }
+.m{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 12px; border-radius:var(--r-sm); background:var(--hg-bg-000000-004); text-align:left; color:inherit; min-width:0; }
+.m b{ font-size:20px; font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .m b em{ font-style:normal; font-size:var(--fs-sm); font-weight:400; color:var(--hg-tx-4a4e54); margin-left:2px; }
+.m span{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.wr{ display:flex; flex-wrap:wrap; gap:6px; }
+.wc{ display:inline-flex; align-items:center; gap:5px; min-height:28px; padding:0 10px; border-radius:14px; background:var(--hg-bg-ffe3de); color:var(--hg-tx-8a1c0c-on); font-size:var(--fs-sm); font-weight:600; }
+.wc ha-icon{ width:16px; height:16px; }
+.mr{ align-self:flex-start; display:inline-flex; align-items:center; gap:4px; min-height:32px; padding:0 4px; margin:-4px 0; background:none; color:var(--hg-tx-4a4e54); font-size:var(--fs-sm); font-weight:600; }
+.mr ha-icon{ width:18px; height:18px; }
+.row.sub{ min-height:44px; } .row.sub .tx b{ font-weight:400; }
+.lnk.sm{ align-self:flex-start; font-size:var(--fs-sm); }
+.sh{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); font-weight:600; color:var(--hg-tx-6a6e74); text-transform:uppercase; letter-spacing:.06em; margin:0 0 4u; }
+.sh ha-icon{ width:12u; height:12u; } .sh i{ font-style:normal; font-weight:400; color:var(--hg-tx-9aa0a6); margin-left:auto; text-transform:none; letter-spacing:0; }
+.row{ position:relative; display:flex; align-items:center; gap:var(--s1); min-height:max(calc(var(--k) * 40), 44px); padding:3u 0; border-radius:var(--r-sm); }
+.row + .row, .lw + .lw, .row + .lw, .lw + .row{ border-top:1px solid var(--hg-bd-000000-006); }
+.ri{ position:relative; width:28u; height:28u; border-radius:var(--r-sm); flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ffffff-070); color:var(--hg-tx-4a4e54); }
+.ri ha-icon{ width:15u; height:15u; }
+.on .ri{ background:var(--hg-accent); color:var(--hg-on-accent); } .act .ri, .opn .ri{ background:var(--hg-alert-bg); color:var(--hg-alert-ic); }
+.tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1u; text-align:left; padding:4u 0; }
+.tx b{ font-size:var(--fs-sm); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tx span{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.v{ font-size:var(--fs-sm); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--hg-tx-1e2023); } .v em{ font-style:normal; font-weight:400; font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); margin-left:2u; }
+.chev{ width:14u; height:14u; color:var(--hg-tx-9aa0a6); flex:none; }
+.un{ opacity:.55; }
+.lw .br{ display:flex; align-items:center; gap:var(--s1); padding:0 0 var(--s1) 37u; }
+.br output{ font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); min-width:28u; text-align:right; font-variant-numeric:tabular-nums; }
+input[type=range]{ -webkit-appearance:none; appearance:none; flex:1; height:max(calc(var(--k) * 22), 28px); background:none; margin:0; touch-action:pan-y; }
+input[type=range]::-webkit-slider-runnable-track{ height:4u; border-radius:2u; background:linear-gradient(90deg, var(--hg-accent) var(--v), var(--hg-ac-000000-010) var(--v)); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16u; height:16u; margin-top:-6u; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
+input[type=range]::-moz-range-track{ height:5u; border-radius:3u; background:var(--hg-bg-000000-010); } input[type=range]::-moz-range-progress{ height:5u; border-radius:3u; background:var(--hg-accent); }
+input[type=range]::-moz-range-thumb{ width:18u; height:18u; border:0; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
+.bt{ position:relative; width:30u; height:30u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ffffff-070); color:var(--hg-tx-1e2023); }
+.bt ha-icon{ width:15u; height:15u; } .bts{ display:flex; gap:5u; }
+@media (pointer:coarse){ .bt::before{ content:''; position:absolute; inset:-7px; } }
+.art{ width:34u; height:34u; border-radius:var(--r-sm); flex:none; object-fit:cover; background:var(--hg-bg-ffffff-070); }
+.cams{ display:grid; gap:var(--s1); }
+.cam{ position:relative; display:block; width:100%; aspect-ratio:16/9; border-radius:var(--r-sm); overflow:hidden; background:var(--hg-bg-2b3038); }
+.cam img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.cam span{ position:absolute; left:8u; bottom:7u; padding:2u var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-000000-045); color:var(--hg-tx-ffffff); font-size:var(--fs-xs); }
+.cam span:not(.ph){ display:none; }
+.cam .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff-065); font-size:var(--fs-sm); background:none; padding:0; left:0; bottom:0; }
+.empty{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--s1); padding:var(--s1) 2u; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.lnk{ position:relative; display:inline-flex; align-items:center; gap:5u; height:max(calc(var(--k) * 30), 40px); padding:0 var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-075); color:var(--hg-tx-1e2023); font-size:var(--fs-sm); font-weight:400; }
+.lnk ha-icon{ width:13u; height:13u; }
+.unh{ display:flex; align-items:center; gap:var(--s1); width:100%; min-height:44px; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.unh ha-icon{ width:14u; height:14u; margin-left:auto; color:var(--hg-tx-9aa0a6); }
+
+/* pralka: hero – drzwi front-loadera (SVG) + duży czas, faza jako pigułka, ciche statystyki; animacje tylko transform/opacity */
+ha-card.wmc{ gap:var(--s2); }
+.wmh{ display:flex; align-items:center; gap:var(--s1); min-height:40px; }
+.wmh b{ flex:1; min-width:0; font-size:var(--fs-md); font-weight:600; background:none; padding:0; text-align:left; color:inherit; cursor:pointer; }
+.wmr{ display:grid; grid-template-columns:clamp(124px, 38%, 168px) minmax(0, 1fr); align-items:center; gap:var(--s3); }
+.wmv{ position:relative; aspect-ratio:1; }
+.wmv svg{ width:100%; height:100%; display:block; overflow:visible; }
+.wmi{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--s1); min-width:0; }
+.wmt{ font-size:clamp(26px, 2.4vw, 34px); font-weight:600; letter-spacing:-.02em; line-height:1.05; font-variant-numeric:tabular-nums; color:var(--hg-tx-1e2023); }
+.wmt small{ font-size:.55em; font-weight:400; color:var(--hg-tx-4a4e54); margin:0 .18em 0 .08em; letter-spacing:0; }
+.wme{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); font-variant-numeric:tabular-nums; margin-top:-4px; }
+.wmp{ display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 12px 0 10px; border-radius:14px; background:var(--hg-bg-000000-005); color:var(--hg-tx-3a3d42); font-size:var(--fs-sm); font-weight:600; white-space:nowrap; }
+.wmp i{ width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.8; }
+.run .wmp{ background:var(--hg-bg-ffffff-062); box-shadow:inset 0 0 0 1px var(--hg-accent-soft); color:var(--hg-accent-tx); } .fin .wmp{ background:var(--hg-accent-faint); color:var(--hg-accent-tx); }
+.wsr{ display:flex; flex-wrap:wrap; gap:4px var(--s2); margin-top:2px; }
+.wsr button{ display:inline-flex; align-items:center; gap:5px; min-height:32px; padding:0; background:none; color:var(--hg-tx-3a3d42); font-size:var(--fs-sm); font-variant-numeric:tabular-nums; white-space:nowrap; cursor:pointer; }
+.wsr ha-icon{ width:16px; height:16px; color:var(--hg-tx-6a6e74); }
+.wmb{ width:44px; height:44px; } .wmb:active{ transform:scale(.96); }
+@media (max-width:380px){ .wmr{ grid-template-columns:116px minmax(0, 1fr); gap:var(--s2); } }
+/* ilustracja */
+.wm-dr, .wm-cl, .wm-wt, .wm-bb circle, .wm-str{ transform-box:view-box; transform-origin:60px 60px; }
+.wm-trk{ fill:none; stroke:var(--hg-gx-000000-007); stroke-width:2.5; }
+.wm-prg{ fill:none; stroke:var(--hg-accent); stroke-width:2.5; stroke-linecap:round; transform:rotate(-90deg); transform-origin:60px 60px; transition:stroke-dashoffset .6s cubic-bezier(.2,0,0,1); }
+.fin .wm-prg{ stroke:var(--hg-accent); }
+.wm-str{ opacity:0; }
+.wm-bb circle{ opacity:0; }
+.wm-chk{ opacity:0; transform:scale(.25); transform-origin:92px 92px; transition:opacity .3s cubic-bezier(.2,0,0,1), transform .3s cubic-bezier(.2,0,0,1); }
+.wm-glow{ opacity:0; transition:opacity .4s; }
+.wm-wt{ transform:translateY(var(--wy, 40px)); }
+.ph-wash{ --wy:10px; } .ph-rinse{ --wy:0px; } .ph-pause{ --wy:10px; --hg-play:paused; } .ph-spin, .ph-done, .ph-idle{ --wy:44px; }
+.ph-wash .wm-dr{ animation:wmr 3.6s linear infinite; } .ph-wash .wm-cl{ animation:var(--hg-wm-tumble, wmt 3.6s cubic-bezier(.45,0,.55,1) infinite); } .ph-wash .wm-wt{ animation:var(--hg-wm-slosh, wms 2.4s cubic-bezier(.45,0,.55,1) infinite); }
+.ph-rinse .wm-dr{ animation:wmr 5s linear infinite; } .ph-rinse .wm-cl{ animation:var(--hg-wm-tumble, wmt 5s cubic-bezier(.45,0,.55,1) infinite); } .ph-rinse .wm-wt{ animation:var(--hg-wm-slosh, wms 1.8s cubic-bezier(.45,0,.55,1) infinite); }
+.ph-rinse .wm-bb circle{ animation:var(--hg-wm-bub, wmb 2.4s ease-in infinite); } .ph-rinse .wm-bb circle:nth-child(2){ animation-delay:.8s; } .ph-rinse .wm-bb circle:nth-child(3){ animation-delay:1.6s; } .ph-rinse .wm-bb circle:nth-child(4){ animation-delay:.4s; }
+.ph-spin .wm-dr, .ph-spin .wm-cl, .ph-spin .wm-str{ animation:wmr var(--spd, .4s) linear infinite; } .ph-spin .wm-str{ opacity:1; } .ph-spin .wm-cl{ transform:none; }
+.ph-pause .wm-dr, .ph-pause .wm-cl{ animation:wmr 3.6s linear infinite; }
+.ph-done .wm-chk{ opacity:1; transform:scale(1); } .ph-done .wm-glow{ opacity:1; }
+.ph-idle svg{ opacity:.6; }
+@keyframes wmr{ to{ transform:rotate(360deg); } }
+@keyframes wmt{ 0%,100%{ transform:rotate(-30deg) translateY(3px); } 50%{ transform:rotate(25deg) translateY(-7px); } }
+@keyframes wms{ 0%,100%{ transform:translate(-5px, var(--wy)) rotate(-3deg); } 50%{ transform:translate(5px, var(--wy)) rotate(3deg); } }
+@keyframes wmb{ 0%{ opacity:0; transform:translateY(0); } 25%{ opacity:.9; } 100%{ opacity:0; transform:translateY(-24px); } }
+@media (prefers-reduced-motion: reduce){ .wmv *, .wmv{ animation:none !important; transition:none !important; } }
+`);
+  }
+  _nm(e, fb) { return HGAreas.name(this._hass, e, this._a, this._config.areas, fb); }
+  _num(s) {
+    const at = s.attributes, u = at.unit_of_measurement || '', v = parseFloat(s.state);
+    if (!isFinite(v) || !/^-?\d+(\.\d+)?(e-?\d+)?$/i.test(String(s.state).trim())) {
+      if (at.device_class === 'timestamp') { const d = new Date(s.state); if (!isNaN(d)) return [typeof hgRel === 'function' ? hgRel(d) : d.toLocaleString('pl-PL'), '']; }
+      return [H.T(this._hass, s), ''];
+    }
+    if ((u === 's' && v >= 3600) || (u === 'min' && v >= 120)) return [H.fmt(u === 's' ? v / 3600 : v / 60, 0), 'h'];
+    const d = ['W', '%', 'lx', 'ppm', 'µg/m³', 'dB', 'dBm', 's', 'min'].includes(u) ? 0 : Math.abs(v) >= 100 ? 0 : 1;
+    return [H.fmt(v, d), u];
+  }
+  _washer(g, av, dv) {
+    const h = this._hass, st = (e) => h.states[e], f = (re) => av.find((e) => re.test(e));
+    const eMs = f(/^sensor\..*machine_state$/), eJob = f(/^sensor\..*job_state$/), eEnd = f(/^sensor\..*completion_time$/), eP = f(/^sensor\..*_moc$|^sensor\..*_power$/),
+      eSel = f(/^select\.washer$/), eSpin = f(/^select\..*spin_level$/), eTemp = f(/^select\..*water_temperature$/), eRem = f(/^binary_sensor\..*remote_control$/), ePw = f(/^binary_sensor\..*zasilanie$/);
+    const ms = eMs ? st(eMs).state : null, job = eJob ? st(eJob).state : null;
+    const lab = (e, map) => { const v = st(e).state; return map[v] != null ? map[v] : H.T(h, st(e)); };
+    const run = ms === 'run', pause = ms === 'pause', done = !run && !pause && job === 'finish';
+    const off = ePw && st(ePw).state === 'off';
+    const ph = run ? (HG_WM_ANIM[job] || 'wash') : pause ? 'pause' : done ? 'done' : 'idle';
+    const phase = eJob && job !== 'none' ? lab(eJob, HG_WM_JOB) : '';
+    const msL = eMs ? lab(eMs, HG_WM_MS) : '';
+    const status = done ? 'Pranie zakończone' : run || pause ? [msL, phase].filter(Boolean).join(' · ') : off ? 'Wyłączona' : 'Gotowa';
+    // czas i postęp: koniec z completion_time; start = ostatnia zmiana machine_state na „run” (prawdziwe dane, bez zgadywania)
+    let rem = '', endT = '', pct = null;
+    if (eEnd && (run || pause)) { const d = new Date(st(eEnd).state), m = Math.round((d - Date.now()) / 60000);
+      if (!isNaN(d) && m > 0) { rem = m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; endT = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+        if (run) { const s0 = new Date(st(eMs).last_changed), tot = d - s0; if (tot > 60000) pct = Math.max(0, Math.min(1, (Date.now() - s0) / tot)); } } }
+    if (done) pct = 1;
+    const spinV = eSpin ? parseInt(st(eSpin).state, 10) : NaN, spd = isFinite(spinV) ? (1.1 - Math.min(spinV, 1600) / 1600 * .85).toFixed(2) : '.45';
+    const remote = eRem && st(eRem).state === 'on';
+    const ctl = eSel && remote && (run || pause) ? `<button class="bt wmb" data-act="wm" data-e="${H.esc(eSel)}" data-o="${run ? 'pause' : 'run'}" aria-label="${run ? 'Wstrzymaj' : 'Wznów'}">${H.icon(run ? 'mdi:pause' : 'mdi:play')}</button>` : '';
+    const title = dv.name_by_user || 'Pralka';
+    // ciche statystyki (tylko istniejące encje)
+    const sr = [];
+    if (eTemp && H.ok(st(eTemp)) && st(eTemp).state !== 'none') { const v = st(eTemp).state; sr.push([eTemp, 'mdi:thermometer', v === 'cold' ? 'Zimna woda' : /^\d+$/.test(v) ? `${v}°C` : H.T(h, st(eTemp)), 'Temperatura wody']); }
+    if (eSpin && H.ok(st(eSpin))) { const v = st(eSpin).state; sr.push([eSpin, 'mdi:rotate-right', /^\d+$/.test(v) ? `${v} obr./min` : v === 'no_spin' ? 'Bez wirowania' : v === 'rinse_hold' ? 'Wstrzymane' : H.T(h, st(eSpin)), 'Wirowanie']); }
+    if (eP && (run || pause)) { const v = parseFloat(st(eP).state); if (isFinite(v)) sr.push([eP, 'mdi:flash-outline', `${H.fmt(v, 0)} W`, 'Moc']); }
+    // duży tekst: pozostały czas, albo stan
+    let big;
+    if (rem) { const m = rem.match(/^(\d+) h (\d+) min$/) || null, mm = rem.match(/^(\d+) min$/);
+      big = m ? `${+m[1]}<small>h</small>${+m[2]}<small>min</small>` : mm ? `${mm[1]}<small>min</small>` : H.esc(rem); }
+    else big = H.esc(done ? 'Wyprane' : pause ? 'Pauza' : run ? 'Pracuje' : off ? 'Wyłączona' : 'Gotowa');
+    const pill = (run || pause) ? (phase || msL) + (pause && phase ? ' · pauza' : '') : '';
+    const C = 2 * Math.PI * 55, prg = pct == null ? '' : `<circle class="wm-trk" cx="60" cy="60" r="55"/><circle class="wm-prg" cx="60" cy="60" r="55" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - pct)).toFixed(1)}"/>`;
+    const svg = `<svg viewBox="0 0 120 120" role="img" aria-label="${H.esc(status)}"><defs>
+      <linearGradient id="wmg-ch" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(220 10% 97%)"/><stop offset=".45" stop-color="hsl(220 6% 78%)"/><stop offset=".55" stop-color="hsl(220 8% 88%)"/><stop offset="1" stop-color="hsl(220 6% 62%)"/></linearGradient>
+      <radialGradient id="wmg-gl" cx=".5" cy=".42" r=".62"><stop offset="0" stop-color="hsl(212 30% 30%)"/><stop offset=".75" stop-color="hsl(214 28% 16%)"/><stop offset="1" stop-color="hsl(216 30% 9%)"/></radialGradient>
+      <radialGradient id="wmg-sh" cx=".5" cy=".5" r=".5"><stop offset=".78" stop-color="hsl(0 0% 0% / 0)"/><stop offset="1" stop-color="hsl(0 0% 0% / .55)"/></radialGradient>
+      <radialGradient id="wmg-glow" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="hsl(140 60% 50% / .45)"/><stop offset="1" stop-color="hsl(140 60% 50% / 0)"/></radialGradient>
+      <clipPath id="wmcp"><circle cx="60" cy="60" r="36"/></clipPath></defs>
+      <circle class="wm-glow" cx="60" cy="60" r="60" fill="url(#wmg-glow)"/>${prg}
+      <circle cx="60" cy="62" r="49" fill="hsl(0 0% 0% / .10)"/>
+      <circle cx="60" cy="60" r="49" fill="url(#wmg-ch)"/><circle cx="60" cy="60" r="44" fill="hsl(220 8% 70%)"/><circle cx="60" cy="60" r="42.5" fill="hsl(220 6% 24%)"/>
+      <circle cx="60" cy="60" r="36" fill="url(#wmg-gl)"/>
+      <g clip-path="url(#wmcp)">
+        <g class="wm-dr"><circle cx="60" cy="60" r="31" fill="none" stroke="hsl(210 20% 80% / .16)" stroke-width="1.6" stroke-dasharray=".1 4.2" stroke-linecap="round"/><circle cx="60" cy="60" r="25" fill="none" stroke="hsl(210 20% 80% / .12)" stroke-width="1.6" stroke-dasharray=".1 4.2" stroke-linecap="round"/>
+          <path d="M60 26v6M60 88v6M26 60h6M88 60h6" stroke="hsl(210 20% 85% / .22)" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="wm-str"><path d="M30 48a32 32 0 0 1 22-20M90 72a32 32 0 0 1-22 20" fill="none" stroke="hsl(210 30% 90% / .28)" stroke-width="5" stroke-linecap="round"/></g>
+        <g class="wm-cl"><path d="M42 72c3-8 14-10 20-4 3 4-1 10-8 11-7 1-14-2-12-7z" fill="hsl(18 62% 66%)"/><path d="M58 78c5-7 15-6 18 0 2 5-4 9-10 8-6 0-10-3-8-8z" fill="hsl(210 50% 68%)"/><path d="M48 83c3-4 10-4 12 0 1 3-3 6-7 5-3 0-6-2-5-5z" fill="hsl(40 30% 90%)"/></g>
+        <path class="wm-wt" d="M14 64 Q37 58 60 64 T106 64 V110 H14 Z" fill="hsl(206 70% 62% / .42)"/>
+        <g class="wm-bb" fill="hsl(0 0% 100% / .7)"><circle cx="46" cy="86" r="2"/><circle cx="62" cy="90" r="1.6"/><circle cx="73" cy="84" r="2.4"/><circle cx="54" cy="92" r="1.4"/></g>
+      </g>
+      <circle cx="60" cy="60" r="36" fill="url(#wmg-sh)"/>
+      <path d="M36 50a26 26 0 0 1 20-20" fill="none" stroke="hsl(0 0% 100% / .55)" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="74" cy="38" rx="4" ry="2.2" fill="hsl(0 0% 100% / .35)" transform="rotate(30 74 38)"/>
+      <g class="wm-chk"><circle cx="92" cy="92" r="13" fill="hsl(140 55% 42%)"/><path d="M86 92l4 4 8-8" fill="none" style="stroke:var(--hg-gx-ffffff)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+    return `<div class="blk"><ha-card class="glass dv wmc ${run ? 'run' : done ? 'fin' : ''}">
+      <div class="wmh"><b role="button" tabindex="0" data-act="${eMs ? 'more' : 'dev'}" ${eMs ? `data-e="${H.esc(eMs)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + ', ' + status)}">${H.esc(title)}</b>${ctl}</div>
+      <div class="wmr"><div class="wmv ph-${ph}" style="--spd:${spd}s">${svg}</div>
+        <div class="wmi"><div class="wmt" aria-label="${H.esc(rem ? 'Pozostało ' + rem : big)}">${big}</div>${endT ? `<div class="wme">Koniec ${H.esc(endT)}</div>` : ''}
+          ${pill ? `<span class="wmp"><i></i>${H.esc(pill)}</span>` : ''}
+          ${sr.length ? `<div class="wsr">${sr.map(([e, ic, v, l]) => `<button data-act="more" data-e="${H.esc(e)}" title="${H.esc(l)}" aria-label="${H.esc(l + ': ' + v)}">${H.icon(ic)}${H.esc(v)}</button>`).join('')}</div>` : ''}</div></div>
+    </ha-card></div>`;
+  }
+  /* schody: widok z boku, dwie żarówki w rzeczywistych miejscach (świecą wg jasności/koloru, płynne przejście), czujniki ruchu dół/góra z falami,
+     odliczanie do zgaszenia (delay s po ustaniu ruchu na obu czujnikach – z last_changed), przełącznik automatyzacji */
+  /* kotłownia: bojler CWU – temperatura (duża), pionowy wskaźnik zbiornika, nastawa ±, tryb, animacja grzania, przełączniki */
+  /* CWU góra: czujnik temperatury zbiornika + gniazdko grzałki (stan = przełącznik) */
+  _cwuUp(U2) {
+    const h = this._hass, st = (e) => e && h.states[e], num = (e) => { const s = st(e); return H.ok(s) && !isNaN(Number(s.state)) && Number(s.state) > -100 ? Number(s.state) : null; };
+    const t = num(U2.tank), sw = st(U2.switch), swOn = H.ok(sw) && sw.state === 'on', pw = num(U2.power), on = swOn && pw != null && pw > 0, fr = t != null ? Math.max(0, Math.min(1, (t - 20) / 55)) : 0;
+    const info = U2.co.map(([e, l]) => { const v = num(e); return v != null ? [`${H.fmt(v, 1)}°`, l] : null; }).filter(Boolean);
+    return `<div class="blk stb"><ha-card class="glass cwc ${on ? 'heat' : ''}" style="--f:${fr.toFixed(3)};--tf:0">
+      <div class="sth"><div><b>${H.esc(U2.title)}</b><span class="stf">Zbiornik ciepłej wody</span></div><button class="ib" data-act="more" data-e="${H.esc(U2.tank)}" aria-label="Historia temperatury">${H.icon('mdi:arrow-top-right')}</button></div>
+      <div class="cwm"><div class="cwt" role="img" aria-label="Zbiornik CWU góra: ${t != null ? H.fmt(t, 0) + '°C' : 'brak danych'}"><i class="fl"></i>${on ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+        <div class="cwv"><span class="cwn">${t != null ? H.fmt(t, 0) : '–'}<sup>°C</sup></span><span class="cws">${on ? `${H.icon('mdi:heat-wave')}Grzeje` : !swOn ? 'Wyłączony' : 'Nie grzeje'}</span></div>
+        <div class="cwi">${pw != null ? `<div class="cwp ${on ? 'on' : ''}"><b>${H.fmt(pw, 0)}<em>W</em></b><small>Moc grzania</small></div>` : ''}</div></div>
+      ${H.ok(sw) ? `<div class="stg2"><label class="cp ${swOn ? 'on' : ''}"><b>Zasilanie</b>${this.toggleHtml(swOn, 'cwus', false, 'CWU góra: zasilanie').replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(U2.switch)}"`)}</label></div>` : ''}
+    </ha-card></div>`;
+  }
+  _cwu(CW) {
+    const f2 = (v) => Number(v).toFixed(3);
+    const h = this._hass, st = (e) => e && h.states[e], num = (e) => { const s = st(e); return H.ok(s) && !isNaN(Number(s.state)) ? Number(s.state) : null; };
+    const w = st(CW.heater); if (!H.ok(w)) return `<div class="blk"><ha-card class="glass"><div class="ph"><b>Bojler niedostępny</b></div></ha-card></div>`;
+    const A = w.attributes, cur = A.current_temperature != null ? Number(A.current_temperature) : num(CW.tank), tgt = Number(A.temperature ?? A.target_temperature), mn = A.min_temp || 30, mx = A.max_temp || 75;
+    const on = w.state !== 'off', heat = st(CW.heating) ? st(CW.heating).state === 'on' : !!A.heating, keep = st(CW.keep) && st(CW.keep).state === 'on';
+    const fr = cur != null ? Math.max(0, Math.min(1, (cur - mn) / (mx - mn))) : 0, tf = !isNaN(tgt) ? Math.max(0, Math.min(1, (tgt - mn) / (mx - mn))) : null;
+    const mode = !on ? 'Wyłączony' : A.whole_tank_heating ? 'Grzanie całego zbiornika' : A.variable_heating ? 'Grzanie zmienne' : 'Grzanie standardowe';
+    const state = !on ? 'Wyłączony' : heat ? 'Grzeje' : keep ? 'Utrzymuje temperaturę' : 'Gotowy';
+    const pw = num(CW.power), rem = num(CW.remaining), tank = num(CW.tank), cons = num(CW.consumption);
+    const E = H.esc(CW.heater), dis = !on ? 'disabled' : '';
+    const info = [pw != null ? [H.fmt(pw, 0), 'W', 'Moc grzania', heat && pw > 0] : null, rem != null && heat ? [String(rem), 'min', 'Do końca'] : null,       cons != null ? [H.fmt(cons, 0), 'l', 'Zużycie wody'] : null].filter(Boolean);
+    const sws = CW.switches.map(([e, l]) => { const s = st(e); if (!H.ok(s)) return ''; const o = s.state === 'on'; return `<label class="cp ${o ? 'on' : ''}"><b>${H.esc(l)}</b>${this.toggleHtml(o, 'cwus', false, l).replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(e)}"`)}</label>`; }).join('');
+    return `<div class="blk stb"><ha-card class="glass cwc ${heat ? 'heat' : ''} ${on ? '' : 'off'}" style="--f:${f2(fr)};--tf:${tf != null ? f2(tf) : 0}">
+      <div class="sth"><div><b>${H.esc(CW.title || 'Ciepła woda')}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="Szczegóły bojlera">${H.icon('mdi:arrow-top-right')}</button></div>
+      <div class="cwm">
+        <div class="cwt" role="img" aria-label="Zbiornik: ${cur != null ? H.fmt(cur, 0) + '°C' : 'brak danych'}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}Grzeje do ${H.fmt(tgt, 0)}°` : H.esc(state)}</span>
+          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="Obniż nastawę">${H.icon('mdi:minus')}</button><span class="cwg"><small>Nastawa</small><b>${H.fmt(tgt, 0)}°</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="Podwyższ nastawę">${H.icon('mdi:plus')}</button></div></div>
+        <div class="cwi">${info.map(([v, u, l, hot]) => `<div class="cwp ${hot ? 'on' : ''}"><b>${H.esc(v)}<em>${H.esc(u)}</em></b><small>${H.esc(l)}</small></div>`).join('')}</div>
+      </div>
+      <div class="stg2">${sws}</div></ha-card></div>`;
+  }
+  _stairs(ST) {
+    const h = this._hass, st = (e) => h.states[e], f = (v) => Number(v).toFixed(2);
+    const ago = (s) => { if (!s) return ''; const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)); return m < 1 ? 'od chwili' : m < 60 ? `od ${m} min` : m < 1440 ? `od ${Math.floor(m / 60)} h` : `od ${Math.floor(m / 1440)} d`; };
+    const lt = (k) => { const e = ST[k].light, s = st(e), ok = H.ok(s), on = ok && s.state === 'on';
+      const b = on ? (s.attributes.brightness != null ? s.attributes.brightness / 255 : 1) : 0;
+      return { e, s, ok, on, b, g: on ? Math.max(.5, Math.min(1, .4 + b * .6)) : 0 }; };
+    const L = { bottom: lt('bottom'), top: lt('top') }, nm = { bottom: 'Dół', top: 'Góra' };
+    const mb = st(ST.bottom.motion), mt = st(ST.top.motion), mbOn = H.ok(mb) && mb.state === 'on', mtOn = H.ok(mt) && mt.state === 'on';
+    const anyOn = L.bottom.on || L.top.on;
+    const N = 8, RU = 30, RI = 18, DX = 24, DY = -10, X0 = 100, Y0 = 196, LO = 46;
+    const dir = mbOn ? 'up' : mtOn ? 'dn' : (L.top.on && !L.bottom.on ? 'dn' : 'up');
+    const P = (pts) => pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' ');
+    let geo = '', glow = '';
+    for (let i = 0; i < N; i++) {
+      const x = X0 + i * RU, yb = Y0 - i * RI, yt = yb - RI, tr = [[x, yt], [x + RU, yt], [x + RU + DX, yt + DY], [x + DX, yt + DY]];
+      geo += `<polygon class="riser" points="${P([[x, yb], [x + RU, yb], [x + RU, yt], [x, yt]])}"/><polygon class="tread" points="${P(tr)}"/><polyline class="edge" points="${P([[x, yt], [x + RU, yt]])}"/>`;
+      const t = i / (N - 1), o = Math.max(L.bottom.g * (1 - t * .9), L.top.g * (.1 + t * .9));
+      glow += `<polygon class="gl ${o > 0 ? 'on' : ''}" style="--o:${f(o * .6)};--d:${f((dir === 'up' ? i : N - 1 - i) * .12)}s" points="${P(tr)}"/>`;
+    }
+    const XT = X0 + N * RU, YT = Y0 - N * RI;
+    geo = `<polygon class="side" points="${P([[X0, Y0], [XT, Y0], [XT, YT]])}"/>` + geo;
+    // lampy: ta sama odległość LO nad środkiem własnego stopnia (pierwszy / ostatni), etykiety na zewnątrz (symetrycznie)
+    const tc = (i) => [X0 + i * RU + RU / 2 + DX / 2, Y0 - (i + 1) * RI + DY / 2];
+    const lampSvg = (k, i, side, ms, mOn) => { const o = L[k], p = Math.round(o.b * 100), [sx, sy] = tc(i), cx = sx, cy = sy - LO, tx = side < 0 ? cx - 16 : cx + 16, an = side < 0 ? 'end' : 'start';
+      return `<g class="lmp ${o.on ? 'on' : ''}" style="--g:${f(o.g)}" data-act="stb" data-e="${H.esc(o.e)}" role="button" tabindex="0" aria-label="${H.esc(`Żarówka ${nm[k].toLowerCase()}: ${o.ok ? (o.on ? `włączona ${p}%` : 'wyłączona') : 'niedostępna'}`)}">
+        <polygon class="cone" fill="url(#stcone)" points="${P([[cx - 5, cy + 6], [cx + 5, cy + 6], [sx + RU * .9, sy], [sx - RU * .9, sy]])}"/>
+        <circle class="halo" cx="${cx}" cy="${cy}" r="40" fill="url(#sthalo)"/><circle class="bulb" cx="${cx}" cy="${cy}" r="7"/>
+        <text class="tl" x="${tx}" y="${cy - 6}" text-anchor="${an}">${nm[k]}</text><text class="ts" x="${tx}" y="${cy + 7}" text-anchor="${an}">${o.ok ? (o.on ? `${p || 1}%` : 'Wył.') : '—'}</text>
+        <circle class="hit" cx="${cx}" cy="${cy}" r="24"/></g>
+        ${H.ok(ms) ? `<g class="mk ${mOn ? 'on' : ''}"><circle class="rp" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="4"/><circle class="dt" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="3"/><text class="ts" x="${side < 0 ? tx - 11 : tx + 11}" y="${cy + 22}" text-anchor="${an}">${mOn ? 'Ruch teraz' : 'Ruch ' + ago(ms)}</text></g>` : ''}`; };
+    const svg = `<div class="sv3"><svg viewBox="0 ${YT - LO - 26} 440 ${Y0 - YT + LO + 34}" aria-hidden="false"><defs>
+      <radialGradient id="sthalo"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".6"/><stop offset=".5" style="stop-color:var(--hg-accent)" stop-opacity=".15"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></radialGradient>
+      <linearGradient id="stcone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".45"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
+      ${geo}${glow}${lampSvg('bottom', 0, -1, mb, mbOn)}${lampSvg('top', N - 1, 1, mt, mtOn)}</svg></div>`;
+    let fade = null;
+    if (anyOn && H.ok(mb) && H.ok(mt) && !mbOn && !mtOn) { const t = Math.max(new Date(mb.last_changed), new Date(mt.last_changed)) + ST.delay * 1000; if (t > Date.now()) fade = t; }
+    this._stFade = fade;
+    const rem = fade ? Math.ceil((fade - Date.now()) / 1000) : 0, fr = fade ? Math.max(0, Math.min(1, (fade - Date.now()) / (ST.delay * 1000))) : 0;
+    const ring = fade ? `<div class="str" role="timer" aria-label="Gaśnie za ${rem} s"><svg viewBox="0 0 40 40"><circle class="rb" cx="20" cy="20" r="17" pathLength="100"/><circle class="rf" cx="20" cy="20" r="17" pathLength="100" style="--o0:${f(100 - fr * 100)};animation-duration:${f((fade - Date.now()) / 1000)}s"/></svg><span class="stn">${rem}</span></div>` : '';
+    const gp = ST.group && st(ST.group), gOn = H.ok(gp) && gp.state === 'on';
+    const grp = H.ok(gp) ? `<label class="sgl"><span>Wszystkie</span>${this.toggleHtml(gOn, 'stb', false, 'Światła schody').replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : '';
+    const au = st(ST.automation), auOn = au && au.state === 'on';
+    const chip = (k, lab, s, on) => H.ok(s) ? `<button class="sm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(ST[k].motion)}" aria-label="${H.esc(`${lab}: ${on ? 'ruch' : 'brak ruchu ' + ago(s)}`)}">${H.icon(on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off')}<span><b>${lab}</b><small>${on ? 'Ruch teraz' : `Brak ruchu ${ago(s)}`}</small></span><i></i></button>` : '';
+    return `<div class="blk stb"><ha-card class="glass stc ${anyOn ? 'lit' : 'idle'}">
+      <div class="sth"><div><b>Oświetlenie schodów</b><span class="stf" aria-live="polite">${fade ? `Gaśnie za ${rem} s` : anyOn ? 'Świeci' : 'Wyłączone'}</span></div>${ring}</div>
+      ${svg}
+      <div class="stg2">${['bottom', 'top'].map((k) => { const o = L[k]; return o.ok ? `<label class="cp ${o.on ? 'on' : ''}"><b>${nm[k]}</b><small>${o.on ? Math.round(o.b * 100) + '%' : 'Wył.'}</small>${this.toggleHtml(o.on, 'stb', false, 'Żarówka ' + nm[k].toLowerCase()).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(o.e)}"`)}</label>` : ''; }).join('')}
+        ${H.ok(gp) ? `<label class="cp ${gOn ? 'on' : ''}"><b>Wszystkie</b>${this.toggleHtml(gOn, 'stb', false, 'Światła schody').replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : ''}
+        ${au ? `<label class="cp ${auOn ? 'on' : ''}"><b>Automatyczne</b>${this.toggleHtml(auOn, 'sta', false, 'Automatyzacja schodów').replace('data-act="sta"', `data-act="sta" data-e="${H.esc(ST.automation)}"`)}</label>` : ''}</div>
+    </ha-card></div>`;
+  }
+  /* odtwarzacz w stylu „Teraz odtwarzane”: okładka (entity_picture) z tłem barwionym kolorem okładki, tytuł/wykonawca/aplikacja,
+     postęp z media_position/duration (na żywo), sterowanie wg supported_features, głośność + wyciszenie, źródło */
+  _player(e) {
+    const h = this._hass, s = h.states[e], at = s.attributes, f = at.supported_features || 0, nm = this._nm(e, 'Odtwarzacz'), E = H.esc(e);
+    const pl = s.state === 'playing', act = ['playing', 'paused', 'buffering'].includes(s.state), off = ['off', 'standby'].includes(s.state);
+    const tv = at.device_class === 'tv' || /tv|telewiz/i.test(nm + e);
+    const ST = { playing: 'Odtwarza', paused: 'Wstrzymano', idle: 'Bezczynny', on: 'Włączony', off: 'Wyłączony', standby: 'Czuwanie', buffering: 'Buforowanie' };
+    const app = at.app_name && !/^[a-z]+\.[a-z0-9.]+$/i.test(at.app_name) ? at.app_name : '', src = at.source || '';
+    const title = at.media_title || app || ST[s.state] || H.stateLabel(s.state);
+    const sub = [at.media_title ? (at.media_artist || at.media_album_name || app) : '', at.media_series_title].filter(Boolean).join(' · ') || (at.media_title || app ? ST[s.state] || '' : nm);
+    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy" crossorigin="anonymous">` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
+    const dur = Number(at.media_duration) || 0, has = dur > 0 && at.media_position != null && (f & 2 || true);
+    const pos = has ? Math.min(dur, Number(at.media_position) + (pl && at.media_position_updated_at ? (Date.now() - new Date(at.media_position_updated_at)) / 1000 : 0)) : 0;
+    const tm = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
+    const prog = has ? `<div class="mpg" data-dur="${dur}" data-pos="${pos.toFixed(1)}" data-t="${Date.now()}" data-pl="${pl ? 1 : 0}"><div class="mpt"><i style="transform:scaleX(${(pos / dur).toFixed(4)})"></i></div><div class="mpn"><span>${tm(pos)}</span><span>-${tm(dur - pos)}</span></div></div>` : '';
+    const B = (a, ic, lab, big) => `<button class="mb ${big ? 'big' : ''}" data-act="${a}" data-e="${E}" aria-label="${lab}">${H.icon(ic)}</button>`;
+    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', 'Poprzedni') : '', (f & 1) || (f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? 'Pauza' : 'Odtwarzaj', 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', 'Następny') : ''].join('') : '';
+    const vl = at.volume_level, mu = !!at.is_volume_muted, vp = vl != null ? Math.round(vl * 100) : null;
+    const vol = !off && (f & 4) && vp != null ? `<div class="mpv">${f & 8 ? `<button class="mb sm" data-act="mpmu" data-e="${E}" aria-label="${mu ? 'Wyłącz wyciszenie' : 'Wycisz'}" aria-pressed="${mu}">${H.icon(mu || vp === 0 ? 'mdi:volume-off' : vp < 40 ? 'mdi:volume-medium' : 'mdi:volume-high')}</button>` : H.icon('mdi:volume-high')}
+      <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc('Głośność: ' + nm)}"><output>${vp}%</output></div>` : '';
+    const pw = f & 384 ? B('mpw', 'mdi:power', off ? `Włącz: ${H.esc(nm)}` : `Wyłącz: ${H.esc(nm)}`) : '';
+    const chip = src || app ? `<span class="mpch">${H.icon(tv ? 'mdi:television' : 'mdi:music-note')}${H.esc(src || app)}</span>` : '';
+    return `<div class="blk"><ha-card class="glass mpc ${pl ? 'pl' : ''} ${off ? 'off' : ''}">
+      <div class="mpbg" aria-hidden="true"></div>
+      <div class="mph">${art}<button class="mpi" data-act="more" data-e="${E}"><span class="mpd">${H.esc(nm)} · ${H.esc(ST[s.state] || H.stateLabel(s.state))}</span><b>${H.esc(title)}</b><span>${H.esc(sub)}</span></button>${pw}</div>
+      ${prog}${ctl ? `<div class="mpk">${ctl}</div>` : ''}${vol || chip ? `<div class="mpf">${vol}${chip}</div>` : ''}
+    </ha-card></div>`;
+  }
+  _devCard(g, a) {
+    const h = this._hass, dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents), st = (e) => h.states[e];
+    const av = g.ents.filter((e) => HGDev.ok(st(e)));
+    if (!av.length) return null;
+    if (P && P.id === 'washer') return this._washer(g, av, dv);
+    const used = new Set(), num = (e) => /^(sensor|number|input_number)\./.test(e) && isFinite(parseFloat(st(e).state)) && /^-?\d+(\.\d+)?$/.test(String(st(e).state).trim());
+    const raw = dv.name_by_user || dv.name || '';
+    const strip = HGAreas.name({ states: { x: { attributes: { friendly_name: raw || 'Urządzenie' } } } }, 'x', a, null, '');
+    let title = dv.name_by_user || (P && P.name) || strip || 'Urządzenie';
+    // główny przełącznik
+    const SW = /^(switch|fan|humidifier|light|valve|input_boolean)\./;
+    let main = null;
+    if (P && P.mainDom) main = av.find((e) => e.startsWith(P.mainDom + '.'));
+    if (!main && P && P.main) main = av.find((e) => SW.test(e) && P.main.test(e));
+    if (!main && !P) { const sws = av.filter((e) => SW.test(e)); main = sws.find((e) => /^(fan|humidifier)\./.test(e)) || sws.find((e) => /(_on_p_|_on$|power$|_switch_1$|switch$)/.test(e)) || (sws.length === 1 ? sws[0] : null); }
+    if (main) used.add(main);
+    // stan
+    let status = '', se = null;
+    if (P && P.status) se = av.find((e) => /^(sensor|select)\./.test(e) && P.status.test(e) && !num(e));
+    if (!se && !P) se = av.find((e) => e.startsWith('sensor.') && /(_status|_state)(_p_\d|$)/.test(e) && !num(e));
+    if (se) { used.add(se); status = HGDev.stPl(st(se).state); }
+    else if (main) { const ms = st(main); status = ms.attributes.preset_mode ? `${ms.state === 'on' ? 'Włączony' : 'Wyłączony'} · ${HGDev.stPl(ms.attributes.preset_mode)}` : ms.state === 'on' ? 'Włączony' : 'Wyłączony'; }
+    // ostrzeżenia
+    const warns = [];
+    const fe = av.find((e) => e.startsWith('sensor.') && /fault|error/.test(e) && !num(e) || (e.startsWith('sensor.') && /_fault_p_/.test(e)));
+    if (fe) { used.add(fe); const v = String(st(fe).state).trim(); if (!HG_FAULT_OK.test(v)) warns.push(['mdi:alert-circle-outline', 'Błąd: ' + HGDev.stPl(v)]); }
+    for (const w of (P && P.warn) || []) { const e = av.find((x) => w.re.test(x)); if (e) { used.add(e); if (st(e).state === 'on') warns.push([w.icon, w.on]); } }
+    for (const e of av) if (!used.has(e) && e.startsWith('binary_sensor.') && st(e).attributes.device_class === 'problem') { used.add(e); if (st(e).state === 'on') warns.push(['mdi:alert-outline', this._nm(e, 'Problem')]); }
+    // kluczowe odczyty
+    const met = [], active = se ? !/^(standby|idle|off|shutdown|completed|done|finished)$/i.test(st(se).state) : true;
+    if (P) for (const m of P.metrics) {
+      if (m.active && !active) continue;
+      const e = av.find((x) => !used.has(x) && (!m.dom || x.startsWith(m.dom + '.')) && (m.re ? m.re.test(x) : st(x).attributes.device_class === m.dc) && num(x));
+      if (e) { used.add(e); met.push([e, m.label]); }
+    } else {
+      const RK = { temperature: 0, humidity: 1, pm25: 2, carbon_dioxide: 3, power: 4, energy: 5, illuminance: 6, battery: 7 };
+      av.filter((x) => !used.has(x) && x.startsWith('sensor.') && num(x) && (st(x).attributes.device_class || st(x).attributes.unit_of_measurement))
+        .sort((x, y) => (RK[st(x).attributes.device_class] ?? 9) - (RK[st(y).attributes.device_class] ?? 9)).slice(0, 3)
+        .forEach((e) => { used.add(e); met.push([e, this._nm(e, 'Odczyt')]); });
+    }
+    if (!P && main && !met.length && !dv.name_by_user) title = this._nm(main, title);   // np. samo gniazdko: nazwa encji zamiast nazwy modułu
+    // czujnik klimatu nazwany jak pokój -> nazwa rodzajowa
+    if (!P && !main && met.length && met.every(([e]) => ['temperature', 'humidity', 'pressure'].includes(st(e).attributes.device_class)) && (!strip || title.toLowerCase() === a.name.toLowerCase() || title.toLowerCase().includes(a.name.toLowerCase().split(' ')[0]))) title = 'Czujnik klimatu';
+    const rest = av.filter((e) => !used.has(e) && !/^(text|button|update|event|image)\./.test(e) && !(e.startsWith('sensor.') && !num(e) && String(st(e).state).length > 28));
+    const icon = (P && P.icon) || (main && HG_DOM_ICON[main.split('.')[0]]) || (met[0] && HG_DC_ICON[st(met[0][0]).attributes.device_class]) || 'mdi:devices';
+    const on = main ? ['on', 'open', 'unlocked'].includes(st(main).state) : active && !!se;
+    const U = { d: 'dni', min: 'min', h: 'h', s: 's' };
+    const mx = met.map(([e, l]) => { const [v, u] = this._num(st(e)); return `<button class="m" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(`${l}: ${v} ${u}`)}"><b>${H.esc(v)}<em>${H.esc(U[u] || u)}</em></b><span>${H.esc(l)}</span></button>`; }).join('');
+    const open = this._devOpen && this._devOpen.has(g.d);
+    const rows = open ? rest.map((e) => {
+      const s = st(e), dom = e.split('.')[0], nm = this._nm(e, e);
+      if (/^(switch|fan|humidifier|light|input_boolean|valve)$/.test(dom)) { const o = s.state === 'on' || s.state === 'open';
+        return `<div class="row sub ${o ? 'on' : ''}"><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b></button>${this.toggleHtml(o, 'tgl', false, nm).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(e)}"`)}</div>`; }
+      const [v, u] = dom === 'binary_sensor' ? [s.state === 'on' ? 'Tak' : 'Nie', ''] : dom === 'select' ? [HGDev.stPl(s.state), ''] : this._num(s);
+      return `<button class="row sub" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(U[u] || u)}</em>` : ''}</span></button>`;
+    }).join('') + `<button class="lnk sm" data-act="dev" data-d="${H.esc(g.d)}">${H.icon('mdi:cog-outline')}Ustawienia urządzenia</button>` : '';
+    const tg = main ? this.toggleHtml(st(main).state === 'on', 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
+    return `<div class="blk"><ha-card class="glass dv ${on ? 'on' : ''}">
+      <div class="dh"><span class="ri">${H.icon(icon)}</span><button class="tx" data-act="${main ? 'more' : 'dev'}" ${main ? `data-e="${H.esc(main)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + (status ? ', ' + status : ''))}"><b>${H.esc(title)}</b>${status ? `<span>${H.esc(status)}</span>` : ''}</button>${tg}</div>
+      ${mx ? `<div class="mx">${mx}</div>` : ''}${warns.length ? `<div class="wr">${warns.map(([i, t]) => `<span class="wc">${H.icon(i)}${H.esc(t)}</span>`).join('')}</div>` : ''}
+      ${rest.length ? `<button class="mr" data-act="dmore" data-d="${H.esc(g.d)}" aria-expanded="${!!open}">${open ? 'Mniej' : `Więcej · ${rest.length}`}${H.icon(open ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>${rows}` : ''}</ha-card></div>`;
+  }
+  render() {
+    const h = this._hass, a = this._area(); this._a = a;
+    if (!a) return `<ha-card class="glass"><div class="empty"><b>Nie znaleziono pokoju</b>Ten pokój nie istnieje albo został usunięty.<button class="lnk" data-act="rooms">${H.icon('mdi:chevron-left')}Wszystkie pokoje</button></div></ha-card>`;
+    const ST = (this._config.areas || {}).stairs, isSt = ST && ST.room === a.id;
+    const CW = (this._config.areas || {}).cwu, isCw = CW && CW.room === a.id;
+    const SX = new Set(isSt ? [ST.group, ST.bottom.light, ST.top.light, ST.bottom.motion, ST.top.motion] : []);
+    if (isCw) [CW.heater, CW.heating, CW.keep, CW.power, CW.remaining, CW.consumption, ...CW.switches.map((x) => x[0]), ...(CW.up ? [CW.up.tank, CW.up.switch, CW.up.power, ...CW.up.co.map((x) => x[0])] : [])].forEach((e) => SX.add(e));
+    const RS = 'room:' + a.id, RL = HGL.get(RS), SWP = RL.conf._swap || {};
+    const S0 = isSt || isCw ? Object.fromEntries(Object.entries(a.sec).map(([k, v]) => [k, Array.isArray(v) ? v.filter((e) => typeof e !== 'string' || !SX.has(e)) : v])) : a.sec, ok = (e) => H.ok(h.states[e]);
+    const S = Object.keys(SWP).length ? Object.fromEntries(Object.entries(S0).map(([k, v]) => [k, Array.isArray(v) ? v.map((e) => (typeof e === 'string' && SWP[e] && h.states[SWP[e]] ? SWP[e] : e)) : v])) : S0;
+    const blocks = [];
+    if (isSt) blocks.push(this._stairs(ST));
+    if (isCw) { blocks.push(this._cwu(CW)); if (CW.up) blocks.push(this._cwuUp(CW.up)); }
+    // stan pokoju: obecność / ruch i drzwi / okna jako chipy
+    const CH = [...S.mot, ...S.door].filter(ok);
+    if (CH.length) blocks.push(`<div class="blk"><ha-card class="glass chips">${CH.map((e) => { const s = h.states[e], dc = s.attributes.device_class, on = s.state === 'on', isD = S.door.includes(e), nm = this._nm(e, 'Czujnik');
+      const occ = ['occupancy', 'presence'].includes(dc), lab = isD ? (on ? 'otwarte' : 'zamknięte') : on ? (occ ? 'obecność' : 'ruch') : (occ ? 'brak obecności' : 'brak ruchu');
+      const ic = isD ? (dc === 'window' ? (on ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : on ? 'mdi:door-open' : 'mdi:door-closed') : occ ? (on ? 'mdi:account' : 'mdi:account-outline') : on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off';
+      const t = /^(obecność|ruch|czujnik)$/i.test(nm) ? (occ ? 'Obecność' : 'Ruch') : nm, st = isD ? (on ? 'Otwarte' : 'Zamknięte') : on ? 'Wykryto' : (occ ? 'Brak obecności' : 'Brak ruchu');
+      const mn = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)), dur = mn < 1 ? 'chwilę' : mn < 60 ? `${mn} min` : mn < 1440 ? `${Math.floor(mn / 60)} h` : `${Math.floor(mn / 1440)} ${Math.floor(mn / 1440) === 1 ? 'dzień' : 'dni'}`;
+      const rel = isNaN(mn) ? '' : on ? (mn < 1 ? 'przed chwilą' : `od ${dur}`) : (mn < 1 ? 'przed chwilą' : `${dur} temu`);
+      const kind = isD ? 'door' + (dc === 'window' ? ' win' : '') : occ ? 'occ' : 'mot';
+      return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(t + ': ' + st + (rel ? ', ' + rel : ''))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`);
+    const blk = (k, rows, n) => { const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[1]}<i>${n}</i></div>${rows}</ha-card></div>`); };
+    const dimm = (s) => (s.attributes.supported_color_modes || []).some((x) => x !== 'onoff') || s.attributes.brightness != null;
+    // światła
+    const L = S.light.filter(ok);
+    if (L.length) { const d = HG_SEC.find((x) => x[0] === 'light'), nOn = L.filter((e) => h.states[e].state === 'on').length;
+      blocks.push(`<div class="blk"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[1]}<i>${nOn ? `${nOn} z ${L.length} wł.` : L.length}</i></div><div class="lg">${L.map((e) => {
+      const s = h.states[e], on = s.state === 'on', dom = e.split('.')[0], nm = this._nm(e, 'Światło');
+      const pct = on && s.attributes.brightness != null ? Math.round(s.attributes.brightness / 2.55) : on ? 100 : 0, dm = dom === 'light' && dimm(s);
+      const br = dm && on ? `<div class="br"><input type="range" min="0" max="100" step="1" value="${pct}" style="--v:${pct}%" data-act="bri" data-e="${H.esc(e)}" aria-label="${H.esc('Jasność: ' + nm)}"><output>${pct}%</output></div>` : '';
+      return `<div class="lt ${on ? 'on' : ''}"><button class="ltb" data-act="tgl" data-e="${H.esc(e)}" aria-pressed="${on}" aria-label="${H.esc(nm + ': ' + (on ? 'włączone' : 'wyłączone'))}"><span class="lti">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</span><span class="ltx"><b>${H.esc(nm)}</b><span>${on ? (dm ? `Włączone · ${pct}%` : 'Włączone') : 'Wyłączone'}</span></span></button><button class="ltm" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(nm + ' – szczegóły')}">${H.icon('mdi:dots-horizontal')}</button>${br}</div>`;
+    }).join('')}</div></ha-card></div>`); }
+    // klimatyzacja (karta nuvio-ac-card wstawiana po renderze) + bojler/podgrzewacz jako wiersz
+    for (const e of S.clim.filter((x) => x.startsWith('climate.') && ok(x))) blocks.push(`<div class="blk"><div class="acslot" data-ac="${H.esc(e)}"></div></div>`);
+    const WH = S.clim.filter((x) => !x.startsWith('climate.') && ok(x));
+    if (WH.length) blk('clim', WH.map((e) => { const s = h.states[e], ct = s.attributes.current_temperature, nm = this._nm(e, 'Podgrzewacz');
+      return `<div class="row ${s.state !== 'off' ? 'on' : ''}"><span class="ri">${H.icon('mdi:water-boiler')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(H.T(this._hass, s))}${s.attributes.temperature != null ? ' · cel ' + H.fmt(s.attributes.temperature) + '°' : ''}</span></button>${ct != null ? `<span class="v">${H.fmt(ct, 0)}<em>°C</em></span>` : ''}</div>`; }).join(''), WH.length);
+    // media
+    const M = S.media.filter(ok);
+    for (const e of M) blocks.push(this._player(e));
+    // rolety
+    const C = S.cover.filter(ok);
+    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, 'Roleta'), p = s.attributes.current_position;
+      const st = { open: 'Otwarta', closed: 'Zamknięta', opening: 'Otwiera się', closing: 'Zamyka się' }[s.state] || H.stateLabel(s.state);
+      return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + p + '%' : ''}</span></button>
+        <div class="bts"><button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="Otwórz">${H.icon('mdi:arrow-up')}</button><button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="Zatrzymaj">${H.icon('mdi:stop')}</button><button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="Zamknij">${H.icon('mdi:arrow-down')}</button></div></div>`; }).join(''), C.length);
+    // kamery: osadzona karta kamery (miniatura, podgląd na żywo, pełny ekran)
+    for (const e of S.cam) if (ok(e)) blocks.push(`<div class="blk"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`);
+    // urządzenia: jedna karta na urządzenie (encje mediów/klimatyzacji/kamer należą do swoich komponentów)
+    const reg = h.entities || {}, skipDev = new Set([...S.media, ...S.clim, ...S.cam].map((e) => reg[e] && reg[e].device_id).filter(Boolean));
+    if (isCw) [CW.heater, ...(CW.up ? [CW.up.tank, CW.up.switch, CW.up.power, ...CW.up.co.map((x) => x[0])] : [])].forEach((e) => { const d = reg[e] && reg[e].device_id; if (d) skipDev.add(d); });
+    const DG = HGDev.groups(h, a, skipDev), unDev = [];
+    if (isCw) DG.loose = DG.loose.filter((e) => !SX.has(e));
+    const EV = HGAreas.env(h, a), envDC = ['temperature', 'humidity', 'battery', 'voltage', 'signal_strength'];
+    const envOnly = (g) => (EV.t != null || EV.u != null) && g.ents.length && g.ents.every((e) => e.startsWith('sensor.') && envDC.includes(((h.states[e] || {}).attributes || {}).device_class));
+    for (const g of DG.devs) { if (envOnly(g)) continue; const html = this._devCard(g, a); if (html) blocks.push(html); else unDev.push(g); }
+    // encje bez urządzenia: przełączniki i odczyty jako listy
+    const LW = DG.loose.filter((e) => ok(e) && S.sw.includes(e));
+    if (LW.length) blk('sw', LW.map((e) => { const s = h.states[e], dom = e.split('.')[0], nm = this._nm(e, 'Przełącznik');
+      const on = dom === 'lock' ? s.state === 'unlocked' : ['on', 'open'].includes(s.state);
+      const sub = dom === 'lock' ? (s.state === 'locked' ? 'Zamknięty' : 'Otwarty') : on ? 'Włączone' : 'Wyłączone';
+      return `<div class="row ${on ? 'on' : ''}"><span class="ri">${H.icon(s.attributes.icon || HG_DOM_ICON[dom] || 'mdi:toggle-switch-outline')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${sub}</span></button>
+        ${this.toggleHtml(on, 'tgl', false, nm).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(e)}"`)}</div>`; }).join(''), LW.length);
+    const LS = DG.loose.filter((e) => ok(e) && S.sens.includes(e));
+    if (LS.length) blk('sens', LS.map((e) => { const s = h.states[e], dc = s.attributes.device_class, bin = e.startsWith('binary_sensor.'), nm = this._nm(e, 'Czujnik');
+      const [v, u] = bin ? [H.T(this._hass, s), ''] : this._num(s);
+      return `<button class="row ${bin && s.state === 'on' ? 'act' : ''}" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="ri">${H.icon(s.attributes.icon || HG_DC_ICON[dc] || HG_DOM_ICON[e.split('.')[0]])}</span><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</span></button>`; }).join(''), LS.length);
+    // niedostępne: zwinięte (całe urządzenia jako jedna pozycja)
+    const UNI = [...DG.loose.filter((e) => !ok(e) && !S.misc.some((g) => g.ents.includes(e))).map((e) => ({ e, n: this._nm(e, e), i: HG_DOM_ICON[e.split('.')[0]] || 'mdi:help-circle-outline' })),
+      ...[...S.light, ...S.media, ...S.clim.filter((x) => x.startsWith('climate.'))].filter((e) => !ok(e)).map((e) => ({ e, n: this._nm(e, e), i: HG_DOM_ICON[e.split('.')[0]] || 'mdi:help-circle-outline' })),
+      ...unDev.map((g) => { const dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents); return { d: g.d, n: dv.name_by_user || (P && P.name) || dv.name || 'Urządzenie', i: (P && P.icon) || 'mdi:devices' }; })];
+    if (UNI.length) blocks.push(`<div class="blk ${this._showUn ? "" : "unb"}"><ha-card class="glass ${this._showUn ? "" : "quiet"}"><button class="unh" data-act="unv" aria-expanded="${!!this._showUn}">Niedostępne · ${UNI.length}${H.icon(this._showUn ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>
+      ${this._showUn ? UNI.map((x) => `<button class="row un" ${x.d ? `data-act="dev" data-d="${H.esc(x.d)}"` : `data-act="more" data-e="${H.esc(x.e)}"`} style="width:100%"><span class="ri">${H.icon(x.i)}</span><span class="tx"><b>${H.esc(x.n)}</b><span>Niedostępne</span></span></button>`).join('') : ''}</ha-card></div>`);
+    // tryb edycji: encje dodane do pokoju (klimat/kamera jako osadzone karty, reszta jako kafelki)
+    for (const x of RL.added) if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
+      blocks.push(`<div class="blk" data-hgk="${H.esc(x.e)}">${k === 'clim' ? `<div class="acslot" data-ac="${H.esc(x.e)}"></div>` : k === 'cam' ? `<div class="camslot" data-cam="${H.esc(x.e)}"></div>` : `<div class="tg2 one">${hgTileHtml(h, x.e).replace(/ data-hgk="[^"]*"/, '')}</div>`}</div>`); }
+    // klucze bloków (stałe między renderami): encja/urządzenie z pierwszego atrybutu albo rodzaj sekcji
+    const seenK = {};
+    const keyed = blocks.map((b) => { const m0 = b.match(/^\s*<div class="blk[^"]*" data-hgk="([^"]+)"/); let k = m0 && m0[1];
+      if (!k) { const m1 = b.match(/data-(?:ac|cam|d)="([^"]+)"/) || b.match(/class="sh">[\s\S]*?<\/ha-icon>([^<]+)/) || b.match(/data-e="([^"]+)"/) || b.match(/class="(cwu|stw|chips|unh)/); k = m1 ? m1[1].trim() : 'b'; }
+      seenK[k] = (seenK[k] || 0) + 1; if (seenK[k] > 1) k += '#' + seenK[k];
+      const html = m0 ? b : b.replace(/^(\s*<div class="blk[^"]*")/, `$1 data-hgk="${H.esc(k)}"`);
+      const nmO = RL.names && RL.names[k]; const html2 = nmO ? html.replace(/(class="sh">[\s\S]*?<\/ha-icon>)([^<]+)/, (m0, a1) => a1 + H.esc(nmO)) : html;
+      const cf = RL.conf[k] || {}; let html3 = cf.i ? html2.replace(/(class="sh">\s*<ha-icon class="[^"]*" icon=")[^"]*/, `$1${H.esc(cf.i)}`) : html2;
+      if (cf.t) html3 = html3.replace(/^(\s*<div class="blk)/, `$1 hgm-${cf.t}`);
+      return { k, html: RL.size[k] ? html3.replace(/^(\s*<div class="blk)/, `$1 ${HGL.szc(RL.size[k])}`) : html3 }; });
+    const hidR = new Set(RL.hidden);
+    blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
+    if (!blocks.length) return `<ha-card class="glass"><div class="empty"><b>Brak urządzeń w tym pokoju</b>Przypisz urządzenia do obszaru „${H.esc(a.name)}” w ustawieniach Home Assistant.
+      ${a.virtual ? '' : `<button class="lnk" data-act="area" data-a="${H.esc(a.id)}">${H.icon('mdi:cog-outline')}Ustawienia obszaru</button>`}</div></ha-card>`;
+    return `<div class="wrap ${Object.keys(RL.size).length ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
+  }
+  afterRender() {
+    clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0;
+    const tmf = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
+    if (this.$.querySelector('.mpg[data-pl="1"]')) this._mpT = setInterval(() => { for (const g of this.$.querySelectorAll('.mpg[data-pl="1"]')) { const d = +g.dataset.dur, p = Math.min(d, +g.dataset.pos + (Date.now() - +g.dataset.t) / 1000);
+      g.querySelector('i').style.transform = `scaleX(${(p / d).toFixed(4)})`; const n = g.querySelectorAll('.mpn span'); n[0].textContent = tmf(p); n[1].textContent = '-' + tmf(d - p); } }, 1000);
+    for (const im of this.$.querySelectorAll('img.mpa:not([data-t])')) { im.dataset.t = 1; const go = () => { try { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.drawImage(im, 0, 0, 8, 8); const d = x.getImageData(0, 0, 8, 8).data; let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      const n = d.length / 4, cd = im.closest('.mpc'); if (cd) cd.style.setProperty('--mt', `rgb(${Math.round(r / n)} ${Math.round(g / n)} ${Math.round(b / n)})`); } catch (_) {} }; im.complete && im.naturalWidth ? go() : im.addEventListener('load', go, { once: true }); }
+    if (this._stFade) this._stT = setInterval(() => { const el = this.$.querySelector('.stf'), r = Math.ceil((this._stFade - Date.now()) / 1000);
+      if (!el || r <= 0) { clearInterval(this._stT); this._stT = 0; this._stFade = null; if (el) el.textContent = 'Gaśnie…'; return; } el.textContent = `Gaśnie za ${r} s`; const n = this.$.querySelector('.stn'); if (n) n.textContent = r; }, 1000);
+    const h = this._hass, keep = new Set();
+    for (const slot of this.$.querySelectorAll('.acslot[data-ac]')) {
+      const e = slot.dataset.ac; keep.add(e);
+      let el = this._ac.get(e);
+      if (!el) { el = document.createElement('nuvio-ac-card'); el.setConfig({ entity: e, title: this._nm(e, 'Klimatyzacja'), compact: true }); this._ac.set(e, el); }
+      slot.appendChild(el); el.hass = h;
+    }
+    for (const k of [...this._ac.keys()]) if (!keep.has(k)) this._ac.delete(k);
+    this._cams = this._cams || new Map(); const kc = new Set();
+    for (const slot of this.$.querySelectorAll('.camslot[data-cam]')) {
+      const e = slot.dataset.cam; kc.add(e);
+      let el = this._cams.get(e);
+      if (!el) { el = document.createElement('nuvio-camera-card'); const A = this._config.areas || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
+        el.setConfig({ entity: e, name: ((this._config.areas || {}).entity_names || {})[e] || this._nm(e, 'Kamera'), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
+      slot.appendChild(el); el.hass = h;
+    }
+    for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
+    this._camLoad();
+  }
+  _camLoad() {
+    for (const img of this.$.querySelectorAll('img[data-cam]')) {
+      const s = this._hass.states[img.dataset.cam]; if (!s || !s.attributes.entity_picture) continue;
+      const u = s.attributes.entity_picture; img.src = u + (u.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 1000);
+    }
+  }
+  _camTimer() {
+    clearInterval(this._ct);
+    this._ct = setInterval(() => { if (!document.hidden && this.isConnected && this._hass && this.$) this._camLoad(); }, Math.max(5, this._config ? this._config.refresh : 10) * 1000);
+  }
+  onAct(act, t) {
+    const h = this._hass, e = t.dataset.e;
+    if (act[0] === 't' && hgTileAct(this, act, t)) return;
+    if (act === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (act === 'tgl') {
+      const dom = e.split('.')[0], s = h.states[e];
+      if (dom === 'lock') return H.call(h, 'lock', s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e });
+      return H.call(h, ['light', 'switch', 'fan', 'input_boolean', 'humidifier', 'siren', 'valve'].includes(dom) ? dom : 'homeassistant', 'toggle', { entity_id: e });
+    }
+    if (act === 'stb') { const st = h.states[e]; if (!H.ok(st)) return H.fire(this, 'hass-more-info', { entityId: e }); return H.call(h, 'light', 'toggle', { entity_id: e }); }
+    if (act === 'cwut') { const e = t.dataset.e, w = h.states[e]; if (!H.ok(w)) return; const a2 = w.attributes, v = Math.max(a2.min_temp || 30, Math.min(a2.max_temp || 75, Number(a2.temperature || a2.target_temperature || 50) + Number(t.dataset.d))); return H.call(h, 'water_heater', 'set_temperature', { entity_id: e, temperature: v }); }
+    if (act === 'cwus') { const e = t.dataset.e; return H.call(h, 'switch', h.states[e] && h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
+    if (act === 'sta') return H.call(h, 'automation', h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e });
+    if (act === 'wm') return H.call(h, 'select', 'select_option', { entity_id: e, option: t.dataset.o });
+    if (act === 'mpp') return H.call(h, 'media_player', 'media_play_pause', { entity_id: e });
+    if (act === 'mpprev') return H.call(h, 'media_player', 'media_previous_track', { entity_id: e });
+    if (act === 'mpnext') return H.call(h, 'media_player', 'media_next_track', { entity_id: e });
+    if (act === 'mpmu') return H.call(h, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !h.states[e].attributes.is_volume_muted });
+    if (act === 'mpw') return H.call(h, 'media_player', h.states[e].state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e });
+    if (act === 'cov') return H.call(h, 'cover', t.dataset.s, { entity_id: e });
+    if (act === 'robots') return H.navigate(this._config.robots_path);
+    if (act === 'dev') return H.navigate('/config/devices/device/' + t.dataset.d);
+    if (act === 'area') return H.navigate('/config/areas/area/' + t.dataset.a);
+    if (act === 'rooms') return H.navigate(HG_P('rooms'));
+    if (act === 'unv') { this._showUn = !this._showUn; return this.rerender(); }
+    if (act === 'dmore') { const d = t.dataset.d, o = this._devOpen = this._devOpen || new Set(); o.has(d) ? o.delete(d) : o.add(d); return this.rerender(); }
+  }
+  getCardSize() { return 10; }
+}
+hgReg('nuvio-room-card', HGRoomCard, 'Nuvio – Pokój', 'Wszystkie encje pokoju pogrupowane wg rodzaju (adres ?area=<id>)');
+
+/* ===================== POGODA NA ZEWNĄTRZ ===================== */
+/* Źródło: weather.<x> (stan + atrybuty), prognoza godzinowa i dzienna przez WS weather/subscribe_forecast (jedna subskrypcja na typ,
+   współdzielona przez wszystkie instancje karty), temperatura „teraz” z fizycznego czujnika zewnętrznego (CFG temp_sensor), słońce z sun.sun.
+   Ikony: Meteocons (basmilius/weather-icons, MIT) hostowane lokalnie; animowana tylko duża ikona, w lite / reduced-motion wersja statyczna. */
+const HG_WX_COND = {
+  'clear-night': ['Bezchmurnie', 'clear-night', 'clear-night'], sunny: ['Słonecznie', 'clear-day', 'clear-night'], partlycloudy: ['Częściowe zachmurzenie', 'partly-cloudy-day', 'partly-cloudy-night'],
+  cloudy: ['Pochmurno', 'cloudy', 'cloudy'], fog: ['Mgła', 'fog-day', 'fog-night'], rainy: ['Deszcz', 'rain', 'rain'], pouring: ['Ulewa', 'extreme-rain', 'extreme-rain'],
+  snowy: ['Śnieg', 'snow', 'snow'], 'snowy-rainy': ['Deszcz ze śniegiem', 'sleet', 'sleet'], hail: ['Grad', 'hail', 'hail'], lightning: ['Burza', 'thunderstorms', 'thunderstorms'],
+  'lightning-rainy': ['Burza z deszczem', 'thunderstorms-rain', 'thunderstorms-rain'], windy: ['Wietrznie', 'wind', 'wind'], 'windy-variant': ['Wietrznie, pochmurno', 'wind', 'wind'],
+  exceptional: ['Zjawisko wyjątkowe', 'not-available', 'not-available'],
+};
+const HG_WX_SHORT = { 'Częściowe zachmurzenie': 'Częś. zachm.', 'Deszcz ze śniegiem': 'Deszcz/śnieg', 'Burza z deszczem': 'Burza, deszcz', 'Wietrznie, pochmurno': 'Wietrznie', 'Zjawisko wyjątkowe': 'Wyjątkowe' };
+const HGWx = {
+  subs: new Map(),   // key entity|type -> { data, cbs:Set, unsub, pending }
+  sub(hass, entity, type, cb) {
+    const k = entity + '|' + type; let s = this.subs.get(k);
+    if (!s) {
+      s = { data: null, cbs: new Set(), unsub: null };
+      this.subs.set(k, s);
+      try {
+        s.pending = hass.connection.subscribeMessage((m) => { s.data = (m && m.forecast) || []; for (const f of s.cbs) f(s.data); }, { type: 'weather/subscribe_forecast', forecast_type: type, entity_id: entity });
+        s.pending.then((u) => { s.unsub = u; if (!s.cbs.size) { u(); this.subs.delete(k); } }, () => { this.subs.delete(k); });
+      } catch (e) { this.subs.delete(k); }
+    }
+    s.cbs.add(cb); if (s.data) cb(s.data);
+    return () => { s.cbs.delete(cb); if (!s.cbs.size && s.unsub) { s.unsub(); this.subs.delete(k); } };
+  },
+  still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
+  icon(cfg, cond, night, anim) {
+    const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
+    return `${cfg.icon_base}${anim && !this.still() ? '' : 'static/'}${f}.svg?v=${cfg.icon_v}`;
+  },
+  // kolor temperatury: zimno (niebieski) -> ciepło (pomarańcz)
+  tcol(t) {
+    const st = [[-10, [76, 130, 230]], [0, [90, 170, 235]], [10, [96, 196, 160]], [18, [245, 196, 70]], [26, [245, 130, 50]], [34, [230, 70, 60]]];
+    if (t <= st[0][0]) return `rgb(${st[0][1]})`; if (t >= st[st.length - 1][0]) return `rgb(${st[st.length - 1][1]})`;
+    for (let i = 1; i < st.length; i++) if (t <= st[i][0]) { const [a, ca] = st[i - 1], [b, cb] = st[i], k = (t - a) / (b - a); return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(',')})`; }
+  },
+  hm: (d) => d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
+};
+class HGWeatherCard extends HGBase {
+  defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: 'Na zewnątrz', icon_base: HG_ASSET + 'assets/meteocons/', icon_v: '1', variant: 'card' }; }
+  ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun].filter(Boolean); }
+  _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
+  set hass(h) { const first = !this._hass; this._hass = h; if (first || !this._u) this._subscribe(); this._update(); }
+  get hass() { return this._hass; }
+  connectedCallback() { super.connectedCallback(); if (this._hass) this._subscribe(); }
+  disconnectedCallback() { for (const u of this._u || []) u(); this._u = null; this._closeX(); }
+  _subscribe() {
+    const c = this._config; if (!c || !this._hass || this._u || !this.isConnected) return;
+    const fp = (d) => JSON.stringify((d || []).slice(0, 30).map((x) => [x.datetime, x.condition, x.temperature, x.templow, x.precipitation, x.precipitation_probability, x.wind_speed]));
+    this._u = [
+      HGWx.sub(this._hass, c.entity, 'hourly', (d) => { const f = fp(d); if (f === this._hf) return; this._hf = f; this._hourly = d; this._hv = (this._hv || 0) + 1; this._update(); this._xUpd(); }),
+      HGWx.sub(this._hass, c.entity, 'daily', (d) => { const f = fp(d); if (f === this._df) return; this._df = f; this._daily = d; this._dv = (this._dv || 0) + 1; this._update(); this._xUpd(); }),
+    ];
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; gap:6u; padding:var(--s2) var(--s3) var(--s2); min-width:0; overflow:hidden; }
+.hd .ic{ color:var(--hg-accent-tx); }
+.hdb{ display:flex; align-items:center; gap:var(--s1); min-width:0; flex:1; background:none; padding:0; color:inherit; text-align:left; cursor:pointer; }
+.now{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); min-width:0; }
+.now img{ width:max(40u, 46px); height:max(40u, 46px); margin:-6u -4u -6u -6u; }
+.cd{ min-width:0; display:flex; flex-direction:column; gap:2u; }
+.cd b{ font-size:var(--fs-md); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cd span{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tn{ font-size:clamp(34px, calc(var(--k) * 34), 52px); font-weight:300; line-height:1; letter-spacing:-.04em; font-variant-numeric:tabular-nums; color:var(--hg-tx-1e2023); }
+.tn sup{ font-size:.45em; font-weight:400; vertical-align:top; margin-left:1px; position:relative; top:.15em; }
+.strip{ flex:none; position:relative; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; scrollbar-width:none; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; margin:0 calc(var(--s3) * -1); padding:0 var(--s3); scroll-snap-type:x proximity; }
+.strip::-webkit-scrollbar{ display:none; }
+.hrs{ display:grid; grid-auto-flow:column; grid-auto-columns:max(34u, 42px); gap:2u; width:max-content; }
+.h{ display:flex; flex-direction:column; align-items:center; gap:1u; padding:2u 0 0; scroll-snap-align:start; font-variant-numeric:tabular-nums; }
+.h small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); } .h.nw small{ color:var(--hg-tx-1e2023); font-weight:600; }
+.h img{ width:max(22u, 26px); height:max(22u, 26px); }
+.h b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); }
+.h i{ display:flex; align-items:center; gap:1px; font-style:normal; font-size:var(--fs-xs); color:var(--hg-tx-6a6e74); min-height:14px; white-space:nowrap; }
+.h i ha-icon{ width:11px; height:11px; --mdc-icon-size:11px; }
+.h i.wet{ color:var(--hg-accent-tx); font-weight:600; }
+.h i.wn{ color:var(--hg-tx-6a6e74); }
+.tl{ position:relative; height:4px; border-radius:2px; margin:3u 0 4u; }
+.tl .kn{ position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 0 0 2px var(--hg-sh-000000-018), var(--hg-sh-sm); }
+.sun{ flex:none; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); font-variant-numeric:tabular-nums; border-top:1px solid var(--hg-bd-000000-006); padding-top:var(--s1); }
+.sun > span{ display:flex; align-items:center; gap:3u; white-space:nowrap; min-width:0; } .sun > span b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); }
+.sun img{ width:22px; height:22px; margin:-4px -2px; }
+.sun svg{ width:100%; height:max(22u, 26px); overflow:visible; }
+.arc{ fill:none; stroke:var(--hg-gx-000000-014); stroke-width:1.5; stroke-dasharray:3 3; vector-effect:non-scaling-stroke; }
+.arcd{ fill:none; stroke:var(--hg-accent); stroke-width:2; vector-effect:non-scaling-stroke; }
+.hz{ stroke:var(--hg-gx-000000-012); stroke-width:1; vector-effect:non-scaling-stroke; }
+.ph{ font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); padding:var(--s1) 0; }
+/* wariant „hero”: na zdjęciu, bez tła/ramki; typografia jak ekran blokady iOS (biały tekst, warstwowy miękki cień) */
+:host([variant=hero]){ display:block; --wx-u: var(--hg-u0, 1.3px); }
+.hero{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:none; border:0; padding:0; margin:0; color:var(--hg-tx-ffffff); text-align:left; cursor:pointer;
+  text-shadow:0 2px 24px var(--hg-sh-000000-025), 0 1px 3px var(--hg-sh-000000-020); font-variant-numeric:tabular-nums; -webkit-tap-highlight-color:transparent; outline:none; isolation:isolate; }
+/* bardzo miękkie przyciemnienie za blokiem (bez widocznej krawędzi) – czytelność na jasnym niebie */
+.hero::before{ content:''; position:absolute; z-index:-1; inset:-28% -22% -30% -18%; background:radial-gradient(closest-side, var(--hg-bg-000000-020), var(--hg-bg-000000-008) 60%, var(--hg-bg-000000-000)); pointer-events:none; }
+.hero:focus-visible{ outline:1px solid var(--hg-tx-ffffff-070); outline-offset:10px; border-radius:16px; }
+.hero.anim{ animation:hgwxin .7s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes hgwxin{ from{ opacity:0; transform:translateY(6px); } }
+@media (prefers-reduced-motion: reduce){ .hero.anim{ animation:none; } }
+.hero .big{ display:flex; align-items:flex-start; font-size:clamp(72px, calc(var(--wx-u) * 73), 140px); font-weight:100; line-height:.9; letter-spacing:-.04em; font-feature-settings:'tnum' 1; }
+.hero .big sup{ font-size:.36em; font-weight:200; line-height:1; margin:.06em 0 0 .04em; letter-spacing:0; }
+/* ikona wyrównana do wysokości wersalików liczby */
+.hero .big img{ width:.6em; height:.6em; margin:.02em 0 0 .14em; filter:drop-shadow(0 2px 10px var(--hg-sh-000000-022)); }
+.hero .cd2{ font-size:clamp(16px, calc(var(--wx-u) * 14.6), 28px); font-weight:500; letter-spacing:.01em; line-height:1.2; }
+.hero .mm{ display:flex; gap:1.1em; font-size:clamp(13px, calc(var(--wx-u) * 12), 23px); font-weight:400; line-height:1.2; }
+.hero .mm span{ display:inline-flex; align-items:baseline; gap:.25em; } .hero .mm i{ font-style:normal; font-weight:200; opacity:.75; }
+.hero .nx{ display:flex; margin-top:8px; font-size:clamp(12px, calc(var(--wx-u) * 11.3), 21px); }
+.hero .hc{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:0 1em; min-width:2.6em; }
+.hero .hc:first-child{ padding-left:0; align-items:flex-start; } .hero .hc + .hc{ border-left:1px solid var(--hg-bd-ffffff-018); }
+.hero .hc small{ font-size:.78em; font-weight:500; letter-spacing:.06em; text-transform:uppercase; opacity:.6; }
+.hero .hc img{ width:1.9em; height:1.9em; margin:-.15em 0; }
+.hero .hc b{ font-weight:400; }
+.hero .hc em{ font-style:normal; font-size:.78em; font-weight:400; color:var(--hg-accent-faint); line-height:1; }
+/* wariant kompaktowy (tablet pionowo / telefon): chip obok cen paliw */
+.chip{ display:inline-flex; align-items:center; gap:6px; box-sizing:border-box; height:var(--chip-h, 100%); min-height:var(--chip-h, 32px); padding:0 var(--chip-pr, 12px) 0 var(--chip-pl, 6px); border-radius:var(--chip-r, 12px); position:relative; isolation:isolate; background:transparent;
+  border: var(--glass-border, 1px solid transparent); box-shadow: var(--glass-shadow, none); color:var(--hg-tx-1e2023); font-size:var(--fs-sm); white-space:nowrap; cursor:pointer; font-variant-numeric:tabular-nums; }
+.chip::after{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg, var(--hg-bg-ffffff-060)); -webkit-backdrop-filter: var(--glass-bf, none); backdrop-filter: var(--glass-bf, none); }
+.chip img{ width:var(--chip-ic, 26px); height:var(--chip-ic, 26px); flex:none; } .chip .s{ display:none; }
+@media (max-width:600px){ .chip .f{ display:none; } .chip .s{ display:inline; } } .chip b{ font-weight:600; } .chip span{ color:var(--hg-tx-3a3d42); }
+/* szczegóły: kolumny bez odstępów -> gradient wyrównany do środków godzin */
+.sc2{ width:max-content; min-width:100%; }
+.hrs.al{ gap:0; grid-auto-columns:56px; }
+`);
+  }
+  _tNow() {
+    const h = this._hass, c = this._config, s = h.states[c.temp_sensor];
+    if (H.ok(s) && isFinite(parseFloat(s.state))) return { v: parseFloat(s.state), src: 'sensor' };
+    const w = h.states[c.entity]; const t = w && parseFloat(w.attributes.temperature);
+    return isFinite(t) ? { v: t, src: 'weather' } : null;
+  }
+  _night(d) {
+    const s = this._hass.states[this._config.sun]; if (!s) return false;
+    const r = Date.parse(s.attributes.next_rising), st = Date.parse(s.attributes.next_setting); if (!isFinite(r) || !isFinite(st)) return false;
+    // dla czasu d: noc, jeśli d leży między zachodem a wschodem (przybliżenie dobowe z najbliższych zdarzeń)
+    const day = 86400000, t = d.getTime();
+    let sr = r, ss = st; while (sr - day > t) sr -= day; while (ss - day > t) ss -= day;
+    while (sr < t - day) sr += day; while (ss < t - day) ss += day;
+    const lastRise = sr <= t ? sr : sr - day, lastSet = ss <= t ? ss : ss - day;
+    return lastSet > lastRise;
+  }
+  _hrs() {
+    const now = Date.now();
+    return (this._hourly || []).filter((f) => Date.parse(f.datetime) > now - 3600000).slice(0, this._config.hours);
+  }
+  _hourCells(hr, wide) {
+    const c = this._config;
+    return hr.map((f, i) => {
+      const d = new Date(f.datetime), pp = f.precipitation_probability, mm = f.precipitation, ws = f.wind_speed;
+      const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${Math.round(pp)}%</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' mm' : '') : ''}</i>` : '';
+      const wn = wide && ws != null ? `<i class="wn">${H.icon('mdi:weather-windy')}${H.fmt(ws, 0)}</i>` : '';
+      const mmx = wide && pp != null && mm != null && mm > 0 ? `<i class="wet">${H.fmt(mm, 1)} mm</i>` : '';
+      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? 'Teraz' : 'Godz. ' + d.getHours()}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(f.temperature, 0)}°${pp != null ? `, opady ${Math.round(pp)}%` : mm != null ? `, opady ${H.fmt(mm, 1)} mm` : ''}`)}">
+        <small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy" decoding="async"><b>${H.fmt(f.temperature, 0)}°</b>${pr}${mmx}${wn}</div>`;
+    }).join('');
+  }
+  _tline(hr) {
+    if (hr.length < 2) return '';
+    const ts = hr.map((f) => f.temperature).filter((t) => t != null); if (!ts.length) return '';
+    const stops = hr.map((f, i) => `${HGWx.tcol(f.temperature)} ${((i + .5) / hr.length * 100).toFixed(1)}%`).join(',');
+    const t0 = Date.parse(hr[0].datetime), frac = Math.max(0, Math.min(1, (Date.now() - t0) / 3600000));
+    const kx = ((frac + .5) / hr.length) * 100;
+    return `<div class="tl" style="background:linear-gradient(90deg, ${stops})" aria-hidden="true"><span class="kn" style="left:${kx.toFixed(2)}%"></span></div>`;
+  }
+  _sun() {
+    const s = this._hass.states[this._config.sun]; if (!s) return '';
+    const r = Date.parse(s.attributes.next_rising), st = Date.parse(s.attributes.next_setting); if (!isFinite(r) || !isFinite(st)) return '';
+    const now = Date.now(), up = st < r;          // słońce nad horyzontem, jeśli najbliższy jest zachód
+    // pozycja: dzień = (teraz − wschód dziś) / (zachód − wschód dziś); wschód dziś ≈ jutrzejszy − 24 h (oś łuku, nie wyświetlana godzina)
+    let p, night = !up;
+    if (up) { const r0 = r - 86400000; p = (now - r0) / Math.max(1, st - r0); }
+    else { const s0 = st > r ? st - 86400000 : st; p = (now - s0) / Math.max(1, r - s0); }
+    p = Math.max(0, Math.min(1, p));
+    const x = p * 100, y = night ? 30 + Math.sin(p * Math.PI) * 6 : 30 - Math.sin(p * Math.PI) * 26;
+    const pts = []; for (let i = 0; i <= 20; i++) { const q = i / 20; pts.push(`${(q * 100).toFixed(1)},${(30 - Math.sin(q * Math.PI) * 26).toFixed(1)}`); }
+    const done = []; if (!night) for (let i = 0; i <= 20; i++) { const q = (i / 20) * p; done.push(`${(q * 100).toFixed(1)},${(30 - Math.sin(q * Math.PI) * 26).toFixed(1)}`); }
+    const svg = `<svg viewBox="0 -2 100 40" preserveAspectRatio="none" aria-hidden="true"><line class="hz" x1="0" y1="30" x2="100" y2="30"/><polyline class="arc" points="${pts.join(' ')}"/>${done.length ? `<polyline class="arcd" points="${done.join(' ')}"/>` : ''}
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${night ? 'var(--hg-ac-9aa6c8)' : 'var(--hg-accent)'}" style="stroke:var(--hg-gx-ffffff)" stroke-width="1.2" vector-effect="non-scaling-stroke" transform="scale(1 1)"/></svg>`;
+    const c = this._config, ri = `${c.icon_base}static/sunrise.svg?v=${c.icon_v}`, si = `${c.icon_base}static/sunset.svg?v=${c.icon_v}`;
+    const lab = (t) => { const d = new Date(t), today = new Date().toDateString() === d.toDateString(); return HGWx.hm(d) + (today ? '' : ' jutro'); };
+    return `<div class="sun" aria-label="${H.esc(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`)}"><span><img src="${ri}" alt=""><span><b>${HGWx.hm(new Date(r))}</b> wschód${new Date().toDateString() === new Date(r).toDateString() ? '' : ' (jutro)'}</span></span>${svg}<span><span><b>${HGWx.hm(new Date(st))}</b> zachód${new Date().toDateString() === new Date(st).toDateString() ? '' : ' (jutro)'}</span><img src="${si}" alt=""></span></div>`;
+  }
+  _minmax() {
+    const d0 = (this._daily || [])[0];
+    if (d0 && new Date(d0.datetime).toDateString() === new Date().toDateString() && d0.temperature != null) return [d0.temperature, d0.templow];
+    const today = new Date().toDateString(), hs = (this._hourly || []).filter((f) => new Date(f.datetime).toDateString() === today).map((f) => f.temperature).filter((t) => t != null);
+    return hs.length ? [Math.max(...hs), Math.min(...hs)] : null;
+  }
+  render() {
+    const h = this._hass, c = this._config, w = h.states[c.entity];
+    if (c.variant === 'hero') return this._hero(w);
+    const hd = (inner) => `<div class="hd"><button class="hdb" data-act="more" aria-label="${H.esc(c.title + ' – szczegóły pogody')}">${H.icon('mdi:weather-partly-cloudy', 'ic')}<span class="tt">${H.esc(c.title)}</span></button>${inner || ''}</div>`;
+    if (!H.ok(w)) return `<ha-card class="glass">${hd()}<div class="ph">Pogoda niedostępna</div></ha-card>`;
+    const tn = this._tNow(), cond = HG_WX_COND[w.state] || [w.state], mm = this._minmax(), night = this._night(new Date());
+    const hr = this._hrs();
+    const exp = `<button class="ib" data-act="expand" aria-label="Prognoza szczegółowa" title="Prognoza 24 h i dni">${H.icon('mdi:arrow-expand')}</button>`;
+    return `<ha-card class="glass">${hd(exp)}
+      <div class="now"><img src="${HGWx.icon(c, w.state, night, true)}" alt="" decoding="async"><div class="cd"><b>${H.esc(cond[0])}</b>${mm ? `<span>Maks ${H.fmt(mm[0], 0)}° · Min ${mm[1] != null ? H.fmt(mm[1], 0) + '°' : '–'}</span>` : ''}</div>
+        ${tn ? `<div class="tn" title="${tn.src === 'sensor' ? 'Czujnik zewnętrzny' : 'Prognoza (brak czujnika)'}">${H.fmt(tn.v, Math.abs(tn.v) < 10 ? 1 : 0)}<sup>°</sup></div>` : ''}</div>
+      ${hr.length ? `<div class="strip" tabindex="0" aria-label="Prognoza godzinowa"><div class="hrs" role="list">${this._hourCells(hr, false)}</div>${this._tline(hr)}</div>` : ''}
+      ${this._sun()}</ha-card>`;
+  }
+  _hero(w) {
+    const c = this._config;
+    if (!H.ok(w)) return '';
+    const t = parseFloat(w.attributes.temperature), cond = (HG_WX_COND[w.state] || [w.state])[0], mm = this._minmax(), night = this._night(new Date());
+    const lbl = `Na zewnątrz: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, maks ${H.fmt(mm[0], 0)}°, min ${H.fmt(mm[1], 0)}°` : ''} – prognoza szczegółowa`;
+    const chip = `<button class="chip" data-act="expand" aria-label="${H.esc(lbl)}" title="${H.esc(cond)}"><img src="${HGWx.icon(c, w.state, night, false)}" alt=""><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''}</b><span class="f">${H.esc(cond)}</span><span class="s">${H.esc(HG_WX_SHORT[cond] || cond)}</span></button>`;
+    if (this.hasAttribute('compact')) return chip;
+    const first = !this._shown; this._shown = true;
+    const nx = this._hrs().slice(1, 6).map((f) => { const d = new Date(f.datetime);
+      return `<span class="hc"><small>${String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt=""><b>${H.fmt(f.temperature, 0)}°</b>${f.precipitation > 0 ? `<em>${H.fmt(f.precipitation, 1)} mm</em>` : ''}</span>`; }).join('');
+    return `<button class="hero ${first && !HGWx.still() ? 'anim' : ''}" data-act="expand" aria-label="${H.esc(lbl)}" title="Prognoza szczegółowa">
+      <span class="big">${isFinite(t) ? H.fmt(t, 0) : '–'}<sup>°</sup><img src="${HGWx.icon(c, w.state, night, true)}" alt=""></span>
+      <span class="cd2">${H.esc(cond)}</span>${mm ? `<span class="mm"><span><i>↑</i>${H.fmt(mm[0], 0)}°</span>${mm[1] != null ? `<span><i>↓</i>${H.fmt(mm[1], 0)}°</span>` : ''}</span>` : ''}${nx ? `<span class="nx" aria-hidden="true">${nx}</span>` : ''}</button>`;
+  }
+  static get observedAttributes() { return ['compact']; }
+  attributeChangedCallback() { if (this._hass && this._config) this.rerender(); }
+  onAct(a) {
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: this._config.entity });
+    if (a === 'expand') return this._openX();
+  }
+  /* szczegóły pogody: dialog w document.body (poza panelem z contain/transform), styl iOS Weather w naszym szkle */
+  _openX() {
+    if (this._x) return;
+    const x = this._x = document.createElement('div'); x.className = 'hg-wx-x';
+    const sr = x.attachShadow({ mode: 'open' });
+    sr.innerHTML = `<style>${HG_BASE}${U(`
+:host{ position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-032); animation:f .18s ease; }
+@keyframes f{ from{ opacity:0; } }
+@media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
+.root{ width:min(680px, 100%); min-width:0; height:auto !important; }
+.dlg{ box-sizing:border-box; width:100%; max-height:min(90vh, 820px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:24px; padding:24px;
+  border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); font-variant-numeric:tabular-nums; }
+.top{ display:flex; align-items:center; gap:12px; min-width:0; }
+.top img{ width:56px; height:56px; margin:-8px -4px; flex:none; }
+.top .tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.top .tx small{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); } .top .tx b{ font-size:20px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.top .tx b span{ font-weight:300; }
+.cls{ width:40px; height:40px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-005); color:var(--hg-tx-1e2023); }
+.cls ha-icon{ width:20px; height:20px; }
+.sec{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+.sh{ font-size:var(--fs-xs); font-weight:600; color:var(--hg-tx-5a5e64); text-transform:uppercase; letter-spacing:.06em; }
+.det{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
+.t{ display:flex; flex-direction:column; gap:4px; padding:12px; border-radius:var(--r-sm); background:var(--hg-bg-000000-004); min-width:0; }
+.t span{ display:flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .t ha-icon{ width:16px; height:16px; flex:none; color:var(--hg-tx-5a5e64); }
+.t b{ font-size:18px; font-weight:600; white-space:nowrap; } .t b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-4a4e54); margin-left:2px; }
+.hs{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; overscroll-behavior-x:contain; touch-action:pan-x pan-y; padding:4px 0;
+  -webkit-mask-image:linear-gradient(90deg, transparent, var(--hg-ac-000000) 16px, var(--hg-ac-000000) calc(100% - 24px), transparent); mask-image:linear-gradient(90deg, transparent, var(--hg-ac-000000) 16px, var(--hg-ac-000000) calc(100% - 24px), transparent); }
+.hs::-webkit-scrollbar{ display:none; }
+.hr{ display:grid; grid-auto-flow:column; grid-auto-columns:52px; width:max-content; padding:0 16px; }
+.hc{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+.hc small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); } .hc.nw small{ color:var(--hg-tx-1e2023); font-weight:600; }
+.hc img{ width:30px; height:30px; } .hc b{ font-size:var(--fs-md); font-weight:500; }
+.hc i{ font-style:normal; font-size:11px; color:var(--hg-accent-tx); min-height:13px; white-space:nowrap; }
+.hc .d{ width:6px; height:6px; border-radius:50%; margin-top:2px; }
+.days{ display:flex; flex-direction:column; }
+.dy{ display:grid; grid-template-columns:minmax(64px, 1.1fr) 36px 40px 34px minmax(80px, 2fr) 34px; align-items:center; gap:8px; min-height:48px; font-size:var(--fs-md); }
+.dy + .dy{ border-top:1px solid var(--hg-bd-000000-007); }
+.dy .n{ font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .dy img{ width:36px; height:36px; }
+.dy .p{ font-size:11px; color:var(--hg-accent-tx); white-space:nowrap; } .dy .lo{ color:var(--hg-tx-5a5e64); text-align:right; } .dy .hi{ text-align:right; font-weight:600; }
+.rg{ position:relative; height:6px; border-radius:3px; background:var(--hg-bg-000000-007); }
+.rg i{ position:absolute; top:0; bottom:0; border-radius:3px; } .rg u{ position:absolute; top:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; background:currentColor; box-shadow:0 0 0 2px var(--hg-panel-flat, var(--hg-sh-eceef2)), 0 1px 3px var(--hg-bg-000000-030); }
+.sun{ display:grid; grid-template-columns:auto 1fr auto; align-items:end; gap:12px; }
+.sun .e{ display:flex; flex-direction:column; align-items:center; gap:2px; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; }
+.sun .e img{ width:32px; height:32px; margin:-4px 0; } .sun .e b{ font-size:var(--fs-md); font-weight:600; color:var(--hg-tx-1e2023); }
+.sun svg{ width:100%; max-width:240px; height:auto; justify-self:center; overflow:visible; }
+.sun .hz{ stroke:var(--hg-gx-000000-018); stroke-width:1; } .sun .rem{ fill:none; stroke:var(--hg-gx-000000-022); stroke-width:1.5; stroke-dasharray:4 5; } .sun .dn{ fill:none; stroke:var(--hg-accent); stroke-width:2.5; stroke-linecap:round; }
+@media (max-width: 520px){ .dlg{ padding:20px 16px; gap:20px; } .det{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .dy{ grid-template-columns:minmax(56px, 1fr) 30px 30px minmax(56px, 1.6fr) 30px; } .dy .p{ display:none; } .dy img{ width:30px; height:30px; } }
+`)}</style><div class="root"></div>`;
+    x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x || p.some((n) => n.dataset && n.dataset.act === 'xclose')) this._closeX(); });
+    this._xKey = (e) => { if (e.key === 'Escape') this._closeX(); }; document.addEventListener('keydown', this._xKey);
+    document.body.appendChild(x); this._xUpd(); this._sunToday();
+  }
+  /* dzisiejszy wschód/zachód: z historii sun.sun (przejścia below/above_horizon od północy), reszta z next_rising/next_setting */
+  async _sunToday() {
+    const h = this._hass, c = this._config; if (!h || !h.callWS) return;
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    if (this._sunDay === d0.getTime()) return;
+    try {
+      const r = await h.callWS({ type: 'history/history_during_period', start_time: d0.toISOString(), entity_ids: [c.sun], minimal_response: true, no_attributes: true });
+      const L = (r && r[c.sun]) || []; let rise = null, set = null, prev = null;
+      for (const x of L) { const t = (x.lu || x.lc || 0) * 1000, s = x.s; if (prev && prev !== s && t >= d0.getTime()) { if (s === 'above_horizon' && !rise) rise = t; if (s === 'below_horizon' && rise && !set) set = t; } prev = s; }
+      this._sunDay = d0.getTime(); this._sunHist = { rise, set }; this._xUpd();
+    } catch (e) { /* bez historii: tylko najbliższe zdarzenia */ }
+  }
+  _sunTimes() {
+    const s = this._hass.states[this._config.sun]; if (!s) return null;
+    const nr = Date.parse(s.attributes.next_rising), ns = Date.parse(s.attributes.next_setting);
+    const today = (t) => isFinite(t) && new Date(t).toDateString() === new Date().toDateString();
+    const hs = this._sunHist || {};
+    const rise = today(nr) ? { t: nr } : hs.rise ? { t: hs.rise } : isFinite(nr) ? { t: nr, tm: true } : null;
+    const set = today(ns) ? { t: ns } : hs.set ? { t: hs.set } : isFinite(ns) ? { t: ns, tm: true } : null;
+    return { rise, set, up: s.state === 'above_horizon' };
+  }
+  _sunSvg(st) {
+    if (!st || !st.rise || !st.set) return '';
+    const now = Date.now(), A = (p) => [150 - 130 * Math.cos(Math.PI * p), 104 - 84 * Math.sin(Math.PI * p)];
+    let dot;
+    if (st.up && !st.rise.tm && !st.set.tm) {
+      const p = Math.max(0, Math.min(1, (now - st.rise.t) / Math.max(1, st.set.t - st.rise.t))), [x, y] = A(p);
+      dot = `<path class="dn" d="M20,104 A130,84 0 0 1 ${x.toFixed(1)},${y.toFixed(1)}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" style="fill:var(--hg-accent)" style="stroke:var(--hg-gx-ffffff)" stroke-width="2.5"/>`;
+    } else {
+      // noc: księżyc pod horyzontem, pozycja wg czasu do wschodu
+      const s0 = st.set.tm ? st.set.t - 86400000 : st.set.t, r1 = st.rise.tm ? st.rise.t : st.rise.t + 86400000;
+      const p = Math.max(0, Math.min(1, (now - s0) / Math.max(1, r1 - s0)));
+      dot = `<circle cx="${(20 + 260 * p).toFixed(1)}" cy="${(116 + 8 * Math.sin(Math.PI * p)).toFixed(1)}" r="7" style="fill:var(--hg-gx-9aa6c8)" style="stroke:var(--hg-gx-ffffff)" stroke-width="2"/>`;
+    }
+    return `<svg viewBox="0 0 300 130" aria-hidden="true"><line class="hz" x1="0" y1="104" x2="300" y2="104"/><path class="rem" d="M20,104 A130,84 0 0 1 280,104"/>${dot}</svg>`;
+  }
+  _xUpd() {
+    if (!this._x) return;
+    const c = this._config, h = this._hass, w = h.states[c.entity]; if (!w) return;
+    const at = w.attributes, cond = (HG_WX_COND[w.state] || [w.state])[0], t = parseFloat(at.temperature), night = this._night(new Date());
+    const DN = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+    const dl = (d) => { const t0 = new Date(); t0.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0); const n = Math.round((dd - t0) / 86400000); return n === 0 ? 'Dziś' : n === 1 ? 'Jutro' : DN[dd.getDay()]; };
+    // kafle szczegółów (tylko prawdziwe atrybuty)
+    const WD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], wd = at.wind_bearing != null ? WD[Math.round(at.wind_bearing / 45) % 8] : '';
+    const det = [at.humidity != null ? ['mdi:water-percent', 'Wilgotność', H.fmt(at.humidity, 0), '%'] : null,
+      at.wind_speed != null ? ['mdi:weather-windy', 'Wiatr', H.fmt(at.wind_speed, 0), `${at.wind_speed_unit || 'km/h'}${wd ? ' ' + wd : ''}`] : null,
+      at.pressure != null ? ['mdi:gauge', 'Ciśnienie', H.fmt(at.pressure, 0), at.pressure_unit || 'hPa'] : null,
+      at.uv_index != null ? ['mdi:white-balance-sunny', 'UV', H.fmt(at.uv_index, 1), ''] : null].filter(Boolean)
+      .map(([i, l, v, u]) => `<div class="t"><span>${H.icon(i)}${l}</span><b>${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</b></div>`).join('');
+    // godziny
+    const hr = this._hrs();
+    const hrs = hr.map((f, i) => { const d = new Date(f.datetime);
+      return `<div class="hc ${i === 0 ? 'nw' : ''}"><small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy"><b>${H.fmt(f.temperature, 0)}°</b>
+        <span class="d" style="background:${HGWx.tcol(f.temperature)}"></span><i>${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' mm' : ''}</i></div>`; }).join('');
+    // dni: pasek zakresu na wspólnej skali
+    const D = (this._daily || []).slice(0, 7).filter((f) => f.temperature != null);
+    const lo = Math.min(...D.map((f) => f.templow ?? f.temperature)), hi = Math.max(...D.map((f) => f.temperature)), sp = Math.max(1, hi - lo);
+    const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === 'Dziś';
+      const nowDot = isT && isFinite(t) ? `<u style="left:${Math.max(0, Math.min(100, ((t - lo) / sp) * 100)).toFixed(1)}%"></u>` : '';
+      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(a, 0)}° do ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, opady ${H.fmt(f.precipitation, 1)} mm` : ''}`)}">
+        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc((HG_WX_COND[f.condition] || [f.condition])[0])}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' mm' : ''}</span>
+        <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
+    // słońce
+    const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static/${n}.svg?v=${c.icon_v}`;
+    const se = (o, lab, icn) => o ? `<div class="e"><img src="${ic(icn)}" alt=""><b>${HGWx.hm(new Date(o.t))}</b><span>${lab}${o.tm ? ' jutro' : ''}</span></div>` : '<div></div>';
+    this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="Pogoda – szczegóły">
+      <div class="top"><img src="${HGWx.icon(c, w.state, night, true)}" alt=""><div class="tx"><small>${H.esc(c.title)}</small><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''} <span>· ${H.esc(cond)}</span></b></div><button class="cls" data-act="xclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+      ${det ? `<div class="det">${det}</div>` : ''}
+      ${hrs ? `<div class="sec"><div class="sh">Najbliższe ${hr.length} h</div><div class="hs" tabindex="0" aria-label="Prognoza godzinowa"><div class="hr">${hrs}</div></div></div>` : ''}
+      ${days ? `<div class="sec"><div class="sh">Kolejne dni</div><div class="days">${days}</div></div>` : ''}
+      ${st && (st.rise || st.set) ? `<div class="sec"><div class="sh">Słońce</div><div class="sun">${se(st.rise, 'wschód', 'sunrise')}${svg || '<div></div>'}${se(st.set, 'zachód', 'sunset')}</div></div>` : ''}</div>`;
+    const cl = this._x.shadowRoot.querySelector('.cls'); if (cl && !this._xFocused) { this._xFocused = true; cl.focus(); }
+  }
+  _closeX() { if (!this._x) return; this._x.remove(); this._x = null; this._xFocused = false; document.removeEventListener('keydown', this._xKey); }
+  getCardSize() { return 5; }
+}
+hgReg('nuvio-weather-card', HGWeatherCard, 'Nuvio – Pogoda', 'Na zewnątrz: teraz, prognoza godzinowa, słońce; szczegóły z dniami');
+
+/* ===== nuvio-net-card: widok „Sieć” (UniFi Network + Speedtest). Jedna klasa, sekcje: wan | gw | dev | wlan | cl.
+   Konfiguracja jawna w build.py (CFG['net']); brakujące/niedostępne encje są pomijane. ===== */
+const HGConfirm = {
+  ask(title, text, ok = 'Potwierdź', danger = true, info = false) {
+    return new Promise((res) => {
+      const x = document.createElement('div'); x.className = 'hg-confirm';
+      const sr = x.attachShadow({ mode: 'open' });
+      sr.innerHTML = `<style>${HG_BASE}${U(`
+:host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-036); animation:f .16s ease; }
+@keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
+.d{ width:min(380px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); display:flex; flex-direction:column; gap:16px; }
+.d b{ font-size:18px; font-weight:600; } .d p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); line-height:1.45; }
+.r{ display:flex; gap:8px; justify-content:flex-end; }
+.r button{ height:44px; padding:0 18px; border-radius:22px; font-size:var(--fs-sm); font-weight:600; background:var(--hg-bg-000000-006); color:var(--hg-tx-1e2023); }
+.r button.ok{ background:${danger ? 'var(--hg-ac-c62828)' : 'var(--hg-ac-1e2023)'}; color:var(--hg-tx-ffffff); }
+`)}</style><div class="d" role="alertdialog" aria-modal="true" aria-label="${H.esc(title)}"><b>${H.esc(title)}</b><p>${H.esc(text)}</p>
+        <div class="r">${info ? '' : '<button class="no" data-v="0">Anuluj</button>'}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
+      const done = (v) => { document.removeEventListener('keydown', key); x.remove(); res(v); };
+      const key = (e) => { if (e.key === 'Escape') done(false); };
+      x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x) return done(false); const b = p.find((n) => n.dataset && n.dataset.v); if (b) done(b.dataset.v === '1'); });
+      document.addEventListener('keydown', key); document.body.appendChild(x);
+      setTimeout(() => { const n = sr.querySelector('.no') || sr.querySelector('.ok'); n && n.focus(); }, 30);
+    });
+  },
+};
+window.HGConfirm = window.HGConfirm || HGConfirm;
+const hgPlK = (n) => (n === 1 ? 'klient' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'klienci' : 'klientów');
+const hgUp = (s) => { if (!s || !H.ok(s)) return null; const d = new Date(s.state); if (isNaN(d)) return null;
+  const m = Math.max(0, (Date.now() - d) / 60000); if (m < 60) return `${Math.round(m)} min`; const hh = m / 60; if (hh < 48) return `${Math.round(hh)} godz.`; return `${Math.round(hh / 24)} dni`; };
+
+class HGNetCard extends HGBase {
+  defaults() { return { section: 'wan', net: {} }; }
+  _n() { return this._config.net || {}; }
+  _clientEnts() {
+    const h = this._hass, n = this._n(), cl = n.clients || {}, ex = new Set(cl.exclude || []);
+    const key = h.entities ? Object.keys(h.entities).length : 0;
+    if (this._clK === key && this._clL) return this._clL;
+    const L = Object.values(h.entities || {}).filter((e) => e.platform === (cl.platform || 'unifi') && e.entity_id.startsWith('device_tracker.') && !ex.has(e.entity_id) && !e.hidden).map((e) => e.entity_id);
+    this._clK = key; this._clL = L; return L;
+  }
+  ents() {
+    const n = this._n(), s = this._config.section, g = n.gateway || {}, w = n.wan || {};
+    if (s === 'wan') return [g.state, g.tracker, g.uptime, ...(w.latency || []).map((x) => x.entity), w.down, w.up, w.ping].filter(Boolean);
+    const pe = (L) => (L || []).map((p) => (typeof p === 'string' ? p : p.entity));
+    if (s === 'gw') return [g.state, g.cpu, g.mem, g.temp, g.uptime, g.update, g.restart, g.clients, ...pe(g.ports)].filter(Boolean);
+    if (s === 'dev') return (n.devices || []).flatMap((d) => [d.state, d.cpu, d.mem, d.uptime, d.clients, d.update, d.restart, ...pe(d.ports)]).filter(Boolean);
+    if (s === 'wlan') return (n.wlans || []).flatMap((x) => [x.switch, x.clients, x.qr]).filter(Boolean);
+    if (s === 'cl') return [...this._clientEnts(), ...(n.wlans || []).map((x) => x.clients).filter(Boolean)];
+    return [];
+  }
+  _extraSig() { return [this._config.section === 'wan' ? (this._hist || []).length : 0, this._flt, this._srt, Math.floor(Date.now() / 60000)]; }
+  set hass(h) { const first = !this._hass; this._hass = h; window.__hgHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
+  get hass() { return this._hass; }
+  async _ldHist() {
+    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true;
+    try {
+      const r = await h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 24 * 3600e3).toISOString(), entity_ids: [e.entity], minimal_response: true, no_attributes: true });
+      this._hist = ((r && r[e.entity]) || []).map((x) => parseFloat(x.s)).filter((v) => isFinite(v)); this.rerender();
+    } catch (err) { this._hist = []; }
+    this._hl = false; setTimeout(() => this.isConnected && this._ldHist(), 10 * 60000);
+  }
+  css() {
+    return U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
+.hd .ic{ color:var(--hg-accent-tx); }
+.big{ display:flex; align-items:center; gap:var(--s2); min-width:0; }
+.big .bd{ width:44px; height:44px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-005); color:var(--hg-tx-5a5e64); }
+.big .bd.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .big .bd.bad{ background:var(--hg-bg-c62828); color:var(--hg-tx-ffffff); } .big .bd ha-icon{ width:22px; height:22px; }
+.big b{ display:block; font-size:var(--fs-md); font-weight:600; } .big span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); margin-top:2px; font-variant-numeric:tabular-nums; }
+.kv{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(124px, 100%), 1fr)); gap:var(--s1); }
+.kv > div{ padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-055); min-width:0; }
+.kv small{ display:flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .kv small ha-icon{ width:14px; height:14px; flex:none; }
+.kv b{ display:block; font-size:var(--fs-md); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .kv b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:var(--hg-tx-4a4e54); margin-left:2px; }
+.bar{ height:6px; border-radius:3px; background:var(--hg-bg-000000-010); margin-top:6px; overflow:hidden; padding:0 !important; } .bar i{ display:block; height:100%; border-radius:3px; background:var(--c, var(--hg-accent)); }
+.spk{ display:flex; flex-direction:column; gap:4px; } .spk svg{ width:100%; height:44px; display:block; overflow:visible; } .spk small{ display:flex; justify-content:space-between; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
+.spk polyline{ fill:none; stroke:var(--hg-accent); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.upd{ display:flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); } .upd ha-icon{ width:16px; height:16px; } .upd.av{ color:var(--hg-accent-tx); font-weight:600; }
+.act{ display:flex; gap:var(--s1); flex-wrap:wrap; }
+.pts{ display:flex; gap:6px; flex-wrap:wrap; }
+.pt{ position:relative; display:inline-flex; align-items:center; gap:5px; height:32px; min-height:var(--hg-tgt, 0px); padding:0 10px 0 8px; border-radius:16px; background:var(--hg-bg-000000-005); color:var(--hg-tx-4a4e54); font-size:var(--fs-xs); max-width:100%; }
+.pt b{ font-weight:600; color:var(--hg-tx-1e2023); font-variant-numeric:tabular-nums; } .pt small{ font-size:var(--fs-xs); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:9em; }
+.pt i{ width:8px; height:8px; border-radius:50%; background:var(--hg-bg-9aa0a6); flex:none; } .pt.on i{ background:var(--hg-accent); }
+.pt ha-icon{ width:14px; height:14px; --mdc-icon-size:14px; color:var(--hg-accent-tx); flex:none; } .pt.lk{ cursor:not-allowed; background:var(--hg-bg-000000-004); }
+.pt:not(.on):not(.lk){ background:var(--hg-bg-e53935-010); } .pt:not(.on) b{ color:var(--hg-tx-b3261e); }
+.btn{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px 0 12px; border-radius:20px; background:var(--hg-bg-000000-005); color:var(--hg-tx-1e2023); font-size:var(--fs-sm); font-weight:600; }
+.btn ha-icon{ width:18px; height:18px; } .btn:hover{ background:var(--hg-bg-000000-008); }
+.devs{ display:grid; gap:var(--s2); grid-template-columns:repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.dv{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-050); min-width:0; }
+.dv .t{ display:flex; align-items:center; gap:var(--s1); min-width:0; } .dv .t > ha-icon{ width:20px; height:20px; color:var(--hg-tx-5a5e64); flex:none; }
+.dv .t .sp{ flex:1; } .nm{ min-width:0; } .nm b{ display:block; font-size:var(--fs-md); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .nm small{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); margin-top:1px; }
+.chip{ display:inline-flex; align-items:center; gap:4px; height:24px; padding:0 8px; border-radius:12px; background:var(--hg-bg-000000-005); font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; }
+.chip::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--hg-bg-9aa0a6); } .chip.ok::before{ background:var(--hg-accent); } .chip.bad::before{ background:var(--hg-bg-e53935); }
+.ib2{ width:40px; height:40px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-005); color:var(--hg-tx-3a3d42); }
+.ib2 ha-icon{ width:20px; height:20px; } .ib2:hover{ background:var(--hg-bg-000000-009); }
+.m{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s1); font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); }
+.m b{ display:block; font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); font-variant-numeric:tabular-nums; }
+.lr{ display:flex; align-items:center; gap:var(--s2); min-height:52px; } .lr + .lr{ border-top:1px solid var(--hg-bd-000000-006); }
+.lr > ha-icon{ width:20px; height:20px; color:var(--hg-tx-5a5e64); flex:none; } .lr .tx{ flex:1; min-width:0; } .lr .tx b{ display:block; font-size:var(--fs-sm); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lr .tx span{ display:block; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.tot{ display:flex; align-items:baseline; gap:6px; } .tot b{ font-size:28px; font-weight:600; font-variant-numeric:tabular-nums; } .tot span{ font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); }
+.flt{ display:flex; gap:var(--s1); flex-wrap:wrap; align-items:center; }
+.flt button{ height:32px; padding:0 12px; border-radius:16px; background:var(--hg-bg-000000-005); font-size:var(--fs-xs); font-weight:600; color:var(--hg-tx-3a3d42); }
+.flt button.on{ background:var(--hg-bg-1e2023); color:var(--hg-tx-ffffff-inv); } .flt .sp{ flex:1; }
+.cls{ display:flex; flex-direction:column; }
+.cr{ display:grid; grid-template-columns:10px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .9fr) auto; align-items:center; gap:var(--s2); min-height:44px; font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); }
+.cr + .cr{ border-top:1px solid var(--hg-bd-000000-006); }
+.cr i{ width:8px; height:8px; border-radius:50%; background:var(--hg-bg-9aa0a6); } .cr.on i{ background:var(--hg-accent); }
+.cr b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .cr span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.cr.mem b{ color:var(--hg-accent-tx); } .cr.mem b::after{ content:' · domownik'; font-weight:400; color:var(--hg-tx-4a4e54); font-size:var(--fs-xs); }
+.pin{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap:var(--s1); }
+.pm{ display:flex; align-items:center; gap:var(--s2); padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-055); min-width:0; text-align:left; min-height:52px; }
+.pm .av{ position:relative; width:36px; height:36px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-006); }
+.pm .av ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; color:var(--hg-tx-4a4e54); } .pm .av i{ position:absolute; right:-1px; bottom:-1px; width:11px; height:11px; border-radius:50%; background:var(--hg-bg-9aa0a6); box-shadow:0 0 0 2px var(--hg-sh-ffffff-090); }
+.pm.on .av i{ background:var(--hg-accent); } .pm .tx{ min-width:0; display:flex; flex-direction:column; }
+.pm b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); } .pm span{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cr .ls{ text-align:right; }
+.empty{ font-size:var(--fs-xs); color:var(--hg-tx-4a4e54); padding:var(--s1) 0; }
+@container (max-width: 520px){ .cr{ grid-template-columns:10px minmax(0, 1fr) auto; } .cr .ap, .cr .ip{ display:none; } }
+ha-card.glass{ container-type:inline-size; }
+`);
+  }
+  _st(e) { return e ? H.st(this._hass, e) : null; }
+  _num(e) { const s = this._st(e); return s && H.ok(s) && isFinite(parseFloat(s.state)) ? parseFloat(s.state) : null; }
+  _kv(icon, label, v, u, bar) {
+    if (v == null || v === '') return '';
+    return `<div><small>${H.icon(icon)}${H.esc(label)}</small><b>${H.esc(typeof v === 'number' ? H.fmt(v, v < 10 ? 1 : 0) : v)}${u ? `<em>${H.esc(u)}</em>` : ''}</b>${bar != null ? `<div class="bar" style="--c:${bar > 90 ? 'var(--hg-ac-e53935)' : bar > 70 ? 'var(--hg-accent)' : 'var(--hg-accent)'}"><i style="width:${Math.min(100, Math.max(2, bar))}%"></i></div>` : ''}</div>`;
+  }
+  _upd(e) {
+    const s = this._st(e); if (!s || !H.ok(s)) return '';
+    const a = s.attributes, av = s.state === 'on';
+    return `<button class="upd ${av ? 'av' : ''}" data-act="more" data-e="${H.esc(e)}">${H.icon(av ? 'mdi:package-up' : 'mdi:check-circle-outline')}<span>${av ? `Dostępna aktualizacja ${H.esc(a.latest_version || '')}` : `Oprogramowanie aktualne${a.installed_version ? ' · ' + H.esc(a.installed_version) : ''}`}</span></button>`;
+  }
+  /* porty: rząd numerowanych pigułek (stan, zablokowane = chronione: uplink/WAN) */
+  _ports(L, dn) {
+    const P = (L || []).map((p) => (typeof p === 'string' ? { entity: p } : p)).map((p) => [p, this._st(p.entity)]).filter(([, st]) => st && H.ok(st));
+    if (!P.length) return '';
+    return `<div class="pts" role="group" aria-label="Porty · ${H.esc(dn)}">${P.map(([p, st], i) => { const on = st.state === 'on', n = p.n || (String(p.entity).match(/_(\d+)$/) || [])[1] || i + 1;
+      const t = `Port ${n}${p.label ? ' · ' + p.label : ''}: ${on ? 'włączony' : 'wyłączony'}${p.lock ? ' · chroniony (nie wyłączaj)' : ''}`;
+      return `<button class="pt ${on ? 'on' : ''} ${p.lock ? 'lk' : ''}" data-act="port" data-e="${H.esc(p.entity)}" data-n="${H.esc(n)}" data-l="${H.esc(p.label || '')}" data-d="${H.esc(dn)}" ${p.lock ? 'data-lock="1" aria-disabled="true"' : ''} aria-pressed="${on}" aria-label="${H.esc(t)}" title="${H.esc(t)}">${p.lock ? H.icon('mdi:lock') : `<i></i>`}<b>${H.esc(n)}</b>${p.label ? `<small>${H.esc(p.label)}</small>` : ''}</button>`; }).join('')}</div>`;
+  }
+  _hd(icon, title, note) { return `<div class="hd">${H.icon(icon, 'ic')}<span class="tt">${H.esc(title)}</span><span class="sp"></span>${note ? `<span class="note">${note}</span>` : ''}</div>`; }
+  render() { const s = this._config.section; return `<ha-card class="glass">${(this['_' + s] ? this['_' + s]() : '')}</ha-card>`; }
+  _wan() {
+    const n = this._n(), g = n.gateway || {}, w = n.wan || {}, gs = this._st(g.state), tr = this._st(g.tracker);
+    const ok = gs && H.ok(gs) ? gs.state === 'connected' : tr && H.ok(tr) ? tr.state === 'home' : null;
+    const ip = tr && H.ok(tr) ? tr.attributes.ip : null, up = hgUp(this._st(g.uptime));
+    const lat = (w.latency || []).map((x) => [x, this._num(x.entity)]).filter(([, v]) => v != null);
+    const sp = [[w.down, 'mdi:download', 'Pobieranie', 'Mb/s'], [w.up, 'mdi:upload', 'Wysyłanie', 'Mb/s'], [w.ping, 'mdi:timer-outline', 'Ping', 'ms']].map(([e, i, l, u]) => this._kv(i, l, this._num(e), u)).join('');
+    const hs = this._hist || [], mx = Math.max(...hs, 1), mn = Math.min(...hs, mx);
+    const pts = hs.length > 2 ? hs.map((v, i) => `${(i / (hs.length - 1) * 100).toFixed(2)},${(40 - ((v - mn) / Math.max(1, mx - mn)) * 36).toFixed(1)}`).join(' ') : '';
+    return `${this._hd('mdi:web', 'Internet')}
+      <div class="big"><span class="bd ${ok === true ? 'ok' : ok === false ? 'bad' : ''}">${H.icon(ok === false ? 'mdi:web-off' : 'mdi:web')}</span><div><b>${ok === true ? 'Połączono' : ok === false ? 'Brak połączenia' : 'Stan nieznany'}</b><span>${[ip ? 'IP ' + H.esc(ip) : '', up ? 'bramka działa od ' + up : ''].filter(Boolean).join(' · ')}</span></div></div>
+      ${lat.length || sp ? `<div class="kv">${lat.map(([x, v]) => this._kv('mdi:timer-outline', x.name, v, 'ms')).join('')}${sp}</div>` : ''}
+      ${pts ? `<div class="spk" aria-label="Opóźnienie WAN, ostatnie 24 h"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points="${pts}"/></svg><small><span>−24 h</span><span>opóźnienie ${H.esc((w.latency || [])[0].name)} · ${H.fmt(mn, 0)}–${H.fmt(mx, 0)} ms</span><span>teraz</span></small></div>` : ''}`;
+  }
+  _gw() {
+    const g = this._n().gateway || {}; if (!g.state && !g.cpu) return '';
+    const gs = this._st(g.state), cpu = this._num(g.cpu), mem = this._num(g.mem), tmp = this._num(g.temp), up = hgUp(this._st(g.uptime)), rs = this._st(g.restart);
+    return `${this._hd('mdi:router-network', g.name || 'Bramka', gs && H.ok(gs) ? `<span class="chip ${gs.state === 'connected' ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, gs))}</span>` : '')}
+      <div class="kv">${this._kv('mdi:cpu-64-bit', 'Procesor', cpu, '%', cpu)}${this._kv('mdi:memory', 'Pamięć', mem, '%', mem)}${this._kv('mdi:thermometer', 'Temp. CPU', tmp, '°C')}${this._kv('mdi:timer-sand', 'Działa od', up, '')}</div>
+      ${this._ports(g.ports, g.name || 'Bramka')}
+      ${this._upd(g.update)}
+      ${rs ? `<div class="act"><button class="btn" data-act="restart" data-e="${H.esc(g.restart)}" data-n="${H.esc(g.name || 'Bramka')}">${H.icon('mdi:restart')}Uruchom ponownie</button></div>` : ''}`;
+  }
+  _dev() {
+    const L = (this._n().devices || []).filter((d) => this._st(d.state) || this._st(d.cpu));
+    const tiles = L.map((d) => {
+      const s = this._st(d.state), ok = s && H.ok(s) && s.state === 'connected', cpu = this._num(d.cpu), mem = this._num(d.mem), cl = this._num(d.clients), up = hgUp(this._st(d.uptime));
+      const u = this._st(d.update), ua = u && u.state === 'on';
+      const ports = this._ports(d.ports, d.name);
+      const ent = this._hass.entities && this._hass.entities[d.state], dev = ent && this._hass.devices ? this._hass.devices[ent.device_id] : null;
+      const nm = d.name || (dev && (dev.name_by_user || dev.name)) || (s ? String(s.attributes.friendly_name || '').replace(/\s*(State|Stan)$/i, '') : '') || '—', model = d.model || (dev && dev.model) || '';
+      return `<div class="dv"><div class="t">${H.icon(d.kind === 'switch' ? 'mdi:switch' : 'mdi:access-point')}<span class="sp"></span>${s && H.ok(s) ? `<span class="chip ${ok ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, s))}</span>` : ''}
+          ${this._st(d.restart) ? `<button class="ib2" data-act="restart" data-e="${H.esc(d.restart)}" data-n="${H.esc(nm)}" aria-label="Uruchom ponownie ${H.esc(nm)}" title="Uruchom ponownie">${H.icon('mdi:restart')}</button>` : ''}</div>
+        <div class="nm"><b title="${H.esc(nm)}">${H.esc(nm)}</b>${model ? `<small>${H.esc(model)}</small>` : ''}</div>
+        <div class="m">${cl != null ? `<span><b>${H.fmt(cl, 0)}</b>${hgPlK(cl)}</span>` : ''}${cpu != null ? `<span><b>${H.fmt(cpu, 0)}%</b>CPU</span>` : ''}${mem != null ? `<span><b>${H.fmt(mem, 0)}%</b>pamięć</span>` : ''}</div>
+        ${up ? `<span class="upd">${H.icon('mdi:timer-sand')}działa od ${up}</span>` : ''}${ua ? this._upd(d.update) : ''}${ports}</div>`;
+    }).join('');
+    return `${this._hd('mdi:access-point-network', 'Punkty dostępowe i przełączniki', `${L.length} urządz.`)}<div class="devs">${tiles}</div>`;
+  }
+  _wlan() {
+    const W = (this._n().wlans || []).filter((x) => this._st(x.switch) || this._st(x.clients));
+    const rows = W.map((x) => {
+      const sw = this._st(x.switch), on = sw && sw.state === 'on', cl = this._num(x.clients), qr = this._st(x.qr);
+      return `<div class="lr">${H.icon(on ? 'mdi:wifi' : 'mdi:wifi-off')}<div class="tx"><b>${H.esc(x.name)}</b><span>${[x.note, cl != null ? `${H.fmt(cl, 0)} ${hgPlK(cl)}` : ''].filter(Boolean).map(H.esc).join(' · ')}</span></div>
+        ${qr && H.ok(qr) ? `<button class="ib2" data-act="qr" data-e="${H.esc(x.qr)}" data-n="${H.esc(x.name)}" aria-label="Kod QR sieci ${H.esc(x.name)}" title="Kod QR">${H.icon('mdi:qrcode')}</button>` : ''}
+        ${sw && H.ok(sw) ? this.toggleHtml(on, 'wlan" data-e="' + H.esc(x.switch) + '" data-n="' + H.esc(x.name), false, `Sieć ${x.name}`) : ''}</div>`;
+    }).join('');
+    return `${this._hd('mdi:wifi', 'Sieci Wi‑Fi')}<div>${rows || '<div class="empty">Brak sieci Wi‑Fi w konfiguracji</div>'}</div>`;
+  }
+  _cname(s) {
+    const a = s.attributes; let n = a.friendly_name || '';
+    const half = n.split(' '); if (half.length % 2 === 0 && half.slice(0, half.length / 2).join(' ') === half.slice(half.length / 2).join(' ')) n = half.slice(0, half.length / 2).join(' ');
+    if (!n || /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(n) || /^unifi_default/.test(n)) n = a.host_name || (a.oui ? `${a.oui.split(/[ ,.，]/)[0]} ·${(a.mac || '').slice(-5)}` : a.mac || s.entity_id);
+    return n;
+  }
+  _cl() {
+    const n = this._n(), h = this._hass, cfg = n.clients || {}, mem = cfg.members || {};
+    const pTr = {}; for (const p of Object.keys(h.states).filter((e) => e.startsWith('person.'))) for (const t of (h.states[p].attributes.device_trackers || [])) pTr[t] = p;
+    const apN = {}; for (const d of (n.devices || [])) { const t = this._st(d.tracker); if (t && t.attributes.mac) apN[t.attributes.mac] = d.name; }
+    const wl = (n.wlans || []).map((x) => this._num(x.clients)).filter((v) => v != null), tot = wl.reduce((a, b) => a + b, 0);
+    let L = this._clientEnts().map((e) => h.states[e]).filter((s) => s && H.ok(s));
+    const onN = L.filter((s) => s.state === 'home').length;
+    if (this._flt === 'on') L = L.filter((s) => s.state === 'home'); else if (this._flt === 'off') L = L.filter((s) => s.state !== 'home');
+    const isMem = (s) => mem[s.entity_id] || pTr[s.entity_id];
+    const ipn = (ip) => (ip || '999.999.999.999').split('.').reduce((a, b) => a * 256 + (+b || 0), 0);
+    L.sort((a, b) => (isMem(b) ? 1 : 0) - (isMem(a) ? 1 : 0) || (this._srt === 'ip' ? ipn(a.attributes.ip) - ipn(b.attributes.ip) : (b.state === 'home') - (a.state === 'home') || this._cname(a).localeCompare(this._cname(b), 'pl')));
+    // domownicy przypięci na górze: jeden (najświeższy) tracker UniFi na osobę
+    const byP = {}; for (const e of this._clientEnts()) { const st = h.states[e], p = st && H.ok(st) && (mem[e] || pTr[e]); if (!p) continue;
+      const b = byP[p]; if (!b || (st.state === 'home') > (b.state === 'home') || ((st.state === 'home') === (b.state === 'home') && st.last_changed > b.last_changed)) byP[p] = st; }
+    const pins = Object.entries(byP).sort((x, y) => (h.states[x[0]] ? H.name(h, x[0]) : x[0]).localeCompare(h.states[y[0]] ? H.name(h, y[0]) : y[0], 'pl')).map(([p, st]) => { const on = st.state === 'home', a = st.attributes;
+      return `<button class="pm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(st.entity_id)}"><span class="av">${H.icon('mdi:cellphone')}<i></i></span><span class="tx"><b>${H.esc(h.states[p] ? H.name(h, p) : p)}</b>
+        <span>${H.esc([this._cname(st), on ? ['w sieci', apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') : 'poza siecią · ' + hgRel(new Date(st.last_changed))].join(' · '))}</span></span></button>`; }).join('');
+    const pinSet = new Set(Object.values(byP).map((st) => st.entity_id));
+    const rows = L.filter((s) => !pinSet.has(s.entity_id)).map((s) => { const a = s.attributes, on = s.state === 'home', m = isMem(s);
+      return `<button class="cr ${on ? 'on' : ''} ${m ? 'mem' : ''}" data-act="more" data-e="${H.esc(s.entity_id)}" title="${H.esc(a.mac || '')}"><i></i><b>${H.esc(this._cname(s))}</b>
+        <span class="ap">${H.esc([apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') || (a.is_wired ? 'przewodowo' : ''))}</span><span class="ip">${H.esc(a.ip || '')}</span>
+        <span class="ls">${on ? 'połączony' : 'rozłączony · ' + H.esc(hgRel(new Date(s.last_changed)))}</span></button>`; }).join('');
+    const f = (k, l) => `<button class="${(this._flt || 'all') === k ? 'on' : ''}" data-act="flt" data-k="${k}">${l}</button>`;
+    return `${this._hd('mdi:devices', 'Klienci')}
+      ${pins ? `<div class="pin" aria-label="Telefony domowników">${pins}</div>` : ''}
+      <div class="tot">${wl.length ? `<b>${H.fmt(tot, 0)}</b><span>urządzeń w sieciach Wi‑Fi teraz</span>` : `<b>${onN}</b><span>śledzonych online</span>`}</div>
+      <div class="flt">${f('all', `Wszyscy · ${this._clientEnts().filter((e) => H.ok(h.states[e])).length}`)}${f('on', `Połączone · ${onN}`)}${f('off', 'Rozłączone')}<span class="sp"></span>
+        <button class="${this._srt === 'ip' ? '' : 'on'}" data-act="srt" data-k="name">Nazwa</button><button class="${this._srt === 'ip' ? 'on' : ''}" data-act="srt" data-k="ip">IP</button></div>
+      <div class="cls">${rows || '<div class="empty">Brak śledzonych klientów</div>'}</div>
+      ${cfg.note ? `<div class="empty">${H.esc(cfg.note)}</div>` : ''}`;
+  }
+  _qr(e, ssid) {
+    const st = this._hass.states[e]; if (!st || !st.attributes.entity_picture) return;
+    const x = document.createElement('div'); x.className = 'hg-qr'; const sr = x.attachShadow({ mode: 'open' });
+    sr.innerHTML = `<style>${HG_BASE}${U(`
+:host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-042); animation:f .16s ease; }
+@keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
+.d{ position:relative; width:min(360px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
+.hd{ display:flex; align-items:center; gap:8px; align-self:stretch; } .hd ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); } .hd b{ flex:1; text-align:left; font-size:18px; font-weight:600; }
+.x{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-000000-006); } .x ha-icon{ color:var(--hg-tx-1e2023); width:20px; height:20px; }
+.q{ width:100%; aspect-ratio:1; max-width:300px; background:var(--hg-bg-ffffff); border-radius:16px; padding:16px; box-sizing:border-box; display:flex; } .q img{ width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); } p b{ color:var(--hg-tx-1e2023); }
+`)}</style><div class="d" role="dialog" aria-modal="true" aria-label="Kod QR sieci ${H.esc(ssid)}"><div class="hd">${H.icon('mdi:wifi')}<b>${H.esc(ssid)}</b><button class="x" data-v="x" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+      <div class="q"><img alt="Kod QR sieci ${H.esc(ssid)}" src="${H.esc(st.attributes.entity_picture)}"></div><p>Zeskanuj aparatem telefonu, aby połączyć się z siecią <b>${H.esc(ssid)}</b>.</p></div>`;
+    const done = () => { document.removeEventListener('keydown', key); x.remove(); };
+    const key = (ev) => { if (ev.key === 'Escape') done(); };
+    x.addEventListener('click', (ev) => { const p = ev.composedPath(); if (p[0] === x || p.find((n) => n.dataset && n.dataset.v === 'x')) done(); });
+    document.addEventListener('keydown', key); document.body.appendChild(x);
+    setTimeout(() => { const b = sr.querySelector('.x'); b && b.focus(); }, 30);
+  }
+  async onAct(a, t) {
+    const h = this._hass, e = t && t.dataset.e;
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (a === 'flt') { this._flt = t.dataset.k; return this.rerender(); }
+    if (a === 'srt') { this._srt = t.dataset.k; return this.rerender(); }
+    if (a === 'restart') { if (await HGConfirm.ask(`Uruchomić ponownie: ${t.dataset.n}?`, 'Urządzenie będzie niedostępne przez 1–3 minuty; połączeni klienci stracą sieć.', 'Uruchom ponownie')) H.call(h, 'button', 'press', { entity_id: e }); return; }
+    if (a === 'port') { if (t.dataset.lock) { await HGConfirm.ask(`Port ${t.dataset.n} jest chroniony`, `${t.dataset.l ? t.dataset.l + ' – ' : ''}to połączenie z internetem lub łącze do sieci. Wyłączenie go z panelu odcięłoby sieć i Home Assistant, dlatego jest zablokowane.`, 'Rozumiem', false, true); return; }
+      const on = h.states[e] && h.states[e].state === 'on', nm = `port ${t.dataset.n}${t.dataset.l ? ' (' + t.dataset.l + ')' : ''} · ${t.dataset.d}`;
+      if (await HGConfirm.ask(on ? `Wyłączyć ${nm}?` : `Włączyć ${nm}?`, on ? 'Urządzenie podłączone do tego portu straci połączenie z siecią.' : 'Port zostanie ponownie włączony.', on ? 'Wyłącz' : 'Włącz', on)) H.call(h, 'switch', on ? 'turn_off' : 'turn_on', { entity_id: e }); return; }
+    if (a === 'qr') return this._qr(e, t.dataset.n);
+    if (a === 'wlan') { const on = h.states[e] && h.states[e].state === 'on';
+      if (on && !(await HGConfirm.ask(`Wyłączyć sieć ${t.dataset.n}?`, 'Urządzenia połączone z tą siecią Wi‑Fi stracą połączenie.', 'Wyłącz'))) return;
+      H.call(h, 'switch', on ? 'turn_off' : 'turn_on', { entity_id: e }); }
+  }
+  getCardSize() { return 4; }
+}
+hgReg('nuvio-net-card', HGNetCard, 'Nuvio – Sieć', 'UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci');
+
+/* ===================== PAGE (tło, pasek górny, nagłówek, szyna, panel, hub) ===================== */
+const HG_SVG = {
+  figma: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 2.8h3.5v6.1H8.5a3.05 3.05 0 0 1 0-6.1Z"/><path d="M12 2.8h3.5a3.05 3.05 0 0 1 0 6.1H12Z"/><path d="M8.5 8.9H12V15H8.5a3.05 3.05 0 0 1 0-6.1Z"/><circle cx="15.5" cy="11.95" r="3.05"/><path d="M8.5 15H12v3.05a3.05 3.05 0 1 1-3.5-3.05Z"/></svg>`,
+};
+/* browser_mod (zarejestrowana przeglądarka) kładzie na cały ekran niewidoczną warstwę .browser-mod-require-interaction (z-index 99999),
+   która połyka dotknięcia, dopóki nie odblokuje odtwarzania wideo. Na tym dashboardzie przepuszczamy dotyk do przycisków,
+   a gest (pointerup/click = moment aktywacji użytkownika) przekazujemy warstwie, żeby browser_mod i tak się odblokował. */
+let hgBmUsers = 0, hgBmObs = null;
+const hgBmFix = () => {
+  const ov = document.querySelector('body > .browser-mod-require-interaction');
+  if (ov && ov.style.pointerEvents !== 'none') ov.style.pointerEvents = 'none';
+};
+const hgBmFwd = (e) => {
+  const ov = document.querySelector('body > .browser-mod-require-interaction');
+  if (!ov || ov.__hgFwd) return;
+  ov.__hgFwd = true;
+  try { ov.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true, pointerType: e.pointerType || 'touch', clientX: e.clientX, clientY: e.clientY })); } catch (err) { /* stary WebView */ }
+};
+function hgBmPassThrough(on) {
+  hgBmUsers = Math.max(0, hgBmUsers + (on ? 1 : -1));
+  if (hgBmUsers === 1 && on) {
+    hgBmFix();
+    hgBmObs = new MutationObserver(hgBmFix); hgBmObs.observe(document.body, { childList: true });
+    window.addEventListener('pointerup', hgBmFwd, true); window.addEventListener('click', hgBmFwd, true);
+  } else if (hgBmUsers === 0 && !on) {
+    if (hgBmObs) hgBmObs.disconnect(); hgBmObs = null;
+    window.removeEventListener('pointerup', hgBmFwd, true); window.removeEventListener('click', hgBmFwd, true);
+    const ov = document.querySelector('body > .browser-mod-require-interaction'); if (ov) ov.style.pointerEvents = '';
+  }
+}
+/* ===== przejścia między widokami (uproszczone) =====
+   HA trzyma widoki w pamięci (hui-root _viewCache): każdy widok ma własny nuvio-page, który przy przełączeniu jest odłączany/podłączany.
+   Stary nuvio-page zapisuje w HGNav położenie wskaźników (zakładka, szyna) i panelu tuż przed zmianą adresu; nowy w connectedCallback /
+   po pierwszym zbudowaniu przesuwa wskaźniki z poprzedniej pozycji (transform).
+   Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
+const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
+const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
+const hgTouch = () => !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+// etykieta paliwa w stylu naklejki na dystrybutorze: PB95 zielona, PB98 ciemnozielona, ON czarna
+const hgFuelBadge = (l) => { const m = /^PB?\s*(\d+)/i.exec(l || ''); const on = /^ON/i.test(l || '');
+  const cls = m ? (m[1] === '98' ? 'b98' : 'b95') : on ? 'bon' : 'bx';
+  return `<span class="fb ${cls}" aria-hidden="true">${m ? `<small>Pb</small>${H.esc(m[1])}` : H.esc((l || '').slice(0, 3))}</span>`; };
+const HG_BG_OK = new Set();   // zdekodowane zdjęcia tła (kolejne widoki ustawiają je od razu)
+const hgMatch = (m, path) => [].concat(m).some((x) => x && path.startsWith(x));
+const HGNav = {
+  prev: null,
+  ready() {},
+  go(path, nav) { if (HGShell.go(path)) return; return nav(); },
+};
+const hgLite = () => {
+  try { const o = localStorage.getItem('nuvio:lite'); if (o === '1' || o === '0') return o === '1'; } catch (e) { /* prywatny tryb */ }
+  const coarse = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  return coarse || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+};
+let HG_HELPERS = null;   // loadCardHelpers w pamięci -> budowa nowego widoku synchronicznie, bez pustej klatki
+const HG_LOGO = `<span class="logo" aria-hidden="true"><ha-icon icon="mdi:home-assistant"></ha-icon></span>`;
+
+
+/* ===== przełączanie widoków bez przebudowy przez HA =====
+   Pomiar (ślad Chromium, CPU x4): każde przełączenie widoku przez HA to długie zadanie hui-root (przerysowanie paska zakładek
+   wszystkich widoków, podmiana hui-view) + ponowne podpięcie strony – 60–320 ms. Tu: nuvio-page utworzony przez HA (root) zostaje,
+   inne widoki dashboardu tworzymy sami (dopiero przy pierwszej wizycie = leniwie: mapa, kamery, roboty itd.) jako rodzeństwo roota
+   i tylko podmieniamy. Adres: pushState bez location-changed (HA nie przebudowuje). Wstecz/Dalej i głęboki link: obsługuje HA
+   (router HA i tak ustawia widok z adresu przy przejściu w historii), nowy root przejmuje stan. Gdy HA mimo to zmieni widok (inne źródło nawigacji), nowy root przejmuje stan. */
+const HGShell = window.__hgShell || {
+  // wyłączone: w pomiarze A/B (CPU x4) nie poprawiło p95 (tło stanu HA dominuje), a Wstecz i okna szczegółów i tak przebudowują widok w HA
+  enabled: false,
+  root: null, cur: null, pages: new Map(),
+  _views() {
+    let n = this.root;
+    while (n && n.tagName !== 'HUI-ROOT') n = n.parentNode || n.host || null;
+    const v = n && n.lovelace && n.lovelace.config && n.lovelace.config.views;
+    return Array.isArray(v) ? v : null;
+  },
+  /* ścieżka -> [widok, konfiguracja nuvio-page] albo null (inny dashboard / nie nasz widok / przekierowanie) */
+  _resolve(path) {
+    if (!path || /[?#]/.test(path)) return null;
+    const seg = path.split('/'), cur = location.pathname.split('/');
+    if (seg[1] !== cur[1] || seg.length > 3) return null;
+    const vs = this._views(); if (!vs) return null;
+    const v = seg[2] ? vs.find((x) => x.path === seg[2]) : vs[0];
+    const cc = v && v.cards && v.cards.length === 1 && v.cards[0];
+    if (!cc || cc.type !== 'custom:nuvio-page' || cc.redirect || !(v.path || cc.view)) return null;
+    return [cc.view || v.path, cc];
+  },
+  adopt(page) {
+    if (this.root === page) return;
+    // HA pokazał (nowy lub zapamiętany) widok: porzuć nasze strony przy starym roocie
+    for (const [k, p] of this.pages) if (p !== this.root && p !== page) p.remove();
+    if (this.root && this.root !== page) { this.root.style.display = ''; this.root._hgPend = null; }
+    this.root = page; this.pages = new Map([[page._config.view, page]]); this.cur = page._config.view;
+    page.style.display = ''; page._hgHidden = false;
+    const h = page._hgPend; page._hgPend = null;
+    if (h) queueMicrotask(() => { if (page._hass !== h && !page._hgHidden) page.hass = h; });
+  },
+  _ok() { return !!(this.enabled && this.root && this.root.isConnected && this.root.parentNode && this.root._hass && this.root._built); },
+  go(path) {
+    if (!this._ok() || window.__hgNoShell) return false;
+    const r = this._resolve(path); if (!r || r[0] === this.cur) return false;
+    history.pushState(null, '', path);
+    this._show(r[0], r[1]);
+    return true;
+  },
+  /* pokazujemy widok inny niż root HA, a adres wskazuje dokładnie ten widok */
+  held() {
+    if (!this._ok() || window.__hgNoShell || this.cur === this.root._config.view) return false;
+    const r = this._resolve(location.pathname); return !!(r && r[0] === this.cur);
+  },
+  _show(view, cfg) {
+    const root = this.root, h = root._hgPend || root._hass;
+    const old = this.pages.get(this.cur);
+    if (old && old.isConnected) old._saveNav();
+    if (old === root) { root._hgHide(); } else if (old) old.remove();
+    this.cur = view;
+    if (view === root._config.view) { root._hgShow(); return; }
+    let pg = this.pages.get(view);
+    if (!pg) { pg = document.createElement('nuvio-page'); pg._hgChild = true; pg.setConfig(Object.assign({}, cfg)); this.pages.set(view, pg); }
+    pg.hass = h;
+    root.parentNode.insertBefore(pg, root.nextSibling);
+  },
+  /* stan HA dociera tylko do roota: przekaż widocznej stronie */
+  fwd(h) { const p = this.pages.get(this.cur); if (p && p !== this.root && p.isConnected) p.hass = h; },
+};
+if (!window.__hgShell) {
+  window.__hgShell = HGShell;
+  // inne skrypty (np. kiosk-mode) po popstate wysyłają location-changed; adres = widok pokazany przez nas -> HA nie przebudowuje
+  window.addEventListener('location-changed', (e) => { if (HGShell.held()) e.stopImmediatePropagation(); }, true);
+}
+
+class HGPage extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._notif = {};
+    this._cards = [];
+    this.shadowRoot.addEventListener('click', (e) => this._click(e));
+    const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingPaint) { this._pendingPaint = false; this._sigTop = this._sigHub = null; this._paintTop(); this._paintHub(); } }, 60); };
+    this.shadowRoot.addEventListener('pointerdown', (e) => { if (e.composedPath().some((n) => n.classList && (n.classList.contains('top') || n.classList.contains('hub')))) { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); } }, { passive: true });
+    this.shadowRoot.addEventListener('pointerup', up, { passive: true });
+    this.shadowRoot.addEventListener('pointercancel', up, { passive: true });
+    this._onResize = () => { this._layout(); if (this._built && this._hass) { this._paintRail(); this._paintTop(); this._tabsFit(); } };
+    // zmiana adresu: jeśli prowadzi do innego widoku, ten nuvio-page zaraz zostanie odłączony -> zapisz wskaźniki do animacji, bez przerysowania
+    this._onLoc = () => {
+      this._syncPlay();
+      if (!this._built) return;
+      if (this._ownPath()) { if (this._config.room_head) this._paintHead(); return this._onResize(); }
+      this._saveNav();
+    };
+    this._onDoc = (e) => { const cp = e.composedPath(); if (this._menuOpen && !cp.includes(this._menuEl) && !cp.includes(this._menuL)) { this._menuOpen = false; this._paintTop(true); } };
+  }
+  static getStubConfig() { return { view: 'dashboard', cards: [] }; }
+  setConfig(c) {
+    this._config = Object.assign({
+      view: 'dashboard', brand: 'Dom', title: 'Witaj, {name}!', subtitle: 'Steruj domem w jednym miejscu',
+      user: {}, tabs: [], rail: [], hub: null, toolbar: true, back: { back: true, fallback: '/' },
+      panel: { columns: '1fr 1fr', rows: '150fr 92fr 48fr 152fr', areas: null, width: 438 }, cards: [], persons: [],
+      notifications_action: { notifications: true }, mail_action: { notifications: true },
+      menu: [], storage_key: 'nuvio', zoom: { min: 0.8, max: 1.3, step: 0.1 },
+    }, c);
+    this._built = false;
+    this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
+    if (this._hass) this._build();
+  }
+  set hass(h) {
+    if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
+    // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
+    if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
+    const first = !this._hass, old = this._hass;
+    this._hass = h;
+    if (this._editing && this._eSheetEl && old && old.states !== h.states) this._ePvTick(h);
+    if (!this._config) return;
+    if (this._config.redirect) { this._redirect(); return; }
+    if (!this._built) this._build();
+    for (const el of this._cards) el.hass = h;
+    if (this._wxEl) this._wxEl.hass = h;
+    if (first) { this._subscribe(); HGVer.check(h, true); }
+    // górny pasek / hub zależą tylko od kilku encji -> przerysuj tylko gdy zmienił się ich obiekt stanu
+    const w = this._watch();
+    if (!old || old.user !== h.user || w.some((e) => old.states[e] !== h.states[e])) { this._paintTop(); this._paintHub(); }
+    if (this._fuelEl && (!old || this._fuelEnts().some((e) => old.states[e] !== h.states[e]))) this._paintFuel();
+    if (this._config.room_head && this._built) this._paintHead();
+  }
+  _watch() {
+    if (this._w) return this._w;
+    const c = this._config, ui = this._userInfo();
+    const set = new Set([ui.person].filter(Boolean));
+    for (const t of c.tabs) for (const e of (t.badge && (t.badge.count_on || t.badge.count_active)) || []) set.add(e);
+    for (const p of (c.hub && c.hub.persons) || []) set.add(p);
+    return (this._w = [...set]);
+  }
+  _setHTML(el, html) {
+    if (el._hgHtml === html) return false;
+    if (this._touching) { this._pendingPaint = true; return false; }
+    el._hgHtml = html; el.innerHTML = html; return true;
+  }
+  get hass() { return this._hass; }
+  _hgHide() {
+    this._hgHidden = true; this.style.display = 'none';
+    if (this._sheetOpen) this._openSheet(false);
+    if (this._menuOpen) { this._menuOpen = false; this._paintTop(true); }
+    this._syncPlay();
+  }
+  _hgShow() {
+    this._hgHidden = false; this.style.display = '';
+    const h = this._hgPend; this._hgPend = null;
+    if (h) this.hass = h;
+    this._syncPlay(); this._layout(); this._enter();
+  }
+  _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
+  _saveNav() {
+    if (!this.isConnected || !this._panelEl) return;
+    const R = (el) => { if (!el) return null; const b = el.getBoundingClientRect(); return b.width ? { x: b.left, y: b.top, w: b.width, h: b.height } : null; };
+    const ti = this._topEl.querySelector('.tab.act'), ri = this._railEl.querySelector('.ri.act');
+    HGNav.prev = { t: performance.now(), view: this._config.view, tab: R(ti), tabI: ti ? [...ti.parentNode.children].indexOf(ti) : -1,
+      rail: R(ri), panel: R(this._panelEl), mode: this.getAttribute('mode') };
+  }
+  /* stary adres widoku (np. /devices -> /multimedia): podmiana w historii bez dodatkowego wpisu */
+  _redirect() {
+    if (!this.isConnected || !this._ownPath() || this._redirTo === location.pathname) return;
+    this._redirTo = location.pathname;
+    history.replaceState(null, '', this._config.redirect + location.search);
+    window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: true } }));
+  }
+  connectedCallback() {
+    if (this._config && this._config.redirect) { this._redirTo = null; return this._redirect(); }
+    if (!this._hgChild && this._config) HGShell.adopt(this);
+    window.addEventListener('resize', this._onResize);
+    window.addEventListener('location-changed', this._onLoc);
+    window.addEventListener('popstate', this._onLoc);
+    document.addEventListener('click', this._onDoc, true);
+    this._onVis = this._onVis || (() => { this._syncPlay(); if (!document.hidden) { HGVer.check(this._hass); this._glassRefresh(); } });
+    document.addEventListener('visibilitychange', this._onVis);
+    this._syncPlay();
+    hgBmPassThrough(true);
+    this.toggleAttribute('lite', hgLite());
+    this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this);
+    if (this._hass && !this._unsub) this._subscribe();
+    this._layout();
+    if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
+  }
+  disconnectedCallback() {
+    if (this._editing) this._editExit(false);
+    if (this._config && this._config.redirect) return;
+    window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('location-changed', this._onLoc);
+    window.removeEventListener('popstate', this._onLoc);
+    document.removeEventListener('click', this._onDoc, true);
+    document.removeEventListener('visibilitychange', this._onVis);
+    this.toggleAttribute('paused', true);
+    if (this._sheetOpen) { this._sheetOpen = false; clearTimeout(this._sheetT); if (this._sheetL) { this._sheetL.classList.remove('in'); this._sheetL.removeAttribute('open'); this._sheetL.innerHTML = ''; } }
+    hgBmPassThrough(false);
+    this._ro && this._ro.disconnect(); this._pro && this._pro.disconnect();
+    if (this._unsub) { this._unsub.then((u) => u && u()).catch(() => {}); this._unsub = null; }
+  }
+  _subscribe() {
+    if (!this._hass || this._unsub || !this.isConnected) return;
+    try {
+      this._unsub = this._hass.connection.subscribeMessage((m) => {
+        if (m.type === 'current') this._notif = { ...m.notifications };
+        else if (m.type === 'added' || m.type === 'updated') this._notif = { ...this._notif, ...m.notifications };
+        else if (m.type === 'removed') { const n = { ...this._notif }; for (const k of Object.keys(m.notifications)) delete n[k]; this._notif = n; }
+        this._paintTop(true);
+      }, { type: 'persistent_notification/subscribe' });
+      this._unsub.catch(() => { this._unsub = null; });
+    } catch (e) { /* brak subskrypcji – brak kropki */ }
+  }
+  _ls(k, v) { const key = this._config.storage_key + ':' + k; if (v === undefined) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } } localStorage.setItem(key, JSON.stringify(v)); }
+
+  /* ---------- tryb i skala ---------- */
+  _layout() {
+    if (!this._config) return;
+    const W = this.getBoundingClientRect().width || window.innerWidth, Hh = window.innerHeight;
+    let mode, u;
+    if (W < 600) { mode = 'phone'; u = Math.max(0.92, Math.min(1.15, W / 375)); }
+    else if (W >= 900 && W / Hh >= 1.2) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
+    else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620)); }
+    const z = this._zoom();
+    if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
+    this.style.setProperty('--hg-u0', u.toFixed(4) + 'px');
+    this.style.setProperty('--hg-zoom', z);
+    if (this._panel) this._panelGrid(mode);
+    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.toggleAttribute('touch', touch);
+    if (mode === 'phone' || (mode === 'tablet' && touch)) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
+    if (this._built) this._placeInd();
+    if (this._panelEl && this._config.panel.fit) {
+      // panel dopasowany do treści (Kamery): dostępna wysokość dla kafli w trybie wide, żeby zmieścić się bez przewijania
+      if (mode === 'wide') {
+        const top = this._panelEl.getBoundingClientRect().top, cs = getComputedStyle(this._panelEl);
+        const pb = parseFloat(getComputedStyle(this.shadowRoot.querySelector('.page')).paddingBottom) || 19 * u;
+        const av = Hh - top - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - pb;
+        this._panelEl.style.setProperty('--hg-avail-h', Math.max(160, Math.floor(av)) + 'px');
+      } else this._panelEl.style.removeProperty('--hg-avail-h');
+    }
+    if (this._panelEl) {
+      for (const el of this._cards) { if ('ontouchstart' in window || navigator.maxTouchPoints > 0) el.setAttribute('touch', ''); }
+    }
+  }
+  _hasTiles2() { return !!(this._hasTiles || this._autoScroll); }
+  /* stały układ (wide, bez przewijania): gdy treść karty nie mieści się w swoim polu -> panel przechodzi w przewijanie */
+  _fitCheck() {
+    if (this.hasAttribute('scroll') && this.getAttribute('mode') !== 'phone' && this._cardWraps) for (const w of this._cardWraps) { const c = w.firstElementChild; if (!c || w.hidden) continue;
+      const need = c.scrollHeight; if (need > w.clientHeight + 4 && need > (w._hgMinFit || 0)) { w._hgMinFit = need; w.style.minHeight = need + 'px'; } }
+    if (this._autoScroll || this._config.panel.scroll || this.getAttribute('mode') === 'phone' || !this._cardWraps) return;
+    const over = this._cardWraps.some((w) => { const c = w.firstElementChild; if (!c || w.hidden) return false; const r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .root > *'); const el = r || c; return el.scrollHeight > el.clientHeight + 4 || c.scrollHeight > w.clientHeight + 4; });
+    if (over) { this._autoScroll = true; this._layout(); }
+  }
+  _zoom() { const z = Number(this._ls('zoom')); return z && isFinite(z) ? z : 1; }
+  _moreUpd() {
+    if (this._moreRaf) return;
+    this._moreRaf = requestAnimationFrame(() => {
+      this._moreRaf = 0; const el = this._panelEl, b = this._moreEl; if (!el || !b) return;
+      const can = this.hasAttribute('scroll') && this.getAttribute('mode') === 'wide' && el.scrollHeight - el.clientHeight - el.scrollTop > 12;
+      b.hidden = !can; this._fitCheck();
+    });
+  }
+  _panelGrid(mode) {
+    const p = this._config.panel, el = this._panelEl;
+    if (mode === 'phone') {
+      el.style.gridTemplateColumns = p.phone_columns || '1fr'; el.style.gridTemplateRows = ''; el.style.gridTemplateAreas = p.phone_areas || '';
+    } else {
+      const tablet = mode === 'tablet' && p.tablet;
+      // widok o stałym układzie z dodanymi kaflami: wiersze z treści (jak tablet) + przewijanie
+      const q = tablet || (this._hasTiles2() && !p.scroll && p.tablet) ? Object.assign({}, p, p.tablet, this._hasTiles2() && !p.scroll ? { auto_rows: 'auto', rows: String((p.tablet && p.tablet.rows) || p.rows || '').replace(/minmax\(([^,()]+|[^,()]*\([^()]*\)[^,()]*),\s*\d+(\.\d+)?fr\)/g, 'minmax($1, max-content)').replace(/(^|\s)\d+(\.\d+)?fr(?=\s|$)/g, '$1max-content') } : {}) : p;
+      el.style.gridTemplateColumns = q.columns || '1fr 1fr';
+      el.style.gridTemplateRows = q.rows || '';
+      el.style.gridTemplateAreas = q.areas || '';
+      // przewijany panel o stałej wysokości: wiersze „auto” ściskałyby karty do min-height -> max-content (wysokość z treści)
+      el.style.gridAutoRows = q.auto_rows === 'auto' && (p.scroll || this._hasTiles2()) ? 'max-content' : (q.auto_rows || 'minmax(calc(var(--k) * 56), auto)');
+    }
+    if (!this._cardWraps) return;
+    this._cardWraps.forEach((w, i) => {
+      const cc = (this._lc || this._config.cards)[i] || {};
+      w.style.gridArea = mode === 'phone' && !this._config.panel.phone_areas ? '' : (cc.area || '');
+      const fixed = mode === 'wide' && !this._config.panel.scroll && !this._hasTiles2();
+      w.style.setProperty('--hg-min-h', fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`);
+      w.style.minHeight = fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`;
+      if (cc.span === 'full') w.style.gridColumn = '1 / -1';
+      else if (mode !== 'phone' && cc.span && !cc.area) w.style.gridColumn = `span ${cc.span}`;
+      else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
+    });
+    this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
+    this.toggleAttribute('wide-panel', !!p.wide);
+    this.toggleAttribute('fit-panel', !!p.fit);
+    if (this._pro) { this._pro.disconnect(); this._pro.observe(el); for (const k of el.children) this._pro.observe(k); }
+    this._moreUpd();
+  }
+
+  /* ---------- budowa ---------- */
+  async _build() {
+    if (this._building) return; this._building = true;
+    const c = this._config;
+    const sr = this.shadowRoot;
+    sr.innerHTML = `<style>${HG_BASE}${this._css()}</style>
+      <div class="bg" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div>
+      <div class="page">
+        <header class="top"></header>
+        <section class="head"></section>
+        <nav class="rail" aria-label="Sekcje"></nav>
+        <main class="panel" aria-label="${H.esc(c.view)}"></main>
+        <div class="tools" role="toolbar"></div>
+        <aside class="hub"></aside>
+        <button class="more" data-act="pmore" hidden aria-label="Przewiń w dół" title="Więcej poniżej">${H.icon('mdi:chevron-down')}</button>
+        ${c.back ? `<button class="back" data-act="back" aria-label="Wstecz" title="Wstecz">${H.icon('mdi:chevron-left')}</button>` : ''}
+      </div>
+      <div class="layer menu-l"></div><div class="layer sheet-l"></div>`;
+    this._menuL = sr.querySelector('.menu-l'); this._sheetL = sr.querySelector('.sheet-l');
+    this._topEl = sr.querySelector('.top'); this._headEl = sr.querySelector('.head'); this._railEl = sr.querySelector('.rail');
+    this._moreEl = sr.querySelector('.more');
+    this._panelEl = sr.querySelector('.panel'); this._toolsEl = sr.querySelector('.tools'); this._hubEl = sr.querySelector('.hub');
+    this._panel = true;
+    // przewijany panel: wskaźnik „więcej poniżej” (bez gradientu/maski – maska tworzyłaby nowy backdrop root dla szkła)
+    this._panelEl.addEventListener('scroll', () => this._moreUpd(), { passive: true });
+    this._pro = this._pro || new ResizeObserver(() => this._moreUpd());
+    const bgc = c.background || {};
+    // zdjęcie tła ustawiane dopiero po zdekodowaniu, potem jednorazowe odświeżenie szkła: Chrome (GPU, Retina) potrafi zostawić
+    // nieaktualny kafel backdrop-filter sprzed dorysowania zdjęcia (pas z twardą krawędzią do czasu zmiany rozmiaru okna)
+    this._bgDef = [['--hg-bg-wide', bgc.wide], ['--hg-bg-portrait', bgc.portrait]];
+    const setBg = (k, u) => { if (!u || (HGL.data.app && HGL.data.app.bg)) return; const v = `url('${u}')`;
+      if (HG_BG_OK.has(u)) { this.style.setProperty(k, v); return; }
+      const im = new Image(); im.decoding = 'async'; im.src = u;
+      const done = () => { HG_BG_OK.add(u); this.style.setProperty(k, v); this._glassRefresh(); };
+      (im.decode ? im.decode() : Promise.reject()).then(done, () => { im.onload = done; im.onerror = done; if (im.complete) done(); }); };
+    setBg('--hg-bg-wide', bgc.wide); setBg('--hg-bg-portrait', bgc.portrait);
+    if (bgc.position) this.style.setProperty('--hg-bg-pos', bgc.position);
+    this.toggleAttribute('panel-hidden', !!this._ls('hidden:' + c.view));
+    // karty panelu
+    const helpers = HG_HELPERS || (window.loadCardHelpers ? (HG_HELPERS = await window.loadCardHelpers()) : null);
+    this._cards = []; this._cardWraps = [];
+    if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
+    if (this._config._hgAuto && HGL.loaded && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
+    if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
+    for (const cc of LC) {
+      const w = document.createElement('div'); w.className = 'cw'; w.dataset.hgk = cc._k;
+      if (cc._hid) { w.hidden = true; w.style.display = 'none'; }
+      let el;
+      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles;
+      try {
+        if (helpers) el = helpers.createCardElement(conf);
+        else { el = document.createElement(conf.type.replace('custom:', '')); el.setConfig(conf); }
+      } catch (e) { el = document.createElement('div'); el.textContent = 'Card error: ' + e.message; }
+      try { if (this._hass) el.hass = this._hass; } catch (e) { console.error('nuvio card', conf.type, e); }
+      w.appendChild(el); this._panelEl.appendChild(w);
+      this._cards.push(el); this._cardWraps.push(w);
+    }
+    this._built = true; this._building = false;
+    this._sigTop = this._sigRail = this._sigHub = null;
+    this._paintHead(); this._paintTools();
+    this._paintTop(true); this._paintRail(true); this._paintHub(true);
+    this._layout();
+    if (this.isConnected) this._enter();
+  }
+  /* wejście widoku: odśwież wskaźniki (bez zbędnego przerysowania), animacja z położenia poprzedniego widoku */
+  /* jednorazowe przemalowanie warstw szkła (backdrop-filter none -> przywrócenie w kolejnej klatce) */
+  /* ukrycie/pokazanie panelu jako jednej całości: animacja tylko opacity + transform samego panelu (tło z rozmyciem, karty i cień
+     są jego zawartością, więc znikają razem); po zakończeniu visibility:hidden. Reduced-motion: bez ruchu, lite: krótki fade. */
+  _panelVis(hide) {
+    const p = this._panelEl; if (!p) return;
+    if (this._pBusy === hide) return;                                  // ten sam kierunek już trwa (podwójne zdarzenie)
+    const rm = matchMedia('(prefers-reduced-motion: reduce)').matches, lite = this.hasAttribute('lite');
+    const tok = this._pTok = (this._pTok || 0) + 1;
+    if (this._pAn) { try { this._pAn.cancel(); } catch (e) {} this._pAn = null; }
+    if (!p.animate) { this.toggleAttribute('panel-hidden', hide); return; }
+    this._pBusy = hide;
+    HG_FREEZE.on = true;                                               // karty nie przerysowują DOM w trakcie animacji
+    this.setAttribute('panel-anim', '');                               // potomkowie bez rozmycia i animacji; tylko panel animowany (opacity + transform)
+    if (!hide) this.removeAttribute('panel-hidden');
+    const moved = rm || lite ? 'none' : 'translateX(24px) scale(.98)';
+    const an = this._pAn = p.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: moved }],
+      { duration: rm ? 120 : lite ? 160 : 220, easing: hide ? 'cubic-bezier(.4,0,1,1)' : 'cubic-bezier(0,0,.2,1)', direction: hide ? 'normal' : 'reverse', fill: 'both' });
+    an.finished.then(() => {
+      if (tok !== this._pTok) return;                                 // nowsze wywołanie przejęło panel
+      if (hide) this.setAttribute('panel-hidden', '');
+      an.cancel(); this._pAn = null; this._pBusy = undefined;
+      requestAnimationFrame(() => { if (tok === this._pTok) this.removeAttribute('panel-anim'); HG_FREEZE.release(); });
+    }, () => { if (tok === this._pTok) { this._pBusy = undefined; this.removeAttribute('panel-anim'); HG_FREEZE.release(); } });
+  }
+  _glassRefresh() {
+    const sr = this.shadowRoot; if (!sr || this._grRaf) return;
+    this._grRaf = requestAnimationFrame(() => requestAnimationFrame(() => {
+      this._grRaf = 0;
+      if (this.hasAttribute('panel-anim')) return;
+      const els = sr.querySelectorAll('.tabs, .rail, .more, .rback');   // panel celowo pominięty (mrugnięcie szkła)
+      els.forEach((e) => { e.style.setProperty('backdrop-filter', 'none'); e.style.setProperty('-webkit-backdrop-filter', 'none'); });
+      requestAnimationFrame(() => els.forEach((e) => { e.style.removeProperty('backdrop-filter'); e.style.removeProperty('-webkit-backdrop-filter'); }));
+    }));
+  }
+  _enter() {
+    if (!this._hass) return;
+    this._paintTop(); this._paintRail();
+    const p = HGNav.prev; HGNav.prev = null;
+    const fresh = p && p.view !== this._config.view && performance.now() - p.t < 2500 && p.mode === this.getAttribute('mode');
+    if (fresh && !hgReduced() && this._panelEl.animate) this._animIn(p);
+    HGNav.ready();
+    clearTimeout(this._grT); this._grT = setTimeout(() => this._glassRefresh(), 260);   // po przejściu widoku
+  }
+  _animIn(p) {
+    // wskaźnik zakładek i szyny przesuwa się z poprzedniej pozycji: tylko transform, mały element bez rozmycia
+    const flip = (el, from) => {
+      if (!el || !from) return;
+      const b = el.getBoundingClientRect(); if (!b.width) return;
+      const dx = from.x - b.left, dy = from.y - b.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      const base = el.style.transform || 'none';
+      el.animate([{ transform: `translate(${dx}px, ${dy}px) ${base === 'none' ? '' : base}` }, { transform: base }], { duration: 200, easing: HG_EASE });
+    };
+    flip(this._topEl.querySelector('.ind'), p.tab);
+    flip(this._railEl.querySelector('.rind'), p.rail);
+    // treść: tylko krótkie przenikanie kart (bez panelu, bez rozmycia, bez kolejkowania); na dotyku bez przejścia
+    if (hgTouch()) return;
+    const o = { duration: 150, easing: 'ease-out' };
+    this._headEl.animate([{ opacity: 0 }, { opacity: 1 }], o);
+    this._cardWraps.forEach((w) => w.animate([{ opacity: 0 }, { opacity: 1 }], o));
+  }
+  /* animacje ciągłe tylko w widocznym widoku i karcie przeglądarki (--hg-play dziedziczone do kart) */
+  _syncPlay() {
+    const on = this.isConnected && !document.hidden && this._config && this._ownPath();
+    this.toggleAttribute('paused', !on);
+  }
+  _userInfo() {
+    const c = this._config, u = (this._hass && this._hass.user) || {};
+    if (!this._pe || this._pe[0] !== u.id) {
+      const pe = Object.keys(this._hass.states).find((k) => k.startsWith('person.') && this._hass.states[k].attributes.user_id === u.id);
+      this._pe = [u.id, pe || null];
+    }
+    const pe = this._pe[1] ? { entity_id: this._pe[1] } : null;
+    const full = c.user.full_name || u.name || 'Użytkownik';
+    const first = c.user.name || full.split(/\s+/)[0];
+    const handle = c.user.handle || '@' + first.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9_]/g, '_');
+    return { full, first, handle, person: c.user.person || (pe && pe.entity_id) };
+  }
+  /* nagłówek widoku pokoju: przycisk „Pokoje”, ikona i nazwa pokoju, temperatura / wilgotność (adres ?area=<id>) */
+  _roomHead() {
+    const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || {}), a = m.byId[HGAreas.areaFromUrl()];
+    const back = `<button class="rback" data-act="roomback" aria-label="Wróć do pokoi">${H.icon('mdi:chevron-left')}<span>Pokoje</span></button>`;
+    if (!a) return `${back}<h1>Pokój</h1><p>Nie znaleziono pokoju</p>`;
+    const env = HGAreas.env(h, a), S = a.sec || {}, okS = (e) => H.ok(h.states[e]);
+    // hero: duża temperatura + wilgotność; obok stan pokoju (obecność, włączone światła, otwarte drzwi/okna) – tylko z prawdziwych encji
+    const big = env.t != null ? `<span class="rt">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}<sup>°</sup></span>` : '';
+    const hum = env.u != null ? `<span class="ru">${H.icon('mdi:water-percent')}${H.fmt(env.u, 0)}%</span>` : '';
+    const occ = (S.mot || []).filter(okS), occOn = occ.some((e) => h.states[e].state === 'on');
+    const lOn = (S.light || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
+    const opn = (S.door || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
+    const pills = [occ.length ? `<span class="rp ${occOn ? 'on' : ''}"><i></i>${occOn ? 'Ktoś jest' : 'Pusto'}</span>` : '',
+      lOn ? `<span class="rp lt">${H.icon('mdi:lightbulb-on')}${hgPl(lOn, 'światło', 'światła', 'świateł')}</span>` : '',
+      opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? 'Otwarte' : `${opn} otwarte`}</span>` : ''].join('');
+    const sub = big || hum || pills ? `${big}${hum}${pills ? `<span class="rps">${pills}</span>` : ''}` : `<span>${a.devN ? hgPl(a.devN, 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak urządzeń'}</span>`;
+    return `${back}<h1 class="rh">${H.icon(a.icon, 'rhi')}<span>${H.esc(a.name)}</span></h1><p class="renv">${sub}</p>`;
+  }
+  _paintHead() {
+    const c = this._config; if (!this._hass) return;
+    if (c.room_head) { this._setHTML(this._headEl, this._roomHead()); return; }
+    const ui = this._userInfo();
+    this._headEl.innerHTML = `<h1>${H.esc(c.title.replace('{name}', ui.first))}</h1><p>${H.esc(c.subtitle)}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? '<div class="fuel" role="list" aria-label="Ceny paliw"></div>' : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
+    this._placeWx();
+  }
+  /* pogoda na zewnątrz: szeroki układ -> bez tła na zdjęciu pod powitaniem (.wxh); tablet/telefon -> chip obok cen paliw (.wxs) */
+  _placeWx() {
+    const c = this._config; if (!c || !c.weather || !this._headEl) return;
+    if (!this._wxEl) { this._wxEl = document.createElement('nuvio-weather-card'); this._wxEl.setConfig(c.weather); this._wxEl.setAttribute('variant', 'hero'); }
+    const wide = this.getAttribute('mode') === 'wide', t = this._headEl.querySelector(wide ? '.wxh' : '.wxs'); if (!t) return;
+    if (this._wxEl.hasAttribute('compact') === wide) this._wxEl.toggleAttribute('compact', !wide);
+    if (this._wxEl.parentNode !== t) t.appendChild(this._wxEl);
+    if (this._hass) this._wxEl.hass = this._hass;
+  }
+  /* ceny paliw (gov.pl): małe chipy pod powitaniem; strzałka = zmiana jutro; brak danych -> wiersz znika */
+  _fuelEnts() { return (this._config.fuel || []).flatMap((f) => [f.entity, f.change].filter(Boolean)); }
+  _paintFuel(force) {
+    const el = this._fuelEl; if (!el || !this._hass) return;
+    const chips = [];
+    for (const f of this._config.fuel) {
+      const s = H.st(this._hass, f.entity), v = s ? parseFloat(s.state) : NaN;
+      if (!H.ok(s) || !isFinite(v)) continue;
+      const ch = H.st(this._hass, f.change), ca = (H.ok(ch) && ch.attributes) || {};
+      const gr = Number(ca.roznica_gr), known = H.ok(ch) && isFinite(gr) && ca.cena_jutro != null;
+      const dir = !known || gr === 0 ? 'eq' : gr > 0 ? 'up' : 'dn';
+      const price = `${v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
+      const tom = !known ? 'jutro: brak danych' : gr === 0 ? 'jutro bez zmian' : `jutro ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`;
+      chips.push(`<button class="fc" role="listitem" data-act="fuel" data-e="${H.esc(f.entity)}" title="${H.esc(`${f.label} ${price}/l · ${tom}`)}" aria-label="${H.esc(`${f.label} ${price} za litr, ${tom}`)}"><span class="fl ${H.esc(String(f.label).replace(/\W/g, '').toLowerCase())}">${H.esc(String(f.label).toUpperCase())}</span><b>${price}</b><i class="tr ${dir}" aria-hidden="true">${H.icon(dir === 'up' ? 'mdi:arrow-up' : dir === 'dn' ? 'mdi:arrow-down' : 'mdi:minus')}</i></button>`);
+    }
+    el.hidden = !chips.length;
+    if (force) el._hgHtml = null;
+    this._setHTML(el, chips.join(''));
+  }
+  _paintTop(force) {
+    if (!this._built || !this._hass) return;
+    const c = this._config, ui = this._userInfo();
+    const path = location.pathname;
+    const nCount = Object.keys(this._notif).length;
+    const badgeOf = (t) => {
+      if (!t.badge) return 0;
+      if (t.badge.count_active) return t.badge.count_active.filter((e) => hgMpActive(H.st(this._hass, e))).length;
+      if (t.badge.count_on) return t.badge.count_on.filter((e) => { const s = H.st(this._hass, e); return s && !['off', 'unavailable', 'unknown', 'idle', 'standby', 'paused', 'not_home'].includes(s.state); }).length;
+      return 0;
+    };
+    const tabs = c.tabs.map((t) => ({ ...t, act: path === t.path || (t.match && hgMatch(t.match, path)), b: badgeOf(t) }));
+    const sig = JSON.stringify([!!this._editing, this._isAdmin(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '']);
+    if (!force && sig === this._sigTop) return; this._sigTop = sig;
+    const ps = ui.person && H.st(this._hass, ui.person);
+    const av = ps && ps.attributes.entity_picture ? hgAvatar(this._hass, ui.person, 'uav') : `<span class="uav ini">${H.esc(ui.first[0] || '?')}</span>`;
+    this._setHTML(this._topEl, `
+      <button class="brand" data-act="nav" data-i="0" aria-label="${H.esc(c.brand)}">${HG_LOGO}<span>${H.esc(c.brand)}</span></button>
+      <div class="tabs" role="tablist">${tabs.map((t, i) => `<button role="tab" aria-selected="${!!t.act}" class="tab ${t.act ? 'act' : ''}" data-act="nav" data-i="${i}" title="${H.esc(t.label)}" aria-label="${H.esc(t.label)}">${t.icon ? H.icon(t.icon) : ''}<span class="tl">${H.esc(t.label)}</span>${t.b ? `<sup class="nb" aria-label="${t.b} aktywne">${t.b > 9 ? '9+' : t.b}</sup>` : ''}</button>`).join('')}<i class="ind" aria-hidden="true"></i></div>
+      <div class="right">
+        ${this._isAdmin() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? 'Zakończ edycję układu' : 'Edytuj układ'}" title="${this._editing ? 'Gotowe' : 'Edytuj układ'}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
+        <button class="cir" data-act="mail" aria-label="Wiadomości" title="Wiadomości i powiadomienia">${H.icon('mdi:email')}</button>
+        <button class="cir" data-act="bell" aria-label="Powiadomienia (${nCount})" title="Powiadomienia: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
+        <div class="user">
+          <button class="uin" data-act="profile" aria-label="Profil" title="Profil">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
+          <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="Menu" title="Menu">${H.icon('mdi:chevron-down')}</button>
+        </div>
+      </div>`);
+    this._menuEl = this._topEl.querySelector('.user');
+    this._paintMenu();
+    this._tabsFit();
+    this._placeInd();
+    // ponowny pomiar po załadowaniu fontów/ikon (pierwszy pomiar bywał zawyżony -> niepotrzebnie same ikony)
+    if (!this._tfRe) { this._tfRe = true; const re = () => { if (this.isConnected) this._tabsFit(); };
+      (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(re)); setTimeout(re, 800); setTimeout(re, 2500); }
+  }
+  /* zakładki u góry (tryb wide): gdy z etykietami nie mieszczą się przed prawą grupą, same ikony (etykieta w title/aria-label) */
+  _tabsFit() {
+    const t = this._topEl && this._topEl.querySelector('.tabs'), r = this._topEl && this._topEl.querySelector('.right');
+    if (!t || !r) return;
+    const was = this.hasAttribute('tabs-compact');
+    this.removeAttribute('tabs-compact');
+    if (this.getAttribute('mode') !== 'wide') { if (was) this._placeInd(); return; }
+    const fit = t.getBoundingClientRect().right + 16 <= r.getBoundingClientRect().left;
+    this.toggleAttribute('tabs-compact', !fit);
+    if (was !== !fit) this._placeInd();
+  }
+  /* menu użytkownika w osobnej warstwie (poza .page z kontekstami stosu backdrop-filter / contain), position:fixed nad panelem */
+  _paintMenu() {
+    const L = this._menuL; if (!L) return;
+    if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
+    const c = this._config, b = this._menuEl.getBoundingClientRect();
+    L.setAttribute('open', '');
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}</div>`;
+    this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
+    document.addEventListener('keydown', this._menuKey, true);
+  }
+  /* telefon: arkusz „Więcej” (warstwa nad stroną): zamykanie tapnięciem w tło, przesunięciem w dół, Escape */
+  _openSheet(open) {
+    const L = this._sheetL, c = this._config; if (!L) return;
+    clearTimeout(this._sheetT);
+    if (!open) {
+      if (!this._sheetOpen) return;
+      this._sheetOpen = false;   // stan logiczny od razu (warstwa znika dopiero po animacji, ale pasek ma już wrócić do aktywnej pozycji)
+      L.classList.remove('in'); document.removeEventListener('keydown', this._sheetKey, true);
+      this._sheetT = setTimeout(() => { L.removeAttribute('open'); L.innerHTML = ''; }, hgReduced() ? 0 : 220);
+      this._paintRail(true); return;
+    }
+    const path = location.pathname, pop = open === 'rail', more = pop ? (this._railOv || []) : ((c.phone_nav && c.phone_nav.more) || []);
+    this._sheetOpen = true; this._sheetMode = pop ? 'rail' : 'phone'; this._sheetItems = more;
+    L.setAttribute('open', ''); L.classList.toggle('popm', pop);
+    const mb = pop && this._railEl.querySelector('[data-act=railmore]'), mr = mb ? mb.getBoundingClientRect() : null;
+    const pc = Math.min(3, Math.max(1, more.length)), pw = pc * 88 + (pc - 1) * 10 + 20;
+    const pst = mr ? `style="--hg-pc:${pc}; left:${Math.round(Math.max(12, Math.min(mr.right + 14, innerWidth - pw - 12)))}px; top:${Math.round(Math.max(12, Math.min(mr.top - 12, innerHeight - 24 - Math.ceil(more.length / 3) * 88)))}px"` : '';
+    L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="Więcej"><i class="grab" aria-hidden="true"></i>
+      <div class="sg">${more.map((m, i) => `<button class="st ${m.match && hgMatch(m.match, path) ? 'act' : ''}" data-act="sheetnav" data-i="${i}">${H.icon(m.icon)}<span>${H.esc(m.label)}</span></button>`).join('')}</div></div>`;
+    requestAnimationFrame(() => requestAnimationFrame(() => L.classList.add('in')));
+    this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape') { e.preventDefault(); this._openSheet(false); } });
+    document.addEventListener('keydown', this._sheetKey, true);
+    const sh = L.querySelector('.sheet'); let y0 = null;
+    sh.addEventListener('pointerdown', (e) => { y0 = e.clientY; }, { passive: true });
+    sh.addEventListener('pointermove', (e) => { if (y0 == null) return; const dy = e.clientY - y0; if (dy > 0) sh.style.transform = `translateY(${dy}px)`; }, { passive: true });
+    const end = (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; sh.style.transform = ''; if (dy > 70) this._openSheet(false); };
+    sh.addEventListener('pointerup', end, { passive: true }); sh.addEventListener('pointercancel', () => { y0 = null; sh.style.transform = ''; }, { passive: true });
+    sh.querySelector('.st') && sh.querySelector('.st').focus({ preventScroll: true });
+    this._paintRail(true);
+  }
+  /* wskaźnik = osobny element pod aktywnym przyciskiem (pozycja przez transform, animowany w _animIn) */
+  _placeInd() {
+    const put = (box, act, ind, sel) => {
+      if (!box || !ind) return;
+      if (!act) { ind.style.opacity = '0'; return; }
+      ind.style.opacity = '';
+      ind.style.width = act.offsetWidth + 'px'; ind.style.height = act.offsetHeight + 'px';
+      ind.style.transform = `translate(${act.offsetLeft}px, ${act.offsetTop}px)`;
+    };
+    if (this._topEl) put(this._topEl.querySelector('.tabs'), this._topEl.querySelector('.tab.act'), this._topEl.querySelector('.ind'));
+    if (this._railEl) put(this._railEl, this._railEl.querySelector('.ri.act'), this._railEl.querySelector('.rind'));
+  }
+  _paintRail(force) {
+    if (!this._built) return;
+    const c = this._config, path = location.pathname;
+    const phone = this.getAttribute('mode') === 'phone' && c.phone_nav;
+    if (phone) {
+      // stan arkusza z flagi (nie z atrybutu warstwy: ten znika dopiero po animacji zamykania)
+      const open = !!this._sheetOpen;
+      const m = c.phone_nav.main.map((r) => ({ ...r, act: !open && (r.match ? hgMatch(r.match, path) : false) }));
+      const moreAct = !m.some((r) => r.act) && c.phone_nav.more.some((r) => r.match && hgMatch(r.match, path));
+      const sig = JSON.stringify(['p', m.map((r) => r.act), moreAct, open]);
+      if (!force && sig === this._sigRail) return; this._sigRail = sig;
+      // przyciski budujemy raz; przy otwarciu/zamknięciu arkusza tylko przełączamy klasy (bez podmiany ha-icon pod palcem
+      // ani odtwarzania wskaźnika od zera — na telefonie ikona potrafiła zniknąć do czasu ponownego wczytania)
+      const btns = this._railEl.dataset.pn === '1' ? this._railEl.querySelectorAll('.ri.pn') : null;
+      if (btns && btns.length === m.length + 1) {
+        m.forEach((r, i) => btns[i].classList.toggle('act', !!r.act));
+        const mb = btns[m.length]; mb.classList.toggle('act', !!(moreAct || open)); mb.setAttribute('aria-expanded', String(!!open));
+        this._placeInd(); return;
+      }
+      this._railEl.dataset.pn = '1';
+      this._railEl.innerHTML = m.map((r, i) => `<button class="ri pn ${r.act ? 'act' : ''}" data-act="pnav" data-i="${i}" aria-label="${H.esc(r.label)}">${H.icon(r.icon)}<span>${H.esc(r.label)}</span></button>`).join('')
+        + `<button class="ri pn ${moreAct || open ? 'act' : ''}" data-act="more" aria-haspopup="dialog" aria-expanded="${!!open}" aria-label="Więcej">${H.icon('mdi:dots-horizontal')}<span>Więcej</span></button><i class="rind" aria-hidden="true"></i>`;
+      this._placeInd(); return;
+    }
+    if (this._sheetOpen && this._sheetMode !== 'rail') this._openSheet(false);
+    delete this._railEl.dataset.pn;
+    const all = c.rail.map((r, i) => ({ ...r, i, act: r.match ? hgMatch(r.match, path) : false }));
+    // szyna nie mieści wszystkiego: nadmiar (najpierw wg rail_overflow, potem od końca, bez ostatniej = Ustawienia) do „Więcej”
+    const fit = this._railFit(all.length), ov = new Set();
+    if (fit < all.length) {
+      const need = all.length - (fit - 1), order = [...(c.rail_overflow || []).map((l) => all.findIndex((r) => r.label === l)).filter((i) => i >= 0 && i < all.length - 1),
+        ...all.map((r, i) => i).slice(0, -1).reverse()];
+      for (const i of order) { if (ov.size >= need) break; ov.add(i); }
+    }
+    this._railOv = [...ov].sort((x, y) => x - y).map((i) => all[i]);
+    const items = all.filter((r, i) => !ov.has(i)), moreAct = this._railOv.some((r) => r.act) || (this._sheetOpen && this._sheetMode === 'rail');
+    const sig = JSON.stringify([items.map((r) => r.i + (r.act ? 'a' : '')), [...ov], moreAct]);
+    if (!force && sig === this._sigRail) return; this._sigRail = sig;
+    const btn = (r) => `<button class="ri ${r.act ? 'act' : ''}" data-act="rail" data-i="${r.i}" aria-label="${H.esc(r.label)}" title="${H.esc(r.label)}">${r.svg && HG_SVG[r.svg] ? HG_SVG[r.svg] : H.icon(r.icon)}</button>`;
+    const moreB = ov.size ? `<button class="ri ${moreAct ? 'act' : ''}" data-act="railmore" aria-haspopup="dialog" aria-expanded="${!!(this._sheetOpen && this._sheetMode === 'rail')}" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-grid')}</button>` : '';
+    this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + btn(items[items.length - 1]) + '<i class="rind" aria-hidden="true"></i>';
+    this._placeInd();
+    if (!this._rfChk) { this._rfChk = true; requestAnimationFrame(() => { this._rfChk = false; this._paintRail(); }); }   // ponowny pomiar po malowaniu
+    if (!this._rfT) { this._rfT = true; for (const ms of [400, 1200, 3000]) setTimeout(() => { if (this.isConnected) this._paintRail(); }, ms); }
+  }
+  /* ile przycisków zmieści szyna nad przyciskiem wstecz (min. 12 px odstępu) */
+  _railFit(n) {
+    const r = this._railEl; if (!r || !r.isConnected) return n;
+    const mode = this.getAttribute('mode'); if (mode !== 'wide' && mode !== 'tablet') return n;
+    const rr = r.getBoundingClientRect(); if (!rr.height) return Math.min(n, this._rfLast || n);   // ukryta strona: ostatni pomiar
+    const cs = getComputedStyle(r), gap = parseFloat(cs.rowGap) || 8, pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
+    const one = r.querySelector('.ri'), ih = one ? one.getBoundingClientRect().height : 39;
+    const bk = this.shadowRoot.querySelector('.back'), bb = bk && bk.offsetParent ? bk.getBoundingClientRect() : null;
+    const limit = bb && bb.top > rr.top ? bb.top - 12 : innerHeight - 16;
+    const k = Math.floor((limit - rr.top - pad + gap) / (ih + gap));
+    this._rfLast = Math.max(3, k); return Math.max(3, Math.min(n, k));
+  }
+  _paintTools() {
+    const c = this._config, hid = this.hasAttribute('panel-hidden');
+    if (!c.toolbar) { this._toolsEl.style.display = 'none'; return; }
+    this._toolsEl.innerHTML = `
+      <button class="tb" data-act="search" aria-label="Szukaj" title="Szukaj (szybki pasek)">${H.icon('mdi:magnify')}</button>
+      <button class="tb sm" data-act="zin" aria-label="Powiększ" title="Powiększ panel">${H.icon('mdi:plus-circle-outline')}</button>
+      <button class="tb sm" data-act="zout" aria-label="Pomniejsz" title="Pomniejsz panel">${H.icon('mdi:minus-circle')}</button>
+      <button class="tb" data-act="close" aria-label="${hid ? 'Pokaż panel' : 'Ukryj panel'}" title="${hid ? 'Pokaż panel' : 'Ukryj panel'}">${H.icon(hid ? 'mdi:view-dashboard-outline' : 'mdi:close')}</button>`;
+  }
+  _paintHub(force) {
+    if (!this._built || !this._hass) return;
+    const hb = this._config.hub; if (!hb) { this._hubEl.style.display = 'none'; return; }
+    const sig = JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
+    if (!force && sig === this._sigHub) return; this._sigHub = sig;
+    this._setHTML(this._hubEl, `<div class="ht"><b>${H.esc(hb.title)}</b><span>${H.esc(hb.subtitle)}</span></div>
+      <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || 'Rodzina')}">${H.icon('mdi:plus')}</button>
+      <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.esc(H.name(this._hass, p))}: ${H.esc(s ? H.t(this._hass, s) : '')}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
+  }
+  _click(e) {
+    const t = e.composedPath().find((n) => n.dataset && n.dataset.act && this.shadowRoot.contains(n));
+    if (!t) return;
+    const c = this._config, a = t.dataset.act, i = Number(t.dataset.i);
+    const go = (x) => H.action(this, this._hass, x);
+    switch (a) {
+      case 'nav': return go({ navigate: c.tabs[i] && c.tabs[i].path });
+      case 'rail': return go(c.rail[i].action);
+      case 'pnav': this._openSheet(false); return go(c.phone_nav.main[i].action);
+      case 'more': return this._openSheet(!this._sheetOpen);
+      case 'sheetclose': return this._openSheet(false);
+      case 'fuel': return H.fire(this, 'hass-more-info', { entityId: t.dataset.e });
+      case 'roomback': return go({ navigate: c.room_back || HG_P('rooms') });
+      case 'sheetnav': { const m = (this._sheetItems || c.phone_nav.more)[i]; this._openSheet(false); return go(m.action); }
+      case 'railmore': return this._openSheet(this._sheetOpen ? false : 'rail');
+      case 'edit': return this._editing ? this._editExit(true) : this._editEnter();
+      case 'mail': return go(c.mail_action);
+      case 'bell': return go(c.notifications_action);
+      case 'pmore': { const el = this._panelEl; return el && el.scrollBy({ top: Math.round(el.clientHeight * 0.8), behavior: 'smooth' }); }
+      case 'profile': return go(c.user.action || { navigate: '/profile' });
+      case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
+      case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
+      case 'back': return go(c.back);
+      case 'search': return go(c.search_action || { quickbar: 'e' });
+      case 'zin': case 'zout': {
+        const zz = c.zoom; let z = this._zoom() + (a === 'zin' ? zz.step : -zz.step);
+        z = Math.round(Math.max(zz.min, Math.min(zz.max, z)) * 100) / 100; this._ls('zoom', z); return this._layout();
+      }
+      case 'close': { const h = !this.hasAttribute('panel-hidden'); this._panelVis(h); this._ls('hidden:' + c.view, h); return this._paintTools(); }
+      case 'hubplus': return go(c.hub.plus || { navigate: c.tabs[3] && c.tabs[3].path });
+      case 'person': return go({ more_info: t.dataset.e });
+    }
+  }
+  getCardSize() { return 12; }
+  _css() {
+    return U(`
+:host{ display:block; color:var(--hg-tx-ffffff); position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
+.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
+@media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
+@media (pointer:coarse){ :host{ --hg-bf:.6; } }
+/* tryb lekki (dotyk / słabe urządzenie, nadpisanie: localStorage nuvio:lite = 1/0): słabsze rozmycie, bez ciężkich cieni */
+/* ===== JEDNO SZKŁO dla wszystkich pływających powierzchni = dokładnie przepis kart (ha-card.glass przy panel_backdrop:false):
+   wypełnienie, backdrop-filter, ramka, cień. Tokeny liczone na :host, więc lite/dotyk (--hg-bf, --hg-glass-lite, --hg-card-sh) działają tak samo jak w kartach. */
+:host{ --primary-color: var(--hg-accent); --accent-color: var(--hg-accent); --state-icon-active-color: var(--hg-accent); --state-active-color: var(--hg-accent); --state-light-active-color: var(--hg-accent); --state-switch-active-color: var(--hg-accent); --switch-checked-color: var(--hg-accent); --switch-checked-button-color: var(--hg-accent); --switch-checked-track-color: var(--hg-accent); --rgb-primary-color: 99,215,30; --rgb-state-light-color: 99,215,30; --rgb-state-switch-color: 99,215,30; --mush-rgb-amber: 99,215,30; --mush-rgb-orange: 99,215,30; --mush-rgb-blue: 99,215,30; --mush-rgb-green: 99,215,30; --mush-rgb-yellow: 99,215,30; --ha-card-background: var(--hg-glass-bg); --ha-card-border-width: 0; --ha-card-box-shadow: none; --ha-card-border-radius: 18px; --mdc-theme-primary: var(--hg-accent); --label-badge-blue: var(--hg-accent); --label-badge-yellow: var(--hg-accent);
+  --glass-bg: var(--hg-glass-lite, var(--hg-glass-bg)); --glass-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1));
+  --glass-border: 0 solid transparent; --glass-shadow: var(--hg-card-sh, var(--hg-sh)); }
+/* rozmycie na izolowanej warstwie ::after (inset:0, radius:inherit, z-index:-1) – element sam nie ma backdrop-filter
+   (unika dwutonowego pasa Chrome na małych elementach; ta sama technika wszędzie = identyczny wygląd) */
+.tabs, .rail, .tools, .hub, .back, .cir, .user, .fc, .rback, .more, .menu, .sheet-l .sheet{ background: transparent !important; border: var(--glass-border) !important; box-shadow: var(--glass-shadow) !important;
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important; isolation:isolate; }
+:where(.tabs, .rail, .tools, .hub, .back, .cir, .user, .fc, .rback, .more){ position:relative; }
+.tabs::after, .rail::after, .tools::after, .hub::after, .back::after, .cir::after, .user::after, .fc::after, .rback::after, .more::after, .menu::after, .sheet-l .sheet::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-bf); backdrop-filter: var(--glass-bf); }
+.tabs::after, .rail::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
+.tools::after, .rail::after{ -webkit-backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); }
+/* lite (dotyk): rozmycie tylko na zewnętrznym panelu (≤12px); chrom, menu, arkusz i karty bez backdrop-filter, bez dużych cieni */
+:host([lite]){ --hg-lens: saturate(100%); --hg-glass-rim: var(--hg-glass-rim-lite); --hg-glass-bri: 1; --hg-glow: none; --hg-glow-l: none; --hg-bf:.35; --hg-card-sh: 0 0 0 transparent; --hg-inner-bf: none; --hg-glass-lite: var(--hg-glass-lite-c); --hg-warm-lite: var(--hg-warm-lite-c); --hg-wm-tumble: none; --hg-wm-slosh: none; --hg-wm-bub: none; --hg-sc-anim: none; }
+:host([lite]) .panel{ -webkit-backdrop-filter: blur(12px) !important; backdrop-filter: blur(12px) !important; box-shadow: none !important; }
+:host([lite]) .ind{ box-shadow:none !important; }
+:host([lite]) .ri, :host([lite]) .tab{ transition:none; }
+/* niewidoczny widok / ukryta karta przeglądarki: animacje ciągłe wstrzymane (zmienna dziedziczy się do kart) */
+:host([paused]){ --hg-play: paused; }
+*, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
+.shade{ position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: var(--hg-bg-0e1014-026-k); }
+/* noc (schemat ciemny): dodatkowe przyciemnienie zdjęcia */
+.shade::after{ content:''; position:absolute; inset:0; background: var(--hg-night, transparent); }
+.page{ position:relative; z-index:1; }
+.logo{ width:22u; height:22u; border-radius:50%; background:var(--hg-accent); color:var(--hg-on-accent); display:inline-flex; align-items:center; justify-content:center; flex:none; box-shadow:var(--hg-sh-sm); }
+.logo ha-icon{ width:15u; height:15u; --mdc-icon-size:100%; }
+/* szeroki panel (Mapa, Kamery, Kalendarz): nagłówek i panel w normalnym przepływie (siatka: auto | 1fr) zamiast stałego top,
+   więc panel zawsze zaczyna się pod nagłówkiem, niezależnie od rozmiaru fontu i ekranu */
+:host([mode=wide][wide-panel]) .page{ display:grid; grid-template-columns: 86u minmax(0,1fr); grid-template-rows: auto minmax(0,1fr);
+  padding: 78u var(--s3) var(--s3) 0; box-sizing:border-box; }
+:host([mode=wide][wide-panel]) .head{ position:relative; left:auto; top:auto; grid-row:1; grid-column:1 / -1; margin-left:26u; max-width:none; }
+:host([mode=wide][wide-panel]) .panel{ position:relative; left:auto; right:auto; top:auto; bottom:auto; width:auto; grid-row:2; grid-column:2;
+  margin-top:max(24px, calc(var(--hg-u0) * 14)); min-height:0; align-self:stretch; }
+:host([wide-panel]) .tools, :host([wide-panel]) .hub{ display:none; }
+:host([mode=wide][fit-panel]) .panel{ align-self:start; max-height:100%; overflow:auto; align-content:start; }
+:host([fit-panel]) .panel{ align-self:start; }
+button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+/* ----- pasek górny ----- */
+.top{ display:flex; align-items:center; }
+.brand{ display:flex; align-items:center; gap:var(--s1); color:var(--hg-tx-ffffff-k); text-shadow:0 1px 6px var(--hg-sh-000000-030-k); font-size:var(--fs-md); font-weight:400; letter-spacing:-.01em; }
+.brand svg{ width:19u; height:19u; flex:none; }
+.tabs{ display:flex; align-items:center; gap:2u; padding:4u; border-radius:999px; height:39u;
+  background: var(--hg-bg-ffffff-013-k); border:1px solid var(--hg-bd-ffffff-016-k);
+  -webkit-backdrop-filter: blur(calc(14px * var(--hg-bf, 1))); backdrop-filter: blur(calc(14px * var(--hg-bf, 1))); box-shadow: var(--hg-sh); }
+.tab{ position:relative; height:31u; padding:0 var(--s3); border-radius:999px; font-size:var(--fs-sm); color:var(--hg-tx-ffffff-095-k); text-shadow:0 1px 6px var(--hg-sh-000000-028-k); white-space:nowrap; transition: background .25s, color .25s; }
+.tab:hover{ background:var(--hg-bg-ffffff-012-k); }
+.tab{ display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.tab ha-icon{ width:20px; height:20px; flex:none; color:currentColor; --mdc-icon-size:20px; pointer-events:none; }
+.tab .tl{ pointer-events:none; }
+.tabs{ position:relative; }
+.tab{ z-index:1; }
+.tab.act{ color:var(--hg-tx-1f2125-k); padding:0 var(--s3); text-shadow:none; }
+.tab.act:hover{ background:none; }
+.ind, .rind{ position:absolute; left:0; top:0; z-index:0; pointer-events:none; background:var(--hg-bg-ffffff-k); will-change:transform; transform-origin:0 50%; }
+.ind{ border-radius:999px; box-shadow: 0 2px 8px var(--hg-sh-000000-012); }
+.rind{ border-radius:50%; box-shadow: var(--hg-sh); }
+:host([mode=phone]) .ind{ border-radius:22px; }
+/* jeden styl odznak (zakładki, dzwonek): pigułka z akcentem, biała cyfra, pierścień w kolorze tła */
+.nb{ position:absolute; top:1u; right:2u; min-width:18px; height:18px; padding:0 5px; box-sizing:border-box; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;
+  background:var(--hg-accent); color:var(--hg-on-accent) !important; font:600 11px/1 'HG DM Sans',system-ui,sans-serif; font-style:normal; letter-spacing:0; text-shadow:none !important; vertical-align:baseline;
+  box-shadow:0 0 0 2px var(--hg-nb-ring, var(--hg-chrome-solid)); pointer-events:none; z-index:2; }
+.tab.act .nb{ --hg-nb-ring:var(--hg-ac-ffffff-k); } .cir .nb{ top:-3px; right:-3px; }
+
+.right{ display:flex; align-items:center; gap:4u; margin-left:auto; }
+.cir{ position:relative; width:35u; height:35u; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff);
+  background: var(--hg-bg-96a0a6-055); border:1px solid var(--hg-bd-ffffff-022); -webkit-backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); }
+.cir ha-icon{ width:15u; height:15u; }
+.ndot{ position:absolute; top:8u; right:9u; width:6u; height:6u; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 0 1.5px var(--hg-sh-96a0a6-090-k); }
+.user{ position:relative; display:flex; align-items:center; height:35u; border-radius:999px; padding:0 var(--s1) 0 4u; margin-left:3u;
+  background: var(--hg-bg-96a0a6-055); border:1px solid var(--hg-bd-ffffff-022); -webkit-backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); }
+.uin{ display:flex; align-items:center; gap:var(--s1); color:var(--hg-tx-ffffff-k); text-shadow:0 1px 4px var(--hg-sh-000000-025-k); height:100%; }
+.uav{ width:27u; height:27u; border-radius:50%; background:center/cover var(--hg-bg-cccccc-k); flex:none; display:flex; align-items:center; justify-content:center; font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-ffffff-k); }
+.un{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; min-width:0; }
+.un b{ font-size:var(--fs-sm); font-weight:400; white-space:nowrap; } .un small{ font-size:var(--fs-xs); opacity:.92; white-space:nowrap; }
+.chev{ width:22u; height:22u; color:var(--hg-tx-ffffff-k); display:flex; align-items:center; justify-content:center; margin-left:4u; }
+.chev ha-icon{ width:15u; height:15u; }
+.layer{ display:none; } .layer[open]{ display:block; }
+.menu-l .menu{ position:fixed; z-index:1000; }
+.menu{ position:absolute; right:0; top:calc(100% + 6px); min-width:200px; padding:6px; border-radius:16px; z-index:20; color:var(--hg-tx-1f2125); }
+.menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:10px; font-size:14px; text-align:left; }
+.menu button:hover{ background:var(--hg-bg-000000-006); } .menu ha-icon{ width:18px; height:18px; }
+/* ----- arkusz „Więcej” (telefon) ----- */
+.sheet-l{ position:fixed; inset:0; z-index:1000; }
+.sheet-l .scrim{ position:absolute; inset:0; background:var(--hg-bg-08101e-038-k); opacity:0; transition:opacity .2s ease; }
+.sheet-l .sheet{ position:absolute; left:8px; right:8px; bottom:0; padding:8px 14px calc(18px + env(safe-area-inset-bottom)); border-radius:var(--r-lg) var(--r-lg) 0 0; color:var(--hg-tx-1f2125); transform:translateY(105%); transition:transform .26s cubic-bezier(.2,.8,.2,1); touch-action:none; }
+.sheet-l.in .scrim{ opacity:1; } .sheet-l.in .sheet{ transform:none; }
+/* „Więcej” z szyny (desktop/tablet): wyskakujące okienko obok szyny */
+.sheet-l.popm .scrim{ background:transparent; }
+.sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:0; transition:transform .2s ease, opacity .2s ease; touch-action:auto; }
+.sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); gap:10px; }
+.sheet-l.in .sheet.pop{ transform:none; opacity:1; } .sheet.pop .grab{ display:none; }
+.sheet .grab{ display:block; width:40px; height:5px; border-radius:3px; background:var(--hg-bg-000000-018); margin:2px auto 12px; }
+.sg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+.st{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:78px; padding:8px 4px; border-radius:18px; background:var(--hg-bg-ffffff-075);
+  border:1px solid var(--hg-bd-000000-005); font-size:13px; font-weight:400; color:var(--hg-tx-1f2125); text-align:center; }
+.st ha-icon{ width:24px; height:24px; } .st span{ max-width:100%; overflow-wrap:anywhere; line-height:1.15; }
+.st.act{ background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); }
+@media (prefers-reduced-motion: reduce){ .sheet-l .sheet, .sheet-l .scrim{ transition:none; } }
+/* ----- nagłówek ----- */
+.rback{ position:relative; display:inline-flex; align-items:center; gap:2u; height:max(calc(var(--k) * 30), 40px); padding:0 var(--s2) 0 var(--s1); margin:0 0 10u; border-radius:var(--r-md);
+  color: var(--hg-chrome-fg); font-size:var(--fs-sm); font-weight:600; }
+.rback ha-icon{ width:18u; height:18u; pointer-events:none; } .rback span{ pointer-events:none; }
+.head .rh{ display:flex; align-items:center; gap:var(--s1); } .head .rhi{ width:24u; height:24u; flex:none; }
+.head .renv{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6u 16u; font-size:15u; font-weight:400; margin-top:6u; } .head .renv > span{ display:inline-flex; align-items:center; gap:3u; } .head .renv ha-icon{ width:16u; height:16u; }
+.head .renv .rt{ display:inline-flex; align-items:center; gap:2u; font-size:24u; font-weight:300; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; } .head .renv .rt sup{ font-size:.45em; font-weight:400; vertical-align:.95em; margin-left:1px; }
+.head .renv .rt ha-icon{ width:20u; height:20u; opacity:.85; } .head .renv .ru{ font-size:17u; opacity:.92; } .head .renv .ru ha-icon{ width:18u; height:18u; }
+.head .rps{ display:inline-flex; flex-wrap:wrap; gap:6u; align-self:center; }
+.head .rp{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:15px; font-size:13.5px; font-weight:600; color:var(--hg-tx-ffffff-k); background:var(--hg-bg-000000-028-k); }
+.head .rp i{ width:8px; height:8px; border-radius:50%; background:var(--hg-bg-ffffff-060-k); } .head .rp.on i{ background:var(--hg-accent); box-shadow:0 0 0 3px var(--hg-accent-soft); }
+.head .rp ha-icon{ width:15px; height:15px; } .head .rp.lt ha-icon{ color:var(--hg-accent-tx); } .head .rp.op ha-icon{ color:var(--hg-accent-tx); }
+.head h1{ margin:0; font-size:24u; font-weight:600; letter-spacing:-.015em; line-height:1.18; text-shadow: 0 1px 12px var(--hg-sh-000000-018-k); }
+.fuel{ display:flex; gap:5u; margin-top:9u; flex-wrap:wrap; } .fuel[hidden]{ display:none; }
+.hrow{ display:flex; align-items:stretch; gap:5u; min-width:0; } .hrow .fuel{ margin-top:0; min-width:0; } .hrow{ margin-top:9u; }
+.wxs:empty, .wxh:empty{ display:none; } .wxs{ flex:none; display:flex; }
+:host([mode=wide]) .wxs{ display:none; }
+:host(:not([mode=wide])) .wxh{ display:none; }
+/* pogoda na zdjęciu: pod chipami paliw, na prawo od szyny (szyna: left 16u, szer. ~50u, top 184u) */
+:host([mode=wide]) .wxh{ position:absolute; left:62u; top:120u; width:max-content; }
+.fc{ display:inline-flex; align-items:center; gap:5u; height:max(calc(var(--k) * 24), calc(var(--hg-tgt, 0px) * .75)); padding:0 var(--s1) 0 3u; border-radius:999px;
+  font:inherit; font-size:var(--fs-sm); line-height:1; cursor:pointer; font-variant-numeric: tabular-nums; }
+.fc{ gap:6u !important; padding:0 4u 0 var(--s1) !important; }
+.fc b{ font-weight:300; font-size:calc(var(--fs-md) * 1.1); letter-spacing:-.01em; }
+.fc .fl{ display:inline-flex; align-items:center; gap:4u; font-size:var(--fs-xs); font-weight:500; opacity:.72; }
+.fc .fd{ width:6u; height:6u; border-radius:50%; background:var(--hg-accent); } .fc .fd.pb98{ background:var(--hg-accent-lo); } .fc .fd.on{ background:var(--hg-bg-c8cdd2-080); }
+.fc .tr{ height:16u !important; padding:0 4u; border-radius:999px; }
+.fb{ display:inline-flex; align-items:flex-start; justify-content:center; min-width:20u; height:calc(100% - 6u); padding:0 3u; box-sizing:border-box; border-radius:6u;
+  color:var(--hg-tx-ffffff-k); font-weight:600; font-size:var(--fs-sm); line-height:1; letter-spacing:-.02em; font-stretch:condensed; align-items:center; }
+.fb small{ font-size:6u; font-weight:600; align-self:flex-start; margin:3u 1px 0 0; letter-spacing:0; }
+.fb.b95{ background:var(--hg-accent-tx); } .fb.b98{ background:var(--hg-accent-tx); } .fb.bon{ background:var(--hg-bg-1c1c1e-k); box-shadow: inset 0 0 0 1px var(--hg-sh-ffffff-018-k); } .fb.bx{ background:var(--hg-bg-636366-k); }
+.fc .tr{ display:inline-flex; width:auto; height:auto; background:none !important; align-items:center; justify-content:center; margin-left:-1u; }
+.fc .tr ha-icon{ width:14px; height:14px; display:flex; --mdc-icon-size:14px; }
+.fc .tr.up{ color:inherit; opacity:.8; background:var(--hg-tile-bg, var(--hg-bg-ffffff-012)) !important; } .fc .tr.dn{ color:var(--hg-accent-tx); background:var(--hg-accent-faint) !important; } .fc .tr.eq{ color:inherit; opacity:.68; }
+.head p{ margin:0; font-size:23u; font-weight:400; letter-spacing:-.01em; line-height:1.2; text-shadow: 0 1px 12px var(--hg-sh-000000-018-k); }
+/* ----- szyna ----- */
+.rail{ display:flex; flex-direction:column; align-items:center; gap:var(--s1); padding:5u; border-radius:999px; width:40u;
+  background: var(--hg-bg-1e242c-022-k); border:1px solid var(--hg-bd-ffffff-042-k); -webkit-backdrop-filter: blur(calc(14px * var(--hg-bf, 1))); backdrop-filter: blur(calc(14px * var(--hg-bf, 1)));
+  box-shadow: var(--hg-sh); }
+.ri{ width:30u; height:30u; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff-k); transition: background .25s, color .25s; }
+.ri ha-icon, .ri svg{ width:15u; height:15u; }
+.ri:hover{ background:var(--hg-bg-ffffff-014-k); }
+.rail{ position:relative; }
+.ri{ position:relative; z-index:1; }
+.ri.act{ color:var(--hg-tx-1f2125-k); }
+.ri.act:hover{ background:none; }
+.ri.act[data-act=railmore], .ri.act[data-act=more], .ri[aria-expanded=true]{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; text-shadow:none !important; }
+.ri:focus{ outline:none; } .ri:focus-visible, .tab:focus-visible, .cir:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+/* ----- panel ----- */
+.panel{ display:grid; gap:var(--s2); padding:var(--s3); border-radius:var(--r-lg); --hg-u: calc(var(--hg-u0, 1.3px) * var(--hg-zoom, 1)); --k: var(--hg-u); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); 
+  background: var(--hg-panel-bg);
+  border:0; -webkit-backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%); backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%);
+  box-shadow: 0 20u 50u var(--hg-sh-0a141e-018); }
+.cw{ min-width:0; min-height:0; contain: layout style; animation: hgCwIn .6s cubic-bezier(.2,0,0,1) both; }
+.cw:nth-child(2){ animation-delay:.06s } .cw:nth-child(3){ animation-delay:.12s } .cw:nth-child(4){ animation-delay:.18s } .cw:nth-child(5){ animation-delay:.24s } .cw:nth-child(n+6){ animation-delay:.3s }
+@keyframes hgCwIn{ from{ opacity:0; transform:translateY(10px) } }
+:host([lite]) .cw{ animation:none; }
+@media (prefers-reduced-motion: reduce){ .cw{ animation:none; } }
+.cw > *{ height:100%; }
+/* ukryty panel: visibility nie wystarcza (ha-card w kartach ma własne visibility:visible i przebijał się po animacji) -> także opacity 0 i bez rozmycia */
+:host([panel-hidden]) .panel{ visibility:hidden; opacity:0 !important; pointer-events:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+/* w trakcie animacji: jedno rozmycie (sam panel), potomkowie bez backdrop-filter / animacji / przejść -> panel znika jako jedna warstwa */
+:host([panel-anim]) .panel{ transform-origin: 100% 50%; pointer-events:none; --hg-inner-bf: none; }
+/* TEST panel_backdrop: false – panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
+:host([no-pbg]) .panel{ background:none !important; border-color:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+  --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1)); }
+:host([no-pbg]) .panel{ padding:0 !important; border-width:0 !important; }
+/* przewijane panele: mały wewnętrzny margines na cień/uniesienie kart, kompensowany ujemnym marginesem (te same zewnętrzne krawędzie) */
+:host([no-pbg][mode=wide][scroll]) .panel, :host([no-pbg][mode=wide][fit-panel]) .panel{ padding:8px !important; margin:-8px; scroll-padding-bottom:8px; }
+:host([no-pbg][mode=wide][wide-panel][scroll]) .panel, :host([no-pbg][mode=wide][wide-panel][fit-panel]) .panel{ margin:calc(max(24px, calc(var(--hg-u0) * 14)) - 8px) -8px -8px; }
+:host([no-pbg][panel-anim]) .panel{ --hg-card-bf: none; --hg-glass-lite: var(--hg-glass-lite-c); --hg-warm-lite: var(--hg-warm-lite-c); }
+:host([panel-anim]) .panel *, :host([panel-anim]) .panel *::before, :host([panel-anim]) .panel *::after{ animation:none !important; transition:none !important; }
+/* ----- toolbar ----- */
+.tools{ display:flex; align-items:center; justify-content:space-between; gap:var(--s1); padding:5u var(--s1); border-radius:var(--r-lg); height:39u; width:171u;
+  background: var(--hg-bg-1e2024-030); border:1px solid var(--hg-bd-ffffff-055); -webkit-backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); }
+.tb{ width:28u; height:28u; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff); background: var(--hg-bg-1e1e1e-055); }
+.tb ha-icon{ width:17u; height:17u; } .tb.sm ha-icon{ width:14u; height:14u; }
+/* ----- hub ----- */
+.hub{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s2); border-radius:var(--r-sm); width:329u; height:49u;
+  background: var(--hg-bg-282828-030); border:1px solid var(--hg-bd-ffffff-045); -webkit-backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); }
+.ht{ flex:1; min-width:0; line-height:1.15; } .ht b{ display:block; font-size:var(--fs-sm); font-weight:400; }
+.ht span{ display:block; font-size:var(--fs-xs); font-weight:400; opacity:.95; max-width:125u; }
+.plus{ width:22u; height:22u; border-radius:5u; background:var(--hg-bg-969a9e-060); color:var(--hg-tx-ffffff); display:flex; align-items:center; justify-content:center; position:relative; }
+.plus ha-icon{ width:16u; height:16u; }
+.avs{ display:flex; gap:3u; }
+.pa{ position:relative; border-radius:var(--r-sm); }
+.hav{ display:flex; width:24u; height:24u; border-radius:var(--r-sm); background:center/cover var(--hg-bg-cccccc); align-items:center; justify-content:center; font-size:var(--fs-xs); font-weight:600; color:var(--hg-tx-ffffff); }
+.pa::after{ content:''; position:absolute; right:-1u; bottom:-1u; width:6u; height:6u; border-radius:50%; background:var(--hg-bg-9aa0a6); box-shadow:0 0 0 1.5px var(--hg-sh-282828-080); }
+.pa.home::after{ background:var(--hg-accent); }
+.back{ width:38u; height:38u; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-ffffff);
+  background: var(--hg-bg-a0a4a8-055); border:1px solid var(--hg-bd-ffffff-030); -webkit-backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); backdrop-filter: blur(calc(12px * var(--hg-bf, 1))); }
+.back ha-icon{ width:20u; height:20u; }
+/* treść na szkle kontrolek wg schematu: jasny = ciemne ikony/tekst na jasnym szarym szkle, ciemny = białe; aktywny = biała pigułka */
+.tab:not(.act), .cir, .uin, .chev, .ri:not(.act), .back, .hub, .fc, .tb{ color: var(--hg-chrome-fg) !important; text-shadow: var(--hg-chrome-ts) !important; }
+.tab:not(.act):hover, .ri:not(.act):hover{ background: var(--hg-chrome-hover); }
+.tb, .plus{ background: var(--hg-chrome-btn) !important; color: var(--hg-chrome-fg) !important; }
+
+.fc .tr.eq{ color: var(--hg-chrome-fg); }
+.ind, .rind, :host([lite]) .ind, :host([lite]) .rind{ box-shadow: var(--hg-chrome-pill-sh) !important; }
+@media (pointer:coarse){ .tab::before, .cir::before, .ri::before, .tb::before, .plus::before, .pa::before, .chev::before{ content:''; position:absolute; inset:-6px; } .ri, .tb, .chev{ position:relative; } }
+
+/* ================= WIDE (desktop/landscape) – geometria referencji 912x597 ================= */
+:host([mode=wide]) .page{ height:100vh; height:100dvh; overflow:hidden; }
+:host([mode=wide]) .top{ position:absolute; left:20u; right:20u; top:20u; height:39u; }
+:host([mode=wide]) .tabs{ position:absolute; left:204u; top:0; }
+:host([mode=wide]) .head{ position:absolute; left:26u; top:78u; max-width:400u; }
+:host([mode=wide]) .rail{ position:absolute; left:16u; top:184u; }
+:host([mode=wide]) .panel{ position:absolute; right:18u; top:73u; bottom:19u; width:calc(var(--k) * 438); }
+:host([mode=wide][scroll]) .panel{ overflow:auto; align-content:start; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color: var(--hg-ac-000000-028) transparent; scroll-padding-bottom:var(--s3); }
+:host([mode=wide][scroll]) .panel::-webkit-scrollbar{ width:6px; } :host([mode=wide][scroll]) .panel::-webkit-scrollbar-track{ background:transparent; margin:var(--s3) 0; }
+:host([mode=wide][scroll]) .panel::-webkit-scrollbar-thumb{ background:var(--hg-bg-000000-028); border-radius:3px; }
+.more{ display:none; }
+:host([mode=wide][scroll]) .more:not([hidden]){ display:flex; position:absolute; z-index:5; width:36px; height:36px; border-radius:50%; align-items:center; justify-content:center;
+  color: var(--hg-chrome-fg); animation: hgmore 2.4s ease-in-out infinite; }
+:host([mode=wide][scroll]) .more ha-icon{ width:20px; height:20px; }
+:host([mode=wide][scroll]:not([wide-panel])) .more{ right:calc(18u + var(--k) * 219 - 18px); bottom:calc(19u + 10px); }
+:host([mode=wide][scroll][wide-panel]) .more{ left:calc(86u + (100% - 86u - var(--s3)) / 2 - 18px); bottom:calc(var(--s3) + 10px); }
+
+@keyframes hgmore{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(3px); } }
+:host([mode=wide]) .tools{ position:absolute; left:151u; bottom:80u; }
+:host([mode=wide]) .hub{ position:absolute; left:96u; bottom:20u; }
+:host([mode=wide]) .back{ position:absolute; left:16u; bottom:22u; }
+
+/* ================= TABLET (portret / wąskie okna) ================= */
+:host([mode=tablet]) .page, :host([mode=phone]) .page{ min-height:100vh; min-height:100dvh; display:grid; }
+:host([mode=tablet]) .page{ grid-template-columns: 44u 1fr auto; column-gap:14u; row-gap:14u; padding:16u 16u calc(16u + env(safe-area-inset-bottom)) 16u;
+  grid-template-areas: "top top top" "head head head" "rail panel panel" "back hub tools"; grid-template-rows: auto auto 1fr auto; align-items:start; }
+:host([mode=tablet]) .top{ grid-area:top; flex-wrap:wrap; row-gap:12u; }
+:host([mode=tablet]) .tabs{ order:3; width:100%; justify-content:space-between; }
+:host([mode=tablet]) .tab{ flex:1; }
+:host([mode=tablet]) .tabs{ container-type:inline-size; }
+:host([tabs-compact]) .tab .tl{ display:none; } :host([tabs-compact]) .tab{ padding:0 var(--s2); }
+@container (max-width: 600px){ .tab .tl{ display:none; } .tab{ padding:0 var(--s2); } }
+:host([mode=tablet]) .head{ grid-area:head; padding:4u 2u 0; }
+:host([mode=tablet]) .rail{ grid-area:rail; position:sticky; top:16u; width:44u; }
+:host([mode=tablet]) .ri{ width:34u; height:34u; }
+:host([mode=tablet]) .panel{ grid-area:panel; align-self:stretch; }
+:host([mode=tablet]) .tools{ grid-area:tools; align-self:center; }
+:host([mode=tablet]) .hub{ grid-area:hub; width:100%; align-self:center; }
+:host([mode=tablet]) .back{ grid-area:back; align-self:center; }
+
+/* ================= PHONE ================= */
+:host([mode=phone]) .page{ grid-template-columns: 1fr; row-gap:14px; padding:12px 12px calc(96px + env(safe-area-inset-bottom)) 12px;
+  grid-template-areas: "top" "head" "panel" "hub" "tools"; overflow-x:hidden; }
+:host([mode=phone]) .top{ grid-area:top; flex-wrap:wrap; row-gap:10px; min-width:0; }
+:host([mode=phone]) .brand{ min-height:44px; }
+:host([mode=phone]) .tabs{ order:3; width:100%; height:52px; padding:4px; overflow-x:auto; scrollbar-width:none; justify-content:flex-start; }
+:host([mode=phone]) .tabs::-webkit-scrollbar{ display:none; }
+:host([mode=phone]) .tab{ height:44px; padding:0 clamp(5px, 2.1vw, 9px); font-size:clamp(12.5px, 3.5vw, 13.5px); flex:1 0 auto; border-radius:22px; }
+:host([mode=phone]) .tab.act{ padding:0 clamp(8px, 3vw, 12px); }
+:host([mode=phone]) .tab .nb{ top:0; right:0; }
+:host([mode=phone]) .cir{ width:44px; height:44px; } :host([mode=phone]) .cir ha-icon{ width:20px; height:20px; }
+:host([mode=phone]) .ndot{ top:10px; right:11px; width:8px; height:8px; }
+:host([mode=phone]) .user{ height:48px; border-radius:24px; padding:0 4px; }
+:host([mode=phone]) .uin{ min-width:44px; justify-content:center; }
+:host([mode=phone]) .uav{ width:36px; height:36px; }
+:host([mode=phone]) .un{ display:none; }
+:host([mode=phone]) .chev{ width:30px; height:44px; }
+:host([mode=phone]) .head{ grid-area:head; padding:2px 4px 0; }
+:host([mode=phone]) .head h1{ font-size:26px; } :host([mode=phone]) .head p{ font-size:19px; }
+:host([mode=phone]) .fuel{ flex-wrap:nowrap; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .hrow{ gap:6px; margin-top:10px; max-width:100%; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ min-width:0; } :host([mode=phone]) .hrow .fuel{ margin-top:0; flex:1; } :host([mode=phone]) .hrow{ --chip-h:40px; --chip-r:12px; --chip-pl:6px; --chip-pr:10px; --chip-ic:28px; align-items:center; scroll-snap-type:x proximity; }
+.fc .fl{ opacity:1 !important; height:16u; padding:0 6u; border-radius:999px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.02em; background:var(--hg-accent); color:var(--hg-on-accent); }
+.fc .fl.on{ background:var(--hg-on-accent); color:var(--hg-thumb); }
+.fc .tr.up{ color:var(--hg-trend-up) !important; opacity:1 !important; background:var(--hg-bg-ff5a52-016) !important; }
+.fc .tr.dn{ color:var(--hg-accent-tx) !important; background:var(--hg-accent-soft) !important; }
+.fc .tr.eq{ opacity:.68; background:var(--hg-tile-bg, var(--hg-bg-ffffff-012)) !important; }
+:host([mode=phone]) .fc .fl{ height:20px; padding:0 7px; font-size:11px; }
+:host([mode=phone]) .fc{ box-sizing:border-box; height:var(--chip-h); padding:0 var(--chip-pr) 0 var(--chip-pl); border-radius:var(--chip-r); font-size:15px; gap:6px; flex:none; scroll-snap-align:start; } :host([mode=phone]) .fuel{ align-items:center; scroll-snap-type:x proximity; }
+:host([mode=phone]) .wxs{ height:var(--chip-h); align-items:center; } :host([mode=phone]) .wxs > *{ height:var(--chip-h); display:flex; }
+:host([mode=phone]) .fb{ min-width:30px; height:28px; border-radius:8px; font-size:14px; padding:0 4px; box-sizing:border-box; } :host([mode=phone]) .fb small{ font-size:9px; margin-top:4px; }
+
+/* telefon: większa skala pisma przez tokeny (karty dziedziczą --hg-fs-*), hierarchia zachowana */
+:host([mode=phone]) .menu button{ font-size:15px; } :host([mode=phone]) .st{ font-size:14px; }
+:host([mode=phone]){ --hg-fs-xs:13px; --hg-fs-sm:15px; --hg-fs-md:17px; --hg-fsv:1.12; --hg-fs-min:12px; }
+:host([mode=phone]) .head .renv{ font-size:16px; } :host([mode=phone]) .head .renv .rt{ font-size:28px; }
+:host([mode=phone]) .panel{ grid-area:panel; padding:12px; gap:12px; border-radius:24px; }
+/* ===== tryb edycji układu ===== */
+.cir.ed.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; }
+:host([editing]) .tools, :host([editing]) .hub{ visibility:hidden; }
+.hge-bar{ position:fixed; z-index:60; left:50%; bottom:22px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; padding:6px; border-radius:999px; max-width:calc(100vw - 24px); overflow-x:auto; scrollbar-width:none;
+  background:var(--hg-chrome-bg, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(22px) saturate(120%); backdrop-filter:blur(22px) saturate(120%); box-shadow:0 12px 36px var(--hg-sh-000000-032); color:var(--hg-chrome-fg, inherit); animation:hgeBar .32s cubic-bezier(.2,0,0,1) both; }
+@keyframes hgeBar{ from{ opacity:0; transform:translate(-50%, 14px); } }
+:host([scroll]) .panel{ overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color: var(--hg-ac-ffffff-035) transparent; }
+:host([scroll]) .panel::-webkit-scrollbar{ width:6px; } :host([scroll]) .panel::-webkit-scrollbar-thumb{ background:var(--hg-bg-ffffff-035); border-radius:3px; } :host([scroll]) .panel::-webkit-scrollbar-track{ background:transparent; }
+:host([mode=phone]) .panel{ overflow-y:visible !important; }
+.hge-bar .hgt{ display:inline-flex; align-items:center; gap:6px; padding:0 10px 0 8px; white-space:nowrap; font-size:14px; } .hge-bar .hgt ha-icon{ width:18px; height:18px; color:var(--hg-accent-tx); }
+.hge-bar button{ flex:none; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; white-space:nowrap; transition:transform .15s, background .2s; }
+.hge-bar button:active{ transform:scale(.96); } .hge-bar button:disabled{ opacity:.45; cursor:default; }
+.hge-bar button ha-icon{ width:18px; height:18px; } .hge-bar button.ok{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; }
+.hge-bar button:focus-visible, .hge-sheet button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+:host([mode=phone]) .hge-bar{ bottom:calc(env(safe-area-inset-bottom, 0px) + 92px); } :host([mode=phone]) .hge-bar .hgt, :host([mode=phone]) .hge-bar [data-hge=reset] span, :host([mode=phone]) .hge-bar [data-hge=hidden] span{ display:none; } :host([mode=phone]) .hge-bar{ gap:6px; } :host([mode=phone]) .hge-bar button{ padding:0 12px; }
+.hge-sheet-l{ position:fixed; inset:0; z-index:70; }
+.hge-scrim{ position:absolute; inset:0; background:var(--hg-bg-080c12-036); animation:hgeFade .2s ease both; } @keyframes hgeFade{ from{ opacity:0 } }
+.hge-sheet{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(560px, calc(100vw - 24px)); max-height:min(78vh, 720px); display:flex; flex-direction:column; gap:10px; padding:16px; border-radius:26px;
+  background:var(--hg-panel-bg, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(26px) saturate(120%); backdrop-filter:blur(26px) saturate(120%); box-shadow:0 24px 60px var(--hg-sh-000000-040); color:var(--hg-chrome-fg, inherit); animation:hgeIn .28s cubic-bezier(.2,0,0,1) both; }
+@keyframes hgeIn{ from{ opacity:0; transform:translate(-50%,-46%) scale(.98); } }
+:host([mode=phone]) .hge-sheet{ top:auto; bottom:0; transform:translateX(-50%); width:100vw; max-height:84vh; border-radius:26px 26px 0 0; padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 16px); animation:hgeUp .3s cubic-bezier(.2,0,0,1) both; }
+@keyframes hgeUp{ from{ transform:translate(-50%, 30%); opacity:.4 } }
+@media (prefers-reduced-motion: reduce){ .hge-bar, .hge-sheet, .hge-scrim{ animation:none !important; } }
+.hs-h{ display:flex; align-items:center; justify-content:space-between; } .hs-h b{ font-size:18px; font-weight:500; padding-left:4px; }
+.hs-x{ width:40px; height:40px; border-radius:50%; border:0; background:var(--hg-tile-bg); color:inherit; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.hs-s{ position:relative; display:flex; align-items:center; gap:8px; flex:none; height:44px; padding:0 6px 0 18px; border-radius:999px; isolation:isolate; box-sizing:border-box;
+  background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-014), 0 4px 16px var(--hg-ac-000000-012); transition:box-shadow .2s; }
+.hs-s::after{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; -webkit-backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))); backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))); }
+.hs-s:focus-within{ box-shadow:inset 0 0 0 1px transparent, 0 0 0 2px var(--hg-accent), 0 4px 16px var(--hg-bg-000000-012); }
+.hs-s > ha-icon{ flex:none; width:20px; height:20px; opacity:.8; margin-right:4px; }
+.hs-s:not(:has(> .hs-clr:not([hidden]), > button)){ padding-right:18px; }
+.hs-s input, .hs-in{ flex:1; min-width:0; height:100%; border:0; outline:0; background:none; color:inherit; font-family:inherit; font-size:15px; font-weight:400; line-height:1.2; padding:0; text-indent:0; }
+.hs-s input::placeholder{ color:inherit; opacity:.72; }
+.hs-s input[type=search]::-webkit-search-cancel-button{ -webkit-appearance:none; }
+.hs-s .hs-clr{ flex:none; width:32px; height:32px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; } .hs-s .hs-clr[hidden]{ display:none; } .hs-s .hs-clr ha-icon{ width:16px; height:16px; }
+.hs-s .hs-b{ height:34px; }
+.hs-f{ display:flex; gap:8px; flex:none; overflow-x:auto; scrollbar-width:none; padding:2px 2px 4px; -webkit-mask-image:linear-gradient(90deg, var(--hg-ac-000000) calc(100% - 28px), transparent); mask-image:linear-gradient(90deg, var(--hg-ac-000000) calc(100% - 28px), transparent); }
+.hs-f::-webkit-scrollbar{ display:none; }
+.hs-f.wrap{ flex-wrap:wrap; overflow:visible; -webkit-mask-image:none; mask-image:none; }
+.hs-f input[type=color]{ width:44px; height:36px; border:0; border-radius:12px; padding:2px; background:var(--hg-tile-bg); cursor:pointer; }
+.hge-sheet.wide{ width:min(640px, calc(100vw - 24px)); max-height:min(86vh, 820px); }
+.hs-sc{ display:flex; flex-direction:column; gap:14px; overflow-y:auto; overscroll-behavior:contain; min-height:0; padding:2px; scrollbar-width:thin; }
+.hs-hint{ font-size:12px; opacity:.75; padding-left:4px; }
+.hs-pvb{ padding:10px; border-radius:20px; background:var(--hg-bg-000000-012); } .hs-pvb.clone > div{ pointer-events:none; }
+.hs-sw{ display:flex; flex-wrap:wrap; gap:10px; }
+.hs-sw button, .hs-cc{ display:flex; flex-direction:column; align-items:center; gap:4px; border:0; background:none; color:inherit; cursor:pointer; padding:0; font:inherit; }
+.hs-sw i{ width:36px; height:36px; border-radius:50%; background:var(--c); box-shadow:inset 0 0 0 2px var(--hg-sh-ffffff-025); }
+.hs-sw button[aria-pressed=true] i{ box-shadow:0 0 0 3px var(--hg-glass-bg), 0 0 0 5px var(--c); }
+.hs-sw small, .hs-cc small, .hs-bgs small{ font-size:11px; opacity:.8; }
+.hs-cc input{ width:36px; height:36px; border:0; border-radius:50%; padding:0; background:none; cursor:pointer; }
+.hs-ap{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:4px; font-size:13px; }
+.hs-ap .b1{ padding:6px 12px; border-radius:999px; background:var(--a); color:var(--o); font-weight:600; } .hs-ap .b3{ opacity:.75; }
+.hs-bgs{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:10px; }
+.hs-bgs button{ display:flex; flex-direction:column; gap:4px; border:0; padding:0; background:none; color:inherit; cursor:pointer; font:inherit; text-align:left; }
+.hs-bgs img{ width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:14px; box-shadow:0 4px 12px var(--hg-sh-000000-020); }
+.hs-bgs button[aria-pressed=true] img{ box-shadow:0 0 0 3px var(--hg-accent); }
+.hs-rg{ width:100%; accent-color:var(--hg-accent); height:28px; }
+.hs-f button{ flex:none; height:34px; padding:0 12px; border-radius:999px; border:0; background:var(--hg-tile-bg); color:inherit; font:500 13px/1 inherit; cursor:pointer; }
+.hs-f button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.hs-l{ display:flex; flex-direction:column; gap:6px; overflow-y:auto; min-height:120px; overscroll-behavior:contain; padding:2px; }
+.hs-r{ display:flex; align-items:center; gap:10px; width:100%; min-height:56px; padding:8px 10px; border:0; border-radius:16px; background:var(--hg-tile-bg); color:inherit; font:inherit; text-align:left; cursor:pointer; transition:background .2s, transform .15s; }
+.hs-r:active{ transform:scale(.985); } @media (hover:hover){ button.hs-r:hover{ background:var(--hg-accent-faint, var(--hg-tile-bg)); } }
+.hs-i{ flex:none; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-glass-bg); } .hs-i ha-icon{ width:20px; height:20px; }
+.hs-t{ flex:1; display:flex; flex-direction:column; min-width:0; } .hs-t b{ font-weight:500; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hs-t small{ font-size:12px; opacity:.72; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hs-p{ flex:none; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-accent); color:var(--hg-on-accent); } .hs-p ha-icon{ width:18px; height:18px; }
+.hs-b{ flex:none; height:36px; padding:0 14px; border:0; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font:600 13px/1 inherit; cursor:pointer; }
+.hs-fl{ display:flex; flex-direction:column; gap:6px; } .hs-fl > span:not(.hs-s){ font-size:12px; opacity:.72; padding-left:18px; }
+.hs-ac{ display:flex; justify-content:flex-end; gap:8px; padding-top:4px; } .hs-ac .hs-b{ height:42px; padding:0 20px; font-size:14px; }
+.hs-b2{ height:42px; padding:0 18px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; }
+.hs-pv{ display:flex; flex-direction:column; gap:6px; flex:none; } .hs-pv:empty{ display:none; } .hs-pv > small{ font-size:12px; opacity:.72; padding-left:4px; } .hs-pv .tg2{ grid-template-columns:1fr; pointer-events:none; }
+.hs-more{ display:block; height:1px; flex:none; } .hs-cnt{ padding:0 6px; opacity:.6; font-size:12px; }
+.hs-e{ margin:12px 4px; opacity:.72; font-size:14px; }
+/* tło panelu obejmuje treść (bez rozciągania do dołu ekranu) */
+:host([mode=wide][wide-panel]:not([scroll])) .panel, :host([mode=tablet]) .panel, :host([mode=phone]) .panel{ align-self:start; height:auto; align-content:start; }
+:host([mode=phone]) .rail{ position:fixed; z-index:10; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom)); width:auto; height:64px;
+  flex-direction:row; justify-content:space-around; border-radius:32px; padding:6px 8px; background: var(--hg-bg-181e28-074); }
+:host([mode=phone]) .ri{ width:48px; height:48px; } :host([mode=phone]) .ri ha-icon, :host([mode=phone]) .ri svg{ width:22px; height:22px; }
+:host([mode=phone]) .ri.pn{ flex:1 1 0; min-width:0; max-width:76px; height:54px; border-radius:22px; flex-direction:column; gap:2px; }
+:host([mode=phone]) .ri.pn ha-icon{ width:21px; height:21px; }
+:host([mode=phone]) .ri.pn span{ font-size:11.5px; line-height:1.1; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
+:host([mode=phone]) .rail:has(.pn){ height:68px; padding:6px; gap:2px; justify-content:space-between; border-radius:34px; }
+:host([mode=phone]) .rind{ border-radius:22px; }
+:host([mode=phone]) .tabs{ display:none !important; }
+:host([mode=phone]) .tools{ grid-area:tools; width:auto; height:56px; justify-self:center; gap:10px; padding:4px 8px; border-radius:28px; }
+:host([mode=phone]) .tb{ width:44px; height:44px; } :host([mode=phone]) .tb ha-icon{ width:22px; height:22px; } :host([mode=phone]) .tb.sm{ display:none; }
+:host([mode=phone]) .hub{ grid-area:hub; width:100%; height:auto; min-height:64px; padding:8px 10px; gap:10px; border-radius:16px; }
+:host([mode=phone]) .ht b{ font-size:15px; } :host([mode=phone]) .ht span{ font-size:13px; max-width:none; }
+:host([mode=phone]) .plus{ width:44px; height:44px; border-radius:12px; }
+:host([mode=phone]) .hav{ width:34px; height:34px; border-radius:9px; font-size:12px; }
+:host([mode=phone]) .avs{ gap:4px; }
+:host([mode=phone]) .back{ display:none; }
+`);
+  }
+}
+hgReg('nuvio-page', HGPage, 'Nuvio – Page', 'Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)');
+console.info(`%c HOME-GLASS %c ${HG_VER} `, 'background:var(--hg-accent);color:var(--hg-tx-1f2125);font-weight:600', 'background:var(--hg-bg-1f2125);color:var(--hg-tx-ffffff)');
+
+/* ===== Tryb edycji układu (admin): kolejność (przeciąganie + FLIP), ukrywanie/przywracanie, rozmiar S/M/L, dodawanie kafli z encji HA.
+   Układ: nadpisania na bazie CFG z build.py, per zakres (widok / „rooms” / „room:<id>” / „<widok>:tiles”).
+   Zapis: dane użytkownika HA (websocket frontend/set_user_data, klucz nuvio_layout – synchronizacja między urządzeniami),
+   kopia w localStorage (nuvio:layout) jako zapas / natychmiastowy odczyt. */
+const HGL = window.__hgL || (window.__hgL = {
+  KEY: 'nuvio_layout', LS: 'nuvio:layout',
+  data: (() => { try { return JSON.parse(localStorage.getItem('nuvio:layout') || 'null') || { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
+  subs: new Set(), loaded: false, _p: null,
+  get(sc) { const x = this.data.s[sc] || {}; return { order: x.order || [], hidden: x.hidden || [], size: x.size || {}, added: x.added || [], names: x.names || {}, conf: x.conf || {} }; },
+  set(sc, v) { const o = { order: v.order || [], hidden: v.hidden || [], size: v.size || {}, added: v.added || [], names: v.names || {}, conf: v.conf || {} };
+    for (const k of Object.keys(o.conf)) if (!o.conf[k] || !Object.keys(o.conf[k]).length) delete o.conf[k];
+    if (!o.order.length && !o.hidden.length && !Object.keys(o.size).length && !o.added.length && !Object.keys(o.names).length && !Object.keys(o.conf).length) delete this.data.s[sc]; else this.data.s[sc] = o; },
+  load(h) {
+    if (this._p) return this._p;
+    const c = h && h.connection;
+    this._p = !c ? Promise.resolve() : c.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => {
+      const v = r && r.value; this.loaded = true;
+      if (v && v.s && (v.ts || 0) >= (this.data.ts || 0)) { this.data = v; this._ls(); this.notify(); }
+      HGApp.apply();
+    }, () => { this.loaded = true; });
+    return this._p;
+  },
+  _ls() { try { localStorage.setItem(this.LS, JSON.stringify(this.data)); } catch (e) {} },
+  save(h) {
+    this.data.ts = Date.now(); this._ls();
+    if (window.__hgDryRun || !h || !h.connection) return Promise.resolve('local');
+    return h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: this.data }).then(() => 'ha', () => 'local');
+  },
+  notify() { HGApp.apply(); for (const f of [...this.subs]) try { f(); } catch (e) {} },
+  /* kolejność listy elementów wg zapisanych kluczy (nieznane na końcu, w kolejności bazowej) */
+  sort(items, key, order) { if (!order.length) return items; const ix = new Map(order.map((k, i) => [k, i]));
+    return items.map((x, i) => [x, i]).sort((a, b) => ((ix.has(key(a[0])) ? ix.get(key(a[0])) : 1e3 + a[1]) - (ix.has(key(b[0])) ? ix.get(key(b[0])) : 1e3 + b[1]))).map((x) => x[0]); },
+  szc(sz) { return sz === 'm' ? 'hgsz-m' : sz === 'l' ? 'hgsz-l' : ''; },
+});
+/* ===== Wygląd: akcent (tinty i tekst na akcencie liczone wg WCAG) + tło (zdjęcie / URL / przesłane / kolor / gradient) + przyciemnienie ===== */
+const HG_ACCENTS = [[('#' + '63D71E'), 'Limonka'], [('#' + '3DDC97'), 'Mięta'], [('#' + '2EC4D6'), 'Turkus'], [('#' + '4C9BFF'), 'Błękit'], [('#' + 'A78BFA'), 'Fiolet'], [('#' + 'FF6FAE'), 'Róż'], [('#' + 'FF9F43'), 'Pomarańcz'], [('#' + 'F5C542'), 'Złoto']];
+const HG_BGS = [['', 'Domyślne'], ...(window.HG_USER_BGS || [])];   /* własne zdjęcia: URL / przesłanie; gradienty w sekcji „Kolor lub gradient” */
+const HGApp = window.__hgApp || (window.__hgApp = {
+  toRgb(hx) { const m = /^#?([0-9a-f]{6})$/i.exec(hx || ''); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; },
+  hex(c) { return '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('').toUpperCase(); },
+  lum(c) { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); },
+  cr(a, b) { const x = this.lum(a), y = this.lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); },
+  mix(c, d, t) { return c.map((v, i) => v + (d[i] - v) * t); },
+  /* kolor tekstu w akcencie: najbliższy odcień z kontrastem >= 5 względem tła */
+  tx(c, bg) { const tgt = this.lum(bg) > 0.5 ? [0, 0, 0] : [255, 255, 255]; for (let t = 0; t <= 1; t += 0.04) { const m = this.mix(c, tgt, t); if (this.cr(m, bg) >= 5) return this.hex(m); } return this.hex(tgt); },
+  tokens(hx) { const c = this.toRgb(hx); if (!c) return null; const r = c.join(',');
+    const on = this.cr(c, [11, 15, 10]) >= this.cr(c, [255, 255, 255]) ? ('#' + '0B0F0A') : ('#' + 'FFFFFF');
+    const base = { '--hg-accent': this.hex(c), '--hg-on-accent': on, '--hg-accent-hi': this.hex(this.mix(c, [255, 255, 255], 0.25)), '--hg-accent-lo': this.hex(this.mix(c, [0, 0, 0], 0.35)),
+      '--hg-accent-soft': 'rgb' + `a(${r},.22)`, '--hg-accent-faint': 'rgb' + `a(${r},.10)`, '--hg-accent-glow': 'rgb' + `a(${r},.30)` };
+    return { light: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [236, 238, 241]) }), dark: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [40, 44, 50]) }) }; },
+  get() { return (HGL.data.app) || {}; },
+  set(v) { HGL.data.app = v; this.apply(); },
+  css(o) { return Object.entries(o).map(([k, v]) => `${k}: ${v} !important;`).join(' '); },
+  bgImg(b) { if (!b) return null;
+    if (b.kind === 'color') return `linear-gradient(${b.v}, ${b.v})`;
+    if (b.kind === 'gradient') return `linear-gradient(160deg, ${b.v}, ${b.v2 || ('#' + '000000')})`;
+    if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${String(b.v).replace(/'/g, '%27')}')`; return null; },
+  apply() {
+    const a = this.get(); let st = document.getElementById('hg-app-style');
+    if (!st) { st = document.createElement('style'); st.id = 'hg-app-style'; document.head.appendChild(st); }
+    const T = a.accent && a.accent.toUpperCase() !== ('#' + '63D71E') ? this.tokens(a.accent) : null;
+    const img = this.bgImg(a.bg || window.HG_DEFAULT_BG), img2 = a.bg && a.bg.v2p ? `url('${a.bg.v2p}')` : img;
+    const dim = a.dim != null ? Math.max(0, Math.min(1, a.dim)) : null;
+    let css = '';
+    const L = Object.assign({}, T ? T.light : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {});
+    const D = Object.assign({}, T ? T.dark : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {}, dim != null ? { '--hg-night': 'rgb' + `a(6,8,12,${(dim * 0.65).toFixed(3)})`, '--hg-photo-filter': `brightness(${(1 - dim * 0.45).toFixed(3)}) saturate(.9)` } : {});
+    if (Object.keys(L).length) css += `:root:root, nuvio-page:not([x]){ ${this.css(L)} }\n`;
+    if (Object.keys(D).length) css += `:root:root[data-hg-scheme=dark], :root[data-hg-scheme=dark] nuvio-page:not([x]){ ${this.css(D)} }\n`;
+    if (st.textContent !== css) st.textContent = css;
+  },
+});
+const HG_TILE_KIND = (e) => { const d = e.split('.')[0];
+  if (['light', 'switch', 'fan', 'input_boolean', 'automation', 'lock', 'siren', 'humidifier', 'valve'].includes(d)) return 'tog';
+  if (d === 'climate') return 'clim'; if (d === 'media_player') return 'media'; if (d === 'camera') return 'cam'; if (d === 'cover') return 'cover';
+  if (['scene', 'script', 'button', 'input_button'].includes(d)) return 'run'; return 'val'; };
+/* typy wyświetlania zgodne z domeną encji */
+const HG_TYPES = { tog: 'Przełącznik', btn: 'Przycisk', compact: 'Kompaktowy', minimal: 'Minimalny', val: 'Odczyt', chart: 'Z wykresem', clim: 'Klimat', media: 'Multimedia', cam: 'Kamera', cover: 'Roleta', run: 'Akcja' };
+const hgTypesFor = (h, e) => { const d = e.split('.')[0], s = h.states[e], k = HG_TILE_KIND(e), num = s && s.state !== '' && isFinite(Number(s.state));
+  if (k === 'tog') return ['tog', 'btn', 'compact', 'minimal']; if (k === 'run') return ['run', 'btn', 'compact', 'minimal']; if (k === 'clim') return ['clim', 'val', 'chart', 'compact', 'minimal'];
+  if (k === 'media') return ['media', 'compact', 'minimal']; if (k === 'cam') return ['cam', 'compact', 'minimal']; if (k === 'cover') return ['cover', 'compact', 'minimal'];
+  return num || d === 'sensor' ? ['val', 'chart', 'compact', 'minimal'] : ['val', 'compact', 'minimal']; };
+const hgTypeOpts = (h, e) => hgTypesFor(h, e).map((t, i) => [t, i ? HG_TYPES[t] : 'Normalny']);
+/* historia (24 h) do wykresów – pamięć 5 min, odświeżenie kart po pobraniu */
+const HG_HIST = window.__hgHist || (window.__hgHist = { m: new Map(), get(h, e, cb) { const c = this.m.get(e); if (c && Date.now() - c.t < 300000) return c.d; if (c && c.p) return c.d;
+  const o = { t: Date.now(), d: c ? c.d : null, p: true }; this.m.set(e, o);
+  if (h && h.callWS) h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 864e5).toISOString(), entity_ids: [e], minimal_response: true, no_attributes: true, significant_changes_only: false })
+    .then((r) => { const a = (r && r[e]) || []; o.d = a.map((x) => [x.lu * 1000 || Date.parse(x.last_updated || x.last_changed), Number(x.s != null ? x.s : x.state)]).filter((x) => isFinite(x[1])); o.p = false; o.t = Date.now(); cb && cb(); }, () => { o.p = false; o.d = []; });
+  return o.d; } });
+const hgSpark = (pts) => { if (!pts || pts.length < 2) return '<svg class="sp" viewBox="0 0 100 30" preserveAspectRatio="none"></svg>';
+  const t0 = pts[0][0], t1 = pts[pts.length - 1][0] || t0 + 1, v = pts.map((p) => p[1]), lo = Math.min(...v), hi = Math.max(...v), rg = hi - lo || 1;
+  const P = pts.map((p) => `${((p[0] - t0) / (t1 - t0 || 1) * 100).toFixed(2)},${(28 - (p[1] - lo) / rg * 26).toFixed(2)}`).join(' ');
+  return `<svg class="sp" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${P} 100,30" fill="var(--hg-accent-soft)"/><polyline points="${P}" fill="none" stroke="var(--hg-accent)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`; };
+const HG_KIND_LBL = { tog: 'Przełącznik', clim: 'Klimat', media: 'Multimedia', cam: 'Kamera', cover: 'Roleta', run: 'Akcja', val: 'Odczyt' };
+const HG_DOM_ICON2 = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', input_boolean: 'mdi:toggle-switch-outline', automation: 'mdi:robot-outline',
+  lock: 'mdi:lock-outline', climate: 'mdi:thermostat', media_player: 'mdi:speaker', camera: 'mdi:cctv', cover: 'mdi:window-shutter', sensor: 'mdi:gauge', binary_sensor: 'mdi:checkbox-blank-circle-outline',
+  scene: 'mdi:palette-outline', script: 'mdi:script-text-outline', button: 'mdi:gesture-tap-button', weather: 'mdi:weather-partly-cloudy', person: 'mdi:account', water_heater: 'mdi:water-boiler' };
+const hgTileHtml = (h, e, sz, o) => {
+  o = o || {}; const s0 = h.states[e]; if (!s0) return '';
+  const s = o.n || o.i ? Object.assign({}, s0, { attributes: Object.assign({}, s0.attributes, o.n ? { friendly_name: o.n } : {}, o.i ? { icon: o.i } : {}) }) : s0;
+  const k0 = HG_TILE_KIND(e), k = o.t && hgTypesFor(h, e).includes(o.t) ? o.t : k0, d = e.split('.')[0], nm = s.attributes.friendly_name || H.name(h, e), ok = H.ok(s), on = ['on', 'open', 'unlocked', 'playing', 'heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'].includes(s.state);
+  const ic = s.attributes.icon || HG_DOM_ICON2[d] || 'mdi:circle-outline', cls = `hgtl k-${k} ${HGL.szc(sz)} ${on ? 'on' : ''} ${ok ? '' : 'un'}`;
+  const hd = `<span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? H.T(h, s) : 'Niedostępne')}</small></span>`;
+  const actE = k0 === 'run' ? 'trun' : k0 === 'tog' ? 'ttog' : 'tmore';
+  if (k === 'compact') return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="${actE}" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b></span><small class="cs">${H.esc(ok ? H.T(h, s) + (s.attributes.unit_of_measurement && isFinite(Number(s.state)) ? ' ' + s.attributes.unit_of_measurement : '') : 'Niedostępne')}</small></button></div>`;
+  if (k === 'minimal') { const n0 = Number(s.state), v0 = isFinite(n0) && s.state !== '' ? H.fmt(n0, Math.abs(n0) >= 100 ? 0 : 1) + (s.attributes.unit_of_measurement ? ' ' + s.attributes.unit_of_measurement : '') : ok ? H.T(h, s) : '–';
+    return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb mm" data-act="${actE}" data-e="${H.esc(e)}" title="${H.esc(nm)}" aria-label="${H.esc(nm + ': ' + v0)}"><span class="ti">${H.icon(ic)}</span><small>${H.esc(v0)}</small></button></div>`; }
+  if (k === 'btn') return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb bb" data-act="${actE}" data-e="${H.esc(e)}" aria-pressed="${on}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? H.T(h, s) : 'Niedostępne')}</small></span></button></div>`;
+  if (k === 'chart') { const pts = HG_HIST.get(h, e, () => { HGL.notify(); }), cur = k0 === 'clim' ? s.attributes.current_temperature : Number(s.state), u = k0 === 'clim' ? '°' : (s.attributes.unit_of_measurement || '');
+    return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b><small>Ostatnie 24 h</small></span></button><span class="tv">${H.esc(cur != null && isFinite(cur) ? H.fmt(cur, Math.abs(cur) >= 100 ? 0 : 1) : '–')}<em>${H.esc(u)}</em></span>${hgSpark(k0 === 'clim' ? null : pts)}</div>`; }
+  if (k === 'val' && k0 === 'clim') { const ct = s.attributes.current_temperature; return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b><small>${H.esc(H.T(h, s))}</small></span></button><span class="tv">${ct != null ? H.fmt(ct, 1) : '–'}<em>°</em></span></div>`; }
+  if (k === 'clim') return `<div class="${cls}" data-hgk="${H.esc(e)}"><div class="acslot" data-ac="${H.esc(e)}"${o && o.n ? ` data-n="${H.esc(o.n)}"` : ''}></div></div>`;
+  if (k === 'cam') return `<div class="${cls}" data-hgk="${H.esc(e)}"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`;
+  if (k === 'tog') return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}">${hd}</button>${ok ? `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(nm)}" data-act="ttog" data-e="${H.esc(e)}"><i></i></button>` : ''}</div>`;
+  if (k === 'run') return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="trun" data-e="${H.esc(e)}">${hd}</button><button class="rb" data-act="trun" data-e="${H.esc(e)}" aria-label="${H.esc('Uruchom: ' + nm)}">${H.icon('mdi:play')}</button></div>`;
+  if (k === 'cover') { const p = s.attributes.current_position;
+    return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}">${hd}</button><div class="cv">${[['open_cover', 'mdi:chevron-up', 'Otwórz'], ['stop_cover', 'mdi:stop', 'Zatrzymaj'], ['close_cover', 'mdi:chevron-down', 'Zamknij']].map(([sv, i2, l]) => `<button data-act="tcov" data-s="${sv}" data-e="${H.esc(e)}" aria-label="${l}" ${ok ? '' : 'disabled'}>${H.icon(i2)}</button>`).join('')}${p != null ? `<em>${p}%</em>` : ''}</div></div>`; }
+  if (k === 'media') { const a = s.attributes, t = a.media_title || '', ar = a.media_artist || a.app_name || '', pic = a.entity_picture;
+    return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}">${pic ? `<img class="ma" alt="" src="${H.esc(pic)}">` : `<span class="ti">${H.icon(ic)}</span>`}<span class="tn"><b>${H.esc(t || nm)}</b><small>${H.esc(t ? (ar || nm) : (ok ? H.T(h, s) : 'Niedostępne'))}</small></span></button>
+      <div class="mc"><button data-act="tmp" data-e="${H.esc(e)}" aria-label="Odtwórz / pauza" ${ok && s.state !== 'off' ? '' : 'disabled'}>${H.icon(s.state === 'playing' ? 'mdi:pause' : 'mdi:play')}</button><button class="pw ${s.state !== 'off' && ok ? 'on' : ''}" data-act="tmw" data-e="${H.esc(e)}" aria-label="Zasilanie" ${ok ? '' : 'disabled'}>${H.icon('mdi:power')}</button></div></div>`; }
+  const u = s.attributes.unit_of_measurement || '', n = Number(s.state), num = s.state !== '' && isFinite(n);
+  const v = num ? H.fmt(n, Math.abs(n) >= 100 ? 0 : 1) : H.T(h, s);
+  return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b></span></button><span class="tv${num ? '' : ' tx'}">${H.esc(ok ? v : '–')}${num && u ? `<em>${H.esc(u)}</em>` : ''}</span></div>`;
+};
+const HG_TILE_CSS = `
+.tg2{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap:12px; }
+.hgtl{ position:relative; display:flex; align-items:center; gap:10px; min-width:0; min-height:76px; padding:12px 14px; border-radius:18px; background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:var(--hg-card-sh, none); color:inherit; }
+.hgtl.hgsz-m{ grid-column:span 2; } .hgtl.hgsz-l{ grid-column:1 / -1; }
+@container (max-width: 460px){ .hgtl.hgsz-m{ grid-column:1 / -1; } }
+.hgtl.k-clim, .hgtl.k-cam{ padding:0; background:none; box-shadow:none; display:block; }
+.hgtl.k-clim > div, .hgtl.k-cam > div{ height:100%; }
+.hgtl .hgtb{ flex:1; display:flex; align-items:center; gap:10px; min-width:0; background:none; border:0; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.hgtl .ti{ flex:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); }
+.hgtl .ti ha-icon{ width:20px; height:20px; }
+.hgtl.on .ti{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.hgtl .tn{ display:flex; flex-direction:column; min-width:0; } .hgtl .tn b{ font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hgtl .tn small{ opacity:.66; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hgtl.on .tn small{ color:var(--hg-accent-tx); opacity:1; }
+.hgtl .tv{ flex:none; font-size:30px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .hgtl .tv.tx{ font-size:15px; font-weight:600; letter-spacing:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; } .hgtl .tv em{ font-style:normal; font-size:13px; opacity:.65; margin-left:3px; font-weight:400; }
+.hgtl.un{ opacity:.6; }
+.tg2.one{ grid-template-columns:1fr; height:100%; } .tg2.one > .hgtl{ height:100%; }
+.hgtl.k-compact{ min-height:52px; padding:6px 12px 6px 6px; border-radius:999px; } .hgtl.k-compact .ti{ width:36px; height:36px; } .hgtl.k-compact .cs{ flex:none; margin-left:auto; opacity:.8; font-size:13px; white-space:nowrap; }
+.hgtl.k-minimal{ min-height:0; padding:10px; justify-content:center; } .hgtl.k-minimal .mm{ flex-direction:column; gap:6px; align-items:center; text-align:center; } .hgtl.k-minimal small{ font-size:13px; opacity:.85; white-space:nowrap; }
+.hgtl.k-btn{ min-height:120px; } .hgtl.k-btn .bb{ flex-direction:column; align-items:flex-start; justify-content:space-between; height:100%; gap:14px; } .hgtl.k-btn .ti{ width:48px; height:48px; } .hgtl.k-btn .ti ha-icon{ width:24px; height:24px; }
+.hgtl.k-chart{ flex-wrap:wrap; min-height:120px; align-content:flex-start; } .hgtl.k-chart .sp{ flex:1 0 100%; height:44px; margin-top:4px; }
+.hgtl .cv, .hgtl .mc{ display:flex; align-items:center; gap:6px; flex:none; }
+.hgtl .cv button, .hgtl .mc button, .hgtl .rb{ width:40px; height:40px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; }
+.hgtl .mc .pw.on{ background:var(--hg-accent); color:var(--hg-on-accent); } .hgtl .cv em{ font-style:normal; font-size:12px; opacity:.66; }
+.hgtl .ma{ width:44px; height:44px; border-radius:12px; object-fit:cover; flex:none; }
+.hgtl button:disabled{ opacity:.45; cursor:default; }
+`;
+/* wspólne akcje kafli (dodanych) – używane przez nuvio-tiles-card i nuvio-room-card */
+const hgTileAct = (card, act, t) => {
+  const h = card._hass, e = t.dataset.e, s = e && h.states[e]; if (!s) return false;
+  const d = e.split('.')[0];
+  if (act === 'tmore') { H.fire(card, 'hass-more-info', { entityId: e }); return true; }
+  if (act === 'ttog') { if (d === 'lock') H.call(h, 'lock', s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e }); else H.call(h, 'homeassistant', 'toggle', { entity_id: e }); return true; }
+  if (act === 'trun') { H.call(h, d === 'scene' ? 'scene' : d === 'script' ? 'script' : d, d === 'scene' || d === 'script' ? 'turn_on' : 'press', { entity_id: e }); return true; }
+  if (act === 'tcov') { H.call(h, 'cover', t.dataset.s, { entity_id: e }); return true; }
+  if (act === 'tmp') { H.call(h, 'media_player', 'media_play_pause', { entity_id: e }); return true; }
+  if (act === 'tmw') { H.call(h, 'media_player', s.state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e }); return true; }
+  return false;
+};
+/* osadzenie kart klimatyzacji / kamer w slotach (jak w karcie pokoju) */
+const hgSlots = (card) => {
+  const h = card._hass; card._acM = card._acM || new Map(); card._camM = card._camM || new Map();
+  for (const slot of card.$.querySelectorAll('.acslot[data-ac]')) { const e = slot.dataset.ac, nn = slot.dataset.n || '', mk = e + '|' + nn; let el = card._acM.get(mk);
+    if (!el) { el = document.createElement('nuvio-ac-card'); el.setConfig({ entity: e, title: nn || H.name(h, e), compact: true }); if (card._hgPvHost) el._hgPv = true; card._acM.set(mk, el); } slot.appendChild(el); el.hass = h; }
+  for (const slot of card.$.querySelectorAll('.camslot[data-cam]')) { const e = slot.dataset.cam; let el = card._camM.get(e);
+    if (!el) { el = document.createElement('nuvio-camera-card'); el.setConfig({ entity: e, name: H.name(h, e), embedded: true }); card._camM.set(e, el); } slot.appendChild(el); el.hass = h; }
+};
+/* karta dodanych kafli widoku (zakres „<widok>:tiles”) */
+class HGTilesCard extends HGBase {
+  constructor() { super(); this._sub = () => this.rerender(); }
+  connectedCallback() { super.connectedCallback(); HGL.subs.add(this._sub); }
+  disconnectedCallback() { HGL.subs.delete(this._sub); }
+  ents() { return this._config.single ? [this._config.single.e] : HGL.get(this._config.scope).added.map((x) => x.e).filter(Boolean); }
+  _extraSig() { return this._config.single ? (HG_HIST.m.get(this._config.single.e) || {}).t || 0 : [HGL.data.s[this._config.scope] || null, [...HG_HIST.m.values()].map((x) => x.t).join()]; }
+  css() { return `:host{ display:block; height:auto; container-type:inline-size; }` + HG_TILE_CSS; }
+  render() {
+    const h = this._hass; if (this._config.single) return `<div class="tg2 one">${hgTileHtml(h, this._config.single.e, 's', this._config.single)}</div>`;
+    const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
+    const it = HGL.sort(L.added.filter((x) => h.states[x.e] && !hid.has(x.e)), (x) => x.e, L.order);
+    return `<div class="tg2" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => hgTileHtml(h, x.e, L.size[x.e], x)).join('')}</div>`;
+  }
+  afterRender() { hgSlots(this); }
+  onAct(act, t) { hgTileAct(this, act, t); }
+}
+hgReg('nuvio-tiles-card', HGTilesCard, 'Nuvio – Moje kafelki', 'Kafelki dodane w trybie edycji');
+
+/* style trybu edycji wstrzykiwane do cieni kart (elementy z data-hgk w kontenerach data-hgl) */
+const HGE_CSS = `
+[data-hgl] > [data-hgk]{ position:relative; }
+.hge-on [data-hgl] > [data-hgk], [data-hgl].hge-on > [data-hgk]{ outline:1.5px dashed var(--hg-accent); outline-offset:3px; border-radius:var(--r-md, 18px); animation:hgeW 1.6s ease-in-out infinite; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+[data-hgl] > [data-hgk]:nth-child(2n){ animation-delay:-.8s; }
+@keyframes hgeW{ 0%,100%{ rotate:-.35deg } 50%{ rotate:.35deg } }
+@media (prefers-reduced-motion: reduce){ [data-hgl] > [data-hgk]{ animation:none !important; } }
+:host([lite]) [data-hgl] > [data-hgk], .hge-lite [data-hgl] > [data-hgk]{ animation:none !important; }
+[data-hgk].hge-drag{ animation:none !important; z-index:20; box-shadow:0 18px 48px var(--hg-sh-000000-035) !important; outline-style:solid !important; cursor:grabbing; }
+.hge{ position:absolute; inset:0; z-index:15; pointer-events:none; border-radius:inherit; }
+.hge *{ pointer-events:auto !important; }
+.hge button{ position:absolute; display:flex; align-items:center; justify-content:center; border:0; cursor:pointer; font:600 12px/1 inherit; color:var(--hg-on-accent); background:var(--hg-accent); box-shadow:0 4px 14px var(--hg-sh-000000-028); -webkit-tap-highlight-color:transparent; }
+.hge .hx{ top:-10px; right:-10px; width:30px; height:30px; border-radius:50%; background:var(--hg-thumb, var(--hg-bg-ffffff)); color:var(--hg-on-accent); }
+.hge .hh{ top:-10px; left:-10px; width:30px; height:30px; border-radius:50%; cursor:grab; touch-action:none; }
+.hge .hs{ position:absolute; bottom:8px; right:8px; height:28px; padding:0 3px; border-radius:999px; background:var(--hg-thumb, var(--hg-bg-ffffff)); color:var(--hg-on-accent); gap:2px; display:flex; align-items:center; box-shadow:0 4px 14px var(--hg-sh-000000-028); }
+.hge .hs i{ font-style:normal; cursor:pointer; width:24px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; pointer-events:auto; }
+.hge .hs i.on{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.hge ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; pointer-events:none; }
+.hge-on > .hgtl:not(.k-clim):not(.k-cam){ padding-bottom:42px; }
+.hge-cf{ position:absolute; top:26px; right:6px; z-index:3; display:flex; align-items:center; gap:6px; padding:6px 6px 6px 12px; border-radius:999px; background:var(--hg-thumb, var(--hg-bg-ffffff)); color:var(--hg-on-accent); font:500 13px/1.2 inherit; box-shadow:0 8px 24px var(--hg-sh-000000-030); max-width:calc(100% - 12px); }
+.hge-cf span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hge .hge-cf button{ position:static; height:30px; padding:0 12px; border-radius:999px; box-shadow:none; flex:none; }
+.hge .hge-cf button[data-hge=cfno]{ background:var(--hg-bg-000000-008); }
+.hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, var(--hg-bg-a0e63c-008)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0 0 11px; width:100%; }
+.hge-add ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); }
+`;
+
+/* ===== silnik edycji (metody nuvio-page) ===== */
+
+const HG_LOOK_CSS = `
+.lk{ display:flex; flex-direction:column; max-height:min(86vh, calc(100dvh - 24px)); }
+.lk .lk-sc{ gap:12px; flex:1 1 auto; min-height:0; scrollbar-width:thin; scrollbar-color:color-mix(in srgb, currentColor 22%, transparent) transparent; padding:2px 4px 8px 2px; }
+.lk .lk-sc::-webkit-scrollbar{ width:6px; } .lk .lk-sc::-webkit-scrollbar-thumb{ background:color-mix(in srgb, currentColor 22%, transparent); border-radius:9px; } .lk .lk-sc::-webkit-scrollbar-track{ background:transparent; }
+.lk-g{ position:relative; padding:14px; border-radius:20px; background:color-mix(in srgb, var(--hg-tile-bg) 70%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 8%, transparent); display:flex; flex-direction:column; gap:12px; }
+.lk-g h4{ margin:0; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; letter-spacing:.01em; } .lk-g h4 ha-icon{ width:18px; height:18px; opacity:.7; }
+.lk-g h4 em{ margin-left:auto; font-style:normal; font-variant-numeric:tabular-nums; padding:3px 10px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:12px; }
+.lk-hn{ margin-top:-8px; opacity:.6; font-size:12px; }
+.lk-sw{ display:grid; grid-template-columns:repeat(auto-fill, minmax(58px,1fr)); gap:10px 6px; }
+.lk-sw button, .lk-cc{ all:unset; position:relative; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; font-size:11px; }
+.lk-sw i, .lk-cc i{ width:38px; height:38px; border-radius:50%; background:var(--c); display:grid; place-items:center; color:transparent; box-shadow:0 0 0 2px transparent; transition:box-shadow .15s, transform .15s; }
+.lk-cc i{ background:var(--c); color:var(--hg-tx-ffffff-095); } .lk-cc input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.lk-sw ha-icon, .lk-cc ha-icon{ width:20px; height:20px; }
+.lk-sw [aria-pressed=true] i, .lk-cc[aria-pressed=true] i{ color:var(--hg-tx-ffffff); box-shadow:0 0 0 2px var(--hg-tile-bg), 0 0 0 4px var(--c); mix-blend-mode:normal; }
+.lk-sw [aria-pressed=true] i ha-icon{ filter:drop-shadow(0 1px 1px var(--hg-sh-000000-035)); }
+.lk-sw button:focus-visible i, .lk-cc:focus-within i{ outline:2px solid var(--hg-accent); outline-offset:3px; }
+.lk-pv{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border-radius:16px; background:var(--hg-tile-bg); }
+.lk-pc{ display:flex; align-items:center; gap:10px; min-width:0; } .lk-pi{ width:36px; height:36px; border-radius:12px; display:grid; place-items:center; flex:none; } .lk-pi ha-icon{ width:20px; height:20px; }
+.lk-pt{ display:flex; flex-direction:column; font-size:13px; min-width:0; } .lk-pt small{ font-size:12px; font-weight:600; }
+.lk-pb{ display:inline-flex; align-items:center; gap:4px; height:32px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; flex:none; } .lk-pb ha-icon{ width:16px; height:16px; }
+.lk-bgs{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+.lk-bgs button{ all:unset; cursor:pointer; display:flex; flex-direction:column; gap:6px; font-size:12px; min-width:0; }
+.lk-bgs span{ position:relative; display:block; aspect-ratio:16/10; border-radius:14px; overflow:hidden; box-shadow:0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); transition:box-shadow .15s; }
+.lk-bgs img{ width:100%; height:100%; object-fit:cover; display:block; }
+.lk-bgs span ha-icon{ position:absolute; top:6px; right:6px; width:16px; height:16px; padding:3px; border-radius:50%; background:var(--hg-accent); color:var(--hg-on-accent); opacity:0; transform:scale(.6); transition:.15s; }
+.lk-bgs [aria-pressed=true] span{ box-shadow:0 0 0 3px var(--hg-accent); } .lk-bgs [aria-pressed=true] span ha-icon{ opacity:1; transform:none; }
+.lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.lk-row{ display:flex; gap:8px; align-items:center; } .lk-url{ flex:1 1 auto; min-width:0; }
+.lk-mini{ all:unset; position:relative; z-index:1; cursor:pointer; height:32px; padding:0 12px; margin-right:-6px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:13px; font-weight:600; display:grid; place-items:center; flex:none; }
+.lk-up{ all:unset; cursor:pointer; height:44px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); font-size:13px; font-weight:600; flex:none; } .lk-up ha-icon{ width:18px; height:18px; }
+.lk-grd{ display:grid; grid-template-columns:64px 1fr 1fr; grid-template-rows:auto auto; gap:8px 10px; align-items:center; }
+.lk-gp{ grid-row:span 2; width:64px; height:84px; border-radius:14px; box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); }
+.lk-st{ position:relative; display:flex; align-items:center; gap:8px; height:38px; padding:0 10px 0 6px; border-radius:999px; background:var(--hg-tile-bg); font-size:13px; cursor:pointer; min-width:0; }
+.lk-st i{ width:26px; height:26px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-025); } .lk-st input{ position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; }
+.lk-seg{ grid-column:2 / span 2; display:grid; grid-template-columns:1fr 1fr; padding:3px; border-radius:999px; background:var(--hg-tile-bg); }
+.lk-seg button{ all:unset; cursor:pointer; height:32px; border-radius:999px; text-align:center; font-size:13px; font-weight:600; }
+.lk-seg [aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.lk-rg{ -webkit-appearance:none; appearance:none; width:100%; height:28px; background:transparent; margin:0; cursor:pointer; }
+.lk-rg::-webkit-slider-runnable-track{ height:8px; border-radius:9px; background:linear-gradient(90deg, var(--hg-accent) var(--v), color-mix(in srgb, currentColor 14%, transparent) var(--v)); }
+.lk-rg::-moz-range-track{ height:8px; border-radius:9px; background:linear-gradient(90deg, var(--hg-accent) var(--v), color-mix(in srgb, currentColor 14%, transparent) var(--v)); }
+.lk-rg::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; margin-top:-8px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 2px 8px var(--hg-sh-000000-030), 0 0 0 3px var(--hg-accent); }
+.lk-rg::-moz-range-thumb{ width:22px; height:22px; border:0; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 2px 8px var(--hg-sh-000000-030), 0 0 0 3px var(--hg-accent); }
+.lk-rg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:4px; border-radius:9px; }
+.lk-ft{ position:relative; display:flex; justify-content:space-between; gap:10px; padding-top:12px; margin-top:4px; border-top:1px solid color-mix(in srgb, currentColor 8%, transparent); flex:none; }
+.lk-gh, .lk-ok{ all:unset; cursor:pointer; height:44px; padding:0 18px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; }
+.lk-gh{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); } .lk-gh ha-icon{ width:18px; height:18px; }
+.lk-ok{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 26px; }
+.lk-gh:focus-visible, .lk-ok:focus-visible, .lk-up:focus-visible, .lk-mini:focus-visible, .lk-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+@media (max-width:480px){ .lk-up span{ display:none; } .lk-up{ width:44px; padding:0; justify-content:center; } .lk-g{ padding:12px; } }
+@media (max-height:500px){ .lk{ max-height:calc(100dvh - 16px); } .lk-bgs{ grid-template-columns:repeat(6, minmax(0,1fr)); } .lk-sw{ grid-template-columns:repeat(9, minmax(0,1fr)); } }
+@media (prefers-reduced-motion: reduce){ .lk *{ transition:none !important; } }
+`;
+/* podgląd: karty w podglądzie omijają zamrożenie edycji i rysują się od razu */
+function hgPvLive(pv) { const go = (r) => { for (const x of r.querySelectorAll('*')) { if (x.rerender && !x._hgPv) { x._hgPv = true; try { x.rerender(); } catch (e) { /* karta bez konfiguracji */ } } if (x.shadowRoot) go(x.shadowRoot); } }; go(pv); requestAnimationFrame(() => go(pv)); }
+/* wybór stylu: karty z miniaturą danego stylu (ten sam komponent w „+ Dodaj” i w ustawieniach) */
+const HG_THUMB_T = new Set(['tog', 'btn', 'compact', 'minimal', 'val', 'chart', 'run', 'cover', 'media']);
+const HG_SCHEMA = { '': 'n', card: 'n', compact: 'c', minimal: 'm', clim: 'k', cam: 'v', media: 'p' };
+function hgStyleCards(h, e, opts, cur, act, room) {
+  return `<div class="hs-sty" role="radiogroup" aria-label="Styl">${opts.map(([t, l]) => { const sel = cur === t;
+    const th = e && h.states[e] && HG_THUMB_T.has(t) && !room ? `<div class="hs-th tile" aria-hidden="true"><div class="tg2">${hgTileHtml(h, e, 's', { t }).replace(/<(\/?)button\b/g, '<$1span').replace(/ (data-act|data-e|data-hgk)="[^"]*"/g, '')}</div></div>`
+      : `<div class="hs-th sch s-${HG_SCHEMA[t] || 'n'}"><i></i><b></b><b></b><u></u></div>`;
+    return `<button data-hge="${act}" data-t="${H.esc(t)}" role="radio" aria-checked="${sel}" aria-pressed="${sel}">${th}<span>${H.esc(l)}</span></button>`; }).join('')}</div>`;
+}
+const HG_STY_CSS = `
+.hs-sty{ display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr)); gap:10px; }
+.hs-sty > button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; gap:8px; padding:8px 8px 10px; border-radius:18px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); transition:box-shadow .15s, transform .15s; min-width:0; }
+.hs-sty > button > span{ font-size:13px; font-weight:600; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hs-sty > button[aria-checked=true]{ box-shadow:inset 0 0 0 2px var(--hg-accent); }
+.hs-sty > button[aria-checked=true] > span::before{ content:''; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--hg-accent); margin-right:6px; vertical-align:1px; }
+.hs-sty > button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.hs-th{ position:relative; height:64px; border-radius:12px; overflow:hidden; pointer-events:none; background:color-mix(in srgb, currentColor 5%, transparent); }
+.hs-th.tile .tg2{ display:block; width:200%; transform:scale(.5); transform-origin:0 0; padding:8px; box-sizing:border-box; }
+.hs-th.tile .hgtl{ min-height:0; } .hs-th.tile span.hgtb{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; } .hs-th.tile .hgtl > span:not(.hgtb):not(.tv){ display:inline-flex; }
+.hs-th.sch i{ position:absolute; left:10px; top:12px; width:22px; height:22px; border-radius:7px; background:var(--hg-accent); }
+.hs-th.sch b{ position:absolute; left:40px; top:14px; height:6px; width:46%; border-radius:4px; background:color-mix(in srgb, currentColor 35%, transparent); } .hs-th.sch b + b{ top:26px; width:28%; opacity:.6; }
+.hs-th.sch u{ position:absolute; left:10px; right:10px; bottom:10px; height:12px; border-radius:6px; background:color-mix(in srgb, currentColor 14%, transparent); }
+.hs-th.s-c i{ top:21px; } .hs-th.s-c b{ top:24px; } .hs-th.s-c b + b, .hs-th.s-c u{ display:none; }
+.hs-th.s-m i{ left:calc(50% - 11px); top:14px; } .hs-th.s-m b{ left:30%; width:40%; top:44px; } .hs-th.s-m b + b, .hs-th.s-m u{ display:none; }
+.hs-th.s-k u{ height:20px; background:linear-gradient(90deg, var(--hg-accent) 0 40%, color-mix(in srgb, currentColor 14%, transparent) 40%); }
+.hs-th.s-v{ background:linear-gradient(135deg, color-mix(in srgb, currentColor 22%, transparent), color-mix(in srgb, currentColor 6%, transparent)); } .hs-th.s-v i{ border-radius:50%; width:10px; height:10px; background:var(--hg-bg-ee3333); }
+.hs-ac{ display:flex !important; justify-content:flex-end !important; align-items:center; gap:10px; }
+.hs-ac > button{ all:unset; box-sizing:border-box; cursor:pointer; flex:none !important; width:auto !important; height:44px; padding:0 20px; border-radius:999px; display:inline-flex !important; align-items:center; gap:6px; font-size:14px; font-weight:600; line-height:1; white-space:nowrap; }
+.hs-ac > button ha-icon{ width:18px; height:18px; flex:none; }
+.hs-ac > .hs-b{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 24px; }
+.hs-ac > .hs-b2{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); color:inherit; background:none; }
+.hs-ac > button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+`;
+const HG_EDIT = {
+  /* otwarty podgląd na żywo: nowy stan z HA -> karta (hass) albo przerysowanie kafla (max co 1 s) */
+  _ePvTick(h) {
+    const pv = this._eSheetEl.querySelector('.hs-pvb'); if (!pv) return;
+    if (pv.classList.contains('live') && this._ePvEl) { this._ePvEl.hass = h; return; }
+    for (const x of pv.querySelectorAll('nuvio-ac-card, nuvio-camera-card')) x.hass = h;
+    if (this._ePvT) return; this._ePvT = setTimeout(() => { this._ePvT = 0; const p2 = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!p2 || p2.classList.contains('live') || p2.querySelector('nuvio-ac-card, nuvio-camera-card')) return;
+      if (this._eCfgR && this._eSheetEl.querySelector('[data-hge=cfgsave]')) this._eCfgPv();
+      else { const b = this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]'); if (b && this._eAddE) { p2.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: p2 }); hgPvLive(p2); } } }, 1000);
+  },
+  /* klucz karty panelu: typ + pierwsza encja/tytuł/obszar (+ numer przy powtórzeniach) */
+  _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
+  _pageScope() { const v = this._config.view; return ['rooms', 'pokoj'].includes(v) ? null : v; },
+  /* bazowe karty z CFG + nadpisania: kolejność (zamiana obszarów siatki albo kolejność DOM), ukryte, rozmiar, kafle dodane */
+  _applyLayout(cards) {
+    const sc = this._pageScope(); this._lkeys = this._keys(cards);
+    if (!sc) return cards.map((cc, i) => Object.assign({}, cc, { _k: this._lkeys[i] }));
+    const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
+    let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
+    if (L.order.length) {
+      if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
+        const ord = L.order.filter((k) => byK.has(k)); if (ord.length === out.length) out = ord.map((k, i) => { used.add(k); return Object.assign({}, byK.get(k), { area: slot[i] }); }); }
+      else out = HGL.sort(out, (c) => c._k, L.order);
+    }
+    out = out.map((c) => { const cf = L.conf[c._k]; if (!cf) return c; const o = Object.assign({}, c, cf.set || {});
+      if (cf.n) { o.title = cf.n; o.name = cf.n; } if (cf.i) o.icon = cf.i;
+      if (cf.t && cf.t !== 'card') { const main = Object.entries(o).map(([, v]) => (typeof v === 'string' && this._hass && this._hass.states[v] ? v : Array.isArray(v) && typeof v[0] === 'string' && this._hass && this._hass.states[v[0]] ? v[0] : null)).find(Boolean);
+        if (main) return { type: 'custom:nuvio-tiles-card', single: { e: main, t: cf.t, n: cf.n, i: cf.i }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; }
+      return o; });
+    for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
+    const tl = HGL.get(sc + ':tiles');
+    if (tl.added.length) out.push({ type: 'custom:nuvio-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true });
+    return out;
+  },
+  _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },
+  /* wszystkie kontenery edycji w widoku: panel (karty) + kontenery data-hgl w cieniach kart */
+  _eConts() {
+    const out = []; const sc = this._pageScope();
+    if (sc) out.push({ el: this._panelEl, scope: sc, page: true, root: this.shadowRoot });
+    const walk = (el, d) => { if (!el || !el.shadowRoot || d > 2) return; const r = el.shadowRoot;
+      for (const c of r.querySelectorAll('[data-hgl]')) out.push({ el: c, scope: c.dataset.hgl, root: r, host: el, sz: !!c.dataset.hgsz });
+      for (const x of r.querySelectorAll('nuvio-tiles-card, nuvio-areas-card, nuvio-room-card')) walk(x, d + 1); };
+    for (const c of this._cards || []) walk(c, 0);
+    return out;
+  },
+  _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
+  _editEnter() {
+    if (this._editing || !this._isAdmin()) return;
+    this._editing = true; this._eSnap = JSON.stringify(HGL.data);
+    this._menuOpen = false; this._paintTop(true);
+    this.setAttribute('editing', '');
+    this._eWire(); this._eDecorate(); this._eBar();
+  },
+  _editExit(save) {
+    if (!this._editing) return;
+    this._editing = false; this.removeAttribute('editing');
+    if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
+    const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
+      HGL.notify(); if (this.isConnected) this._build(); };
+    if (save) HGL.save(this._hass).then((w) => { this._eToast(w === 'ha' ? 'Zapisano układ (synchronizacja przez Home Assistant)' : 'Zapisano układ na tym urządzeniu'); fin(); }); else fin();
+  },
+  _eToast(t, undo) { const d = document.createElement('div'); d.className = 'hge-toast'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d);
+    if (undo) { const u = document.createElement('button'); u.textContent = 'Cofnij'; Object.assign(u.style, { marginLeft: '12px', border: '0', borderRadius: '999px', padding: '6px 12px', background: 'var(--hg-ac-000000-085)', color: 'var(--hg-ac-ffffff)', font: '600 13px/1 system-ui, sans-serif', cursor: 'pointer' });
+      u.addEventListener('click', (ev) => { ev.stopPropagation(); d.remove(); undo(); }, true); d.appendChild(u); d.style.pointerEvents = 'auto'; }
+    Object.assign(d.style, { position: 'fixed', left: '50%', bottom: '28px', transform: 'translateX(-50%)', zIndex: 9999, padding: '10px 16px', borderRadius: '999px', background: 'var(--hg-accent, var(--hg-bg-9be15d))', color: 'var(--hg-on-accent, var(--hg-bg-0b0f0a))', font: '500 14px/1.2 system-ui, sans-serif', boxShadow: '0 8px 24px var(--hg-bg-000000-030)' });
+    setTimeout(() => d.remove(), undo ? 6000 : 2600); },
+  /* odświeżenie po zmianie układu: karty przerysowane (z odmrożeniem), dekoracje od nowa */
+  _eRefresh(page) {
+    HG_FREEZE.on = false;
+    if (page) { this._eSkipDeco = true; return this._build().then(() => { this._eSkipDeco = false; if (this._editing) { HG_FREEZE.on = true; requestAnimationFrame(() => this._eDecorate()); } }); }
+    HGL.notify(); for (const c of this._cards || []) { try { c.rerender && c.rerender(); } catch (e) {} }
+    const deep = (el, d) => { if (!el || !el.shadowRoot || d > 2) return; for (const x of el.shadowRoot.querySelectorAll('nuvio-areas-card, nuvio-room-card, nuvio-tiles-card')) { try { x.rerender(); } catch (e) {} deep(x, d + 1); } };
+    for (const c of this._cards || []) deep(c, 0);
+    requestAnimationFrame(() => { HG_FREEZE.on = true; this._eDecorate(); });
+  },
+  _eDecorate() {
+    if (!this._editing) return;
+    HG_FREEZE.on = true;
+    const lite = this.hasAttribute('lite');
+    for (const ct of this._eConts()) {
+      if (!ct.root.querySelector('style[data-hge]')) { const st = document.createElement('style'); st.dataset.hge = '1'; st.textContent = HGE_CSS; ct.root.appendChild(st); }
+      ct.el.classList.add('hge-on'); ct.el.classList.toggle('hge-lite', lite);
+      const areas = ct.page && !!this._config.panel.areas;
+      for (const it of this._eItems(ct)) {
+        if (it.querySelector(':scope > .hge') || (!ct.page && it.offsetHeight < 8)) continue;
+        const k = it.dataset.hgk, L = HGL.get(ct.scope), z = L.size[k] || 's', canSz = ct.page ? !areas : ct.sz;
+        const d = document.createElement('div'); d.className = 'hge';
+        d.innerHTML = `<button class="hh" data-hge="drag" aria-label="Przeciągnij, aby zmienić kolejność" title="Przeciągnij">${H.icon('mdi:drag')}</button>`
+          + `<button class="hx" data-hge="hide" aria-label="Ukryj kafelek" title="Ukryj">${H.icon('mdi:close')}</button>`
+          + (canSz ? `<span class="hs" role="group" aria-label="Rozmiar">${['s', 'm', 'l'].map((x) => `<i role="button" tabindex="0" class="${z === x ? 'on' : ''}" data-hge="size" data-z="${x}" aria-pressed="${z === x}" aria-label="Rozmiar ${x.toUpperCase()}">${x.toUpperCase()}</i>`).join('')}</span>` : '');
+        d._ct = ct; d._it = it; it.appendChild(d);
+      }
+      if (!ct.el.querySelector(':scope > .hge-addw') && (ct.page || /^(rooms|room:)/.test(ct.scope) || ct.scope.endsWith(':tiles'))) {
+        if (ct.scope.endsWith(':tiles')) continue;               // „+ Dodaj” jest na poziomie widoku
+        const w = document.createElement(ct.page ? 'div' : 'div'); w.className = 'hge-addw' + (ct.page ? ' cw' : '');
+        if (ct.page) { w.style.gridColumn = '1 / -1'; w.style.gridArea = 'auto'; }
+        if (!ct.page && ct.el.classList.contains('grid')) w.style.gridColumn = '1 / -1';
+        w.innerHTML = `<button class="hge-add" data-hge="add">${H.icon('mdi:plus')}<span>Dodaj</span></button>`;
+        w.firstChild._ct = ct; ct.el.appendChild(w);
+        if (!ct.page) ct.el.style.position = ct.el.style.position || 'relative';
+      }
+    }
+    this._eBar();
+  },
+  _eUndecorate() {
+    const all = this._eConts();
+    for (const ct of all) { ct.el.classList.remove('hge-on'); for (const x of ct.el.querySelectorAll(':scope > [data-hgk] > .hge, :scope > .hge-addw')) x.remove(); const st = ct.root.querySelector('style[data-hge]'); if (st && ct.root !== this.shadowRoot) st.remove(); }
+  },
+  _eBar() {
+    if (!this._editing) return;
+    let b = this._eBarEl; if (b && !b.isConnected) this.shadowRoot.appendChild(b); if (!b) { b = this._eBarEl = document.createElement('div'); b.className = 'hge-bar'; b.setAttribute('role', 'toolbar'); b.setAttribute('aria-label', 'Edycja układu'); this.shadowRoot.appendChild(b); }
+    const nh = this._eHidden().length;
+    b.innerHTML = `<span class="hgt">${H.icon('mdi:pencil')}<b>Edycja układu</b></span>
+      <button data-hge="hidden" ${nh ? '' : 'disabled'}>${H.icon('mdi:eye-outline')}<span>Przywróć ukryte${nh ? ` · ${nh}` : ''}</span></button>
+      <button data-hge="look">${H.icon('mdi:palette-outline')}<span>Wygląd</span></button>
+      <button data-hge="reset">${H.icon('mdi:restore')}<span>Przywróć domyślny układ</span></button>
+      <button data-hge="cancel">Anuluj</button><button class="ok" data-hge="done">${H.icon('mdi:check')}<span>Gotowe</span></button>`;
+  },
+  /* ukryte elementy wszystkich zakresów widoku */
+  _eHidden() {
+    const out = []; const h = this._hass, cfgA = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean);
+    const scopes = new Set(this._eConts().map((c) => c.scope)); const ps = this._pageScope(); if (ps) { scopes.add(ps); scopes.add(ps + ':tiles'); }
+    for (const sc of scopes) for (const k of HGL.get(sc).hidden) {
+      let n = k;
+      if (h.states[k]) n = H.name(h, k);
+      else if (sc === ps) { const cc = (this._config.cards || [])[this._lkeys.indexOf(k)]; n = (cc && (cc.title || (cc.entity && H.name(h, cc.entity)))) || k.split('|')[0].replace(/^hg-|-card$/g, ''); }
+      else if (sc === 'rooms') { const m = cfgA && HGAreas.model(h, cfgA); n = (m && m.byId[k] && m.byId[k].name) || k; }
+      else n = k.replace(/^sec:/, 'Sekcja: ');
+      out.push({ sc, k, n });
+    }
+    return out;
+  },
+  _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
+  _eWire() {
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else this._editExit(false); } };
+    this._eL = [['pointerdown', onDown, true], ['click', onClick, true], ['touchmove', onTm, { passive: false, capture: true }], ['keydown', onKey, true]];
+    for (const [t, f, o] of this._eL) window.addEventListener(t, f, o);
+  },
+  _eUnwire() { for (const [t, f, o] of this._eL || []) window.removeEventListener(t, f, o); this._eL = null; this._eUndecorate(); },
+  _ePath(e) { const p = e.composedPath(); const ctl = p.find((n) => n.dataset && n.dataset.hge); const it = p.find((n) => n.dataset && n.dataset.hgk && n.parentElement && (n.parentElement.dataset.hgl || n.parentElement === this._panelEl));
+    return { p, ctl, it, inBar: p.includes(this._eBarEl) || (this._eSheetEl && p.includes(this._eSheetEl)) }; },
+  _eClick(e) {
+    const { ctl, it, inBar } = this._ePath(e);
+    if (ctl) { e.preventDefault(); e.stopPropagation(); return this._eCtl(ctl, e); }
+    if (inBar) return;
+    if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(ct, it.dataset.hgk); } }
+  },
+  _eCtl(b, e) {
+    const a = b.dataset.hge;
+    if (a === 'done') return this._editExit(true);
+    if (a === 'cancel') return this._editExit(false);
+    if (a === 'reset') { const ps = this._pageScope(); const sc = new Set(this._eConts().map((c) => c.scope)); if (ps) { sc.add(ps); sc.add(ps + ':tiles'); }
+      for (const s of sc) HGL.set(s, {}); this._eToast('Przywrócono domyślny układ widoku (zapisz „Gotowe”)'); return this._eRefresh(true); }
+    if (a === 'hidden') return this._eSheet('hidden');
+    if (a === 'look') return this._eLook();
+    if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
+    if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'photo', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
+    if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast('Podaj adres https:// lub /local/…'); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
+    if (a === 'bgcol') { const S = this._eSheetEl, c1 = S.querySelector('[name=bgc1]').value, c2 = S.querySelector('[name=bgc2]').value; this._eApp((A) => { A.bg = b.dataset.k === 'gradient' ? { kind: 'gradient', v: c1, v2: c2 } : { kind: 'color', v: c1 }; }); return this._eLook(); }
+    if (a === 'bgup') return this._eSheetEl.querySelector('input[type=file]').click();
+    if (a === 'lookreset') { HGL.data.app = {}; HGApp.apply(); this._eToast('Przywrócono domyślny wygląd'); return this._eLook(); }
+    if (a === 'add') return this._eSheet('add', b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct));
+    if (a === 'restore') { this._eSet(b.dataset.sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.k); }); this._eSheet(false); return this._eRefresh(b.dataset.sc === this._pageScope()); }
+    if (a === 'sheetclose') return this._eSheet(false);
+    if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) return this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n);
+    if (a === 'addt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } const pv = this._eSheetEl.querySelector('.hs-pvb'); pv.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: pv }); hgPvLive(pv); return; }
+    if (a === 'addok') { const t = (this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]') || { dataset: {} }).dataset.t, T0 = hgTypesFor(this._hass, this._eAddE)[0];
+      const fake = { dataset: { hge: 'pick', sc: this._eAddSc, e: this._eAddE, n: this._eAddN || '', t: t && t !== T0 ? t : 'def' } }; return this._eCtl(fake, e); }
+    if (a === 'addback') return this._eSheet('add', null, this._eSc);
+    if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
+      this._eSheet(false); this._eToast('Dodano: ' + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'NUVIO-TILES-CARD')); }
+    if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast('Zmieniono encję');
+      const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
+      const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
+    if (a === 'cfgsave') return this._eCfgSave();
+    if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
+    if (a === 'cfgent') { this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.p, old: b.dataset.v }); return this._eSheet('add', null, this._eCfgR.sc); }
+    if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
+    const d = b._d || b.closest('.hge'); if (!d) return;
+    const ct = d._ct, it = d._it, k = it.dataset.hgk;
+    if (a === 'hide' && !b.dataset.ok) {
+      const nm = (it.querySelector('.sh, .nm, .tn b, .hd b, b') || {}).textContent || 'ten element';
+      const q = document.createElement('div'); q.className = 'hge-cf'; q.innerHTML = `<span>Usunąć „${H.esc(nm.trim().slice(0, 40))}”?</span><button data-hge="hide" data-ok="1">Usuń</button><button data-hge="cfno">Nie</button>`;
+      d.appendChild(q); for (const x of q.querySelectorAll('button')) x._d = d; return;
+    }
+    if (a === 'cfno') { const q = b.closest('.hge-cf'); if (q) q.remove(); return; }
+    if (a === 'hide') {
+      const prev = JSON.stringify(HGL.data.s[ct.scope] || null);
+      const added = HGL.get(ct.scope).added.some((x) => x.e === k);
+      this._eSet(ct.scope, (L) => { if (added) L.added = L.added.filter((x) => x.e !== k); else if (!L.hidden.includes(k)) L.hidden.push(k); });
+      const rest = this._eItems(ct).filter((x) => x !== it); const fr = rest.map((x) => x.getBoundingClientRect());
+      it.style.display = 'none'; if (ct.page) it.hidden = true;
+      this._eFlipFrom(rest, fr); this._eBar();
+      this._eToast(added ? 'Usunięto kafelek' : 'Usunięto – przywrócisz w „Przywróć ukryte”', () => { const v = JSON.parse(prev); if (v) HGL.data.s[ct.scope] = v; else delete HGL.data.s[ct.scope]; this._eRefresh(ct.page); });
+      return;
+    }
+    if (a === 'size') { const z = b.dataset.z; this._eSet(ct.scope, (L) => { if (z === 's') delete L.size[k]; else L.size[k] = z; });
+      const its = this._eItems(ct), fr = its.map((x) => x.getBoundingClientRect());
+      if (ct.page) { it.style.gridColumn = z === 'l' ? '1 / -1' : z === 'm' ? 'span 2' : ''; }
+      else { it.classList.remove('hgsz-m', 'hgsz-l'); if (z !== 's') it.classList.add('hgsz-' + z); }
+      for (const x of d.querySelectorAll('[data-hge=size]')) { const on = x.dataset.z === z; x.setAttribute('aria-pressed', on); x.classList.toggle('on', on); }
+      return this._eFlipFrom(its, fr);
+    }
+  },
+  /* FLIP: elementy animowane z poprzedniego położenia do nowego */
+  _eFlipFrom(items, before, skip) {
+    if (hgReduced() || this.hasAttribute('lite')) return;
+    items.forEach((x, i) => { if (x === skip || !before[i]) return; const r = x.getBoundingClientRect(), dx = before[i].left - r.left, dy = before[i].top - r.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      x.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,0,0,1)' }); });
+  },
+  /* przeciąganie: mysz – od razu z uchwytu albo po 6 px; dotyk – uchwyt od razu, kafel po przytrzymaniu 380 ms */
+  _eDown(e) {
+    if (e.button > 0) return;
+    const { ctl, it, inBar } = this._ePath(e); if (inBar) return;
+    if (ctl && ctl.dataset.hge !== 'drag') return;
+    if (!it) return;
+    const ct = this._eConts().find((c) => c.el === it.parentElement); if (!ct) return;
+    const touch = e.pointerType !== 'mouse', handle = !!ctl;
+    const D = this._drag = { it, ct, x0: e.clientX, y0: e.clientY, on: false, id: e.pointerId, tx: 0, ty: 0 };
+    const start = () => { if (this._drag !== D) return; D.on = true; it.classList.add('hge-drag'); D.r0 = it.getBoundingClientRect(); D.nx = D.r0.left; D.ny = D.r0.top; if (navigator.vibrate) try { navigator.vibrate(12); } catch (x) {} };
+    if (handle) start(); else if (touch) D.lp = setTimeout(start, 380);
+    const mv = (ev) => {
+      if (ev.pointerId !== D.id) return;
+      const dx = ev.clientX - D.x0, dy = ev.clientY - D.y0;
+      if (!D.on) { if (touch) { if (Math.hypot(dx, dy) > 8) end(); return; } if (Math.hypot(dx, dy) > 6) start(); else return; }
+      ev.preventDefault();
+      D.px = ev.clientX; D.py = ev.clientY;
+      if (!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; this._eMove(D); });
+    };
+    const end = (ev) => {
+      clearTimeout(D.lp); window.removeEventListener('pointermove', mv, true); window.removeEventListener('pointerup', end, true); window.removeEventListener('pointercancel', end, true);
+      if (this._drag !== D) return; this._drag = null;
+      if (!D.on) return;
+      D.on = false; const cur = `translate(${D.tx}px, ${D.ty}px)`;
+      it.style.transform = ''; it.classList.remove('hge-drag');
+      if (!hgReduced()) it.animate([{ transform: cur }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,0,0,1)' });
+      this._eCommit(ct);
+      this._eSwallow = Date.now();
+      const sw = (c) => { if (Date.now() - this._eSwallow < 400) { c.preventDefault(); c.stopPropagation(); } window.removeEventListener('click', sw, true); };
+      window.addEventListener('click', sw, true);
+    };
+    window.addEventListener('pointermove', mv, true); window.addEventListener('pointerup', end, true); window.addEventListener('pointercancel', end, true);
+  },
+  _eMove(D) {
+    const { it, ct } = D;
+    // położenie naturalne (bez transformacji) -> przesunięcie tak, by kafel był pod palcem
+    const place = () => { it.style.transform = 'none'; const r = it.getBoundingClientRect(); D.tx = D.px - D.x0 + D.r0.left - r.left; D.ty = D.py - D.y0 + D.r0.top - r.top; it.style.transform = `translate(${D.tx}px, ${D.ty}px)`; };
+    place();
+    const items = this._eItems(ct), x = D.px, y = D.py;
+    const tg = items.find((o) => { if (o === it) return false; const r = o.getBoundingClientRect(); return x > r.left && x < r.right && y > r.top && y < r.bottom; });
+    if (!tg || tg === D.last) { if (!tg) D.last = null; return; }
+    D.last = tg;
+    const before = items.map((o) => o.getBoundingClientRect());
+    if (ct.page && this._config.panel.areas) { const an = (x) => getComputedStyle(x).gridRowStart, a1 = an(it), a2 = an(tg); it.style.gridArea = a2; tg.style.gridArea = a1; }
+    else { const ia = items.indexOf(it), ib = items.indexOf(tg); ct.el.insertBefore(it, ia < ib ? tg.nextSibling : tg); }
+    place();
+    this._eFlipFrom(items, before, it);
+  },
+  _eCommit(ct) {
+    const items = this._eItems(ct);
+    if (ct.page && this._config.panel.areas) {
+      const base = (this._config.cards || []).map((c) => c.area), byArea = new Map(items.map((w) => [getComputedStyle(w).gridRowStart, w.dataset.hgk]));
+      const all = this._lkeys; const ord = base.map((a, i) => byArea.get(a) || all[i]);
+      this._eSet(ct.scope, (L) => { L.order = ord; });
+    } else this._eSet(ct.scope, (L) => { L.order = items.map((w) => w.dataset.hgk); });
+  },
+  /* arkusz: „Dodaj” (wyszukiwarka encji / pokoi) albo „Przywróć ukryte” */
+  /* ===== jeden arkusz ustawień dla każdego kafelka / karty / pokoju / sekcji ===== */
+  _eSubj(ct, k) {
+    const h = this._hass, sc = ct.scope, L = HGL.get(sc), cf = L.conf[k] || {}, x = L.added.find((y) => y.e === k);
+    const ok = (v) => typeof v === 'string' && !!h.states[v];
+    const LBL = { entity: 'Główna encja', temperature: 'Temperatura', temp: 'Temperatura', humidity: 'Wilgotność', hum: 'Wilgotność', power: 'Moc', energy: 'Energia', climate: 'Klimatyzacja', camera: 'Kamera', person: 'Osoba' };
+    if (x) return { kind: 'added', x, ents: [{ p: 'e', l: 'Encja', v: x.e }], types: hgTypeOpts(h, x.e), t: x.t || hgTypesFor(h, x.e)[0], n: x.n || '', i: x.i || '', dn: H.name(h, x.e), main: x.e };
+    if (sc === this._pageScope()) { const cc = (this._config.cards || [])[this._lkeys.indexOf(k)] || {}, ents = [];
+      for (const [key, v] of Object.entries(cc)) { const cur = cf.set && cf.set[key] !== undefined ? cf.set[key] : v;
+        if (ok(cur)) ents.push({ p: key, l: LBL[key] || key, v: cur });
+        else if (Array.isArray(cur)) cur.forEach((y, i) => { const yy = typeof y === 'string' ? y : y && y.entity; if (ok(yy)) ents.push({ p: key + '.' + i, l: `${LBL[key] || key} ${i + 1}`, v: yy }); }); }
+      const main = (ents[0] || {}).v;
+      return { kind: 'card', cc, ents: ents.slice(0, 12), types: [['card', 'Normalny'], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: cf.t || 'card', n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
+    if (sc === 'rooms') { const ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}, a = HGAreas.model(h, ac).byId[k] || {};
+      return { kind: 'room', a, ents: [{ p: 'temp', l: 'Temperatura', v: cf.temp || (a.temp && a.temp.e) || '' }, { p: 'hum', l: 'Wilgotność', v: cf.hum || (a.hum && a.hum.e) || '' }],
+        types: [['', 'Normalny'], ['compact', 'Kompaktowy'], ['minimal', 'Minimalny']], t: cf.t || '', n: cf.n || '', i: cf.i || '', dn: a.name || k }; }
+    const it = ct.el.querySelector(`:scope > [data-hgk="${CSS.escape(k)}"]`), sw = (L.conf._swap) || {}, seen = new Set(), ents = [];
+    if (it) for (const el of it.querySelectorAll('[data-e],[data-ac],[data-cam]')) { const v = el.dataset.e || el.dataset.ac || el.dataset.cam; if (ok(v) && !seen.has(v)) { seen.add(v); ents.push({ p: 'swap', l: ents.length ? 'Encja' : 'Główna encja', v }); } }
+    const hd = it && it.querySelector('.sh');
+    return { kind: 'sec', ents: ents.slice(0, 12), types: [['', 'Normalny'], ['compact', 'Kompaktowy'], ['minimal', 'Minimalny']], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
+  },
+  _eCfg(ct, k) {
+    const h = this._hass, sc = ct.scope, L = HGL.get(sc), z = L.size[k] || 's', canSz = ct.page ? !this._config.panel.areas : ct.sz;
+    const S0 = this._eSubj(ct, k); this._eCfgR = { sc, k, ct, S: S0 }; this._eSheet('cfg');
+    const S = this._eSheetEl, ttl = { added: 'Ustawienia kafelka', card: 'Ustawienia karty', room: 'Ustawienia pokoju', sec: 'Ustawienia sekcji' }[S0.kind];
+    const ico = (v) => (h.states[v] && h.states[v].attributes.icon) || HG_DOM_ICON2[String(v).split('.')[0]] || 'mdi:circle-outline';
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${ttl}"><style>${HG_STY_CSS}</style><div class="hs-h"><b>${ttl}</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+      <div class="hs-sc">
+      <div class="hs-pv"><small>Podgląd na żywo</small><div class="hs-pvb"></div></div>
+      ${S0.ents.length ? `<div class="hs-fl"><span>Encje</span>${S0.ents.map((x) => `<button class="hs-r" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(x.l)}: ${H.esc(x.v ? H.name(h, x.v) : 'wybierz')}</b><small>${H.esc(x.v || '—')}</small></span><span class="hs-p" title="Zmień">${H.icon('mdi:swap-horizontal')}</span></button>`).join('')}</div>` : ''}
+      <div class="hs-fl"><span>Tryb wyświetlania</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
+      <label class="hs-fl"><span>Nazwa</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
+      <label class="hs-fl"><span>Ikona (np. mdi:sofa)</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
+      ${canSz ? `<div class="hs-fl"><span>Rozmiar</span><div class="hs-f wrap" role="group" aria-label="Rozmiar">${[['s', 'S · mały'], ['m', 'M · średni'], ['l', 'L · cała szerokość']].map(([v, l]) => `<button data-hge="cfgz" data-z="${v}" aria-pressed="${z === v}">${l}</button>`).join('')}</div></div>` : ''}
+      </div>
+      <div class="hs-ac"><button class="hs-b2" data-hge="sheetclose">Anuluj</button><button class="hs-b" data-hge="cfgsave">Zapisz</button></div></div>`;
+    for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(n.value.trim())) ic.setAttribute('icon', n.value.trim()); } this._eCfgPv(); });
+    this._eCfgPv();
+  },
+  _eCfgVals() { const S = this._eSheetEl, g = (q) => S.querySelector(q);
+    return { n: g('[name=n]').value.trim(), i: /^mdi:[a-z0-9-]+$/.test(g('[name=i]').value.trim()) ? g('[name=i]').value.trim() : '', t: (g('[data-hge=cfgt][aria-pressed=true]') || { dataset: { t: '' } }).dataset.t, z: (g('[data-hge=cfgz][aria-pressed=true]') || { dataset: {} }).dataset.z }; },
+  /* podgląd: kafel (typy kafli) albo kopia bieżącego elementu z klasą trybu, nazwą i ikoną */
+  _eCfgPv() {
+    const R = this._eCfgR, S0 = R.S, h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv) return;
+    const V = this._eCfgVals();
+    if (S0.kind === 'added' || (S0.kind === 'card' && V.t && V.t !== 'card')) { pv.className = 'hs-pvb tg2'; pv.innerHTML = hgTileHtml(h, S0.main, 's', { t: V.t, n: V.n, i: V.i }); hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
+    const it = R.ct.el.querySelector(`:scope > [data-hgk="${CSS.escape(R.k)}"]`); if (!it) { pv.innerHTML = ''; return; }
+    if (S0.kind === 'card') { const src = [...it.querySelectorAll('*')].find((x) => x.tagName.includes('-') && x.setConfig); if (src) {
+      const cf = (HGL.get(R.sc).conf[R.k] || {}), cfg = Object.assign({}, S0.cc, cf.set || {}); if (V.n) { cfg.title = V.n; cfg.name = V.n; } if (V.i) cfg.icon = V.i;
+      const el = document.createElement(src.tagName.toLowerCase()); el._hgPv = true; try { el.setConfig(cfg); } catch (e) { /* zła konfiguracja – pokaż pusty */ }
+      const hh = Math.min(360, Math.max(120, it.getBoundingClientRect().height || 220));
+      pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.style.cssText = `height:${hh}px;display:grid;pointer-events:none;`; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvLive(pv); return; } }
+    const cl = it.cloneNode(true); for (const x of cl.querySelectorAll('.hge, .hge-cf')) x.remove();
+    cl.classList.remove('hgm-compact', 'hgm-minimal'); if (V.t) cl.classList.add('hgm-' + V.t); cl.style.cssText = 'animation:none;outline:none;width:100%;transform:none;';
+    const nmEl = cl.querySelector('.nm, .sh'); if (nmEl && V.n) { const ic0 = nmEl.querySelector('ha-icon'); nmEl.textContent = V.n; if (ic0) nmEl.prepend(ic0); }
+    const icEl = cl.querySelector('.ic ha-icon, .sh ha-icon'); if (icEl && V.i) icEl.setAttribute('icon', V.i);
+    pv.className = 'hs-pvb clone'; pv.innerHTML = ''; const host = document.createElement('div'); pv.appendChild(host);
+    const sr = host.attachShadow({ mode: 'open' }); const src = R.ct.root; sr.innerHTML = [...src.querySelectorAll('style')].map((x) => x.outerHTML).join('');
+    const wrap = document.createElement('div'); wrap.className = R.ct.el.className.replace('hge-on', ''); wrap.style.cssText = 'display:block;columns:auto;pointer-events:none'; wrap.appendChild(cl); sr.appendChild(wrap);
+  },
+  _eCfgSet(R, nv) {
+    const S0 = R.S, p = R.path;
+    this._eSet(R.sc, (L) => { const cf = L.conf[R.k] = L.conf[R.k] || {};
+      if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { if (L.size[R.k]) { L.size[nv] = L.size[R.k]; delete L.size[R.k]; } x.e = nv; } L.order = L.order.map((k) => (k === R.k ? nv : k)); delete L.conf[R.k]; }
+      else if (S0.kind === 'card') { cf.set = cf.set || {}; const [key, idx] = p.split('.'); if (idx == null) cf.set[key] = nv; else { const base = (cf.set[key] || S0.cc[key] || []).slice(); base[+idx] = typeof base[+idx] === 'object' && base[+idx] ? Object.assign({}, base[+idx], { entity: nv }) : nv; cf.set[key] = base; } }
+      else if (S0.kind === 'room') cf[p] = nv;
+      else { const sw = L.conf._swap = L.conf._swap || {}; sw[R.old] = nv; }
+    });
+  },
+  _eCfgSave() {
+    const R = this._eCfgR, S0 = R.S, V = this._eCfgVals();
+    this._eSet(R.sc, (L) => {
+      if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { for (const f of ['n', 'i', 't']) if (V[f]) x[f] = V[f]; else delete x[f]; } }
+      else if (S0.kind === 'sec') { if (V.n) L.names[R.k] = V.n; else delete L.names[R.k]; const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['i', 't']) if (V[f]) cf[f] = V[f]; else delete cf[f]; }
+      else { const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['n', 'i']) if (V[f]) cf[f] = V[f]; else delete cf[f]; if (V.t && V.t !== 'card') cf.t = V.t; else delete cf.t; }
+      if (V.z) { if (V.z === 's') delete L.size[R.k]; else L.size[R.k] = V.z; }
+    });
+    this._eSheet(false); this._eToast('Zapisano ustawienia'); return this._eRefresh(R.sc === this._pageScope());
+  },
+  /* krok 2 dodawania: styl widżetu z podglądem na żywo */
+  _eAddStep(sc, e, n) {
+    const h = this._hass, S = this._eSheetEl, T = hgTypeOpts(h, e); this._eAddE = e;
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="Styl widżetu"><style>${HG_STY_CSS}</style><div class="hs-h"><b>Styl widżetu</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      <div class="hs-pv"><small>Podgląd na żywo · ${H.esc(n || H.name(h, e))}</small><div class="hs-pvb tg2">${hgTileHtml(h, e, 's', { t: T[0][0] })}</div></div>
+      <div class="hs-fl"><span>Styl</span>${hgStyleCards(h, e, T, T[0][0], 'addt')}</div></div>
+      <div class="hs-ac"><button class="hs-b2" data-hge="addback">Wstecz</button><button class="hs-b" data-hge="addok">${H.icon('mdi:plus')}<span>Dodaj</span></button></div></div>`;
+    hgSlots({ _hass: h, $: S.querySelector('.hs-pvb') }); hgPvLive(S.querySelector('.hs-pvb')); this._eAddSc = sc; this._eAddN = n;
+  },
+  _eApp(f) { const A = Object.assign({}, HGApp.get()); f(A); HGApp.set(A); this._eBgSync(); },
+  /* tło strony: nadpisanie z „Wygląd” ma pierwszeństwo przed zdjęciem z CFG (zmienne na hoście usuwane) */
+  _eBgSync() { const A = HGApp.get(); if (A.bg) { this.style.removeProperty('--hg-bg-wide'); this.style.removeProperty('--hg-bg-portrait'); } else if (this._bgDef) { for (const [k, v] of this._bgDef) if (v) this.style.setProperty(k, `url('${v}')`); } this._glassRefresh && this._glassRefresh(); },
+  _eLook() {
+    this._eSheet('cfg'); const S = this._eSheetEl, A = HGApp.get(), acc = (A.accent || ('#' + '63D71E')).toUpperCase(), bg = A.bg || null, dim = A.dim != null ? A.dim : 0.4;
+    const T = HGApp.tokens(acc);
+    const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
+    const ck = H.icon('mdi:check');
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide lk" role="dialog" aria-modal="true" aria-label="Wygląd"><style>${HG_LOOK_CSS}</style><div class="hs-h"><b>Wygląd</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc lk-sc">
+      <section class="lk-g"><h4>${H.icon('mdi:palette-outline')}Akcent</h4>
+        <div class="lk-sw">${HG_ACCENTS.map(([c, l]) => `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`).join('')}
+        <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="Własny kolor akcentu"><small>Własny</small></label></div>
+        <div class="lk-pv" aria-label="Podgląd"><div class="lk-pc"><span class="lk-pi" style="background:${acc};color:${T.light['--hg-on-accent']}">${H.icon('mdi:lightbulb-on')}</span><span class="lk-pt"><b>Lampa</b><small style="color:var(--hg-accent-tx)">Włączone · 80%</small></span></div><span class="lk-pb" style="background:${acc};color:${T.light['--hg-on-accent']}">${ck} Aktywny</span></div></section>
+      <section class="lk-g"><h4>${H.icon('mdi:image-outline')}Tło</h4>
+        <div class="lk-bgs">${HG_BGS.map(([u, l, pu], i) => `<button data-hge="bgp" data-v="${i ? u : ''}" data-p="${pu || ''}" aria-pressed="${i ? !!bg && bg.v === u : !bg}" title="${l}"><span><img alt="" loading="lazy" src="${u}">${ck}</span><small>${i ? l : 'Domyślne'}</small></button>`).join('')}</div>
+        <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="Adres zdjęcia: https://… lub /local/…" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">Ustaw</button></span>
+          <button class="lk-up" data-hge="bgup" title="Prześlij zdjęcie do Home Assistant">${H.icon('mdi:upload')}<span>Prześlij</span></button><input type="file" accept="image/*" hidden></div>
+        <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>
+          <label class="lk-st"><input type="color" name="bgc1" value="${c1}" aria-label="Kolor 1"><i style="background:${c1}"></i>Kolor 1</label>
+          <label class="lk-st"><input type="color" name="bgc2" value="${c2}" aria-label="Kolor 2"><i style="background:${c2}"></i>Kolor 2</label>
+          <div class="lk-seg"><button data-hge="bgcol" data-k="color" aria-pressed="${!!bg && bg.kind === 'color'}">Jednolity</button><button data-hge="bgcol" data-k="gradient" aria-pressed="${!!bg && bg.kind === 'gradient'}">Gradient</button></div></div></section>
+      <section class="lk-g"><h4>${H.icon('mdi:brightness-6')}Przyciemnienie<em class="dv">${dv}%</em></h4><small class="lk-hn">Dotyczy tła w trybie ciemnym</small>
+        <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="Przyciemnienie tła"></section>
+      </div><div class="lk-ft"><button class="lk-gh" data-hge="lookreset">${H.icon('mdi:restore')}Przywróć domyślne</button><button class="lk-ok" data-hge="sheetclose">Gotowe</button></div></div>`;
+    const gu = () => { const v1 = S.querySelector('[name=bgc1]').value, v2 = S.querySelector('[name=bgc2]').value; S.querySelector('.lk-gp').style.background = `linear-gradient(135deg,${v1},${v2})`; S.querySelectorAll('.lk-st i')[0].style.background = v1; S.querySelectorAll('.lk-st i')[1].style.background = v2; };
+    S.querySelectorAll('[name=bgc1],[name=bgc2]').forEach((x) => x.addEventListener('input', gu));
+    S.querySelector('[name=acc]').addEventListener('change', (e) => { this._eApp((A2) => { A2.accent = e.target.value.toUpperCase(); }); this._eLook(); });
+    const rg = S.querySelector('[name=dim]'); rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value + '%'); S.querySelector('.dv').textContent = rg.value + '%'; this._eApp((A2) => { A2.dim = rg.value / 100; }); });
+    S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
+  },
+  /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
+  _eUpload(f) {
+    if (!f) return; const h = this._hass, tok = h && h.auth && h.auth.data && h.auth.data.access_token; if (!tok) return this._eToast('Brak sesji – nie można przesłać');
+    const fd = new FormData(); fd.append('file', f, f.name); this._eToast('Przesyłanie…');
+    fetch('/api/image/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + tok }, body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => {
+      const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast('Ustawiono przesłane zdjęcie'); this._eLook(); }, (e) => this._eToast('Nie udało się przesłać (' + e + ')'));
+  },
+  _eSheet(mode, ct, scOver) {
+    if (!mode) { this._eRepl = null; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
+    this._eSheetOpen = mode; this._eSheetCt = ct; this._eF = 'all'; this._eQ = '';
+    let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); }
+    if (!this.shadowRoot.querySelector('style[data-hgt]')) { const st = document.createElement('style'); st.dataset.hgt = '1'; st.textContent = HG_TILE_CSS; this.shadowRoot.appendChild(st); }
+    if (mode === 'cfg') return;
+    if (mode === 'hidden') { const hid = this._eHidden();
+      L.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet" role="dialog" aria-modal="true" aria-label="Przywróć ukryte"><div class="hs-h"><b>Przywróć ukryte</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+        <div class="hs-l">${hid.length ? hid.map((x) => `<div class="hs-r"><span class="hs-i">${H.icon('mdi:eye-off-outline')}</span><span class="hs-t"><b>${H.esc(x.n)}</b><small>${H.esc(x.sc === this._pageScope() ? 'Karta widoku' : x.sc === 'rooms' ? 'Pokój' : x.sc.startsWith('room:') ? 'Sekcja pokoju' : 'Kafelek')}</small></span><button class="hs-b" data-hge="restore" data-sc="${H.esc(x.sc)}" data-k="${H.esc(x.k)}">Przywróć</button></div>`).join('') : '<p class="hs-e">Brak ukrytych elementów w tym widoku.</p>'}</div></div>`;
+      return;
+    }
+    if (!scOver) this._eRepl = null;
+    const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eSc = sc;
+    const rooms = sc === 'rooms' && !this._eRepl;
+    L.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet" role="dialog" aria-modal="true" aria-label="Dodaj kafelek"><div class="hs-h"><b>${this._eRepl ? 'Zmień encję' : rooms ? 'Dodaj pokój' : sc.startsWith('room:') ? 'Dodaj do pokoju' : 'Dodaj kafelek'}</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
+      <label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${rooms ? 'Szukaj obszaru' : 'Szukaj po nazwie, pokoju lub domenie'}" aria-label="Szukaj" autocomplete="off"><button class="hs-clr" type="button" hidden aria-label="Wyczyść">${H.icon('mdi:close')}</button></label>
+      ${rooms ? '' : `<div class="hs-f" role="group" aria-label="Rodzaj">${[['all', 'Wszystkie'], ['light', 'Światła'], ['tog', 'Przełączniki'], ['val', 'Czujniki'], ['clim', 'Klimat'], ['media', 'Multimedia'], ['cam', 'Kamery'], ['cover', 'Rolety'], ['run', 'Sceny i skrypty']].map(([f, l]) => `<button data-hge="filter" data-f="${f}" aria-pressed="${f === 'all'}">${l}</button>`).join('')}</div>`}
+      ${rooms ? '' : '<div class="hs-pv" aria-live="polite"></div>'}<div class="hs-l" role="list"></div></div>`;
+    const inp = L.querySelector('input'), clr = L.querySelector('.hs-clr'); inp.addEventListener('input', () => { this._eQ = inp.value; clr.hidden = !inp.value; this._eSheetList(); });
+    clr.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); inp.value = ''; this._eQ = ''; clr.hidden = true; this._eSheetList(); inp.focus(); }, true);
+    this._eSheetList(); setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (e) {} }, 60);
+  },
+  /* encje już widoczne w widoku: atrybuty data-e/data-ac/data-cam/data-entity w DOM (głęboko) + identyfikatory w konfiguracji kart */
+  _eShown() {
+    const h = this._hass, S = new Set();
+    const rx = /\b[a-z_]+\.[a-z0-9_]+\b/g, js = JSON.stringify(this._config.cards || []);
+    for (const m of js.match(rx) || []) if (h.states[m]) S.add(m);
+    const walk = (r, d) => { if (!r || d > 4) return; for (const el of r.querySelectorAll('[data-e],[data-ac],[data-cam],[data-entity],[data-hgk]')) { for (const v of [el.dataset.e, el.dataset.ac, el.dataset.cam, el.dataset.entity, el.dataset.hgk]) if (v && h.states[v]) S.add(v); }
+      for (const el of r.querySelectorAll('*')) if (el.shadowRoot && el.tagName.startsWith('HG-')) walk(el.shadowRoot, d + 1); };
+    walk(this.shadowRoot, 0);
+    for (const sc of Object.keys(HGL.data.s)) for (const x of HGL.get(sc).added) if (sc === this._eSc) S.add(x.e);
+    return S;
+  },
+  _eSheetList() {
+    const L = this._eSheetEl; if (!L) return; const lst = L.querySelector('.hs-l'); if (!lst) return;
+    for (const b of L.querySelectorAll('[data-hge=filter]')) b.setAttribute('aria-pressed', b.dataset.f === this._eF);
+    const h = this._hass, sc = this._eSc, q = (this._eQ || '').trim().toLowerCase();
+    if (sc === 'rooms' && !this._eRepl) {
+      const ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}; const m = HGAreas.model(h, ac);
+      const shown = new Set([...m.rooms.map((a) => a.id), ...HGL.get('rooms').added.map((x) => x.e)]); const hid = new Set(HGL.get('rooms').hidden);
+      const list = m.list.filter((a) => a.id !== '_none' && (!shown.has(a.id) || hid.has(a.id)) && (!q || hgNorm(a.name).includes(hgNorm(q))));
+      lst.innerHTML = list.length ? list.map((a) => `<button class="hs-r" role="listitem" data-hge="pick" data-sc="rooms" data-e="${H.esc(a.id)}" data-n="${H.esc(a.name)}"><span class="hs-i">${H.icon(a.icon)}</span><span class="hs-t"><b>${H.esc(a.name)}</b><small>${a.ents.length} ${a.ents.length === 1 ? 'encja' : 'encji'}${hid.has(a.id) ? ' · ukryty' : ''}</small></span><span class="hs-p">${H.icon('mdi:plus')}</span></button>`).join('') : '<p class="hs-e">Wszystkie obszary są już na liście.</p>';
+      return;
+    }
+    const shown = this._eShown(), f = this._eF, reg = h.entities || {}, areas = h.areas || {}, devs = h.devices || {};
+    const skip = new Set(['zone', 'sun', 'persistent_notification', 'update', 'tts', 'stt', 'conversation', 'event', 'image', 'device_tracker', 'group', 'input_text', 'input_datetime', 'todo', 'calendar', 'weather', 'wake_word', 'assist_satellite', 'select', 'number', 'text', 'time', 'date', 'datetime', 'notify', 'ai_task']);
+    const arr = [];
+    for (const e of Object.keys(h.states)) {
+      const d = e.split('.')[0]; if (skip.has(d) || (!this._eRepl && shown.has(e))) continue;
+      const r = reg[e]; if (r && (r.hidden || r.entity_category)) continue;
+      const k = HG_TILE_KIND(e);
+      if (f !== 'all' && !(f === 'light' ? d === 'light' : f === 'tog' ? k === 'tog' && d !== 'light' : f === k)) continue;
+      const s = h.states[e], nm = H.name(h, e), aid = r && (r.area_id || (r.device_id && devs[r.device_id] && devs[r.device_id].area_id)), an = aid && areas[aid] ? areas[aid].name : '';
+      if (q && !(hgNorm(nm).includes(hgNorm(q)) || e.includes(q) || hgNorm(an).includes(hgNorm(q)))) continue;
+      arr.push({ e, nm, an, k, s });
+    }
+    const coll = new Intl.Collator('pl'); arr.sort((a, b) => coll.compare(a.nm, b.nm));
+    const sh = arr; this._eArr = arr;
+    const pv = L.querySelector('.hs-pv'); if (pv) { const fx = this._eF === 'all' ? null : this._eF;
+      pv.innerHTML = sh.length ? `<small>Podgląd${fx ? ' · ' + H.esc(fx === 'light' ? 'Światło' : (HG_KIND_LBL[fx] || '')) : ''}</small><div class="tg2">${hgTileHtml(h, sh[0].e)}</div>` : ''; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); }
+    const row = (x) => `<button class="hs-r" role="listitem" data-hge="${this._eRepl ? 'repl' : 'pick'}" data-sc="${H.esc(sc)}" data-e="${H.esc(x.e)}" data-n="${H.esc(x.nm)}"><span class="hs-i">${H.icon(x.s.attributes.icon || HG_DOM_ICON2[x.e.split('.')[0]] || 'mdi:circle-outline')}</span><span class="hs-t"><b>${H.esc(x.nm)}</b><small>${H.esc([HG_KIND_LBL[x.k], x.an, this._eRepl && shown.has(x.e) ? 'już na widoku' : '', H.ok(x.s) ? H.T(h, x.s) : 'niedostępne'].filter(Boolean).join(' · '))}</small></span><span class="hs-p">${H.icon(this._eRepl ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>`;
+    /* leniwe renderowanie: porcje po 60, kolejne przy przewijaniu (bez limitu) */
+    if (this._eIO) this._eIO.disconnect();
+    if (!sh.length) { lst.innerHTML = `<p class="hs-e">${this._eRepl ? 'Brak pasujących encji.' : 'Brak pasujących encji (już widoczne są pomijane).'}</p>`; return; }
+    let n = 0; lst.innerHTML = `<small class="hs-cnt">${sh.length} ${sh.length === 1 ? 'encja' : 'encji'}</small>`;
+    const more = () => { const st = lst.querySelector('.hs-more'); st && st.remove(); lst.insertAdjacentHTML('beforeend', sh.slice(n, n + 60).map(row).join('')); n += 60;
+      if (n < sh.length) { lst.insertAdjacentHTML('beforeend', '<i class="hs-more" aria-hidden="true"></i>'); this._eIO.observe(lst.querySelector('.hs-more')); } };
+    this._eIO = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) more(); }, { root: lst, rootMargin: '300px' });
+    more();
+  },
+};
+Object.assign(HGPage.prototype, HG_EDIT);

@@ -1,0 +1,5 @@
+presets/private/
+__pycache__/
+*.pyc
+tests/out/
+.ha-test/
