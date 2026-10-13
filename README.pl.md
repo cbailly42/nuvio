@@ -33,7 +33,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_multimedia_light_390.png" alt="Multimedia na telefonie (jasny)" width="24%">
-  <img src="docs/screenshots/empty_dashboard_wizard_dark_390.png" alt="Kreator pierwszego uruchomienia na telefonie (ciemny)" width="24%">
+  <img src="docs/screenshots/demo_wizard_dark_390.png" alt="Kreator pierwszego uruchomienia na telefonie (ciemny)" width="24%">
 </p>
 
 ## Funkcje
@@ -66,6 +66,16 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 1. Skopiuj zawartość `dist/` do `/config/www/nuvio/`.
 2. Dodaj zasób `/local/nuvio/nuvio.js` (typ: **moduł JavaScript**).
 3. Użyj tej samej konfiguracji `strategy` co wyżej.
+
+## Polecane dodatki
+
+Nuvio działa samodzielnie, ale pełnoekranowy wygląd ze zrzutów uzyskasz z tymi pakietami z HACS:
+
+| Pakiet | Po co |
+|---|---|
+| [kiosk-mode](https://github.com/NemesisRE/kiosk-mode) | Ukrywa nagłówek i/lub pasek boczny Home Assistanta, więc widać tylko pulpit Nuvio (tablety ścienne, telefony). Nawigacja Nuvio współpracuje z kiosk-mode. |
+| [custom-sidebar](https://github.com/elchininet/custom-sidebar) | Ukrywa lub porządkuje pozycje paska bocznego HA per użytkownik lub urządzenie, jeśli wolisz go zostawić, ale odchudzić. |
+| [browser_mod](https://github.com/thomasloven/hass-browser_mod) *(opcjonalnie)* | Zamienia przeglądarkę w sterowalne urządzenie (popupy, sterowanie per urządzenie). Nuvio obsługuje jego warstwę interakcji i pomija jego odtwarzacze oraz czujniki. |
 
 ## Konfiguracja
 

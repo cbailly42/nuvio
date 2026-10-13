@@ -33,7 +33,7 @@ and entities from Home Assistant and generates the views. Everything can then be
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_multimedia_light_390.png" alt="Media on mobile (light)" width="24%">
-  <img src="docs/screenshots/empty_dashboard_wizard_dark_390.png" alt="First-run wizard on mobile (dark)" width="24%">
+  <img src="docs/screenshots/demo_wizard_dark_390.png" alt="First-run wizard on mobile (dark)" width="24%">
 </p>
 
 ## Features
@@ -66,6 +66,16 @@ and entities from Home Assistant and generates the views. Everything can then be
 1. Copy the contents of `dist/` to `/config/www/nuvio/`.
 2. Add the resource `/local/nuvio/nuvio.js` (type: **JavaScript module**).
 3. Use the same `strategy` config as above.
+
+## Recommended companion packages
+
+Nuvio works on its own, but for the full-screen look from the screenshots these HACS packages help:
+
+| Package | Why |
+|---|---|
+| [kiosk-mode](https://github.com/NemesisRE/kiosk-mode) | Hides the Home Assistant header and/or sidebar, so only the Nuvio dashboard is visible (wall tablets, phones). Nuvio's navigation is kiosk-mode aware. |
+| [custom-sidebar](https://github.com/elchininet/custom-sidebar) | Hides or reorders Home Assistant sidebar items per user or device, if you prefer to keep the sidebar but trim it. |
+| [browser_mod](https://github.com/thomasloven/hass-browser_mod) *(optional)* | Turns a browser into a controllable device (popups, per-device control). Nuvio handles its interaction overlay and skips browser_mod's own media players and sensors. |
 
 ## Configuration
 
