@@ -258,6 +258,12 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.7
+- Nowe: zapasowe źródło zdjęć i czcionek. Nuvio wczytuje tła, miniatury w galerii i czcionki najpierw z lokalnej instalacji, a gdy plik się nie wczyta, z jsDelivr przypiętego do działającej wersji (`cdn.jsdelivr.net/gh/kczepiec/nuvio@v<wersja>/dist/`). Bez internetu nadal działają pliki lokalne.
+- Poprawka: szwy na szkle przy tle ze zdjęciem. Przyciemnienie tła to teraz jedna nakładka zamiast filtra CSS na pełnoekranowym zdjęciu, a warstwy tła są znów zwykłymi warstwami fixed, więc rozmyte elementy próbkują jednolite tło.
+- Poprawka: okienko "Więcej" na pasku bocznym jest matowe od pierwszej klatki (animacja odsłaniania zamiast przejścia opacity, które wyłączało rozmycie), a kafelki mają równą wysokość i wyrównanie.
+- Poprawka: widoki o tej samej nazwie lub podobnych ścieżkach. Aktywny element paska dopasowuje całe segmenty ścieżki (`/nuvio/test` nie zapala się dla `/nuvio/test2`), a `rail_overflow` przyjmuje ścieżkę widoku i nigdy nie przypisuje dwóch wpisów do jednego elementu.
+
 ### 0.3.6
 - Nowość: szerokość sekcji. Ustawienia sekcji pulpitu mają **Automatyczna**, **Pełna szerokość** lub **Połowa** z małym podglądem; na telefonie każda sekcja ma pełną szerokość. Zapisywane osobno dla każdej sekcji.
 - Nowość: w trybie edycji Nuvio sprawdza na serwerze, czy jest nowszy `nuvio.js`, i prosi o odświeżenie bez pamięci podręcznej (Ctrl+Shift+R), gdy przeglądarka uruchamia starą wersję. Nagłówek galerii + Dodaj pokazuje załadowaną wersję.

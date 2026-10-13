@@ -2,6 +2,9 @@
 const HG_ASSET = (() => { try { const u = import.meta.url; if (u) return u.replace(/[^/]*([?#].*)?$/, ''); } catch (e) { /* brak */ }
   try { const s = document.currentScript && document.currentScript.src; if (s) return s.replace(/[^/]*(\?.*)?$/, ''); } catch (e) { /* brak */ }
   const r = [...document.querySelectorAll('script[src*="nuvio"]')].map((x) => x.src)[0]; return r ? r.replace(/[^/]*(\?.*)?$/, '') : '/hacsfiles/nuvio/'; })();
+/* zapas z CDN (jsDelivr, przypięty do tagu działającej wersji): gdy plik obok paczki się nie wczyta; lokalny pierwszy (offline) */
+const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string' || !u.startsWith(HG_ASSET)) return '';
+  return 'https://cdn.jsdelivr.net/gh/kczepiec/nuvio@v' + v + '/dist/' + u.slice(HG_ASSET.length).replace(/[?#].*$/, ''); } catch (e) { return ''; } };
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'nuvio');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
@@ -402,7 +405,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.6+bb7665a2';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.6+682063b2';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -441,8 +444,8 @@ window.__hgVer = HGVer;
   s.id = 'hg-fonts';
   const b = HG_ASSET + 'nuvio-font-';
   s.textContent = `
-@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF;}
-@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}`;
+@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin-ext.woff2) format('woff2')${typeof hgCdn === 'function' && hgCdn(b + 'dmsans-latin-ext.woff2') ? `, url(${hgCdn(b + 'dmsans-latin-ext.woff2')}) format('woff2')` : ''};unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'HG DM Sans';font-style:normal;font-weight:100 700;font-display:swap;src:url(${b}dmsans-latin.woff2) format('woff2')${typeof hgCdn === 'function' && hgCdn(b + 'dmsans-latin.woff2') ? `, url(${hgCdn(b + 'dmsans-latin.woff2')}) format('woff2')` : ''};unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}`;
   document.head.appendChild(s);
 })();
 
@@ -5819,7 +5822,8 @@ const hgFuelBadge = (l) => { const m = /^PB?\s*(\d+)/i.exec(l || ''); const on =
   const cls = m ? (m[1] === '98' ? 'b98' : 'b95') : on ? 'bon' : 'bx';
   return `<span class="fb ${cls}" aria-hidden="true">${m ? `<small>Pb</small>${H.esc(m[1])}` : H.esc((l || '').slice(0, 3))}</span>`; };
 const HG_BG_OK = new Set();   // zdekodowane zdjęcia tła (kolejne widoki ustawiają je od razu)
-const hgMatch = (m, path) => [].concat(m).some((x) => x && path.startsWith(x));
+/* dopasowanie po całych segmentach ścieżki: /nuvio/test nie zapala się dla /nuvio/test2 (widoki o podobnych lub tych samych nazwach) */
+const hgMatch = (m, path) => [].concat(m).some((x) => x && (path === x || path.startsWith(x.endsWith('/') ? x : x + '/')));
 const HGNav = {
   prev: null,
   ready() {},
@@ -6479,7 +6483,7 @@ class HGPage extends HTMLElement {
     // szyna nie mieści wszystkiego: nadmiar (najpierw wg rail_overflow, potem od końca, bez ostatniej = Ustawienia) do „Więcej”
     const fit = this._railFit(all.length), ov = new Set();
     if (fit < all.length) {
-      const need = all.length - (fit - 1), order = [...(c.rail_overflow || []).map((l) => all.findIndex((r) => r.label === l)).filter((i) => i >= 0 && i < all.length - 1),
+      const need = all.length - (fit - 1), order = [...(c.rail_overflow || []).map(function (l) { const u = this; const i = all.findIndex((r, j) => !u.has(j) && ((r.action && r.action.navigate === l) || r.label === l)); if (i >= 0) u.add(i); return i; }, new Set()).filter((i) => i >= 0 && i < all.length - 1),
         ...all.map((r, i) => i).slice(0, -1).reverse()];
       for (const i of order) { if (ov.size >= need) break; ov.add(i); }
     }
@@ -6561,8 +6565,7 @@ class HGPage extends HTMLElement {
   _css() {
     return U(`
 :host{ display:block; color:var(--hg-tx-ffffff); position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
-/* tło i przyciemnienie jako własne pełnoekranowe warstwy GPU: backdrop-filter szklanych elementów próbkuje jedną warstwę (bez szwów na granicach innych warstw) */
-.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
+.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat;  }
 @media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
 @media (pointer:coarse){ :host{ --hg-bf:.6; } }
 /* tryb lekki (dotyk / słabe urządzenie, nadpisanie: localStorage nuvio:lite = 1/0): słabsze rozmycie, bez ciężkich cieni */
@@ -6589,7 +6592,7 @@ class HGPage extends HTMLElement {
 /* niewidoczny widok / ukryta karta przeglądarki: animacje ciągłe wstrzymane (zmienna dziedziczy się do kart) */
 :host([paused]){ --hg-play: paused; }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
-.shade{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden;
+.shade{ position:fixed; inset:0; pointer-events:none; z-index:0;
   background: var(--hg-bg-0e1014-026-k); }
 /* noc (schemat ciemny): dodatkowe przyciemnienie zdjęcia */
 .shade::after{ content:''; position:absolute; inset:0; background: var(--hg-night, transparent); }
@@ -6658,9 +6661,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .sheet-l.in .scrim{ opacity:1; } .sheet-l.in .sheet{ transform:none; }
 /* „Więcej” z szyny (desktop/tablet): wyskakujące okienko obok szyny */
 .sheet-l.popm .scrim{ background:transparent; }
-.sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:0; transition:transform .2s ease, opacity .2s ease; touch-action:auto; }
-.sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); gap:10px; }
-.sheet-l.in .sheet.pop{ transform:none; opacity:1; } .sheet.pop .grab{ display:none; }
+.sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:1; clip-path:inset(0 100% 0 0 round 28px); transition:transform .2s ease, clip-path .2s ease;   /* bez animacji opacity: Chrome pomija backdrop-filter, gdy rodzic ma opacity < 1 (szkło pojawiało się dopiero po animacji) */ touch-action:auto; }
+.sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); grid-auto-rows:1fr; align-items:stretch; gap:10px; } .sheet.pop .st{ height:100%; box-sizing:border-box; }
+.sheet-l.in .sheet.pop{ transform:none; opacity:1; clip-path:inset(0 0 0 0 round 28px); } .sheet.pop .grab{ display:none; }
 .sheet .grab{ display:block; width:40px; height:5px; border-radius:3px; background:var(--hg-bg-000000-018); margin:2px auto 12px; }
 .sg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
 .st{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:78px; padding:8px 4px; border-radius:18px; background:var(--hg-bg-ffffff-075);
@@ -7108,12 +7111,17 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     let B = a.bg || window.HG_DEFAULT_BG;
     if (!a.bg && B && B.kind === 'image') { /* domyślne zdjęcie: sprawdź raz, czy się wczytuje; błąd -> gradient zapasowy */
       if (B._st === 'bad') B = window.HG_DEFAULT_BG_FB;
-      else if (!B._st) { B._st = 'wait'; const im = new Image(); im.onload = () => { B._st = 'ok'; }; im.onerror = () => { B._st = 'bad'; this.apply(); }; im.src = B.v; } }
+      else if (!B._st) { B._st = 'wait'; const im = new Image(); im.onload = () => { B._st = 'ok'; };
+        im.onerror = () => { const c = !B._cdn && typeof hgCdn === 'function' && hgCdn(B.v); if (c) { console.warn('Nuvio: local background failed, using CDN', B.v); B._cdn = 1; B.v2p = hgCdn(B.v2p) || B.v2p; B.v = c; B._st = ''; } else B._st = 'bad'; this.apply(); }; im.src = B.v; } }
+    /* wybrane tło z pliku obok paczki: sprawdź raz, przy błędzie podstaw kopię z CDN (tylko w pamięci, bez zmiany zapisu) */
+    if (a.bg && a.bg.kind === 'image' && typeof hgCdn === 'function' && hgCdn(a.bg.v)) { const M = (window.__hgBgAlt = window.__hgBgAlt || {}), v0 = a.bg.v;
+      if (M[v0] === undefined) { M[v0] = null; const im = new Image(); im.onload = () => { M[v0] = ''; }; im.onerror = () => { console.warn('Nuvio: local background failed, using CDN', v0); M[v0] = hgCdn(v0); this.apply(); }; im.src = v0; }
+      if (M[v0]) B = Object.assign({}, a.bg, { v: M[v0], v2p: hgCdn(a.bg.v2p) || M[v0] }); }
     const img = this.bgImg(B), img2 = B && B.v2p ? this.bgImg({ kind: 'image', v: B.v2p }) : img;
     const dim = a.dim != null ? Math.max(0, Math.min(1, a.dim)) : null;
     let css = '';
     const L = Object.assign({}, T ? T.light : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {});
-    const D = Object.assign({}, T ? T.dark : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {}, dim != null ? { '--hg-night': 'rgb' + `a(6,8,12,${(dim * 0.65).toFixed(3)})`, '--hg-photo-filter': `brightness(${(1 - dim * 0.45).toFixed(3)}) saturate(.9)` } : {});
+    const D = Object.assign({}, T ? T.dark : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {}, dim != null ? { '--hg-night': 'rgb' + `a(6,8,12,${(1 - (1 - dim * 0.65) * (1 - dim * 0.45)).toFixed(3)})` } : {});   /* przyciemnienie tylko nakładką: filter na pełnoekranowym zdjęciu dzielił tło na kafle GPU i dawał szwy pod szkłem */
     if (Object.keys(L).length) css += `:root:root, nuvio-page:not([x]){ ${this.css(L)} }\n`;
     if (Object.keys(D).length) css += `:root:root[data-hg-scheme=dark], :root[data-hg-scheme=dark] nuvio-page:not([x]){ ${this.css(D)} }\n`;
     if (st.textContent !== css) st.textContent = css;
@@ -8060,7 +8068,7 @@ const HG_EDIT = {
       <section class="lk-g"><h4>${H.icon('mdi:image-outline')}${hgTr('Tło', 'Background')}</h4>
         <div class="lk-bgs">${HG_BGS.map(([u, l, pu, th], i) => { const on = i ? !!bg && bg.kind !== 'color' && bg.kind !== 'gradient' && bg.v === u : !bg;
           const src = th || u || (HG_DEFAULT_BG.kind === 'image' ? HG_DEFAULT_BG.v : '');
-          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove()">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
+          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="var c=!this.dataset.cdn&&window.hgCdn&&window.hgCdn(this.src);if(c){console.warn('Nuvio: local background failed, using CDN', this.src);this.dataset.cdn='1';this.src=c;}else{this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove();}">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
         <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">${hgTr('Ustaw', 'Set')}</button></span>
           <button class="lk-up" data-hge="bgup" title="${hgTr('Prześlij zdjęcie do Home Assistant', 'Upload an image to Home Assistant')}">${H.icon('mdi:upload')}<span>${hgTr('Prześlij', 'Upload')}</span></button><input type="file" accept="image/*" hidden></div>
         <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>

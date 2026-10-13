@@ -258,6 +258,12 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.7
+- New: remote fallback for images and fonts. Nuvio loads backgrounds, gallery thumbnails and fonts from the local install first and, if a file fails to load, from jsDelivr pinned to the running version (`cdn.jsdelivr.net/gh/kczepiec/nuvio@v<version>/dist/`). Offline installs keep working with local files.
+- Fixed: glass seams on photo backgrounds. Background dimming is now a single overlay instead of a CSS filter on the full screen photo, and the background layers are plain fixed layers again, so blurred elements sample one uniform backdrop.
+- Fixed: the rail "More" popover is frosted from the first frame (reveal animation instead of fading opacity, which disabled the blur) and its tiles keep equal height and alignment.
+- Fixed: views with the same title or similar paths. The active rail item matches whole path segments (`/nuvio/test` no longer lights up for `/nuvio/test2`), and `rail_overflow` accepts a view path and never maps two entries to one item.
+
 ### 0.3.6
 - New: section width. The settings of a dashboard section offer **Automatic**, **Full width** or **Half** with a small visual preview; on phones every section is full width. Saved per section.
 - New: in edit mode Nuvio checks the server for a newer `nuvio.js` and asks for a reload without cache (Ctrl+Shift+R) when the browser runs an older cached build. The + Add gallery header shows the loaded version.

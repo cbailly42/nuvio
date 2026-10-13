@@ -43,7 +43,8 @@ const hgFuelBadge = (l) => { const m = /^PB?\s*(\d+)/i.exec(l || ''); const on =
   const cls = m ? (m[1] === '98' ? 'b98' : 'b95') : on ? 'bon' : 'bx';
   return `<span class="fb ${cls}" aria-hidden="true">${m ? `<small>Pb</small>${H.esc(m[1])}` : H.esc((l || '').slice(0, 3))}</span>`; };
 const HG_BG_OK = new Set();   // zdekodowane zdjęcia tła (kolejne widoki ustawiają je od razu)
-const hgMatch = (m, path) => [].concat(m).some((x) => x && path.startsWith(x));
+/* dopasowanie po całych segmentach ścieżki: /nuvio/test nie zapala się dla /nuvio/test2 (widoki o podobnych lub tych samych nazwach) */
+const hgMatch = (m, path) => [].concat(m).some((x) => x && (path === x || path.startsWith(x.endsWith('/') ? x : x + '/')));
 const HGNav = {
   prev: null,
   ready() {},
@@ -703,7 +704,7 @@ class HGPage extends HTMLElement {
     // szyna nie mieści wszystkiego: nadmiar (najpierw wg rail_overflow, potem od końca, bez ostatniej = Ustawienia) do „Więcej”
     const fit = this._railFit(all.length), ov = new Set();
     if (fit < all.length) {
-      const need = all.length - (fit - 1), order = [...(c.rail_overflow || []).map((l) => all.findIndex((r) => r.label === l)).filter((i) => i >= 0 && i < all.length - 1),
+      const need = all.length - (fit - 1), order = [...(c.rail_overflow || []).map(function (l) { const u = this; const i = all.findIndex((r, j) => !u.has(j) && ((r.action && r.action.navigate === l) || r.label === l)); if (i >= 0) u.add(i); return i; }, new Set()).filter((i) => i >= 0 && i < all.length - 1),
         ...all.map((r, i) => i).slice(0, -1).reverse()];
       for (const i of order) { if (ov.size >= need) break; ov.add(i); }
     }
@@ -785,8 +786,7 @@ class HGPage extends HTMLElement {
   _css() {
     return U(`
 :host{ display:block; color:#fff; position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
-/* tło i przyciemnienie jako własne pełnoekranowe warstwy GPU: backdrop-filter szklanych elementów próbkuje jedną warstwę (bez szwów na granicach innych warstw) */
-.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
+.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat;  }
 @media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
 @media (pointer:coarse){ :host{ --hg-bf:.6; } }
 /* tryb lekki (dotyk / słabe urządzenie, nadpisanie: localStorage home-glass:lite = 1/0): słabsze rozmycie, bez ciężkich cieni */
@@ -813,7 +813,7 @@ class HGPage extends HTMLElement {
 /* niewidoczny widok / ukryta karta przeglądarki: animacje ciągłe wstrzymane (zmienna dziedziczy się do kart) */
 :host([paused]){ --hg-play: paused; }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
-.shade{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden;
+.shade{ position:fixed; inset:0; pointer-events:none; z-index:0;
   background: rgba(14,16,20,.26); }
 /* noc (schemat ciemny): dodatkowe przyciemnienie zdjęcia */
 .shade::after{ content:''; position:absolute; inset:0; background: var(--hg-night, transparent); }
@@ -882,9 +882,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .sheet-l.in .scrim{ opacity:1; } .sheet-l.in .sheet{ transform:none; }
 /* „Więcej” z szyny (desktop/tablet): wyskakujące okienko obok szyny */
 .sheet-l.popm .scrim{ background:transparent; }
-.sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:0; transition:transform .2s ease, opacity .2s ease; touch-action:auto; }
-.sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); gap:10px; }
-.sheet-l.in .sheet.pop{ transform:none; opacity:1; } .sheet.pop .grab{ display:none; }
+.sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:1; clip-path:inset(0 100% 0 0 round 28px); transition:transform .2s ease, clip-path .2s ease;   /* bez animacji opacity: Chrome pomija backdrop-filter, gdy rodzic ma opacity < 1 (szkło pojawiało się dopiero po animacji) */ touch-action:auto; }
+.sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); grid-auto-rows:1fr; align-items:stretch; gap:10px; } .sheet.pop .st{ height:100%; box-sizing:border-box; }
+.sheet-l.in .sheet.pop{ transform:none; opacity:1; clip-path:inset(0 0 0 0 round 28px); } .sheet.pop .grab{ display:none; }
 .sheet .grab{ display:block; width:40px; height:5px; border-radius:3px; background:rgba(0,0,0,.18); margin:2px auto 12px; }
 .sg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
 .st{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:78px; padding:8px 4px; border-radius:18px; background:rgba(255,255,255,.75);
