@@ -33,7 +33,7 @@ const HGWx = {
   still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
   icon(cfg, cond, night, anim) {
     const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
-    return `${cfg.icon_base}${anim && !this.still() ? '' : 'static/'}${f}.svg?v=${cfg.icon_v}`;
+    return `${cfg.icon_base}${anim && !this.still() ? '' : 'static-'}${f}.svg?v=${cfg.icon_v}`;
   },
   // kolor temperatury: zimno (niebieski) -> ciepło (pomarańcz)
   tcol(t) {
@@ -44,7 +44,7 @@ const HGWx = {
   hm: (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' }),
 };
 class HGWeatherCard extends HGBase {
-  defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgTr('Na zewnątrz', 'Outside'), icon_base: HG_ASSET + 'assets/meteocons/', icon_v: '1', variant: 'card' }; }
+  defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgTr('Na zewnątrz', 'Outside'), icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1', variant: 'card' }; }
   ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun].filter(Boolean); }
   _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
   setConfig(c) { const o = this._config; if (o && this._u && ((c && c.entity) || '') !== o.entity) { for (const u of this._u) u(); this._u = null; this._hourly = this._daily = this._hf = this._df = null; }
@@ -183,7 +183,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const done = []; if (!night) for (let i = 0; i <= 20; i++) { const q = (i / 20) * p; done.push(`${(q * 100).toFixed(1)},${(30 - Math.sin(q * Math.PI) * 26).toFixed(1)}`); }
     const svg = `<svg viewBox="0 -2 100 40" preserveAspectRatio="none" aria-hidden="true"><line class="hz" x1="0" y1="30" x2="100" y2="30"/><polyline class="arc" points="${pts.join(' ')}"/>${done.length ? `<polyline class="arcd" points="${done.join(' ')}"/>` : ''}
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${night ? '#9AA6C8' : 'var(--hg-accent)'}" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" transform="scale(1 1)"/></svg>`;
-    const c = this._config, ri = `${c.icon_base}static/sunrise.svg?v=${c.icon_v}`, si = `${c.icon_base}static/sunset.svg?v=${c.icon_v}`;
+    const c = this._config, ri = `${c.icon_base}static-sunrise.svg?v=${c.icon_v}`, si = `${c.icon_base}static-sunset.svg?v=${c.icon_v}`;
     const lab = (t) => { const d = new Date(t), today = new Date().toDateString() === d.toDateString(); return HGWx.hm(d) + (today ? '' : hgTr(' jutro', ' tomorrow')); };
     return `<div class="sun" aria-label="${H.esc(hgTr(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`, `Sunrise ${lab(r)}, sunset ${lab(st)}`))}"><span><img src="${ri}" alt=""><span><b>${HGWx.hm(new Date(r))}</b> ${hgTr('wschód', 'sunrise')}${new Date().toDateString() === new Date(r).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span></span>${svg}<span><span><b>${HGWx.hm(new Date(st))}</b> ${hgTr('zachód', 'sunset')}${new Date().toDateString() === new Date(st).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span><img src="${si}" alt=""></span></div>`;
   }
@@ -344,7 +344,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
         <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc(HGWx.cn(f.condition))}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
         <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
     // słońce
-    const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static/${n}.svg?v=${c.icon_v}`;
+    const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static-${n}.svg?v=${c.icon_v}`;
     const se = (o, lab, icn) => o ? `<div class="e"><img src="${ic(icn)}" alt=""><b>${HGWx.hm(new Date(o.t))}</b><span>${lab}${o.tm ? hgTr(' jutro', ' tomorrow') : ''}</span></div>` : '<div></div>';
     this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="${hgTr('Pogoda – szczegóły', 'Weather – details')}">
       <div class="top"><img src="${HGWx.icon(c, w.state, night, true)}" alt=""><div class="tx"><small>${H.esc(c.title)}</small><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''} <span>· ${H.esc(cond)}</span></b></div><button class="cls" data-act="xclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>

@@ -216,7 +216,7 @@ Na podstawie [docs/STATUS.md](docs/STATUS.md). W kodzie nie ma innych planowanyc
 
 ### Ręcznie
 
-1. Pobierz archiwum źródeł najnowszego wydania (GitHub, Releases, Source code) i skopiuj zawartość jego folderu `dist/` (`nuvio.js` i `assets/`) do `/config/www/nuvio/`. Wydania nie mają załączonych plików.
+1. Pobierz archiwum źródeł najnowszego wydania (GitHub, Releases, Source code) i skopiuj zawartość jego folderu `dist/` (`nuvio.js` oraz pliki `nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`, wszystkie bez podfolderów) do `/config/www/nuvio/`. Wydania nie mają załączonych plików.
 2. Dodaj zasób `/local/nuvio/nuvio.js` (typ: **moduł JavaScript**).
 3. Użyj tej samej konfiguracji `strategy` co wyżej.
 
@@ -257,6 +257,10 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
+
+### 0.3.4
+- Naprawione: po instalacji z HACS brakowało czcionek, teł i ikon pogody. HACS pobiera tylko pliki leżące bezpośrednio w `dist/`, więc wszystkie zasoby są tam teraz z unikalnymi nazwami (`nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`); autorzy teł w `dist/CREDITS.md`.
+- Naprawione: baza zasobów brana jest z adresu modułu, więc instalacja ręczna w `/local/nuvio/` ładuje własne czcionki i tła zamiast z `/hacsfiles/nuvio/`.
 
 ### 0.3.3
 - Naprawione: w trybie edycji uchwyt i X pierwszego bloku w kolumnie pokoju były rysowane na bloku z poprzedniej kolumny; każdy blok ma teraz dokładnie jeden uchwyt (lewy górny róg), jeden X (prawy górny) i S/M/L w środku.
@@ -300,6 +304,6 @@ Wydania budują GitHub Actions na tagach `v*`.
 Nuvio jest udostępniany na [licencji MIT](LICENSE).
 
 Dołączone zasoby zewnętrzne:
-- [DM Sans](dist/assets/fonts/OFL.txt): SIL Open Font License 1.1
-- [Meteocons](dist/assets/meteocons/LICENSE): Bas Milius, MIT
-- [Domyślne zdjęcie tła](dist/assets/bg/CREDITS.md): „House in forest”, autor Flo Pappert, CC0 1.0 (przez Wikimedia Commons)
+- [DM Sans](dist/nuvio-font-OFL.txt): SIL Open Font License 1.1
+- [Meteocons](dist/nuvio-meteo-LICENSE.txt): Bas Milius, MIT
+- [Domyślne zdjęcie tła](dist/CREDITS.md): „House in forest”, autor Flo Pappert, CC0 1.0 (przez Wikimedia Commons)

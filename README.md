@@ -216,7 +216,7 @@ From [docs/STATUS.md](docs/STATUS.md). There are no other planned components in 
 
 ### Manual
 
-1. Download the source archive of the latest release (GitHub, Releases, Source code) and copy the contents of its `dist/` folder (`nuvio.js` and `assets/`) to `/config/www/nuvio/`. Releases have no attached files.
+1. Download the source archive of the latest release (GitHub, Releases, Source code) and copy the contents of its `dist/` folder (`nuvio.js` and the `nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*` files, all flat) to `/config/www/nuvio/`. Releases have no attached files.
 2. Add the resource `/local/nuvio/nuvio.js` (type: **JavaScript module**).
 3. Use the same `strategy` config as above.
 
@@ -257,6 +257,10 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
+
+### 0.3.4
+- Fixed: fonts, backgrounds and weather icons were missing after a HACS install. HACS only downloads files that sit directly in `dist/`, so all assets now live there with unique names (`nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`); background credits are in `dist/CREDITS.md`.
+- Fixed: the asset base is taken from the module URL, so a manual install under `/local/nuvio/` loads its own fonts and backgrounds instead of `/hacsfiles/nuvio/`.
 
 ### 0.3.3
 - Fixed: in edit mode the drag handle and X of the first block in a room column were drawn on the previous column's block; every block now has exactly one handle (top left), one X (top right) and S/M/L inside it.
@@ -300,6 +304,6 @@ Releases are built by GitHub Actions on `v*` tags.
 Nuvio is released under the [MIT License](LICENSE).
 
 Bundled third-party assets:
-- [DM Sans](dist/assets/fonts/OFL.txt): SIL Open Font License 1.1
-- [Meteocons](dist/assets/meteocons/LICENSE) by Bas Milius, MIT
-- [Default background photo](dist/assets/bg/CREDITS.md): "House in forest" by Flo Pappert, CC0 1.0 (via Wikimedia Commons)
+- [DM Sans](dist/nuvio-font-OFL.txt): SIL Open Font License 1.1
+- [Meteocons](dist/nuvio-meteo-LICENSE.txt) by Bas Milius, MIT
+- [Default background photo](dist/CREDITS.md): "House in forest" by Flo Pappert, CC0 1.0 (via Wikimedia Commons)

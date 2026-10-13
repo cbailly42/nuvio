@@ -20,7 +20,7 @@ jobs:
           import json; p=json.load(open('package.json')); p['version']='$V'; json.dump(p, open('package.json','w'), indent=2)
           PY
       - name: Build
-        run: python tools/build.py && node --check dist/nuvio.js
+        run: python tools/build.py && cp dist/nuvio.js /tmp/nuvio.mjs && node --check /tmp/nuvio.mjs
       - name: Hardcode guard
         run: python tools/guard.py
       # no attached files: HACS installs the full dist/ (with assets/) only when a release has no assets
