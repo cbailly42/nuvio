@@ -59,6 +59,7 @@ const HGModel = {
 /* układ własnego widoku: siatka / kolumny / masonry / panel (hero jak strona główna) + kolumny na telefon / tablet / komputer i maks. szerokość */
 const HG_LAYS = [['grid', hgTrLazy('Siatka', 'Grid'), 'mdi:view-grid-outline', hgTrLazy('Równe rzędy kart', 'Even rows of cards')], ['cols', hgTrLazy('Kolumny', 'Columns'), 'mdi:view-column-outline', hgTrLazy('Karty ułożone od góry, bez wyrównania rzędów', 'Cards stacked from the top, rows not aligned')],
   ['masonry', 'Masonry', 'mdi:view-dashboard-variant-outline', hgTrLazy('Karty dopasowane wysokością, bez pustych miejsc', 'Cards fitted by height, no gaps')], ['panel', 'Panel', 'mdi:view-agenda-outline', hgTrLazy('Jak strona główna: pogoda u góry, karty pod spodem', 'Like the home page: weather on top, cards below')]];
+const HG_HINT_MIN = 3;
 const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k] || d)), r = (k) => `repeat(${k}, minmax(0, 1fr))`, cm = n('cm', 1), ct = n('ct', 2), cd = n('cd', c.lay === 'panel' ? 2 : 3);
   return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { flow: 'cols' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(!c.lay || c.lay === 'grid' ? { flow: 'grid' } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
 /* --- generator konfiguracji (strategia pulpitu) --- */
@@ -141,13 +142,14 @@ b{ font-size:15px; font-weight:600; } small{ display:block; font-size:12px; opac
 class HGHintCard extends HTMLElement {
   setConfig(c) { this._c = c || {}; this._r = 0; if (!this.shadowRoot) this.attachShadow({ mode: 'open' }); }
   getCardSize() { return 3; }
-  _hk() { return this._c.hint_sc && typeof HGL !== 'undefined' && HGL.data ? ((HGL.get(this._c.hint_sc).added || []).length ? 1 : 0) : 0; }
+  /* podpowiedź zostaje, dopóki widok ma mniej niż HG_HINT_MIN elementów (pusty panel z jednym wierszem wyglądał na zepsuty) */
+  _hk() { return this._c.hint_sc && typeof HGL !== 'undefined' && HGL.data ? ((HGL.get(this._c.hint_sc).added || []).length >= HG_HINT_MIN ? 1 : 0) : 0; }
   set hass(h) { this._h = h; const k = this._hk(); if (!this._r || k !== this._k) { this._k = k; this._r = 0; this._draw(); } }
   connectedCallback() { if (this._h) { this._r = 0; this._k = this._hk(); requestAnimationFrame(() => this._draw()); } }
   _hidden() { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz) || {}; return !!(w.hints && w.hints[this._c.hint] === 0); }
   _wrap(v) { const w = this.parentElement; if (this._c.hint_sc && w && w.classList.contains('cw')) w.style.display = v; }
   _draw() { const c = this._c, D = Object.assign({}, HG_HINTS[c.hint] || {}, c), h = this._h; if (!h) return; this._r = 1;
-    if (this._hidden() || (c.hint_sc && typeof HGL !== 'undefined' && HGL.data && (HGL.get(c.hint_sc).added || []).length)) { this.style.display = 'none'; this.shadowRoot.innerHTML = ''; this._wrap('none'); return; } this.style.display = ''; this._wrap('');
+    if (this._hidden() || (c.hint_sc && typeof HGL !== 'undefined' && HGL.data && (HGL.get(c.hint_sc).added || []).length >= HG_HINT_MIN)) { this.style.display = 'none'; this.shadowRoot.innerHTML = ''; this._wrap('none'); return; } this.style.display = ''; this._wrap('');
     const C = D.comp && typeof HG_COMP !== 'undefined' && HG_COMP.find((x) => x.id === D.comp), sl = C && C.slots.find((x) => x.req), pick = sl && typeof hgSlotCands === 'function' && hgSlotCands(h, sl).length;
     const admin = h.user && h.user.is_admin;
     this.shadowRoot.innerHTML = `<style>${HG_HINT_CSS}</style><div class="hn" role="note"><div class="hd"><span class="ic">${H.icon(D.icon || 'mdi:information-outline')}</span><span><b>${H.esc(D.t || '')}</b><small>${H.esc(D.s || hgTr('Brak danych do wyświetlenia', 'Nothing to show yet'))}</small></span></div><p>${H.esc(D.d || '')}</p>
@@ -296,6 +298,7 @@ const HGLookX = {
       <div class="lcv-f"><span>${hgTr('Ikona', 'Icon')}</span><div class="lcv-ic">${IC.map((i) => `<button data-hge="lx-ci" data-i="${i}" aria-pressed="${c.i === i}" aria-label="${i}">${H.icon(i)}</button>`).join('')}<input data-cv="i" value="${H.esc(c.i || '')}" placeholder="mdi:…" autocomplete="off" aria-label="${hgTr('Własna ikona', 'Custom icon')}"></div></div>
       <label class="lcv-f"><span>${hgTr('Ścieżka', 'Path')}</span><span class="lcv-p">/${H.esc(HG_DASH())}/<input data-cv="p" maxlength="32" value="${H.esc(c.p || '')}" placeholder="${hgTr('ogrod', 'garden')}" autocomplete="off" ${ed ? 'disabled' : ''}></span></label>
       <div class="lcv-f"><span>${hgTr('Układ', 'Layout')}</span><div class="lcv-l">${L.map(([k, l, i, d]) => `<button data-hge="lx-cl" data-l="${k}" aria-pressed="${(c.lay || 'grid') === k}">${H.icon(i)}<b>${l}</b><small>${d}</small></button>`).join('')}</div></div>
+      <div class="lcv-f"><span>${hgTr('Szerokość panelu', 'Panel width')}</span>${hgPwPick(c.pw || 'narrow', 'lx-cw')}<style>${HG_PW_CSS}</style></div>
       <div class="lcv-f"><span>${hgTr('Kolumny na urządzeniach', 'Columns per device')}</span><div class="lcv-r">${num('cm', hgTr('Telefon', 'Phone'), 1)}${num('ct', 'Tablet', 2)}${num('cd', hgTr('Komputer', 'Desktop'), c.lay === 'panel' ? 2 : 3)}<label class="lcv-n"><span>${hgTr('Maks. szerokość', 'Max width')}</span><select data-cv="mw">${[['0', hgTr('Pełna', 'Full')], ['960', '960 px'], ['1200', '1200 px'], ['1440', '1440 px']].map(([v, l]) => `<option value="${v}" ${String(c.mw || 0) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div></div>
       ${c.err ? `<p class="lcv-e" role="alert">${H.esc(c.err)}</p>` : ''}
       <div class="lcv-a">${ed ? `<button class="lx-hbtn lcv-del" data-hge="lx-cd">${H.icon('mdi:trash-can-outline')}${c.del ? hgTr('Na pewno usunąć?', 'Delete for sure?') : hgTr('Usuń widok', 'Delete view')}</button>` : ''}<button class="lx-hbtn" data-hge="lx-cx">${hgTr('Anuluj', 'Cancel')}</button><button class="lx-hbtn ok" data-hge="lx-cs2">${H.icon('mdi:check')}${ed ? hgTr('Zapisz', 'Save') : hgTr('Utwórz widok', 'Create view')}</button></div></div>
@@ -342,11 +345,12 @@ const HGLookX = {
   async act(page, b, a) { const h = page._hass;
     if (a.startsWith('lx-c') && a !== 'lx-cs') { const slug = (x) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
       if (a === 'lx-cn') { this.cv = { n: '', s: '', i: 'mdi:view-grid-outline', p: '', lay: 'grid', cm: 1, ct: 2, cd: 3, mw: 0 }; return page._eLook(); }
-      if (a === 'lx-ce') { const c = ((HGL.data.wiz || {}).custom || []).find((x) => x.p === b.dataset.v); if (c) this.cv = Object.assign({}, c, { old: c.p }); return page._eLook(); }
+      if (a === 'lx-ce') { const c = ((HGL.data.wiz || {}).custom || []).find((x) => x.p === b.dataset.v); if (c) this.cv = Object.assign({}, c, { old: c.p, pw: (HGL.data.pw || {})[c.p] || 'narrow' }); return page._eLook(); }
       this.cvSync(page); const c = this.cv; if (!c) return;
       if (a === 'lx-cx') { this.cv = null; return page._eLook(); }
       if (a === 'lx-ci') { c.i = b.dataset.i; return page._eLook(); }
       if (a === 'lx-cl') { c.lay = b.dataset.l; return page._eLook(); }
+      if (a === 'lx-cw') { c.pw = b.dataset.w; hgPwMark(b); if (c.old && page._config.view === c.old) { HGL.data.pw = Object.assign({}, HGL.data.pw, { [c.old]: c.pw }); page._panelGrid(page.getAttribute('mode')); } return; }
       const w = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {}), CU = (w.custom || []).slice(), cur = this.views();
       if (a === 'lx-cd') { if (!c.del) { c.del = 1; return page._eLook(); }
         w.custom = CU.filter((x) => x.p !== c.old); w.views = cur.order.filter((v) => cur.on.has(v) && v !== c.old && v !== 'dashboard'); w.ts = Date.now(); this.cv = null; this.pend = null; await HGL.save(h);
@@ -355,7 +359,7 @@ const HGLookX = {
         c.err = !c.n ? hgTr('Podaj nazwę widoku.', 'Enter a view name.') : !c.p ? hgTr('Podaj ścieżkę (litery i cyfry).', 'Enter a path (letters and digits).') : taken.includes(c.p) ? hgTr(`Ścieżka /${c.p} jest już zajęta.`, `The path /${c.p} is already taken.`) : !/^mdi:[a-z0-9-]+$/.test(c.i || 'mdi:x') ? hgTr('Ikona w formacie mdi:nazwa.', 'Icon must be in the mdi:name format.') : '';
         if (c.err) return page._eLook();
         const rec = { p: c.p, n: c.n, ...(c.s ? { s: c.s.slice(0, 48) } : {}), i: c.i || 'mdi:view-grid-outline', lay: c.lay || 'grid', cm: +c.cm || 1, ct: +c.ct || 2, cd: +c.cd || 3, ...(+c.mw ? { mw: +c.mw } : {}) };
-        const j = CU.findIndex((x) => x.p === c.old); if (j >= 0) CU[j] = rec; else CU.push(rec); w.custom = CU;
+        const j = CU.findIndex((x) => x.p === c.old); if (j >= 0) CU[j] = rec; else CU.push(rec); w.custom = CU; HGL.data.pw = Object.assign({}, HGL.data.pw, { [rec.p]: c.pw || 'narrow' });
         const on = cur.order.filter((v) => cur.on.has(v) && v !== 'dashboard'); if (!c.old) on.push(rec.p); w.views = on; w.ts = Date.now(); this.cv = null; this.pend = null; await HGL.save(h);
         page._eToast((c.old ? hgTr('Zapisano widok: ', 'View saved: ') : hgTr('Utworzono widok: ', 'View created: ')) + rec.n + hgTr(' (odświeżanie…)', ' (reloading…)')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); } }
     if (a === 'lx-hacs') { const p = HG_PKGS.find((x) => x.id === b.dataset.p); if (!p) return; this.hacsGo = Object.assign({}, this.hacsGo, { [p.id]: 1 }); if (!window.__hgDryRun) { if (hgHacsOpen(h, p.rid, p.repo)) page._editExit && page._editExit(false); } else page._eLook(); return; }

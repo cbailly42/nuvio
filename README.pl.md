@@ -258,6 +258,10 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.10
+- Nowe: szerokość panelu dla każdego widoku. Każdy widok (wbudowany i własny) ma do wyboru **Panel wąski** (kolumna po prawej jak w głównym Panelu, lewa strona wolna na tytuł i tło) albo **Panel na całą szerokość** (jak w Pokojach), z małymi podglądami. Wybór jest w arkuszu tytułu widoku (tryb edycji, tytuł) i w formularzu własnego widoku, działa od razu bez ponownego otwierania okna i zapisuje się dla każdego widoku. Wąski panel mieści najwyżej dwie kolumny; na telefonie panel zawsze zajmuje całą szerokość.
+- Zmiana: podpowiedź pustego widoku zostaje, dopóki własny widok nie ma trzech elementów, i wyświetla się pod kafelkami, więc widok z jednym wierszem nie wygląda już na pusty.
+
 ### 0.3.9
 - Poprawka: układy własnych widoków naprawdę się różnią. **Siatka** to równe rzędy z kartami rozciągniętymi do wysokości rzędu, **Kolumny** układają karty od góry w każdej kolumnie po kolei bez wyrównania rzędów, **Masonry** wstawia każdą kartę do najkrótszej kolumny, a **Panel** pokazuje pogodę u góry i dwie kolumny. Zapisywane dla każdego widoku i stosowane po odświeżeniu.
 - Poprawka: okno ustawień widoku aktualizuje się na miejscu. Wybór układu, ikony czy innej opcji nie zamyka już i nie otwiera okna od nowa; zostają pozycja przewinięcia, wpisany tekst i fokus.

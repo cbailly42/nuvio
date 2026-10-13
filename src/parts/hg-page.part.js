@@ -341,6 +341,8 @@ class HGPage extends HTMLElement {
       else { let best = Infinity; for (let c = 0; c + s <= n; c++) { const t = Math.max(...H.slice(c, c + s)); if (t < best) { best = t; col = c; } } }
       const top = Math.max(...H.slice(col, col + s)); for (let c = col; c < col + s; c++) H[c] = top + k;
       w.style.gridColumn = `${col + 1} / span ${s}`; w.style.gridRow = `${top + 1} / span ${k}`; }); }
+  _pwSet() { const L = window.__hgL, m = (L && L.data && L.data.pw) || {}; return m[this._config.view] || null; }
+  _pwCur() { return this._pwSet() || (this._config.panel && this._config.panel.wide ? 'wide' : 'narrow'); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
     if (mode === 'phone') {
@@ -370,13 +372,16 @@ class HGPage extends HTMLElement {
       else if (mode !== 'phone' && span && !cc.area) w.style.gridColumn = `span ${span}`;
       else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
     });
+    /* szerokość panelu wybrana dla widoku (wąski / cała szerokość); wąski panel mieści najwyżej 2 kolumny */
+    const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
+    if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
     el.style.alignItems = p.align === 'start' || p.masonry || p.flow === 'cols' ? 'start' : p.flow === 'grid' ? 'stretch' : '';
     const mm = p.masonry ? 'masonry' : p.flow === 'cols' ? 'cols' : '';
     if (mm && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masMode = mm; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; this._masMode = ''; for (const w of this._cardWraps) { w.style.gridRowEnd = ''; w.style.gridRow = ''; if (w.dataset.masGc != null) { w.style.gridColumn = w.dataset.masGc; delete w.dataset.masGc; } } }
     this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
-    this.toggleAttribute('wide-panel', !!p.wide);
+    this.toggleAttribute('wide-panel', wd);
     this.toggleAttribute('fit-panel', !!p.fit);
     if (this._pro) { this._pro.disconnect(); this._pro.observe(el); for (const k of el.children) this._pro.observe(k); }
     this._moreUpd();

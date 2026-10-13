@@ -258,6 +258,10 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.10
+- New: panel width per view. Every view (built in and custom) offers **Narrow panel** (a right column like the main Panel, leaving the left side for the title and background) or **Full width panel** (like Rooms), with small previews. The choice is in the view title sheet (edit mode, title) and in the custom view form, applies live without reopening the dialog and is saved per view. A narrow panel holds at most two columns; on phones the panel is always full width.
+- Changed: the empty view hint stays visible until a custom view has three items and sits below the tiles, so a view with a single row no longer looks empty.
+
 ### 0.3.9
 - Fixed: custom view layouts now really differ. **Grid** keeps equal rows with cards stretched to the row height, **Columns** stacks cards top down in each column in order without aligning rows, **Masonry** places each card in the shortest column, and **Panel** shows the weather on top with two columns. Saved per view and applied after reload.
 - Fixed: the view settings dialog updates in place. Choosing a layout, icon or other option no longer closes and reopens the dialog; scroll position, typed text and focus are kept.
