@@ -43,8 +43,8 @@ const HGStats = {
 /* ===================== SOLAR ===================== */
 class HGSolarCard extends HGBase {
   defaults() {
-    return { title: 'Energia słoneczna dziś', icon: 'mdi:solar-panel', statistic: null, today_entity: null, days: 7,
-      caption: 'kWh czystej energii', offline_label: 'falownik offline', locale: 'pl-PL', expand: null, no_data: 'Brak źródła danych' };
+    return { title: hgTr('Energia słoneczna dziś', 'Solar energy today'), icon: 'mdi:solar-panel', statistic: null, today_entity: null, days: 7,
+      caption: hgTr('kWh czystej energii', 'kWh of clean energy'), offline_label: hgTr('falownik offline', 'inverter offline'), locale: null, expand: null, no_data: hgTr('Brak źródła danych', 'No data source') };
   }
   ents() { return [this._config.today_entity, this._config.status_entity].filter(Boolean); }
   _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._w]; }
@@ -61,7 +61,7 @@ class HGSolarCard extends HGBase {
     if (!this._hass || !this._config || !this._config.statistic || (this._loading && !force)) return;
     this._loading = true;
     try {
-      if (force) HGStats.cache = {};
+      if (force) delete HGStats.cache[this._config.statistic + this._config.days];   // tylko własny wpis (inne karty zachowują pamięć)
       const v = await HGStats.daily(this._hass, [this._config.statistic], this._config.days);
       this._data = { t: Date.now(), v }; this._err = null;
     } catch (e) { this._err = String(e && e.message || e); }
@@ -93,8 +93,8 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     const c = this._config;
     const ts0 = H.st(this._hass, c.today_entity);
     const off0 = c.today_entity && (!ts0 || ts0.state === 'unavailable');
-    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.esc(c.today_entity)}: niedostępny">${H.esc(c.offline_label)}</span>` : ''}
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.esc(c.today_entity)}: ${hgTr('niedostępny', 'unavailable')}">${H.esc(c.offline_label)}</span>` : ''}
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     if (!c.statistic || this._err || (this._data && !this._data.v.has)) {
       return `<ha-card class="glass"><div class="top">${hd}</div><div class="ph" style="padding:0 14px"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || c.statistic || '')}</div></ha-card>`;
     }
@@ -106,7 +106,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     if (todayState != null && isFinite(todayState) && todayState > vals[vals.length - 1]) vals[vals.length - 1] = todayState;
     const n = vals.length, sel = this._sel == null ? n - 1 : this._sel;
     const W = this._w || 400, Hh = 100;
-    const pad = 0.06, xs = vals.map((_, i) => (pad + (i * (1 - 2 * pad)) / (n - 1)) * 100);
+    const pad = 0.06, xs = vals.map((_, i) => (n > 1 ? pad + (i * (1 - 2 * pad)) / (n - 1) : 0.5) * 100);   // days:1 -> punkt na środku
     const mx = Math.max(...vals, 0.001) * 1.15;
     const yv = (v) => 70 - (v / mx) * 58;   // % wysokości wykresu
     const pts = vals.map((v, i) => [xs[i], yv(v)]);
@@ -116,7 +116,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     const prev = sel > 0 ? vals[sel - 1] : null, cur = vals[sel];
     const delta = prev ? ((cur - prev) / prev) * 100 : null;
     const dd = days[sel];
-    const dlab = `<b>${dd.getDate()}</b> ${H.esc(dd.toLocaleDateString(c.locale, { day: 'numeric', month: 'long' }).replace(/^\d+\s*/, ''))}`;
+    const dlab = `<b>${dd.getDate()}</b> ${H.esc(dd.toLocaleDateString(c.locale || HG_LOC(), { day: 'numeric', month: 'long' }).replace(/^\d+\s*/, ''))}`;
     const today = vals[n - 1];
     return `<ha-card class="glass"><div class="top">${hd}
       <div class="v"><b>${H.fmt(today, 1)}</b><span>${H.esc(c.caption)}</span></div></div>
@@ -127,7 +127,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
         <div class="band" style="left:${xs[sel]}%"></div>
         <span class="dot" style="left:${xs[sel]}%;top:${pts[sel][1]}%"></span>
         <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.fmt(Math.abs(delta), 2) + '%'}</span></div>
-        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.esc(d.toLocaleDateString(c.locale))}: ${H.fmt(vals[i], 1)} kWh">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
+        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.esc(d.toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(vals[i], 1)} kWh">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
       </div></ha-card>`;
   }
   onAct(a, el) {
@@ -140,7 +140,7 @@ hgReg('hg-solar-card', HGSolarCard, 'Home Glass – Solar', 'Produkcja PV z osta
 
 /* ===================== BARS (raport zużycia) ===================== */
 class HGBarsCard extends HGBase {
-  defaults() { return { title: 'Zużycie z sieci', icon: 'mdi:transmission-tower', statistics: [], labels: [], colors: ['var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)'], days: 7, unit: 'kWh', locale: 'pl-PL', expand: null, no_data: 'Brak źródła danych' }; }
+  defaults() { return { title: hgTr('Zużycie z sieci', 'Grid consumption'), icon: 'mdi:transmission-tower', statistics: [], labels: [], colors: ['var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)'], days: 7, unit: 'kWh', locale: null, expand: null, no_data: hgTr('Brak źródła danych', 'No data source') }; }
   ents() { return []; }
   _extraSig() { return [this._data ? this._data.t : 0]; }
   connectedCallback() { super.connectedCallback(); this._load(); this._iv = setInterval(() => this._load(), 15 * 60 * 1000); }
@@ -168,7 +168,7 @@ ha-card.glass{ display:flex; flex-direction:column; }
   render() {
     const c = this._config;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="Rozwiń" title="Szczegóły">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     if (this._err || (this._data && !this._data.v.has)) return `<ha-card class="glass">${hd}<div class="ph"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || '')}</div></ha-card>`;
     if (!this._data) return `<ha-card class="glass">${hd}</ha-card>`;
     const { days, byId } = this._data.v;
@@ -176,9 +176,9 @@ ha-card.glass{ display:flex; flex-direction:column; }
     const tot = rows.map((r) => r.reduce((a, b) => a + b, 0)); const mx = Math.max(...tot, 0.001);
     const week = tot.reduce((a, b) => a + b, 0);
     return `<ha-card class="glass">${hd}
-      <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${c.days} dni</span></div>
+      <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${hgTr(`${c.days} dni`, `${c.days} days`)}</span></div>
       <div class="lg">${c.statistics.map((id, i) => `<span><i style="background:${c.colors[i % c.colors.length]}"></i>${H.esc(c.labels[i] || id)}</span>`).join('')}</div>
-      <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.esc(days[i].toLocaleDateString(c.locale))}: ${H.fmt(tot[i], 1)} ${c.unit}"><em>${H.fmt(tot[i], 1)}</em>
+      <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.esc(days[i].toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(tot[i], 1)} ${c.unit}"><em>${H.fmt(tot[i], 1)}</em>
         <div class="st" style="height:${Math.max(3, (tot[i] / mx) * 100)}%">${r.map((v, j) => `<div style="height:${tot[i] ? (v / tot[i]) * 100 : 0}%;background:${c.colors[j % c.colors.length]}"></div>`).join('')}</div>
         <small>${H.DAYS[days[i].getDay()]}</small></div>`).join('')}</div></ha-card>`;
   }
@@ -207,17 +207,17 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
     const nm = c.name || H.name(this._hass, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>brak encji</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>${hgTr('brak encji', 'entity not found')}</div></ha-card>`;
     const a = s.attributes, sf = a.supported_features || 0, st = s.state;
-    const pic = a.entity_picture ? `style="background-image:url('${H.esc(a.entity_picture)}')"` : '';
+    const pic = a.entity_picture ? `style="background-image:url('${H.cssUrl(a.entity_picture)}')"` : '';
     const sub = [a.media_title, a.media_artist].filter(Boolean).join(' · ') || H.stateLabel(st);
-    const AL = { prev: 'Poprzedni', next: 'Następny', on: 'Włącz', off: 'Wyłącz' };
+    const AL = { prev: hgTr('Poprzedni', 'Previous'), next: hgTr('Następny', 'Next'), on: hgTr('Włącz', 'Turn on'), off: hgTr('Wyłącz', 'Turn off') };
     const b = (f, act, ic, cls = '') => (sf & f ? `<button class="cb ${cls}" data-act="${act}" aria-label="${AL[act]}" title="${AL[act]}">${H.icon(ic)}</button>` : '');
     const unav = st === 'unavailable';
     return `<ha-card class="glass ${st === 'playing' ? 'playing' : ''}"><div class="row"><div class="art" ${pic}>${pic ? '' : H.icon(c.icon)}</div>
       <div class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></div>
-      <button class="ib kebab" data-act="more" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-vertical')}</button></div>
-      ${unav ? '' : `<div class="ctl">${b(16, 'prev', 'mdi:skip-previous')}${(sf & 1) || (sf & 16384) ? `<button class="cb pp" data-act="pp" aria-label="Odtwórz/pauza">${H.icon(st === 'playing' ? 'mdi:pause' : 'mdi:play')}</button>` : ''}${b(32, 'next', 'mdi:skip-next')}
+      <button class="ib kebab" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button></div>
+      ${unav ? '' : `<div class="ctl">${b(16, 'prev', 'mdi:skip-previous')}${(sf & 1) || (sf & 16384) ? `<button class="cb pp" data-act="pp" aria-label="${hgTr('Odtwórz/pauza', 'Play/pause')}">${H.icon(st === 'playing' ? 'mdi:pause' : 'mdi:play')}</button>` : ''}${b(32, 'next', 'mdi:skip-next')}
         ${st === 'off' ? b(128, 'on', 'mdi:power') : b(256, 'off', 'mdi:power')}</div>`}</ha-card>`;
   }
   onAct(a) {
@@ -235,11 +235,11 @@ const hgAvatar = (hass, e, cls = 'av') => {
   const pic = s && s.attributes.entity_picture;
   const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
   const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
-  return pic ? `<span class="${cls}" style="background-image:url('${H.esc(pic)}')"></span>`
+  return pic ? `<span class="${cls}" style="background-image:url('${H.cssUrl(pic)}')"></span>`
     : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
 };
 class HGPersonCard extends HGBase {
-  defaults() { return { home_label: 'W domu', away_label: 'Poza domem', locale: 'pl-PL' }; }
+  defaults() { return { home_label: hgTr('W domu', 'Home'), away_label: hgTr('Poza domem', 'Away'), locale: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
@@ -252,14 +252,14 @@ ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; 
   }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(c.entity)}</b>brak encji</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(c.entity)}</b>${hgTr('brak encji', 'entity not found')}</div></ha-card>`;
     const home = s.state === 'home';
     const zone = home ? c.home_label : s.state === 'not_home' ? c.away_label : H.stateLabel(s.state);
     const since = new Date(s.last_changed);
     const mins = Math.round((Date.now() - since) / 60000);
-    const rel = mins < 60 ? `${mins} min` : mins < 1440 ? `${Math.round(mins / 60)} godz.` : Math.round(mins / 1440) === 1 ? '1 dnia' : `${Math.round(mins / 1440)} dni`;
+    const rel = mins < 60 ? `${mins} min` : mins < 1440 ? hgTr(`${Math.round(mins / 60)} godz.`, `${Math.round(mins / 60)} h`) : Math.round(mins / 1440) === 1 ? hgTr('1 dnia', '1 day') : hgTr(`${Math.round(mins / 1440)} dni`, `${Math.round(mins / 1440)} days`);
     return `<ha-card class="glass ${home ? 'home' : ''}" data-act="more">${hgAvatar(this._hass, c.entity)}
-      <div class="tx"><b>${H.esc(c.name || s.attributes.friendly_name)}</b><span>${H.icon(home ? 'mdi:home' : 'mdi:map-marker')}${H.esc(zone)}</span><small>od ${rel}</small></div></ha-card>`;
+      <div class="tx"><b>${H.esc(c.name || s.attributes.friendly_name)}</b><span>${H.icon(home ? 'mdi:home' : 'mdi:map-marker')}${H.esc(zone)}</span><small>${hgTr('od', 'for')} ${rel}</small></div></ha-card>`;
   }
   _extraSig() { return Math.floor(Date.now() / 60000); }
   onAct() { H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
@@ -268,7 +268,7 @@ hgReg('hg-person-card', HGPersonCard, 'Home Glass – Person', 'Osoba z awatarem
 
 /* ===================== LINK ===================== */
 class HGLinkCard extends HGBase {
-  defaults() { return { title: 'Otwórz', subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
+  defaults() { return { title: hgTr('Otwórz', 'Open'), subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }

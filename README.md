@@ -48,6 +48,8 @@ and entities from Home Assistant and generates the views. Everything can then be
 - **Edit mode**: drag & drop, hide/restore, S/M/L sizes, add tiles from any entity, swap entities, display styles with live preview,
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
+- **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
+- **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
 - **Light and dark mode**, touch friendly, reduced-motion aware.
 
 ## Components
@@ -162,6 +164,13 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 - `custom:nuvio-energy-card`: load percentage of the total phase power against your maximum (no screenshot yet: it does not render correctly outside a fixed-height grid).
 - `custom:nuvio-bars-card`: daily consumption bars from statistics (no screenshot yet: same fixed-height issue).
 - `custom:nuvio-tiles-card`: tiles you add in edit mode (shown in every view after you add tiles).
+- General components (no screenshots yet), all available in edit mode under "+ Add":
+  - `custom:nuvio-slider-card`: horizontal or vertical slider for lights, volume, fans, covers, valves and numbers.
+  - `custom:nuvio-button-card`: tile or pill button for scripts, scenes, `button.press` and toggles.
+  - `custom:nuvio-entities-card`: rows with a toggle or value for any mix of entities.
+  - `custom:nuvio-select-card`: `input_select` / `select` options as chips or a list.
+  - `custom:nuvio-stepper-card`: plus / minus for counters and numbers.
+  - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
 ### Planned
@@ -170,10 +179,10 @@ From [docs/STATUS.md](docs/STATUS.md). There are no other planned components in 
 
 | Item | Status |
 |---|---|
-| View editor: add, rename and reorder whole views | not started |
-| Full i18n of cards and edit mode (UI outside the strategy and wizard is Polish only) | partial |
+| View editor: add, rename and reorder whole views | done (Appearance → Views) |
+| Full i18n of cards and edit mode | done (Polish / English) |
 | Config export / import UI | not started |
-| Empty-state hints on an empty Home view | not started |
+| Empty-state hints on an empty Home view | done |
 
 ## Installation
 
@@ -231,6 +240,29 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 ```
 
 Releases are built by GitHub Actions on `v*` tags.
+
+## Changelog
+
+### Unreleased
+- Fixed: scene buttons now call `scene.turn_on` (they did nothing before).
+- Fixed: kW / MW power sensors are converted to watts in the power, energy, phases and PV cards.
+- Fixed: cameras in the room view no longer break after ~10 minutes (rotating image token).
+- Fixed: layout saves merge with the latest server copy (no overwrite between devices); the local cache is per Home Assistant user.
+- Fixed: AC chevrons no longer keep repeating after release outside the card; `heat_cool` range thermostats are read-only; 0.5 °C default step.
+- Fixed: TV in standby turns on; play/pause, cover and valve buttons respect what the device supports.
+- Fixed: month calendar refreshes; alarm code field keeps focus; weather uses the precipitation unit and text wind bearings.
+- Fixed: page no longer crashes with an empty rail; leaving edit mode by navigation saves instead of discarding.
+- Added: English UI for all cards, the page and edit mode.
+- Added: keyboard reordering in edit mode; undo after removing a tile restores only that tile.
+- HACS: release zip (`zip_release`) so fonts, backgrounds and weather icons are installed with the plugin.
+
+### 0.1.2 and later on main
+- Multi-step onboarding wizard; custom views (Appearance → Views); Map and Calendar components and views.
+- General components: slider, button, entities, select, stepper, gauge.
+- Empty-state hint cards, display modes for group cards, editable view title and subtitle, stacked toaster.
+
+### 0.1.1
+- Component-first "+ Add" gallery with live preview; kiosk drawer fix; component catalog in the README.
 
 ## License & credits
 

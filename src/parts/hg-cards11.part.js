@@ -1,7 +1,7 @@
 /* ===== hg-net-card: widok „Sieć” (UniFi Network + Speedtest). Jedna klasa, sekcje: wan | gw | dev | wlan | cl.
    Konfiguracja jawna w build.py (CFG['net']); brakujące/niedostępne encje są pomijane. ===== */
 const HGConfirm = {
-  ask(title, text, ok = 'Potwierdź', danger = true, info = false) {
+  ask(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
     return new Promise((res) => {
       const x = document.createElement('div'); x.className = 'hg-confirm';
       const sr = x.attachShadow({ mode: 'open' });
@@ -15,7 +15,7 @@ const HGConfirm = {
 .r button{ height:44px; padding:0 18px; border-radius:22px; font-size:var(--fs-sm); font-weight:600; background:rgba(0,0,0,.06); color:#1E2023; }
 .r button.ok{ background:${danger ? '#C62828' : '#1E2023'}; color:#fff; }
 `)}</style><div class="d" role="alertdialog" aria-modal="true" aria-label="${H.esc(title)}"><b>${H.esc(title)}</b><p>${H.esc(text)}</p>
-        <div class="r">${info ? '' : '<button class="no" data-v="0">Anuluj</button>'}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
+        <div class="r">${info ? '' : `<button class="no" data-v="0">${hgTr('Anuluj', 'Cancel')}</button>`}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
       const done = (v) => { document.removeEventListener('keydown', key); x.remove(); res(v); };
       const key = (e) => { if (e.key === 'Escape') done(false); };
       x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x) return done(false); const b = p.find((n) => n.dataset && n.dataset.v); if (b) done(b.dataset.v === '1'); });
@@ -25,16 +25,16 @@ const HGConfirm = {
   },
 };
 window.HGConfirm = window.HGConfirm || HGConfirm;
-const hgPlK = (n) => (n === 1 ? 'klient' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'klienci' : 'klientów');
+const hgPlK = (n) => (hgCurLang() === 'en' ? (n === 1 ? 'client' : 'clients') : n === 1 ? 'klient' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'klienci' : 'klientów');
 const hgUp = (s) => { if (!s || !H.ok(s)) return null; const d = new Date(s.state); if (isNaN(d)) return null;
-  const m = Math.max(0, (Date.now() - d) / 60000); if (m < 60) return `${Math.round(m)} min`; const hh = m / 60; if (hh < 48) return `${Math.round(hh)} godz.`; return `${Math.round(hh / 24)} dni`; };
+  const m = Math.max(0, (Date.now() - d) / 60000); if (m < 60) return `${Math.round(m)} min`; const hh = m / 60; if (hh < 48) return hgTr(`${Math.round(hh)} godz.`, `${Math.round(hh)} h`); return hgTr(`${Math.round(hh / 24)} dni`, `${Math.round(hh / 24)} days`); };
 
 class HGNetCard extends HGBase {
   defaults() { return { section: 'wan', net: {} }; }
   _n() { return this._config.net || {}; }
   _clientEnts() {
     const h = this._hass, n = this._n(), cl = n.clients || {}, ex = new Set(cl.exclude || []);
-    const key = h.entities ? Object.keys(h.entities).length : 0;
+    const key = h.entities;      // rejestr encji: nowy obiekt przy każdej zmianie
     if (this._clK === key && this._clL) return this._clL;
     const L = Object.values(h.entities || {}).filter((e) => e.platform === (cl.platform || 'unifi') && e.entity_id.startsWith('device_tracker.') && !ex.has(e.entity_id) && !e.hidden).map((e) => e.entity_id);
     this._clK = key; this._clL = L; return L;
@@ -52,13 +52,15 @@ class HGNetCard extends HGBase {
   _extraSig() { return [this._config.section === 'wan' ? (this._hist || []).length : 0, this._flt, this._srt, Math.floor(Date.now() / 60000)]; }
   set hass(h) { const first = !this._hass; this._hass = h; window.__hgHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
   get hass() { return this._hass; }
+  connectedCallback() { super.connectedCallback(); if (this._hass && this._config && this._config.section === 'wan' && !this._hT) this._ldHist(); }
+  disconnectedCallback() { clearTimeout(this._hT); this._hT = 0; }
   async _ldHist() {
-    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true;
+    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true; clearTimeout(this._hT); this._hT = 0;
     try {
       const r = await h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 24 * 3600e3).toISOString(), entity_ids: [e.entity], minimal_response: true, no_attributes: true });
       this._hist = ((r && r[e.entity]) || []).map((x) => parseFloat(x.s)).filter((v) => isFinite(v)); this.rerender();
     } catch (err) { this._hist = []; }
-    this._hl = false; setTimeout(() => this.isConnected && this._ldHist(), 10 * 60000);
+    this._hl = false; if (this.isConnected) this._hT = setTimeout(() => { this._hT = 0; if (this.isConnected) this._ldHist(); }, 10 * 60000);
   }
   css() {
     return U(`
@@ -129,14 +131,14 @@ ha-card.glass{ container-type:inline-size; }
   _upd(e) {
     const s = this._st(e); if (!s || !H.ok(s)) return '';
     const a = s.attributes, av = s.state === 'on';
-    return `<button class="upd ${av ? 'av' : ''}" data-act="more" data-e="${H.esc(e)}">${H.icon(av ? 'mdi:package-up' : 'mdi:check-circle-outline')}<span>${av ? `Dostępna aktualizacja ${H.esc(a.latest_version || '')}` : `Oprogramowanie aktualne${a.installed_version ? ' · ' + H.esc(a.installed_version) : ''}`}</span></button>`;
+    return `<button class="upd ${av ? 'av' : ''}" data-act="more" data-e="${H.esc(e)}">${H.icon(av ? 'mdi:package-up' : 'mdi:check-circle-outline')}<span>${av ? `${hgTr('Dostępna aktualizacja', 'Update available')} ${H.esc(a.latest_version || '')}` : `${hgTr('Oprogramowanie aktualne', 'Firmware up to date')}${a.installed_version ? ' · ' + H.esc(a.installed_version) : ''}`}</span></button>`;
   }
   /* porty: rząd numerowanych pigułek (stan, zablokowane = chronione: uplink/WAN) */
   _ports(L, dn) {
     const P = (L || []).map((p) => (typeof p === 'string' ? { entity: p } : p)).map((p) => [p, this._st(p.entity)]).filter(([, st]) => st && H.ok(st));
     if (!P.length) return '';
-    return `<div class="pts" role="group" aria-label="Porty · ${H.esc(dn)}">${P.map(([p, st], i) => { const on = st.state === 'on', n = p.n || (String(p.entity).match(/_(\d+)$/) || [])[1] || i + 1;
-      const t = `Port ${n}${p.label ? ' · ' + p.label : ''}: ${on ? 'włączony' : 'wyłączony'}${p.lock ? ' · chroniony (nie wyłączaj)' : ''}`;
+    return `<div class="pts" role="group" aria-label="${hgTr('Porty', 'Ports')} · ${H.esc(dn)}">${P.map(([p, st], i) => { const on = st.state === 'on', n = p.n || (String(p.entity).match(/_(\d+)$/) || [])[1] || i + 1;
+      const t = `Port ${n}${p.label ? ' · ' + p.label : ''}: ${on ? hgTr('włączony', 'on') : hgTr('wyłączony', 'off')}${p.lock ? hgTr(' · chroniony (nie wyłączaj)', ' · protected (do not turn off)') : ''}`;
       return `<button class="pt ${on ? 'on' : ''} ${p.lock ? 'lk' : ''}" data-act="port" data-e="${H.esc(p.entity)}" data-n="${H.esc(n)}" data-l="${H.esc(p.label || '')}" data-d="${H.esc(dn)}" ${p.lock ? 'data-lock="1" aria-disabled="true"' : ''} aria-pressed="${on}" aria-label="${H.esc(t)}" title="${H.esc(t)}">${p.lock ? H.icon('mdi:lock') : `<i></i>`}<b>${H.esc(n)}</b>${p.label ? `<small>${H.esc(p.label)}</small>` : ''}</button>`; }).join('')}</div>`;
   }
   _hd(icon, title, note) { return `<div class="hd">${H.icon(icon, 'ic')}<span class="tt">${H.esc(title)}</span><span class="sp"></span>${note ? `<span class="note">${note}</span>` : ''}</div>`; }
@@ -146,22 +148,22 @@ ha-card.glass{ container-type:inline-size; }
     const ok = gs && H.ok(gs) ? gs.state === 'connected' : tr && H.ok(tr) ? tr.state === 'home' : null;
     const ip = tr && H.ok(tr) ? tr.attributes.ip : null, up = hgUp(this._st(g.uptime));
     const lat = (w.latency || []).map((x) => [x, this._num(x.entity)]).filter(([, v]) => v != null);
-    const sp = [[w.down, 'mdi:download', 'Pobieranie', 'Mb/s'], [w.up, 'mdi:upload', 'Wysyłanie', 'Mb/s'], [w.ping, 'mdi:timer-outline', 'Ping', 'ms']].map(([e, i, l, u]) => this._kv(i, l, this._num(e), u)).join('');
+    const sp = [[w.down, 'mdi:download', hgTr('Pobieranie', 'Download'), 'Mb/s'], [w.up, 'mdi:upload', hgTr('Wysyłanie', 'Upload'), 'Mb/s'], [w.ping, 'mdi:timer-outline', 'Ping', 'ms']].map(([e, i, l, u]) => this._kv(i, l, this._num(e), u)).join('');
     const hs = this._hist || [], mx = Math.max(...hs, 1), mn = Math.min(...hs, mx);
     const pts = hs.length > 2 ? hs.map((v, i) => `${(i / (hs.length - 1) * 100).toFixed(2)},${(40 - ((v - mn) / Math.max(1, mx - mn)) * 36).toFixed(1)}`).join(' ') : '';
     return `${this._hd('mdi:web', 'Internet')}
-      <div class="big"><span class="bd ${ok === true ? 'ok' : ok === false ? 'bad' : ''}">${H.icon(ok === false ? 'mdi:web-off' : 'mdi:web')}</span><div><b>${ok === true ? 'Połączono' : ok === false ? 'Brak połączenia' : 'Stan nieznany'}</b><span>${[ip ? 'IP ' + H.esc(ip) : '', up ? 'bramka działa od ' + up : ''].filter(Boolean).join(' · ')}</span></div></div>
+      <div class="big"><span class="bd ${ok === true ? 'ok' : ok === false ? 'bad' : ''}">${H.icon(ok === false ? 'mdi:web-off' : 'mdi:web')}</span><div><b>${ok === true ? hgTr('Połączono', 'Connected') : ok === false ? hgTr('Brak połączenia', 'Disconnected') : hgTr('Stan nieznany', 'Unknown state')}</b><span>${[ip ? 'IP ' + H.esc(ip) : '', up ? hgTr('bramka działa od ', 'gateway up for ') + up : ''].filter(Boolean).join(' · ')}</span></div></div>
       ${lat.length || sp ? `<div class="kv">${lat.map(([x, v]) => this._kv('mdi:timer-outline', x.name, v, 'ms')).join('')}${sp}</div>` : ''}
-      ${pts ? `<div class="spk" aria-label="Opóźnienie WAN, ostatnie 24 h"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points="${pts}"/></svg><small><span>−24 h</span><span>opóźnienie ${H.esc((w.latency || [])[0].name)} · ${H.fmt(mn, 0)}–${H.fmt(mx, 0)} ms</span><span>teraz</span></small></div>` : ''}`;
+      ${pts ? `<div class="spk" aria-label="${hgTr('Opóźnienie WAN, ostatnie 24 h', 'WAN latency, last 24 h')}"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points="${pts}"/></svg><small><span>−24 h</span><span>${hgTr('opóźnienie', 'latency')} ${H.esc((w.latency || [])[0].name)} · ${H.fmt(mn, 0)}–${H.fmt(mx, 0)} ms</span><span>${hgTr('teraz', 'now')}</span></small></div>` : ''}`;
   }
   _gw() {
     const g = this._n().gateway || {}; if (!g.state && !g.cpu) return '';
     const gs = this._st(g.state), cpu = this._num(g.cpu), mem = this._num(g.mem), tmp = this._num(g.temp), up = hgUp(this._st(g.uptime)), rs = this._st(g.restart);
-    return `${this._hd('mdi:router-network', g.name || 'Bramka', gs && H.ok(gs) ? `<span class="chip ${gs.state === 'connected' ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, gs))}</span>` : '')}
-      <div class="kv">${this._kv('mdi:cpu-64-bit', 'Procesor', cpu, '%', cpu)}${this._kv('mdi:memory', 'Pamięć', mem, '%', mem)}${this._kv('mdi:thermometer', 'Temp. CPU', tmp, '°C')}${this._kv('mdi:timer-sand', 'Działa od', up, '')}</div>
-      ${this._ports(g.ports, g.name || 'Bramka')}
+    return `${this._hd('mdi:router-network', g.name || hgTr('Bramka', 'Gateway'), gs && H.ok(gs) ? `<span class="chip ${gs.state === 'connected' ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, gs))}</span>` : '')}
+      <div class="kv">${this._kv('mdi:cpu-64-bit', hgTr('Procesor', 'CPU'), cpu, '%', cpu)}${this._kv('mdi:memory', hgTr('Pamięć', 'Memory'), mem, '%', mem)}${this._kv('mdi:thermometer', hgTr('Temp. CPU', 'CPU temp.'), tmp, '°C')}${this._kv('mdi:timer-sand', hgTr('Działa od', 'Uptime'), up, '')}</div>
+      ${this._ports(g.ports, g.name || hgTr('Bramka', 'Gateway'))}
       ${this._upd(g.update)}
-      ${rs ? `<div class="act"><button class="btn" data-act="restart" data-e="${H.esc(g.restart)}" data-n="${H.esc(g.name || 'Bramka')}">${H.icon('mdi:restart')}Uruchom ponownie</button></div>` : ''}`;
+      ${rs ? `<div class="act"><button class="btn" data-act="restart" data-e="${H.esc(g.restart)}" data-n="${H.esc(g.name || hgTr('Bramka', 'Gateway'))}">${H.icon('mdi:restart')}${hgTr('Uruchom ponownie', 'Restart')}</button></div>` : ''}`;
   }
   _dev() {
     const L = (this._n().devices || []).filter((d) => this._st(d.state) || this._st(d.cpu));
@@ -172,22 +174,22 @@ ha-card.glass{ container-type:inline-size; }
       const ent = this._hass.entities && this._hass.entities[d.state], dev = ent && this._hass.devices ? this._hass.devices[ent.device_id] : null;
       const nm = d.name || (dev && (dev.name_by_user || dev.name)) || (s ? String(s.attributes.friendly_name || '').replace(/\s*(State|Stan)$/i, '') : '') || '—', model = d.model || (dev && dev.model) || '';
       return `<div class="dv"><div class="t">${H.icon(d.kind === 'switch' ? 'mdi:switch' : 'mdi:access-point')}<span class="sp"></span>${s && H.ok(s) ? `<span class="chip ${ok ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, s))}</span>` : ''}
-          ${this._st(d.restart) ? `<button class="ib2" data-act="restart" data-e="${H.esc(d.restart)}" data-n="${H.esc(nm)}" aria-label="Uruchom ponownie ${H.esc(nm)}" title="Uruchom ponownie">${H.icon('mdi:restart')}</button>` : ''}</div>
+          ${this._st(d.restart) ? `<button class="ib2" data-act="restart" data-e="${H.esc(d.restart)}" data-n="${H.esc(nm)}" aria-label="${hgTr('Uruchom ponownie', 'Restart')} ${H.esc(nm)}" title="${hgTr('Uruchom ponownie', 'Restart')}">${H.icon('mdi:restart')}</button>` : ''}</div>
         <div class="nm"><b title="${H.esc(nm)}">${H.esc(nm)}</b>${model ? `<small>${H.esc(model)}</small>` : ''}</div>
-        <div class="m">${cl != null ? `<span><b>${H.fmt(cl, 0)}</b>${hgPlK(cl)}</span>` : ''}${cpu != null ? `<span><b>${H.fmt(cpu, 0)}%</b>CPU</span>` : ''}${mem != null ? `<span><b>${H.fmt(mem, 0)}%</b>pamięć</span>` : ''}</div>
-        ${up ? `<span class="upd">${H.icon('mdi:timer-sand')}działa od ${up}</span>` : ''}${ua ? this._upd(d.update) : ''}${ports}</div>`;
+        <div class="m">${cl != null ? `<span><b>${H.fmt(cl, 0)}</b>${hgPlK(cl)}</span>` : ''}${cpu != null ? `<span><b>${H.fmt(cpu, 0)}%</b>CPU</span>` : ''}${mem != null ? `<span><b>${H.fmt(mem, 0)}%</b>${hgTr('pamięć', 'memory')}</span>` : ''}</div>
+        ${up ? `<span class="upd">${H.icon('mdi:timer-sand')}${hgTr('działa od', 'up for')} ${up}</span>` : ''}${ua ? this._upd(d.update) : ''}${ports}</div>`;
     }).join('');
-    return `${this._hd('mdi:access-point-network', 'Punkty dostępowe i przełączniki', `${L.length} urządz.`)}<div class="devs">${tiles}</div>`;
+    return `${this._hd('mdi:access-point-network', hgTr('Punkty dostępowe i przełączniki', 'Access points and switches'), hgTr(`${L.length} urządz.`, `${L.length} devices`))}<div class="devs">${tiles}</div>`;
   }
   _wlan() {
     const W = (this._n().wlans || []).filter((x) => this._st(x.switch) || this._st(x.clients));
     const rows = W.map((x) => {
       const sw = this._st(x.switch), on = sw && sw.state === 'on', cl = this._num(x.clients), qr = this._st(x.qr);
       return `<div class="lr">${H.icon(on ? 'mdi:wifi' : 'mdi:wifi-off')}<div class="tx"><b>${H.esc(x.name)}</b><span>${[x.note, cl != null ? `${H.fmt(cl, 0)} ${hgPlK(cl)}` : ''].filter(Boolean).map(H.esc).join(' · ')}</span></div>
-        ${qr && H.ok(qr) ? `<button class="ib2" data-act="qr" data-e="${H.esc(x.qr)}" data-n="${H.esc(x.name)}" aria-label="Kod QR sieci ${H.esc(x.name)}" title="Kod QR">${H.icon('mdi:qrcode')}</button>` : ''}
-        ${sw && H.ok(sw) ? this.toggleHtml(on, 'wlan" data-e="' + H.esc(x.switch) + '" data-n="' + H.esc(x.name), false, `Sieć ${x.name}`) : ''}</div>`;
+        ${qr && H.ok(qr) ? `<button class="ib2" data-act="qr" data-e="${H.esc(x.qr)}" data-n="${H.esc(x.name)}" aria-label="${hgTr('Kod QR sieci', 'QR code for network')} ${H.esc(x.name)}" title="${hgTr('Kod QR', 'QR code')}">${H.icon('mdi:qrcode')}</button>` : ''}
+        ${sw && H.ok(sw) ? this.toggleHtml(on, 'wlan" data-e="' + H.esc(x.switch) + '" data-n="' + H.esc(x.name), false, `${hgTr('Sieć', 'Network')} ${x.name}`) : ''}</div>`;
     }).join('');
-    return `${this._hd('mdi:wifi', 'Sieci Wi‑Fi')}<div>${rows || '<div class="empty">Brak sieci Wi‑Fi w konfiguracji</div>'}</div>`;
+    return `${this._hd('mdi:wifi', hgTr('Sieci Wi‑Fi', 'Wi‑Fi networks'))}<div>${rows || `<div class="empty">${hgTr('Brak sieci Wi‑Fi w konfiguracji', 'No Wi‑Fi networks configured')}</div>`}</div>`;
   }
   _cname(s) {
     const a = s.attributes; let n = a.friendly_name || '';
@@ -205,25 +207,25 @@ ha-card.glass{ container-type:inline-size; }
     if (this._flt === 'on') L = L.filter((s) => s.state === 'home'); else if (this._flt === 'off') L = L.filter((s) => s.state !== 'home');
     const isMem = (s) => mem[s.entity_id] || pTr[s.entity_id];
     const ipn = (ip) => (ip || '999.999.999.999').split('.').reduce((a, b) => a * 256 + (+b || 0), 0);
-    L.sort((a, b) => (isMem(b) ? 1 : 0) - (isMem(a) ? 1 : 0) || (this._srt === 'ip' ? ipn(a.attributes.ip) - ipn(b.attributes.ip) : (b.state === 'home') - (a.state === 'home') || this._cname(a).localeCompare(this._cname(b), 'pl')));
+    L.sort((a, b) => (isMem(b) ? 1 : 0) - (isMem(a) ? 1 : 0) || (this._srt === 'ip' ? ipn(a.attributes.ip) - ipn(b.attributes.ip) : (b.state === 'home') - (a.state === 'home') || this._cname(a).localeCompare(this._cname(b), HG_LOC())));
     // domownicy przypięci na górze: jeden (najświeższy) tracker UniFi na osobę
     const byP = {}; for (const e of this._clientEnts()) { const st = h.states[e], p = st && H.ok(st) && (mem[e] || pTr[e]); if (!p) continue;
       const b = byP[p]; if (!b || (st.state === 'home') > (b.state === 'home') || ((st.state === 'home') === (b.state === 'home') && st.last_changed > b.last_changed)) byP[p] = st; }
-    const pins = Object.entries(byP).sort((x, y) => (h.states[x[0]] ? H.name(h, x[0]) : x[0]).localeCompare(h.states[y[0]] ? H.name(h, y[0]) : y[0], 'pl')).map(([p, st]) => { const on = st.state === 'home', a = st.attributes;
+    const pins = Object.entries(byP).sort((x, y) => (h.states[x[0]] ? H.name(h, x[0]) : x[0]).localeCompare(h.states[y[0]] ? H.name(h, y[0]) : y[0], HG_LOC())).map(([p, st]) => { const on = st.state === 'home', a = st.attributes;
       return `<button class="pm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(st.entity_id)}"><span class="av">${H.icon('mdi:cellphone')}<i></i></span><span class="tx"><b>${H.esc(h.states[p] ? H.name(h, p) : p)}</b>
-        <span>${H.esc([this._cname(st), on ? ['w sieci', apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') : 'poza siecią · ' + hgRel(new Date(st.last_changed))].join(' · '))}</span></span></button>`; }).join('');
+        <span>${H.esc([this._cname(st), on ? [hgTr('w sieci', 'online'), apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') : hgTr('poza siecią · ', 'offline · ') + hgRel(new Date(st.last_changed))].join(' · '))}</span></span></button>`; }).join('');
     const pinSet = new Set(Object.values(byP).map((st) => st.entity_id));
     const rows = L.filter((s) => !pinSet.has(s.entity_id)).map((s) => { const a = s.attributes, on = s.state === 'home', m = isMem(s);
       return `<button class="cr ${on ? 'on' : ''} ${m ? 'mem' : ''}" data-act="more" data-e="${H.esc(s.entity_id)}" title="${H.esc(a.mac || '')}"><i></i><b>${H.esc(this._cname(s))}</b>
-        <span class="ap">${H.esc([apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') || (a.is_wired ? 'przewodowo' : ''))}</span><span class="ip">${H.esc(a.ip || '')}</span>
-        <span class="ls">${on ? 'połączony' : 'rozłączony · ' + H.esc(hgRel(new Date(s.last_changed)))}</span></button>`; }).join('');
+        <span class="ap">${H.esc([apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') || (a.is_wired ? hgTr('przewodowo', 'wired') : ''))}</span><span class="ip">${H.esc(a.ip || '')}</span>
+        <span class="ls">${on ? hgTr('połączony', 'connected') : hgTr('rozłączony · ', 'disconnected · ') + H.esc(hgRel(new Date(s.last_changed)))}</span></button>`; }).join('');
     const f = (k, l) => `<button class="${(this._flt || 'all') === k ? 'on' : ''}" data-act="flt" data-k="${k}">${l}</button>`;
-    return `${this._hd('mdi:devices', 'Klienci')}
-      ${pins ? `<div class="pin" aria-label="Telefony domowników">${pins}</div>` : ''}
-      <div class="tot">${wl.length ? `<b>${H.fmt(tot, 0)}</b><span>urządzeń w sieciach Wi‑Fi teraz</span>` : `<b>${onN}</b><span>śledzonych online</span>`}</div>
-      <div class="flt">${f('all', `Wszyscy · ${this._clientEnts().filter((e) => H.ok(h.states[e])).length}`)}${f('on', `Połączone · ${onN}`)}${f('off', 'Rozłączone')}<span class="sp"></span>
-        <button class="${this._srt === 'ip' ? '' : 'on'}" data-act="srt" data-k="name">Nazwa</button><button class="${this._srt === 'ip' ? 'on' : ''}" data-act="srt" data-k="ip">IP</button></div>
-      <div class="cls">${rows || '<div class="empty">Brak śledzonych klientów</div>'}</div>
+    return `${this._hd('mdi:devices', hgTr('Klienci', 'Clients'))}
+      ${pins ? `<div class="pin" aria-label="${hgTr('Telefony domowników', 'Household phones')}">${pins}</div>` : ''}
+      <div class="tot">${wl.length ? `<b>${H.fmt(tot, 0)}</b><span>${hgTr('urządzeń w sieciach Wi‑Fi teraz', 'devices on Wi‑Fi now')}</span>` : `<b>${onN}</b><span>${hgTr('śledzonych online', 'tracked online')}</span>`}</div>
+      <div class="flt">${f('all', `${hgTr('Wszyscy', 'All')} · ${this._clientEnts().filter((e) => H.ok(h.states[e])).length}`)}${f('on', `${hgTr('Połączone', 'Connected')} · ${onN}`)}${f('off', hgTr('Rozłączone', 'Disconnected'))}<span class="sp"></span>
+        <button class="${this._srt === 'ip' ? '' : 'on'}" data-act="srt" data-k="name">${hgTr('Nazwa', 'Name')}</button><button class="${this._srt === 'ip' ? 'on' : ''}" data-act="srt" data-k="ip">IP</button></div>
+      <div class="cls">${rows || `<div class="empty">${hgTr('Brak śledzonych klientów', 'No tracked clients')}</div>`}</div>
       ${cfg.note ? `<div class="empty">${H.esc(cfg.note)}</div>` : ''}`;
   }
   _qr(e, ssid) {
@@ -238,8 +240,8 @@ ha-card.glass{ container-type:inline-size; }
 .x{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.06); } .x ha-icon{ color:#1E2023; width:20px; height:20px; }
 .q{ width:100%; aspect-ratio:1; max-width:300px; background:#fff; border-radius:16px; padding:16px; box-sizing:border-box; display:flex; } .q img{ width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
 p{ margin:0; font-size:var(--fs-sm); color:#4A4E54; } p b{ color:#1E2023; }
-`)}</style><div class="d" role="dialog" aria-modal="true" aria-label="Kod QR sieci ${H.esc(ssid)}"><div class="hd">${H.icon('mdi:wifi')}<b>${H.esc(ssid)}</b><button class="x" data-v="x" aria-label="Zamknij">${H.icon('mdi:close')}</button></div>
-      <div class="q"><img alt="Kod QR sieci ${H.esc(ssid)}" src="${H.esc(st.attributes.entity_picture)}"></div><p>Zeskanuj aparatem telefonu, aby połączyć się z siecią <b>${H.esc(ssid)}</b>.</p></div>`;
+`)}</style><div class="d" role="dialog" aria-modal="true" aria-label="${hgTr('Kod QR sieci', 'QR code for network')} ${H.esc(ssid)}"><div class="hd">${H.icon('mdi:wifi')}<b>${H.esc(ssid)}</b><button class="x" data-v="x" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
+      <div class="q"><img alt="${hgTr('Kod QR sieci', 'QR code for network')} ${H.esc(ssid)}" src="${H.esc(st.attributes.entity_picture)}"></div><p>${hgTr('Zeskanuj aparatem telefonu, aby połączyć się z siecią', 'Scan with your phone camera to join')} <b>${H.esc(ssid)}</b>.</p></div>`;
     const done = () => { document.removeEventListener('keydown', key); x.remove(); };
     const key = (ev) => { if (ev.key === 'Escape') done(); };
     x.addEventListener('click', (ev) => { const p = ev.composedPath(); if (p[0] === x || p.find((n) => n.dataset && n.dataset.v === 'x')) done(); });
@@ -251,15 +253,15 @@ p{ margin:0; font-size:var(--fs-sm); color:#4A4E54; } p b{ color:#1E2023; }
     if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
     if (a === 'flt') { this._flt = t.dataset.k; return this.rerender(); }
     if (a === 'srt') { this._srt = t.dataset.k; return this.rerender(); }
-    if (a === 'restart') { if (await HGConfirm.ask(`Uruchomić ponownie: ${t.dataset.n}?`, 'Urządzenie będzie niedostępne przez 1–3 minuty; połączeni klienci stracą sieć.', 'Uruchom ponownie')) H.call(h, 'button', 'press', { entity_id: e }); return; }
-    if (a === 'port') { if (t.dataset.lock) { await HGConfirm.ask(`Port ${t.dataset.n} jest chroniony`, `${t.dataset.l ? t.dataset.l + ' – ' : ''}to połączenie z internetem lub łącze do sieci. Wyłączenie go z panelu odcięłoby sieć i Home Assistant, dlatego jest zablokowane.`, 'Rozumiem', false, true); return; }
+    if (a === 'restart') { if (await HGConfirm.ask(hgTr(`Uruchomić ponownie: ${t.dataset.n}?`, `Restart ${t.dataset.n}?`), hgTr('Urządzenie będzie niedostępne przez 1–3 minuty; połączeni klienci stracą sieć.', 'The device will be unavailable for 1–3 minutes; connected clients will lose network access.'), hgTr('Uruchom ponownie', 'Restart'))) H.call(h, 'button', 'press', { entity_id: e }); return; }
+    if (a === 'port') { if (t.dataset.lock) { await HGConfirm.ask(hgTr(`Port ${t.dataset.n} jest chroniony`, `Port ${t.dataset.n} is protected`), `${t.dataset.l ? t.dataset.l + ' – ' : ''}${hgTr('to połączenie z internetem lub łącze do sieci. Wyłączenie go z panelu odcięłoby sieć i Home Assistant, dlatego jest zablokowane.', 'this is the internet connection or a network uplink. Turning it off from the panel would cut off the network and Home Assistant, so it is locked.')}`, hgTr('Rozumiem', 'Got it'), false, true); return; }
       const on = h.states[e] && h.states[e].state === 'on', nm = `port ${t.dataset.n}${t.dataset.l ? ' (' + t.dataset.l + ')' : ''} · ${t.dataset.d}`;
-      if (await HGConfirm.ask(on ? `Wyłączyć ${nm}?` : `Włączyć ${nm}?`, on ? 'Urządzenie podłączone do tego portu straci połączenie z siecią.' : 'Port zostanie ponownie włączony.', on ? 'Wyłącz' : 'Włącz', on)) H.call(h, 'switch', on ? 'turn_off' : 'turn_on', { entity_id: e }); return; }
+      if (await HGConfirm.ask(on ? hgTr(`Wyłączyć ${nm}?`, `Turn off ${nm}?`) : hgTr(`Włączyć ${nm}?`, `Turn on ${nm}?`), on ? hgTr('Urządzenie podłączone do tego portu straci połączenie z siecią.', 'The device connected to this port will lose its network connection.') : hgTr('Port zostanie ponownie włączony.', 'The port will be turned back on.'), on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on'), on)) H.call(h, 'switch', on ? 'turn_off' : 'turn_on', { entity_id: e }); return; }
     if (a === 'qr') return this._qr(e, t.dataset.n);
     if (a === 'wlan') { const on = h.states[e] && h.states[e].state === 'on';
-      if (on && !(await HGConfirm.ask(`Wyłączyć sieć ${t.dataset.n}?`, 'Urządzenia połączone z tą siecią Wi‑Fi stracą połączenie.', 'Wyłącz'))) return;
+      if (on && !(await HGConfirm.ask(hgTr(`Wyłączyć sieć ${t.dataset.n}?`, `Turn off network ${t.dataset.n}?`), hgTr('Urządzenia połączone z tą siecią Wi‑Fi stracą połączenie.', 'Devices connected to this Wi‑Fi network will lose their connection.'), hgTr('Wyłącz', 'Turn off')))) return;
       H.call(h, 'switch', on ? 'turn_off' : 'turn_on', { entity_id: e }); }
   }
   getCardSize() { return 4; }
 }
-hgReg('hg-net-card', HGNetCard, 'Home Glass – Sieć', 'UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci');
+hgReg('hg-net-card', HGNetCard, hgTr('Home Glass – Sieć', 'Home Glass – Network'), hgTr('UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci', 'UniFi: internet, gateway, access points, Wi‑Fi and clients'));

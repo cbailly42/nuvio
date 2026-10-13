@@ -48,6 +48,8 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 - **Tryb edycji**: przeciąganie, ukrywanie i przywracanie, rozmiary S/M/L, dodawanie kafli z dowolnej encji, podmiana encji,
   style wyświetlania z podglądem na żywo, wygląd (kolor akcentu z automatycznym kontrastem WCAG, tło: zdjęcie / kolor / gradient, przyciemnienie).
 - **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
+- **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
+- **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
 - **Tryb jasny i ciemny**, obsługa dotyku, szacunek dla „ogranicz ruch”.
 
 ## Komponenty
@@ -162,6 +164,13 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 - `custom:nuvio-energy-card`: procent obciążenia (suma faz względem mocy maksymalnej) (bez zrzutu: poza siatką o stałej wysokości renderuje się niepoprawnie).
 - `custom:nuvio-bars-card`: dzienne słupki zużycia ze statystyk (bez zrzutu: ten sam problem z wysokością).
 - `custom:nuvio-tiles-card`: kafelki dodane w trybie edycji (pojawiają się w widoku po dodaniu kafli).
+- Komponenty ogólne (jeszcze bez zrzutów), dostępne w trybie edycji w „+ Dodaj”:
+  - `custom:nuvio-slider-card`: suwak poziomy lub pionowy dla świateł, głośności, wentylatorów, rolet, zaworów i liczb.
+  - `custom:nuvio-button-card`: przycisk-kafel lub wiersz dla skryptów, scen, `button.press` i przełączników.
+  - `custom:nuvio-entities-card`: wiersze z przełącznikiem lub wartością dla dowolnych encji.
+  - `custom:nuvio-select-card`: opcje `input_select` / `select` jako przyciski lub lista.
+  - `custom:nuvio-stepper-card`: plus i minus dla liczników i liczb.
+  - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
 ### Planowane
@@ -170,10 +179,10 @@ Na podstawie [docs/STATUS.md](docs/STATUS.md). W kodzie nie ma innych planowanyc
 
 | Pozycja | Status |
 |---|---|
-| Edytor widoków: dodawanie, zmiana nazw i kolejności całych widoków | nie rozpoczęte |
-| Pełne tłumaczenie kart i trybu edycji (poza strategią i kreatorem interfejs jest tylko po polsku) | częściowo |
+| Edytor widoków: dodawanie, zmiana nazw i kolejności całych widoków | gotowe (Wygląd → Widoki) |
+| Pełne tłumaczenie kart i trybu edycji | gotowe (polski / angielski) |
 | Eksport i import konfiguracji w interfejsie | nie rozpoczęte |
-| Podpowiedzi dla pustego widoku Panel | nie rozpoczęte |
+| Podpowiedzi dla pustego widoku Panel | gotowe |
 
 ## Instalacja
 
@@ -231,6 +240,29 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 ```
 
 Wydania budują GitHub Actions na tagach `v*`.
+
+## Lista zmian
+
+### Niewydane
+- Poprawka: przyciski scen wywołują `scene.turn_on` (wcześniej nic nie robiły).
+- Poprawka: czujniki mocy w kW / MW są przeliczane na waty w kartach mocy, energii, faz i fotowoltaiki.
+- Poprawka: kamery w widoku pokoju nie psują się po ok. 10 minutach (rotujący token obrazu).
+- Poprawka: zapis układu scala się z najnowszą wersją z serwera (bez nadpisywania między urządzeniami); kopia lokalna jest osobna dla każdego użytkownika HA.
+- Poprawka: strzałki klimatyzacji nie powtarzają się po puszczeniu poza kartą; termostaty z zakresem `heat_cool` są tylko do odczytu; domyślny krok 0,5 °C.
+- Poprawka: telewizor w trybie czuwania się włącza; przyciski odtwarzania, rolet i zaworów uwzględniają możliwości urządzenia.
+- Poprawka: kalendarz miesięczny się odświeża; pole kodu alarmu nie traci fokusu; pogoda używa jednostki opadów i tekstowego kierunku wiatru.
+- Poprawka: strona nie wywraca się przy pustym `rail`; wyjście z trybu edycji przez nawigację zapisuje zmiany zamiast je odrzucać.
+- Nowe: angielski interfejs wszystkich kart, strony i trybu edycji.
+- Nowe: zmiana kolejności z klawiatury w trybie edycji; „Cofnij” po usunięciu kafla przywraca tylko ten kafel.
+- HACS: wydanie jako zip (`zip_release`), więc fonty, tła i ikony pogody instalują się razem z wtyczką.
+
+### 0.1.2 i późniejsze zmiany na main
+- Wieloetapowy kreator; własne widoki (Wygląd → Widoki); komponenty i widoki Mapa i Kalendarz.
+- Komponenty ogólne: suwak, przycisk, lista encji, wybór, licznik, wskaźnik.
+- Podpowiedzi dla pustych stanów, tryby wyświetlania kart grupowych, edytowalny tytuł i podtytuł widoku, stos powiadomień.
+
+### 0.1.1
+- Galeria „+ Dodaj” z podglądem na żywo; poprawka szuflady w trybie kiosku; katalog komponentów w README.
 
 ## Licencja i podziękowania
 

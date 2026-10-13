@@ -1,18 +1,21 @@
 /* ===================== BEZPIECZEŃSTWO: alarm + czujniki ===================== */
+/* [etykieta PL, kolor, ikona, etykieta EN] */
 const HG_ALARM_ST = {
-  disarmed: ['Rozbrojony', 'var(--hg-accent)', 'mdi:shield-off-outline'], armed_home: ['Uzbrojony · w domu', 'var(--hg-accent)', 'mdi:shield-home'],
-  armed_away: ['Uzbrojony · poza domem', 'var(--hg-accent)', 'mdi:shield-lock'], armed_night: ['Uzbrojony · noc', 'var(--hg-accent)', 'mdi:shield-moon'],
-  armed_vacation: ['Uzbrojony · urlop', 'var(--hg-accent)', 'mdi:shield-airplane'], armed_custom_bypass: ['Uzbrojony · własny', 'var(--hg-accent)', 'mdi:shield-edit'],
-  arming: ['Uzbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync'], pending: ['Oczekuje…', 'var(--hg-accent)', 'mdi:shield-alert-outline'],
-  disarming: ['Rozbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync'], triggered: ['Alarm!', '#E53935', 'mdi:bell-ring'],
-  unavailable: ['Niedostępny', '#9AA0A6', 'mdi:shield-remove-outline'], unknown: ['Nieznany', '#9AA0A6', 'mdi:shield-remove-outline'],
+  disarmed: ['Rozbrojony', 'var(--hg-accent)', 'mdi:shield-off-outline', 'Disarmed'], armed_home: ['Uzbrojony · w domu', 'var(--hg-accent)', 'mdi:shield-home', 'Armed · home'],
+  armed_away: ['Uzbrojony · poza domem', 'var(--hg-accent)', 'mdi:shield-lock', 'Armed · away'], armed_night: ['Uzbrojony · noc', 'var(--hg-accent)', 'mdi:shield-moon', 'Armed · night'],
+  armed_vacation: ['Uzbrojony · urlop', 'var(--hg-accent)', 'mdi:shield-airplane', 'Armed · vacation'], armed_custom_bypass: ['Uzbrojony · własny', 'var(--hg-accent)', 'mdi:shield-edit', 'Armed · custom'],
+  arming: ['Uzbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync', 'Arming…'], pending: ['Oczekuje…', 'var(--hg-accent)', 'mdi:shield-alert-outline', 'Pending…'],
+  disarming: ['Rozbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync', 'Disarming…'], triggered: ['Alarm!', '#E53935', 'mdi:bell-ring', 'Triggered!'],
+  unavailable: ['Niedostępny', '#9AA0A6', 'mdi:shield-remove-outline', 'Unavailable'], unknown: ['Nieznany', '#9AA0A6', 'mdi:shield-remove-outline', 'Unknown'],
 };
 /* supported_features (AlarmControlPanelEntityFeature): 1 ARM_HOME, 2 ARM_AWAY, 4 ARM_NIGHT, 8 TRIGGER (bez przycisku), 16 ARM_CUSTOM_BYPASS, 32 ARM_VACATION */
-const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home'], [2, 'arm_away', 'Poza domem', 'mdi:lock', 'armed_away'],
-  [4, 'arm_night', 'Noc', 'mdi:weather-night', 'armed_night'], [32, 'arm_vacation', 'Urlop', 'mdi:airplane', 'armed_vacation'],
-  [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass']];
+/* [bit, tryb, etykieta PL, ikona, stan, etykieta EN]; etykieta w bieżącym języku: hgAlarmLbl(a) */
+const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home', 'Home'], [2, 'arm_away', 'Poza domem', 'mdi:lock', 'armed_away', 'Away'],
+  [4, 'arm_night', 'Noc', 'mdi:weather-night', 'armed_night', 'Night'], [32, 'arm_vacation', 'Urlop', 'mdi:airplane', 'armed_vacation', 'Vacation'],
+  [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass', 'Custom']];
+const hgAlarmLbl = (a) => hgTr(a[2], a[5]);
 class HGAlarmCard extends HGBase {
-  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: 'Alarm · Dom' }; }
+  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home') }; }
   _extraSig() { return [this._pend || '', (this._code || '').length, Math.floor(Date.now() / 60000)]; }
   css() {
     return U(`
@@ -50,33 +53,37 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   _needCode(act) { const a = (H.st(this._hass, this._config.entity) || { attributes: {} }).attributes; return !!a.code_format && (act === 'disarm' || !!a.code_arm_required); }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
-    const stt = s ? s.state : 'unavailable', [lbl, col, ic] = HG_ALARM_ST[stt] || [H.stateLabel(stt), 'var(--hg-accent)', 'mdi:shield'];
+    const stt = s ? s.state : 'unavailable', [lblPl, col, ic, lblEn] = HG_ALARM_ST[stt] || [H.stateLabel(stt), 'var(--hg-accent)', 'mdi:shield'], lbl = lblEn ? hgTr(lblPl, lblEn) : lblPl;
     const un = !H.ok(s), feat = s ? Number(s.attributes.supported_features) || 0 : 0;
     const anim = ['arming', 'pending', 'disarming', 'triggered'].includes(stt);
     const by = s && s.attributes.changed_by ? ` · ${H.esc(s.attributes.changed_by)}` : '';
-    const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="Uzbrój: ${a[2]}" title="Uzbrój: ${a[2]}">${H.icon(a[3])}<span>${a[2]}</span></button>`).join('')
-      + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="Rozbrój">${H.icon('mdi:shield-off-outline')}<span>Rozbrój</span></button>` : '');
+    const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}" title="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}">${H.icon(a[3])}<span>${hgAlarmLbl(a)}</span></button>`).join('')
+      + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="${hgTr('Rozbrój', 'Disarm')}">${H.icon('mdi:shield-off-outline')}<span>${hgTr('Rozbrój', 'Disarm')}</span></button>` : '');
     let kp = '';
     if (this._pend) {
       const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
-      const nm = this._pend === 'disarm' ? 'Rozbrój' : (HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój'])[2];
-      kp = `<div class="kp"><div class="q"><span>Kod do: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="Anuluj">Anuluj</button></div>
-        ${txt ? `<input class="pw" type="password" autocomplete="off" aria-label="Kod alarmu" placeholder="Kod">`
-        : `<div class="dots" aria-live="polite">${n ? '<i></i>'.repeat(n) : '<em>Wpisz kod</em>'}</div>
+      const nm = this._pend === 'disarm' ? hgTr('Rozbrój', 'Disarm') : hgAlarmLbl(HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój', 0, 0, 'Arm']);
+      kp = `<div class="kp"><div class="q"><span>${hgTr('Kod do', 'Code for')}: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="${hgTr('Anuluj', 'Cancel')}">${hgTr('Anuluj', 'Cancel')}</button></div>
+        ${txt ? `<input class="pw" type="password" autocomplete="off" aria-label="${hgTr('Kod alarmu', 'Alarm code')}" placeholder="${hgTr('Kod', 'Code')}">`
+        : `<div class="dots" aria-live="polite">${n ? '<i></i>'.repeat(n) : `<em>${hgTr('Wpisz kod', 'Enter code')}</em>`}</div>
         <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}
-          <button class="k" data-act="kdel" aria-label="Usuń cyfrę">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button>
-          <button class="k ok" data-act="kok" aria-label="Zatwierdź" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button></div>`}
-        ${txt ? `<button class="k ok" data-act="kok" aria-label="Zatwierdź">${H.icon('mdi:check')}</button>` : ''}</div>`;
+          <button class="k" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button>
+          <button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button></div>`}
+        ${txt ? `<button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}">${H.icon('mdi:check')}</button>` : ''}</div>`;
     }
     return `<ha-card class="glass ${anim ? 'anim' : ''} ${stt === 'triggered' ? 'trig' : ''}" style="--c:${col}">
       <div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-        <button class="ib kebab" data-act="more" aria-label="Szczegóły alarmu" title="Szczegóły i historia">${H.icon('mdi:dots-vertical')}</button></div>
+        <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły alarmu', 'Alarm details')}" title="${hgTr('Szczegóły i historia', 'Details and history')}">${H.icon('mdi:dots-vertical')}</button></div>
       <div class="big"><div class="ring">${H.icon(ic)}</div><div class="st"><b>${H.esc(lbl)}</b>
-        <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), 'zmiana ' + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : 'Brak encji ' + H.esc(c.entity)}</span></div></div>
+        <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), hgTr('zmiana ', 'changed ') + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : hgTr('Brak encji ', 'Entity not found: ') + H.esc(c.entity)}</span></div></div>
       ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
   }
-  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); }; } }
+  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
+    i.onblur = () => { if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }; } }
+  /* pole kodu z fokusem: nie podmieniaj DOM (utrata fokusu/klawiatury) – przerysuj po blur */
+  _doUpdate(force) { const i = this.$ && this.$.querySelector('.pw'); if (i && this.shadowRoot.activeElement === i) { this._pendingUpd = true; return; } return super._doUpdate(force); }
   _send(m, code) {
+    const pw = this.$.querySelector('.pw'); if (pw) pw.blur();
     const d = { entity_id: this._config.entity }; if (code) d.code = code;
     this._pend = null; this._code = '';
     H.call(this._hass, 'alarm_control_panel', 'alarm_' + m, d);
@@ -92,30 +99,33 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   getCardSize() { return 5; }
 }
-hgReg('hg-alarm-card', HGAlarmCard, 'Home Glass – Alarm', 'Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu');
+hgReg('hg-alarm-card', HGAlarmCard, 'Home Glass – Alarm', hgTr('Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu', 'Alarm state, arm/disarm per supported_features, code keypad'));
 
 /* --- czujniki: automatyczne wykrywanie (reguły w CFG['security'] w build.py, opis w README) --- */
+/* [kategoria, ikona wł., ikona wył., stan wł. PL, stan wył. PL, stan wł. EN, stan wył. EN] */
 const HG_SENS = {
-  motion: ['ruch', 'mdi:motion-sensor', 'mdi:motion-sensor-off', 'Wykryto', 'Brak'], occupancy: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Wykryto', 'Brak'],
-  presence: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Obecny', 'Brak'],
-  door: ['otw', 'mdi:door-open', 'mdi:door-closed', 'Otwarte', 'Zamknięte'], window: ['otw', 'mdi:window-open-variant', 'mdi:window-closed-variant', 'Otwarte', 'Zamknięte'],
-  opening: ['otw', 'mdi:square-rounded-outline', 'mdi:square-rounded', 'Otwarte', 'Zamknięte'], garage_door: ['otw', 'mdi:garage-open-variant', 'mdi:garage-variant', 'Otwarta', 'Zamknięta'],
-  smoke: ['inne', 'mdi:smoke-detector-variant-alert', 'mdi:smoke-detector-variant', 'Dym!', 'OK'], gas: ['inne', 'mdi:meter-gas', 'mdi:meter-gas-outline', 'Gaz!', 'OK'],
-  moisture: ['inne', 'mdi:water-alert', 'mdi:water-off-outline', 'Zalanie!', 'Sucho'], tamper: ['inne', 'mdi:shield-alert', 'mdi:shield-check-outline', 'Sabotaż!', 'OK'],
-  vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', 'Wibracje', 'Spokój'],
+  motion: ['ruch', 'mdi:motion-sensor', 'mdi:motion-sensor-off', 'Wykryto', 'Brak', 'Detected', 'Clear'], occupancy: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Wykryto', 'Brak', 'Detected', 'Clear'],
+  presence: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Obecny', 'Brak', 'Present', 'Away'],
+  door: ['otw', 'mdi:door-open', 'mdi:door-closed', 'Otwarte', 'Zamknięte', 'Open', 'Closed'], window: ['otw', 'mdi:window-open-variant', 'mdi:window-closed-variant', 'Otwarte', 'Zamknięte', 'Open', 'Closed'],
+  opening: ['otw', 'mdi:square-rounded-outline', 'mdi:square-rounded', 'Otwarte', 'Zamknięte', 'Open', 'Closed'], garage_door: ['otw', 'mdi:garage-open-variant', 'mdi:garage-variant', 'Otwarta', 'Zamknięta', 'Open', 'Closed'],
+  smoke: ['inne', 'mdi:smoke-detector-variant-alert', 'mdi:smoke-detector-variant', 'Dym!', 'OK', 'Smoke!', 'OK'], gas: ['inne', 'mdi:meter-gas', 'mdi:meter-gas-outline', 'Gaz!', 'OK', 'Gas!', 'OK'],
+  moisture: ['inne', 'mdi:water-alert', 'mdi:water-off-outline', 'Zalanie!', 'Sucho', 'Leak!', 'Dry'], tamper: ['inne', 'mdi:shield-alert', 'mdi:shield-check-outline', 'Sabotaż!', 'OK', 'Tampering!', 'OK'],
+  vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', 'Wibracje', 'Spokój', 'Vibration', 'Still'],
 };
-const HG_SENS_TABS = [['all', 'Wszystkie'], ['ruch', 'Ruch / obecność'], ['otw', 'Drzwi / okna'], ['inne', 'Inne']];
+const HG_SENS_TABS = [['all', 'Wszystkie', 'All'], ['ruch', 'Ruch / obecność', 'Motion / presence'], ['otw', 'Drzwi / okna', 'Doors / windows'], ['inne', 'Inne', 'Other']];
 const hgGlob = (pat) => new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
 class HGSensorsCard extends HGBase {
   defaults() {
-    return { title: 'Czujniki', icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
+    return { title: hgTr('Czujniki', 'Sensors'), icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
       exclude: [], include: [], names: {}, name_strip: [' Zajętość', ' occupancy'], extras: true };
   }
   _extraSig() { return [this._tab || 'all', !!this._showUn, Math.floor(Date.now() / 60000), this._disc && this._disc.key]; }
   /* wykrywanie tylko gdy zmieni się liczba encji lub rejestr (nie przy każdym hass) */
   _discover() {
-    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
-    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) return this._disc;
+    const h = this._hass, c = this._config;
+    if (this._disc && this._disc.st === h.states && this._disc.ent === h.entities) return this._disc;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + (h.entities ? hgNKeys(h.entities) : 0);
+    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) { this._disc.st = h.states; return this._disc; }
     const reg = h.entities || {}, dev = h.devices || {};
     const exc = c.exclude.map(hgGlob), inc = c.include.map(hgGlob);
     const list = [];
@@ -143,7 +153,7 @@ class HGSensorsCard extends HGBase {
       for (const x of list) if (x.dev && byDev[x.dev]) x.lux = byDev[x.dev][0];
     }
     this._entsC = null;
-    return (this._disc = { key, ent: h.entities, list });
+    return (this._disc = { key, ent: h.entities, st: h.states, list });
   }
   ents() { if (!this._hass) return []; return this._discover().list.flatMap((x) => (x.lux ? [x.e, x.lux] : [x.e])); }
   _changed() { const k = this._disc && this._disc.key; this._discover(); if (this._disc.key !== k) { this._entsC = null; this._prevStates = null; } return super._changed(); }
@@ -194,21 +204,22 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const sel = it.filter((x) => tab === 'all' || x.cat === tab).sort((a, b) => (b.on - a.on) || (a.un - b.un) || (b.t - a.t));
     const tile = (x) => {
       const d = HG_SENS[x.dc], lux = x.lux && H.st(h, x.lux);
-      const luxT = lux && H.ok(lux) ? ({ bright: 'jasno', dim: 'ciemno', dark: 'ciemno' }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
-      const st = x.un ? 'Niedostępny' : x.on ? d[3] : d[4];
+      const luxT = lux && H.ok(lux) ? ({ bright: hgTr('jasno', 'bright'), dim: hgTr('ciemno', 'dim'), dark: hgTr('ciemno', 'dark') }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
+      const st = x.un ? hgTr('Niedostępny', 'Unavailable') : x.on ? hgTr(d[3], d[5]) : hgTr(d[4], d[6]);
       const sub = [`<em>${H.esc(st)}</em>`, x.s && !x.un ? hgRel(new Date(x.s.last_changed)) : '', x.area ? H.esc(x.area) : '', luxT ? H.esc(luxT) : ''].filter(Boolean).join(' · ');
-      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – historia" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
+      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – ${hgTr('historia', 'history')}" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
         <span class="ic">${H.icon(x.on ? d[1] : d[2])}</span><span class="tx"><b>${H.esc(this._nm(x.e))}</b><span>${sub}</span></span></button>`;
     };
     const ok = sel.filter((x) => !x.un), un = sel.filter((x) => x.un);
-    const sum = [`<span class="a"><b>${act.length}</b> ${act.length === 1 ? 'aktywny' : 'aktywne'}</span>`, mot ? `<span><b>${mot}</b> ruch</span>` : '',
-      `<span class="o"><b>${opn}</b> ${opn === 1 ? 'otwarte' : 'otwartych'}</span>`.replace('otwartych', opn > 1 && opn < 5 ? 'otwarte' : 'otwartych'), alr ? `<span class="a"><b>${alr}</b> alarm</span>` : '',
-      unN ? `<span><b>${unN}</b> niedostępnych</span>` : ''].join('');
-    const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${l}<i>${cnt(k)}</i></button>`).join('');
+    const en = hgCurLang() === 'en';
+    const sum = [`<span class="a"><b>${act.length}</b> ${en ? 'active' : act.length === 1 ? 'aktywny' : 'aktywne'}</span>`, mot ? `<span><b>${mot}</b> ${hgTr('ruch', 'motion')}</span>` : '',
+      `<span class="o"><b>${opn}</b> ${en ? 'open' : opn === 1 || (opn > 1 && opn < 5) ? 'otwarte' : 'otwartych'}</span>`, alr ? `<span class="a"><b>${alr}</b> alarm</span>` : '',
+      unN ? `<span><b>${unN}</b> ${hgTr('niedostępnych', 'unavailable')}</span>` : ''].join('');
+    const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l, le]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${hgTr(l, le)}<i>${cnt(k)}</i></button>`).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
-      <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="Filtr czujników">${tabs}</div>
-      ${ok.length ? `<div class="grid">${ok.map(tile).join('')}</div>` : `<div class="none">Brak dostępnych czujników w tej grupie</div>`}
-      ${un.length ? `<div class="sec">Niedostępne · ${un.length}<button data-act="unv" aria-expanded="${!!this._showUn}">${this._showUn ? 'Ukryj' : 'Pokaż'}</button></div>${this._showUn ? `<div class="grid">${un.map(tile).join('')}</div>` : ''}` : ''}
+      <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="${hgTr('Filtr czujników', 'Sensor filter')}">${tabs}</div>
+      ${ok.length ? `<div class="grid">${ok.map(tile).join('')}</div>` : `<div class="none">${hgTr('Brak dostępnych czujników w tej grupie', 'No available sensors in this group')}</div>`}
+      ${un.length ? `<div class="sec">${hgTr('Niedostępne', 'Unavailable')} · ${un.length}<button data-act="unv" aria-expanded="${!!this._showUn}">${this._showUn ? hgTr('Ukryj', 'Hide') : hgTr('Pokaż', 'Show')}</button></div>${this._showUn ? `<div class="grid">${un.map(tile).join('')}</div>` : ''}` : ''}
     </ha-card>`;
   }
   onAct(a, t) {
@@ -218,4 +229,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   }
   getCardSize() { return 8; }
 }
-hgReg('hg-sensors-card', HGSensorsCard, 'Home Glass – Czujniki', 'Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne');
+hgReg('hg-sensors-card', HGSensorsCard, hgTr('Home Glass – Czujniki', 'Home Glass – Sensors'), hgTr('Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne', 'Auto-discovered motion, presence, door, window and other sensors'));
