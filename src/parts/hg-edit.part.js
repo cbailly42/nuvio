@@ -206,12 +206,12 @@ const HG_COMP = [
   { id: 'robots', n: 'Roboty', d: 'Odkurzacze i kosiarki: stan i sterowanie', i: 'mdi:robot-vacuum', card: 'hg-robots-card', slots: [{ k: 'entities', l: 'Roboty', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
   { id: 'agenda', n: 'Kalendarz', d: 'Agenda lub widok miesiąca', i: 'mdi:calendar-month-outline', card: 'hg-agenda-card', cards: { agenda: 'hg-agenda-card', month: 'hg-month-card' }, modes: [['agenda', 'Agenda', 'mdi:format-list-bulleted'], ['month', 'Miesiąc', 'mdi:calendar-month-outline']],
     slots: [{ k: 'calendars', l: 'Kalendarze', dom: ['calendar'], multi: 1, req: 1 }], cfg: (v) => (v.mode === 'month' ? { calendars: v.calendars } : { calendars: v.calendars, days: 14 }) },
-  { id: 'map', n: 'Mapa', d: 'Domownicy, urządzenia i strefy na mapie', i: 'mdi:map-outline', card: 'hg-map-card', slots: [{ k: 'entities', l: 'Osoby, urządzenia, strefy', dom: ['person', 'device_tracker', 'zone'], multi: 1, req: 1 }],
+  { id: 'map', n: 'Mapa', d: 'Domownicy, urządzenia i strefy na mapie', i: 'mdi:map-outline', card: 'hg-map-card', slots: [{ k: 'entities', l: 'Osoby, urządzenia, strefy', dom: ['person', 'device_tracker', 'zone'], loc: 1, multi: 1, req: 1 }],
     cfg: (v) => ({ entities: v.entities, theme_mode: 'auto', hours_to_show: 0 }) },
 ];
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
-  if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; return true; })
+  if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
   .sort((a, b) => H.name(h, a).localeCompare(H.name(h, b)));
 const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
 const hgCompCard = (C, v) => (C.cards && v && C.cards[v.mode]) || C.card;
