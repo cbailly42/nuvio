@@ -258,6 +258,14 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.15
+- Fixed: the hide panel button switches its icon (eye) and label and reports its state with aria-pressed.
+- Fixed: long entity names on tiles no longer get cut at the top and bottom; they wrap to 2 lines with an ellipsis, and unknown values show No data instead of a dash.
+- Improved: the size picker is a glass segmented control with size glyphs, equal widths and the labels Small, Medium and Full width, with the selected one in the accent colour.
+- Fixed: in edit mode the Add tile flows as the next grid cell, the same size as a small tile, without empty rows; the drag, remove and size handles sit neatly on the tile edges.
+- Fixed: all footer buttons in dialogs have the same height and padding, aligned right, and stack full width on phones.
+- New: the Icon field has a searchable icon picker with the full MDI list from Home Assistant, recent icons, keyboard navigation and a live preview; typing mdi:name by hand still works.
+
 ### 0.3.14
 - Fixed: a view or panel with no visible items shows the Empty view state with an Add widget button, live after deleting, hiding, undo or redo, in edit mode and normal mode, on every view type. Undo restores the items and hides it again.
 - Fixed: the Undo button in notifications uses the text color that matches the theme accent.

@@ -166,9 +166,40 @@ const hgTileHtml = (h, e, sz, o) => {
     return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}">${pic ? `<img class="ma" alt="" src="${H.esc(pic)}">` : `<span class="ti">${H.icon(ic)}</span>`}<span class="tn"><b>${H.esc(t || nm)}</b><small>${H.esc(t ? (ar || nm) : (ok ? H.T(h, s) : hgTr('Niedostępne', 'Unavailable')))}</small></span></button>
       <div class="mc"><button data-act="tmp" data-e="${H.esc(e)}" aria-label="${hgTr('Odtwórz / pauza', 'Play / pause')}" ${ok && s.state !== 'off' ? '' : 'disabled'}>${H.icon(s.state === 'playing' ? 'mdi:pause' : 'mdi:play')}</button><button class="pw ${s.state !== 'off' && ok ? 'on' : ''}" data-act="tmw" data-e="${H.esc(e)}" aria-label="${hgTr('Zasilanie', 'Power')}" ${ok ? '' : 'disabled'}>${H.icon('mdi:power')}</button></div></div>`; }
   const u = s.attributes.unit_of_measurement || '', n = Number(s.state), num = s.state !== '' && isFinite(n);
-  const v = num ? H.fmt(n, Math.abs(n) >= 100 ? 0 : 1) : H.T(h, s);
-  return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b></span></button><span class="tv${num ? '' : ' tx'}">${H.esc(ok ? v : '–')}${num && u ? `<em>${H.esc(u)}</em>` : ''}</span></div>`;
+  const v = num ? H.fmt(n, Math.abs(n) >= 100 ? 0 : 1) : H.T(h, s), nd = !ok || ['unknown', 'unavailable', ''].includes(String(s.state)) || v === '–' || v === '';
+  return `<div class="${cls}" data-hgk="${H.esc(e)}"><button class="hgtb" data-act="tmore" data-e="${H.esc(e)}"><span class="ti">${H.icon(ic)}</span><span class="tn"><b>${H.esc(nm)}</b></span></button><span class="tv${num ? '' : ' tx'}${nd ? ' nd' : ''}">${H.esc(nd ? hgTr('Brak danych', 'No data') : v)}${num && u ? `<em>${H.esc(u)}</em>` : ''}</span></div>`;
 };
+/* wybór ikony: pole tekstowe mdi:xxx (wpisywanie dowolne) + szklany panel z wyszukiwaniem, siatką ikon MDI z listy HA, ostatnimi i obsługą klawiatury */
+let hgIcList = null; const hgIcLoad = () => (hgIcList = hgIcList || fetch('/static/mdi/iconList.json').then((r) => (r.ok ? r.json() : [])).catch(() => []));
+const hgIcRecent = () => { try { return JSON.parse(localStorage.getItem('nuvio:icons') || '[]').filter((x) => /^mdi:[a-z0-9-]+$/.test(x)).slice(0, 12); } catch (e) { return []; } };
+const hgIcWire = (S) => { const inp = S && S.querySelector('.hge-sheet input[name=i]'); if (!inp || inp._icw) return; inp._icw = 1;
+  const box = inp.closest('.hs-s'), fl = inp.closest('.hs-fl'); fl.classList.add('hs-ipw'); const pv = box.querySelector('ha-icon');
+  const ob = document.createElement('button'); ob.type = 'button'; ob.className = 'hs-ipb'; ob.setAttribute('aria-haspopup', 'dialog'); ob.setAttribute('aria-expanded', 'false'); ob.setAttribute('aria-label', hgTr('Wybierz ikonę', 'Choose icon')); ob.innerHTML = H.icon('mdi:chevron-down'); box.appendChild(ob);
+  if (pv) { pv.style.cursor = 'pointer'; pv.addEventListener('click', (e) => { e.preventDefault(); open(); }); }
+  let pop = null, tok = null; const cur = () => inp.value.trim();
+  const pick = (ic) => { inp.value = ic; inp.dispatchEvent(new Event('input', { bubbles: true })); if (pv && /^mdi:[a-z0-9-]+$/.test(ic)) pv.setAttribute('icon', ic);
+    try { localStorage.setItem('nuvio:icons', JSON.stringify([ic, ...hgIcRecent().filter((x) => x !== ic)].slice(0, 12))); } catch (e) { /* tryb prywatny */ } close(); inp.focus(); };
+  const btns = (L) => L.map((n) => `<button type="button" role="option" data-ic="${H.esc(n)}" aria-selected="${n === cur()}" title="${H.esc(n)}" aria-label="${H.esc(n.replace('mdi:', ''))}">${H.icon(n)}</button>`).join('');
+  const close = () => { if (!pop) return; pop.remove(); pop = null; if (tok) { hgsOpen.delete(tok); tok = null; } ob.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', out, true); };
+  const out = (e) => { if (pop && !e.composedPath().includes(fl)) close(); };
+  const fill = async (q) => { const g = pop && pop.querySelector('.hs-ipg.all'); if (!g) return; const L = await hgIcLoad(); if (!pop) return; q = q.toLowerCase().replace(/^mdi:/, '').trim();
+    const R = []; for (const x of L) { if (!q || x.name.includes(q) || (x.keywords || []).some((k) => k.includes(q))) { R.push('mdi:' + x.name); if (R.length >= 160) break; } } g.innerHTML = R.length ? btns([...new Set(R)]) : `<div class="hs-ipe">${hgTr('Brak ikon. Możesz wpisać nazwę mdi:… w polu.', 'No icons. You can type an mdi:… name in the field.')}</div>`; };
+  const open = () => { if (pop) return close(); pop = document.createElement('div'); pop.className = 'hs-ipp'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', hgTr('Wybierz ikonę', 'Choose icon'));
+    const rc = hgIcRecent();
+    pop.innerHTML = `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${hgTr('Szukaj ikony (np. sofa, lampa)', 'Search icons (e.g. sofa, lamp)')}" aria-label="${hgTr('Szukaj ikony', 'Search icons')}" autocomplete="off"></label>${rc.length ? `<small>${hgTr('Ostatnie', 'Recent')}</small><div class="hs-ipg rc" role="listbox">${btns(rc)}</div>` : ''}<small>${hgTr('Wszystkie ikony', 'All icons')}</small><div class="hs-ipg all" role="listbox"><div class="hs-ipe">${hgTr('Wczytywanie…', 'Loading…')}</div></div>`;
+    fl.appendChild(pop); const r = pop.getBoundingClientRect(), sc = fl.closest('.hs-sc'), sr = sc && sc.getBoundingClientRect(); if (sr && r.bottom > sr.bottom && r.top - sr.top > r.height + 60) pop.classList.add('up'); else if (sc && r.bottom > sr.bottom) sc.scrollTop += r.bottom - sr.bottom + 8;
+    tok = {}; hgsOpen.add(tok); ob.setAttribute('aria-expanded', 'true'); document.addEventListener('pointerdown', out, true);
+    const q = pop.querySelector('input'); q.addEventListener('input', () => fill(q.value)); q.focus({ preventScroll: true }); fill(/^mdi:/.test(cur()) ? '' : cur());
+    pop.addEventListener('click', (e) => { const b = e.target.closest('[data-ic]'); if (b) { e.preventDefault(); e.stopPropagation(); pick(b.dataset.ic); } });
+    pop.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); ob.focus(); return; }
+      const all = [...pop.querySelectorAll('[data-ic]')], i = all.indexOf(e.target.closest && e.target.closest('[data-ic]')), g = pop.querySelector('.hs-ipg.all'), cols = Math.max(1, Math.round(g.clientWidth / 44));
+      if (e.target === q && (e.key === 'ArrowDown' || e.key === 'Enter')) { e.preventDefault(); const f = g.querySelector('[data-ic]'); if (e.key === 'Enter' && f && q.value.trim()) return pick(f.dataset.ic); if (f) f.focus(); return; }
+      if (i < 0) return; const mv = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+      if (mv) { e.preventDefault(); const j = i + mv; if (j < 0) return q.focus(); if (all[j]) all[j].focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); all[0].focus(); } else if (e.key === 'End') { e.preventDefault(); all[all.length - 1].focus(); } }); };
+  ob.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(); });
+  inp.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); open(); } }); };
+const hgSzSeg = (act, cur) => `<div class="hs-seg" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', 'Mały', 'Small'], ['m', 'Średni', 'Medium'], ['l', 'Cała szerokość', 'Full width']].map(([v, pl, en]) => `<button type="button" data-hge="${act}" data-z="${v}" aria-pressed="${cur === v}"><span class="sg sg-${v}" aria-hidden="true"><i></i><i></i><i></i></span><span>${hgTr(pl, en)}</span></button>`).join('')}</div>`;
 const HG_TILE_CSS = `
 .tg2{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap:12px; }
 .hgtl{ position:relative; display:flex; align-items:center; gap:10px; min-width:0; min-height:76px; padding:12px 14px; border-radius:18px; background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:var(--hg-card-sh, none); color:inherit; }
@@ -176,11 +207,12 @@ const HG_TILE_CSS = `
 @container (max-width: 460px){ .hgtl.hgsz-m{ grid-column:1 / -1; } }
 .hgtl.k-clim, .hgtl.k-cam{ padding:0; background:none; box-shadow:none; display:block; }
 .hgtl.k-clim > div, .hgtl.k-cam > div{ height:100%; }
-.hgtl .hgtb{ flex:1 1 0; display:flex; flex-wrap:nowrap; align-items:center; gap:10px; min-width:0; overflow:hidden; background:none; border:0; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.hgtl .hgtb{ flex:1 1 0; display:flex; flex-wrap:nowrap; align-items:center; gap:10px; min-width:0; overflow:visible; align-self:stretch; background:none; border:0; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
 .hgtl .ti{ flex:none; position:static; margin:0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); }
 .hgtl .ti ha-icon{ width:20px; height:20px; }
 .hgtl.on .ti{ background:var(--hg-accent); color:var(--hg-on-accent); }
-.hgtl .tn{ display:flex; flex-direction:column; flex:1 1 0; min-width:0; overflow:hidden; } .hgtl .tn b{ font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; white-space:normal; overflow:hidden; overflow-wrap:anywhere; line-height:1.25; }
+.hgtl .tn{ display:flex; flex-direction:column; flex:1 1 0; min-width:0; overflow:hidden; } .hgtl .tn b{ font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; white-space:normal; overflow:hidden; text-overflow:ellipsis; overflow-wrap:break-word; word-break:break-word; line-height:1.3; padding-block:1px; }
+.hgtl .tn{ justify-content:center; } .hgtl .tv.nd{ font-size:13px; font-weight:500; opacity:.6; white-space:nowrap; }
 .hgtl .tn small{ opacity:.66; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hgtl.on .tn small{ color:var(--hg-accent-tx); opacity:1; }
 .hgtl .tv{ flex:none; margin-left:auto; align-self:center; text-align:right; font-size:30px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .hgtl .tv.tx{ font-size:15px; font-weight:600; letter-spacing:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; } .hgtl .tv em{ font-style:normal; font-size:13px; opacity:.65; margin-left:3px; font-weight:400; }
 .hgtl.un{ opacity:.6; }
@@ -496,9 +528,10 @@ const HG_COMP_EDIT = {
       ${C.modes ? `<div class="hs-fl"><span>${hgTr('Opcje komponentu', 'Component options')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Opcje komponentu', 'Component options')}">${C.modes.map(([m, pl, en, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${H.esc(hgTr(pl, en))}</button>`).join('')}</div></div>` : ''}
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
-      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cz" data-z="${v}" aria-pressed="${R.z === v}">${l}</button>`).join('')}</div></div>`}
+      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span>${hgSzSeg('cz', R.z)}</div>`}
       </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? hgTr('Anuluj', 'Cancel') : hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed ? 'mdi:check' : 'mdi:plus')}<span>${ed ? hgTr('Zapisz', 'Save') : hgTr('Dodaj', 'Add')}</span></button></div></div>`;
     for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { R[n.name] = n.value.trim(); if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(R.i)) ic.setAttribute('icon', R.i); } this._eCompPv(); });
+    hgIcWire(S);
     requestAnimationFrame(() => this._eCompDrag()); this._eCompPv();
   },
   _eCompPv() { const R = this._eCompR, C = HG_COMP.find((x) => x.id === R.cid), h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv || !C) return;
@@ -586,20 +619,21 @@ const HGE_CSS = `
 .hge{ position:absolute; inset:0; z-index:15; pointer-events:none; border-radius:inherit; }
 .hge *{ pointer-events:auto !important; }
 .hge button{ position:absolute; display:flex; align-items:center; justify-content:center; border:0; cursor:pointer; font:600 12px/1 inherit; color:var(--hg-on-accent); background:var(--hg-accent); box-shadow:0 4px 14px rgba(0,0,0,.28); -webkit-tap-highlight-color:transparent; }
-.hge .hx{ top:-10px; right:-10px; width:30px; height:30px; border-radius:50%; background:var(--hg-thumb, #fff); color:var(--hg-on-accent); }
-.hge .hh{ top:-10px; left:-10px; width:30px; height:30px; border-radius:50%; cursor:grab; touch-action:none; }
-.hge .hs{ position:absolute; bottom:8px; right:8px; height:28px; padding:0 3px; border-radius:999px; background:var(--hg-thumb, #fff); color:var(--hg-on-accent); gap:2px; display:flex; align-items:center; box-shadow:0 4px 14px rgba(0,0,0,.28); }
+.hge .hx{ top:-12px; right:12px; width:28px; height:28px; border-radius:50%; background:var(--hg-thumb, #fff); color:var(--hg-on-accent); }
+.hge .hh{ top:-12px; left:12px; width:28px; height:28px; border-radius:50%; cursor:grab; touch-action:none; }
+.hge .hs{ position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); height:26px; padding:0 3px; border-radius:999px; background:var(--hg-thumb, #fff); color:var(--hg-on-accent); gap:2px; display:flex; align-items:center; box-shadow:0 4px 14px rgba(0,0,0,.28); }
 .hge .hs i{ font-style:normal; cursor:pointer; width:24px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; pointer-events:auto; }
 .hge .hs i.on{ background:var(--hg-accent); color:var(--hg-on-accent); }
 .hge ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; pointer-events:none; }
-.hge-on > .hgtl:not(.k-clim):not(.k-cam){ padding-bottom:42px; }
+.hge-on > .hgtl:not(.k-clim):not(.k-cam){ padding-bottom:18px; }
 .hge-cf{ position:absolute; top:26px; right:6px; z-index:3; display:flex; align-items:center; gap:6px; padding:6px 6px 6px 12px; border-radius:999px; background:var(--hg-thumb, #fff); color:var(--hg-on-accent); font:500 13px/1.2 inherit; box-shadow:0 8px 24px rgba(0,0,0,.3); max-width:calc(100% - 12px); }
 .hge-cf span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hge .hge-cf button{ position:static; height:30px; padding:0 12px; border-radius:999px; box-shadow:none; flex:none; }
 .hge .hge-cf button[data-hge=cfno]{ background:rgba(0,0,0,.08); }
 /* kontener dodanych kafli to nie slot: bez własnej ramki (ramki mają kafle w środku) */
 .hge-on > [data-hgk="_tiles"], [data-hgl].hge-on > [data-hgk="_tiles"]{ outline:none !important; animation:none !important; }
-.hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, rgba(160,230,60,.08)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0 0 11px; width:100%; }
+.hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, rgba(160,230,60,.08)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0; width:100%; height:100%; box-sizing:border-box; }
+.hge-addw{ min-height:76px; display:flex; } .hge-addw > .hge-add{ flex:1; }
 .hge-add ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); }
 `;
 
@@ -698,7 +732,9 @@ const HG_STY_CSS = `
 .hs-ac{ display:flex !important; justify-content:flex-end !important; align-items:center; gap:10px; }
 .hs-ac > button{ all:unset; box-sizing:border-box; cursor:pointer; flex:none !important; width:auto !important; height:44px; padding:0 20px; border-radius:999px; display:inline-flex !important; align-items:center; gap:6px; font-size:14px; font-weight:600; line-height:1; white-space:nowrap; }
 .hs-ac > button ha-icon{ width:18px; height:18px; flex:none; }
-.hs-ac > .hs-b{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 24px; }
+.hs-ac > .hs-b{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.hs-ac > button{ min-width:104px; justify-content:center; }
+@media (max-width:600px){ .hs-ac{ flex-direction:column-reverse; align-items:stretch !important; } .hs-ac > button{ width:100% !important; } }
 .hs-ac > .hs-b2{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); color:inherit; background:none; }
 .hs-ac > button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 `;
@@ -805,10 +841,10 @@ const HG_EDIT = {
       if (!ct.el.querySelector(':scope > .hge-addw') && (ct.page || /^(rooms|room:)/.test(ct.scope) || ct.scope.endsWith(':tiles'))) {
         if (ct.scope.endsWith(':tiles')) continue;               // „+ Dodaj” jest na poziomie widoku
         const w = document.createElement(ct.page ? 'div' : 'div'); w.className = 'hge-addw' + (ct.page ? ' cw' : '');
-        if (ct.page) { w.style.gridColumn = '1 / -1'; w.style.gridArea = 'auto'; }
+        if (ct.page) { w.style.gridColumn = ''; w.style.gridArea = 'auto'; }
         if (!ct.page && ct.el.classList.contains('grid')) w.style.gridColumn = '1 / -1';
         w.innerHTML = `<button class="hge-add" data-hge="add">${H.icon('mdi:plus')}<span>${hgTr('Dodaj', 'Add')}</span></button>`;
-        w.firstChild._ct = ct; ct.el.appendChild(w);
+        w.firstChild._ct = ct; ct.el.appendChild(w); if (ct.page && this._masOn) requestAnimationFrame(() => this._masLay());
         if (!ct.page) ct.el.style.position = ct.el.style.position || 'relative';
       }
     }
@@ -1054,10 +1090,10 @@ const HG_EDIT = {
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
       ${ct.page ? (() => { const w0 = (L.conf[k] && L.conf[k].w) || '', box = (f) => `<span aria-hidden="true" style="display:flex;gap:3px;width:44px;height:22px;flex:none"><i style="flex:1;border-radius:4px;background:${f ? 'currentColor' : 'color-mix(in srgb, currentColor 40%, transparent)'}"></i>${f ? '' : '<i style="flex:1;border-radius:4px;border:1.5px dashed color-mix(in srgb, currentColor 35%, transparent)"></i>'}</span>`;
         return `<div class="hs-fl"><span>${hgTr('Szerokość', 'Width')}</span><div class="hs-f wrap" role="radiogroup" aria-label="${hgTr('Szerokość', 'Width')}">${[['', hgTr('Automatyczna', 'Automatic'), null], ['full', hgTr('Pełna szerokość', 'Full width'), 1], ['half', hgTr('Połowa', 'Half'), 0]].map(([v, l, f]) => `<button data-hge="cfgw" data-w="${v}" role="radio" aria-pressed="${w0 === v}" aria-checked="${w0 === v}" style="gap:8px">${f == null ? '' : box(f)}${l}</button>`).join('')}</div><small style="opacity:.6;font-size:12px">${hgTr('Na telefonie każda sekcja ma pełną szerokość.', 'On phones every section is full width.')}</small></div>`; })() : ''}
-      ${canSz ? `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cfgz" data-z="${v}" aria-pressed="${z === v}">${l}</button>`).join('')}</div></div>` : ''}
+      ${canSz ? `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span>${hgSzSeg('cfgz', z)}</div>` : ''}
       </div>
       <div class="hs-ac"><button class="hs-b2" data-hge="sheetclose">${hgTr('Anuluj', 'Cancel')}</button><button class="hs-b" data-hge="cfgsave">${hgTr('Zapisz', 'Save')}</button></div></div>`;
-    for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(n.value.trim())) ic.setAttribute('icon', n.value.trim()); } this._eCfgPv(); });
+    for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(n.value.trim())) ic.setAttribute('icon', n.value.trim()); } this._eCfgPv(); }); hgIcWire(S);
     this._eCfgPv();
   },
   _eCfgVals() { const S = this._eSheetEl, g = (q) => S.querySelector(q);

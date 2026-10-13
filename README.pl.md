@@ -258,6 +258,14 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.15
+- Poprawka: przycisk ukrywania panelu zmienia ikonę (oko) i etykietę oraz podaje stan przez aria-pressed.
+- Poprawka: długie nazwy encji na kafelkach nie są już ucięte u góry i u dołu; zawijają się do 2 linii z wielokropkiem, a nieznane wartości pokazują Brak danych zamiast kreski.
+- Ulepszenie: wybór rozmiaru to szklany przełącznik segmentowy z symbolami rozmiaru, równymi szerokościami i etykietami Mały, Średni i Cała szerokość, wybrany w kolorze akcentu.
+- Poprawka: w trybie edycji kafelek Dodaj jest kolejną komórką siatki, wielkości małego kafelka, bez pustych rzędów; uchwyty przeciągania, usuwania i rozmiaru leżą równo na krawędziach kafelka.
+- Poprawka: wszystkie przyciski w stopce okien mają tę samą wysokość i odstępy, są wyrównane do prawej, a na telefonie układają się jeden pod drugim na całą szerokość.
+- Nowość: pole Ikona ma wybór ikon z wyszukiwaniem pełnej listy MDI z Home Assistant, ostatnimi ikonami, obsługą klawiatury i podglądem; ręczne wpisanie mdi:nazwa nadal działa.
+
 ### 0.3.14
 - Poprawka: widok lub panel bez widocznych elementów pokazuje pusty stan „Pusty widok” z przyciskiem Dodaj widżet, na żywo po usunięciu, ukryciu, cofnięciu lub ponowieniu, w trybie edycji i zwykłym, we wszystkich rodzajach widoków. Cofnięcie przywraca elementy i ukrywa pusty stan.
 - Poprawka: przycisk Cofnij w powiadomieniach używa koloru tekstu dopasowanego do akcentu motywu.

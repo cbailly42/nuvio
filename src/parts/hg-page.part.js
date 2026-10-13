@@ -330,7 +330,7 @@ class HGPage extends HTMLElement {
     for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
   /* własne widoki: jawne rozmieszczenie w rzędach 4 px. masonry: karta do najkrótszej kolumny; cols: kolumny po kolei (bez wyrównania rzędów) */
   _masLay() { const el = this._panelEl, cs = getComputedStyle(el), gap = parseFloat(cs.rowGap) || 0, n = Math.max(1, cs.gridTemplateColumns.split(' ').filter(Boolean).length), cols = this._masMode === 'cols';
-    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild);
+    const aw = el.querySelector(':scope > .hge-addw'), W = this._cardWraps.filter((w) => !w.hidden && w.style.display !== 'none' && w.firstElementChild).concat(aw ? [aw] : []);
     for (const w of W) { if (w.dataset.masGc == null) w.dataset.masGc = w.style.gridColumn || ''; w.style.minHeight = '0px'; w.style.gridRow = ''; w.style.gridRowEnd = 'span 1'; }
     const spanOf = (w) => { const g = w.dataset.masGc; if (/1\s*\/\s*-1/.test(g)) return n; const m = /span\s+(\d+)/.exec(g); return Math.min(n, m ? +m[1] : 1); };
     const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
@@ -775,14 +775,14 @@ class HGPage extends HTMLElement {
     const k = Math.floor((limit - rr.top - pad + gap) / (ih + gap));
     this._rfLast = Math.max(3, k); return Math.max(3, Math.min(n, k));
   }
-  _paintTools() {
-    const c = this._config, hid = this.hasAttribute('panel-hidden');
+  _paintTools(hv) {
+    const c = this._config, hid = hv != null ? hv : this.hasAttribute('panel-hidden');
     if (!c.toolbar) { this._toolsEl.style.display = 'none'; return; }
     this._toolsEl.innerHTML = `
       <button class="tb" data-act="search" aria-label="${hgTr('Szukaj', 'Search')}" title="${hgTr('Szukaj (szybki pasek)', 'Search (quick bar)')}">${H.icon('mdi:magnify')}</button>
       <button class="tb sm" data-act="zin" aria-label="${hgTr('Powiększ', 'Zoom in')}" title="${hgTr('Powiększ panel', 'Enlarge panel')}">${H.icon('mdi:plus-circle-outline')}</button>
       <button class="tb sm" data-act="zout" aria-label="${hgTr('Pomniejsz', 'Zoom out')}" title="${hgTr('Pomniejsz panel', 'Shrink panel')}">${H.icon('mdi:minus-circle')}</button>
-      <button class="tb" data-act="close" aria-label="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}" title="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}">${H.icon(hid ? 'mdi:view-dashboard-outline' : 'mdi:close')}</button>`;
+      <button class="tb${hid ? ' pz' : ''}" data-act="close" aria-pressed="${hid}" aria-label="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}" title="${hid ? hgTr('Pokaż panel', 'Show panel') : hgTr('Ukryj panel', 'Hide panel')}">${H.icon(hid ? 'mdi:eye-outline' : 'mdi:eye-off-outline')}</button>`;
   }
   _paintHub(force) {
     if (!this._built || !this._hass) return;
@@ -823,7 +823,7 @@ class HGPage extends HTMLElement {
         const zz = c.zoom; let z = this._zoom() + (a === 'zin' ? zz.step : -zz.step);
         z = Math.round(Math.max(zz.min, Math.min(zz.max, z)) * 100) / 100; this._ls('zoom', z); return this._layout();
       }
-      case 'close': { const h = !this.hasAttribute('panel-hidden'); this._panelVis(h); this._ls('hidden:' + c.view, h); return this._paintTools(); }
+      case 'close': { const h = !this.hasAttribute('panel-hidden'); this._panelVis(h); this._ls('hidden:' + c.view, h); this._paintTools(h); const t = this._toolsEl.querySelector('[data-act=close]'); if (t) t.focus({ preventScroll: true }); return; }
       case 'hubplus': return go(c.hub.plus || { navigate: c.tabs[3] && c.tabs[3].path });
       case 'person': return go({ more_info: t.dataset.e });
     }
@@ -1152,8 +1152,18 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet-l.nav-f .hge-sheet > :not(.hs-h):not(style){ animation:hgNavF .26s cubic-bezier(.2,.8,.2,1) both; } .hge-sheet-l.nav-b .hge-sheet > :not(.hs-h):not(style){ animation:hgNavB .26s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes hgNavF{ from{ transform:translateX(28px); } } @keyframes hgNavB{ from{ transform:translateX(-28px); } }
 .hs-bk + b{ flex:1; min-width:0; }
-.hs-h b:focus{ outline:none; } .hs-h b:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; border-radius:6px; }
+.hs-h b:focus{ outline:none; } .hs-h b:focus-visible{ outline:none; }
 .hs-cf{ position:absolute; inset:0; z-index:5; display:grid; place-items:center; padding:20px; border-radius:inherit; background:rgba(8,12,18,.35); }
+.hs-seg{ display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; padding:4px; border-radius:16px; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+.hs-seg button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:58px; padding:8px 6px; border-radius:12px; font:500 13px/1.2 inherit; text-align:center; transition:background .2s, color .2s; }
+.hs-seg button:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.12)); } .hs-seg button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; } .hs-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.hs-seg .sg{ display:flex; gap:2px; width:30px; height:12px; } .hs-seg .sg i{ flex:1; border-radius:3px; border:1.5px solid currentColor; opacity:.4; box-sizing:border-box; } .hs-seg .sg-s i:nth-child(1), .hs-seg .sg-m i:nth-child(-n+2), .hs-seg .sg-l i{ background:currentColor; opacity:1; }
+.hs-ipw{ position:relative; } .hs-ipb{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; } .hs-ipb:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.12)); } .hs-ipb:focus-visible{ outline:2px solid var(--hg-accent); }
+.hs-ipp{ position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30; box-sizing:border-box; padding:10px; border-radius:20px; background:var(--hg-pop-bg, rgba(34,36,40,.97)); color:inherit; box-shadow:0 18px 48px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.1); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); display:flex; flex-direction:column; gap:8px; }
+.hs-ipp.up{ top:auto; bottom:calc(100% + 6px); } .hs-ipp > small{ font-size:11.5px; opacity:.6; padding:0 4px; }
+.hs-ipg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(40px, 1fr)); gap:4px; max-height:216px; overflow-y:auto; scrollbar-width:thin; } .hs-ipg.rc{ max-height:none; }
+.hs-ipg button{ all:unset; cursor:pointer; aspect-ratio:1; border-radius:12px; display:grid; place-items:center; } .hs-ipg button:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.14)); } .hs-ipg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:-2px; } .hs-ipg button[aria-selected=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.hs-ipg ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .hs-ipe{ padding:14px 6px; font-size:13px; opacity:.6; text-align:center; grid-column:1 / -1; }
 .hs-cfb{ width:min(320px, 100%); box-sizing:border-box; padding:18px; border-radius:20px; display:flex; flex-direction:column; gap:6px; color:#fff;
   background:rgba(30,34,40,.66); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid rgba(255,255,255,.16); box-shadow:0 20px 50px rgba(0,0,0,.4);
   animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
@@ -1257,8 +1267,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 /* przyciski: główny lime z czarnym tekstem, drugorzędny szklany */
 .hs-b, .hge-sheet .lk-mini, .hge-sheet .lx-hbtn.ok, .hs-ac > .hs-b{ height:36px; padding:0 16px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font:600 14px/1 inherit; box-shadow:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
 .hs-ac > .hs-b, .hs-ac > .hs-b2, .hge-sheet .lcv-a .lx-hbtn{ height:44px; padding:0 20px; }
-.hs-b2, .hge-sheet .lx-hbtn:not(.ok), .hs-ac > .hs-b2{ height:36px; padding:0 16px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font:500 14px/1 inherit; display:inline-flex; align-items:center; justify-content:center; gap:8px; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+.hs-b2, .hge-sheet .lx-hbtn:not(.ok){ height:36px; padding:0 16px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font:500 14px/1 inherit; display:inline-flex; align-items:center; justify-content:center; gap:8px; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
 .hs-b ha-icon, .hs-b2 ha-icon, .hge-sheet .lx-hbtn ha-icon, .hge-sheet .lk-mini ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.hs-ac{ display:flex; justify-content:flex-end; align-items:center; gap:8px; } .hs-ac > .hs-b, .hs-ac > .hs-b2{ height:44px; min-width:104px; padding:0 20px; box-sizing:border-box; font-size:14px; line-height:1; border-radius:999px; }
+@media (max-width:600px){ .hs-ac{ flex-direction:column-reverse; align-items:stretch; } .hs-ac > .hs-b, .hs-ac > .hs-b2{ width:100%; } }
 .hs-b:disabled{ opacity:.4; cursor:default; }
 .hs-ac{ gap:8px; padding-top:4px; }
 /* segmenty / chipy */
