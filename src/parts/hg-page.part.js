@@ -773,8 +773,8 @@ class HGPage extends HTMLElement {
 .tabs::after, .rail::after, .tools::after, .hub::after, .back::after, .cir::after, .user::after, .fc::after, .rback::after, .more::after, .menu::after, .sheet-l .sheet::after{
   content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-bf); backdrop-filter: var(--glass-bf); }
-.tabs::after, .rail::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
-.tools::after, .rail::after{ -webkit-backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); }
+.tabs::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
+/* rail + pigułka narzędzi (zoom): dokładnie przepis szkła kart (--glass-bf), bez osobnego nasycenia */
 /* lite (dotyk): rozmycie tylko na zewnętrznym panelu (≤12px); chrom, menu, arkusz i karty bez backdrop-filter, bez dużych cieni */
 :host([lite]){ --hg-lens: saturate(100%); --hg-glass-rim: var(--hg-glass-rim-lite); --hg-glass-bri: 1; --hg-glow: none; --hg-glow-l: none; --hg-bf:.35; --hg-card-sh: 0 0 0 transparent; --hg-inner-bf: none; --hg-glass-lite: var(--hg-glass-lite-c); --hg-warm-lite: var(--hg-warm-lite-c); --hg-wm-tumble: none; --hg-wm-slosh: none; --hg-wm-bub: none; --hg-sc-anim: none; }
 :host([lite]) .panel{ -webkit-backdrop-filter: blur(12px) !important; backdrop-filter: blur(12px) !important; box-shadow: none !important; }

@@ -282,7 +282,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.2+1ea8852e';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.2+a67a2d60';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -5999,8 +5999,8 @@ class HGPage extends HTMLElement {
 .tabs::after, .rail::after, .tools::after, .hub::after, .back::after, .cir::after, .user::after, .fc::after, .rback::after, .more::after, .menu::after, .sheet-l .sheet::after{
   content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-bf); backdrop-filter: var(--glass-bf); }
-.tabs::after, .rail::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
-.tools::after, .rail::after{ -webkit-backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); }
+.tabs::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
+/* rail + pigułka narzędzi (zoom): dokładnie przepis szkła kart (--glass-bf), bez osobnego nasycenia */
 /* lite (dotyk): rozmycie tylko na zewnętrznym panelu (≤12px); chrom, menu, arkusz i karty bez backdrop-filter, bez dużych cieni */
 :host([lite]){ --hg-lens: saturate(100%); --hg-glass-rim: var(--hg-glass-rim-lite); --hg-glass-bri: 1; --hg-glow: none; --hg-glow-l: none; --hg-bf:.35; --hg-card-sh: 0 0 0 transparent; --hg-inner-bf: none; --hg-glass-lite: var(--hg-glass-lite-c); --hg-warm-lite: var(--hg-warm-lite-c); --hg-wm-tumble: none; --hg-wm-slosh: none; --hg-wm-bub: none; --hg-sc-anim: none; }
 :host([lite]) .panel{ -webkit-backdrop-filter: blur(12px) !important; backdrop-filter: blur(12px) !important; box-shadow: none !important; }
