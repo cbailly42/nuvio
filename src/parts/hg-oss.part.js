@@ -6,6 +6,10 @@ const HG_DASH = () => (location.pathname.split('/')[1] || 'home-glass');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (assets/bg, CREDITS.md); gdy się nie wczyta – gradient */
 const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+/* 10 teł do wyboru (CC0, assets/backgrounds/CREDITS.md); pierwsze = domyślne. Miniatury ~5 KB, pełne zdjęcia wczytywane dopiero po wyborze */
+const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', 'Dom w lesie'], ['domek-nad-woda', 'Domek nad wodą'], ['gwiazdzista-noc', 'Gwiaździsta noc'], ['zachod-slonca', 'Zachód słońca'], ['las-o-zmierzchu', 'Las o zmierzchu'],
+  ['jasny-salon', 'Jasny salon'], ['drewniane-wnetrze', 'Drewniane wnętrze'], ['kuchnia', 'Kuchnia'], ['mglisty-las', 'Mglisty las'], ['nad-mgla', 'Nad mgłą']]
+  .map(([id, l], i) => { const b = HG_ASSET + 'assets/backgrounds/' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
 const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'assets/bg/default-wide.webp', v2p: HG_ASSET + 'assets/bg/default-portrait.webp' };
 
 const HG_I18N = {
