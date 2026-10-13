@@ -206,11 +206,22 @@ const HG_COMP = [
   { id: 'robots', n: 'Roboty', d: 'Odkurzacze i kosiarki: stan i sterowanie', i: 'mdi:robot-vacuum', card: 'hg-robots-card', slots: [{ k: 'entities', l: 'Roboty', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
   { id: 'agenda', n: 'Kalendarz', d: 'Agenda lub widok miesiąca', i: 'mdi:calendar-month-outline', card: 'hg-agenda-card', cards: { agenda: 'hg-agenda-card', month: 'hg-month-card' }, modes: [['agenda', 'Agenda', 'mdi:format-list-bulleted'], ['month', 'Miesiąc', 'mdi:calendar-month-outline']],
     slots: [{ k: 'calendars', l: 'Kalendarze', dom: ['calendar'], multi: 1, req: 1 }], cfg: (v) => (v.mode === 'month' ? { calendars: v.calendars } : { calendars: v.calendars, days: 14 }) },
+  { id: 'slider', n: 'Suwak', d: 'Jasność, głośność, wentylator, roleta, liczba', i: 'mdi:tune-variant', card: 'hg-slider-card', modes: [['h', 'Poziomy', 'mdi:arrow-left-right'], ['v', 'Pionowy', 'mdi:arrow-up-down']],
+    slots: [{ k: 'e', l: 'Encja', dom: ['light', 'media_player', 'fan', 'cover', 'valve', 'input_number', 'number'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'h' }) },
+  { id: 'button', n: 'Przycisk', d: 'Skrypt, scena, button.press lub akcja', i: 'mdi:gesture-tap-button', card: 'hg-button-card', modes: [['tile', 'Kafel', 'mdi:square-rounded-outline'], ['pill', 'Wiersz', 'mdi:minus-box-outline']],
+    slots: [{ k: 'e', l: 'Encja', dom: ['script', 'scene', 'button', 'input_button', 'automation', 'lock', 'switch'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'tile' }) },
+  { id: 'entities', n: 'Lista encji', d: 'Wiersze z przełącznikiem lub wartością', i: 'mdi:format-list-checks', card: 'hg-entities-card',
+    slots: [{ k: 'entities', l: 'Encje', dom: ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier', 'sensor', 'binary_sensor', 'script', 'scene', 'button', 'input_button', 'lock', 'cover', 'climate', 'media_player', 'person'], pref: ['light', 'switch', 'fan', 'input_boolean'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
+  { id: 'select', n: 'Wybór', d: 'Opcje input_select i select', i: 'mdi:form-dropdown', card: 'hg-select-card', modes: [['chips', 'Przyciski', 'mdi:dots-horizontal'], ['list', 'Lista', 'mdi:format-list-bulleted']],
+    slots: [{ k: 'e', l: 'Encja', dom: ['input_select', 'select'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'chips' }) },
+  { id: 'stepper', n: 'Licznik', d: 'Plus i minus dla liczników i wartości', i: 'mdi:plus-minus-variant', card: 'hg-stepper-card',
+    slots: [{ k: 'e', l: 'Encja', dom: ['counter', 'input_number', 'number'], req: 1 }], cfg: (v) => ({ entity: v.e }) },
+  { id: 'gauge', n: 'Wskaźnik', d: 'Wartość czujnika na łuku', i: 'mdi:gauge', card: 'hg-gauge-card', slots: [{ k: 'e', l: 'Czujnik liczbowy', dom: ['sensor', 'input_number', 'number'], num: 1, req: 1 }], cfg: (v) => ({ entity: v.e }) },
   { id: 'map', n: 'Mapa', d: 'Domownicy, urządzenia i strefy na mapie', i: 'mdi:map-outline', card: 'hg-map-card', slots: [{ k: 'entities', l: 'Osoby, urządzenia, strefy', dom: ['person', 'device_tracker', 'zone'], loc: 1, multi: 1, req: 1 }],
     cfg: (v) => ({ entities: v.entities, theme_mode: 'auto', hours_to_show: 0 }) },
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', };
+const HG_COMP_Z = { climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
