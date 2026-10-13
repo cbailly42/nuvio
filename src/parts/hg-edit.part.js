@@ -270,7 +270,39 @@ const HGToast = window.__hgToast || (window.__hgToast = {
     box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));
     if (!this.exp) this.arm(x, ms); else x.left = ms; },
 });
+const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
+  _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
+    const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', 'Edytuj tytuł i podtytuł'); b.title = 'Edytuj tytuł i podtytuł'; b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
+  _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
+  _eHead() { const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
+    const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="Tytuł widoku"><style>${HG_STY_CSS}
+      .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:#FF6B6B; opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } }
+      .hd-d{ border-radius:16px; padding:12px; background:var(--hg-tile-bg); min-width:0; } .hd-d small{ display:block; font-size:11px; opacity:.55; margin-bottom:6px; } .hd-d b{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; font-weight:600; line-height:1.18; } .hd-d p{ margin:4px 0 0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; opacity:.85; line-height:1.2; }
+      .hd-d.d b{ font-size:20px; } .hd-d.d p{ font-size:17px; } .hd-d.t b{ font-size:17px; } .hd-d.t p{ font-size:14px; } .hd-d.m b{ font-size:15px; } .hd-d.m p{ font-size:12.5px; }
+      .hd-v{ display:none; } .hd-v.on{ display:block; } .hd-hint{ font-size:12px; opacity:.6; margin:-4px 0 4px; }</style>
+      <div class="hs-h"><b>Tytuł i podtytuł</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      <div class="hs-pv"><small>Podgląd na urządzeniach</small><div class="hd-pv"></div></div>
+      ${fld('t', 'Tytuł', c.title, HG_HEAD_LIM.t)}${fld('s', 'Podtytuł', c.subtitle, HG_HEAD_LIM.s)}
+      <p class="hd-hint">Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).</p>
+      <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>Krótsze wersje dla telefonu i tabletu</b><small>Opcjonalne – puste pola używają wersji głównej</small></span></button>
+      <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', 'Tytuł – tablet', 'jak główny', HG_HEAD_LIM.t)}${fld('st', 'Podtytuł – tablet', 'jak główny', HG_HEAD_LIM.s)}${fld('tm', 'Tytuł – telefon', 'jak główny', 22)}${fld('sm', 'Podtytuł – telefon', 'jak główny', 36)}</div>
+      </div><div class="hs-ac"><button class="hs-b2" data-hge="hdreset">Przywróć domyślne</button><button class="hs-b" data-hge="hdok">Zapisz</button></div></div>`;
+    for (const i of S.querySelectorAll('input.hs-in')) i.addEventListener('input', () => this._eHeadPv());
+    this._eHeadPv(); },
+  _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; } return o; },
+  _eHeadPv() { const S = this._eSheetEl, c = this._config, V = this._eHeadVals(), nm = this._userInfo().first || '';
+    for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
+    const r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm)), one = (cls, l, t, s) => `<div class="hd-d ${cls}"><small>${l}</small><b>${r(t)}</b><p>${r(s)}</p></div>`;
+    const T = V.t || c.title, Su = V.s || c.subtitle;
+    S.querySelector('.hd-pv').innerHTML = one('d', 'Komputer', T, Su) + one('t', 'Tablet', V.tt || T, V.st || Su) + one('m', 'Telefon', V.tm || T, V.sm || Su); },
+  _eHeadAct(a) { const sc = this._pageScope();
+    if (a === 'hdvar') { this._eSheetEl.querySelector('.hd-v').classList.toggle('on'); return; }
+    const V = a === 'hdreset' ? {} : this._eHeadVals();
+    this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
+    this._eSheet(false);
+    this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? 'Przywrócono domyślny tytuł' : 'Zapisano tytuł'); },
   _eGhostSweep() { if (!this._eOn && !this.classList.contains('hge')) {} for (const ct of this._eConts()) for (const it of this._eItems(ct)) { const g = hgIsGhost(it), d = it.querySelector(':scope > .hge');
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
@@ -560,7 +592,7 @@ const HG_EDIT = {
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
-    this._eWire(); this._eDecorate(); this._eGhostSweep(); this._eBar();
+    this._eWire(); this._eDecorate(); this._eGhostSweep(); this._eHeadBtn(); this._eBar();
     clearInterval(this._eGh); this._eGh = setInterval(() => { if (!this._editing) return clearInterval(this._eGh); if (this._drag && this._drag.on) return; this._eGhostSweep(); this._eDecorate(); }, 700);
   },
   _editExit(save) {
@@ -663,6 +695,8 @@ const HG_EDIT = {
       for (const s of sc) HGL.set(s, {}); this._eToast('Przywrócono domyślny układ widoku (zapisz „Gotowe”)'); return this._eRefresh(true); }
     if (a === 'hidden') return this._eSheet('hidden');
     if (a === 'look') return this._eLook();
+    if (a === 'headedit') return this._eHead();
+    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar') return this._eHeadAct(a, b);
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }

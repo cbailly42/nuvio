@@ -513,7 +513,9 @@ class HGPage extends HTMLElement {
     const c = this._config; if (!this._hass) return;
     if (c.room_head) { this._setHTML(this._headEl, this._roomHead()); return; }
     const ui = this._userInfo();
-    this._headEl.innerHTML = `<h1>${H.esc(c.title.replace('{name}', ui.first))}</h1><p>${H.esc(c.subtitle)}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? '<div class="fuel" role="list" aria-label="Ceny paliw"></div>' : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    const hd = (typeof HGL !== 'undefined' && HGL.data && HGL.data.s && this._pageScope && ((HGL.data.s[this._pageScope()] || {}).conf || {})._head) || {}, md = this.getAttribute('mode');
+    const pick = (k, def) => String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '');
+    this._headEl.innerHTML = `<h1 title="${H.esc(pick('t', c.title))}">${H.esc(pick('t', c.title))}</h1><p>${H.esc(pick('s', c.subtitle))}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? '<div class="fuel" role="list" aria-label="Ceny paliw"></div>' : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
     this._placeWx();
   }
@@ -1021,7 +1023,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .un{ display:none; }
 :host([mode=phone]) .chev{ width:30px; height:44px; }
 :host([mode=phone]) .head{ grid-area:head; padding:2px 4px 0; }
-:host([mode=phone]) .head h1{ font-size:26px; } :host([mode=phone]) .head p{ font-size:19px; }
+:host([mode=phone]) .head h1{ font-size:clamp(20px, 6.6vw, 26px); } :host([mode=phone]) .head p{ font-size:clamp(15px, 4.9vw, 19px); }
+.head h1, .head p{ overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; text-overflow:ellipsis; } .head p{ -webkit-line-clamp:2; }
+.head .hge-hd{ all:unset; cursor:pointer; position:absolute; top:0; right:-40px; z-index:2; width:32px; height:32px; border-radius:50%; display:inline-grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); vertical-align:middle; box-shadow:0 4px 14px rgba(0,0,0,.25); } .head .hge-hd ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ position:relative; } :host([mode=phone]) .head .hge-hd, :host([mode=tablet]) .head .hge-hd{ right:4px; }
 :host([mode=phone]) .fuel{ flex-wrap:nowrap; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .hrow{ gap:6px; margin-top:10px; max-width:100%; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ min-width:0; } :host([mode=phone]) .hrow .fuel{ margin-top:0; flex:1; } :host([mode=phone]) .hrow{ --chip-h:40px; --chip-r:12px; --chip-pl:6px; --chip-pr:10px; --chip-ic:28px; align-items:center; scroll-snap-type:x proximity; }
 .fc .fl{ opacity:1 !important; height:16u; padding:0 6u; border-radius:999px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.02em; background:var(--hg-accent); color:var(--hg-on-accent); }
 .fc .fl.on{ background:var(--hg-on-accent); color:var(--hg-thumb); }
