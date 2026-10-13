@@ -19,8 +19,8 @@ python3 tools/guard.py
 git add -A && git commit -qm "chore: release $V"
 git tag -a "v$V" -m "Nuvio $V"
 git push -q origin main "v$V"
-# Only the zip is attached (manual install). No nuvio.js asset, so HACS installs the whole dist/ folder
-# (assets included) and registers /hacsfiles/nuvio/nuvio.js as the dashboard resource.
+# HACS downloads release assets (not dist/) when a release has any. nuvio.zip alone is saved
+# unextracted, so nuvio.js is attached as well. assets/ (fonts, backgrounds) only comes with the zip.
 rm -f /tmp/nuvio.zip && (cd dist && zip -qr /tmp/nuvio.zip nuvio.js assets)
 # tag uruchamia też .github/workflows/release.yml – jeśli wydanie już istnieje, tylko podmień pliki
 if gh release view "v$V" >/dev/null 2>&1; then gh release upload "v$V" /tmp/nuvio.zip dist/nuvio.js --clobber
