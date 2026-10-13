@@ -209,10 +209,12 @@ const HG_COMP = [
   { id: 'map', n: 'Mapa', d: 'Domownicy, urządzenia i strefy na mapie', i: 'mdi:map-outline', card: 'hg-map-card', slots: [{ k: 'entities', l: 'Osoby, urządzenia, strefy', dom: ['person', 'device_tracker', 'zone'], loc: 1, multi: 1, req: 1 }],
     cfg: (v) => ({ entities: v.entities, theme_mode: 'auto', hours_to_show: 0 }) },
 ];
+/* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
+const HG_COMP_Z = { climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
-  .sort((a, b) => H.name(h, a).localeCompare(H.name(h, b)));
+  .sort((a, b) => (sl.pref ? ((sl.pref.indexOf(a.split('.')[0]) + 1 || 99) - (sl.pref.indexOf(b.split('.')[0]) + 1 || 99)) : 0) || H.name(h, a).localeCompare(H.name(h, b)));
 const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
 const hgCompCard = (C, v) => (C.cards && v && C.cards[v.mode]) || C.card;
 const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
@@ -332,7 +334,7 @@ const HG_COMP_EDIT = {
   /* krok 2: formularz komponentu (dodawanie i edycja – ten sam arkusz) */
   _eComp(cid, st) {
     const h = this._hass, C = HG_COMP.find((x) => x.id === cid); if (!C) return; this._eSheet('cfg'); const S = this._eSheetEl;
-    const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: 's' };
+    const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: HG_COMP_Z[C.id] || 's' };
     const ed = !!R.edit, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
     const slot = (sl) => { const v = R.v[sl.k];
       if (!sl.multi) return `<div class="hs-fl"><span>${H.esc(sl.l)}${sl.req ? '' : ''}</span><div class="hs-r hs-er"><button class="hs-eb" data-hge="cslot" data-k="${sl.k}"><span class="hs-i">${H.icon(v ? ico(v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(v ? H.name(h, v) : 'Wybierz encję')}</b><small>${H.esc(v || sl.dom.join(', '))}</small></span><span class="hs-p" title="Zmień">${H.icon(v ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>${v && !sl.req ? `<button class="hs-del" data-hge="cdel" data-k="${sl.k}" aria-label="Usuń">${H.icon('mdi:close')}</button>` : ''}</div></div>`;
@@ -442,6 +444,8 @@ const HGE_CSS = `
 .hge-cf span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hge .hge-cf button{ position:static; height:30px; padding:0 12px; border-radius:999px; box-shadow:none; flex:none; }
 .hge .hge-cf button[data-hge=cfno]{ background:rgba(0,0,0,.08); }
+/* kontener dodanych kafli to nie slot: bez własnej ramki (ramki mają kafle w środku) */
+.hge-on > [data-hgk="_tiles"], [data-hgl].hge-on > [data-hgk="_tiles"]{ outline:none !important; animation:none !important; }
 .hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, rgba(160,230,60,.08)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0 0 11px; width:100%; }
 .hge-add ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); }
 `;

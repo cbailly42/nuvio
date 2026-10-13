@@ -1207,6 +1207,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet :is(button, a, input, select, [role=button]):focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet :is(button, .hs-r, .hs-s, .hge-sheet .lx-sw, .hge-sheet .lx-sw i){ transition:background-color var(--ui-t), box-shadow var(--ui-t), transform var(--ui-t), opacity var(--ui-t), color var(--ui-t); }
 .hge-sheet button:active:not(:disabled){ transform:scale(.96); } .hge-sheet .lx-sw:active i{ transform:scale(.96); } .hge-sheet .lx-sw[aria-checked=true]:active i{ transform:translateX(18px) scale(.96); }
+/* jeden pierścień fokusu: pole w pigułce (.hs-s) i pola formularza widoku rysują go same, wewnętrzny input bez obrysu */
+.hge-sheet .hs-s input, .hge-sheet .hs-s input:focus, .hge-sheet .hs-s input:focus-visible, .hge-sheet .hs-in:focus-visible, .hge-sheet .lcv :is(input, select):focus-visible{ outline:none !important; }
+.hge-sheet .hs-s:focus-within{ box-shadow:inset 0 0 0 1.5px var(--hg-accent); }
+.hge-sheet input[type=color]:focus-visible{ outline:none !important; } .hge-sheet :has(> input[type=color]:focus-visible){ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @media (prefers-reduced-motion:reduce){ .hge-sheet *{ transition:none !important; } .hge-sheet button:active{ transform:none !important; } }
 `);
   }
