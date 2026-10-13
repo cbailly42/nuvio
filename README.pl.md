@@ -110,3 +110,4 @@ Nuvio jest udostępniany na [licencji MIT](LICENSE).
 Dołączone zasoby zewnętrzne:
 - [DM Sans](dist/assets/fonts/OFL.txt) — SIL Open Font License 1.1
 - [Meteocons](dist/assets/meteocons/LICENSE) — Bas Milius, MIT
+- [Domyślne zdjęcie tła](dist/assets/bg/CREDITS.md): „House in forest”, autor Flo Pappert, CC0 1.0 (przez Wikimedia Commons)

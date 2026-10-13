@@ -4,7 +4,9 @@ const HG_ASSET = (() => { try { const s = document.currentScript && document.cur
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'home-glass');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
-window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+/* domyślne tło: zdjęcie CC0 dostarczane z pakietem (assets/bg, CREDITS.md); gdy się nie wczyta – gradient */
+const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'assets/bg/default-wide.webp', v2p: HG_ASSET + 'assets/bg/default-portrait.webp' };
 
 const HG_I18N = {
   pl: { panel: 'Panel', rooms: 'Pokoje', room: 'Pokój', media: 'Multimedia', cams: 'Kamery', family: 'Rodzina', energy: 'Energia', settings: 'Ustawienia', profile: 'Profil',

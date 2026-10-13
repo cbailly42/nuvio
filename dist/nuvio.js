@@ -4,7 +4,9 @@ const HG_ASSET = (() => { try { const s = document.currentScript && document.cur
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'nuvio');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
-window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+/* domyślne tło: zdjęcie CC0 dostarczane z pakietem (assets/bg, CREDITS.md); gdy się nie wczyta – gradient */
+const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'assets/bg/default-wide.webp', v2p: HG_ASSET + 'assets/bg/default-portrait.webp' };
 
 const HG_I18N = {
   pl: { panel: 'Panel', rooms: 'Pokoje', room: 'Pokój', media: 'Multimedia', cams: 'Kamery', family: 'Rodzina', energy: 'Energia', settings: 'Ustawienia', profile: 'Profil',
@@ -133,7 +135,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.0+4958cc2a';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.0+c617b537';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6219,12 +6221,17 @@ const HGApp = window.__hgApp || (window.__hgApp = {
   bgImg(b) { if (!b) return null;
     if (b.kind === 'color') return `linear-gradient(${b.v}, ${b.v})`;
     if (b.kind === 'gradient') return `linear-gradient(160deg, ${b.v}, ${b.v2 || ('#' + '000000')})`;
+    if (b.kind === 'image' && b.v) return `url('${String(b.v).replace(/'/g, '%27')}')`;
     if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${String(b.v).replace(/'/g, '%27')}')`; return null; },
   apply() {
     const a = this.get(); let st = document.getElementById('hg-app-style');
     if (!st) { st = document.createElement('style'); st.id = 'hg-app-style'; document.head.appendChild(st); }
     const T = a.accent && a.accent.toUpperCase() !== ('#' + '63D71E') ? this.tokens(a.accent) : null;
-    const img = this.bgImg(a.bg || window.HG_DEFAULT_BG), img2 = a.bg && a.bg.v2p ? `url('${a.bg.v2p}')` : img;
+    let B = a.bg || window.HG_DEFAULT_BG;
+    if (!a.bg && B && B.kind === 'image') { /* domyślne zdjęcie: sprawdź raz, czy się wczytuje; błąd -> gradient zapasowy */
+      if (B._st === 'bad') B = window.HG_DEFAULT_BG_FB;
+      else if (!B._st) { B._st = 'wait'; const im = new Image(); im.onload = () => { B._st = 'ok'; }; im.onerror = () => { B._st = 'bad'; this.apply(); }; im.src = B.v; } }
+    const img = this.bgImg(B), img2 = B && B.v2p ? this.bgImg({ kind: 'image', v: B.v2p }) : img;
     const dim = a.dim != null ? Math.max(0, Math.min(1, a.dim)) : null;
     let css = '';
     const L = Object.assign({}, T ? T.light : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {});
@@ -6836,7 +6843,7 @@ const HG_EDIT = {
         <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="Własny kolor akcentu"><small>Własny</small></label></div>
         <div class="lk-pv" aria-label="Podgląd"><div class="lk-pc"><span class="lk-pi" style="background:${acc};color:${T.light['--hg-on-accent']}">${H.icon('mdi:lightbulb-on')}</span><span class="lk-pt"><b>Lampa</b><small style="color:var(--hg-accent-tx)">Włączone · 80%</small></span></div><span class="lk-pb" style="background:${acc};color:${T.light['--hg-on-accent']}">${ck} Aktywny</span></div></section>
       <section class="lk-g"><h4>${H.icon('mdi:image-outline')}Tło</h4>
-        <div class="lk-bgs">${HG_BGS.map(([u, l, pu], i) => `<button data-hge="bgp" data-v="${i ? u : ''}" data-p="${pu || ''}" aria-pressed="${i ? !!bg && bg.v === u : !bg}" title="${l}"><span><img alt="" loading="lazy" src="${u}">${ck}</span><small>${i ? l : 'Domyślne'}</small></button>`).join('')}</div>
+        <div class="lk-bgs">${HG_BGS.map(([u, l, pu], i) => `<button data-hge="bgp" data-v="${i ? u : ''}" data-p="${pu || ''}" aria-pressed="${i ? !!bg && bg.v === u : !bg}" title="${l}"><span${i ? '' : ` style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})"`}>${i ? `<img alt="" loading="lazy" src="${u}">` : (HG_DEFAULT_BG.kind === 'image' && HG_DEFAULT_BG.v ? `<img alt="" loading="lazy" src="${H.esc(HG_DEFAULT_BG.v)}" onerror="this.remove()">` : '')}${ck}</span><small>${i ? l : 'Domyślne'}</small></button>`).join('')}</div>
         <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="Adres zdjęcia: https://… lub /local/…" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">Ustaw</button></span>
           <button class="lk-up" data-hge="bgup" title="Prześlij zdjęcie do Home Assistant">${H.icon('mdi:upload')}<span>Prześlij</span></button><input type="file" accept="image/*" hidden></div>
         <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>
