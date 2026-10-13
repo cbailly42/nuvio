@@ -97,11 +97,12 @@ const HG_CAM_CSS = `
 .fr.ok img{ opacity:1; }
 .shim{ position:absolute; inset:0; overflow:hidden; background:rgba(214,218,224,.55); transition:opacity .4s ease; animation:hgshim 1.6s ease-in-out infinite; }
 .shim::after{ content:none; }
+.shim .ph{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#4A4E54; font-size:var(--fs-sm, 13px); } .shim .ph ha-icon{ --mdc-icon-size:28px; opacity:.55; } .shim .ph .e{ display:none; } .fr.err .shim .ph .l{ display:none; } .fr.err .shim .ph .e{ display:inline; }
 .fr.ok .shim{ opacity:0; animation:none; }
 @keyframes hgshim{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
 .fr .live{ position:absolute; inset:0; display:none; background:#000; }
 .fr.err .shim{ animation:none; display:flex; align-items:center; justify-content:center; }
-.fr.err .shim::after{ content:'Brak obrazu z kamery'; font-size:var(--fs-sm); color:#4A4E54; }
+.fr.err .shim::after{ content:none; }
 .fr.on .live{ display:block; } .fr.on img, .fr.on .shim{ visibility:hidden; }
 .fr .live > *{ display:block; height:100%; --ha-card-border-radius:0; --ha-card-border-width:0; --ha-card-box-shadow:none; --ha-card-background:#000; }
 .ov{ position:absolute; left:0; right:0; bottom:0; display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s1); padding:var(--s1); z-index:3;
@@ -157,7 +158,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
     const hd = `<div class="hd">${H.icon('mdi:cctv', 'ic')}<span class="tt"></span><span class="sp"></span><span class="st"></span>
       <button class="ib kebab" data-act="more" aria-label="Szczegóły kamery" title="Szczegóły">${H.icon('mdi:dots-vertical')}</button></div>`;
     const body = un ? `<div class="un">${H.icon('mdi:cctv-off')}<span>${c.cover ? 'Brak połączenia z kamerą' : 'Kamera niedostępna'}</span></div>`
-      : `<div class="fr" data-act="frame" style="--aspn:${asp}"><div class="shim"></div><img alt="" decoding="async"><div class="live"></div>
+      : `<div class="fr" data-act="frame" style="--aspn:${asp}"><div class="shim"><span class="ph">${H.icon('mdi:cctv')}<span class="l">Ładowanie…</span><span class="e">Brak obrazu</span></span></div><img alt="" decoding="async"><div class="live"></div>
           <div class="ov">${this._nl() ? '<span></span>' : `<button class="pb" data-act="live" aria-label="Podgląd na żywo">${H.icon('mdi:play')}<span>Na żywo</span></button>`}
           <button class="pb ic" data-act="full" aria-label="Pełny ekran" title="Pełny ekran">${H.icon('mdi:fullscreen')}</button></div></div>`;
     this.$.innerHTML = `<ha-card class="glass ${c.embedded ? 'bare' : ''} ${c.cover ? 'cv' : ''}"><div class="tile">${hd}${body}</div></ha-card>`;
@@ -167,6 +168,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
     if (this._fr) {
       this._io = new IntersectionObserver((en) => { this._vis = en.some((e) => e.isIntersecting); if (this._vis) this._snap(); });
       this._io.observe(this._fr);
+      clearTimeout(this._errT); this._errT = setTimeout(() => { if (!this._loaded && this._fr && this._fr.isConnected) this._fr.classList.add('err'); }, 12000);   // brak klatki po 12 s -> „Brak obrazu” zamiast wiecznego ładowania
     }
   }
   _snap() {

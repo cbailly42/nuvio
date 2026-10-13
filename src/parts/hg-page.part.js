@@ -1081,7 +1081,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet.wide{ width:min(640px, calc(100vw - 24px)); max-height:min(86vh, 820px); }
 .hs-sc{ display:flex; flex-direction:column; gap:14px; overflow-y:auto; overscroll-behavior:contain; min-height:0; padding:2px; scrollbar-width:thin; }
 .hs-hint{ font-size:12px; opacity:.75; padding-left:4px; }
-.hs-pvb{ padding:10px; border-radius:20px; background:rgba(0,0,0,.12); } .hs-pvb.clone > div{ pointer-events:none; }
+.hs-pvb{ padding:10px; border-radius:20px; background:rgba(0,0,0,.12); max-height:min(380px, 45vh); overflow:hidden; contain:paint; } .hs-pvb.live{ display:block; } .hs-pvf{ display:block; max-height:calc(min(380px, 45vh) - 20px); overflow:hidden; pointer-events:none; position:relative; } .hs-pvf > *{ display:block; transform-origin:top left; } .hs-pvb.clone > div{ pointer-events:none; }
 .hs-sw{ display:flex; flex-wrap:wrap; gap:10px; }
 .hs-sw button, .hs-cc{ display:flex; flex-direction:column; align-items:center; gap:4px; border:0; background:none; color:inherit; cursor:pointer; padding:0; font:inherit; }
 .hs-sw i{ width:36px; height:36px; border-radius:50%; background:var(--c); box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
