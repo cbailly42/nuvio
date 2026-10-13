@@ -472,6 +472,8 @@ hgReg('hg-tiles-card', HGTilesCard, hgTr('Home Glass – Moje kafelki', 'Home Gl
 const HGE_CSS = `
 .hge-on > .hge-ghost{ display:none !important; }
 [data-hgl] > [data-hgk]{ position:relative; }
+/* w układzie kolumnowym (masonry) blok jako inline-block: Chrome inaczej rysuje absolutne uchwyty i X pierwszego bloku kolumny w poprzedniej kolumnie */
+.hge-on [data-hgl] > [data-hgk]:not([hidden]), [data-hgl].hge-on > [data-hgk]:not([hidden]){ display:inline-block; width:100%; vertical-align:top; break-inside:avoid; }
 .hge-on [data-hgl] > [data-hgk], [data-hgl].hge-on > [data-hgk]{ outline:1.5px dashed var(--hg-accent); outline-offset:3px; border-radius:var(--r-md, 18px); animation:hgeW 1.6s ease-in-out infinite; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
 [data-hgl] > [data-hgk]:nth-child(2n){ animation-delay:-.8s; }
 @keyframes hgeW{ 0%,100%{ rotate:-.35deg } 50%{ rotate:.35deg } }
