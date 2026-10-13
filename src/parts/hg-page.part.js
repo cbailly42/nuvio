@@ -315,6 +315,13 @@ class HGPage extends HTMLElement {
       b.hidden = !can; this._fitCheck();
     });
   }
+  _mas() { const el = this._panelEl; if (!el || !this._cardWraps) return;
+    if (!this._masRO) this._masRO = new ResizeObserver(() => { cancelAnimationFrame(this._masF); this._masF = requestAnimationFrame(() => this._masOn && this._masLay()); });
+    for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
+  _masLay() { const el = this._panelEl, gap = parseFloat(getComputedStyle(el).rowGap) || 0;
+    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild); for (const w of W) { w.style.minHeight = '0px'; w.style.gridRowEnd = 'span 1'; }
+    const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
+    W.forEach((w, i) => { w.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); }); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
     if (mode === 'phone') {
@@ -340,6 +347,10 @@ class HGPage extends HTMLElement {
       else if (mode !== 'phone' && cc.span && !cc.area) w.style.gridColumn = `span ${cc.span}`;
       else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
     });
+    /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
+    el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
+    el.style.alignItems = p.align === 'start' || p.masonry ? 'start' : '';
+    if (p.masonry && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; for (const w of this._cardWraps) w.style.gridRowEnd = ''; }
     this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
     this.toggleAttribute('wide-panel', !!p.wide);
     this.toggleAttribute('fit-panel', !!p.fit);
