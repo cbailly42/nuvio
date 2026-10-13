@@ -52,7 +52,9 @@ const HGModel = {
 async function hgGenerate(hass, opt) {
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */
   if (!wiz) try { const r = await hass.callWS({ type: 'frontend/get_user_data', key: 'nuvio_layout' }); wiz = r && r.value && r.value.wiz; } catch (e) { /* brak */ }
-  const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M = await HGModel.load(hass);
+  const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
+  /* _empty: tylko testy – symulacja instancji bez danych */
+  const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [] }) : M0;
   const want = (v) => !wiz || !wiz.views || wiz.views.includes(v);
   const V = [['dashboard', t('panel'), 'mdi:view-dashboard-outline', true], ['rooms', t('rooms'), 'mdi:sofa-outline', Object.keys(M.areas).length > 0],
     ['multimedia', t('media'), 'mdi:play-box-multiple-outline', M.media.length > 0], ['kamery', t('cams'), 'mdi:cctv', M.cams.length > 0],
@@ -73,9 +75,14 @@ async function hgGenerate(hass, opt) {
   const scroll = { scroll: true, columns: '1fr 1fr', auto_rows: 'auto', phone_columns: '1fr', tablet: { columns: '1fr 1fr' } };
   const one = (a) => ({ wide: true, scroll: true, columns: '1fr', auto_rows: 'auto', areas: `"${a}"`, phone_areas: `"${a}"`, phone_columns: '1fr', tablet: { columns: '1fr' } });
   const dash = [];
+const hint = (k) => ({ type: 'custom:nuvio-hint-card', hint: k });
+    if (!M.weather) dash.push(hint('weather'));
   if (M.climate[0]) dash.push({ type: 'custom:nuvio-ac-card', entity: M.climate[0], title: t('climate'), min_h: 253 });
   if (M.scenes.length) dash.push({ type: 'custom:nuvio-scenes-card', title: t('scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
   if (M.power.length) dash.push({ type: 'custom:nuvio-power-card', title: t('power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
+  if (!M.scenes.length) dash.push(hint('scenes'));
+  if (!M.power.length) dash.push(hint('power'));
+  if (!M.persons.length) dash.push(hint('people'));
   const views = [];
   const view = (path, title, card, sub) => ({ title, path, type: 'panel', ...(sub ? { subview: true } : {}), cards: [card] });
   views.push(view('dashboard', t('panel'), base('dashboard', t('hello'), t('hello_sub'), dash, scroll, weather ? { weather } : {})));
@@ -83,13 +90,50 @@ async function hgGenerate(hass, opt) {
     views.push(view('rooms', t('rooms'), base('rooms', t('rooms'), t('rooms_sub'), [{ type: 'custom:nuvio-areas-card', area: 'grid', min_h: 200, room_path: HG_P('pokoj'), areas: areasCfg }], one('grid'))));
     views.push(view('pokoj', t('room'), base('pokoj', t('room'), '', [{ type: 'custom:nuvio-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms') }), true));
   }
-  if (V.some((v) => v[0] === 'multimedia')) views.push(view('multimedia', t('media'), base('multimedia', t('media'), t('media_sub'), [{ type: 'custom:nuvio-players-card', area: 'm', entities: M.media }], one('m'))));
-  if (V.some((v) => v[0] === 'kamery')) views.push(view('kamery', t('cams'), base('kamery', t('cams'), t('cams_sub'), [{ type: 'custom:nuvio-cameras-card', area: 'c', entities: M.cams }], one('c'))));
-  if (V.some((v) => v[0] === 'family')) views.push(view('family', t('family'), base('family', t('family'), t('family_sub'), M.persons.map((p) => ({ type: 'custom:nuvio-person-card', entity: p })), scroll)));
-  if (V.some((v) => v[0] === 'energia')) views.push(view('energia', t('energy'), base('energia', t('energy'), t('energy_sub'), M.power.slice(0, 4).map((e) => ({ type: 'custom:nuvio-power-card', title: hass.states[e].attributes.friendly_name || e, entities: [e], max_power: 10000, hours: 24 })), scroll)));
+  if (V.some((v) => v[0] === 'multimedia')) views.push(view('multimedia', t('media'), base('multimedia', t('media'), t('media_sub'), [M.media.length ? { type: 'custom:nuvio-players-card', area: 'm', entities: M.media } : { ...hint('media'), area: 'm' }], one('m'))));
+  if (V.some((v) => v[0] === 'kamery')) views.push(view('kamery', t('cams'), base('kamery', t('cams'), t('cams_sub'), [M.cams.length ? { type: 'custom:nuvio-cameras-card', area: 'c', entities: M.cams } : { ...hint('cams'), area: 'c' }], one('c'))));
+  if (V.some((v) => v[0] === 'family')) views.push(view('family', t('family'), base('family', t('family'), t('family_sub'), (M.persons.length ? M.persons.map((p) => ({ type: 'custom:nuvio-person-card', entity: p })) : [hint('people')]), scroll)));
+  if (V.some((v) => v[0] === 'energia')) views.push(view('energia', t('energy'), base('energia', t('energy'), t('energy_sub'), (M.power.length ? M.power.slice(0, 4).map((e) => ({ type: 'custom:nuvio-power-card', title: hass.states[e].attributes.friendly_name || e, entities: [e], max_power: 10000, hours: 24 })) : [hint('power')]), scroll)));
   views.sort((a, b) => (a.subview ? 1 : 0) - (b.subview ? 1 : 0) || V.findIndex((v) => v[0] === a.path) - V.findIndex((v) => v[0] === b.path));
   return { title: brand, views, _hgWizard: !wiz, ...(opt.kiosk_mode ? { kiosk_mode: opt.kiosk_mode } : {}) };
 }
+
+/* --- puste stany: zamiast pustego szkła podpowiedź, co dodać (integracja, krótki opis, przyciski) --- */
+const HG_HINTS = {
+  weather: { icon: 'mdi:weather-partly-cloudy', t: 'Pogoda', d: 'Dodaj integrację Met.no (bezpłatna, bez klucza API) albo dowolną encję weather.*.', domain: 'met', comp: 'weather' },
+  power: { icon: 'mdi:lightning-bolt-outline', t: 'Zużycie energii', d: 'Potrzebny czujnik mocy (W) z licznika, falownika lub gniazdka. Możesz też skonfigurować panel Energia w HA.', href: '/config/energy', hl: 'Panel Energia', comp: 'power' },
+  scenes: { icon: 'mdi:palette-outline', t: 'Sceny i skrypty', d: 'Utwórz scenę lub skrypt w HA, a pojawią się tu jako przyciski.', href: '/config/scene/dashboard', hl: 'Utwórz scenę', comp: 'scenes' },
+  climate: { icon: 'mdi:thermostat', t: 'Klimat', d: 'Dodaj termostat lub klimatyzator (encja climate.*), np. przez integrację producenta.', comp: 'climate' },
+  media: { icon: 'mdi:play-box-multiple-outline', t: 'Multimedia', d: 'Dodaj odtwarzacz: Google Cast, Sonos, Spotify lub telewizor (encje media_player.*).', domain: 'cast', comp: 'players' },
+  cams: { icon: 'mdi:cctv', t: 'Kamery', d: 'Dodaj kamerę przez ONVIF, integrację producenta lub Generic Camera (encje camera.*).', domain: 'onvif', comp: 'cameras' },
+  people: { icon: 'mdi:account-group-outline', t: 'Domownicy', d: 'Dodaj osoby w HA i przypisz im telefon z aplikacją Home Assistant, by widzieć, kto jest w domu.', href: '/config/person', hl: 'Dodaj osobę', comp: 'people' },
+  fuel: { icon: 'mdi:gas-station-outline', t: 'Ceny paliw', d: 'Potrzebny czujnik z ceną (np. sensor z integracji REST lub Scrape, jednostka zł/l).', href: '/config/integrations/dashboard', hl: 'Integracje' },
+};
+const HG_HINT_CSS = `:host{ display:block; } .hn{ box-sizing:border-box; height:100%; min-height:150px; display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:var(--r-lg, 28px); color:var(--primary-text-color, inherit);
+  background:var(--hg-glass-lite, var(--hg-glass-bg, var(--hg-bg-ffffff-012))); -webkit-backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); box-shadow:var(--hg-card-sh, 0 10px 30px var(--hg-sh-000000-018)); font-family:'DM Sans', system-ui, sans-serif; }
+.hd{ display:flex; gap:12px; align-items:center; } .ic{ flex:none; width:42px; height:42px; border-radius:14px; display:grid; place-items:center; background:color-mix(in srgb, var(--hg-accent, var(--hg-bg-63d71e)) 18%, transparent); color:var(--hg-accent-tx, var(--hg-accent, var(--hg-tx-63d71e))); } .ic ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; }
+b{ font-size:16px; font-weight:600; } small{ display:block; font-size:12px; opacity:.6; margin-top:2px; } p{ margin:0; font-size:13.5px; line-height:1.45; opacity:.8; flex:1; }
+.bt{ display:flex; flex-wrap:wrap; gap:8px; } button, a{ all:unset; cursor:pointer; box-sizing:border-box; height:36px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; background:var(--hg-tile-bg, var(--hg-bg-ffffff-010)); }
+.ok{ background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-on-accent, var(--hg-tx-0b0f0a-on)); font-weight:600; } .gh{ background:none; opacity:.7; margin-left:auto; } button:focus-visible, a:focus-visible{ outline:2px solid var(--hg-accent, var(--hg-tx-63d71e)); outline-offset:2px; } ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; }`;
+class HGHintCard extends HTMLElement {
+  setConfig(c) { this._c = c || {}; this._r = 0; if (!this.shadowRoot) this.attachShadow({ mode: 'open' }); }
+  getCardSize() { return 3; }
+  set hass(h) { this._h = h; if (!this._r) this._draw(); }
+  _hidden() { const w = (window.HGL && HGL.data && HGL.data.wiz) || {}; return !!(w.hints && w.hints[this._c.hint] === 0); }
+  _draw() { const c = this._c, D = Object.assign({}, HG_HINTS[c.hint] || {}, c), h = this._h; if (!h) return; this._r = 1;
+    if (this._hidden()) { this.style.display = 'none'; this.shadowRoot.innerHTML = ''; return; } this.style.display = '';
+    const C = D.comp && typeof HG_COMP !== 'undefined' && HG_COMP.find((x) => x.id === D.comp), sl = C && C.slots.find((x) => x.req), pick = sl && typeof hgSlotCands === 'function' && hgSlotCands(h, sl).length;
+    const admin = h.user && h.user.is_admin;
+    this.shadowRoot.innerHTML = `<style>${HG_HINT_CSS}</style><div class="hn" role="note"><div class="hd"><span class="ic">${H.icon(D.icon || 'mdi:information-outline')}</span><span><b>${H.esc(D.t || '')}</b><small>Brak danych do wyświetlenia</small></span></div><p>${H.esc(D.d || '')}</p>
+      ${admin ? `<div class="bt">${pick ? `<button class="ok" data-a="pick">${H.icon('mdi:swap-horizontal')}Wybierz encję</button>` : ''}${D.domain ? `<a class="${pick ? '' : 'ok'}" href="https://my.home-assistant.io/redirect/config_flow_start/?domain=${encodeURIComponent(D.domain)}" target="_blank" rel="noopener">${H.icon('mdi:plus')}Dodaj integrację</a>` : ''}${D.href ? `<button class="${pick || D.domain ? '' : 'ok'}" data-a="go">${H.icon('mdi:cog-outline')}${H.esc(D.hl || 'Skonfiguruj')}</button>` : ''}${D.hacs ? `<button data-a="hacs">${H.icon('mdi:download')}Zainstaluj w HACS</button>` : ''}<button class="gh" data-a="hide">Ukryj</button></div>` : ''}</div>`;
+    if (!this._wired) { this._wired = 1; this.shadowRoot.addEventListener('click', (e) => this._click(e)); } }
+  async _click(e) { const D = Object.assign({}, HG_HINTS[this._c.hint] || {}, this._c), h = this._h; { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
+      if (a === 'go') { history.pushState(null, '', D.href); window.dispatchEvent(new CustomEvent('location-changed')); }
+      if (a === 'hacs') hgHacsOpen(h, D.hacs.rid, D.hacs.repo);
+      if (a === 'hide') { const w = HGL.data.wiz = Object.assign({}, HGL.data.wiz || {}); w.hints = Object.assign({}, w.hints, { [D.hint]: 0 }); this._r = 0; this._draw(); try { await HGL.save(h); } catch (er) { /* offline */ } }
+      if (a === 'pick') { let n = this; while (n && n.tagName !== 'NUVIO-PAGE' && n.tagName !== 'NUVIO-PAGE') n = n.parentNode || n.host; if (!n || !n._editEnter) return; n._editEnter(); n._eGalSc = n._pageScope() + ':tiles'; n._eGalCt = null; n._eComp(D.comp); } } }
+}
+queueMicrotask(() => hgReg('nuvio-hint-card', HGHintCard, 'Nuvio – Podpowiedź', 'Pusty stan z instrukcją, co dodać'));
 class HGStrategy extends HTMLElement { static async generate(config, hass) { return hgGenerate(hass, config || {}); } }
 if (!customElements.get('ll-strategy-dashboard-nuvio')) customElements.define('ll-strategy-dashboard-nuvio', HGStrategy);
 window.hgGenerate = hgGenerate;
@@ -192,10 +236,15 @@ const HG_VIEW_DEF = [['dashboard', 'panel', 'mdi:view-dashboard-outline', ''], [
   ['family', 'family', 'mdi:account-group-outline', 'osób (person)'], ['energia', 'energy', 'mdi:lightning-bolt-outline', 'czujnika mocy (sensor, W/kW)']];
 const hgViewHas = (M) => ({ dashboard: true, rooms: Object.keys(M.areas || {}).length > 0, multimedia: M.media.length > 0, kamery: M.cams.length > 0, family: M.persons.length > 0, energia: M.power.length > 0 });
 /* pakiety: wykrycie po zarejestrowanym zasobie ORAZ faktycznie wczytanym kodzie (globalna / element) */
+/* HACS: strona repozytorium w aplikacji (/hacs/repository/<id GitHub>); bez HACS -> GitHub w nowej karcie */
+const hgHasHacs = (h) => !!(h && h.panels && h.panels.hacs);
+const hgHacsOpen = (h, rid, repo) => { if (hgHasHacs(h) && rid) { history.pushState(null, '', '/hacs/repository/' + rid); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); return true; }
+  window.open('https://github.com/' + repo, '_blank', 'noopener'); return false; };
+window.hgHacsOpen = hgHacsOpen;
 const HG_PKGS = [
-  { id: 'kiosk', name: 'Kiosk Mode', re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: 'Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.' },
-  { id: 'sidebar', name: 'Custom Sidebar', re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: 'Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.' },
-  { id: 'cardmod', name: 'card-mod', re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: 'Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.' },
+  { id: 'kiosk', name: 'Kiosk Mode', repo: 'NemesisRE/kiosk-mode', rid: 497319128, re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: 'Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.' },
+  { id: 'sidebar', name: 'Custom Sidebar', repo: 'elchininet/custom-sidebar', rid: 737780218, re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: 'Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.' },
+  { id: 'cardmod', name: 'card-mod', repo: 'thomasloven/lovelace-card-mod', rid: 190927524, re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: 'Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.' },
 ];
 const HGLookX = {
   M: null, res: null, pend: null, kio: null, busy: false,
@@ -218,10 +267,10 @@ const HGLookX = {
       return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${t(d[1])}</b><small>${has[v] ? (fx ? 'Zawsze widoczny' : on ? 'Widoczny' : 'Ukryty') : 'Brak encji – wymaga ' + d[3]}</small></span>
         ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="W górę" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="W dół" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
         <button class="lx-sw" role="switch" data-hge="lx-v" data-v="${v}" aria-checked="${on}" aria-label="${t(d[1])}" ${fx ? 'disabled' : ''}><i></i></button></div>`; }).join('');
-    const kio = this.kio || {}, P = Object.fromEntries(HG_PKGS.map((p) => [p.id, this.pkg(p)]));
+    const h = page._hass, kio = this.kio || {}, P = Object.fromEntries(HG_PKGS.map((p) => [p.id, this.pkg(p)]));
     const tg = (k, l, sub, val) => `<div class="lx-r on"><span class="lx-t"><b>${l}</b><small>${sub}</small></span><button class="lx-sw" role="switch" data-hge="lx-k" data-k="${k}" aria-checked="${!!val}" aria-label="${l}"><i></i></button></div>`;
     const pk = HG_PKGS.map((p) => { const st = P[p.id];
-      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? 'Zainstalowany' : st.reg ? 'Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres' : p.hint}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>`;
+      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? 'Zainstalowany' : st.reg ? 'Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres' : p.hint}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>${st.ok ? '' : `<div class="lx-hb">${this.hacsGo && this.hacsGo[p.id] ? `<button class="lx-hbtn" data-hge="lx-rf">${H.icon('mdi:refresh')}Odśwież, aby wykryć</button>` : ''}<button class="lx-hbtn ok" data-hge="lx-hacs" data-p="${p.id}">${H.icon(hgHasHacs(h) ? 'mdi:download' : 'mdi:github')}${hgHasHacs(h) ? 'Zainstaluj w HACS' : 'Otwórz na GitHub'}</button>${hgHasHacs(h) ? '' : `<a class="lx-hl" href="https://hacs.xyz/docs/use/" target="_blank" rel="noopener">Jak zainstalować HACS</a>`}</div>`}`;
       if (!st.ok) return head;
       if (p.id === 'kiosk') return head + `<div class="lx-sub">${tg('hide_header', 'Ukryj nagłówek HA', 'Pasek z tytułem pulpitu', kio.hide_header)}${tg('hide_sidebar', 'Ukryj panel boczny HA', 'Menu po lewej stronie', kio.hide_sidebar)}${tg('kiosk_users', 'Kiosk dla nie-administratorów', 'Nagłówek i panel ukryte dla zwykłych użytkowników', kio.non_admin_settings && kio.non_admin_settings.kiosk)}</div>`;
       if (p.id === 'sidebar') return head + `<div class="lx-sub"><div class="lx-r on"><span class="lx-t"><b>Nuvio na górze panelu bocznego</b><small>Konfiguracja Custom Sidebar to plik /config/www/custom-sidebar-config.yaml – skopiuj gotowy fragment</small></span><button class="lk-mini" data-hge="lx-cs">Kopiuj</button></div></div>`;
@@ -236,8 +285,11 @@ const HGLookX = {
       .lx-a{ all:unset; cursor:pointer; flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; } .lx-a:disabled{ opacity:.25; cursor:default; } .lx-a:not(:disabled):hover{ background:var(--hg-tile-bg); } .lx-a ha-icon{ width:20px; height:20px; }
       .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; background:var(--hg-bg-80868e-038); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-022); backdrop-filter:blur(6px); position:relative; transition:background .18s; } .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px var(--hg-sh-000000-030); transition:transform .18s; }
       .lx-sw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; } .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .lx-sw:disabled{ opacity:.45; cursor:default; } .lx-sw:focus-visible, .lx-a:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+      .lx-hb{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; margin:-2px 0 6px 50px; } .lx-hbtn{ all:unset; cursor:pointer; box-sizing:border-box; border-radius:999px; background:var(--hg-tile-bg); height:36px; padding:0 14px; display:inline-flex; gap:6px; align-items:center; font-size:13px; } .lx-hbtn ha-icon{ width:18px; height:18px; } .lx-hbtn.ok{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; } .lx-hbtn:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lx-hl{ font-size:12px; opacity:.7; color:inherit; }
       .lx-ok{ flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); margin-right:8px; } .lx-ok ha-icon{ width:16px; height:16px; } .lx-ap{ align-self:flex-end; height:38px; padding:0 16px; margin:0; }</style>`; },
   async act(page, b, a) { const h = page._hass;
+    if (a === 'lx-hacs') { const p = HG_PKGS.find((x) => x.id === b.dataset.p); if (!p) return; this.hacsGo = Object.assign({}, this.hacsGo, { [p.id]: 1 }); if (!window.__hgDryRun) { if (hgHacsOpen(h, p.rid, p.repo)) page._editExit && page._editExit(false); } else page._eLook(); return; }
+    if (a === 'lx-rf') { if (!window.__hgDryRun) location.reload(); return; }
     if (a === 'lx-v' || a === 'lx-up' || a === 'lx-dn') { const V = this.views(), v = b.dataset.v, o = V.order.slice(), on = new Set(V.on), i = o.indexOf(v);
       if (a === 'lx-v') on.has(v) ? on.delete(v) : on.add(v);
       if (a === 'lx-up' && i > 1) [o[i - 1], o[i]] = [o[i], o[i - 1]];
@@ -282,7 +334,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.2+edbf0071';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.2+88be6d27';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -680,6 +732,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffe3de:#FFE3DE;
   --hg-bg-ffe3df:#FFE3DF;
   --hg-bg-ffffff:#FFFFFF;
+  --hg-bg-ffffff-010:rgba(255,255,255,0.1);
   --hg-bg-ffffff-012:rgba(255,255,255,0.12);
   --hg-bg-ffffff-012-k:rgba(255,255,255,0.12);
   --hg-bg-ffffff-013-k:rgba(255,255,255,0.13);
@@ -757,6 +810,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-000000:#111111;
   --hg-tx-0b0f0a:#111111;
   --hg-tx-0b0f0a-095-on:rgba(11,15,10,0.95);
+  --hg-tx-0b0f0a-on:#111111;
   --hg-tx-111111:#111111;
   --hg-tx-111214-k:#111111;
   --hg-tx-14181d:#111111;
@@ -892,6 +946,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffe3de:#5C281F;
   --hg-bg-ffe3df:#5C261F;
   --hg-bg-ffffff:#2E2E33;
+  --hg-bg-ffffff-010:rgba(255,255,255,0.06);
   --hg-bg-ffffff-012:rgba(255,255,255,0.072);
   --hg-bg-ffffff-016:rgba(255,255,255,0.096);
   --hg-bg-ffffff-020:rgba(255,255,255,0.12);
