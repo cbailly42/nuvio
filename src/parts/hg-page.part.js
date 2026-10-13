@@ -616,10 +616,11 @@ class HGPage extends HTMLElement {
         <button class="cir" data-act="bell" aria-label="${hgTr('Powiadomienia', 'Notifications')} (${nCount})" title="${hgTr('Powiadomienia', 'Notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
           <button class="uin" data-act="profile" aria-label="${hgTr('Profil', 'Profile')}" title="${hgTr('Profil', 'Profile')}">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
-          <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="Menu" title="Menu">${H.icon('mdi:chevron-down')}</button>
+          <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="${this._updDot() ? hgTr('Menu, dostępna aktualizacja', 'Menu, update available') : 'Menu'}" title="Menu">${H.icon('mdi:chevron-down')}${this._updDot() ? '<i class="udot" aria-hidden="true"></i>' : ''}</button>
         </div>
       </div>`);
     this._menuEl = this._topEl.querySelector('.user');
+    if (this._hass && !this._updT) setTimeout(() => this._updCheck(), 1500);
     this._paintMenu();
     this._tabsFit();
     this._placeInd();
@@ -638,13 +639,31 @@ class HGPage extends HTMLElement {
     this.toggleAttribute('tabs-compact', !fit);
     if (was !== !fit) this._placeInd();
   }
+  /* wersja i aktualizacje w stopce menu: encja update.* z HACS, bez niej GitHub (najwyżej raz na 6 h, localStorage), plik na serwerze nowszy niż działająca paczka */
+  _updCheck() { if (this._updT && Date.now() - this._updT < 6e5) return; this._updT = Date.now(); const run = String(HG_BUILD).split('+')[0], U = this._upd = this._upd || {};
+    const cmp = (a, b) => { const x = String(a).replace(/^v/, '').split('.').map(Number), y = String(b).replace(/^v/, '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
+    const done = () => { this._paintTop(true); };
+    const st = this._hass && this._hass.states, ue = st && Object.values(st).find((s) => s.entity_id.startsWith('update.') && /nuvio/i.test(s.entity_id + ' ' + (s.attributes.title || '') + ' ' + (s.attributes.friendly_name || '')));
+    if (ue) { U.src = 'hacs'; U.v = ue.state === 'on' && ue.attributes.latest_version && cmp(ue.attributes.latest_version, run) > 0 ? String(ue.attributes.latest_version).replace(/^v/, '') : null; }
+    else { U.src = 'gh'; let c = null; try { c = JSON.parse(localStorage.getItem('nuvio:upd') || 'null'); } catch (e) { /* uszkodzony wpis */ }
+      const use = (tag) => { U.v = tag && cmp(tag, run) > 0 ? String(tag).replace(/^v/, '') : null; done(); };
+      if (c && Date.now() - c.ts < 6 * 3600e3) use(c.tag);
+      else fetch('https://api.github.com/repos/kczepiec/nuvio/releases/latest', { headers: { Accept: 'application/vnd.github+json' } }).then((r) => (r.ok ? r.json() : null)).then((j) => { const tag = j && j.tag_name; try { localStorage.setItem('nuvio:upd', JSON.stringify({ ts: Date.now(), tag })); } catch (e) { /* tryb prywatny */ } use(tag); }).catch(() => {}); }
+    if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
+      const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || ''); U.stale = m && m[1] !== HG_BUILD ? m[1].split('+')[0] : null; done(); }).catch(() => {});
+    done(); }
+  _updDot() { const U = this._upd || {}; return !!(U.v || U.stale); }
+  _updFoot() { const U = this._upd || {}, run = String(HG_BUILD).split('+')[0];
+    const pill = U.stale ? `<button class="mupd" data-act="updreload">${H.icon('mdi:refresh')}<span>${hgTr(`Odśwież, aby wczytać v${H.esc(U.stale)}`, `Reload to load v${H.esc(U.stale)}`)}</span></button>`
+      : U.v ? `<button class="mupd" data-act="updopen">${H.icon('mdi:arrow-up-circle')}<span>${hgTr(`Dostępna aktualizacja v${H.esc(U.v)}`, `Update available v${H.esc(U.v)}`)}</span></button>` : '';
+    return `<div class="mfoot" role="presentation"><span class="mver">Nuvio v${H.esc(run)}</span>${pill}</div>`; }
   /* menu użytkownika w osobnej warstwie (poza .page z kontekstami stosu backdrop-filter / contain), position:fixed nad panelem */
   _paintMenu() {
     const L = this._menuL; if (!L) return;
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -786,6 +805,8 @@ class HGPage extends HTMLElement {
       case 'pmore': { const el = this._panelEl; return el && el.scrollBy({ top: Math.round(el.clientHeight * 0.8), behavior: 'smooth' }); }
       case 'profile': return go(c.user.action || { navigate: '/profile' });
       case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
+      case 'updreload': { location.reload(); return; }
+      case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);
       case 'search': return go(c.search_action || { quickbar: 'e' });
@@ -891,6 +912,12 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .menu{ position:absolute; right:0; top:calc(100% + 6px); min-width:200px; padding:6px; border-radius:16px; z-index:20; color:#1F2125; }
 .menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:10px; font-size:14px; text-align:left; }
 .menu button:hover{ background:rgba(0,0,0,.06); } .menu ha-icon{ width:18px; height:18px; }
+.mfoot{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin:6px -6px -6px; padding:9px 14px 11px; border-top:1px solid rgba(127,127,127,.18); font-size:11.5px; }
+.mver{ opacity:.55; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+.menu button.mupd{ width:auto; min-height:28px; height:28px; padding:0 11px 0 8px; gap:6px; border-radius:14px; background:var(--hg-accent); color:var(--hg-on-accent, #111); font-size:12px; font-weight:600; }
+.menu button.mupd:hover{ background:var(--hg-accent); filter:brightness(1.06); } .menu button.mupd:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .menu .mupd ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; }
+.chev{ position:relative; } .udot{ position:absolute; right:3px; top:3px; width:9px; height:9px; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 0 2px rgba(20,24,30,.55); animation:hgUdot 2.4s ease-in-out infinite; }
+@keyframes hgUdot{ 50%{ transform:scale(.8); } } @media (prefers-reduced-motion:reduce){ .udot{ animation:none; } }
 /* ----- arkusz „Więcej” (telefon) ----- */
 .sheet-l{ position:fixed; inset:0; z-index:1000; }
 .sheet-l .scrim{ position:absolute; inset:0; background:rgba(8,16,30,.38); opacity:0; transition:opacity .2s ease; }
@@ -1110,6 +1137,14 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet-l.nav-f .hge-sheet > :not(.hs-h):not(style){ animation:hgNavF .26s cubic-bezier(.2,.8,.2,1) both; } .hge-sheet-l.nav-b .hge-sheet > :not(.hs-h):not(style){ animation:hgNavB .26s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes hgNavF{ from{ transform:translateX(28px); } } @keyframes hgNavB{ from{ transform:translateX(-28px); } }
 .hs-bk + b{ flex:1; min-width:0; }
+.hs-h b:focus{ outline:none; } .hs-h b:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; border-radius:6px; }
+.hs-cf{ position:absolute; inset:0; z-index:5; display:grid; place-items:center; padding:20px; border-radius:inherit; background:rgba(8,12,18,.35); }
+.hs-cfb{ width:min(320px, 100%); box-sizing:border-box; padding:18px; border-radius:20px; display:flex; flex-direction:column; gap:6px; color:#fff;
+  background:rgba(30,34,40,.66); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid rgba(255,255,255,.16); box-shadow:0 20px 50px rgba(0,0,0,.4);
+  animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
+.hs-cfb b{ font-size:16px; } .hs-cfb small{ font-size:13px; opacity:.72; line-height:1.35; } .hs-cfb div{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+.hs-bd{ background:#FF6B6B !important; color:#1F0A0A !important; }
+@keyframes hgCfIn{ from{ transform:translateY(8px) scale(.97); } }
 .hs-bk{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; margin-right:6px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.10); transition:background .15s ease, transform .15s ease; }
 .hs-bk:hover{ background:rgba(255,255,255,.18); transform:translateX(-2px); } .hs-bk:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .hs-bk ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
 @media (prefers-reduced-motion:reduce){ .hge-sheet-l.nav-f .hge-sheet > *, .hge-sheet-l.nav-b .hge-sheet > *{ animation:none !important; } }

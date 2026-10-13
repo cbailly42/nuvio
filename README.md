@@ -258,6 +258,11 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.13
+- Fixed: the component form opened from card settings goes back to where it was opened from (Back closes it) instead of the gallery. Every edit sheet now uses one navigation stack.
+- Improved: typed text, search and selections survive going back and forth, scroll position is kept per step, focus moves to the step title and returns to the control that opened the step. Escape steps back. Closing with unsaved changes asks for confirmation (Discard or Stay), only when something changed. On a phone, swipe down closes only the top level and a swipe from the left edge goes one step back. Slides follow reduced motion settings.
+- New: the user menu shows the Nuvio version and an update pill (from the HACS update entity, or GitHub releases checked at most every 6 hours) with a dot on the avatar, plus a reload hint when a newer file is already on the server.
+
 ### 0.3.12
 - Fixed: navigation in the edit sheets works as a stack. In a nested step (choosing an entity, the component form, the widget style, changing an entity from card settings) the X, Escape and a new back arrow return to the previous step with its state kept; only the X on the top level (the + Add gallery or settings) closes the sheet. Steps slide in and out without the sheet closing and reopening.
 

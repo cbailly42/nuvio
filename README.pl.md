@@ -258,6 +258,11 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.13
+- Poprawka: formularz komponentu otwarty z ustawień karty wraca tam, skąd go otwarto (Wstecz go zamyka), a nie do galerii. Wszystkie arkusze edycji używają jednego stosu nawigacji.
+- Ulepszenie: wpisany tekst, wyszukiwanie i wybory zostają przy przechodzeniu w przód i wstecz, pozycja przewinięcia jest pamiętana dla każdego kroku, fokus trafia na tytuł kroku i wraca do przycisku, który go otworzył. Escape cofa o krok. Zamknięcie z niezapisanymi zmianami pyta o potwierdzenie (Odrzuć albo Zostań), tylko gdy coś się zmieniło. Na telefonie przeciągnięcie w dół zamyka tylko najwyższy poziom, a przeciągnięcie od lewej krawędzi cofa o krok. Animacje respektują ograniczenie ruchu.
+- Nowość: menu użytkownika pokazuje wersję Nuvio i informację o aktualizacji (z encji aktualizacji HACS albo z wydań GitHub, najwyżej raz na 6 godzin) z kropką przy awatarze oraz podpowiedź odświeżenia, gdy na serwerze jest już nowszy plik.
+
 ### 0.3.12
 - Poprawka: nawigacja w arkuszach edycji działa jak stos. W zagnieżdżonym kroku (wybór encji, formularz komponentu, styl widżetu, zmiana encji z ustawień karty) X, Escape i nowa strzałka wstecz wracają do poprzedniego kroku z zachowanym stanem; arkusz zamyka tylko X na najwyższym poziomie (galeria + Dodaj albo ustawienia). Kroki wsuwają się płynnie, bez zamykania i ponownego otwierania arkusza.
 

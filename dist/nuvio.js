@@ -505,7 +505,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.12+ee175a3e';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.12+c8eeb658';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -807,6 +807,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-008:rgba(0,0,0,0.08);
   --hg-bd-000000-010:rgba(0,0,0,0.1);
   --hg-bd-1f2125:#1F2125;
+  --hg-bd-7f7f7f-018:rgba(127,127,127,0.18);
   --hg-bd-a3e635:#A3E635;
   --hg-bd-e53935:#E53935;
   --hg-bd-ffffff-016:rgba(255,255,255,0.16);
@@ -843,6 +844,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-000000-k:#000000;
   --hg-bg-06090c-035:rgba(6,9,12,0.35);
   --hg-bg-06090c-070:rgba(6,9,12,0.7);
+  --hg-bg-080c12-035:rgba(8,12,18,0.35);
   --hg-bg-080c12-036:rgba(8,12,18,0.36);
   --hg-bg-08101e-038-k:rgba(8,16,30,0.38);
   --hg-bg-0a0e14-032:rgba(10,14,20,0.32);
@@ -865,6 +867,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-1e2023-084:rgba(30,32,35,0.84);
   --hg-bg-1e2024-012:rgba(30,32,36,0.12);
   --hg-bg-1e2024-030:rgba(30,32,36,0.3);
+  --hg-bg-1e2228-066:rgba(30,34,40,0.66);
   --hg-bg-1e242c:#1E242C;
   --hg-bg-1e242c-022-k:rgba(30,36,44,0.22);
   --hg-bg-1e242c-055:rgba(30,36,44,0.55);
@@ -933,6 +936,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ff5a52-016:rgba(255,90,82,0.16);
   --hg-bg-ff5a5a:#FF5A5A;
   --hg-bg-ff6b5b:#FF6B5B;
+  --hg-bg-ff6b6b:#FF6B6B;
   --hg-bg-ffe3de:#FFE3DE;
   --hg-bg-ffe3df:#FFE3DF;
   --hg-bg-ffffff:#FFFFFF;
@@ -1003,6 +1007,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-000000-045:rgba(0,0,0,0.45);
   --hg-sh-000000-050:rgba(0,0,0,0.5);
   --hg-sh-0a141e-018:rgba(10,20,30,0.18);
+  --hg-sh-14181e-055:rgba(20,24,30,0.55);
   --hg-sh-181e26-090:rgba(24,30,38,0.9);
   --hg-sh-1e242c:#1E242C;
   --hg-sh-282828-080:rgba(40,40,40,0.8);
@@ -1034,6 +1039,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-1e2023:#111111;
   --hg-tx-1e2023-k:#111111;
   --hg-tx-1e2023-on:#111111;
+  --hg-tx-1f0a0a-on:#1F0A0A;
   --hg-tx-1f2125:#111111;
   --hg-tx-1f2125-k:#111111;
   --hg-tx-2a2d31:#3A3D42;
@@ -1092,6 +1098,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-008:rgba(255,255,255,0.112);
   --hg-bd-000000-010:rgba(255,255,255,0.14);
   --hg-bd-1f2125:rgba(255,255,255,0.14);
+  --hg-bd-7f7f7f-018:rgba(255,255,255,0.12);
   --hg-bd-ffffff-016:rgba(255,255,255,0.05);
   --hg-bd-ffffff-018:rgba(255,255,255,0.05);
   --hg-bd-ffffff-022:rgba(255,255,255,0.05);
@@ -1229,6 +1236,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-000000-045:rgba(0,0,0,0.6);
   --hg-sh-000000-050:rgba(0,0,0,0.6);
   --hg-sh-0a141e-018:rgba(0,0,0,0.396);
+  --hg-sh-14181e-055:rgba(0,0,0,0.6);
   --hg-sh-181e26-090:rgba(0,0,0,0.6);
   --hg-sh-1e242c:rgba(0,0,0,0.6);
   --hg-sh-282828-080:rgba(0,0,0,0.6);
@@ -6550,10 +6558,11 @@ class HGPage extends HTMLElement {
         <button class="cir" data-act="bell" aria-label="${hgTr('Powiadomienia', 'Notifications')} (${nCount})" title="${hgTr('Powiadomienia', 'Notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
           <button class="uin" data-act="profile" aria-label="${hgTr('Profil', 'Profile')}" title="${hgTr('Profil', 'Profile')}">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
-          <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="Menu" title="Menu">${H.icon('mdi:chevron-down')}</button>
+          <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="${this._updDot() ? hgTr('Menu, dostępna aktualizacja', 'Menu, update available') : 'Menu'}" title="Menu">${H.icon('mdi:chevron-down')}${this._updDot() ? '<i class="udot" aria-hidden="true"></i>' : ''}</button>
         </div>
       </div>`);
     this._menuEl = this._topEl.querySelector('.user');
+    if (this._hass && !this._updT) setTimeout(() => this._updCheck(), 1500);
     this._paintMenu();
     this._tabsFit();
     this._placeInd();
@@ -6572,13 +6581,31 @@ class HGPage extends HTMLElement {
     this.toggleAttribute('tabs-compact', !fit);
     if (was !== !fit) this._placeInd();
   }
+  /* wersja i aktualizacje w stopce menu: encja update.* z HACS, bez niej GitHub (najwyżej raz na 6 h, localStorage), plik na serwerze nowszy niż działająca paczka */
+  _updCheck() { if (this._updT && Date.now() - this._updT < 6e5) return; this._updT = Date.now(); const run = String(HG_BUILD).split('+')[0], U = this._upd = this._upd || {};
+    const cmp = (a, b) => { const x = String(a).replace(/^v/, '').split('.').map(Number), y = String(b).replace(/^v/, '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
+    const done = () => { this._paintTop(true); };
+    const st = this._hass && this._hass.states, ue = st && Object.values(st).find((s) => s.entity_id.startsWith('update.') && /nuvio/i.test(s.entity_id + ' ' + (s.attributes.title || '') + ' ' + (s.attributes.friendly_name || '')));
+    if (ue) { U.src = 'hacs'; U.v = ue.state === 'on' && ue.attributes.latest_version && cmp(ue.attributes.latest_version, run) > 0 ? String(ue.attributes.latest_version).replace(/^v/, '') : null; }
+    else { U.src = 'gh'; let c = null; try { c = JSON.parse(localStorage.getItem('nuvio:upd') || 'null'); } catch (e) { /* uszkodzony wpis */ }
+      const use = (tag) => { U.v = tag && cmp(tag, run) > 0 ? String(tag).replace(/^v/, '') : null; done(); };
+      if (c && Date.now() - c.ts < 6 * 3600e3) use(c.tag);
+      else fetch('https://api.github.com/repos/kczepiec/nuvio/releases/latest', { headers: { Accept: 'application/vnd.github+json' } }).then((r) => (r.ok ? r.json() : null)).then((j) => { const tag = j && j.tag_name; try { localStorage.setItem('nuvio:upd', JSON.stringify({ ts: Date.now(), tag })); } catch (e) { /* tryb prywatny */ } use(tag); }).catch(() => {}); }
+    if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
+      const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || ''); U.stale = m && m[1] !== HG_BUILD ? m[1].split('+')[0] : null; done(); }).catch(() => {});
+    done(); }
+  _updDot() { const U = this._upd || {}; return !!(U.v || U.stale); }
+  _updFoot() { const U = this._upd || {}, run = String(HG_BUILD).split('+')[0];
+    const pill = U.stale ? `<button class="mupd" data-act="updreload">${H.icon('mdi:refresh')}<span>${hgTr(`Odśwież, aby wczytać v${H.esc(U.stale)}`, `Reload to load v${H.esc(U.stale)}`)}</span></button>`
+      : U.v ? `<button class="mupd" data-act="updopen">${H.icon('mdi:arrow-up-circle')}<span>${hgTr(`Dostępna aktualizacja v${H.esc(U.v)}`, `Update available v${H.esc(U.v)}`)}</span></button>` : '';
+    return `<div class="mfoot" role="presentation"><span class="mver">Nuvio v${H.esc(run)}</span>${pill}</div>`; }
   /* menu użytkownika w osobnej warstwie (poza .page z kontekstami stosu backdrop-filter / contain), position:fixed nad panelem */
   _paintMenu() {
     const L = this._menuL; if (!L) return;
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -6720,6 +6747,8 @@ class HGPage extends HTMLElement {
       case 'pmore': { const el = this._panelEl; return el && el.scrollBy({ top: Math.round(el.clientHeight * 0.8), behavior: 'smooth' }); }
       case 'profile': return go(c.user.action || { navigate: '/profile' });
       case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
+      case 'updreload': { location.reload(); return; }
+      case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);
       case 'search': return go(c.search_action || { quickbar: 'e' });
@@ -6825,6 +6854,12 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .menu{ position:absolute; right:0; top:calc(100% + 6px); min-width:200px; padding:6px; border-radius:16px; z-index:20; color:var(--hg-tx-1f2125); }
 .menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:10px; font-size:14px; text-align:left; }
 .menu button:hover{ background:var(--hg-bg-000000-006); } .menu ha-icon{ width:18px; height:18px; }
+.mfoot{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin:6px -6px -6px; padding:9px 14px 11px; border-top:1px solid var(--hg-bd-7f7f7f-018); font-size:11.5px; }
+.mver{ opacity:.55; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+.menu button.mupd{ width:auto; min-height:28px; height:28px; padding:0 11px 0 8px; gap:6px; border-radius:14px; background:var(--hg-accent); color:var(--hg-on-accent, var(--hg-tx-111111)); font-size:12px; font-weight:600; }
+.menu button.mupd:hover{ background:var(--hg-accent); filter:brightness(1.06); } .menu button.mupd:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .menu .mupd ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; }
+.chev{ position:relative; } .udot{ position:absolute; right:3px; top:3px; width:9px; height:9px; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 0 2px var(--hg-sh-14181e-055); animation:hgUdot 2.4s ease-in-out infinite; }
+@keyframes hgUdot{ 50%{ transform:scale(.8); } } @media (prefers-reduced-motion:reduce){ .udot{ animation:none; } }
 /* ----- arkusz „Więcej” (telefon) ----- */
 .sheet-l{ position:fixed; inset:0; z-index:1000; }
 .sheet-l .scrim{ position:absolute; inset:0; background:var(--hg-bg-08101e-038-k); opacity:0; transition:opacity .2s ease; }
@@ -7044,6 +7079,14 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet-l.nav-f .hge-sheet > :not(.hs-h):not(style){ animation:hgNavF .26s cubic-bezier(.2,.8,.2,1) both; } .hge-sheet-l.nav-b .hge-sheet > :not(.hs-h):not(style){ animation:hgNavB .26s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes hgNavF{ from{ transform:translateX(28px); } } @keyframes hgNavB{ from{ transform:translateX(-28px); } }
 .hs-bk + b{ flex:1; min-width:0; }
+.hs-h b:focus{ outline:none; } .hs-h b:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; border-radius:6px; }
+.hs-cf{ position:absolute; inset:0; z-index:5; display:grid; place-items:center; padding:20px; border-radius:inherit; background:var(--hg-bg-080c12-035); }
+.hs-cfb{ width:min(320px, 100%); box-sizing:border-box; padding:18px; border-radius:20px; display:flex; flex-direction:column; gap:6px; color:var(--hg-tx-ffffff);
+  background:var(--hg-bg-1e2228-066); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid var(--hg-bd-ffffff-016); box-shadow:0 20px 50px var(--hg-sh-000000-040);
+  animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
+.hs-cfb b{ font-size:16px; } .hs-cfb small{ font-size:13px; opacity:.72; line-height:1.35; } .hs-cfb div{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+.hs-bd{ background:var(--hg-bg-ff6b6b) !important; color:var(--hg-tx-1f0a0a-on) !important; }
+@keyframes hgCfIn{ from{ transform:translateY(8px) scale(.97); } }
 .hs-bk{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; margin-right:6px; border-radius:50%; display:grid; place-items:center; background:var(--hg-bg-ffffff-010); transition:background .15s ease, transform .15s ease; }
 .hs-bk:hover{ background:var(--hg-bg-ffffff-018); transform:translateX(-2px); } .hs-bk:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .hs-bk ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
 @media (prefers-reduced-motion:reduce){ .hge-sheet-l.nav-f .hge-sheet > *, .hge-sheet-l.nav-b .hge-sheet > *{ animation:none !important; } }
@@ -7617,7 +7660,7 @@ const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
     const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle')); b.title = hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
   _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
-  _eHead() { const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
+  _eHead() { this._eStk = []; this._eSnapTake(); const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
     const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Tytuł widoku', 'View title')}"><style>${HG_STY_CSS}
       .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:var(--hg-tx-ff6b6b); opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } }
@@ -7650,7 +7693,7 @@ const HG_COMP_EDIT = {
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
-    this._eStk = [];   /* galeria to poziom główny */
+    this._eStk = []; this._eSnapTake();   /* galeria to poziom główny */
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
     const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
@@ -7674,6 +7717,7 @@ const HG_COMP_EDIT = {
   /* krok 2: formularz komponentu (dodawanie i edycja – ten sam arkusz) */
   _eComp(cid, st) {
     const h = this._hass, C = HG_COMP.find((x) => x.id === cid); if (!C) return; this._eSheet('cfg'); const S = this._eSheetEl;
+    if (!st && !this._eBacking && !(this._eStk || []).length) this._eSnapTake();
     const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: HG_COMP_Z[C.id] || 's' };
     const ed = !!R.edit, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
     const slot = (sl) => { const v = R.v[sl.k];
@@ -7715,7 +7759,7 @@ const HG_COMP_EDIT = {
   _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
     if (a === 'cgent') { const ct = this._eGalCt, sc = this._eGalSc; return this._eGo(() => this._eGallery(ct, sc), () => this._eSheet('add', ct, sc)); }
     if (a === 'cgo') { const ct = this._eGalCt, sc = this._eGalSc; this._eCompR = null; return this._eGo(() => this._eGallery(ct, sc), () => this._eComp(b.dataset.c)); }
-    if (a === 'cback') return (this._eStk || []).length ? this._eBack() : this._eGallery(this._eGalCt, this._eGalSc);
+    if (a === 'cback') return this._eBack();
     if (a === 'ctyp') { R.t = b.dataset.t; for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } return this._eCompPv(); }
     if (a === 'cmod') { R.v = Object.assign({}, R.v, { mode: b.dataset.m }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }
     if (a === 'cz') { R.z = b.dataset.z; for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }
@@ -8037,7 +8081,7 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) { if ((this._eStk || []).length) this._eBack(); else this._eSheet(false); } else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) { const cf = this._eSheetEl && this._eSheetEl.querySelector('.hs-cf'); if (cf) cf.remove(); else if ((this._eStk || []).length) this._eBack(); else this._eClose(); } else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
       /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
       else if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && e.composedPath()[0] && e.composedPath()[0].dataset && e.composedPath()[0].dataset.hge === 'drag') { e.preventDefault(); this._eKeyMove(e.composedPath()[0], /Up|Left/.test(e.key) ? -1 : 1); }
       else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };
@@ -8054,6 +8098,7 @@ const HG_EDIT = {
     if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(ct, it.dataset.hgk); } }
   },
   _eCtl(b, e) {
+    this._eTrig = b;
     const a = b.dataset.hge;
     if (a === 'done') return this._editExit(true);
     if (a === 'cancel') return this._editExit(false);
@@ -8075,7 +8120,9 @@ const HG_EDIT = {
     if (/^c(go|gent|back|typ|mod|z|del|slot|ok)$/.test(a)) return this._eCompAct(a, b);
     if (a === 'restore') { this._eSet(b.dataset.sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.k); }); this._eSheet(false); return this._eRefresh(b.dataset.sc === this._pageScope()); }
     if (a === 'sback') return this._eBack();
-    if (a === 'sheetclose') return (this._eStk || []).length && b.classList.contains('hs-x') ? this._eBack() : this._eSheet(false);
+    if (a === 'cfstay') { const c = b.closest('.hs-cf'); if (c) c.remove(); return; }
+    if (a === 'cfdrop') return this._eSheet(false);
+    if (a === 'sheetclose') return (this._eStk || []).length && b.classList.contains('hs-x') ? this._eBack() : this._eClose();
     if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) { const sc0 = this._eSc, ct0 = this._eSheetCt; return this._eGo(() => this._eSheet('add', ct0, sc0), () => this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n)); }
     if (a === 'addt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } const pv = this._eSheetEl.querySelector('.hs-pvb'); pv.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: pv }); hgPvLive(pv); return; }
     if (a === 'addok') { const t = (this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]') || { dataset: {} }).dataset.t, T0 = hgTypesFor(this._hass, this._eAddE)[0];
@@ -8226,7 +8273,7 @@ const HG_EDIT = {
     const hd = it && it.querySelector('.sh');
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
-  _eCfg(ct, k) { this._eStk = [];
+  _eCfg(ct, k) { this._eStk = []; if (!this._eBacking) this._eSnapTake();
     { const L0 = HGL.get(ct.scope); if (hgDedupConf(JSON.parse(JSON.stringify(L0)))) this._eSet(ct.scope, (L) => { hgDedupConf(L); }); }
     { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
       this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
@@ -8367,8 +8414,28 @@ const HG_EDIT = {
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */
-  _eGo(back, fn) { (this._eStk = this._eStk || []).push(back); this._eNav('f'); fn(); },
-  _eBack() { const f = (this._eStk || []).pop(); if (!f) return this._eSheet(false); this._eRepl = null; this._eNav('b'); f(); },
+  _eGo(back, fn) { const S = this._eSheetEl, sc = S && S.querySelector('.hge-sheet .hs-sc'), t = this._eTrig;
+    const key = t && t.dataset ? ['hge', 'c', 'k', 'i', 'e', 't'].filter((x) => t.dataset[x] != null).map((x) => `[data-${x}="${CSS.escape(t.dataset[x])}"]`).join('') : '';
+    (this._eStk = this._eStk || []).push({ back, top: sc ? sc.scrollTop : 0, key, form: this._eFormGet() }); this._eNav('f'); fn(); this._eFocusTitle(); },
+  /* stan formularza kroku (pola i przełączniki aria-pressed), odtwarzany po powrocie, gdy krok czyta wartości z DOM */
+  _eBk(t) { return ['hge', 'c', 'k', 'i', 'e', 't', 'v', 'w', 'z'].filter((x) => t.dataset[x] != null).map((x) => `[data-${x}="${CSS.escape(t.dataset[x])}"]`).join(''); },
+  _eFormGet() { const S = this._eSheetEl, sh = S && S.querySelector('.hge-sheet'); if (!sh) return null;
+    return { f: [...sh.querySelectorAll('input[name], select[name], textarea[name]')].map((i) => [i.name, i.type === 'checkbox' || i.type === 'radio' ? i.checked : i.value, i.type]), p: [...sh.querySelectorAll('[aria-pressed][data-hge]')].map((b) => [this._eBk(b), b.getAttribute('aria-pressed')]) }; },
+  _eFormSet(F) { const S = this._eSheetEl, sh = S && S.querySelector('.hge-sheet'); if (!sh || !F) return;
+    for (const [n, v, t] of F.f) { const i = sh.querySelector(`[name="${CSS.escape(n)}"]`); if (!i) continue; if (t === 'checkbox' || t === 'radio') i.checked = v; else if (i.value !== v) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); } }
+    for (const [k, v] of F.p) { const b = k && sh.querySelector(k); if (b) b.setAttribute('aria-pressed', v); } },
+  _eBack() { const f = (this._eStk || []).pop(); if (!f) return this._eClose(); this._eRepl = null; this._eNav('b'); this._eBacking = true; try { (f.back || f)(); } finally { this._eBacking = false; } if (f.form) this._eFormSet(f.form);
+    const S = this._eSheetEl; if (!S) return; const sc = S.querySelector('.hge-sheet .hs-sc'); if (sc && f.top) sc.scrollTop = f.top;
+    requestAnimationFrame(() => { const sc2 = S.querySelector('.hge-sheet .hs-sc'); if (sc2 && f.top) sc2.scrollTop = f.top; const el = f.key && S.querySelector(f.key); if (el) el.focus({ preventScroll: true }); else this._eFocusTitle(); }); },
+  _eFocusTitle() { requestAnimationFrame(() => { const t = this._eSheetEl && this._eSheetEl.querySelector('.hge-sheet .hs-h b'); if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); } }); },
+  /* niezapisane zmiany: migawka stanu formularza przy otwarciu poziomu głównego */
+  _eSnapVal() { const S = this._eSheetEl, rep = (k, v) => (v && (v.nodeType || typeof v === 'function') ? undefined : v);
+    try { return JSON.stringify([this._eCompR, this._eCfgR && this._eCfgR.v, this._eCfgR && this._eCfgR.set, S ? [...S.querySelectorAll('.hge-sheet input:not([type=search]), .hge-sheet select, .hge-sheet textarea')].filter((i) => !i.closest('.hs-s.srch')).map((i) => i.type === 'checkbox' ? i.checked : i.value) : []], rep); } catch (e) { return ''; } },
+  _eSnapTake() { this._eSnap = null; requestAnimationFrame(() => { this._eSnap = this._eSnapVal(); }); },
+  _eDirtySheet() { return this._eSnap != null && this._eSnapVal() !== this._eSnap; },
+  _eClose() { const S = this._eSheetEl, sh = S && S.querySelector('.hge-sheet'); if (!sh || !this._eDirtySheet()) return this._eSheet(false);
+    if (sh.querySelector('.hs-cf')) return; sh.insertAdjacentHTML('beforeend', `<div class="hs-cf" role="alertdialog" aria-modal="true" aria-labelledby="hscf-t"><div class="hs-cfb"><b id="hscf-t">${hgTr('Odrzucić zmiany?', 'Discard changes?')}</b><small>${hgTr('Niezapisane zmiany w tym oknie zostaną utracone.', 'Unsaved changes in this sheet will be lost.')}</small><div><button class="hs-b2" data-hge="cfstay">${hgTr('Zostań', 'Stay')}</button><button class="hs-b hs-bd" data-hge="cfdrop">${hgTr('Odrzuć', 'Discard')}</button></div></div></div>`);
+    requestAnimationFrame(() => { const b = sh.querySelector('[data-hge=cfstay]'); if (b) b.focus(); }); },
   _eNav(d) { const L = this._eSheetEl; if (!L) return; L.classList.remove('nav-f', 'nav-b'); void L.offsetWidth; L.classList.add('nav-' + d); clearTimeout(this._eNavT); this._eNavT = setTimeout(() => L.classList.remove('nav-f', 'nav-b'), 320); },
   _eCfgBack() { this._eRepl = null; const R = this._eCfgR, ct = R && this._eConts().find((c) => c.scope === R.sc); if (ct) this._eCfg(ct, R.k); else this._eSheet(false); },
   _eDeco() { const L = this._eSheetEl, n = (this._eStk || []).length; if (!L) return; const hd = L.querySelector('.hge-sheet .hs-h'); if (!hd) return;
@@ -8383,9 +8450,13 @@ const HG_EDIT = {
   },
   _eSheet(mode, ct, scOver) {
     if (!mode) { this._eRepl = null; this._eStk = []; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
-    this._eSheetOpen = mode; this._eSheetCt = ct; this._eF = 'all'; this._eQ = '';
+    this._eSheetOpen = mode; this._eSheetCt = ct; if (!this._eBacking) { this._eF = 'all'; this._eQ = ''; }
     let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); this._eStk = [];
-      setTimeout(() => L.classList.add('opened'), 320); new MutationObserver(() => this._eDeco()).observe(L, { childList: true }); }
+      setTimeout(() => L.classList.add('opened'), 320); new MutationObserver(() => this._eDeco()).observe(L, { childList: true });
+      let g = null; L.addEventListener('touchstart', (ev) => { const t = ev.touches[0], sh = L.querySelector('.hge-sheet'); if (!t || !sh) return; const r = sh.getBoundingClientRect(), sc = sh.querySelector('.hs-sc');
+        g = { x: t.clientX, y: t.clientY, edge: t.clientX - r.left < 28, top: t.clientY - r.top < 64 || (sc && sc.scrollTop <= 0 && sc.contains(ev.target)) }; }, { passive: true });
+      L.addEventListener('touchend', (ev) => { const t = ev.changedTouches[0]; if (!g || !t) return; const dx = t.clientX - g.x, dy = t.clientY - g.y, n = (this._eStk || []).length;
+        if (g.edge && dx > 70 && Math.abs(dy) < 50 && n) this._eBack(); else if (g.top && dy > 90 && Math.abs(dx) < 60 && !n) this._eClose(); g = null; }, { passive: true }); }
     if (!this.shadowRoot.querySelector('style[data-hgt]')) { const st = document.createElement('style'); st.dataset.hgt = '1'; st.textContent = HG_TILE_CSS; this.shadowRoot.appendChild(st); }
     if (mode === 'cfg') return;
     if (mode === 'hidden') { const hid = this._eHidden();
@@ -8400,7 +8471,7 @@ const HG_EDIT = {
       <label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${rooms ? hgTr('Szukaj obszaru', 'Search areas') : hgTr('Szukaj po nazwie, pokoju lub domenie', 'Search by name, room or domain')}" aria-label="${hgTr('Szukaj', 'Search')}" autocomplete="off"><button class="hs-clr" type="button" hidden aria-label="${hgTr('Wyczyść', 'Clear')}">${H.icon('mdi:close')}</button></label>
       ${rooms ? '' : `<div class="hs-f" role="group" aria-label="${hgTr('Rodzaj', 'Type')}">${[['all', hgTr('Wszystkie', 'All')], ['light', hgTr('Światła', 'Lights')], ['tog', hgTr('Przełączniki', 'Switches')], ['val', hgTr('Czujniki', 'Sensors')], ['clim', hgTr('Klimat', 'Climate')], ['media', hgTr('Multimedia', 'Media')], ['cam', hgTr('Kamery', 'Cameras')], ['cover', hgTr('Rolety', 'Covers')], ['run', hgTr('Sceny i skrypty', 'Scenes and scripts')]].map(([f, l]) => `<button data-hge="filter" data-f="${f}" aria-pressed="${f === 'all'}">${l}</button>`).join('')}</div>`}
       ${rooms ? '' : '<div class="hs-pv" aria-live="polite"></div>'}<div class="hs-l" role="list"></div></div>`;
-    const inp = L.querySelector('input'), clr = L.querySelector('.hs-clr'); inp.addEventListener('input', () => { this._eQ = inp.value; clr.hidden = !inp.value; this._eSheetList(); });
+    const inp = L.querySelector('input'), clr = L.querySelector('.hs-clr'); if (this._eQ) { inp.value = this._eQ; clr.hidden = false; } inp.addEventListener('input', () => { this._eQ = inp.value; clr.hidden = !inp.value; this._eSheetList(); });
     clr.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); inp.value = ''; this._eQ = ''; clr.hidden = true; this._eSheetList(); inp.focus(); }, true);
     this._eSheetList(); setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (e) {} }, 60);
   },
