@@ -19,17 +19,13 @@ python3 tools/guard.py
 git add -A && git commit -qm "chore: release $V"
 git tag -a "v$V" -m "Nuvio $V"
 git push -q origin main "v$V"
-# HACS downloads release assets (not dist/) when a release has any. nuvio.zip alone is saved
-# unextracted, so nuvio.js is attached as well. assets/ (fonts, backgrounds) only comes with the zip.
-rm -f /tmp/nuvio.zip && (cd dist && zip -qr /tmp/nuvio.zip nuvio.js assets)
-# tag uruchamia też .github/workflows/release.yml – jeśli wydanie już istnieje, tylko podmień pliki
-if gh release view "v$V" >/dev/null 2>&1; then gh release upload "v$V" /tmp/nuvio.zip dist/nuvio.js --clobber
-else gh release create "v$V" /tmp/nuvio.zip dist/nuvio.js --title "Nuvio $V" --generate-notes --verify-tag; fi
-
-# weryfikacja: pobierz opublikowany nuvio.zip oraz dist/nuvio.js z tagu i sprawdź wersję paczki
+# Bez załączników: HACS pobiera zasoby wydania zamiast dist/, więc wydanie nie ma plików i HACS
+# instaluje cały dist/ (z assets/). Instalacja ręczna: dist/ z archiwum źródeł tagu.
+if ! gh release view "v$V" >/dev/null 2>&1; then gh release create "v$V" --title "Nuvio $V" --generate-notes --verify-tag; fi
+# weryfikacja: dist/nuvio.js w tagu ma nową wersję, wydanie nie ma załączników
 T=$(mktemp -d); sleep 3
-gh release download "v$V" -p nuvio.zip -p nuvio.js -D "$T" --clobber && unzip -p "$T/nuvio.zip" nuvio.js > "$T/a.js"
 git show "v$V:dist/nuvio.js" > "$T/t.js"
-# HACS pobiera zasoby wydania zamiast dist/, więc nuvio.js musi być osobnym zasobem
-for f in "$T/a.js" "$T/t.js" "$T/nuvio.js"; do grep -q "HG_BUILD = '$V+" "$f" || { echo "BŁĄD: $f nie ma wersji $V"; exit 1; }; done
-echo "OK: asset i dist w tagu v$V mają HG_BUILD $V"
+grep -q "HG_BUILD = '$V+" "$T/t.js" || { echo "BŁĄD: dist/nuvio.js w v$V nie ma wersji $V"; exit 1; }
+git ls-tree -r --name-only "v$V" dist/assets | grep -q . || { echo "BŁĄD: brak dist/assets w v$V"; exit 1; }
+N=$(gh release view "v$V" --json assets -q '.assets | length'); [ "$N" = "0" ] || { echo "BŁĄD: wydanie v$V ma $N załączników (HACS pominie dist/)"; exit 1; }
+echo "OK: v$V – dist/nuvio.js ma HG_BUILD $V, dist/assets jest, brak załączników"

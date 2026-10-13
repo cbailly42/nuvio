@@ -216,7 +216,7 @@ From [docs/STATUS.md](docs/STATUS.md). There are no other planned components in 
 
 ### Manual
 
-1. Copy the contents of `dist/` to `/config/www/nuvio/`.
+1. Download the source archive of the latest release (GitHub, Releases, Source code) and copy the contents of its `dist/` folder (`nuvio.js` and `assets/`) to `/config/www/nuvio/`. Releases have no attached files.
 2. Add the resource `/local/nuvio/nuvio.js` (type: **JavaScript module**).
 3. Use the same `strategy` config as above.
 
@@ -257,6 +257,10 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
+
+### 0.3.3
+- Fixed: in edit mode the drag handle and X of the first block in a room column were drawn on the previous column's block; every block now has exactly one handle (top left), one X (top right) and S/M/L inside it.
+- Changed: releases no longer attach `nuvio.zip` or `nuvio.js`. HACS then installs the full `dist/` folder including `assets/` (fonts, backgrounds); with attached files it skipped `dist/` and kept an old build. Manual install uses `dist/` from the release source archive.
 
 ### 0.3.2
 - The + Add gallery header shows the loaded Nuvio version, so an outdated or cached bundle (no Basic group) is easy to spot. After updating in HACS, reload the browser (Ctrl+Shift+R) or clear the app cache.

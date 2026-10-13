@@ -216,7 +216,7 @@ Na podstawie [docs/STATUS.md](docs/STATUS.md). W kodzie nie ma innych planowanyc
 
 ### Ręcznie
 
-1. Skopiuj zawartość `dist/` do `/config/www/nuvio/`.
+1. Pobierz archiwum źródeł najnowszego wydania (GitHub, Releases, Source code) i skopiuj zawartość jego folderu `dist/` (`nuvio.js` i `assets/`) do `/config/www/nuvio/`. Wydania nie mają załączonych plików.
 2. Dodaj zasób `/local/nuvio/nuvio.js` (typ: **moduł JavaScript**).
 3. Użyj tej samej konfiguracji `strategy` co wyżej.
 
@@ -257,6 +257,10 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
+
+### 0.3.3
+- Naprawione: w trybie edycji uchwyt i X pierwszego bloku w kolumnie pokoju były rysowane na bloku z poprzedniej kolumny; każdy blok ma teraz dokładnie jeden uchwyt (lewy górny róg), jeden X (prawy górny) i S/M/L w środku.
+- Zmienione: wydania nie mają już załączników `nuvio.zip` ani `nuvio.js`. HACS instaluje wtedy cały folder `dist/` razem z `assets/` (czcionki, tła); przy załącznikach pomijał `dist/` i zostawiał starą wersję. Instalacja ręczna: `dist/` z archiwum źródeł wydania.
 
 ### 0.3.2
 - Nagłówek galerii + Dodaj pokazuje wersję załadowanej paczki Nuvio, więc stara lub zbuforowana paczka (bez grupy Podstawowe) jest od razu widoczna. Po aktualizacji w HACS odśwież przeglądarkę (Ctrl+Shift+R) albo wyczyść pamięć aplikacji.
