@@ -974,7 +974,7 @@ ha-card.wmc{ gap:var(--s2); }
     if (UNI.length) blocks.push(`<div class="blk ${this._showUn ? "" : "unb"}"><ha-card class="glass ${this._showUn ? "" : "quiet"}"><button class="unh" data-act="unv" aria-expanded="${!!this._showUn}">${hgTr('Niedostępne', 'Unavailable')} · ${UNI.length}${H.icon(this._showUn ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>
       ${this._showUn ? UNI.map((x) => `<button class="row un" ${x.d ? `data-act="dev" data-d="${H.esc(x.d)}"` : `data-act="more" data-e="${H.esc(x.e)}"`} style="width:100%"><span class="ri">${H.icon(x.i)}</span><span class="tx"><b>${H.esc(x.n)}</b><span>${hgTr('Niedostępne', 'Unavailable')}</span></span></button>`).join('') : ''}</ha-card></div>`);
     // tryb edycji: encje dodane do pokoju (klimat/kamera jako osadzone karty, reszta jako kafelki)
-    for (const x of RL.added) if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
+    for (const x of RL.added) if (x.c) blocks.push(`<div class="blk" style="align-self:start;--hg-min-h:0px" data-hgk="${H.esc(x.e)}">${hgCmHtml(x).replace(/ data-hgk="[^"]*"/, '')}</div>`); else if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
       blocks.push(`<div class="blk" data-hgk="${H.esc(x.e)}">${k === 'clim' ? `<div class="acslot" data-ac="${H.esc(x.e)}"></div>` : k === 'cam' ? `<div class="camslot" data-cam="${H.esc(x.e)}"></div>` : `<div class="tg2 one">${hgTileHtml(h, x.e).replace(/ data-hgk="[^"]*"/, '')}</div>`}</div>`); }
     // klucze bloków (stałe między renderami): encja/urządzenie z pierwszego atrybutu albo rodzaj sekcji
     const seenK = {};
@@ -1017,6 +1017,7 @@ ha-card.wmc{ gap:var(--s2); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
+    if (typeof hgCmSlots === 'function') hgCmSlots(this);
   }
   onAct(act, t) {
     const h = this._hass, e = t.dataset.e;

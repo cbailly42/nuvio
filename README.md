@@ -48,6 +48,8 @@ and entities from Home Assistant and generates the views. Everything can then be
 - **Empty rooms**: a room with no devices offers **Import from area** (preview of the area's entities plus name matches, with checkboxes; **Pick entities** to choose any entity by hand; optionally also assign them to the area in Home Assistant) and **Create custom layout** (edit mode with an empty room and the + Add gallery). Area settings stays as a secondary link.
 - **Edit mode**: drag & drop, hide/restore, S/M/L sizes, add tiles from any entity, swap entities, display styles with live preview,
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
+- **Component gallery (+ Add)**: a **Basic** group first (Slider, Button, Entity list, Select, Stepper, Gauge, with live thumbnails, also available in rooms), then **Cards** for specific device types. The component form has no display mode picker; real variants (slider horizontal or vertical, button tile or row, select chips or list) are listed as **Component options**.
+  <br><img src="docs/components/gallery-basic.png" alt="Component gallery with the Basic group" width="420">
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
 - **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
 - **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
@@ -255,6 +257,11 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
+
+### 0.3.1
+- Fixed: the generic components (Slider, Button, Entity list, Select, Stepper, Gauge) were missing from the + Add gallery in rooms (the room gallery only listed tile components); they now appear in a **Basic** group with live thumbnails, and rooms render added components.
+- Changed: the component form no longer shows a display mode picker; genuine variants are labelled **Component options**.
+- Fixed: unchecked checkboxes in the room import dialog were invisible on dark backgrounds.
 
 ### 0.3.0
 - New: empty room view with two actions. **Import from area** shows the area's entities (and entities whose name matches the room) with checkboxes, a **Pick entities** search for manual choice, and an option to also assign them to the area in Home Assistant; selected entities become tiles arranged by type (climate and cameras large, media medium). **Create custom layout** opens edit mode with an empty room and the + Add gallery.

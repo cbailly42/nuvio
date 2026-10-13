@@ -257,6 +257,7 @@ const HG_COMP_Z = { climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
   .sort((a, b) => (sl.pref ? ((sl.pref.indexOf(a.split('.')[0]) + 1 || 99) - (sl.pref.indexOf(b.split('.')[0]) + 1 || 99)) : 0) || H.name(h, a).localeCompare(H.name(h, b)));
+const HG_COMP_BASIC = ['slider', 'button', 'entities', 'select', 'stepper', 'gauge'];
 const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
 const hgCompCard = (C, v) => (C.cards && v && C.cards[v.mode]) || C.card;
 const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
@@ -267,6 +268,7 @@ const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new
     if (!el) { el = document.createElement(m.c); try { el.setConfig(Object.assign({ type: 'custom:' + m.c }, m.cfg)); } catch (e) { /* zła konfiguracja – pusta karta */ } card._cmM.set(sig, el); }
     if (el.parentElement !== slot) slot.appendChild(el); el.hass = h; } };
 const HG_COMP_CSS = `
+.cgh{ margin:18px 2px 10px; font-size:13px; font-weight:600; letter-spacing:.02em; display:flex; flex-direction:column; gap:2px; } .cgh small{ font-size:12px; font-weight:400; opacity:.62; letter-spacing:0; } .cq + .cgh{ margin-top:14px; }
 .cg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; } @media (max-width:560px){ .cg{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
 .cg button{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; padding:8px; border-radius:20px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 8%, transparent); transition:transform .15s, box-shadow .15s; min-width:0; }
 .cg button:hover:not(.na){ transform:translateY(-2px); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--hg-accent) 60%, transparent), 0 10px 24px rgba(0,0,0,.18); } .cg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
@@ -356,12 +358,13 @@ const HG_COMP_EDIT = {
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
-    const room = sc.startsWith('room:'), list = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile);
+    const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
       return `<button class="${miss ? 'na' : ''}" data-hge="cgo" data-c="${C.id}" ${miss ? 'aria-disabled="true"' : ''}><div class="th" data-th="${C.id}"><div class="ph">${H.icon(C.i)}</div></div><b>${H.icon(C.i)}${H.esc(C.n)}</b><small>${H.esc(C.d)}${miss ? `<em>${hgTr('Brak encji', 'No entities')}: ${H.esc(miss.l.toLowerCase())} (${H.esc(miss.dom.join(', '))}${miss.dc ? ' · ' + H.esc(miss.dc.join(', ')) : ''})</em>` : ''}</small></button>`; };
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Dodaj komponent', 'Add component')}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${hgTr('Dodaj komponent', 'Add component')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="cq"><button class="hs-r" data-hge="cgent" style="min-height:48px">${H.icon('mdi:magnify')}<span class="hs-t"><b>${hgTr('Szukaj encji', 'Search entities')}</b><small>${hgTr('Szybkie dodanie pojedynczej encji jako kafelka', 'Quickly add a single entity as a tile')}</small></span></button></div>
-      <div class="cg" role="list">${list.map(card).join('')}</div></div></div>`;
+      ${bas.length ? `<h4 class="cgh">${hgTr('Podstawowe', 'Basic')}<small>${hgTr('Uniwersalne elementy dla dowolnych encji', 'General controls for any entity')}</small></h4><div class="cg" role="list">${bas.map(card).join('')}</div>` : ''}
+      ${rest.length ? `<h4 class="cgh">${hgTr('Karty', 'Cards')}<small>${hgTr('Gotowe karty dla konkretnych rodzajów urządzeń', 'Ready made cards for specific device types')}</small></h4><div class="cg" role="list">${rest.map(card).join('')}</div>` : ''}</div></div>`;
     /* miniatury na żywo: kafel z pierwszą pasującą encją albo pomniejszona karta */
     requestAnimationFrame(() => { for (const C of list) { const th = S.querySelector(`[data-th="${C.id}"]`); if (!th) continue; const v = this._eCompDef(C); if (!v) continue;
       const box = document.createElement('div'); if (C.tile) { box.className = 'tg2 one'; box.innerHTML = hgTileHtml(h, v.e, 's', { t: C.tile }); hgSlots({ _hass: h, $: box }); }
@@ -388,8 +391,7 @@ const HG_COMP_EDIT = {
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${H.esc(C.n)}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${H.icon(C.i)} ${H.esc(C.n)}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
       ${C.slots.map(slot).join('')}
-      ${C.modes ? `<div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Tryb wyświetlania', 'Display mode')}">${C.modes.map(([m, pl, en, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${H.esc(hgTr(pl, en))}</button>`).join('')}</div></div>` : ''}
-      ${T && main ? `<div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, main, T, R.t || T[0][0], 'ctyp')}</div>` : ''}
+      ${C.modes ? `<div class="hs-fl"><span>${hgTr('Opcje komponentu', 'Component options')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Opcje komponentu', 'Component options')}">${C.modes.map(([m, pl, en, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${H.esc(hgTr(pl, en))}</button>`).join('')}</div></div>` : ''}
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
       ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cz" data-z="${v}" aria-pressed="${R.z === v}">${l}</button>`).join('')}</div></div>`}

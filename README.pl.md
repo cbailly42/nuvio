@@ -48,6 +48,8 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 - **Puste pokoje**: pokój bez urządzeń proponuje **Importuj z obszaru** (podgląd encji z obszaru i pasujących po nazwie, z polami wyboru; **Wybierz encje**, aby wskazać dowolne encje ręcznie; opcjonalnie przypisanie ich też do obszaru w Home Assistant) oraz **Utwórz własny układ** (tryb edycji z pustym pokojem i galerią + Dodaj). Ustawienia obszaru zostają jako link pomocniczy.
 - **Tryb edycji**: przeciąganie, ukrywanie i przywracanie, rozmiary S/M/L, dodawanie kafli z dowolnej encji, podmiana encji,
   style wyświetlania z podglądem na żywo, wygląd (kolor akcentu z automatycznym kontrastem WCAG, tło: zdjęcie / kolor / gradient, przyciemnienie).
+- **Galeria komponentów (+ Dodaj)**: najpierw grupa **Podstawowe** (Suwak, Przycisk, Lista encji, Wybór, Licznik, Wskaźnik, z miniaturami na żywo, dostępne też w pokojach), potem **Karty** dla konkretnych rodzajów urządzeń. Formularz komponentu nie ma wyboru trybu wyświetlania; prawdziwe warianty (suwak poziomy lub pionowy, przycisk jako kafel lub wiersz, wybór jako przyciski lub lista) są w **Opcjach komponentu**.
+  <br><img src="docs/components/gallery-basic.png" alt="Galeria komponentów z grupą Podstawowe" width="420">
 - **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
 - **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
@@ -255,6 +257,11 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
+
+### 0.3.1
+- Poprawka: uniwersalne komponenty (Suwak, Przycisk, Lista encji, Wybór, Licznik, Wskaźnik) nie pojawiały się w galerii + Dodaj w pokojach (galeria pokoju pokazywała tylko kafelki); teraz są w grupie **Podstawowe** z miniaturami na żywo, a pokoje wyświetlają dodane komponenty.
+- Zmiana: formularz komponentu nie pokazuje już wyboru trybu wyświetlania; prawdziwe warianty są opisane jako **Opcje komponentu**.
+- Poprawka: niezaznaczone pola wyboru w oknie importu pokoju były niewidoczne na ciemnym tle.
 
 ### 0.3.0
 - Nowość: widok pustego pokoju z dwiema akcjami. **Importuj z obszaru** pokazuje encje z obszaru (oraz encje z nazwą pasującą do pokoju) z polami wyboru, wyszukiwarkę **Wybierz encje** do ręcznego wyboru i opcję przypisania ich też do obszaru w Home Assistant; zaznaczone encje stają się kafelkami ułożonymi według rodzaju (klimatyzacja i kamery duże, multimedia średnie). **Utwórz własny układ** otwiera tryb edycji z pustym pokojem i galerią + Dodaj.
