@@ -1227,5 +1227,5 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 `);
   }
 }
-hgReg('hg-page', HGPage, 'Home Glass – Page', 'Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)');
+hgReg('hg-page', HGPage, 'Home Glass – Page', hgTr('Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)', 'Full-screen glass layout (bar, header, rail, card panel)'));
 console.info(`%c HOME-GLASS %c ${HG_VER} `, 'background:var(--hg-accent);color:#1F2125;font-weight:600', 'background:#1F2125;color:#fff');

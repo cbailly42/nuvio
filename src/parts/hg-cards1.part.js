@@ -57,7 +57,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('hg-energy-card', HGEnergyCard, 'Home Glass – Energia', 'Procent obciążenia mocy (suma faz / moc maks.)');
+hgReg('hg-energy-card', HGEnergyCard, hgTr('Home Glass – Energia', 'Home Glass – Energy'), hgTr('Procent obciążenia mocy (suma faz / moc maks.)', 'Power load percentage (sum of phases / max power)'));
 
 /* ===================== KLIMATYZACJA ===================== */
 /* stan widoczny od razu, bez zmiany powierzchni szkła: mała pełna kropka trybu z ikoną (subtelna animacja), aktywny chip,
@@ -316,7 +316,7 @@ ha-card.glass > *{ flex-shrink:0; }
   }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
-hgReg('hg-ac-card', HGACCard, 'Home Glass – Klimatyzacja', 'Klimatyzacja w stylu Tesli: temperatura, pasek, tryby');
+hgReg('hg-ac-card', HGACCard, hgTr('Home Glass – Klimatyzacja', 'Home Glass – Climate'), hgTr('Klimatyzacja w stylu Tesli: temperatura, pasek, tryby', 'Tesla-style climate control: temperature, bar, modes'));
 
 /* ===================== OŚWIETLENIE ===================== */
 class HGLightCard extends HGBase {
@@ -388,7 +388,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-light-card', HGLightCard, 'Home Glass – Oświetlenie', 'Suwak jasności światła');
+hgReg('hg-light-card', HGLightCard, hgTr('Home Glass – Oświetlenie', 'Home Glass – Light'), hgTr('Suwak jasności światła', 'Light brightness slider'));
 
 /* ===================== PRZEŁĄCZNIK (Wi-Fi / Kuchnia / pokoje) ===================== */
 class HGSwitchCard extends HGBase {
@@ -437,4 +437,4 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
   }
   getGridOptions() { return { columns: 6, rows: 1 }; }
 }
-hgReg('hg-switch-card', HGSwitchCard, 'Home Glass – Przełącznik', 'Przełącznik w stylu glass (wiersz lub kafel)');
+hgReg('hg-switch-card', HGSwitchCard, hgTr('Home Glass – Przełącznik', 'Home Glass – Switch'), hgTr('Przełącznik w stylu glass (wiersz lub kafel)', 'Glass-style switch (row or tile)'));

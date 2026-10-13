@@ -25,16 +25,16 @@ const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 
 const HG_PRESS_DOM = ['script', 'scene', 'button', 'input_button', 'automation'];
 /* model suwaka: wartość, zakres i zapis wg domeny */
 const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.attributes) || {}, on = !!s && !['off', 'unavailable', 'unknown', 'closed', 'idle', 'standby'].includes(s.state);
-  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: 'Poziom' };
+  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgTr('Poziom', 'Level') };
   if (!s) return r;
-  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = 'Jasność'; r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
+  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgTr('Jasność', 'Brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
     r.set = (v) => (v <= 0 ? H.call(h, 'light', 'turn_off', { entity_id: e }) : H.call(h, 'light', 'turn_on', { entity_id: e, brightness_pct: v })); }
-  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = 'Głośność'; r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
-  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = 'Prędkość';
+  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgTr('Głośność', 'Volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
+  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgTr('Prędkość', 'Speed');
     r.set = (v) => (v <= 0 ? H.call(h, 'fan', 'turn_off', { entity_id: e }) : H.call(h, 'fan', 'set_percentage', { entity_id: e, percentage: Math.round(v) })); }
-  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = 'Otwarcie'; r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
+  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgTr('Otwarcie', 'Position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
     r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
-  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = 'Wartość';
+  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
     r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
   else r.ok = false;
   return r; };
@@ -57,12 +57,12 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .un .trk{ cursor:not-allowed; }
 `); }
   render() { const c = this._config, h = this._hass, m = hgSlider(h, c.entity), s = m.s, nm = c.name || H.name(h, c.entity), v = this._drag ?? this._pend ?? m.v, p = m.max > m.min ? ((v - m.min) / (m.max - m.min)) * 100 : 0;
-    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number</div></ha-card>`;
+    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number', 'The slider works with lights, media players, fans, covers and input_number')}</div></ha-card>`;
     const ic = c.icon || s.attributes.icon || HG_DOM_ICON2[m.d] || 'mdi:tune-variant', tog = ['light', 'fan', 'media_player'].includes(m.d) && H.ok(s);
     const vert = c.mode === 'v', fill = vert ? `height:${p}%` : `width:${p}%`;
     return `<div class="${vert ? 'v' : ''}" style="height:100%"><ha-card class="glass ${m.on && v > m.min ? '' : 'off'} ${m.ok ? '' : 'un'}"><div class="gh">
-      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? 'Wycisz' : 'Przełącz'} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
-      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : 'niedostępne'}</span></div>
+      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? hgTr('Wycisz', 'Mute') : hgTr('Przełącz', 'Toggle')} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
+      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : hgTr('niedostępne', 'unavailable')}</span></div>
       <div class="trk" role="slider" tabindex="${m.ok ? 0 : -1}" aria-label="${H.esc(m.label)} ${H.esc(nm)}" aria-orientation="${vert ? 'vertical' : 'horizontal'}" aria-valuemin="${m.min}" aria-valuemax="${m.max}" aria-valuenow="${v}" ${m.ok ? '' : 'aria-disabled="true"'}><div class="gfl" style="${fill}"></div></div></ha-card></div>`; }
   afterRender() { const t = this.$.querySelector('.trk'); if (!t || t.getAttribute('aria-disabled')) return; const vert = this._config.mode === 'v';
     const m = () => hgSlider(this._hass, this._config.entity);
@@ -82,7 +82,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (a === 'mute') return H.call(this._hass, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !s.attributes.is_volume_muted }); }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-slider-card', HGSliderCard, 'Home Glass – Suwak', 'Suwak dla jasności, głośności, wentylatora, rolety i input_number');
+hgReg('hg-slider-card', HGSliderCard, hgTr('Home Glass – Suwak', 'Home Glass – Slider'), hgTr('Suwak dla jasności, głośności, wentylatora, rolety i input_number', 'Slider for brightness, volume, fan, cover and input_number'));
 
 /* --- przycisk: skrypt, scena, button.press, automatyzacja albo dowolna akcja (tap_action) --- */
 const hgPress = (node, h, e, act) => { if (act) return H.action(node, h, act); const d = hgDom(e);
@@ -102,21 +102,21 @@ ha-card.glass{ padding:0; }
 .ok .gic{ background:var(--hg-accent); color:var(--hg-on-accent); } .ok .gic ha-icon{ animation:gpop .4s cubic-bezier(.2,.8,.2,1.3); } @keyframes gpop{ from{ transform:scale(.4); opacity:0 } }
 .ok .gn small{ color:var(--hg-accent-tx, var(--hg-accent)); opacity:1; } .pill .chev{ margin-left:auto; opacity:.5; width:20px; height:20px; }
 `); }
-  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), d = hgDom(c.entity), nm = c.name || (c.entity ? H.name(h, c.entity) : 'Przycisk');
-    if (!c.entity && !c.tap_action) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję lub akcję</b>Skrypt, scena, przycisk albo tap_action</div></ha-card>`;
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), d = hgDom(c.entity), nm = c.name || (c.entity ? H.name(h, c.entity) : hgTr('Przycisk', 'Button'));
+    if (!c.entity && !c.tap_action) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję lub akcję', 'Choose an entity or action')}</b>${hgTr('Skrypt, scena, przycisk albo tap_action', 'Script, scene, button or tap_action')}</div></ha-card>`;
     const un = c.entity && (!s || s.state === 'unavailable' || (!H.ok(s) && !HG_PRESS_DOM.includes(d))) && !c.tap_action, on = s && ['on', 'unlocked', 'open'].includes(s.state) && !HG_PRESS_DOM.includes(d), ok = this._ok;
-    const sub = un ? 'niedostępne' : ok ? 'Wykonano' : c.subtitle || (HG_PRESS_DOM.includes(d) || c.tap_action ? 'Dotknij, aby uruchomić' : H.t(h, s));
+    const sub = un ? hgTr('niedostępne', 'unavailable') : ok ? hgTr('Wykonano', 'Done') : c.subtitle || (HG_PRESS_DOM.includes(d) || c.tap_action ? hgTr('Dotknij, aby uruchomić', 'Tap to run') : H.t(h, s));
     const ic = ok ? 'mdi:check' : c.icon || (s && s.attributes.icon) || HG_DOM_ICON2[d] || 'mdi:gesture-tap-button';
     return `<ha-card class="glass ${c.mode === 'pill' ? 'pill' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}"><button class="gbig" data-act="press" ${un ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${H.esc(sub)}">
       <span class="gic ${on ? 'on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(sub)}</small></span>${c.mode === 'pill' ? H.icon('mdi:chevron-right', 'chev') : ''}</button></ha-card>`; }
   onAct(a) { if (a !== 'press') return; const c = this._config; hgPress(this, this._hass, c.entity, c.tap_action); this._ok = true; this.rerender(); clearTimeout(this._ot); this._ot = setTimeout(() => { this._ok = false; this.rerender(); }, 1600); }
   getGridOptions() { return { columns: 3, rows: 2 }; }
 }
-hgReg('hg-button-card', HGButtonCard, 'Home Glass – Przycisk', 'Przycisk dla skryptu, sceny, button.press lub dowolnej akcji');
+hgReg('hg-button-card', HGButtonCard, hgTr('Home Glass – Przycisk', 'Home Glass – Button'), hgTr('Przycisk dla skryptu, sceny, button.press lub dowolnej akcji', 'Button for a script, scene, button.press or any action'));
 
 /* --- lista encji: wiersze z przełącznikiem, przyciskiem lub wartością --- */
 class HGEntitiesCard extends HGBase {
-  defaults() { return { title: 'Encje', icon: 'mdi:format-list-bulleted', entities: [] }; }
+  defaults() { return { title: hgTr('Encje', 'Entities'), icon: 'mdi:format-list-bulleted', entities: [] }; }
   ents() { return this._config.entities.map((x) => (typeof x === 'string' ? x : x.entity)); }
   css() { return HG_GEN_CSS + U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overflow:auto; }
@@ -125,11 +125,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
 .gr .gn{ cursor:pointer; } .gr .gn:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; border-radius:8px; }
 `); }
   render() { const c = this._config, h = this._hass;
-    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>Dodaj encje</b>Lista z przełącznikami i wartościami</div></ha-card>`;
+    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Dodaj encje', 'Add entities')}</b>${hgTr('Lista z przełącznikami i wartościami', 'A list with toggles and values')}</div></ha-card>`;
     const rows = c.entities.map((x) => { const o = typeof x === 'string' ? { entity: x } : x, e = o.entity, s = H.st(h, e), d = hgDom(e), ok = H.ok(s), nm = o.name || H.name(h, e);
       const on = s && ['on', 'open', 'unlocked', 'playing', 'home'].includes(s.state), ic = o.icon || (s && s.attributes.icon) || HG_DOM_ICON2[d] || 'mdi:circle-outline';
       const num = s && isFinite(parseFloat(s.state)) && s.attributes.unit_of_measurement, val = num ? `${H.fmt(parseFloat(s.state), 1)}<small>${H.esc(s.attributes.unit_of_measurement)}</small>` : H.esc(H.t(h, s));
-      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}Uruchom</button>`
+      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}${hgTr('Uruchom', 'Run')}</button>`
         : ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier'].includes(d) ? `<button class="gsw" role="switch" data-act="tog" data-e="${H.esc(e)}" aria-checked="${!!on}" aria-label="${H.esc(nm)}" ${ok ? '' : 'disabled'}><span class="gkn"></span></button>`
         : `<span class="gv">${val}</span>`;
       return `<div class="gr ${ok || (HG_PRESS_DOM.includes(d) && s && s.state !== 'unavailable') ? '' : 'un'}"><span class="gic ${on ? 'on' : ''}">${H.icon(ic)}</span><span class="gn" role="button" tabindex="0" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b>${HG_PRESS_DOM.includes(d) || /gsw/.test(ctl) ? `<small>${H.esc(H.t(h, s))}</small>` : ''}</span>${ctl}</div>`; }).join('');
@@ -140,7 +140,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
     if (a === 'press') return hgPress(this, h, e); }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }
 }
-hgReg('hg-entities-card', HGEntitiesCard, 'Home Glass – Lista encji', 'Wiersze encji z przełącznikiem, przyciskiem lub wartością');
+hgReg('hg-entities-card', HGEntitiesCard, hgTr('Home Glass – Lista encji', 'Home Glass – Entities'), hgTr('Wiersze encji z przełącznikiem, przyciskiem lub wartością', 'Entity rows with a toggle, button or value'));
 
 /* --- wybór opcji: input_select / select --- */
 class HGSelectCard extends HGBase {
@@ -153,10 +153,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
 .list .gb{ height:44px; justify-content:flex-start; padding:0 14px; border-radius:12px; } .list .gb .ck{ margin-left:auto; } .gb:not([aria-pressed=true]) .ck{ display:none; }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>input_select lub select</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('input_select lub select', 'input_select or select')}</div></ha-card>`;
     const ok = H.ok(s), cur = this._pend ?? s.state, ic = c.icon || s.attributes.icon || 'mdi:format-list-bulleted-square';
     const ops = (s.attributes.options || []).map((o) => `<button class="gb" data-act="opt" data-o="${H.esc(o)}" aria-pressed="${o === cur}" ${ok ? '' : 'disabled'}>${H.esc(o)}${c.mode === 'list' ? H.icon('mdi:check', 'ck') : ''}</button>`).join('');
-    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : 'niedostępne')}</small></span></div>
+    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : hgTr('niedostępne', 'unavailable'))}</small></span></div>
       <div class="gops" role="radiogroup" aria-label="${H.esc(nm)}">${ops}</div></ha-card>`; }
   onAct(a, t) { if (a !== 'opt') return; const e = this._config.entity; this._pend = t.dataset.o; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 3000);
     H.call(this._hass, hgDom(e), 'select_option', { entity_id: e, option: t.dataset.o }); this.rerender(); }
@@ -164,7 +164,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
   get hass() { return this._hass; }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-select-card', HGSelectCard, 'Home Glass – Wybór', 'Opcje input_select i select jako przyciski lub lista');
+hgReg('hg-select-card', HGSelectCard, hgTr('Home Glass – Wybór', 'Home Glass – Select'), hgTr('Opcje input_select i select jako przyciski lub lista', 'input_select and select options as buttons or a list'));
 
 /* --- licznik / krokowy: counter, input_number, number --- */
 class HGStepperCard extends HGBase {
@@ -180,10 +180,10 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (d === 'counter') return { d, s, min: a.minimum ?? -Infinity, max: a.maximum ?? Infinity, step: a.step || 1, unit: '', v: parseFloat(s && s.state) || 0 };
     const m = hgSlider(h, e); return Object.assign(m, { d }); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>counter, input_number lub number</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('counter, input_number lub number', 'counter, input_number or number')}</div></ha-card>`;
     const m = this._m(), ok = H.ok(s), v = this._pend ?? m.v, ic = c.icon || s.attributes.icon || (m.d === 'counter' ? 'mdi:counter' : 'mdi:numeric');
-    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${m.d === 'counter' ? 'Licznik' : 'Krok ' + H.fmt(m.step, 3)}</small></span>${m.d === 'counter' ? `<button class="gb" data-act="reset" aria-label="Wyzeruj" ${ok ? '' : 'disabled'}>${H.icon('mdi:restore')}</button>` : ''}</div>
-      <div class="gst"><button class="gb r" data-act="dec" aria-label="Zmniejsz" ${ok && v > m.min ? '' : 'disabled'}>${H.icon('mdi:minus')}</button><span class="gbn" aria-live="polite">${ok ? hgFmtV(v, m).replace('<small>', '<small>') : 'niedostępne'}</span><button class="gb r ok" data-act="inc" aria-label="Zwiększ" ${ok && v < m.max ? '' : 'disabled'}>${H.icon('mdi:plus')}</button></div></ha-card>`; }
+    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${m.d === 'counter' ? hgTr('Licznik', 'Counter') : hgTr('Krok ', 'Step ') + H.fmt(m.step, 3)}</small></span>${m.d === 'counter' ? `<button class="gb" data-act="reset" aria-label="${hgTr('Wyzeruj', 'Reset')}" ${ok ? '' : 'disabled'}>${H.icon('mdi:restore')}</button>` : ''}</div>
+      <div class="gst"><button class="gb r" data-act="dec" aria-label="${hgTr('Zmniejsz', 'Decrease')}" ${ok && v > m.min ? '' : 'disabled'}>${H.icon('mdi:minus')}</button><span class="gbn" aria-live="polite">${ok ? hgFmtV(v, m).replace('<small>', '<small>') : hgTr('niedostępne', 'unavailable')}</span><button class="gb r ok" data-act="inc" aria-label="${hgTr('Zwiększ', 'Increase')}" ${ok && v < m.max ? '' : 'disabled'}>${H.icon('mdi:plus')}</button></div></ha-card>`; }
   onAct(a) { const e = this._config.entity, h = this._hass, m = this._m(); if (!H.ok(m.s)) return;
     if (m.d === 'counter') { const sv = { inc: 'increment', dec: 'decrement', reset: 'reset' }[a]; if (!sv) return; this._pend = a === 'reset' ? (m.s.attributes.initial ?? 0) : m.v + (a === 'inc' ? m.step : -m.step); H.call(h, 'counter', sv, { entity_id: e }); }
     else { const nv = hgStepRound((this._pend ?? m.v) + (a === 'inc' ? m.step : -m.step), m); this._pend = nv; m.set && m.set(nv); }
@@ -192,7 +192,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   get hass() { return this._hass; }
   getGridOptions() { return { columns: 3, rows: 2 }; }
 }
-hgReg('hg-stepper-card', HGStepperCard, 'Home Glass – Licznik', 'Plus i minus dla counter, input_number i number');
+hgReg('hg-stepper-card', HGStepperCard, hgTr('Home Glass – Licznik', 'Home Glass – Stepper'), hgTr('Plus i minus dla counter, input_number i number', 'Plus and minus for counter, input_number and number'));
 
 /* --- wskaźnik: łuk 240° dla czujnika liczbowego --- */
 class HGGaugeCard extends HGBase {
@@ -207,14 +207,14 @@ ha-card.glass{ display:flex; flex-direction:column; align-items:stretch; gap:8px
 @media (prefers-reduced-motion:reduce){ .gg .fg{ transition:none; } }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz czujnik</b>Dowolny czujnik liczbowy</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz czujnik', 'Choose a sensor')}</b>${hgTr('Dowolny czujnik liczbowy', 'Any numeric sensor')}</div></ha-card>`;
     const u = s.attributes.unit_of_measurement || '', v = parseFloat(s.state), ok = isFinite(v), mn = c.min ?? (u === '°C' ? -20 : 0), mx = c.max ?? (u === '%' ? 100 : u === '°C' ? 40 : u === 'W' ? 5000 : u === 'ppm' ? 2000 : 100);
     const f = ok ? Math.max(0, Math.min(1, (v - mn) / (mx - mn))) : 0, R = 80, L = (2 * Math.PI * R) * (240 / 360), ic = c.icon || s.attributes.icon || 'mdi:gauge';
     const arc = 'M 30.72 140 A 80 80 0 1 1 169.28 140';
-    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? ({ temperature: 'Temperatura', humidity: 'Wilgotność', power: 'Moc', battery: 'Bateria', carbon_dioxide: 'CO₂', illuminance: 'Natężenie światła', pm25: 'PM2.5', pressure: 'Ciśnienie', energy: 'Energia' }[s.attributes.device_class] || 'Czujnik') : 'niedostępne')}</small></span></div>
+    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? (hgTr({ temperature: 'Temperatura', humidity: 'Wilgotność', power: 'Moc', battery: 'Bateria', carbon_dioxide: 'CO₂', illuminance: 'Natężenie światła', pm25: 'PM2.5', pressure: 'Ciśnienie', energy: 'Energia' }, { temperature: 'Temperature', humidity: 'Humidity', power: 'Power', battery: 'Battery', carbon_dioxide: 'CO₂', illuminance: 'Illuminance', pm25: 'PM2.5', pressure: 'Pressure', energy: 'Energy' })[s.attributes.device_class] || hgTr('Czujnik', 'Sensor')) : hgTr('niedostępne', 'unavailable'))}</small></span></div>
       <div class="gg" role="meter" aria-label="${H.esc(nm)}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${ok ? v : ''}"><svg viewBox="0 0 200 170" aria-hidden="true"><path class="bg" d="${arc}" fill="none" stroke-width="14" stroke-linecap="round"/><path class="fg" d="${arc}" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L * (1 - f)}"/></svg>
       <span class="num">${ok ? `${H.fmt(v, 1)}<small>${H.esc(u)}</small>` : '–'}</span><span class="mm"><span>${H.fmt(mn)}</span><span>${H.fmt(mx)}</span></span></div></ha-card>`; }
   onAct() {}
   getGridOptions() { return { columns: 3, rows: 3 }; }
 }
-hgReg('hg-gauge-card', HGGaugeCard, 'Home Glass – Wskaźnik', 'Łuk z wartością czujnika liczbowego');
+hgReg('hg-gauge-card', HGGaugeCard, hgTr('Home Glass – Wskaźnik', 'Home Glass – Gauge'), hgTr('Łuk z wartością czujnika liczbowego', 'Arc with the value of a numeric sensor'));

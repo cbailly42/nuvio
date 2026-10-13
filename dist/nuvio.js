@@ -20,13 +20,15 @@ const HG_I18N = {
     family_sub: 'Kto jest teraz w domu', energy_sub: 'Moc na żywo', scenes: 'Sceny', power: 'Moc teraz', outside: 'Na zewnątrz', more: 'Więcej', home: 'Dom', climate: 'Klimatyzacja',
     wiz_t: 'Witaj w Nuvio', wiz_s: 'Zbudujemy pulpit z Twoich obszarów, urządzeń i encji. Wszystko zmienisz później w trybie edycji.', wiz_lang: 'Język', wiz_views: 'Widoki', wiz_rooms: 'Pokoje',
     wiz_go: 'Utwórz pulpit', wiz_skip: 'Pomiń', wiz_none: 'Nie znaleziono obszarów – pokoje dodasz w Ustawieniach HA → Obszary.', ents: 'encji',
-    hub: 'Domownicy', hub_sub: 'Kto jest teraz w domu' },
+    hub: 'Domownicy', hub_sub: 'Kto jest teraz w domu', na_req: 'Brak encji, wymaga {x}', req_rooms: 'obszarów (Ustawienia → Obszary)', req_media: 'odtwarzacza (media_player)', req_cams: 'kamery (camera)', req_family: 'osób (person)',
+    req_energy: 'czujnika mocy (sensor, W/kW)', req_map: 'osoby lub urządzenia z lokalizacją', req_cal: 'kalendarza (calendar)' },
   en: { map: 'Map', map_sub: 'Where everyone is', calendar: 'Calendar', cal_sub: 'Events from your calendars', panel: 'Home', rooms: 'Rooms', room: 'Room', media: 'Media', cams: 'Cameras', family: 'Family', energy: 'Energy', settings: 'Settings', profile: 'Profile',
     hello: 'Welcome, {name}!', hello_sub: 'Your whole home in one place', rooms_sub: 'Every room at your fingertips', media_sub: 'What is playing', cams_sub: 'Tap for live view',
     family_sub: 'Who is home right now', energy_sub: 'Live power', scenes: 'Scenes', power: 'Power now', outside: 'Outside', more: 'More', home: 'Home', climate: 'Climate',
     wiz_t: 'Welcome to Nuvio', wiz_s: 'We will build a dashboard from your areas, devices and entities. You can change everything later in edit mode.', wiz_lang: 'Language', wiz_views: 'Views', wiz_rooms: 'Rooms',
     wiz_go: 'Create dashboard', wiz_skip: 'Skip', wiz_none: 'No areas found – add rooms in HA Settings → Areas.', ents: 'entities',
-    hub: 'Household', hub_sub: 'Who is home right now' },
+    hub: 'Household', hub_sub: 'Who is home right now', na_req: 'No entities, needs {x}', req_rooms: 'areas (Settings → Areas)', req_media: 'a media player (media_player)', req_cams: 'a camera (camera)', req_family: 'people (person)',
+    req_energy: 'a power sensor (sensor, W/kW)', req_map: 'a person or a device with location', req_cal: 'a calendar (calendar)' },
 };
 const hgLang = (h, pref) => { const l = pref || (h && ((h.locale && h.locale.language) || h.language)) || navigator.language || 'en'; return /^pl/i.test(l) ? 'pl' : 'en'; };
 const hgI = (lang, k) => (HG_I18N[lang] || HG_I18N.en)[k] || HG_I18N.en[k] || k;
@@ -51,8 +53,8 @@ const HGModel = {
 };
 
 /* układ własnego widoku: siatka / kolumny / masonry / panel (hero jak strona główna) + kolumny na telefon / tablet / komputer i maks. szerokość */
-const HG_LAYS = [['grid', 'Siatka', 'mdi:view-grid-outline', 'Równe rzędy kart'], ['cols', 'Kolumny', 'mdi:view-column-outline', 'Karty ułożone od góry, bez wyrównania rzędów'],
-  ['masonry', 'Masonry', 'mdi:view-dashboard-variant-outline', 'Karty dopasowane wysokością, bez pustych miejsc'], ['panel', 'Panel', 'mdi:view-agenda-outline', 'Jak strona główna: pogoda u góry, karty pod spodem']];
+const HG_LAYS = [['grid', hgTrLazy('Siatka', 'Grid'), 'mdi:view-grid-outline', hgTrLazy('Równe rzędy kart', 'Even rows of cards')], ['cols', hgTrLazy('Kolumny', 'Columns'), 'mdi:view-column-outline', hgTrLazy('Karty ułożone od góry, bez wyrównania rzędów', 'Cards stacked from the top, rows not aligned')],
+  ['masonry', 'Masonry', 'mdi:view-dashboard-variant-outline', hgTrLazy('Karty dopasowane wysokością, bez pustych miejsc', 'Cards fitted by height, no gaps')], ['panel', 'Panel', 'mdi:view-agenda-outline', hgTrLazy('Jak strona główna: pogoda u góry, karty pod spodem', 'Like the home page: weather on top, cards below')]];
 const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k] || d)), r = (k) => `repeat(${k}, minmax(0, 1fr))`, cm = n('cm', 1), ct = n('ct', 2), cd = n('cd', c.lay === 'panel' ? 2 : 3);
   return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { align: 'start' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
 /* --- generator konfiguracji (strategia pulpitu) --- */
@@ -114,17 +116,17 @@ const hint = (k) => ({ type: 'custom:nuvio-hint-card', hint: k });
 
 /* --- puste stany: zamiast pustego szkła podpowiedź, co dodać (integracja, krótki opis, przyciski) --- */
 const HG_HINTS = {
-  weather: { icon: 'mdi:weather-partly-cloudy', t: 'Pogoda', d: 'Dodaj integrację Met.no (bezpłatna, bez klucza API) albo dowolną encję weather.*.', domain: 'met', comp: 'weather' },
-  power: { icon: 'mdi:lightning-bolt-outline', t: 'Zużycie energii', d: 'Potrzebny czujnik mocy (W) z licznika, falownika lub gniazdka. Możesz też skonfigurować panel Energia w HA.', href: '/config/energy', hl: 'Panel Energia', comp: 'power' },
-  scenes: { icon: 'mdi:palette-outline', t: 'Sceny i skrypty', d: 'Utwórz scenę lub skrypt w HA, a pojawią się tu jako przyciski.', href: '/config/scene/dashboard', hl: 'Utwórz scenę', comp: 'scenes' },
-  climate: { icon: 'mdi:thermostat', t: 'Klimat', d: 'Dodaj termostat lub klimatyzator (encja climate.*), np. przez integrację producenta.', comp: 'climate' },
-  media: { icon: 'mdi:play-box-multiple-outline', t: 'Multimedia', d: 'Dodaj odtwarzacz: Google Cast, Sonos, Spotify lub telewizor (encje media_player.*).', domain: 'cast', comp: 'players' },
-  cams: { icon: 'mdi:cctv', t: 'Kamery', d: 'Dodaj kamerę przez ONVIF, integrację producenta lub Generic Camera (encje camera.*).', domain: 'onvif', comp: 'cameras' },
-  people: { icon: 'mdi:account-group-outline', t: 'Domownicy', d: 'Dodaj osoby w HA i przypisz im telefon z aplikacją Home Assistant, by widzieć, kto jest w domu.', href: '/config/person', hl: 'Dodaj osobę', comp: 'people' },
-  map: { icon: 'mdi:map-outline', t: 'Mapa', d: 'Dodaj osoby z aplikacją Home Assistant na telefonie albo urządzenia z lokalizacją (device_tracker), a pojawią się na mapie.', href: '/config/person', hl: 'Dodaj osobę', comp: 'map' },
-  calendar: { icon: 'mdi:calendar-month-outline', t: 'Kalendarz', d: 'Dodaj Kalendarz lokalny albo Google Calendar (encje calendar.*), a wydarzenia pojawią się w agendzie i widoku miesiąca.', domain: 'local_calendar', comp: 'agenda' },
-  custom: { icon: 'mdi:view-grid-plus-outline', t: 'Pusty widok', s: 'Twój własny widok', d: 'Dodaj dowolne widżety: kafelki encji, grupy, kamery, mapę, kalendarz i inne. Kolejność i rozmiar zmienisz w trybie edycji.', add: 1 },
-  fuel: { icon: 'mdi:gas-station-outline', t: 'Ceny paliw', d: 'Potrzebny czujnik z ceną (np. sensor z integracji REST lub Scrape, jednostka zł/l).', href: '/config/integrations/dashboard', hl: 'Integracje' },
+  weather: { icon: 'mdi:weather-partly-cloudy', t: hgTrLazy('Pogoda', 'Weather'), d: hgTrLazy('Dodaj integrację Met.no (bezpłatna, bez klucza API) albo dowolną encję weather.*.', 'Add the Met.no integration (free, no API key) or any weather.* entity.'), domain: 'met', comp: 'weather' },
+  power: { icon: 'mdi:lightning-bolt-outline', t: hgTrLazy('Zużycie energii', 'Energy usage'), d: hgTrLazy('Potrzebny czujnik mocy (W) z licznika, falownika lub gniazdka. Możesz też skonfigurować panel Energia w HA.', 'Needs a power sensor (W) from a meter, inverter or smart plug. You can also set up the Energy dashboard in HA.'), href: '/config/energy', hl: hgTrLazy('Panel Energia', 'Energy dashboard'), comp: 'power' },
+  scenes: { icon: 'mdi:palette-outline', t: hgTrLazy('Sceny i skrypty', 'Scenes and scripts'), d: hgTrLazy('Utwórz scenę lub skrypt w HA, a pojawią się tu jako przyciski.', 'Create a scene or script in HA and it will show up here as a button.'), href: '/config/scene/dashboard', hl: hgTrLazy('Utwórz scenę', 'Create scene'), comp: 'scenes' },
+  climate: { icon: 'mdi:thermostat', t: hgTrLazy('Klimat', 'Climate'), d: hgTrLazy('Dodaj termostat lub klimatyzator (encja climate.*), np. przez integrację producenta.', 'Add a thermostat or air conditioner (climate.* entity), e.g. through the manufacturer integration.'), comp: 'climate' },
+  media: { icon: 'mdi:play-box-multiple-outline', t: hgTrLazy('Multimedia', 'Media'), d: hgTrLazy('Dodaj odtwarzacz: Google Cast, Sonos, Spotify lub telewizor (encje media_player.*).', 'Add a player: Google Cast, Sonos, Spotify or a TV (media_player.* entities).'), domain: 'cast', comp: 'players' },
+  cams: { icon: 'mdi:cctv', t: hgTrLazy('Kamery', 'Cameras'), d: hgTrLazy('Dodaj kamerę przez ONVIF, integrację producenta lub Generic Camera (encje camera.*).', 'Add a camera via ONVIF, the manufacturer integration or Generic Camera (camera.* entities).'), domain: 'onvif', comp: 'cameras' },
+  people: { icon: 'mdi:account-group-outline', t: hgTrLazy('Domownicy', 'Household'), d: hgTrLazy('Dodaj osoby w HA i przypisz im telefon z aplikacją Home Assistant, by widzieć, kto jest w domu.', 'Add people in HA and assign them a phone with the Home Assistant app to see who is home.'), href: '/config/person', hl: hgTrLazy('Dodaj osobę', 'Add person'), comp: 'people' },
+  map: { icon: 'mdi:map-outline', t: hgTrLazy('Mapa', 'Map'), d: hgTrLazy('Dodaj osoby z aplikacją Home Assistant na telefonie albo urządzenia z lokalizacją (device_tracker), a pojawią się na mapie.', 'Add people with the Home Assistant app on their phone or devices with location (device_tracker) and they will appear on the map.'), href: '/config/person', hl: hgTrLazy('Dodaj osobę', 'Add person'), comp: 'map' },
+  calendar: { icon: 'mdi:calendar-month-outline', t: hgTrLazy('Kalendarz', 'Calendar'), d: hgTrLazy('Dodaj Kalendarz lokalny albo Google Calendar (encje calendar.*), a wydarzenia pojawią się w agendzie i widoku miesiąca.', 'Add Local Calendar or Google Calendar (calendar.* entities) and events will appear in the agenda and month view.'), domain: 'local_calendar', comp: 'agenda' },
+  custom: { icon: 'mdi:view-grid-plus-outline', t: hgTrLazy('Pusty widok', 'Empty view'), s: hgTrLazy('Twój własny widok', 'Your own view'), d: hgTrLazy('Dodaj dowolne widżety: kafelki encji, grupy, kamery, mapę, kalendarz i inne. Kolejność i rozmiar zmienisz w trybie edycji.', 'Add any widgets: entity tiles, groups, cameras, a map, a calendar and more. Change order and size in edit mode.'), add: 1 },
+  fuel: { icon: 'mdi:gas-station-outline', t: hgTrLazy('Ceny paliw', 'Fuel prices'), d: hgTrLazy('Potrzebny czujnik z ceną (np. sensor z integracji REST lub Scrape, jednostka zł/l).', 'Needs a price sensor (e.g. a sensor from the REST or Scrape integration, unit zł/l).'), href: '/config/integrations/dashboard', hl: hgTrLazy('Integracje', 'Integrations') },
 };
 const HG_HINT_CSS = `:host{ display:block; } .hn{ box-sizing:border-box; height:100%; min-height:150px; display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:var(--r-lg, 24px); color:var(--primary-text-color, inherit);
   background:var(--hg-glass-lite, var(--hg-glass-bg, var(--hg-bg-ffffff-012))); -webkit-backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); box-shadow:var(--hg-card-sh, 0 10px 30px var(--hg-sh-000000-018)); font-family:'DM Sans', system-ui, sans-serif; }
@@ -144,8 +146,8 @@ class HGHintCard extends HTMLElement {
     if (this._hidden() || (c.hint_sc && typeof HGL !== 'undefined' && HGL.data && (HGL.get(c.hint_sc).added || []).length)) { this.style.display = 'none'; this.shadowRoot.innerHTML = ''; this._wrap('none'); return; } this.style.display = ''; this._wrap('');
     const C = D.comp && typeof HG_COMP !== 'undefined' && HG_COMP.find((x) => x.id === D.comp), sl = C && C.slots.find((x) => x.req), pick = sl && typeof hgSlotCands === 'function' && hgSlotCands(h, sl).length;
     const admin = h.user && h.user.is_admin;
-    this.shadowRoot.innerHTML = `<style>${HG_HINT_CSS}</style><div class="hn" role="note"><div class="hd"><span class="ic">${H.icon(D.icon || 'mdi:information-outline')}</span><span><b>${H.esc(D.t || '')}</b><small>${H.esc(D.s || 'Brak danych do wyświetlenia')}</small></span></div><p>${H.esc(D.d || '')}</p>
-      ${admin ? `<div class="bt">${D.add ? `<button class="ok" data-a="add">${H.icon('mdi:plus')}Dodaj widżet</button>` : ''}${pick ? `<button class="ok" data-a="pick">${H.icon('mdi:swap-horizontal')}Wybierz encję</button>` : ''}${D.domain ? `<a class="${pick ? '' : 'ok'}" href="https://my.home-assistant.io/redirect/config_flow_start/?domain=${encodeURIComponent(D.domain)}" target="_blank" rel="noopener">${H.icon('mdi:plus')}Dodaj integrację</a>` : ''}${D.href ? `<button class="${pick || D.domain ? '' : 'ok'}" data-a="go">${H.icon('mdi:cog-outline')}${H.esc(D.hl || 'Skonfiguruj')}</button>` : ''}${D.hacs ? `<button data-a="hacs">${H.icon('mdi:download')}Zainstaluj w HACS</button>` : ''}${D.add ? '' : '<button class="gh" data-a="hide">Ukryj</button>'}</div>` : ''}</div>`;
+    this.shadowRoot.innerHTML = `<style>${HG_HINT_CSS}</style><div class="hn" role="note"><div class="hd"><span class="ic">${H.icon(D.icon || 'mdi:information-outline')}</span><span><b>${H.esc(D.t || '')}</b><small>${H.esc(D.s || hgTr('Brak danych do wyświetlenia', 'Nothing to show yet'))}</small></span></div><p>${H.esc(D.d || '')}</p>
+      ${admin ? `<div class="bt">${D.add ? `<button class="ok" data-a="add">${H.icon('mdi:plus')}${hgTr('Dodaj widżet', 'Add widget')}</button>` : ''}${pick ? `<button class="ok" data-a="pick">${H.icon('mdi:swap-horizontal')}${hgTr('Wybierz encję', 'Choose entity')}</button>` : ''}${D.domain ? `<a class="${pick ? '' : 'ok'}" href="https://my.home-assistant.io/redirect/config_flow_start/?domain=${encodeURIComponent(D.domain)}" target="_blank" rel="noopener">${H.icon('mdi:plus')}${hgTr('Dodaj integrację', 'Add integration')}</a>` : ''}${D.href ? `<button class="${pick || D.domain ? '' : 'ok'}" data-a="go">${H.icon('mdi:cog-outline')}${H.esc(D.hl || hgTr('Skonfiguruj', 'Configure'))}</button>` : ''}${D.hacs ? `<button data-a="hacs">${H.icon('mdi:download')}${hgTr('Zainstaluj w HACS', 'Install in HACS')}</button>` : ''}${D.add ? '' : `<button class="gh" data-a="hide">${hgTr('Ukryj', 'Hide')}</button>`}</div>` : ''}</div>`;
     if (!this._wired) { this._wired = 1; this.shadowRoot.addEventListener('click', (e) => this._click(e)); } }
   async _click(e) { const D = Object.assign({}, HG_HINTS[this._c.hint] || {}, this._c), h = this._h; { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
       if (a === 'go') { history.pushState(null, '', D.href); window.dispatchEvent(new CustomEvent('location-changed')); }
@@ -154,7 +156,7 @@ class HGHintCard extends HTMLElement {
       if (a === 'add') { let n = this; while (n && n.tagName !== 'NUVIO-PAGE' && n.tagName !== 'NUVIO-PAGE') n = n.parentNode || n.host; if (!n || !n._editEnter) return; n._editEnter(); n._eGallery(null, this._c.hint_sc || (n._pageScope() + ':tiles')); return; }
       if (a === 'pick') { let n = this; while (n && n.tagName !== 'NUVIO-PAGE' && n.tagName !== 'NUVIO-PAGE') n = n.parentNode || n.host; if (!n || !n._editEnter) return; n._editEnter(); n._eGalSc = n._pageScope() + ':tiles'; n._eGalCt = null; n._eComp(D.comp); } } }
 }
-queueMicrotask(() => hgReg('nuvio-hint-card', HGHintCard, 'Nuvio – Podpowiedź', 'Pusty stan z instrukcją, co dodać'));
+queueMicrotask(() => hgReg('nuvio-hint-card', HGHintCard, hgTr('Nuvio – Podpowiedź', 'Nuvio – Hint'), hgTr('Pusty stan z instrukcją, co dodać', 'Empty state explaining what to add')));
 class HGStrategy extends HTMLElement { static async generate(config, hass) { return hgGenerate(hass, config || {}); } }
 if (!customElements.get('ll-strategy-dashboard-nuvio')) customElements.define('ll-strategy-dashboard-nuvio', HGStrategy);
 window.hgGenerate = hgGenerate;
@@ -164,11 +166,11 @@ const HG_WZ_T = {
   pl: { hero: 'Witaj w Nuvio', heroS: 'Szklany pulpit dla Home Assistant – zbudujemy go z Twoich obszarów, urządzeń i encji w mniej niż minutę.', start: 'Zaczynamy', skip: 'Pomiń kreator', back: 'Wstecz', next: 'Dalej', go: 'Utwórz pulpit',
     s: ['Język', 'Widoki', 'Pokoje', 'Wygląd', 'Podsumowanie'], langS: 'W jakim języku ma mówić pulpit?', viewsS: 'Wybierz widoki w menu. Panel jest zawsze włączony.', roomsS: 'Które pokoje pokazać? Ukryte możesz przywrócić później.',
     lookS: 'Kolor akcentu i tło – podgląd zmienia się na żywo.', sumS: 'Wszystko gotowe. Każdy wybór zmienisz później w trybie edycji.', acc: 'Akcent', bg: 'Tło', none: 'Nie znaleziono obszarów – pokoje dodasz w Ustawieniach HA → Obszary.',
-    ents: 'encji', rooms: 'pokoi', na: 'brak encji', always: 'zawsze', shown: 'widocznych', step: 'Krok', of: 'z', pv: 'Podgląd', views: 'Widoki', look: 'Wygląd' },
+    ents: 'encji', rooms: 'pokoi', na: 'brak encji', always: 'zawsze', shown: 'widocznych', step: 'Krok', of: 'z', pv: 'Podgląd', views: 'Widoki', look: 'Wygląd', pvRoom: 'Salon', pvMusic: 'Muzyka' },
   en: { hero: 'Welcome to Nuvio', heroS: 'A glass dashboard for Home Assistant – built from your areas, devices and entities in under a minute.', start: 'Get started', skip: 'Skip setup', back: 'Back', next: 'Next', go: 'Create dashboard',
     s: ['Language', 'Views', 'Rooms', 'Appearance', 'Summary'], langS: 'Which language should the dashboard speak?', viewsS: 'Pick the views in the menu. Home is always on.', roomsS: 'Which rooms should be shown? Hidden ones can be restored later.',
     lookS: 'Accent colour and background – the preview updates live.', sumS: 'All set. You can change every choice later in edit mode.', acc: 'Accent', bg: 'Background', none: 'No areas found – add rooms in HA Settings → Areas.',
-    ents: 'entities', rooms: 'rooms', na: 'no entities', always: 'always', shown: 'shown', step: 'Step', of: 'of', pv: 'Preview', views: 'Views', look: 'Appearance' } };
+    ents: 'entities', rooms: 'rooms', na: 'no entities', always: 'always', shown: 'shown', step: 'Step', of: 'of', pv: 'Preview', views: 'Views', look: 'Appearance', pvRoom: 'Living room', pvMusic: 'Music' } };
 const HG_WZ_AREA_IC = [[/salon|living|dzienn/i, 'mdi:sofa'], [/kuch|kitchen/i, 'mdi:stove'], [/sypial|bed/i, 'mdi:bed'], [/łaz|lazien|bath/i, 'mdi:shower'], [/biur|office|gabinet/i, 'mdi:desk'], [/gara/i, 'mdi:garage'], [/ogr|garden|taras/i, 'mdi:flower'], [/dzieci|kid|pok[oó]j/i, 'mdi:teddy-bear'], [/korytarz|hall|przedpok|schod/i, 'mdi:door'], [/kot[lł]own|piwn|basement/i, 'mdi:water-boiler']];
 const HGWizard = {
   async open(page) {
@@ -230,7 +232,7 @@ const HGWizard = {
         if (k === 1) inner = `<div class="g">${all.map(([v, kk, i]) => `<button class="c" data-v="${v}" aria-pressed="${sel.has(v)}" ${has[v] && v !== 'dashboard' ? '' : 'aria-disabled="true"'}>${ck}${MV[v]}<b>${ic(i)}${t(kk)}</b><small>${v === 'dashboard' ? T.always : cnt[v] ? cnt[v] + ' ' + (v === 'rooms' ? T.rooms : T.ents) : T.na}</small></button>`).join('')}</div>`;
         if (k === 2) inner = areas.length ? `<div class="g">${areas.map((x) => `<button class="c" data-a="${H.esc(x.area_id)}" aria-pressed="${!hid.has(x.area_id)}">${ck}<span class="ai">${ic(aIc(x))}</span><b>${H.esc(x.name)}</b><small>${M.roomCount[x.area_id] || 0} ${T.ents}</small></button>`).join('')}</div>` : `<p>${T.none}</p>`;
         if (k === 3) inner = `<div class="lk"><div><span class="lbl">${T.acc}</span><div class="sw">${ACC.map(([c, l]) => `<button data-c="${c}" style="--c:${c}" aria-pressed="${a.toUpperCase() === c.toUpperCase()}" aria-label="${l}">${a.toUpperCase() === c.toUpperCase() ? ic('mdi:check') : ''}</button>`).join('')}</div><span class="lbl">${T.bg}</span><div class="bgs" style="margin-top:6px">${BGS.map(([u, l, p, th], i) => `<button data-b="${i}" title="${H.esc(l)}" aria-label="${H.esc(l)}" aria-pressed="${(u || '') === bgOf()}" style="background-image:url('${th}')"></button>`).join('')}</div></div>
-          <div><span class="lbl">${T.pv}</span><div class="pv" style="${bgCss};margin-top:6px"><div class="tp"><i class="a"></i><b>${H.esc((h.config && h.config.location_name) || 'Dom')}</b><i></i></div><div class="t on">${ic('mdi:lightbulb-on-outline')}<span>${lang === 'pl' ? 'Salon' : 'Living room'}</span><span class="tg"></span></div><div class="t">${ic('mdi:thermometer')}<span>21,5°</span><div class="bar"><i></i></div></div><div class="t">${ic('mdi:lightning-bolt-outline')}<span>1,8 kW</span><div class="bar"><i style="width:35%"></i></div></div><div class="t on">${ic('mdi:play-circle-outline')}<span>${lang === 'pl' ? 'Muzyka' : 'Music'}</span><span class="tg"></span></div></div></div></div>`;
+          <div><span class="lbl">${T.pv}</span><div class="pv" style="${bgCss};margin-top:6px"><div class="tp"><i class="a"></i><b>${H.esc((h.config && h.config.location_name) || t('home'))}</b><i></i></div><div class="t on">${ic('mdi:lightbulb-on-outline')}<span>${T.pvRoom}</span><span class="tg"></span></div><div class="t">${ic('mdi:thermometer')}<span>21,5°</span><div class="bar"><i></i></div></div><div class="t">${ic('mdi:lightning-bolt-outline')}<span>1,8 kW</span><div class="bar"><i style="width:35%"></i></div></div><div class="t on">${ic('mdi:play-circle-outline')}<span>${T.pvMusic}</span><span class="tg"></span></div></div></div></div>`;
         if (k === 4) { const vs = all.filter(([v]) => sel.has(v)), bi = Math.max(0, BGS.findIndex(([u]) => (u || '') === bgOf()));
           inner = `<div class="sm"><div><span class="ai">${ic('mdi:translate')}</span><span><b>${T.s[0]}</b><small>${lang === 'pl' ? 'Polski' : 'English'}</small></span></div><div><span class="ai">${ic('mdi:view-grid-outline')}</span><span><b>${T.views} · ${vs.length}</b><small>${vs.map(([, kk]) => t(kk)).join(' · ')}</small></span></div><div><span class="ai">${ic('mdi:sofa-outline')}</span><span><b>${T.s[2]} · ${areas.length - hid.size}/${areas.length}</b><small>${areas.filter((x) => !hid.has(x.area_id)).map((x) => H.esc(x.name)).slice(0, 6).join(' · ')}${areas.length - hid.size > 6 ? ' …' : ''}</small></span></div><div><span class="ai">${ic('mdi:palette-outline')}</span><span><b>${T.look}</b><small><span class="dot"></span>${H.esc((ACC.find(([c]) => c.toUpperCase() === a.toUpperCase()) || [0, a])[1])} · ${H.esc(BGS[bi][1])}</small></span></div></div>`; }
         body = `<div class="pr" aria-label="${T.step} ${step} ${T.of} ${N}">${T.s.map((_, i) => `<i class="${i < step ? 'on' : ''}"></i>`).join('')}<small>${step} / ${N}</small></div><div class="bd"><div class="pg ${dir < 0 ? 'bk' : ''}"><span class="sl">${T.step} ${step} · ${T.s[k]}</span><h2>${[T.s[0], T.s[1], T.s[2], T.s[3], T.s[4]][k]}</h2><p>${[T.langS, T.viewsS, T.roomsS, T.lookS, T.sumS][k]}</p>${inner}</div></div>`;
@@ -252,10 +254,11 @@ const HGWizard = {
 window.HGWizard = HGWizard;
 
 /* --- Wygląd → „Widoki” (włącz / wyłącz / kolejność, także widoki bez pasujących encji) i „Integracje” (opcjonalne pakiety HACS) --- */
-const HG_VIEW_DEF = [['dashboard', 'panel', 'mdi:view-dashboard-outline', ''], ['rooms', 'rooms', 'mdi:sofa-outline', 'obszarów (Ustawienia → Obszary)'],
-  ['multimedia', 'media', 'mdi:play-box-multiple-outline', 'odtwarzacza (media_player)'], ['kamery', 'cams', 'mdi:cctv', 'kamery (camera)'],
-  ['family', 'family', 'mdi:account-group-outline', 'osób (person)'], ['energia', 'energy', 'mdi:lightning-bolt-outline', 'czujnika mocy (sensor, W/kW)'],
-  ['mapa', 'map', 'mdi:map-outline', 'osoby lub urządzenia z lokalizacją'], ['kalendarz', 'calendar', 'mdi:calendar-month-outline', 'kalendarza (calendar)']];
+/* [ścieżka, klucz nazwy, ikona, klucz HG_I18N wymagania (gdy brak encji)] */
+const HG_VIEW_DEF = [['dashboard', 'panel', 'mdi:view-dashboard-outline', ''], ['rooms', 'rooms', 'mdi:sofa-outline', 'req_rooms'],
+  ['multimedia', 'media', 'mdi:play-box-multiple-outline', 'req_media'], ['kamery', 'cams', 'mdi:cctv', 'req_cams'],
+  ['family', 'family', 'mdi:account-group-outline', 'req_family'], ['energia', 'energy', 'mdi:lightning-bolt-outline', 'req_energy'],
+  ['mapa', 'map', 'mdi:map-outline', 'req_map'], ['kalendarz', 'calendar', 'mdi:calendar-month-outline', 'req_cal']];
 const hgViewHas = (M) => ({ dashboard: true, rooms: Object.keys(M.areas || {}).length > 0, multimedia: M.media.length > 0, kamery: M.cams.length > 0, family: M.persons.length > 0, energia: M.power.length > 0, mapa: M.persons.length + (M.trackers || []).length > 0, kalendarz: (M.calendars || []).length > 0 });
 /* pakiety: wykrycie po zarejestrowanym zasobie ORAZ faktycznie wczytanym kodzie (globalna / element) */
 /* HACS: strona repozytorium w aplikacji (/hacs/repository/<id GitHub>); bez HACS -> GitHub w nowej karcie */
@@ -264,9 +267,9 @@ const hgHacsOpen = (h, rid, repo) => { if (hgHasHacs(h) && rid) { history.pushSt
   window.open('https://github.com/' + repo, '_blank', 'noopener'); return false; };
 window.hgHacsOpen = hgHacsOpen;
 const HG_PKGS = [
-  { id: 'kiosk', name: 'Kiosk Mode', repo: 'NemesisRE/kiosk-mode', rid: 497319128, re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: 'Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.' },
-  { id: 'sidebar', name: 'Custom Sidebar', repo: 'elchininet/custom-sidebar', rid: 737780218, re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: 'Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.' },
-  { id: 'cardmod', name: 'card-mod', repo: 'thomasloven/lovelace-card-mod', rid: 190927524, re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: 'Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.' },
+  { id: 'kiosk', name: 'Kiosk Mode', repo: 'NemesisRE/kiosk-mode', rid: 497319128, re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: hgTrLazy('Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.', 'Hides the HA header and sidebar. Install “Kiosk Mode” from HACS → Frontend.') },
+  { id: 'sidebar', name: 'Custom Sidebar', repo: 'elchininet/custom-sidebar', rid: 737780218, re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: hgTrLazy('Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.', 'Custom order and hiding of sidebar items. Install “Custom Sidebar” from HACS → Frontend.') },
+  { id: 'cardmod', name: 'card-mod', repo: 'thomasloven/lovelace-card-mod', rid: 190927524, re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: hgTrLazy('Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.', 'Extra CSS styles for cards. Install “card-mod” from HACS → Frontend.') },
 ];
 const HGLookX = {
   M: null, res: null, pend: null, kio: null, busy: false,
@@ -283,15 +286,15 @@ const HGLookX = {
     return { order: ['dashboard', ...ord], on: new Set(['dashboard', ...on]) }; },
   cvForm() { const c = this.cv, ed = !!c.old, L = HG_LAYS, num = (k, l, d) => `<label class="lcv-n"><span>${l}</span><select data-cv="${k}">${[1, 2, 3, 4, 5, 6].map((i) => `<option ${(+c[k] || d) === i ? 'selected' : ''}>${i}</option>`).join('')}</select></label>`;
     const IC = ['mdi:view-grid-outline', 'mdi:star-outline', 'mdi:home-outline', 'mdi:sofa-outline', 'mdi:garage', 'mdi:flower-outline', 'mdi:thermometer', 'mdi:lightbulb-outline', 'mdi:shield-home-outline', 'mdi:television', 'mdi:baby-face-outline', 'mdi:briefcase-outline'];
-    return `<div class="lcv" role="group" aria-label="${ed ? 'Edytuj widok' : 'Nowy widok'}"><b class="lcv-h">${H.icon(ed ? 'mdi:pencil-outline' : 'mdi:plus')}${ed ? 'Edytuj widok' : 'Nowy widok'}</b>
-      <label class="lcv-f"><span>Nazwa <em>${(c.n || '').length}/24</em></span><input data-cv="n" maxlength="24" value="${H.esc(c.n || '')}" placeholder="np. Ogród" autocomplete="off"></label>
-      <label class="lcv-f"><span>Podtytuł (opcjonalnie)</span><input data-cv="s" maxlength="48" value="${H.esc(c.s || '')}" placeholder="np. Podlewanie i oświetlenie" autocomplete="off"></label>
-      <div class="lcv-f"><span>Ikona</span><div class="lcv-ic">${IC.map((i) => `<button data-hge="lx-ci" data-i="${i}" aria-pressed="${c.i === i}" aria-label="${i}">${H.icon(i)}</button>`).join('')}<input data-cv="i" value="${H.esc(c.i || '')}" placeholder="mdi:…" autocomplete="off" aria-label="Własna ikona"></div></div>
-      <label class="lcv-f"><span>Ścieżka</span><span class="lcv-p">/${H.esc(HG_DASH())}/<input data-cv="p" maxlength="32" value="${H.esc(c.p || '')}" placeholder="ogrod" autocomplete="off" ${ed ? 'disabled' : ''}></span></label>
-      <div class="lcv-f"><span>Układ</span><div class="lcv-l">${L.map(([k, l, i, d]) => `<button data-hge="lx-cl" data-l="${k}" aria-pressed="${(c.lay || 'grid') === k}">${H.icon(i)}<b>${l}</b><small>${d}</small></button>`).join('')}</div></div>
-      <div class="lcv-f"><span>Kolumny na urządzeniach</span><div class="lcv-r">${num('cm', 'Telefon', 1)}${num('ct', 'Tablet', 2)}${num('cd', 'Komputer', c.lay === 'panel' ? 2 : 3)}<label class="lcv-n"><span>Maks. szerokość</span><select data-cv="mw">${[['0', 'Pełna'], ['960', '960 px'], ['1200', '1200 px'], ['1440', '1440 px']].map(([v, l]) => `<option value="${v}" ${String(c.mw || 0) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div></div>
+    return `<div class="lcv" role="group" aria-label="${ed ? hgTr('Edytuj widok', 'Edit view') : hgTr('Nowy widok', 'New view')}"><b class="lcv-h">${H.icon(ed ? 'mdi:pencil-outline' : 'mdi:plus')}${ed ? hgTr('Edytuj widok', 'Edit view') : hgTr('Nowy widok', 'New view')}</b>
+      <label class="lcv-f"><span>${hgTr('Nazwa', 'Name')} <em>${(c.n || '').length}/24</em></span><input data-cv="n" maxlength="24" value="${H.esc(c.n || '')}" placeholder="${hgTr('np. Ogród', 'e.g. Garden')}" autocomplete="off"></label>
+      <label class="lcv-f"><span>${hgTr('Podtytuł (opcjonalnie)', 'Subtitle (optional)')}</span><input data-cv="s" maxlength="48" value="${H.esc(c.s || '')}" placeholder="${hgTr('np. Podlewanie i oświetlenie', 'e.g. Watering and lighting')}" autocomplete="off"></label>
+      <div class="lcv-f"><span>${hgTr('Ikona', 'Icon')}</span><div class="lcv-ic">${IC.map((i) => `<button data-hge="lx-ci" data-i="${i}" aria-pressed="${c.i === i}" aria-label="${i}">${H.icon(i)}</button>`).join('')}<input data-cv="i" value="${H.esc(c.i || '')}" placeholder="mdi:…" autocomplete="off" aria-label="${hgTr('Własna ikona', 'Custom icon')}"></div></div>
+      <label class="lcv-f"><span>${hgTr('Ścieżka', 'Path')}</span><span class="lcv-p">/${H.esc(HG_DASH())}/<input data-cv="p" maxlength="32" value="${H.esc(c.p || '')}" placeholder="${hgTr('ogrod', 'garden')}" autocomplete="off" ${ed ? 'disabled' : ''}></span></label>
+      <div class="lcv-f"><span>${hgTr('Układ', 'Layout')}</span><div class="lcv-l">${L.map(([k, l, i, d]) => `<button data-hge="lx-cl" data-l="${k}" aria-pressed="${(c.lay || 'grid') === k}">${H.icon(i)}<b>${l}</b><small>${d}</small></button>`).join('')}</div></div>
+      <div class="lcv-f"><span>${hgTr('Kolumny na urządzeniach', 'Columns per device')}</span><div class="lcv-r">${num('cm', hgTr('Telefon', 'Phone'), 1)}${num('ct', 'Tablet', 2)}${num('cd', hgTr('Komputer', 'Desktop'), c.lay === 'panel' ? 2 : 3)}<label class="lcv-n"><span>${hgTr('Maks. szerokość', 'Max width')}</span><select data-cv="mw">${[['0', hgTr('Pełna', 'Full')], ['960', '960 px'], ['1200', '1200 px'], ['1440', '1440 px']].map(([v, l]) => `<option value="${v}" ${String(c.mw || 0) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div></div>
       ${c.err ? `<p class="lcv-e" role="alert">${H.esc(c.err)}</p>` : ''}
-      <div class="lcv-a">${ed ? `<button class="lx-hbtn lcv-del" data-hge="lx-cd">${H.icon('mdi:trash-can-outline')}${c.del ? 'Na pewno usunąć?' : 'Usuń widok'}</button>` : ''}<button class="lx-hbtn" data-hge="lx-cx">Anuluj</button><button class="lx-hbtn ok" data-hge="lx-cs2">${H.icon('mdi:check')}${ed ? 'Zapisz' : 'Utwórz widok'}</button></div></div>
+      <div class="lcv-a">${ed ? `<button class="lx-hbtn lcv-del" data-hge="lx-cd">${H.icon('mdi:trash-can-outline')}${c.del ? hgTr('Na pewno usunąć?', 'Delete for sure?') : hgTr('Usuń widok', 'Delete view')}</button>` : ''}<button class="lx-hbtn" data-hge="lx-cx">${hgTr('Anuluj', 'Cancel')}</button><button class="lx-hbtn ok" data-hge="lx-cs2">${H.icon('mdi:check')}${ed ? hgTr('Zapisz', 'Save') : hgTr('Utwórz widok', 'Create view')}</button></div></div>
       <style>.lx-new{ align-self:flex-start; margin-top:8px; } .lcv{ display:flex; flex-direction:column; gap:12px; margin-top:10px; padding:14px; border-radius:20px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--hg-accent) 45%, transparent); }
       .lcv-h{ display:flex; gap:8px; align-items:center; font-size:15px; } .lcv-h ha-icon{ width:20px; height:20px; } .lcv-f{ display:flex; flex-direction:column; gap:6px; } .lcv-f > span{ font-size:12px; opacity:.72; display:flex; justify-content:space-between; } .lcv-f em{ font-style:normal; }
       .lcv input, .lcv select{ font:inherit; color:inherit; box-sizing:border-box; height:40px; padding:0 12px; border-radius:12px; border:0; background:var(--hg-tile-bg); outline:none; min-width:0; } .lcv input:focus-visible, .lcv select:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .lcv select option{ color:var(--hg-tx-111111); }
@@ -304,25 +307,25 @@ const HGLookX = {
   cvSync(page) { const S = page._eSheetEl, c = this.cv; if (!S || !c) return; for (const n of S.querySelectorAll('[data-cv]')) if (!n.disabled) c[n.dataset.cv] = n.value.trim(); },
   pkg(p) { const reg = (this.res || []).some((u) => p.re.test(u)); let live = false; try { live = p.live(); } catch (e) { live = false; } return { reg, live, ok: reg && live }; },
   html(page) {
-    if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g"><h4>${H.icon('mdi:view-carousel-outline')}Widoki</h4><small class="lk-hn">Wczytywanie…</small></section>`; }
+    if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${hgTr('Wczytywanie…', 'Loading…')}</small></section>`; }
     const lang = hgLang(page._hass, (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
     for (const c of CU) has[c.p] = true; const tl = (d) => (d[4] ? H.esc(d[4].n) : t(d[1]));
     const auto = !!(page._config && page._config._hgAuto);
     const rows = V.order.map((v, i) => { const d = D[v], on = V.on.has(v), fx = v === 'dashboard';
-      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${tl(d)}</b><small>${d[4] ? `Własny widok · ${H.esc((HG_LAYS.find((x) => x[0] === d[4].lay) || HG_LAYS[0])[1])} · /${H.esc(d[4].p)}${on ? '' : ' · ukryty'}` : has[v] ? (fx ? 'Zawsze widoczny' : on ? 'Widoczny' : 'Ukryty') : 'Brak encji, wymaga ' + d[3]}</small></span>${d[4] ? `<button class="lx-a" data-hge="lx-ce" data-v="${v}" aria-label="Edytuj widok">${H.icon('mdi:pencil-outline')}</button>` : ''}
-        ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="W górę" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="W dół" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
+      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${tl(d)}</b><small>${d[4] ? `${hgTr('Własny widok', 'Custom view')} · ${H.esc((HG_LAYS.find((x) => x[0] === d[4].lay) || HG_LAYS[0])[1])} · /${H.esc(d[4].p)}${on ? '' : hgTr(' · ukryty', ' · hidden')}` : has[v] ? (fx ? hgTr('Zawsze widoczny', 'Always visible') : on ? hgTr('Widoczny', 'Visible') : hgTr('Ukryty', 'Hidden')) : t('na_req').replace('{x}', t(d[3]))}</small></span>${d[4] ? `<button class="lx-a" data-hge="lx-ce" data-v="${v}" aria-label="${hgTr('Edytuj widok', 'Edit view')}">${H.icon('mdi:pencil-outline')}</button>` : ''}
+        ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="${hgTr('W górę', 'Move up')}" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="${hgTr('W dół', 'Move down')}" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
         <button class="lx-sw" role="switch" data-hge="lx-v" data-v="${v}" aria-checked="${on}" aria-label="${tl(d)}" ${fx ? 'disabled' : ''}><i></i></button></div>`; }).join('');
     const h = page._hass, kio = this.kio || {}, P = Object.fromEntries(HG_PKGS.map((p) => [p.id, this.pkg(p)]));
     const tg = (k, l, sub, val) => `<div class="lx-r on"><span class="lx-t"><b>${l}</b><small>${sub}</small></span><button class="lx-sw" role="switch" data-hge="lx-k" data-k="${k}" aria-checked="${!!val}" aria-label="${l}"><i></i></button></div>`;
     const pk = HG_PKGS.map((p) => { const st = P[p.id];
-      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? 'Zainstalowany' : st.reg ? 'Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres' : p.hint}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>${st.ok ? '' : `<div class="lx-hb">${this.hacsGo && this.hacsGo[p.id] ? `<button class="lx-hbtn" data-hge="lx-rf">${H.icon('mdi:refresh')}Odśwież, aby wykryć</button>` : ''}<button class="lx-hbtn ok" data-hge="lx-hacs" data-p="${p.id}">${H.icon(hgHasHacs(h) ? 'mdi:download' : 'mdi:github')}${hgHasHacs(h) ? 'Zainstaluj w HACS' : 'Otwórz na GitHub'}</button>${hgHasHacs(h) ? '' : `<a class="lx-hl" href="https://hacs.xyz/docs/use/" target="_blank" rel="noopener">Jak zainstalować HACS</a>`}</div>`}`;
+      const head = `<div class="lx-r${st.ok ? ' on' : ' na'}"><span class="lx-i">${H.icon(p.icon)}</span><span class="lx-t"><b>${p.name}</b><small>${st.ok ? hgTr('Zainstalowany', 'Installed') : st.reg ? hgTr('Zasób zarejestrowany, ale się nie wczytał – odśwież stronę lub sprawdź adres', 'Resource registered but not loaded – reload the page or check the URL') : p.hint}</small></span>${st.ok ? `<span class="lx-ok">${H.icon('mdi:check')}</span>` : ''}</div>${st.ok ? '' : `<div class="lx-hb">${this.hacsGo && this.hacsGo[p.id] ? `<button class="lx-hbtn" data-hge="lx-rf">${H.icon('mdi:refresh')}${hgTr('Odśwież, aby wykryć', 'Reload to detect')}</button>` : ''}<button class="lx-hbtn ok" data-hge="lx-hacs" data-p="${p.id}">${H.icon(hgHasHacs(h) ? 'mdi:download' : 'mdi:github')}${hgHasHacs(h) ? hgTr('Zainstaluj w HACS', 'Install in HACS') : hgTr('Otwórz na GitHub', 'Open on GitHub')}</button>${hgHasHacs(h) ? '' : `<a class="lx-hl" href="https://hacs.xyz/docs/use/" target="_blank" rel="noopener">${hgTr('Jak zainstalować HACS', 'How to install HACS')}</a>`}</div>`}`;
       if (!st.ok) return head;
       if (p.id === 'kiosk') return head + `<div class="lx-sub">${tg('hide_header', hgTr('Ukryj nagłówek HA', 'Hide HA header'), hgTr('Pasek z tytułem pulpitu', 'The bar with the dashboard title'), kio.hide_header)}${tg('hide_sidebar', hgTr('Ukryj panel boczny HA', 'Hide HA sidebar'), hgTr('Menu po lewej stronie', 'The menu on the left'), kio.hide_sidebar)}${tg('kiosk_users', hgTr('Kiosk dla nie-administratorów', 'Kiosk for non-admins'), hgTr('Nagłówek i panel ukryte dla zwykłych użytkowników', 'Header and sidebar hidden for regular users'), kio.non_admin_settings && kio.non_admin_settings.kiosk)}</div>`;
       if (p.id === 'sidebar') return head + `<div class="lx-sub"><div class="lx-r on"><span class="lx-t"><b>${hgTr('Nuvio na górze panelu bocznego', 'Nuvio at the top of the sidebar')}</b><small>${hgTr('Konfiguracja Custom Sidebar to plik /config/www/custom-sidebar-config.yaml – skopiuj gotowy fragment', 'Custom Sidebar is configured in /config/www/custom-sidebar-config.yaml – copy a ready-made snippet')}</small></span><button class="lk-mini" data-hge="lx-cs">${hgTr('Kopiuj', 'Copy')}</button></div></div>`;
       return head; }).join('');
-    return `<section class="lk-g lx"><h4>${H.icon('mdi:view-carousel-outline')}Widoki</h4><small class="lk-hn">${auto ? 'Włącz, wyłącz i ułóż karty pulpitu. Widoki bez encji też możesz włączyć.' : 'Ten pulpit ma własną konfigurację – widokami zarządzasz w jego YAML.'}</small>
-      ${auto ? `<div class="lx-l">${rows}</div>${this.cv ? this.cvForm() : `<button class="lx-hbtn lx-new" data-hge="lx-cn">${H.icon('mdi:plus')}Nowy widok</button>`}${this.pend ? '<button class="lk-mini lx-ap" data-hge="lx-apply">Zastosuj widoki</button>' : ''}` : ''}</section>
-      <section class="lk-g lx"><h4>${H.icon('mdi:puzzle-outline')}Integracje</h4><small class="lk-hn">Opcjonalne dodatki z HACS – Nuvio działa bez nich</small><div class="lx-l">${pk}</div>${this.kpend ? '<button class="lk-mini lx-ap" data-hge="lx-kapply">Zapisz ustawienia kiosku</button>' : ''}</section>
+    return `<section class="lk-g lx"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${auto ? hgTr('Włącz, wyłącz i ułóż karty pulpitu. Widoki bez encji też możesz włączyć.', 'Turn dashboard views on or off and reorder them. Views without entities can be turned on too.') : hgTr('Ten pulpit ma własną konfigurację – widokami zarządzasz w jego YAML.', 'This dashboard has its own configuration – manage its views in its YAML.')}</small>
+      ${auto ? `<div class="lx-l">${rows}</div>${this.cv ? this.cvForm() : `<button class="lx-hbtn lx-new" data-hge="lx-cn">${H.icon('mdi:plus')}${hgTr('Nowy widok', 'New view')}</button>`}${this.pend ? `<button class="lk-mini lx-ap" data-hge="lx-apply">${hgTr('Zastosuj widoki', 'Apply views')}</button>` : ''}` : ''}</section>
+      <section class="lk-g lx"><h4>${H.icon('mdi:puzzle-outline')}${hgTr('Integracje', 'Integrations')}</h4><small class="lk-hn">${hgTr('Opcjonalne dodatki z HACS – Nuvio działa bez nich', 'Optional add-ons from HACS – Nuvio works without them')}</small><div class="lx-l">${pk}</div>${this.kpend ? `<button class="lk-mini lx-ap" data-hge="lx-kapply">${hgTr('Zapisz ustawienia kiosku', 'Save kiosk settings')}</button>` : ''}</section>
       <style>.lx-l{ display:flex; flex-direction:column; gap:6px; } .lx-r{ display:flex; align-items:center; gap:10px; min-height:52px; padding:6px 8px 6px 6px; border-radius:16px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); }
       .lx-r.na{ opacity:.62; } .lx-r.na .lx-t small{ font-style:italic; } .lx-sub{ display:flex; flex-direction:column; gap:6px; margin:-2px 0 4px 18px; } .lx-sub .lx-r{ min-height:46px; padding-left:12px; }
       .lx-i{ flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
@@ -343,14 +346,14 @@ const HGLookX = {
       const w = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {}), CU = (w.custom || []).slice(), cur = this.views();
       if (a === 'lx-cd') { if (!c.del) { c.del = 1; return page._eLook(); }
         w.custom = CU.filter((x) => x.p !== c.old); w.views = cur.order.filter((v) => cur.on.has(v) && v !== c.old && v !== 'dashboard'); w.ts = Date.now(); this.cv = null; this.pend = null; await HGL.save(h);
-        page._eToast('Usunięto widok: ' + c.n); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
+        page._eToast(hgTr('Usunięto widok: ', 'View deleted: ') + c.n); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
       if (a === 'lx-cs2') { c.n = (c.n || '').slice(0, 24); c.p = c.old || slug(c.p || c.n); const taken = [...HG_VIEW_DEF.map((v) => v[0]), 'pokoj', ...CU.map((x) => x.p).filter((x) => x !== c.old)];
-        c.err = !c.n ? 'Podaj nazwę widoku.' : !c.p ? 'Podaj ścieżkę (litery i cyfry).' : taken.includes(c.p) ? `Ścieżka /${c.p} jest już zajęta.` : !/^mdi:[a-z0-9-]+$/.test(c.i || 'mdi:x') ? 'Ikona w formacie mdi:nazwa.' : '';
+        c.err = !c.n ? hgTr('Podaj nazwę widoku.', 'Enter a view name.') : !c.p ? hgTr('Podaj ścieżkę (litery i cyfry).', 'Enter a path (letters and digits).') : taken.includes(c.p) ? hgTr(`Ścieżka /${c.p} jest już zajęta.`, `The path /${c.p} is already taken.`) : !/^mdi:[a-z0-9-]+$/.test(c.i || 'mdi:x') ? hgTr('Ikona w formacie mdi:nazwa.', 'Icon must be in the mdi:name format.') : '';
         if (c.err) return page._eLook();
         const rec = { p: c.p, n: c.n, ...(c.s ? { s: c.s.slice(0, 48) } : {}), i: c.i || 'mdi:view-grid-outline', lay: c.lay || 'grid', cm: +c.cm || 1, ct: +c.ct || 2, cd: +c.cd || 3, ...(+c.mw ? { mw: +c.mw } : {}) };
         const j = CU.findIndex((x) => x.p === c.old); if (j >= 0) CU[j] = rec; else CU.push(rec); w.custom = CU;
         const on = cur.order.filter((v) => cur.on.has(v) && v !== 'dashboard'); if (!c.old) on.push(rec.p); w.views = on; w.ts = Date.now(); this.cv = null; this.pend = null; await HGL.save(h);
-        page._eToast((c.old ? 'Zapisano widok: ' : 'Utworzono widok: ') + rec.n + ' (odświeżanie…)'); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); } }
+        page._eToast((c.old ? hgTr('Zapisano widok: ', 'View saved: ') : hgTr('Utworzono widok: ', 'View created: ')) + rec.n + hgTr(' (odświeżanie…)', ' (reloading…)')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); } }
     if (a === 'lx-hacs') { const p = HG_PKGS.find((x) => x.id === b.dataset.p); if (!p) return; this.hacsGo = Object.assign({}, this.hacsGo, { [p.id]: 1 }); if (!window.__hgDryRun) { if (hgHacsOpen(h, p.rid, p.repo)) page._editExit && page._editExit(false); } else page._eLook(); return; }
     if (a === 'lx-rf') { if (!window.__hgDryRun) location.reload(); return; }
     if (a === 'lx-v' || a === 'lx-up' || a === 'lx-dn') { const V = this.views(), v = b.dataset.v, o = V.order.slice(), on = new Set(V.on), i = o.indexOf(v);
@@ -398,7 +401,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.2+0ccf1be3';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.2+302bfac6';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -1265,7 +1268,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('nuvio-energy-card', HGEnergyCard, 'Nuvio – Energia', 'Procent obciążenia mocy (suma faz / moc maks.)');
+hgReg('nuvio-energy-card', HGEnergyCard, hgTr('Nuvio – Energia', 'Nuvio – Energy'), hgTr('Procent obciążenia mocy (suma faz / moc maks.)', 'Power load percentage (sum of phases / max power)'));
 
 /* ===================== KLIMATYZACJA ===================== */
 /* stan widoczny od razu, bez zmiany powierzchni szkła: mała pełna kropka trybu z ikoną (subtelna animacja), aktywny chip,
@@ -1524,7 +1527,7 @@ ha-card.glass > *{ flex-shrink:0; }
   }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
-hgReg('nuvio-ac-card', HGACCard, 'Nuvio – Klimatyzacja', 'Klimatyzacja w stylu Tesli: temperatura, pasek, tryby');
+hgReg('nuvio-ac-card', HGACCard, hgTr('Nuvio – Klimatyzacja', 'Nuvio – Climate'), hgTr('Klimatyzacja w stylu Tesli: temperatura, pasek, tryby', 'Tesla-style climate control: temperature, bar, modes'));
 
 /* ===================== OŚWIETLENIE ===================== */
 class HGLightCard extends HGBase {
@@ -1596,7 +1599,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('nuvio-light-card', HGLightCard, 'Nuvio – Oświetlenie', 'Suwak jasności światła');
+hgReg('nuvio-light-card', HGLightCard, hgTr('Nuvio – Oświetlenie', 'Nuvio – Light'), hgTr('Suwak jasności światła', 'Light brightness slider'));
 
 /* ===================== PRZEŁĄCZNIK (Wi-Fi / Kuchnia / pokoje) ===================== */
 class HGSwitchCard extends HGBase {
@@ -1645,7 +1648,7 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
   }
   getGridOptions() { return { columns: 6, rows: 1 }; }
 }
-hgReg('nuvio-switch-card', HGSwitchCard, 'Nuvio – Przełącznik', 'Przełącznik w stylu glass (wiersz lub kafel)');
+hgReg('nuvio-switch-card', HGSwitchCard, hgTr('Nuvio – Przełącznik', 'Nuvio – Switch'), hgTr('Przełącznik w stylu glass (wiersz lub kafel)', 'Glass-style switch (row or tile)'));
 
 /* ===================== statystyki (wspólne) ===================== */
 const HGStats = {
@@ -5445,16 +5448,16 @@ const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 
 const HG_PRESS_DOM = ['script', 'scene', 'button', 'input_button', 'automation'];
 /* model suwaka: wartość, zakres i zapis wg domeny */
 const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.attributes) || {}, on = !!s && !['off', 'unavailable', 'unknown', 'closed', 'idle', 'standby'].includes(s.state);
-  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: 'Poziom' };
+  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgTr('Poziom', 'Level') };
   if (!s) return r;
-  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = 'Jasność'; r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
+  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgTr('Jasność', 'Brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
     r.set = (v) => (v <= 0 ? H.call(h, 'light', 'turn_off', { entity_id: e }) : H.call(h, 'light', 'turn_on', { entity_id: e, brightness_pct: v })); }
-  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = 'Głośność'; r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
-  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = 'Prędkość';
+  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgTr('Głośność', 'Volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
+  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgTr('Prędkość', 'Speed');
     r.set = (v) => (v <= 0 ? H.call(h, 'fan', 'turn_off', { entity_id: e }) : H.call(h, 'fan', 'set_percentage', { entity_id: e, percentage: Math.round(v) })); }
-  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = 'Otwarcie'; r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
+  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgTr('Otwarcie', 'Position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
     r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
-  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = 'Wartość';
+  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
     r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
   else r.ok = false;
   return r; };
@@ -5477,12 +5480,12 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .un .trk{ cursor:not-allowed; }
 `); }
   render() { const c = this._config, h = this._hass, m = hgSlider(h, c.entity), s = m.s, nm = c.name || H.name(h, c.entity), v = this._drag ?? this._pend ?? m.v, p = m.max > m.min ? ((v - m.min) / (m.max - m.min)) * 100 : 0;
-    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number</div></ha-card>`;
+    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number', 'The slider works with lights, media players, fans, covers and input_number')}</div></ha-card>`;
     const ic = c.icon || s.attributes.icon || HG_DOM_ICON2[m.d] || 'mdi:tune-variant', tog = ['light', 'fan', 'media_player'].includes(m.d) && H.ok(s);
     const vert = c.mode === 'v', fill = vert ? `height:${p}%` : `width:${p}%`;
     return `<div class="${vert ? 'v' : ''}" style="height:100%"><ha-card class="glass ${m.on && v > m.min ? '' : 'off'} ${m.ok ? '' : 'un'}"><div class="gh">
-      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? 'Wycisz' : 'Przełącz'} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
-      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : 'niedostępne'}</span></div>
+      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? hgTr('Wycisz', 'Mute') : hgTr('Przełącz', 'Toggle')} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
+      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : hgTr('niedostępne', 'unavailable')}</span></div>
       <div class="trk" role="slider" tabindex="${m.ok ? 0 : -1}" aria-label="${H.esc(m.label)} ${H.esc(nm)}" aria-orientation="${vert ? 'vertical' : 'horizontal'}" aria-valuemin="${m.min}" aria-valuemax="${m.max}" aria-valuenow="${v}" ${m.ok ? '' : 'aria-disabled="true"'}><div class="gfl" style="${fill}"></div></div></ha-card></div>`; }
   afterRender() { const t = this.$.querySelector('.trk'); if (!t || t.getAttribute('aria-disabled')) return; const vert = this._config.mode === 'v';
     const m = () => hgSlider(this._hass, this._config.entity);
@@ -5502,7 +5505,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (a === 'mute') return H.call(this._hass, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !s.attributes.is_volume_muted }); }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('nuvio-slider-card', HGSliderCard, 'Nuvio – Suwak', 'Suwak dla jasności, głośności, wentylatora, rolety i input_number');
+hgReg('nuvio-slider-card', HGSliderCard, hgTr('Nuvio – Suwak', 'Nuvio – Slider'), hgTr('Suwak dla jasności, głośności, wentylatora, rolety i input_number', 'Slider for brightness, volume, fan, cover and input_number'));
 
 /* --- przycisk: skrypt, scena, button.press, automatyzacja albo dowolna akcja (tap_action) --- */
 const hgPress = (node, h, e, act) => { if (act) return H.action(node, h, act); const d = hgDom(e);
@@ -5522,21 +5525,21 @@ ha-card.glass{ padding:0; }
 .ok .gic{ background:var(--hg-accent); color:var(--hg-on-accent); } .ok .gic ha-icon{ animation:gpop .4s cubic-bezier(.2,.8,.2,1.3); } @keyframes gpop{ from{ transform:scale(.4); opacity:0 } }
 .ok .gn small{ color:var(--hg-accent-tx, var(--hg-accent)); opacity:1; } .pill .chev{ margin-left:auto; opacity:.5; width:20px; height:20px; }
 `); }
-  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), d = hgDom(c.entity), nm = c.name || (c.entity ? H.name(h, c.entity) : 'Przycisk');
-    if (!c.entity && !c.tap_action) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję lub akcję</b>Skrypt, scena, przycisk albo tap_action</div></ha-card>`;
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), d = hgDom(c.entity), nm = c.name || (c.entity ? H.name(h, c.entity) : hgTr('Przycisk', 'Button'));
+    if (!c.entity && !c.tap_action) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję lub akcję', 'Choose an entity or action')}</b>${hgTr('Skrypt, scena, przycisk albo tap_action', 'Script, scene, button or tap_action')}</div></ha-card>`;
     const un = c.entity && (!s || s.state === 'unavailable' || (!H.ok(s) && !HG_PRESS_DOM.includes(d))) && !c.tap_action, on = s && ['on', 'unlocked', 'open'].includes(s.state) && !HG_PRESS_DOM.includes(d), ok = this._ok;
-    const sub = un ? 'niedostępne' : ok ? 'Wykonano' : c.subtitle || (HG_PRESS_DOM.includes(d) || c.tap_action ? 'Dotknij, aby uruchomić' : H.t(h, s));
+    const sub = un ? hgTr('niedostępne', 'unavailable') : ok ? hgTr('Wykonano', 'Done') : c.subtitle || (HG_PRESS_DOM.includes(d) || c.tap_action ? hgTr('Dotknij, aby uruchomić', 'Tap to run') : H.t(h, s));
     const ic = ok ? 'mdi:check' : c.icon || (s && s.attributes.icon) || HG_DOM_ICON2[d] || 'mdi:gesture-tap-button';
     return `<ha-card class="glass ${c.mode === 'pill' ? 'pill' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}"><button class="gbig" data-act="press" ${un ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${H.esc(sub)}">
       <span class="gic ${on ? 'on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(sub)}</small></span>${c.mode === 'pill' ? H.icon('mdi:chevron-right', 'chev') : ''}</button></ha-card>`; }
   onAct(a) { if (a !== 'press') return; const c = this._config; hgPress(this, this._hass, c.entity, c.tap_action); this._ok = true; this.rerender(); clearTimeout(this._ot); this._ot = setTimeout(() => { this._ok = false; this.rerender(); }, 1600); }
   getGridOptions() { return { columns: 3, rows: 2 }; }
 }
-hgReg('nuvio-button-card', HGButtonCard, 'Nuvio – Przycisk', 'Przycisk dla skryptu, sceny, button.press lub dowolnej akcji');
+hgReg('nuvio-button-card', HGButtonCard, hgTr('Nuvio – Przycisk', 'Nuvio – Button'), hgTr('Przycisk dla skryptu, sceny, button.press lub dowolnej akcji', 'Button for a script, scene, button.press or any action'));
 
 /* --- lista encji: wiersze z przełącznikiem, przyciskiem lub wartością --- */
 class HGEntitiesCard extends HGBase {
-  defaults() { return { title: 'Encje', icon: 'mdi:format-list-bulleted', entities: [] }; }
+  defaults() { return { title: hgTr('Encje', 'Entities'), icon: 'mdi:format-list-bulleted', entities: [] }; }
   ents() { return this._config.entities.map((x) => (typeof x === 'string' ? x : x.entity)); }
   css() { return HG_GEN_CSS + U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overflow:auto; }
@@ -5545,11 +5548,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
 .gr .gn{ cursor:pointer; } .gr .gn:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; border-radius:8px; }
 `); }
   render() { const c = this._config, h = this._hass;
-    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>Dodaj encje</b>Lista z przełącznikami i wartościami</div></ha-card>`;
+    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Dodaj encje', 'Add entities')}</b>${hgTr('Lista z przełącznikami i wartościami', 'A list with toggles and values')}</div></ha-card>`;
     const rows = c.entities.map((x) => { const o = typeof x === 'string' ? { entity: x } : x, e = o.entity, s = H.st(h, e), d = hgDom(e), ok = H.ok(s), nm = o.name || H.name(h, e);
       const on = s && ['on', 'open', 'unlocked', 'playing', 'home'].includes(s.state), ic = o.icon || (s && s.attributes.icon) || HG_DOM_ICON2[d] || 'mdi:circle-outline';
       const num = s && isFinite(parseFloat(s.state)) && s.attributes.unit_of_measurement, val = num ? `${H.fmt(parseFloat(s.state), 1)}<small>${H.esc(s.attributes.unit_of_measurement)}</small>` : H.esc(H.t(h, s));
-      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}Uruchom</button>`
+      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}${hgTr('Uruchom', 'Run')}</button>`
         : ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier'].includes(d) ? `<button class="gsw" role="switch" data-act="tog" data-e="${H.esc(e)}" aria-checked="${!!on}" aria-label="${H.esc(nm)}" ${ok ? '' : 'disabled'}><span class="gkn"></span></button>`
         : `<span class="gv">${val}</span>`;
       return `<div class="gr ${ok || (HG_PRESS_DOM.includes(d) && s && s.state !== 'unavailable') ? '' : 'un'}"><span class="gic ${on ? 'on' : ''}">${H.icon(ic)}</span><span class="gn" role="button" tabindex="0" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b>${HG_PRESS_DOM.includes(d) || /gsw/.test(ctl) ? `<small>${H.esc(H.t(h, s))}</small>` : ''}</span>${ctl}</div>`; }).join('');
@@ -5560,7 +5563,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
     if (a === 'press') return hgPress(this, h, e); }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }
 }
-hgReg('nuvio-entities-card', HGEntitiesCard, 'Nuvio – Lista encji', 'Wiersze encji z przełącznikiem, przyciskiem lub wartością');
+hgReg('nuvio-entities-card', HGEntitiesCard, hgTr('Nuvio – Lista encji', 'Nuvio – Entities'), hgTr('Wiersze encji z przełącznikiem, przyciskiem lub wartością', 'Entity rows with a toggle, button or value'));
 
 /* --- wybór opcji: input_select / select --- */
 class HGSelectCard extends HGBase {
@@ -5573,10 +5576,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
 .list .gb{ height:44px; justify-content:flex-start; padding:0 14px; border-radius:12px; } .list .gb .ck{ margin-left:auto; } .gb:not([aria-pressed=true]) .ck{ display:none; }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>input_select lub select</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('input_select lub select', 'input_select or select')}</div></ha-card>`;
     const ok = H.ok(s), cur = this._pend ?? s.state, ic = c.icon || s.attributes.icon || 'mdi:format-list-bulleted-square';
     const ops = (s.attributes.options || []).map((o) => `<button class="gb" data-act="opt" data-o="${H.esc(o)}" aria-pressed="${o === cur}" ${ok ? '' : 'disabled'}>${H.esc(o)}${c.mode === 'list' ? H.icon('mdi:check', 'ck') : ''}</button>`).join('');
-    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : 'niedostępne')}</small></span></div>
+    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : hgTr('niedostępne', 'unavailable'))}</small></span></div>
       <div class="gops" role="radiogroup" aria-label="${H.esc(nm)}">${ops}</div></ha-card>`; }
   onAct(a, t) { if (a !== 'opt') return; const e = this._config.entity; this._pend = t.dataset.o; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 3000);
     H.call(this._hass, hgDom(e), 'select_option', { entity_id: e, option: t.dataset.o }); this.rerender(); }
@@ -5584,7 +5587,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
   get hass() { return this._hass; }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('nuvio-select-card', HGSelectCard, 'Nuvio – Wybór', 'Opcje input_select i select jako przyciski lub lista');
+hgReg('nuvio-select-card', HGSelectCard, hgTr('Nuvio – Wybór', 'Nuvio – Select'), hgTr('Opcje input_select i select jako przyciski lub lista', 'input_select and select options as buttons or a list'));
 
 /* --- licznik / krokowy: counter, input_number, number --- */
 class HGStepperCard extends HGBase {
@@ -5600,10 +5603,10 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (d === 'counter') return { d, s, min: a.minimum ?? -Infinity, max: a.maximum ?? Infinity, step: a.step || 1, unit: '', v: parseFloat(s && s.state) || 0 };
     const m = hgSlider(h, e); return Object.assign(m, { d }); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz encję</b>counter, input_number lub number</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('counter, input_number lub number', 'counter, input_number or number')}</div></ha-card>`;
     const m = this._m(), ok = H.ok(s), v = this._pend ?? m.v, ic = c.icon || s.attributes.icon || (m.d === 'counter' ? 'mdi:counter' : 'mdi:numeric');
-    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${m.d === 'counter' ? 'Licznik' : 'Krok ' + H.fmt(m.step, 3)}</small></span>${m.d === 'counter' ? `<button class="gb" data-act="reset" aria-label="Wyzeruj" ${ok ? '' : 'disabled'}>${H.icon('mdi:restore')}</button>` : ''}</div>
-      <div class="gst"><button class="gb r" data-act="dec" aria-label="Zmniejsz" ${ok && v > m.min ? '' : 'disabled'}>${H.icon('mdi:minus')}</button><span class="gbn" aria-live="polite">${ok ? hgFmtV(v, m).replace('<small>', '<small>') : 'niedostępne'}</span><button class="gb r ok" data-act="inc" aria-label="Zwiększ" ${ok && v < m.max ? '' : 'disabled'}>${H.icon('mdi:plus')}</button></div></ha-card>`; }
+    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${m.d === 'counter' ? hgTr('Licznik', 'Counter') : hgTr('Krok ', 'Step ') + H.fmt(m.step, 3)}</small></span>${m.d === 'counter' ? `<button class="gb" data-act="reset" aria-label="${hgTr('Wyzeruj', 'Reset')}" ${ok ? '' : 'disabled'}>${H.icon('mdi:restore')}</button>` : ''}</div>
+      <div class="gst"><button class="gb r" data-act="dec" aria-label="${hgTr('Zmniejsz', 'Decrease')}" ${ok && v > m.min ? '' : 'disabled'}>${H.icon('mdi:minus')}</button><span class="gbn" aria-live="polite">${ok ? hgFmtV(v, m).replace('<small>', '<small>') : hgTr('niedostępne', 'unavailable')}</span><button class="gb r ok" data-act="inc" aria-label="${hgTr('Zwiększ', 'Increase')}" ${ok && v < m.max ? '' : 'disabled'}>${H.icon('mdi:plus')}</button></div></ha-card>`; }
   onAct(a) { const e = this._config.entity, h = this._hass, m = this._m(); if (!H.ok(m.s)) return;
     if (m.d === 'counter') { const sv = { inc: 'increment', dec: 'decrement', reset: 'reset' }[a]; if (!sv) return; this._pend = a === 'reset' ? (m.s.attributes.initial ?? 0) : m.v + (a === 'inc' ? m.step : -m.step); H.call(h, 'counter', sv, { entity_id: e }); }
     else { const nv = hgStepRound((this._pend ?? m.v) + (a === 'inc' ? m.step : -m.step), m); this._pend = nv; m.set && m.set(nv); }
@@ -5612,7 +5615,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   get hass() { return this._hass; }
   getGridOptions() { return { columns: 3, rows: 2 }; }
 }
-hgReg('nuvio-stepper-card', HGStepperCard, 'Nuvio – Licznik', 'Plus i minus dla counter, input_number i number');
+hgReg('nuvio-stepper-card', HGStepperCard, hgTr('Nuvio – Licznik', 'Nuvio – Stepper'), hgTr('Plus i minus dla counter, input_number i number', 'Plus and minus for counter, input_number and number'));
 
 /* --- wskaźnik: łuk 240° dla czujnika liczbowego --- */
 class HGGaugeCard extends HGBase {
@@ -5627,17 +5630,17 @@ ha-card.glass{ display:flex; flex-direction:column; align-items:stretch; gap:8px
 @media (prefers-reduced-motion:reduce){ .gg .fg{ transition:none; } }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>Wybierz czujnik</b>Dowolny czujnik liczbowy</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz czujnik', 'Choose a sensor')}</b>${hgTr('Dowolny czujnik liczbowy', 'Any numeric sensor')}</div></ha-card>`;
     const u = s.attributes.unit_of_measurement || '', v = parseFloat(s.state), ok = isFinite(v), mn = c.min ?? (u === '°C' ? -20 : 0), mx = c.max ?? (u === '%' ? 100 : u === '°C' ? 40 : u === 'W' ? 5000 : u === 'ppm' ? 2000 : 100);
     const f = ok ? Math.max(0, Math.min(1, (v - mn) / (mx - mn))) : 0, R = 80, L = (2 * Math.PI * R) * (240 / 360), ic = c.icon || s.attributes.icon || 'mdi:gauge';
     const arc = 'M 30.72 140 A 80 80 0 1 1 169.28 140';
-    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? ({ temperature: 'Temperatura', humidity: 'Wilgotność', power: 'Moc', battery: 'Bateria', carbon_dioxide: 'CO₂', illuminance: 'Natężenie światła', pm25: 'PM2.5', pressure: 'Ciśnienie', energy: 'Energia' }[s.attributes.device_class] || 'Czujnik') : 'niedostępne')}</small></span></div>
+    return `<ha-card class="glass ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? (hgTr({ temperature: 'Temperatura', humidity: 'Wilgotność', power: 'Moc', battery: 'Bateria', carbon_dioxide: 'CO₂', illuminance: 'Natężenie światła', pm25: 'PM2.5', pressure: 'Ciśnienie', energy: 'Energia' }, { temperature: 'Temperature', humidity: 'Humidity', power: 'Power', battery: 'Battery', carbon_dioxide: 'CO₂', illuminance: 'Illuminance', pm25: 'PM2.5', pressure: 'Pressure', energy: 'Energy' })[s.attributes.device_class] || hgTr('Czujnik', 'Sensor')) : hgTr('niedostępne', 'unavailable'))}</small></span></div>
       <div class="gg" role="meter" aria-label="${H.esc(nm)}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${ok ? v : ''}"><svg viewBox="0 0 200 170" aria-hidden="true"><path class="bg" d="${arc}" fill="none" stroke-width="14" stroke-linecap="round"/><path class="fg" d="${arc}" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L * (1 - f)}"/></svg>
       <span class="num">${ok ? `${H.fmt(v, 1)}<small>${H.esc(u)}</small>` : '–'}</span><span class="mm"><span>${H.fmt(mn)}</span><span>${H.fmt(mx)}</span></span></div></ha-card>`; }
   onAct() {}
   getGridOptions() { return { columns: 3, rows: 3 }; }
 }
-hgReg('nuvio-gauge-card', HGGaugeCard, 'Nuvio – Wskaźnik', 'Łuk z wartością czujnika liczbowego');
+hgReg('nuvio-gauge-card', HGGaugeCard, hgTr('Nuvio – Wskaźnik', 'Nuvio – Gauge'), hgTr('Łuk z wartością czujnika liczbowego', 'Arc with the value of a numeric sensor'));
 
 /* ===================== PAGE (tło, pasek górny, nagłówek, szyna, panel, hub) ===================== */
 const HG_SVG = {
@@ -6868,7 +6871,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 `);
   }
 }
-hgReg('nuvio-page', HGPage, 'Nuvio – Page', 'Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)');
+hgReg('nuvio-page', HGPage, 'Nuvio – Page', hgTr('Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)', 'Full-screen glass layout (bar, header, rail, card panel)'));
 console.info(`%c HOME-GLASS %c ${HG_VER} `, 'background:var(--hg-accent);color:var(--hg-tx-1f2125);font-weight:600', 'background:var(--hg-bg-1f2125);color:var(--hg-tx-ffffff)');
 
 /* ===== Tryb edycji układu (admin): kolejność (przeciąganie + FLIP), ukrywanie/przywracanie, rozmiar S/M/L, dodawanie kafli z encji HA.
@@ -7089,40 +7092,40 @@ const hgSlots = (card) => {
 /* ===== „+ Dodaj”: najpierw komponent (galeria), potem jego formularz (sloty encji, nazwa, ikona, styl, rozmiar, podgląd na żywo) ===== */
 const hgIsNum = (h, e) => { const s = h.states[e]; return !!s && s.state !== '' && isFinite(Number(s.state)); };
 const HG_COMP = [
-  { id: 'switch', n: 'Światło / przełącznik', d: 'Włącz i wyłącz jednym dotknięciem', i: 'mdi:lightbulb-outline', tile: 'tog', slots: [{ k: 'e', l: 'Urządzenie', dom: ['light', 'switch', 'fan', 'input_boolean', 'lock', 'automation', 'humidifier', 'valve', 'siren'], req: 1 }] },
-  { id: 'sensor', n: 'Odczyt czujnika', d: 'Wartość lub stan dowolnego czujnika', i: 'mdi:gauge', tile: 'val', slots: [{ k: 'e', l: 'Czujnik', dom: ['sensor', 'binary_sensor', 'input_number', 'counter', 'water_heater'], req: 1 }] },
-  { id: 'chart', n: 'Czujnik z wykresem', d: 'Wartość i wykres z ostatnich 24 h', i: 'mdi:chart-areaspline', tile: 'chart', slots: [{ k: 'e', l: 'Czujnik liczbowy', dom: ['sensor'], num: 1, req: 1 }] },
-  { id: 'climate', n: 'Klimatyzacja', d: 'Temperatura, tryby i nawiew', i: 'mdi:thermostat', tile: 'clim', slots: [{ k: 'e', l: 'Termostat / klimatyzator', dom: ['climate'], req: 1 }] },
-  { id: 'cover', n: 'Roleta / brama', d: 'Otwórz, zatrzymaj, zamknij', i: 'mdi:window-shutter', tile: 'cover', slots: [{ k: 'e', l: 'Roleta', dom: ['cover'], req: 1 }] },
-  { id: 'run', n: 'Scena / skrypt', d: 'Jeden przycisk uruchamiający', i: 'mdi:play-circle-outline', tile: 'run', slots: [{ k: 'e', l: 'Scena lub skrypt', dom: ['scene', 'script', 'button', 'input_button'], req: 1 }] },
-  { id: 'media1', n: 'Odtwarzacz', d: 'Okładka, tytuł i sterowanie', i: 'mdi:speaker', tile: 'media', slots: [{ k: 'e', l: 'Odtwarzacz', dom: ['media_player'], req: 1 }] },
-  { id: 'cam1', n: 'Kamera', d: 'Migawka i podgląd na żywo', i: 'mdi:cctv', tile: 'cam', slots: [{ k: 'e', l: 'Kamera', dom: ['camera'], req: 1 }] },
-  { id: 'scenes', n: 'Sceny i skrypty', d: 'Kilka przycisków w jednej karcie', i: 'mdi:palette-outline', card: 'nuvio-scenes-card', slots: [{ k: 'scripts', l: 'Sceny / skrypty', dom: ['scene', 'script'], multi: 1, obj: 1, req: 1 }],
-    cfg: (v) => ({ scripts: v.scripts }) },
-  { id: 'cameras', n: 'Siatka kamer', d: 'Wszystkie wybrane kamery naraz', i: 'mdi:view-grid-outline', card: 'nuvio-cameras-card', slots: [{ k: 'entities', l: 'Kamery', dom: ['camera'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
-  { id: 'players', n: 'Multimedia', d: 'Lista odtwarzaczy z głośnością', i: 'mdi:play-box-multiple-outline', card: 'nuvio-players-card', slots: [{ k: 'entities', l: 'Odtwarzacze', dom: ['media_player'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
-  { id: 'power', n: 'Moc teraz', d: 'Moc chwilowa z linią z ostatnich godzin', i: 'mdi:flash-outline', card: 'nuvio-power-card', slots: [{ k: 'entities', l: 'Czujnik mocy', dom: ['sensor'], dc: ['power'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) },
-  { id: 'energy', n: 'Energia – statystyki', d: 'Zużycie i produkcja: dziś, tydzień, miesiąc', i: 'mdi:lightning-bolt-outline', card: 'nuvio-energy-stats-card', slots: [{ k: 'consumption', l: 'Zużycie (kWh)', dom: ['sensor'], dc: ['energy'], req: 1 }, { k: 'production', l: 'Produkcja (kWh, opcjonalnie)', dom: ['sensor'], dc: ['energy'] }],
-    cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) },
-  { id: 'weather', n: 'Pogoda', d: 'Teraz, prognoza godzinowa, słońce', i: 'mdi:weather-partly-cloudy', card: 'nuvio-weather-card', slots: [{ k: 'entity', l: 'Prognoza', dom: ['weather'], req: 1 }], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}) }) },
-  { id: 'people', n: 'Domownicy', d: 'Kto jest w domu, strefy i czas', i: 'mdi:account-group-outline', card: 'nuvio-people-card', slots: [{ k: 'persons', l: 'Osoby', dom: ['person'], multi: 1, req: 1 }], cfg: (v) => ({ persons: v.persons }) },
-  { id: 'alarm', n: 'Alarm', d: 'Uzbrajanie i rozbrajanie z kodem', i: 'mdi:shield-home-outline', card: 'nuvio-alarm-card', slots: [{ k: 'entity', l: 'Centrala alarmu', dom: ['alarm_control_panel'], req: 1 }], cfg: (v) => ({ entity: v.entity }) },
-  { id: 'robots', n: 'Roboty', d: 'Odkurzacze i kosiarki: stan i sterowanie', i: 'mdi:robot-vacuum', card: 'nuvio-robots-card', slots: [{ k: 'entities', l: 'Roboty', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
-  { id: 'agenda', n: 'Kalendarz', d: 'Agenda lub widok miesiąca', i: 'mdi:calendar-month-outline', card: 'nuvio-agenda-card', cards: { agenda: 'nuvio-agenda-card', month: 'nuvio-month-card' }, modes: [['agenda', 'Agenda', 'mdi:format-list-bulleted'], ['month', 'Miesiąc', 'mdi:calendar-month-outline']],
-    slots: [{ k: 'calendars', l: 'Kalendarze', dom: ['calendar'], multi: 1, req: 1 }], cfg: (v) => (v.mode === 'month' ? { calendars: v.calendars } : { calendars: v.calendars, days: 14 }) },
-  { id: 'slider', n: 'Suwak', d: 'Jasność, głośność, wentylator, roleta, liczba', i: 'mdi:tune-variant', card: 'nuvio-slider-card', modes: [['h', 'Poziomy', 'mdi:arrow-left-right'], ['v', 'Pionowy', 'mdi:arrow-up-down']],
-    slots: [{ k: 'e', l: 'Encja', dom: ['light', 'media_player', 'fan', 'cover', 'valve', 'input_number', 'number'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'h' }) },
-  { id: 'button', n: 'Przycisk', d: 'Skrypt, scena, button.press lub akcja', i: 'mdi:gesture-tap-button', card: 'nuvio-button-card', modes: [['tile', 'Kafel', 'mdi:square-rounded-outline'], ['pill', 'Wiersz', 'mdi:minus-box-outline']],
-    slots: [{ k: 'e', l: 'Encja', dom: ['script', 'scene', 'button', 'input_button', 'automation', 'lock', 'switch'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'tile' }) },
-  { id: 'entities', n: 'Lista encji', d: 'Wiersze z przełącznikiem lub wartością', i: 'mdi:format-list-checks', card: 'nuvio-entities-card',
-    slots: [{ k: 'entities', l: 'Encje', dom: ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier', 'sensor', 'binary_sensor', 'script', 'scene', 'button', 'input_button', 'lock', 'cover', 'climate', 'media_player', 'person'], pref: ['light', 'switch', 'fan', 'input_boolean'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
-  { id: 'select', n: 'Wybór', d: 'Opcje input_select i select', i: 'mdi:form-dropdown', card: 'nuvio-select-card', modes: [['chips', 'Przyciski', 'mdi:dots-horizontal'], ['list', 'Lista', 'mdi:format-list-bulleted']],
-    slots: [{ k: 'e', l: 'Encja', dom: ['input_select', 'select'], req: 1 }], cfg: (v) => ({ entity: v.e, mode: v.mode || 'chips' }) },
-  { id: 'stepper', n: 'Licznik', d: 'Plus i minus dla liczników i wartości', i: 'mdi:plus-minus-variant', card: 'nuvio-stepper-card',
-    slots: [{ k: 'e', l: 'Encja', dom: ['counter', 'input_number', 'number'], req: 1 }], cfg: (v) => ({ entity: v.e }) },
-  { id: 'gauge', n: 'Wskaźnik', d: 'Wartość czujnika na łuku', i: 'mdi:gauge', card: 'nuvio-gauge-card', slots: [{ k: 'e', l: 'Czujnik liczbowy', dom: ['sensor', 'input_number', 'number'], num: 1, req: 1 }], cfg: (v) => ({ entity: v.e }) },
-  { id: 'map', n: 'Mapa', d: 'Domownicy, urządzenia i strefy na mapie', i: 'mdi:map-outline', card: 'nuvio-map-card', slots: [{ k: 'entities', l: 'Osoby, urządzenia, strefy', dom: ['person', 'device_tracker', 'zone'], loc: 1, multi: 1, req: 1 }],
-    cfg: (v) => ({ entities: v.entities, theme_mode: 'auto', hours_to_show: 0 }) },
+  hgTrO({ id: 'switch', i: 'mdi:lightbulb-outline', tile: 'tog', slots: [hgTrO({ k: 'e', dom: ['light', 'switch', 'fan', 'input_boolean', 'lock', 'automation', 'humidifier', 'valve', 'siren'], req: 1 }, { l: ['Urządzenie', 'Device'] })] }, { n: ['Światło / przełącznik', 'Light / switch'], d: ['Włącz i wyłącz jednym dotknięciem', 'Turn on and off with one tap'] }),
+  hgTrO({ id: 'sensor', i: 'mdi:gauge', tile: 'val', slots: [hgTrO({ k: 'e', dom: ['sensor', 'binary_sensor', 'input_number', 'counter', 'water_heater'], req: 1 }, { l: ['Czujnik', 'Sensor'] })] }, { n: ['Odczyt czujnika', 'Sensor reading'], d: ['Wartość lub stan dowolnego czujnika', 'Value or state of any sensor'] }),
+  hgTrO({ id: 'chart', i: 'mdi:chart-areaspline', tile: 'chart', slots: [hgTrO({ k: 'e', dom: ['sensor'], num: 1, req: 1 }, { l: ['Czujnik liczbowy', 'Numeric sensor'] })] }, { n: ['Czujnik z wykresem', 'Sensor with chart'], d: ['Wartość i wykres z ostatnich 24 h', 'Value and chart for the last 24 h'] }),
+  hgTrO({ id: 'climate', i: 'mdi:thermostat', tile: 'clim', slots: [hgTrO({ k: 'e', dom: ['climate'], req: 1 }, { l: ['Termostat / klimatyzator', 'Thermostat / AC'] })] }, { n: ['Klimatyzacja', 'Air conditioning'], d: ['Temperatura, tryby i nawiew', 'Temperature, modes and fan'] }),
+  hgTrO({ id: 'cover', i: 'mdi:window-shutter', tile: 'cover', slots: [hgTrO({ k: 'e', dom: ['cover'], req: 1 }, { l: ['Roleta', 'Cover'] })] }, { n: ['Roleta / brama', 'Cover / gate'], d: ['Otwórz, zatrzymaj, zamknij', 'Open, stop, close'] }),
+  hgTrO({ id: 'run', i: 'mdi:play-circle-outline', tile: 'run', slots: [hgTrO({ k: 'e', dom: ['scene', 'script', 'button', 'input_button'], req: 1 }, { l: ['Scena lub skrypt', 'Scene or script'] })] }, { n: ['Scena / skrypt', 'Scene / script'], d: ['Jeden przycisk uruchamiający', 'One button to run it'] }),
+  hgTrO({ id: 'media1', i: 'mdi:speaker', tile: 'media', slots: [hgTrO({ k: 'e', dom: ['media_player'], req: 1 }, { l: ['Odtwarzacz', 'Media player'] })] }, { n: ['Odtwarzacz', 'Media player'], d: ['Okładka, tytuł i sterowanie', 'Artwork, title and controls'] }),
+  hgTrO({ id: 'cam1', i: 'mdi:cctv', tile: 'cam', slots: [hgTrO({ k: 'e', dom: ['camera'], req: 1 }, { l: ['Kamera', 'Camera'] })] }, { n: ['Kamera', 'Camera'], d: ['Migawka i podgląd na żywo', 'Snapshot and live view'] }),
+  hgTrO({ id: 'scenes', i: 'mdi:palette-outline', card: 'nuvio-scenes-card', slots: [hgTrO({ k: 'scripts', dom: ['scene', 'script'], multi: 1, obj: 1, req: 1 }, { l: ['Sceny / skrypty', 'Scenes / scripts'] })],
+    cfg: (v) => ({ scripts: v.scripts }) }, { n: ['Sceny i skrypty', 'Scenes and scripts'], d: ['Kilka przycisków w jednej karcie', 'Several buttons in one card'] }),
+  hgTrO({ id: 'cameras', i: 'mdi:view-grid-outline', card: 'nuvio-cameras-card', slots: [hgTrO({ k: 'entities', dom: ['camera'], multi: 1, req: 1 }, { l: ['Kamery', 'Cameras'] })], cfg: (v) => ({ entities: v.entities }) }, { n: ['Siatka kamer', 'Camera grid'], d: ['Wszystkie wybrane kamery naraz', 'All selected cameras at once'] }),
+  hgTrO({ id: 'players', i: 'mdi:play-box-multiple-outline', card: 'nuvio-players-card', slots: [hgTrO({ k: 'entities', dom: ['media_player'], multi: 1, req: 1 }, { l: ['Odtwarzacze', 'Media players'] })], cfg: (v) => ({ entities: v.entities }) }, { n: ['Multimedia', 'Media'], d: ['Lista odtwarzaczy z głośnością', 'Player list with volume'] }),
+  hgTrO({ id: 'power', i: 'mdi:flash-outline', card: 'nuvio-power-card', slots: [hgTrO({ k: 'entities', dom: ['sensor'], dc: ['power'], multi: 1, req: 1 }, { l: ['Czujnik mocy', 'Power sensor'] })], cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) }, { n: ['Moc teraz', 'Power now'], d: ['Moc chwilowa z linią z ostatnich godzin', 'Current power with a line for recent hours'] }),
+  hgTrO({ id: 'energy', i: 'mdi:lightning-bolt-outline', card: 'nuvio-energy-stats-card', slots: [hgTrO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], req: 1 }, { l: ['Zużycie (kWh)', 'Consumption (kWh)'] }), hgTrO({ k: 'production', dom: ['sensor'], dc: ['energy'] }, { l: ['Produkcja (kWh, opcjonalnie)', 'Production (kWh, optional)'] })],
+    cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) }, { n: ['Energia – statystyki', 'Energy – statistics'], d: ['Zużycie i produkcja: dziś, tydzień, miesiąc', 'Consumption and production: today, week, month'] }),
+  hgTrO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'nuvio-weather-card', slots: [hgTrO({ k: 'entity', dom: ['weather'], req: 1 }, { l: ['Prognoza', 'Forecast'] })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}) }) }, { n: ['Pogoda', 'Weather'], d: ['Teraz, prognoza godzinowa, słońce', 'Now, hourly forecast, sun'] }),
+  hgTrO({ id: 'people', i: 'mdi:account-group-outline', card: 'nuvio-people-card', slots: [hgTrO({ k: 'persons', dom: ['person'], multi: 1, req: 1 }, { l: ['Osoby', 'People'] })], cfg: (v) => ({ persons: v.persons }) }, { n: ['Domownicy', 'People'], d: ['Kto jest w domu, strefy i czas', 'Who is home, zones and time'] }),
+  hgTrO({ id: 'alarm', i: 'mdi:shield-home-outline', card: 'nuvio-alarm-card', slots: [hgTrO({ k: 'entity', dom: ['alarm_control_panel'], req: 1 }, { l: ['Centrala alarmu', 'Alarm panel'] })], cfg: (v) => ({ entity: v.entity }) }, { n: ['Alarm', 'Alarm'], d: ['Uzbrajanie i rozbrajanie z kodem', 'Arm and disarm with a code'] }),
+  hgTrO({ id: 'robots', i: 'mdi:robot-vacuum', card: 'nuvio-robots-card', slots: [hgTrO({ k: 'entities', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }, { l: ['Roboty', 'Robots'] })], cfg: (v) => ({ entities: v.entities }) }, { n: ['Roboty', 'Robots'], d: ['Odkurzacze i kosiarki: stan i sterowanie', 'Vacuums and mowers: status and control'] }),
+  hgTrO({ id: 'agenda', i: 'mdi:calendar-month-outline', card: 'nuvio-agenda-card', cards: { agenda: 'nuvio-agenda-card', month: 'nuvio-month-card' }, modes: [['agenda', 'Agenda', 'Agenda', 'mdi:format-list-bulleted'], ['month', 'Miesiąc', 'Month', 'mdi:calendar-month-outline']],
+    slots: [hgTrO({ k: 'calendars', dom: ['calendar'], multi: 1, req: 1 }, { l: ['Kalendarze', 'Calendars'] })], cfg: (v) => (v.mode === 'month' ? { calendars: v.calendars } : { calendars: v.calendars, days: 14 }) }, { n: ['Kalendarz', 'Calendar'], d: ['Agenda lub widok miesiąca', 'Agenda or month view'] }),
+  hgTrO({ id: 'slider', i: 'mdi:tune-variant', card: 'nuvio-slider-card', modes: [['h', 'Poziomy', 'Horizontal', 'mdi:arrow-left-right'], ['v', 'Pionowy', 'Vertical', 'mdi:arrow-up-down']],
+    slots: [hgTrO({ k: 'e', dom: ['light', 'media_player', 'fan', 'cover', 'valve', 'input_number', 'number'], req: 1 }, { l: ['Encja', 'Entity'] })], cfg: (v) => ({ entity: v.e, mode: v.mode || 'h' }) }, { n: ['Suwak', 'Slider'], d: ['Jasność, głośność, wentylator, roleta, liczba', 'Brightness, volume, fan, cover, number'] }),
+  hgTrO({ id: 'button', i: 'mdi:gesture-tap-button', card: 'nuvio-button-card', modes: [['tile', 'Kafel', 'Tile', 'mdi:square-rounded-outline'], ['pill', 'Wiersz', 'Row', 'mdi:minus-box-outline']],
+    slots: [hgTrO({ k: 'e', dom: ['script', 'scene', 'button', 'input_button', 'automation', 'lock', 'switch'], req: 1 }, { l: ['Encja', 'Entity'] })], cfg: (v) => ({ entity: v.e, mode: v.mode || 'tile' }) }, { n: ['Przycisk', 'Button'], d: ['Skrypt, scena, button.press lub akcja', 'Script, scene, button.press or action'] }),
+  hgTrO({ id: 'entities', i: 'mdi:format-list-checks', card: 'nuvio-entities-card',
+    slots: [hgTrO({ k: 'entities', dom: ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier', 'sensor', 'binary_sensor', 'script', 'scene', 'button', 'input_button', 'lock', 'cover', 'climate', 'media_player', 'person'], pref: ['light', 'switch', 'fan', 'input_boolean'], multi: 1, req: 1 }, { l: ['Encje', 'Entities'] })], cfg: (v) => ({ entities: v.entities }) }, { n: ['Lista encji', 'Entity list'], d: ['Wiersze z przełącznikiem lub wartością', 'Rows with a toggle or value'] }),
+  hgTrO({ id: 'select', i: 'mdi:form-dropdown', card: 'nuvio-select-card', modes: [['chips', 'Przyciski', 'Buttons', 'mdi:dots-horizontal'], ['list', 'Lista', 'List', 'mdi:format-list-bulleted']],
+    slots: [hgTrO({ k: 'e', dom: ['input_select', 'select'], req: 1 }, { l: ['Encja', 'Entity'] })], cfg: (v) => ({ entity: v.e, mode: v.mode || 'chips' }) }, { n: ['Wybór', 'Select'], d: ['Opcje input_select i select', 'input_select and select options'] }),
+  hgTrO({ id: 'stepper', i: 'mdi:plus-minus-variant', card: 'nuvio-stepper-card',
+    slots: [hgTrO({ k: 'e', dom: ['counter', 'input_number', 'number'], req: 1 }, { l: ['Encja', 'Entity'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Licznik', 'Stepper'], d: ['Plus i minus dla liczników i wartości', 'Plus and minus for counters and values'] }),
+  hgTrO({ id: 'gauge', i: 'mdi:gauge', card: 'nuvio-gauge-card', slots: [hgTrO({ k: 'e', dom: ['sensor', 'input_number', 'number'], num: 1, req: 1 }, { l: ['Czujnik liczbowy', 'Numeric sensor'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Wskaźnik', 'Gauge'], d: ['Wartość czujnika na łuku', 'Sensor value on an arc'] }),
+  hgTrO({ id: 'map', i: 'mdi:map-outline', card: 'nuvio-map-card', slots: [hgTrO({ k: 'entities', dom: ['person', 'device_tracker', 'zone'], loc: 1, multi: 1, req: 1 }, { l: ['Osoby, urządzenia, strefy', 'People, devices, zones'] })],
+    cfg: (v) => ({ entities: v.entities, theme_mode: 'auto', hours_to_show: 0 }) }, { n: ['Mapa', 'Map'], d: ['Domownicy, urządzenia i strefy na mapie', 'People, devices and zones on a map'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
 const HG_COMP_Z = { climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
@@ -7162,7 +7165,7 @@ const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new 
   L.hidden = uq(L.hidden || []); L.order = uq(L.order || []); const seen = new Set(); L.added = (L.added || []).filter((x) => { if (!x || !x.e || seen.has(x.e)) { ch = true; return false; } seen.add(x.e); return true; }); return ch; };
 const HGToast = window.__hgToast || (window.__hgToast = {
   L: [], el: null,
-  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', 'Powiadomienia');
+  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgTr('Powiadomienia', 'Notifications'));
     const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10000; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
 .hgt .t{ position:absolute; left:0; right:0; bottom:0; box-sizing:border-box; display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 8px 8px 16px; border-radius:20px; background:var(--hg-bg-1e2023-084); color:var(--hg-tx-f5f6f7); box-shadow:0 12px 32px var(--hg-sh-000000-028), inset 0 0 0 1px var(--hg-sh-ffffff-012); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
   transition:transform .38s cubic-bezier(.2,.9,.25,1), opacity .3s; transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
@@ -7185,7 +7188,7 @@ const HGToast = window.__hgToast || (window.__hgToast = {
     if (same) { same.c++; same.n.querySelector('em') ? (same.n.querySelector('em').textContent = '×' + same.c) : same.n.querySelector('span').insertAdjacentHTML('afterend', `<em>×${same.c}</em>`); this.L = this.L.filter((y) => y !== same).concat(same); this.arm(same, ms); return this.lay(); }
     const n = document.createElement('div'); n.className = 't in'; n.setAttribute('role', 'status'); const sp = document.createElement('span'); sp.textContent = t; n.appendChild(sp);
     const x = { t, n, c: 1, undo: !!undo };
-    if (undo) { const u = document.createElement('button'); u.textContent = 'Cofnij'; u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
+    if (undo) { const u = document.createElement('button'); u.textContent = hgTr('Cofnij', 'Undo'); u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
     let sx = null; n.addEventListener('pointerdown', (e) => { sx = e.clientX; }); n.addEventListener('pointermove', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 6) n.style.translate = (e.clientX - sx) + 'px 0'; });
     n.addEventListener('pointerup', (e) => { const dx = sx == null ? 0 : e.clientX - sx; sx = null; n.style.translate = ''; if (Math.abs(dx) > 60 || (Math.abs(dx) < 6 && !e.target.closest('button') && (this.exp || window.matchMedia('(hover:none)').matches))) this.drop(x); else if (Math.abs(dx) < 6 && !this.exp) { this.exp = true; this.lay(); } });
     box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));
@@ -7194,22 +7197,22 @@ const HGToast = window.__hgToast || (window.__hgToast = {
 const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
-    const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', 'Edytuj tytuł i podtytuł'); b.title = 'Edytuj tytuł i podtytuł'; b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
+    const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle')); b.title = hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
   _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
   _eHead() { const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
     const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
-    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="Tytuł widoku"><style>${HG_STY_CSS}
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Tytuł widoku', 'View title')}"><style>${HG_STY_CSS}
       .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:var(--hg-tx-ff6b6b); opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } }
       .hd-d{ border-radius:16px; padding:12px; background:var(--hg-tile-bg); min-width:0; } .hd-d small{ display:block; font-size:11px; opacity:.55; margin-bottom:6px; } .hd-d b{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; font-weight:600; line-height:1.18; } .hd-d p{ margin:4px 0 0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; opacity:.85; line-height:1.2; }
       .hd-d.d b{ font-size:20px; } .hd-d.d p{ font-size:17px; } .hd-d.t b{ font-size:17px; } .hd-d.t p{ font-size:14px; } .hd-d.m b{ font-size:15px; } .hd-d.m p{ font-size:12.5px; }
       .hd-v{ display:none; } .hd-v.on{ display:block; } .hd-hint{ font-size:12px; opacity:.6; margin:-4px 0 4px; }</style>
-      <div class="hs-h"><b>Tytuł i podtytuł</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc">
-      <div class="hs-pv"><small>Podgląd na urządzeniach</small><div class="hd-pv"></div></div>
-      ${fld('t', 'Tytuł', c.title, HG_HEAD_LIM.t)}${fld('s', 'Podtytuł', c.subtitle, HG_HEAD_LIM.s)}
-      <p class="hd-hint">Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).</p>
-      <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>Krótsze wersje dla telefonu i tabletu</b><small>Opcjonalne – puste pola używają wersji głównej</small></span></button>
-      <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', 'Tytuł – tablet', 'jak główny', HG_HEAD_LIM.t)}${fld('st', 'Podtytuł – tablet', 'jak główny', HG_HEAD_LIM.s)}${fld('tm', 'Tytuł – telefon', 'jak główny', 22)}${fld('sm', 'Podtytuł – telefon', 'jak główny', 36)}</div>
-      </div><div class="hs-ac"><button class="hs-b2" data-hge="hdreset">Przywróć domyślne</button><button class="hs-b" data-hge="hdok">Zapisz</button></div></div>`;
+      <div class="hs-h"><b>${hgTr('Tytuł i podtytuł', 'Title and subtitle')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      <div class="hs-pv"><small>${hgTr('Podgląd na urządzeniach', 'Preview on devices')}</small><div class="hd-pv"></div></div>
+      ${fld('t', hgTr('Tytuł', 'Title'), c.title, HG_HEAD_LIM.t)}${fld('s', hgTr('Podtytuł', 'Subtitle'), c.subtitle, HG_HEAD_LIM.s)}
+      <p class="hd-hint">${hgTr(`Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).`, `Insert {name} to show the signed-in person's first name (now: ${H.esc(ui.first || 'none')}).`)}</p>
+      <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>${hgTr('Krótsze wersje dla telefonu i tabletu', 'Shorter versions for phone and tablet')}</b><small>${hgTr('Opcjonalne – puste pola używają wersji głównej', 'Optional – empty fields use the main version')}</small></span></button>
+      <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', hgTr('Tytuł – tablet', 'Title – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.t)}${fld('st', hgTr('Podtytuł – tablet', 'Subtitle – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.s)}${fld('tm', hgTr('Tytuł – telefon', 'Title – phone'), hgTr('jak główny', 'same as main'), 22)}${fld('sm', hgTr('Podtytuł – telefon', 'Subtitle – phone'), hgTr('jak główny', 'same as main'), 36)}</div>
+      </div><div class="hs-ac"><button class="hs-b2" data-hge="hdreset">${hgTr('Przywróć domyślne', 'Restore defaults')}</button><button class="hs-b" data-hge="hdok">${hgTr('Zapisz', 'Save')}</button></div></div>`;
     for (const i of S.querySelectorAll('input.hs-in')) i.addEventListener('input', () => this._eHeadPv());
     this._eHeadPv(); },
   _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; } return o; },
@@ -7217,13 +7220,13 @@ const HG_COMP_EDIT = {
     for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
     const r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm)), one = (cls, l, t, s) => `<div class="hd-d ${cls}"><small>${l}</small><b>${r(t)}</b><p>${r(s)}</p></div>`;
     const T = V.t || c.title, Su = V.s || c.subtitle;
-    S.querySelector('.hd-pv').innerHTML = one('d', 'Komputer', T, Su) + one('t', 'Tablet', V.tt || T, V.st || Su) + one('m', 'Telefon', V.tm || T, V.sm || Su); },
+    S.querySelector('.hd-pv').innerHTML = one('d', hgTr('Komputer', 'Desktop'), T, Su) + one('t', hgTr('Tablet', 'Tablet'), V.tt || T, V.st || Su) + one('m', hgTr('Telefon', 'Phone'), V.tm || T, V.sm || Su); },
   _eHeadAct(a) { const sc = this._pageScope();
     if (a === 'hdvar') { this._eSheetEl.querySelector('.hd-v').classList.toggle('on'); return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
     this._eSheet(false);
-    this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? 'Przywrócono domyślny tytuł' : 'Zapisano tytuł'); },
+    this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? hgTr('Przywrócono domyślny tytuł', 'Default title restored') : hgTr('Zapisano tytuł', 'Title saved')); },
   _eGhostSweep() { if (!this._eOn && !this.classList.contains('hge')) {} for (const ct of this._eConts()) for (const it of this._eItems(ct)) { const g = hgIsGhost(it), d = it.querySelector(':scope > .hge');
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
@@ -7261,19 +7264,19 @@ const HG_COMP_EDIT = {
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${H.esc(C.n)}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${H.icon(C.i)} ${H.esc(C.n)}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
       ${C.slots.map(slot).join('')}
-      ${C.modes ? `<div class="hs-fl"><span>Tryb wyświetlania</span><div class="hs-f wrap" role="group" aria-label="Tryb wyświetlania">${C.modes.map(([m, l, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${l}</button>`).join('')}</div></div>` : ''}
-      ${T && main ? `<div class="hs-fl"><span>Tryb wyświetlania</span>${hgStyleCards(h, main, T, R.t || T[0][0], 'ctyp')}</div>` : ''}
-      <label class="hs-fl"><span>Nazwa</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
-      <label class="hs-fl"><span>Ikona (np. mdi:sofa)</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
-      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>Rozmiar</span><div class="hs-f wrap" role="group" aria-label="Rozmiar">${[['s', 'S · mały'], ['m', 'M · średni'], ['l', 'L · cała szerokość']].map(([v, l]) => `<button data-hge="cz" data-z="${v}" aria-pressed="${R.z === v}">${l}</button>`).join('')}</div></div>`}
-      </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? 'Anuluj' : 'Wstecz'}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed ? 'mdi:check' : 'mdi:plus')}<span>${ed ? 'Zapisz' : 'Dodaj'}</span></button></div></div>`;
+      ${C.modes ? `<div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Tryb wyświetlania', 'Display mode')}">${C.modes.map(([m, pl, en, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${H.esc(hgTr(pl, en))}</button>`).join('')}</div></div>` : ''}
+      ${T && main ? `<div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, main, T, R.t || T[0][0], 'ctyp')}</div>` : ''}
+      <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
+      <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
+      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cz" data-z="${v}" aria-pressed="${R.z === v}">${l}</button>`).join('')}</div></div>`}
+      </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? hgTr('Anuluj', 'Cancel') : hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed ? 'mdi:check' : 'mdi:plus')}<span>${ed ? hgTr('Zapisz', 'Save') : hgTr('Dodaj', 'Add')}</span></button></div></div>`;
     for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { R[n.name] = n.value.trim(); if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(R.i)) ic.setAttribute('icon', R.i); } this._eCompPv(); });
     requestAnimationFrame(() => this._eCompDrag()); this._eCompPv();
   },
   _eCompPv() { const R = this._eCompR, C = HG_COMP.find((x) => x.id === R.cid), h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv || !C) return;
     const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
-    if (C.tile) { pv.className = 'hs-pvb tg2'; pv.innerHTML = R.v.e ? hgTileHtml(h, R.v.e, R.z === 's' ? 's' : R.z, { t: R.t || C.tile, n, i }) : '<p class="hs-e">Wybierz encję</p>'; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
-    const ok = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k])); if (!ok) { pv.className = 'hs-pvb'; pv.innerHTML = '<p class="hs-e">Wybierz encje</p>'; return; }
+    if (C.tile) { pv.className = 'hs-pvb tg2'; pv.innerHTML = R.v.e ? hgTileHtml(h, R.v.e, R.z === 's' ? 's' : R.z, { t: R.t || C.tile, n, i }) : `<p class="hs-e">${hgTr('Wybierz encję', 'Choose an entity')}</p>`; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
+    const ok = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k])); if (!ok) { pv.className = 'hs-pvb'; pv.innerHTML = `<p class="hs-e">${hgTr('Wybierz encje', 'Choose entities')}</p>`; return; }
     pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.style.height = '300px'; const cc = hgCompCard(C, R.v), el = document.createElement(cc);
     try { el.setConfig(Object.assign({ type: 'custom:' + cc }, C.cfg(R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {})); } catch (e) { /* pusta */ } el._hgPv = true; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvFit(box, el); },
   _eCompDrag() { const S = this._eSheetEl; if (!S) return;
@@ -7429,10 +7432,10 @@ function hgPvLive(pv) { const go = (r) => { for (const x of r.querySelectorAll('
 const HG_THUMB_T = new Set(['tog', 'btn', 'compact', 'minimal', 'val', 'chart', 'run', 'cover', 'media']);
 const HG_SCHEMA = { '': 'n', card: 'n', compact: 'c', minimal: 'm', clim: 'k', cam: 'v', media: 'p' };
 /* karty grupowe (wiele encji): układ całego zestawu; pojedyncze kafelki mają własne style */
-const HG_GRP_LBL = { players: 'Multimedia', cameras: 'Kamery', scenes: 'Sceny', people: 'Domownicy', persons: 'Domownicy', lights: 'Światła', robots: 'Roboty', power: 'Moc', covers: 'Rolety' };
-const HG_GRP_TYPES = [['card', 'Karta'], ['g-list', 'Lista'], ['g-grid', 'Siatka'], ['g-car', 'Karuzela'], ['g-clist', 'Kompaktowa lista']];
+const HG_GRP_LBL = hgTrO({}, { players: ['Multimedia', 'Media'], cameras: ['Kamery', 'Cameras'], scenes: ['Sceny', 'Scenes'], people: ['Domownicy', 'People'], persons: ['Domownicy', 'People'], lights: ['Światła', 'Lights'], robots: ['Roboty', 'Robots'], power: ['Moc', 'Power'], covers: ['Rolety', 'Covers'] });
+const HG_GRP_TYPES = [['card', 'Karta', 'Card'], ['g-list', 'Lista', 'List'], ['g-grid', 'Siatka', 'Grid'], ['g-car', 'Karuzela', 'Carousel'], ['g-clist', 'Kompaktowa lista', 'Compact list']].map(([t, pl, en]) => hgTrO([t], { 1: [pl, en] }));   /* [typ, etykieta]; etykieta to getter – język przy użyciu */
 function hgStyleCards(h, e, opts, cur, act, room) {
-  return `<div class="hs-sty" role="radiogroup" aria-label="Styl">${opts.map(([t, l]) => { const sel = cur === t;
+  return `<div class="hs-sty" role="radiogroup" aria-label="${hgTr('Styl', 'Style')}">${opts.map(([t, l]) => { const sel = cur === t;
     const th = t === 'card' && opts === HG_GRP_TYPES ? `<div class="hs-th grp g-card" aria-hidden="true"><b></b><i></i><i></i><i></i><i></i></div>` : t.startsWith('g-') ? `<div class="hs-th grp ${t}" aria-hidden="true"><i></i><i></i><i></i><i></i></div>` : e && h.states[e] && HG_THUMB_T.has(t) && !room ? `<div class="hs-th tile" aria-hidden="true"><div class="tg2">${hgTileHtml(h, e, 's', { t }).replace(/<(\/?)button\b/g, '<$1span').replace(/ (data-act|data-e|data-hgk)="[^"]*"/g, '')}</div></div>`
       : `<div class="hs-th sch s-${HG_SCHEMA[t] || 'n'}"><i></i><b></b><b></b><u></u></div>`;
     return `<button data-hge="${act}" data-t="${H.esc(t)}" role="radio" aria-checked="${sel}" aria-pressed="${sel}">${th}<span>${H.esc(l)}</span></button>`; }).join('')}</div>`;
@@ -7782,7 +7785,7 @@ const HG_EDIT = {
       ents.push(...adds);
       const main = (ents[0] || {}).v;
       const grpN = ents.filter((x) => x.ak).length, grp = grpN >= 2;
-      return { kind: 'card', cc, grp, ents: ents.slice(0, 40), types: grp ? HG_GRP_TYPES : [['card', 'Normalny'], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: (grp && cf.t && !cf.t.startsWith('g-')) ? 'card' : (cf.t || 'card'), n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || HG_GRP_LBL[k.split('|')[0].replace(/^(hg|nuvio)-|-card$/g, '')] || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
+      return { kind: 'card', cc, grp, ents: ents.slice(0, 40), types: grp ? HG_GRP_TYPES : [['card', hgTr('Normalny', 'Default')], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: (grp && cf.t && !cf.t.startsWith('g-')) ? 'card' : (cf.t || 'card'), n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || HG_GRP_LBL[k.split('|')[0].replace(/^(hg|nuvio)-|-card$/g, '')] || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
     if (sc === 'rooms') { const ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}, a = HGAreas.model(h, ac).byId[k] || {};
       return { kind: 'room', a, ents: [{ p: 'temp', l: hgTr('Temperatura', 'Temperature'), v: cf.temp || (a.temp && a.temp.e) || '' }, { p: 'hum', l: hgTr('Wilgotność', 'Humidity'), v: cf.hum || (a.hum && a.hum.e) || '' }],
         types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: cf.n || '', i: cf.i || '', dn: a.name || k }; }
