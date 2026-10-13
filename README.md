@@ -158,18 +158,30 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 </table>
 </details>
 
+<details open>
+<summary><b>General controls</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/slider.png" alt="Slider" width="100%"><br><b>Slider</b> <code>custom:nuvio-slider-card</code><br>Slider for brightness, volume, fan speed, cover position or a numeric value, horizontal or vertical. <code>light.*</code>, <code>media_player.*</code>, <code>fan.*</code>, <code>cover.*</code>, <code>valve.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/button.png" alt="Button" width="100%"><br><b>Button</b> <code>custom:nuvio-button-card</code><br>Button that runs a script, scene, button or any action, as a tile or a pill, with a Done confirmation. <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>input_button.*</code>, <code>automation.*</code>, or any <code>tap_action</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/entities.png" alt="Entities" width="100%"><br><b>Entities</b> <code>custom:nuvio-entities-card</code><br>Entity list where each row shows a switch, a Run button or a value. <code>light.*</code>, <code>switch.*</code>, <code>fan.*</code>, <code>input_boolean.*</code>, <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>sensor.*</code>, <code>binary_sensor.*</code> and other read-only entities.</td>
+<td width="50%" valign="top"><img src="docs/components/select.png" alt="Select" width="100%"><br><b>Select</b> <code>custom:nuvio-select-card</code><br>Option picker shown as chips or a list. <code>input_select.*</code>, <code>select.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/stepper.png" alt="Stepper" width="100%"><br><b>Stepper</b> <code>custom:nuvio-stepper-card</code><br>Counter with increment, decrement and reset, or step a numeric value up and down. <code>counter.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/gauge.png" alt="Gauge" width="100%"><br><b>Gauge</b> <code>custom:nuvio-gauge-card</code><br>Arc gauge showing a sensor value, with a default range chosen by unit. <code>sensor.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+</tr>
+</table>
+</details>
+
 **Other cards**
 
 - `custom:nuvio-map-card`: the native HA map in a glass frame (no screenshot: map tiles need internet access).
 - `custom:nuvio-energy-card`: load percentage of the total phase power against your maximum (no screenshot yet: it does not render correctly outside a fixed-height grid).
 - `custom:nuvio-bars-card`: daily consumption bars from statistics (no screenshot yet: same fixed-height issue).
-- `custom:nuvio-tiles-card`: tiles you add in edit mode (shown in every view after you add tiles).
-- General components (no screenshots yet), all available in edit mode under "+ Add":
-  - `custom:nuvio-slider-card`: horizontal or vertical slider for lights, volume, fans, covers, valves and numbers.
-  - `custom:nuvio-button-card`: tile or pill button for scripts, scenes, `button.press` and toggles.
-  - `custom:nuvio-entities-card`: rows with a toggle or value for any mix of entities.
-  - `custom:nuvio-select-card`: `input_select` / `select` options as chips or a list.
-  - `custom:nuvio-stepper-card`: plus / minus for counters and numbers.
   - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
@@ -243,7 +255,7 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
-### Unreleased
+### 0.2.0
 - Fixed: scene buttons now call `scene.turn_on` (they did nothing before).
 - Fixed: kW / MW power sensors are converted to watts in the power, energy, phases and PV cards.
 - Fixed: cameras in the room view no longer break after ~10 minutes (rotating image token).
@@ -255,8 +267,6 @@ Releases are built by GitHub Actions on `v*` tags.
 - Added: English UI for all cards, the page and edit mode.
 - Added: keyboard reordering in edit mode; undo after removing a tile restores only that tile.
 - HACS: release zip (`zip_release`) so fonts, backgrounds and weather icons are installed with the plugin.
-
-### 0.1.2 and later on main
 - Multi-step onboarding wizard; custom views (Appearance → Views); Map and Calendar components and views.
 - General components: slider, button, entities, select, stepper, gauge.
 - Empty-state hint cards, display modes for group cards, editable view title and subtitle, stacked toaster.

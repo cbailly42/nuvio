@@ -158,18 +158,30 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 </table>
 </details>
 
+<details open>
+<summary><b>Podstawowe sterowanie</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/slider.png" alt="Suwak" width="100%"><br><b>Suwak</b> <code>custom:nuvio-slider-card</code><br>Suwak do jasności, głośności, prędkości wentylatora, pozycji rolety lub wartości liczbowej, poziomy albo pionowy. <code>light.*</code>, <code>media_player.*</code>, <code>fan.*</code>, <code>cover.*</code>, <code>valve.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/button.png" alt="Przycisk" width="100%"><br><b>Przycisk</b> <code>custom:nuvio-button-card</code><br>Przycisk uruchamiający skrypt, scenę, przycisk lub dowolną akcję, jako kafel albo pigułka, z potwierdzeniem Wykonano. <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>input_button.*</code>, <code>automation.*</code> lub dowolna <code>tap_action</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/entities.png" alt="Lista encji" width="100%"><br><b>Lista encji</b> <code>custom:nuvio-entities-card</code><br>Lista encji z przełącznikiem, przyciskiem Uruchom lub wartością w każdym wierszu. <code>light.*</code>, <code>switch.*</code>, <code>fan.*</code>, <code>input_boolean.*</code>, <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>sensor.*</code>, <code>binary_sensor.*</code> i inne encje tylko do odczytu.</td>
+<td width="50%" valign="top"><img src="docs/components/select.png" alt="Wybór" width="100%"><br><b>Wybór</b> <code>custom:nuvio-select-card</code><br>Wybór opcji jako chipy albo lista. <code>input_select.*</code>, <code>select.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/stepper.png" alt="Licznik" width="100%"><br><b>Licznik</b> <code>custom:nuvio-stepper-card</code><br>Licznik ze zwiększaniem, zmniejszaniem i resetem albo zmiana wartości o krok. <code>counter.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/gauge.png" alt="Wskaźnik" width="100%"><br><b>Wskaźnik</b> <code>custom:nuvio-gauge-card</code><br>Wskaźnik łukowy pokazujący wartość czujnika, z zakresem dobranym do jednostki. <code>sensor.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+</tr>
+</table>
+</details>
+
 **Pozostałe karty**
 
 - `custom:nuvio-map-card`: natywna mapa HA w szklanej ramce (bez zrzutu: kafelki mapy wymagają internetu).
 - `custom:nuvio-energy-card`: procent obciążenia (suma faz względem mocy maksymalnej) (bez zrzutu: poza siatką o stałej wysokości renderuje się niepoprawnie).
 - `custom:nuvio-bars-card`: dzienne słupki zużycia ze statystyk (bez zrzutu: ten sam problem z wysokością).
-- `custom:nuvio-tiles-card`: kafelki dodane w trybie edycji (pojawiają się w widoku po dodaniu kafli).
-- Komponenty ogólne (jeszcze bez zrzutów), dostępne w trybie edycji w „+ Dodaj”:
-  - `custom:nuvio-slider-card`: suwak poziomy lub pionowy dla świateł, głośności, wentylatorów, rolet, zaworów i liczb.
-  - `custom:nuvio-button-card`: przycisk-kafel lub wiersz dla skryptów, scen, `button.press` i przełączników.
-  - `custom:nuvio-entities-card`: wiersze z przełącznikiem lub wartością dla dowolnych encji.
-  - `custom:nuvio-select-card`: opcje `input_select` / `select` jako przyciski lub lista.
-  - `custom:nuvio-stepper-card`: plus i minus dla liczników i liczb.
   - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
@@ -243,7 +255,7 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
-### Niewydane
+### 0.2.0
 - Poprawka: przyciski scen wywołują `scene.turn_on` (wcześniej nic nie robiły).
 - Poprawka: czujniki mocy w kW / MW są przeliczane na waty w kartach mocy, energii, faz i fotowoltaiki.
 - Poprawka: kamery w widoku pokoju nie psują się po ok. 10 minutach (rotujący token obrazu).
@@ -255,8 +267,6 @@ Wydania budują GitHub Actions na tagach `v*`.
 - Nowe: angielski interfejs wszystkich kart, strony i trybu edycji.
 - Nowe: zmiana kolejności z klawiatury w trybie edycji; „Cofnij” po usunięciu kafla przywraca tylko ten kafel.
 - HACS: wydanie jako zip (`zip_release`), więc fonty, tła i ikony pogody instalują się razem z wtyczką.
-
-### 0.1.2 i późniejsze zmiany na main
 - Wieloetapowy kreator; własne widoki (Wygląd → Widoki); komponenty i widoki Mapa i Kalendarz.
 - Komponenty ogólne: suwak, przycisk, lista encji, wybór, licznik, wskaźnik.
 - Podpowiedzi dla pustych stanów, tryby wyświetlania kart grupowych, edytowalny tytuł i podtytuł widoku, stos powiadomień.
