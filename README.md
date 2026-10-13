@@ -258,6 +258,9 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.2
+- The + Add gallery header shows the loaded Nuvio version, so an outdated or cached bundle (no Basic group) is easy to spot. After updating in HACS, reload the browser (Ctrl+Shift+R) or clear the app cache.
+
 ### 0.3.1
 - Fixed: the generic components (Slider, Button, Entity list, Select, Stepper, Gauge) were missing from the + Add gallery in rooms (the room gallery only listed tile components); they now appear in a **Basic** group with live thumbnails, and rooms render added components.
 - Changed: the component form no longer shows a display mode picker; genuine variants are labelled **Component options**.
