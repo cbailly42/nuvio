@@ -258,6 +258,9 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.12
+- Poprawka: nawigacja w arkuszach edycji działa jak stos. W zagnieżdżonym kroku (wybór encji, formularz komponentu, styl widżetu, zmiana encji z ustawień karty) X, Escape i nowa strzałka wstecz wracają do poprzedniego kroku z zachowanym stanem; arkusz zamyka tylko X na najwyższym poziomie (galeria + Dodaj albo ustawienia). Kroki wsuwają się płynnie, bez zamykania i ponownego otwierania arkusza.
+
 ### 0.3.11
 - Zmiana: zaprojektowane podglądy w galerii + Dodaj. Każdy komponent pokazuje małą makietę z przykładowymi danymi, oznaczoną jako podgląd (suwak z wypełnieniem, przycisk, wiersze encji z przełącznikami, wybór, licznik, łuk wskaźnika, światło, odczyt czujnika, wykres, klimatyzacja, roleta, sceny, odtwarzacz, kamery, moc, energia, pogoda, domownicy, alarm, roboty, kalendarz, mapa) w tym samym stylu szkła i akcentu. Podgląd na żywo z prawdziwą encją pojawia się tylko wtedy, gdy wszystkie potrzebne encje mają znany stan.
 - Zmiana: komponenty bez pasującej encji można nadal wybrać, są tylko lekko przygaszone i mają jedną krótką linię (Brak pasującej encji), a wymagane domeny mniejszym tekstem i w podpowiedzi. Karty mają równą wysokość, podglądy jedną wysokość, a długie teksty są przycinane na telefonie, tablecie i komputerze.

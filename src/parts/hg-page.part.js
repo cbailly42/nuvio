@@ -1106,6 +1106,13 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(560px, calc(100vw - 24px)); max-height:min(78vh, 720px); display:flex; flex-direction:column; gap:10px; padding:16px; border-radius:26px;
   background:var(--hg-panel-bg, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(26px) saturate(120%); backdrop-filter:blur(26px) saturate(120%); box-shadow:0 24px 60px rgba(0,0,0,.4); color:var(--hg-chrome-fg, inherit); animation:hgeIn .28s cubic-bezier(.2,0,0,1) both; }
 @keyframes hgeIn{ from{ opacity:0; transform:translate(-50%,-46%) scale(.98); } }
+.hge-sheet-l.opened .hge-scrim, .hge-sheet-l.opened .hge-sheet{ animation:none !important; }   /* arkusz już otwarty: kolejne kroki bez ponownej animacji otwarcia */
+.hge-sheet-l.nav-f .hge-sheet > :not(.hs-h):not(style){ animation:hgNavF .26s cubic-bezier(.2,.8,.2,1) both; } .hge-sheet-l.nav-b .hge-sheet > :not(.hs-h):not(style){ animation:hgNavB .26s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes hgNavF{ from{ transform:translateX(28px); } } @keyframes hgNavB{ from{ transform:translateX(-28px); } }
+.hs-bk + b{ flex:1; min-width:0; }
+.hs-bk{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; margin-right:6px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.10); transition:background .15s ease, transform .15s ease; }
+.hs-bk:hover{ background:rgba(255,255,255,.18); transform:translateX(-2px); } .hs-bk:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .hs-bk ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
+@media (prefers-reduced-motion:reduce){ .hge-sheet-l.nav-f .hge-sheet > *, .hge-sheet-l.nav-b .hge-sheet > *{ animation:none !important; } }
 :host([mode=phone]) .hge-sheet{ top:auto; bottom:0; transform:translateX(-50%); width:100vw; max-height:84vh; border-radius:26px 26px 0 0; padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 16px); animation:hgeUp .3s cubic-bezier(.2,0,0,1) both; }
 @keyframes hgeUp{ from{ transform:translate(-50%, 30%); opacity:.4 } }
 @media (prefers-reduced-motion: reduce){ .hge-bar, .hge-sheet, .hge-scrim{ animation:none !important; } }

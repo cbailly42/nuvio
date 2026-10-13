@@ -258,6 +258,9 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.12
+- Fixed: navigation in the edit sheets works as a stack. In a nested step (choosing an entity, the component form, the widget style, changing an entity from card settings) the X, Escape and a new back arrow return to the previous step with its state kept; only the X on the top level (the + Add gallery or settings) closes the sheet. Steps slide in and out without the sheet closing and reopening.
+
 ### 0.3.11
 - Changed: designed previews in the + Add gallery. Every component shows a small mock with sample data, marked as a preview (slider with fill, button, entity rows with toggles, select, stepper, gauge arc, light, sensor value, sparkline, climate, cover, scenes, media player, cameras, power, energy, weather, people, alarm, robots, agenda, map) in the same glass and accent style. A live preview with a real entity is used only when every entity it needs has a known state.
 - Changed: components without a matching entity stay selectable, are only slightly dimmed and show one short line (No matching entity) with the required domains in smaller text and a tooltip. Cards have equal heights, previews have one height and long texts are clamped on phone, tablet and desktop.

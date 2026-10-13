@@ -456,6 +456,7 @@ const HG_COMP_EDIT = {
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
+    this._eStk = [];   /* galeria to poziom główny */
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
     const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
@@ -518,9 +519,9 @@ const HG_COMP_EDIT = {
       const row = hd.closest('.hs-er'), key = row.dataset.ak, i = +row.dataset.ai, j = i + (ev.key === 'ArrowUp' ? -1 : 1), R = this._eCompR, A = (R.v[key] || []).slice(); if (j < 0 || j >= A.length) return;
       [A[i], A[j]] = [A[j], A[i]]; R.v[key] = A; this._eComp(R.cid, R); const nh = this._eSheetEl && this._eSheetEl.querySelector(`.hs-er[data-ak="${CSS.escape(key)}"][data-ai="${j}"] [data-hgdrag]`); if (nh) nh.focus(); }); },
   _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
-    if (a === 'cgent') return this._eSheet('add', this._eGalCt, this._eGalSc);
-    if (a === 'cgo') { this._eCompR = null; return this._eComp(b.dataset.c); }
-    if (a === 'cback') return this._eGallery(this._eGalCt, this._eGalSc);
+    if (a === 'cgent') { const ct = this._eGalCt, sc = this._eGalSc; return this._eGo(() => this._eGallery(ct, sc), () => this._eSheet('add', ct, sc)); }
+    if (a === 'cgo') { const ct = this._eGalCt, sc = this._eGalSc; this._eCompR = null; return this._eGo(() => this._eGallery(ct, sc), () => this._eComp(b.dataset.c)); }
+    if (a === 'cback') return (this._eStk || []).length ? this._eBack() : this._eGallery(this._eGalCt, this._eGalSc);
     if (a === 'ctyp') { R.t = b.dataset.t; for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } return this._eCompPv(); }
     if (a === 'cmod') { R.v = Object.assign({}, R.v, { mode: b.dataset.m }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }
     if (a === 'cz') { R.z = b.dataset.z; for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }
@@ -529,7 +530,8 @@ const HG_COMP_EDIT = {
     if (a === 'cslot') { const cur = sl.multi ? (R.v[sl.k] || []).map((y) => (typeof y === 'string' ? y : y.entity)) : [];
       const cset = new Set(hgSlotCands(h, sl)); /* raz, nie per encja (O(n²) zamrażało przeglądarkę) */
       this._eRepl = { comp: { k: sl.k, i: b.dataset.i != null ? +b.dataset.i : null }, doms: sl.dom, flt: (e) => cset.has(e), excl: cur.filter((_, i) => i !== +b.dataset.i) };
-      return this._eSheet('add', null, this._eGalSc || R.sc); }
+      const back = () => { this._eRepl = null; this._eComp(R.cid, this._eCompR || R); };
+      return this._eGo(back, () => this._eSheet('add', null, this._eGalSc || R.sc)); }
     if (a === 'cok') { const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
       this._eSet(sc, (L) => { let key;
         if (C.tile) { const e = R.v.e; key = e; const x0 = R.edit ? L.added.find((y) => y.e === R.edit) : null, x = { e, ...(R.t && R.t !== C.tile ? { t: R.t } : R.t === C.tile && hgTypesFor(h, e)[0] !== C.tile ? { t: C.tile } : {}), ...(n ? { n } : {}), ...(i ? { i } : {}), comp: C.id };
@@ -544,7 +546,7 @@ const HG_COMP_EDIT = {
   _eCompPick(nv) { const R = this._eCompR, P = this._eRepl.comp, C = HG_COMP.find((x) => x.id === R.cid), sl = C.slots.find((x) => x.k === P.k), h = this._hass;
     if (sl.multi) { const A = (R.v[sl.k] || []).slice(), it = sl.obj ? { entity: nv, name: H.name(h, nv), ...(h.states[nv] && h.states[nv].attributes.icon ? { icon: h.states[nv].attributes.icon } : {}) } : nv; if (P.i != null && P.i < A.length) A[P.i] = it; else A.push(it); R.v[sl.k] = A; }
     else { R.v[sl.k] = nv; if (sl.k === 'e' && C.tile) R.t = C.tile; }
-    this._eRepl = null; this._eComp(R.cid, R); },
+    this._eRepl = null; if ((this._eStk || []).length) this._eStk.pop(); this._eNav('b'); this._eComp(R.cid, R); },
 };
 
 /* karta dodanych kafli widoku (zakres „<widok>:tiles”) */
@@ -841,7 +843,7 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) { if ((this._eStk || []).length) this._eBack(); else this._eSheet(false); } else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
       /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
       else if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && e.composedPath()[0] && e.composedPath()[0].dataset && e.composedPath()[0].dataset.hge === 'drag') { e.preventDefault(); this._eKeyMove(e.composedPath()[0], /Up|Left/.test(e.key) ? -1 : 1); }
       else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };
@@ -878,12 +880,13 @@ const HG_EDIT = {
     if (a === 'add') { const ct0 = b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct); return ct0 && ct0.scope === 'rooms' ? this._eSheet('add', ct0) : this._eGallery(ct0); }
     if (/^c(go|gent|back|typ|mod|z|del|slot|ok)$/.test(a)) return this._eCompAct(a, b);
     if (a === 'restore') { this._eSet(b.dataset.sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.k); }); this._eSheet(false); return this._eRefresh(b.dataset.sc === this._pageScope()); }
-    if (a === 'sheetclose') return this._eSheet(false);
-    if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) return this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n);
+    if (a === 'sback') return this._eBack();
+    if (a === 'sheetclose') return (this._eStk || []).length && b.classList.contains('hs-x') ? this._eBack() : this._eSheet(false);
+    if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) { const sc0 = this._eSc, ct0 = this._eSheetCt; return this._eGo(() => this._eSheet('add', ct0, sc0), () => this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n)); }
     if (a === 'addt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } const pv = this._eSheetEl.querySelector('.hs-pvb'); pv.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: pv }); hgPvLive(pv); return; }
     if (a === 'addok') { const t = (this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]') || { dataset: {} }).dataset.t, T0 = hgTypesFor(this._hass, this._eAddE)[0];
       const fake = { dataset: { hge: 'pick', sc: this._eAddSc, e: this._eAddE, n: this._eAddN || '', t: t && t !== T0 ? t : 'def' } }; return this._eCtl(fake, e); }
-    if (a === 'addback') return this._eSheet('add', null, this._eSc);
+    if (a === 'addback') return (this._eStk || []).length ? this._eBack() : this._eSheet('add', null, this._eSc);
     if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
       this._eSheet(false); this._eToast(hgTr('Dodano: ', 'Added: ') + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'HG-TILES-CARD')); }
     if (a === 'repl' && this._eRepl && this._eRepl.comp) return this._eCompPick(b.dataset.e);
@@ -892,10 +895,10 @@ const HG_EDIT = {
       const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
     if (a === 'cfgsave') return this._eCfgSave();
     if (a === 'cfgz' || a === 'cfgt' || a === 'cfgw') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
-    if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
+    if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, hgTr('Usunięto encję', 'Entity removed')); }
     if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
-      this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eSheet('add', null, this._eCfgR.sc); }
+      this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
     if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
     const d = b._d || b.closest('.hge'); if (!d) return;
     const ct = d._ct, it = d._it, k = it.dataset.hgk;
@@ -1029,7 +1032,7 @@ const HG_EDIT = {
     const hd = it && it.querySelector('.sh');
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
-  _eCfg(ct, k) {
+  _eCfg(ct, k) { this._eStk = [];
     { const L0 = HGL.get(ct.scope); if (hgDedupConf(JSON.parse(JSON.stringify(L0)))) this._eSet(ct.scope, (L) => { hgDedupConf(L); }); }
     { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
       this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
@@ -1169,6 +1172,14 @@ const HG_EDIT = {
     S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
+  /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */
+  _eGo(back, fn) { (this._eStk = this._eStk || []).push(back); this._eNav('f'); fn(); },
+  _eBack() { const f = (this._eStk || []).pop(); if (!f) return this._eSheet(false); this._eRepl = null; this._eNav('b'); f(); },
+  _eNav(d) { const L = this._eSheetEl; if (!L) return; L.classList.remove('nav-f', 'nav-b'); void L.offsetWidth; L.classList.add('nav-' + d); clearTimeout(this._eNavT); this._eNavT = setTimeout(() => L.classList.remove('nav-f', 'nav-b'), 320); },
+  _eCfgBack() { this._eRepl = null; const R = this._eCfgR, ct = R && this._eConts().find((c) => c.scope === R.sc); if (ct) this._eCfg(ct, R.k); else this._eSheet(false); },
+  _eDeco() { const L = this._eSheetEl, n = (this._eStk || []).length; if (!L) return; const hd = L.querySelector('.hge-sheet .hs-h'); if (!hd) return;
+    const bk = hd.querySelector('.hs-bk'); if (n && !bk) hd.insertAdjacentHTML('afterbegin', `<button class="hs-bk" data-hge="sback" aria-label="${hgTr('Wstecz', 'Back')}" title="${hgTr('Wstecz', 'Back')}">${H.icon('mdi:arrow-left')}</button>`); else if (!n && bk) bk.remove();
+    const x = hd.querySelector('.hs-x'); if (x) x.setAttribute('aria-label', n ? hgTr('Wróć do poprzedniego kroku', 'Back to previous step') : hgTr('Zamknij', 'Close')); },
   _eUpload(f) {
     if (!f) return; const h = this._hass; if (!h || !h.fetchWithAuth) return this._eToast(hgTr('Brak sesji – nie można przesłać', 'No session – cannot upload'));
     const fd = new FormData(); fd.append('file', f, f.name); this._eToast(hgTr('Przesyłanie…', 'Uploading…'));
@@ -1177,9 +1188,10 @@ const HG_EDIT = {
       const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast(hgTr('Ustawiono przesłane zdjęcie', 'Uploaded image set')); this._eLook(); }, (e) => this._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')'));
   },
   _eSheet(mode, ct, scOver) {
-    if (!mode) { this._eRepl = null; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
+    if (!mode) { this._eRepl = null; this._eStk = []; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
     this._eSheetOpen = mode; this._eSheetCt = ct; this._eF = 'all'; this._eQ = '';
-    let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); }
+    let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); this._eStk = [];
+      setTimeout(() => L.classList.add('opened'), 320); new MutationObserver(() => this._eDeco()).observe(L, { childList: true }); }
     if (!this.shadowRoot.querySelector('style[data-hgt]')) { const st = document.createElement('style'); st.dataset.hgt = '1'; st.textContent = HG_TILE_CSS; this.shadowRoot.appendChild(st); }
     if (mode === 'cfg') return;
     if (mode === 'hidden') { const hid = this._eHidden();
