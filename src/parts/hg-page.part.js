@@ -323,6 +323,13 @@ class HGPage extends HTMLElement {
       b.hidden = !can; this._fitCheck();
     });
   }
+  _mas() { const el = this._panelEl; if (!el || !this._cardWraps) return;
+    if (!this._masRO) this._masRO = new ResizeObserver(() => { cancelAnimationFrame(this._masF); this._masF = requestAnimationFrame(() => this._masOn && this._masLay()); });
+    for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
+  _masLay() { const el = this._panelEl, gap = parseFloat(getComputedStyle(el).rowGap) || 0;
+    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild); for (const w of W) { w.style.minHeight = '0px'; w.style.gridRowEnd = 'span 1'; }
+    const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
+    W.forEach((w, i) => { w.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); }); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
     if (mode === 'phone') {
@@ -348,6 +355,10 @@ class HGPage extends HTMLElement {
       else if (mode !== 'phone' && cc.span && !cc.area) w.style.gridColumn = `span ${cc.span}`;
       else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
     });
+    /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
+    el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
+    el.style.alignItems = p.align === 'start' || p.masonry ? 'start' : '';
+    if (p.masonry && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; for (const w of this._cardWraps) w.style.gridRowEnd = ''; }
     this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
     this.toggleAttribute('wide-panel', !!p.wide);
     this.toggleAttribute('fit-panel', !!p.fit);
@@ -525,7 +536,9 @@ class HGPage extends HTMLElement {
     const c = this._config; if (!this._hass) return;
     if (c.room_head) { this._setHTML(this._headEl, this._roomHead()); return; }
     const ui = this._userInfo();
-    this._headEl.innerHTML = `<h1>${H.esc((c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')).replace('{name}', ui.first))}</h1><p>${H.esc(c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place'))}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    const hd = (typeof HGL !== 'undefined' && HGL.data && HGL.data.s && this._pageScope && ((HGL.data.s[this._pageScope()] || {}).conf || {})._head) || {}, md = this.getAttribute('mode');
+    const pick = (k, def) => String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '');
+    this._headEl.innerHTML = `<h1 title="${H.esc(pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')))}">${H.esc(pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')))}</h1><p>${H.esc(pick('s', c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place')))}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
     this._placeWx();
   }
@@ -785,8 +798,8 @@ class HGPage extends HTMLElement {
 .tabs::after, .rail::after, .tools::after, .hub::after, .back::after, .cir::after, .user::after, .fc::after, .rback::after, .more::after, .menu::after, .sheet-l .sheet::after{
   content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-bf); backdrop-filter: var(--glass-bf); }
-.tabs::after, .rail::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
-.tools::after, .rail::after{ -webkit-backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); backdrop-filter: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-tools-sat, var(--hg-chrome-sat, 100%))); }
+.tabs::after, .user::after{ -webkit-backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); backdrop-filter: blur(calc(22px * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 120%)); }
+/* rail + pigułka narzędzi (zoom): dokładnie przepis szkła kart (--glass-bf), bez osobnego nasycenia */
 /* lite (dotyk): rozmycie tylko na zewnętrznym panelu (≤12px); chrom, menu, arkusz i karty bez backdrop-filter, bez dużych cieni */
 :host([lite]){ --hg-lens: saturate(100%); --hg-glass-rim: var(--hg-glass-rim-lite); --hg-glass-bri: 1; --hg-glow: none; --hg-glow-l: none; --hg-bf:.35; --hg-card-sh: 0 0 0 transparent; --hg-inner-bf: none; --hg-glass-lite: var(--hg-glass-lite-c); --hg-warm-lite: var(--hg-warm-lite-c); --hg-wm-tumble: none; --hg-wm-slosh: none; --hg-wm-bub: none; --hg-sc-anim: none; }
 :host([lite]) .panel{ -webkit-backdrop-filter: blur(12px) !important; backdrop-filter: blur(12px) !important; box-shadow: none !important; }
@@ -1033,7 +1046,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .un{ display:none; }
 :host([mode=phone]) .chev{ width:30px; height:44px; }
 :host([mode=phone]) .head{ grid-area:head; padding:2px 4px 0; }
-:host([mode=phone]) .head h1{ font-size:26px; } :host([mode=phone]) .head p{ font-size:19px; }
+:host([mode=phone]) .head h1{ font-size:clamp(20px, 6.6vw, 26px); } :host([mode=phone]) .head p{ font-size:clamp(15px, 4.9vw, 19px); }
+.head h1, .head p{ overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; text-overflow:ellipsis; } .head p{ -webkit-line-clamp:2; }
+.head .hge-hd{ all:unset; cursor:pointer; position:absolute; top:0; right:-40px; z-index:2; width:32px; height:32px; border-radius:50%; display:inline-grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); vertical-align:middle; box-shadow:0 4px 14px rgba(0,0,0,.25); } .head .hge-hd ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ position:relative; } :host([mode=phone]) .head .hge-hd, :host([mode=tablet]) .head .hge-hd{ right:4px; }
 :host([mode=phone]) .fuel{ flex-wrap:nowrap; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .hrow{ gap:6px; margin-top:10px; max-width:100%; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ min-width:0; } :host([mode=phone]) .hrow .fuel{ margin-top:0; flex:1; } :host([mode=phone]) .hrow{ --chip-h:40px; --chip-r:12px; --chip-pl:6px; --chip-pr:10px; --chip-ic:28px; align-items:center; scroll-snap-type:x proximity; }
 .fc .fl{ opacity:1 !important; height:16u; padding:0 6u; border-radius:999px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.02em; background:var(--hg-accent); color:var(--hg-on-accent); }
 .fc .fl.on{ background:var(--hg-on-accent); color:var(--hg-thumb); }
@@ -1150,6 +1165,65 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .hav{ width:34px; height:34px; border-radius:9px; font-size:12px; }
 :host([mode=phone]) .avs{ gap:4px; }
 :host([mode=phone]) .back{ display:none; }
+
+/* ===== UI polish: wspólne tokeny arkuszy (promienie 8/12/16/24/28, odstępy 4/8, przyciski 36/44, akcent tylko lime) ===== */
+:host{ --ui-r2:12px; --ui-r3:16px; --ui-r4:24px; --ui-rs:28px; --ui-t:150ms cubic-bezier(.2,0,0,1);
+  --ui-sec:color-mix(in srgb, currentColor 8%, transparent); --ui-sec2:color-mix(in srgb, currentColor 14%, transparent); --ui-rim:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); --ui-sel:inset 0 0 0 1.5px var(--hg-accent); }
+.hge-sheet{ border-radius:var(--ui-rs); padding:16px; gap:12px; }
+:host([mode=phone]) .hge-sheet{ border-radius:var(--ui-rs) var(--ui-rs) 0 0; }
+.hs-h{ min-height:40px; } .hs-h b{ font-size:17px; font-weight:600; letter-spacing:-.01em; }
+.hs-x{ width:36px; height:36px; background:var(--ui-sec); box-shadow:var(--ui-rim); } .hs-x ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
+.hs-sc{ gap:16px; }
+.hs-fl{ gap:8px; } .hs-fl > span:not(.hs-s), .hge-sheet .lcv-f > span, .hge-sheet .lcv-n > span, .hs-pv > small{ font-size:12px; font-weight:500; opacity:.7; padding-left:18px; letter-spacing:.01em; }
+.hs-s{ background:var(--ui-sec); box-shadow:var(--ui-rim); } .hs-s:focus-within{ box-shadow:var(--ui-sel); }
+/* przyciski: główny lime z czarnym tekstem, drugorzędny szklany */
+.hs-b, .hge-sheet .lk-mini, .hge-sheet .lx-hbtn.ok, .hs-ac > .hs-b{ height:36px; padding:0 16px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font:600 14px/1 inherit; box-shadow:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.hs-ac > .hs-b, .hs-ac > .hs-b2, .hge-sheet .lcv-a .lx-hbtn{ height:44px; padding:0 20px; }
+.hs-b2, .hge-sheet .lx-hbtn:not(.ok), .hs-ac > .hs-b2{ height:36px; padding:0 16px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font:500 14px/1 inherit; display:inline-flex; align-items:center; justify-content:center; gap:8px; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+.hs-b ha-icon, .hs-b2 ha-icon, .hge-sheet .lx-hbtn ha-icon, .hge-sheet .lk-mini ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.hs-b:disabled{ opacity:.4; cursor:default; }
+.hs-ac{ gap:8px; padding-top:4px; }
+/* segmenty / chipy */
+.hs-f{ gap:8px; } .hs-f button{ height:36px; padding:0 14px; background:var(--ui-sec); box-shadow:var(--ui-rim); font:500 13px/1 inherit; display:inline-flex; align-items:center; gap:6px; } .hs-f button ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.hs-f button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; font-weight:600; }
+/* wiersze encji i list */
+.hs-r, .hge-sheet .lx-r{ border-radius:var(--ui-r3); min-height:56px; gap:12px; background:var(--ui-sec); box-shadow:none; }
+.hs-i, .hge-sheet .lx-i{ width:36px; height:36px; background:var(--ui-sec); }
+.hs-t b, .hge-sheet .lx-t b{ font-size:14px; font-weight:600; } .hs-t small, .hge-sheet .lx-t small{ font-size:12px; opacity:.66; font-style:normal; }
+.hs-p{ width:32px; height:32px; background:var(--ui-sec2); color:inherit; } .hs-del{ width:32px; height:32px; background:var(--ui-sec); } .hs-del:hover{ background:var(--ui-sec2); }
+.hs-add{ box-shadow:inset 0 0 0 1.5px color-mix(in srgb, currentColor 18%, transparent); background:transparent; border-style:dashed; } .hs-add .hs-i{ background:var(--hg-accent); color:var(--hg-on-accent); }
+/* Wygląd: sekcje, widoki, integracje */
+.hge-sheet .lk-g{ border-radius:var(--ui-rs); padding:16px; gap:12px; background:color-mix(in srgb, currentColor 5%, transparent); box-shadow:var(--ui-rim); }
+.hge-sheet .lk-g h4{ font-size:15px; font-weight:600; } .hge-sheet .lk-hn{ font-size:12px; opacity:.66; }
+.hge-sheet .lx-l{ gap:8px; } .hge-sheet .lx-r{ padding:8px 12px 8px 8px; } .hge-sheet .lx-r.na{ opacity:.72; } .hge-sheet .lx-r.na .lx-t small{ font-style:normal; }
+.hge-sheet .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 18%, transparent); }
+.hge-sheet .lx-a{ width:36px; height:36px; } .hge-sheet .lx-a:not(:disabled):hover{ background:var(--ui-sec); }
+.hge-sheet .lx-sw{ background:var(--ui-sec2); box-shadow:var(--ui-rim); backdrop-filter:none; } .hge-sheet .lx-sw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; }
+.hge-sheet .lx-hb{ margin:0 0 4px 56px; justify-content:flex-start; gap:8px; } .hge-sheet .lx-hb .lx-hbtn.ok{ background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font-weight:500; } .hge-sheet .lx-hb .lx-hbtn.ok ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
+.hge-sheet .lx-hb ~ .lx-hb .lx-hl{ display:none; } .hge-sheet .lx-hl{ font-size:12px; opacity:.7; margin-left:4px; }
+.hge-sheet .lx-ok{ width:28px; height:28px; } .hge-sheet .lx-new{ margin-top:4px; }
+/* formularz własnego widoku */
+.hge-sheet .lcv{ border-radius:var(--ui-r4); padding:16px; gap:16px; background:color-mix(in srgb, currentColor 5%, transparent); box-shadow:var(--ui-rim); }
+.hge-sheet .lcv-h{ font-size:15px; font-weight:600; } .hge-sheet .lcv-f{ gap:8px; } .hge-sheet .lcv-f > span{ padding-right:18px; }
+.hge-sheet .lcv input, .hge-sheet .lcv select{ height:44px; padding:0 18px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); font-size:15px; }
+.hge-sheet .lcv input:focus, .hge-sheet .lcv select:focus{ box-shadow:var(--ui-sel); } .hge-sheet .lcv input:disabled{ opacity:.6; }
+.hge-sheet .lcv-p{ gap:4px; padding-left:18px; } .hge-sheet .lcv-ic{ gap:8px; } .hge-sheet .lcv-ic button{ width:40px; height:40px; border-radius:var(--ui-r2); background:var(--ui-sec); }
+.hge-sheet .lcv-ic button[aria-pressed=true], .hge-sheet .lcv-l button[aria-pressed=true]{ box-shadow:var(--ui-sel); background:color-mix(in srgb, var(--hg-accent) 12%, transparent); color:inherit; }
+.hge-sheet .lcv-l button{ border-radius:var(--ui-r3); padding:12px; background:var(--ui-sec); } .hge-sheet .lcv-l button b{ font-size:14px; font-weight:600; } .hge-sheet .lcv-l button ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
+.hge-sheet .lcv-r{ gap:8px; } .hge-sheet .lcv-n{ gap:8px; } .hge-sheet .lcv-n > span{ padding-left:18px; }
+.hge-sheet .lcv-e{ color:inherit; font-weight:500; padding-left:18px; } .hge-sheet .lcv-del{ color:inherit; } .hge-sheet .lcv-a{ gap:8px; }
+/* galeria komponentów */
+.hge-sheet .cg{ gap:12px; } .hge-sheet .cg button{ border-radius:20px; padding:8px; gap:8px; background:var(--ui-sec); box-shadow:var(--ui-rim); } .hge-sheet .cg .th{ border-radius:var(--ui-r2); }
+.hge-sheet .cg button:hover:not(.na){ box-shadow:var(--ui-sel); transform:none; } .hge-sheet .cg b{ padding:0 4px; } .hge-sheet .cg small{ padding:0 4px 4px; }
+/* stany: fokus, ruch, nacisk */
+.hge-sheet :is(button, a, input, select, [role=button]):focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.hge-sheet :is(button, .hs-r, .hs-s, .hge-sheet .lx-sw, .hge-sheet .lx-sw i){ transition:background-color var(--ui-t), box-shadow var(--ui-t), transform var(--ui-t), opacity var(--ui-t), color var(--ui-t); }
+.hge-sheet button:active:not(:disabled){ transform:scale(.96); } .hge-sheet .lx-sw:active i{ transform:scale(.96); } .hge-sheet .lx-sw[aria-checked=true]:active i{ transform:translateX(18px) scale(.96); }
+/* jeden pierścień fokusu: pole w pigułce (.hs-s) i pola formularza widoku rysują go same, wewnętrzny input bez obrysu */
+.hge-sheet .hs-s input, .hge-sheet .hs-s input:focus, .hge-sheet .hs-s input:focus-visible, .hge-sheet .hs-in:focus-visible, .hge-sheet .lcv :is(input, select):focus-visible{ outline:none !important; }
+.hge-sheet .hs-s:focus-within{ box-shadow:inset 0 0 0 1.5px var(--hg-accent); }
+.hge-sheet input[type=color]:focus-visible{ outline:none !important; } .hge-sheet :has(> input[type=color]:focus-visible){ outline:2px solid var(--hg-accent); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ .hge-sheet *{ transition:none !important; } .hge-sheet button:active{ transform:none !important; } }
 `);
   }
 }
