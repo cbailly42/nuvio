@@ -30,6 +30,10 @@ and entities from Home Assistant and generates the views. Everything can then be
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_kamery_dark_1440.png" alt="Cameras (dark)" width="49%">
+  <img src="docs/screenshots/demo_pokoj_salon_dark_1440.png" alt="Room view (dark)" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/demo_family_light_1440.png" alt="Family (light)" width="49%">
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_multimedia_light_390.png" alt="Media on mobile (light)" width="24%">

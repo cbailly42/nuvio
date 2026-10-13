@@ -30,6 +30,10 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_kamery_dark_1440.png" alt="Kamery (ciemny)" width="49%">
+  <img src="docs/screenshots/demo_pokoj_salon_dark_1440.png" alt="Widok pokoju (ciemny)" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/demo_family_light_1440.png" alt="Rodzina (jasny)" width="49%">
 </p>
 <p align="center">
   <img src="docs/screenshots/demo_multimedia_light_390.png" alt="Multimedia na telefonie (jasny)" width="24%">
