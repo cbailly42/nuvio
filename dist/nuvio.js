@@ -218,7 +218,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.1+ce2a151c';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.1+2ac4a902';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6419,6 +6419,7 @@ const HG_TILE_CSS = `
 .hgtl .mc .pw.on{ background:var(--hg-accent); color:var(--hg-on-accent); } .hgtl .cv em{ font-style:normal; font-size:12px; opacity:.66; }
 .hgtl .ma{ width:44px; height:44px; border-radius:12px; object-fit:cover; flex:none; }
 .hgtl button:disabled{ opacity:.45; cursor:default; }
+.hgtl.k-card{ padding:0; background:none; box-shadow:none; display:block; min-height:0; } .hgtl.k-card > .cmslot{ display:block; height:100%; } .hgtl.k-card > .cmslot > *{ display:block; height:100%; }
 `;
 /* wspólne akcje kafli (dodanych) – używane przez nuvio-tiles-card i nuvio-room-card */
 const hgTileAct = (card, act, t) => {
@@ -6440,21 +6441,156 @@ const hgSlots = (card) => {
   for (const slot of card.$.querySelectorAll('.camslot[data-cam]')) { const e = slot.dataset.cam; let el = card._camM.get(e);
     if (!el) { el = document.createElement('nuvio-camera-card'); el.setConfig({ entity: e, name: H.name(h, e), embedded: true }); card._camM.set(e, el); } slot.appendChild(el); el.hass = h; }
 };
+/* ===== „+ Dodaj”: najpierw komponent (galeria), potem jego formularz (sloty encji, nazwa, ikona, styl, rozmiar, podgląd na żywo) ===== */
+const hgIsNum = (h, e) => { const s = h.states[e]; return !!s && s.state !== '' && isFinite(Number(s.state)); };
+const HG_COMP = [
+  { id: 'switch', n: 'Światło / przełącznik', d: 'Włącz i wyłącz jednym dotknięciem', i: 'mdi:lightbulb-outline', tile: 'tog', slots: [{ k: 'e', l: 'Urządzenie', dom: ['light', 'switch', 'fan', 'input_boolean', 'lock', 'automation', 'humidifier', 'valve', 'siren'], req: 1 }] },
+  { id: 'sensor', n: 'Odczyt czujnika', d: 'Wartość lub stan dowolnego czujnika', i: 'mdi:gauge', tile: 'val', slots: [{ k: 'e', l: 'Czujnik', dom: ['sensor', 'binary_sensor', 'input_number', 'counter', 'water_heater'], req: 1 }] },
+  { id: 'chart', n: 'Czujnik z wykresem', d: 'Wartość i wykres z ostatnich 24 h', i: 'mdi:chart-areaspline', tile: 'chart', slots: [{ k: 'e', l: 'Czujnik liczbowy', dom: ['sensor'], num: 1, req: 1 }] },
+  { id: 'climate', n: 'Klimatyzacja', d: 'Temperatura, tryby i nawiew', i: 'mdi:thermostat', tile: 'clim', slots: [{ k: 'e', l: 'Termostat / klimatyzator', dom: ['climate'], req: 1 }] },
+  { id: 'cover', n: 'Roleta / brama', d: 'Otwórz, zatrzymaj, zamknij', i: 'mdi:window-shutter', tile: 'cover', slots: [{ k: 'e', l: 'Roleta', dom: ['cover'], req: 1 }] },
+  { id: 'run', n: 'Scena / skrypt', d: 'Jeden przycisk uruchamiający', i: 'mdi:play-circle-outline', tile: 'run', slots: [{ k: 'e', l: 'Scena lub skrypt', dom: ['scene', 'script', 'button', 'input_button'], req: 1 }] },
+  { id: 'media1', n: 'Odtwarzacz', d: 'Okładka, tytuł i sterowanie', i: 'mdi:speaker', tile: 'media', slots: [{ k: 'e', l: 'Odtwarzacz', dom: ['media_player'], req: 1 }] },
+  { id: 'cam1', n: 'Kamera', d: 'Migawka i podgląd na żywo', i: 'mdi:cctv', tile: 'cam', slots: [{ k: 'e', l: 'Kamera', dom: ['camera'], req: 1 }] },
+  { id: 'scenes', n: 'Sceny i skrypty', d: 'Kilka przycisków w jednej karcie', i: 'mdi:palette-outline', card: 'nuvio-scenes-card', slots: [{ k: 'scripts', l: 'Sceny / skrypty', dom: ['scene', 'script'], multi: 1, obj: 1, req: 1 }],
+    cfg: (v) => ({ scripts: v.scripts }) },
+  { id: 'cameras', n: 'Siatka kamer', d: 'Wszystkie wybrane kamery naraz', i: 'mdi:view-grid-outline', card: 'nuvio-cameras-card', slots: [{ k: 'entities', l: 'Kamery', dom: ['camera'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
+  { id: 'players', n: 'Multimedia', d: 'Lista odtwarzaczy z głośnością', i: 'mdi:play-box-multiple-outline', card: 'nuvio-players-card', slots: [{ k: 'entities', l: 'Odtwarzacze', dom: ['media_player'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
+  { id: 'power', n: 'Moc teraz', d: 'Moc chwilowa z linią z ostatnich godzin', i: 'mdi:flash-outline', card: 'nuvio-power-card', slots: [{ k: 'entities', l: 'Czujnik mocy', dom: ['sensor'], dc: ['power'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) },
+  { id: 'energy', n: 'Energia – statystyki', d: 'Zużycie i produkcja: dziś, tydzień, miesiąc', i: 'mdi:lightning-bolt-outline', card: 'nuvio-energy-stats-card', slots: [{ k: 'consumption', l: 'Zużycie (kWh)', dom: ['sensor'], dc: ['energy'], req: 1 }, { k: 'production', l: 'Produkcja (kWh, opcjonalnie)', dom: ['sensor'], dc: ['energy'] }],
+    cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) },
+  { id: 'weather', n: 'Pogoda', d: 'Teraz, prognoza godzinowa, słońce', i: 'mdi:weather-partly-cloudy', card: 'nuvio-weather-card', slots: [{ k: 'entity', l: 'Prognoza', dom: ['weather'], req: 1 }], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}) }) },
+  { id: 'people', n: 'Domownicy', d: 'Kto jest w domu, strefy i czas', i: 'mdi:account-group-outline', card: 'nuvio-people-card', slots: [{ k: 'persons', l: 'Osoby', dom: ['person'], multi: 1, req: 1 }], cfg: (v) => ({ persons: v.persons }) },
+  { id: 'alarm', n: 'Alarm', d: 'Uzbrajanie i rozbrajanie z kodem', i: 'mdi:shield-home-outline', card: 'nuvio-alarm-card', slots: [{ k: 'entity', l: 'Centrala alarmu', dom: ['alarm_control_panel'], req: 1 }], cfg: (v) => ({ entity: v.entity }) },
+  { id: 'robots', n: 'Roboty', d: 'Odkurzacze i kosiarki: stan i sterowanie', i: 'mdi:robot-vacuum', card: 'nuvio-robots-card', slots: [{ k: 'entities', l: 'Roboty', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }], cfg: (v) => ({ entities: v.entities }) },
+  { id: 'agenda', n: 'Kalendarz', d: 'Nadchodzące wydarzenia', i: 'mdi:calendar-month-outline', card: 'nuvio-agenda-card', slots: [{ k: 'calendars', l: 'Kalendarze', dom: ['calendar'], multi: 1, req: 1 }], cfg: (v) => ({ calendars: v.calendars, days: 7 }) },
+];
+/* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
+const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
+  if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; return true; })
+  .sort((a, b) => H.name(h, a).localeCompare(H.name(h, b)));
+const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
+const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
+const hgCmHtml = (x, sz) => { HG_CM.set(x.e, { c: x.c, cfg: Object.assign({}, x.cfg, x.n ? { title: x.n, name: x.n } : {}, x.i ? { icon: x.i } : {}) });
+  return `<div class="hgtl k-card ${HGL.szc(sz)}" data-hgk="${H.esc(x.e)}"><div class="cmslot" data-cm="${H.esc(x.e)}"></div></div>`; };
+const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new Map();
+  for (const slot of card.$.querySelectorAll('.cmslot[data-cm]')) { const k = slot.dataset.cm, m = HG_CM.get(k); if (!m || !customElements.get(m.c)) continue; const sig = k + JSON.stringify(m.cfg); let el = card._cmM.get(sig);
+    if (!el) { el = document.createElement(m.c); try { el.setConfig(Object.assign({ type: 'custom:' + m.c }, m.cfg)); } catch (e) { /* zła konfiguracja – pusta karta */ } card._cmM.set(sig, el); }
+    if (el.parentElement !== slot) slot.appendChild(el); el.hass = h; } };
+const HG_COMP_CSS = `
+.cg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; } @media (max-width:560px){ .cg{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.cg button{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; padding:8px; border-radius:20px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 8%, transparent); transition:transform .15s, box-shadow .15s; min-width:0; }
+.cg button:hover:not(.na){ transform:translateY(-2px); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--hg-accent) 60%, transparent), 0 10px 24px var(--hg-bg-000000-018); } .cg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.cg .th{ position:relative; height:96px; border-radius:14px; overflow:hidden; background:color-mix(in srgb, currentColor 6%, transparent); pointer-events:none; } .cg .th > .tg2, .cg .th > .cmf{ position:absolute; left:0; top:0; width:250%; transform:scale(.4); transform-origin:top left; }
+.cg .th .ph{ position:absolute; inset:0; display:grid; place-items:center; } .cg .th .ph ha-icon{ width:34px; height:34px; opacity:.5; }
+.cg b{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; } .cg b ha-icon{ width:18px; height:18px; opacity:.75; flex:none; } .cg small{ font-size:12px; opacity:.66; line-height:1.3; }
+.cg .na{ opacity:.48; cursor:default; } .cg .na small em{ font-style:normal; display:block; margin-top:3px; color:inherit; opacity:.95; }
+.cq{ display:flex; gap:8px; align-items:center; } .cq .hs-s{ flex:1; }
+.hs-pvb .cmf{ display:block; } .hs-pvf .cmf{ display:block; }
+.hs-h b{ display:flex; align-items:center; gap:8px; } .hs-h b ha-icon, .cq > button > ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; opacity:.8; } .cq > button{ gap:12px; }
+.cg .th > .tg2, .cg .th > .cmf{ width:182% !important; transform:scale(.55) !important; }
+`;
+const HG_COMP_EDIT = {
+  /* krok 1: galeria komponentów */
+  _eGallery(ct, scOver) {
+    const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
+    const room = sc.startsWith('room:'), list = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile);
+    const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
+      return `<button class="${miss ? 'na' : ''}" data-hge="cgo" data-c="${C.id}" ${miss ? 'aria-disabled="true"' : ''}><div class="th" data-th="${C.id}"><div class="ph">${H.icon(C.i)}</div></div><b>${H.icon(C.i)}${H.esc(C.n)}</b><small>${H.esc(C.d)}${miss ? `<em>Brak encji: ${H.esc(miss.l.toLowerCase())} (${H.esc(miss.dom.join(', '))}${miss.dc ? ' · ' + H.esc(miss.dc.join(', ')) : ''})</em>` : ''}</small></button>`; };
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="Dodaj komponent"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>Dodaj komponent</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      <div class="cq"><button class="hs-r" data-hge="cgent" style="min-height:48px">${H.icon('mdi:magnify')}<span class="hs-t"><b>Szukaj encji</b><small>Szybkie dodanie pojedynczej encji jako kafelka</small></span></button></div>
+      <div class="cg" role="list">${list.map(card).join('')}</div></div></div>`;
+    /* miniatury na żywo: kafel z pierwszą pasującą encją albo pomniejszona karta */
+    requestAnimationFrame(() => { for (const C of list) { const th = S.querySelector(`[data-th="${C.id}"]`); if (!th) continue; const v = this._eCompDef(C); if (!v) continue;
+      const box = document.createElement('div'); if (C.tile) { box.className = 'tg2 one'; box.innerHTML = hgTileHtml(h, v.e, 's', { t: C.tile }); hgSlots({ _hass: h, $: box }); }
+      else { box.className = 'cmf'; const el = document.createElement(C.card); try { el.setConfig(Object.assign({ type: 'custom:' + C.card }, C.cfg(v, h))); el._hgPv = true; } catch (e) { continue; } box.appendChild(el); el.hass = h; }
+      th.firstChild.remove(); th.appendChild(box); } });
+  },
+  /* domyślne wartości slotów (pierwsze pasujące encje, listy: do 4) */
+  _eCompDef(C) { const h = this._hass, v = {};
+    for (const sl of C.slots) { const cs = hgSlotCands(h, sl); if (!cs.length) { if (sl.req) return null; continue; }
+      v[sl.k] = sl.multi ? cs.slice(0, sl.k === 'entities' && C.id === 'power' ? 1 : 4).map((e) => (sl.obj ? { entity: e, name: H.name(h, e), ...(h.states[e].attributes.icon ? { icon: h.states[e].attributes.icon } : {}) } : e)) : cs[0]; }
+    return v; },
+  /* krok 2: formularz komponentu (dodawanie i edycja – ten sam arkusz) */
+  _eComp(cid, st) {
+    const h = this._hass, C = HG_COMP.find((x) => x.id === cid); if (!C) return; this._eSheet('cfg'); const S = this._eSheetEl;
+    const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: 's' };
+    const ed = !!R.edit, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
+    const slot = (sl) => { const v = R.v[sl.k];
+      if (!sl.multi) return `<div class="hs-fl"><span>${H.esc(sl.l)}${sl.req ? '' : ''}</span><div class="hs-r hs-er"><button class="hs-eb" data-hge="cslot" data-k="${sl.k}"><span class="hs-i">${H.icon(v ? ico(v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(v ? H.name(h, v) : 'Wybierz encję')}</b><small>${H.esc(v || sl.dom.join(', '))}</small></span><span class="hs-p" title="Zmień">${H.icon(v ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>${v && !sl.req ? `<button class="hs-del" data-hge="cdel" data-k="${sl.k}" aria-label="Usuń">${H.icon('mdi:close')}</button>` : ''}</div></div>`;
+      const A = v || [];
+      return `<div class="hs-fl hs-ents"><span>${H.esc(sl.l)}</span>${A.map((y, i) => `<div class="hs-r hs-er" data-ak="${sl.k}" data-ai="${i}"><span class="hs-dg" data-hgdrag aria-label="Przeciągnij, aby zmienić kolejność">${H.icon('mdi:drag-vertical')}</span><button class="hs-eb" data-hge="cslot" data-k="${sl.k}" data-i="${i}"><span class="hs-i">${H.icon(ico(eid(y)))}</span><span class="hs-t"><b><em class="hs-ix">${i + 1}</em>${H.esc(H.name(h, eid(y)))}</b><small>${H.esc(eid(y))}</small></span><span class="hs-p">${H.icon('mdi:swap-horizontal')}</span></button><button class="hs-del" data-hge="cdel" data-k="${sl.k}" data-i="${i}" aria-label="Usuń">${H.icon('mdi:close')}</button></div>`).join('')}
+        <button class="hs-r hs-add" data-hge="cslot" data-k="${sl.k}" data-i="${A.length}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>Dodaj encję</b><small>${H.esc(sl.dom.join(', '))}${sl.dc ? ' · ' + H.esc(sl.dc.join(', ')) : ''}</small></span></button></div>`; };
+    const main = C.tile ? R.v.e : null, T = main ? hgTypeOpts(h, main).filter(([t]) => t !== C.tile).length ? hgTypeOpts(h, main) : [[C.tile, 'Normalny']] : null;
+    const okReq = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k]));
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${H.esc(C.n)}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${H.icon(C.i)} ${H.esc(C.n)}</b><button class="hs-x" data-hge="sheetclose" aria-label="Zamknij">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      <div class="hs-pv"><small>Podgląd na żywo</small><div class="hs-pvb"></div></div>
+      ${C.slots.map(slot).join('')}
+      ${T && main ? `<div class="hs-fl"><span>Tryb wyświetlania</span>${hgStyleCards(h, main, T, R.t || T[0][0], 'ctyp')}</div>` : ''}
+      <label class="hs-fl"><span>Nazwa</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
+      <label class="hs-fl"><span>Ikona (np. mdi:sofa)</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
+      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>Rozmiar</span><div class="hs-f wrap" role="group" aria-label="Rozmiar">${[['s', 'S · mały'], ['m', 'M · średni'], ['l', 'L · cała szerokość']].map(([v, l]) => `<button data-hge="cz" data-z="${v}" aria-pressed="${R.z === v}">${l}</button>`).join('')}</div></div>`}
+      </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? 'Anuluj' : 'Wstecz'}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed ? 'mdi:check' : 'mdi:plus')}<span>${ed ? 'Zapisz' : 'Dodaj'}</span></button></div></div>`;
+    for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { R[n.name] = n.value.trim(); if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(R.i)) ic.setAttribute('icon', R.i); } this._eCompPv(); });
+    requestAnimationFrame(() => this._eCompDrag()); this._eCompPv();
+  },
+  _eCompPv() { const R = this._eCompR, C = HG_COMP.find((x) => x.id === R.cid), h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv || !C) return;
+    const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
+    if (C.tile) { pv.className = 'hs-pvb tg2'; pv.innerHTML = R.v.e ? hgTileHtml(h, R.v.e, R.z === 's' ? 's' : R.z, { t: R.t || C.tile, n, i }) : '<p class="hs-e">Wybierz encję</p>'; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
+    const ok = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k])); if (!ok) { pv.className = 'hs-pvb'; pv.innerHTML = '<p class="hs-e">Wybierz encje</p>'; return; }
+    pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.style.height = '300px'; const el = document.createElement(C.card);
+    try { el.setConfig(Object.assign({ type: 'custom:' + C.card }, C.cfg(R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {})); } catch (e) { /* pusta */ } el._hgPv = true; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvFit(box, el); },
+  _eCompDrag() { const S = this._eSheetEl; if (!S) return;
+    for (const hd of S.querySelectorAll('[data-hgdrag]')) hd.addEventListener('pointerdown', (ev) => { const row = hd.closest('.hs-er'), key = row.dataset.ak, box = row.parentElement; ev.preventDefault(); ev.stopPropagation(); hd.setPointerCapture(ev.pointerId); row.classList.add('drag');
+      const rows = () => [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)];
+      const mv = (e) => { const sib = rows().filter((x) => x !== row); let ref = null; for (const x of sib) { const r = x.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { ref = x; break; } }
+        const last = sib[sib.length - 1]; if (ref) { if (row.nextElementSibling !== ref) box.insertBefore(row, ref); } else if (last && last.nextElementSibling !== row) box.insertBefore(row, last.nextElementSibling); };
+      const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); row.classList.remove('drag');
+        const ord = rows().map((x) => +x.dataset.ai), R = this._eCompR, A = R.v[key] || []; if (ord.every((v, i) => v === i)) return; R.v[key] = ord.map((i) => A[i]); this._eComp(R.cid, R); };
+      hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up); }); },
+  _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
+    if (a === 'cgent') return this._eSheet('add', this._eGalCt, this._eGalSc);
+    if (a === 'cgo') { if (b.classList.contains('na')) return; this._eCompR = null; return this._eComp(b.dataset.c); }
+    if (a === 'cback') return this._eGallery(this._eGalCt, this._eGalSc);
+    if (a === 'ctyp') { R.t = b.dataset.t; for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } return this._eCompPv(); }
+    if (a === 'cz') { R.z = b.dataset.z; for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }
+    const C = HG_COMP.find((x) => x.id === R.cid), sl = C && C.slots.find((x) => x.k === b.dataset.k);
+    if (a === 'cdel') { if (sl.multi) { R.v[sl.k] = (R.v[sl.k] || []).slice(); R.v[sl.k].splice(+b.dataset.i, 1); } else delete R.v[sl.k]; return this._eComp(R.cid, R); }
+    if (a === 'cslot') { const cur = sl.multi ? (R.v[sl.k] || []).map((y) => (typeof y === 'string' ? y : y.entity)) : [];
+      this._eRepl = { comp: { k: sl.k, i: b.dataset.i != null ? +b.dataset.i : null }, doms: sl.dom, flt: (e) => hgSlotCands(h, sl).includes(e), excl: cur.filter((_, i) => i !== +b.dataset.i) };
+      return this._eSheet('add', null, this._eGalSc || R.sc); }
+    if (a === 'cok') { const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
+      this._eSet(sc, (L) => { let key;
+        if (C.tile) { const e = R.v.e; key = e; const x0 = R.edit ? L.added.find((y) => y.e === R.edit) : null, x = { e, ...(R.t && R.t !== C.tile ? { t: R.t } : R.t === C.tile && hgTypesFor(h, e)[0] !== C.tile ? { t: C.tile } : {}), ...(n ? { n } : {}), ...(i ? { i } : {}), comp: C.id };
+          if (x0) Object.assign(x0, x); else if (!L.added.some((y) => y.e === e)) L.added.push(x); L.hidden = L.hidden.filter((y) => y !== e); }
+        else { key = R.edit || ('c:' + C.id + ':' + Date.now().toString(36)); const x = { e: key, c: C.card, comp: C.id, cfg: C.cfg(R.v, h), v: R.v, ...(n ? { n } : {}), ...(i ? { i } : {}) };
+          const j = L.added.findIndex((y) => y.e === key); if (j >= 0) L.added[j] = x; else L.added.push(x); }
+        if (R.z && R.z !== 's') L.size[key] = R.z; else delete L.size[key]; });
+      this._eSheet(false); this._eToast((R.edit ? 'Zapisano: ' : 'Dodano: ') + (n || C.n)); this._eCompR = null;
+      return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'NUVIO-TILES-CARD')); }
+  },
+  /* powrót z wyboru encji do formularza */
+  _eCompPick(nv) { const R = this._eCompR, P = this._eRepl.comp, C = HG_COMP.find((x) => x.id === R.cid), sl = C.slots.find((x) => x.k === P.k), h = this._hass;
+    if (sl.multi) { const A = (R.v[sl.k] || []).slice(), it = sl.obj ? { entity: nv, name: H.name(h, nv), ...(h.states[nv] && h.states[nv].attributes.icon ? { icon: h.states[nv].attributes.icon } : {}) } : nv; if (P.i != null && P.i < A.length) A[P.i] = it; else A.push(it); R.v[sl.k] = A; }
+    else { R.v[sl.k] = nv; if (sl.k === 'e' && C.tile) R.t = C.tile; }
+    this._eRepl = null; this._eComp(R.cid, R); },
+};
+
 /* karta dodanych kafli widoku (zakres „<widok>:tiles”) */
 class HGTilesCard extends HGBase {
   constructor() { super(); this._sub = () => this.rerender(); }
   connectedCallback() { super.connectedCallback(); HGL.subs.add(this._sub); }
   disconnectedCallback() { HGL.subs.delete(this._sub); }
-  ents() { return this._config.single ? [this._config.single.e] : HGL.get(this._config.scope).added.map((x) => x.e).filter(Boolean); }
+  ents() { if (this._config.single) return [this._config.single.e]; const o = []; for (const x of HGL.get(this._config.scope).added) { if (!x.c) { if (x.e) o.push(x.e); continue; } for (const v of Object.values(x.v || {})) for (const y of [].concat(v)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) o.push(e); } } return o; }
   _extraSig() { return this._config.single ? (HG_HIST.m.get(this._config.single.e) || {}).t || 0 : [HGL.data.s[this._config.scope] || null, [...HG_HIST.m.values()].map((x) => x.t).join()]; }
   css() { return `:host{ display:block; height:auto; container-type:inline-size; }` + HG_TILE_CSS; }
   render() {
     const h = this._hass; if (this._config.single) return `<div class="tg2 one">${hgTileHtml(h, this._config.single.e, 's', this._config.single)}</div>`;
     const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
-    const it = HGL.sort(L.added.filter((x) => h.states[x.e] && !hid.has(x.e)), (x) => x.e, L.order);
-    return `<div class="tg2" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => hgTileHtml(h, x.e, L.size[x.e], x)).join('')}</div>`;
+    const it = HGL.sort(L.added.filter((x) => (x.c ? customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
+    return `<div class="tg2" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
   }
-  afterRender() { hgSlots(this); }
+  afterRender() { hgSlots(this); hgCmSlots(this); }
   onAct(act, t) { hgTileAct(this, act, t); }
 }
 hgReg('nuvio-tiles-card', HGTilesCard, 'Nuvio – Moje kafelki', 'Kafelki dodane w trybie edycji');
@@ -6737,7 +6873,8 @@ const HG_EDIT = {
     if (a === 'bgcol') { const S = this._eSheetEl, c1 = S.querySelector('[name=bgc1]').value, c2 = S.querySelector('[name=bgc2]').value; this._eApp((A) => { A.bg = b.dataset.k === 'gradient' ? { kind: 'gradient', v: c1, v2: c2 } : { kind: 'color', v: c1 }; }); return this._eLook(); }
     if (a === 'bgup') return this._eSheetEl.querySelector('input[type=file]').click();
     if (a === 'lookreset') { HGL.data.app = {}; HGApp.apply(); this._eToast('Przywrócono domyślny wygląd'); return this._eLook(); }
-    if (a === 'add') return this._eSheet('add', b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct));
+    if (a === 'add') { const ct0 = b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct); return ct0 && ct0.scope === 'rooms' ? this._eSheet('add', ct0) : this._eGallery(ct0); }
+    if (/^c(go|gent|back|typ|z|del|slot|ok)$/.test(a)) return this._eCompAct(a, b);
     if (a === 'restore') { this._eSet(b.dataset.sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.k); }); this._eSheet(false); return this._eRefresh(b.dataset.sc === this._pageScope()); }
     if (a === 'sheetclose') return this._eSheet(false);
     if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) return this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n);
@@ -6747,6 +6884,7 @@ const HG_EDIT = {
     if (a === 'addback') return this._eSheet('add', null, this._eSc);
     if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
       this._eSheet(false); this._eToast('Dodano: ' + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'NUVIO-TILES-CARD')); }
+    if (a === 'repl' && this._eRepl && this._eRepl.comp) return this._eCompPick(b.dataset.e);
     if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast(R.add ? 'Dodano encję' : 'Zmieniono encję');
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
       const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
@@ -6868,6 +7006,8 @@ const HG_EDIT = {
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', 'Normalny'], ['compact', 'Kompaktowy'], ['minimal', 'Minimalny']], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
   _eCfg(ct, k) {
+    { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
+      this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
     const h = this._hass, sc = ct.scope, L = HGL.get(sc), z = L.size[k] || 's', canSz = ct.page ? !this._config.panel.areas : ct.sz;
     const S0 = this._eSubj(ct, k); this._eCfgR = { sc, k, ct, S: S0 }; this._eSheet('cfg');
     const S = this._eSheetEl, ttl = { added: 'Ustawienia kafelka', card: 'Ustawienia karty', room: 'Ustawienia pokoju', sec: 'Ustawienia sekcji' }[S0.kind]; requestAnimationFrame(() => this._eEntDrag());
@@ -7040,7 +7180,7 @@ const HG_EDIT = {
     const skip = new Set(['zone', 'sun', 'persistent_notification', 'update', 'tts', 'stt', 'conversation', 'event', 'image', 'device_tracker', 'group', 'input_text', 'input_datetime', 'todo', 'calendar', 'weather', 'wake_word', 'assist_satellite', 'select', 'number', 'text', 'time', 'date', 'datetime', 'notify', 'ai_task']);
     const arr = [];
     for (const e of Object.keys(h.states)) {
-      const d = e.split('.')[0]; if (skip.has(d) || (!this._eRepl && shown.has(e))) continue; if (this._eRepl && ((this._eRepl.doms && !this._eRepl.doms.includes(d)) || (this._eRepl.excl && this._eRepl.excl.includes(e)))) continue;
+      const d = e.split('.')[0]; if (skip.has(d) || (!this._eRepl && shown.has(e))) continue; if (this._eRepl && ((this._eRepl.doms && !this._eRepl.doms.includes(d)) || (this._eRepl.excl && this._eRepl.excl.includes(e)) || (this._eRepl.flt && !this._eRepl.flt(e)))) continue;
       const r = reg[e]; if (r && (r.hidden || r.entity_category)) continue;
       const k = HG_TILE_KIND(e);
       if (f !== 'all' && !(f === 'light' ? d === 'light' : f === 'tog' ? k === 'tog' && d !== 'light' : f === k)) continue;
@@ -7063,4 +7203,4 @@ const HG_EDIT = {
     more();
   },
 };
-Object.assign(HGPage.prototype, HG_EDIT);
+Object.assign(HGPage.prototype, HG_EDIT, HG_COMP_EDIT);
