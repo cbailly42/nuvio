@@ -351,8 +351,12 @@ class HGPage extends HTMLElement {
       const fixed = mode === 'wide' && !this._config.panel.scroll && !this._hasTiles2();
       w.style.setProperty('--hg-min-h', fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`);
       w.style.minHeight = fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`;
-      if (cc.span === 'full') w.style.gridColumn = '1 / -1';
-      else if (mode !== 'phone' && cc.span && !cc.area) w.style.gridColumn = `span ${cc.span}`;
+      /* szerokość sekcji z ustawień (Pełna szerokość / Połowa); na telefonie zawsze pełna */
+      const wv = (() => { try { const c = HGL.get(this._pageScope()).conf[w.dataset.hgk]; return c && c.w; } catch (e) { return ''; } })();
+      const span = wv === 'full' ? 'full' : wv === 'half' ? 1 : cc.span;
+      if (span === 'full') w.style.gridColumn = '1 / -1';
+      else if (wv === 'half' && mode !== 'phone') w.style.gridColumn = 'span 1';
+      else if (mode !== 'phone' && span && !cc.area) w.style.gridColumn = `span ${span}`;
       else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
     });
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
@@ -781,7 +785,8 @@ class HGPage extends HTMLElement {
   _css() {
     return U(`
 :host{ display:block; color:#fff; position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
-.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
+/* tło i przyciemnienie jako własne pełnoekranowe warstwy GPU: backdrop-filter szklanych elementów próbkuje jedną warstwę (bez szwów na granicach innych warstw) */
+.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
 @media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
 @media (pointer:coarse){ :host{ --hg-bf:.6; } }
 /* tryb lekki (dotyk / słabe urządzenie, nadpisanie: localStorage home-glass:lite = 1/0): słabsze rozmycie, bez ciężkich cieni */
@@ -808,7 +813,7 @@ class HGPage extends HTMLElement {
 /* niewidoczny widok / ukryta karta przeglądarki: animacje ciągłe wstrzymane (zmienna dziedziczy się do kart) */
 :host([paused]){ --hg-play: paused; }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
-.shade{ position:fixed; inset:0; pointer-events:none; z-index:0;
+.shade{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden;
   background: rgba(14,16,20,.26); }
 /* noc (schemat ciemny): dodatkowe przyciemnienie zdjęcia */
 .shade::after{ content:''; position:absolute; inset:0; background: var(--hg-night, transparent); }

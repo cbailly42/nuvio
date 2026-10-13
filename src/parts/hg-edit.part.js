@@ -526,12 +526,13 @@ const HG_LOOK_CSS = `
 .lk-pt{ display:flex; flex-direction:column; font-size:13px; min-width:0; } .lk-pt small{ font-size:12px; font-weight:600; }
 .lk-pb{ display:inline-flex; align-items:center; gap:4px; height:32px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; flex:none; } .lk-pb ha-icon{ width:16px; height:16px; }
 .lk-bgs{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; } @media (max-width:520px){ .lk-bgs{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
-.lk-bgs button{ all:unset; cursor:pointer; display:flex; flex-direction:column; gap:6px; font-size:12px; min-width:0; }
+.lk-bgs button{ all:unset; outline:none !important; -webkit-tap-highlight-color:transparent; cursor:pointer; display:flex; flex-direction:column; gap:6px; font-size:12px; min-width:0; }
 .lk-bgs span{ position:relative; display:block; aspect-ratio:16/10; border-radius:14px; overflow:hidden; box-shadow:0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); transition:box-shadow .15s; }
 .lk-bgs img{ width:100%; height:100%; object-fit:cover; display:block; }
 .lk-bgs span ha-icon{ position:absolute; top:6px; right:6px; width:16px; height:16px; padding:3px; border-radius:50%; background:var(--hg-accent); color:var(--hg-on-accent); opacity:0; transform:scale(.6); transition:.15s; }
 .lk-bgs [aria-pressed=true] span{ box-shadow:0 0 0 2px var(--hg-glass-bg, #1E242C), 0 0 0 4px var(--hg-accent, #63D71E); } .lk-bgs [aria-pressed=true] span ha-icon{ opacity:1; transform:none; }
-.lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:none; box-shadow:0 0 0 2px var(--hg-glass-bg, #1E242C), 0 0 0 4px var(--hg-accent, #63D71E); }
+.lk-bgs span[data-err]::after{ content:attr(data-et); position:absolute; inset:auto 6px 6px 6px; font-size:11px; line-height:1.2; padding:3px 6px; border-radius:8px; background:rgba(0,0,0,.45); color:#fff; text-align:center; }
 .lk-row{ display:flex; gap:8px; align-items:center; } .lk-url{ flex:1 1 auto; min-width:0; }
 .lk-mini{ all:unset; position:relative; z-index:1; cursor:pointer; height:32px; padding:0 12px; margin:0; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:13px; font-weight:600; display:grid; place-items:center; flex:none; }
 .lk-up{ all:unset; cursor:pointer; height:44px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); font-size:13px; font-weight:600; flex:none; } .lk-up ha-icon{ width:18px; height:18px; }
@@ -650,6 +651,10 @@ const HG_EDIT = {
   },
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
+    /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
+    if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
+      fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
+        if (m && m[1] !== HG_BUILD) this._eToast(hgTr(`Załadowana wersja ${HG_BUILD.split('+')[0]} jest starsza niż na serwerze (${m[1].split('+')[0]}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).`, `Loaded version ${HG_BUILD.split('+')[0]} differs from the server (${m[1].split('+')[0]}). Reload without cache (Ctrl+Shift+R).`)); }).catch(() => {}); }
     if (this._editing || !this._isAdmin()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
@@ -787,7 +792,7 @@ const HG_EDIT = {
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
       const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
     if (a === 'cfgsave') return this._eCfgSave();
-    if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
+    if (a === 'cfgz' || a === 'cfgt' || a === 'cfgw') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
     if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, hgTr('Usunięto encję', 'Entity removed')); }
     if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
@@ -941,6 +946,8 @@ const HG_EDIT = {
       <div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
+      ${ct.page ? (() => { const w0 = (L.conf[k] && L.conf[k].w) || '', box = (f) => `<span aria-hidden="true" style="display:flex;gap:3px;width:44px;height:22px;flex:none"><i style="flex:1;border-radius:4px;background:${f ? 'currentColor' : 'color-mix(in srgb, currentColor 40%, transparent)'}"></i>${f ? '' : '<i style="flex:1;border-radius:4px;border:1.5px dashed color-mix(in srgb, currentColor 35%, transparent)"></i>'}</span>`;
+        return `<div class="hs-fl"><span>${hgTr('Szerokość', 'Width')}</span><div class="hs-f wrap" role="radiogroup" aria-label="${hgTr('Szerokość', 'Width')}">${[['', hgTr('Automatyczna', 'Automatic'), null], ['full', hgTr('Pełna szerokość', 'Full width'), 1], ['half', hgTr('Połowa', 'Half'), 0]].map(([v, l, f]) => `<button data-hge="cfgw" data-w="${v}" role="radio" aria-pressed="${w0 === v}" aria-checked="${w0 === v}" style="gap:8px">${f == null ? '' : box(f)}${l}</button>`).join('')}</div><small style="opacity:.6;font-size:12px">${hgTr('Na telefonie każda sekcja ma pełną szerokość.', 'On phones every section is full width.')}</small></div>`; })() : ''}
       ${canSz ? `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cfgz" data-z="${v}" aria-pressed="${z === v}">${l}</button>`).join('')}</div></div>` : ''}
       </div>
       <div class="hs-ac"><button class="hs-b2" data-hge="sheetclose">${hgTr('Anuluj', 'Cancel')}</button><button class="hs-b" data-hge="cfgsave">${hgTr('Zapisz', 'Save')}</button></div></div>`;
@@ -948,7 +955,7 @@ const HG_EDIT = {
     this._eCfgPv();
   },
   _eCfgVals() { const S = this._eSheetEl, g = (q) => S.querySelector(q);
-    return { n: g('[name=n]').value.trim(), i: /^mdi:[a-z0-9-]+$/.test(g('[name=i]').value.trim()) ? g('[name=i]').value.trim() : '', t: (g('[data-hge=cfgt][aria-pressed=true]') || { dataset: { t: '' } }).dataset.t, z: (g('[data-hge=cfgz][aria-pressed=true]') || { dataset: {} }).dataset.z }; },
+    return { n: g('[name=n]').value.trim(), i: /^mdi:[a-z0-9-]+$/.test(g('[name=i]').value.trim()) ? g('[name=i]').value.trim() : '', t: (g('[data-hge=cfgt][aria-pressed=true]') || { dataset: { t: '' } }).dataset.t, w: g('[data-hge=cfgw]') ? (g('[data-hge=cfgw][aria-pressed=true]') || { dataset: { w: '' } }).dataset.w : null, z: (g('[data-hge=cfgz][aria-pressed=true]') || { dataset: {} }).dataset.z }; },
   /* podgląd: kafel (typy kafli) albo kopia bieżącego elementu z klasą trybu, nazwą i ikoną */
   _eCfgPv() {
     const R = this._eCfgR, S0 = R.S, h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv) return;
@@ -1007,6 +1014,7 @@ const HG_EDIT = {
       if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { for (const f of ['n', 'i', 't']) if (V[f]) x[f] = V[f]; else delete x[f]; } }
       else if (S0.kind === 'sec') { if (V.n) L.names[R.k] = V.n; else delete L.names[R.k]; const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['i', 't']) if (V[f]) cf[f] = V[f]; else delete cf[f]; }
       else { const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['n', 'i']) if (V[f]) cf[f] = V[f]; else delete cf[f]; if (V.t && V.t !== 'card') cf.t = V.t; else delete cf.t; }
+      if (V.w != null) { const cw = L.conf[R.k] = L.conf[R.k] || {}; if (V.w === 'full' || V.w === 'half') cw.w = V.w; else delete cw.w; }
       if (V.z) { if (V.z === 's') delete L.size[R.k]; else L.size[R.k] = V.z; }
     });
     this._eSheet(false); this._eToast(hgTr('Zapisano ustawienia', 'Settings saved')); return this._eRefresh(R.sc === this._pageScope());
@@ -1039,7 +1047,7 @@ const HG_EDIT = {
       <section class="lk-g"><h4>${H.icon('mdi:image-outline')}${hgTr('Tło', 'Background')}</h4>
         <div class="lk-bgs">${HG_BGS.map(([u, l, pu, th], i) => { const on = i ? !!bg && bg.kind !== 'color' && bg.kind !== 'gradient' && bg.v === u : !bg;
           const src = th || u || (HG_DEFAULT_BG.kind === 'image' ? HG_DEFAULT_BG.v : '');
-          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="this.remove()">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
+          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove()">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
         <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">${hgTr('Ustaw', 'Set')}</button></span>
           <button class="lk-up" data-hge="bgup" title="${hgTr('Prześlij zdjęcie do Home Assistant', 'Upload an image to Home Assistant')}">${H.icon('mdi:upload')}<span>${hgTr('Prześlij', 'Upload')}</span></button><input type="file" accept="image/*" hidden></div>
         <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>

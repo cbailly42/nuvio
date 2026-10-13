@@ -258,6 +258,14 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.6
+- New: section width. The settings of a dashboard section offer **Automatic**, **Full width** or **Half** with a small visual preview; on phones every section is full width. Saved per section.
+- New: in edit mode Nuvio checks the server for a newer `nuvio.js` and asks for a reload without cache (Ctrl+Shift+R) when the browser runs an older cached build. The + Add gallery header shows the loaded version.
+- Changed: empty-state hint cards use a 16 px radius and a smaller icon tile.
+- Fixed: background thumbnails that fail to load show "Image not loaded" instead of a silent gradient, and log the URL in the console.
+- Fixed: the selected background thumbnail had a double focus outline; keyboard focus is now one rounded ring in the accent colour, none on mouse click.
+- Fixed: background and shade are single full screen GPU layers, so glass elements sample one backdrop (aimed at a vertical seam seen in Chrome on macOS).
+
 ### 0.3.5
 - Fixed: a background chosen in an older version (stored with the old `assets/backgrounds/` or `assets/bg/` path) is migrated to the new flat `nuvio-bg-*` file, so it shows again after updating.
 

@@ -258,6 +258,14 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.6
+- Nowość: szerokość sekcji. Ustawienia sekcji pulpitu mają **Automatyczna**, **Pełna szerokość** lub **Połowa** z małym podglądem; na telefonie każda sekcja ma pełną szerokość. Zapisywane osobno dla każdej sekcji.
+- Nowość: w trybie edycji Nuvio sprawdza na serwerze, czy jest nowszy `nuvio.js`, i prosi o odświeżenie bez pamięci podręcznej (Ctrl+Shift+R), gdy przeglądarka uruchamia starą wersję. Nagłówek galerii + Dodaj pokazuje załadowaną wersję.
+- Zmienione: karty podpowiedzi pustego stanu mają promień 16 px i mniejszą ikonę.
+- Naprawione: miniatury teł, które się nie wczytały, pokazują „Nie wczytano zdjęcia” zamiast samego gradientu i zapisują adres w konsoli.
+- Naprawione: wybrana miniatura tła miała podwójną ramkę fokusu; fokus z klawiatury to teraz jeden zaokrąglony pierścień w kolorze akcentu, bez ramki po kliknięciu myszą.
+- Naprawione: tło i przyciemnienie są pojedynczymi pełnoekranowymi warstwami GPU, więc szklane elementy próbkują jedno tło (dotyczy pionowego szwu widocznego w Chrome na macOS).
+
 ### 0.3.5
 - Naprawione: tło wybrane w starszej wersji (zapisane ze starą ścieżką `assets/backgrounds/` lub `assets/bg/`) jest przenoszone na nowy płaski plik `nuvio-bg-*`, więc po aktualizacji znów się wyświetla.
 

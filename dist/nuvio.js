@@ -129,9 +129,9 @@ const HG_HINTS = {
   custom: { icon: 'mdi:view-grid-plus-outline', t: hgTrLazy('Pusty widok', 'Empty view'), s: hgTrLazy('Twój własny widok', 'Your own view'), d: hgTrLazy('Dodaj dowolne widżety: kafelki encji, grupy, kamery, mapę, kalendarz i inne. Kolejność i rozmiar zmienisz w trybie edycji.', 'Add any widgets: entity tiles, groups, cameras, a map, a calendar and more. Change order and size in edit mode.'), add: 1 },
   fuel: { icon: 'mdi:gas-station-outline', t: hgTrLazy('Ceny paliw', 'Fuel prices'), d: hgTrLazy('Potrzebny czujnik z ceną (np. sensor z integracji REST lub Scrape, jednostka zł/l).', 'Needs a price sensor (e.g. a sensor from the REST or Scrape integration, unit zł/l).'), href: '/config/integrations/dashboard', hl: hgTrLazy('Integracje', 'Integrations') },
 };
-const HG_HINT_CSS = `:host{ display:block; } .hn{ box-sizing:border-box; height:100%; min-height:150px; display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:var(--r-lg, 24px); color:var(--primary-text-color, inherit);
+const HG_HINT_CSS = `:host{ display:block; } .hn{ box-sizing:border-box; height:100%; min-height:150px; display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:16px; color:var(--primary-text-color, inherit);
   background:var(--hg-glass-lite, var(--hg-glass-bg, var(--hg-bg-ffffff-012))); -webkit-backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); backdrop-filter:blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); box-shadow:var(--hg-card-sh, 0 10px 30px var(--hg-sh-000000-018)); font-family:'DM Sans', system-ui, sans-serif; }
-.hd{ display:flex; gap:12px; align-items:center; } .ic{ flex:none; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, var(--hg-accent, var(--hg-bg-63d71e)) 18%, transparent); color:var(--hg-accent-tx, var(--hg-accent, var(--hg-tx-63d71e))); } .ic ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; }
+.hd{ display:flex; gap:12px; align-items:center; } .ic{ flex:none; width:36px; height:36px; border-radius:10px; display:grid; place-items:center; background:color-mix(in srgb, var(--hg-accent, var(--hg-bg-63d71e)) 18%, transparent); color:var(--hg-accent-tx, var(--hg-accent, var(--hg-tx-63d71e))); } .ic ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; }
 b{ font-size:15px; font-weight:600; } small{ display:block; font-size:12px; opacity:.66; margin-top:2px; } p{ margin:0; font-size:13px; line-height:1.5; opacity:.8; flex:1; text-wrap:pretty; }
 .bt{ display:flex; flex-wrap:wrap; gap:8px; } button, a{ all:unset; cursor:pointer; box-sizing:border-box; height:36px; padding:0 16px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:500; background:color-mix(in srgb, currentColor 8%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background-color 150ms, transform 150ms; } button:active, a:active{ transform:scale(.96); }
 .ok{ background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-on-accent, var(--hg-tx-0b0f0a-on)); font-weight:600; box-shadow:none; } .gh{ background:none; box-shadow:none; opacity:.7; margin-left:auto; } button:focus-visible, a:focus-visible{ outline:2px solid var(--hg-accent, var(--hg-tx-63d71e)); outline-offset:2px; } ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; }`;
@@ -402,7 +402,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.5+06dfd653';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.5+bb7665a2';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6127,8 +6127,12 @@ class HGPage extends HTMLElement {
       const fixed = mode === 'wide' && !this._config.panel.scroll && !this._hasTiles2();
       w.style.setProperty('--hg-min-h', fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`);
       w.style.minHeight = fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`;
-      if (cc.span === 'full') w.style.gridColumn = '1 / -1';
-      else if (mode !== 'phone' && cc.span && !cc.area) w.style.gridColumn = `span ${cc.span}`;
+      /* szerokość sekcji z ustawień (Pełna szerokość / Połowa); na telefonie zawsze pełna */
+      const wv = (() => { try { const c = HGL.get(this._pageScope()).conf[w.dataset.hgk]; return c && c.w; } catch (e) { return ''; } })();
+      const span = wv === 'full' ? 'full' : wv === 'half' ? 1 : cc.span;
+      if (span === 'full') w.style.gridColumn = '1 / -1';
+      else if (wv === 'half' && mode !== 'phone') w.style.gridColumn = 'span 1';
+      else if (mode !== 'phone' && span && !cc.area) w.style.gridColumn = `span ${span}`;
       else if (!cc.area || mode === 'phone') w.style.removeProperty('grid-column');
     });
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
@@ -6557,7 +6561,8 @@ class HGPage extends HTMLElement {
   _css() {
     return U(`
 :host{ display:block; color:var(--hg-tx-ffffff); position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
-.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
+/* tło i przyciemnienie jako własne pełnoekranowe warstwy GPU: backdrop-filter szklanych elementów próbkuje jedną warstwę (bez szwów na granicach innych warstw) */
+.bg{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; filter: var(--hg-photo-filter, none); transition: filter .4s ease; }
 @media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
 @media (pointer:coarse){ :host{ --hg-bf:.6; } }
 /* tryb lekki (dotyk / słabe urządzenie, nadpisanie: localStorage nuvio:lite = 1/0): słabsze rozmycie, bez ciężkich cieni */
@@ -6584,7 +6589,7 @@ class HGPage extends HTMLElement {
 /* niewidoczny widok / ukryta karta przeglądarki: animacje ciągłe wstrzymane (zmienna dziedziczy się do kart) */
 :host([paused]){ --hg-play: paused; }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
-.shade{ position:fixed; inset:0; pointer-events:none; z-index:0;
+.shade{ position:fixed; inset:0; pointer-events:none; z-index:0; transform:translateZ(0); backface-visibility:hidden;
   background: var(--hg-bg-0e1014-026-k); }
 /* noc (schemat ciemny): dodatkowe przyciemnienie zdjęcia */
 .shade::after{ content:''; position:absolute; inset:0; background: var(--hg-night, transparent); }
@@ -7534,12 +7539,13 @@ const HG_LOOK_CSS = `
 .lk-pt{ display:flex; flex-direction:column; font-size:13px; min-width:0; } .lk-pt small{ font-size:12px; font-weight:600; }
 .lk-pb{ display:inline-flex; align-items:center; gap:4px; height:32px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; flex:none; } .lk-pb ha-icon{ width:16px; height:16px; }
 .lk-bgs{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; } @media (max-width:520px){ .lk-bgs{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
-.lk-bgs button{ all:unset; cursor:pointer; display:flex; flex-direction:column; gap:6px; font-size:12px; min-width:0; }
+.lk-bgs button{ all:unset; outline:none !important; -webkit-tap-highlight-color:transparent; cursor:pointer; display:flex; flex-direction:column; gap:6px; font-size:12px; min-width:0; }
 .lk-bgs span{ position:relative; display:block; aspect-ratio:16/10; border-radius:14px; overflow:hidden; box-shadow:0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); transition:box-shadow .15s; }
 .lk-bgs img{ width:100%; height:100%; object-fit:cover; display:block; }
 .lk-bgs span ha-icon{ position:absolute; top:6px; right:6px; width:16px; height:16px; padding:3px; border-radius:50%; background:var(--hg-accent); color:var(--hg-on-accent); opacity:0; transform:scale(.6); transition:.15s; }
 .lk-bgs [aria-pressed=true] span{ box-shadow:0 0 0 2px var(--hg-glass-bg, var(--hg-sh-1e242c)), 0 0 0 4px var(--hg-accent, var(--hg-bg-63d71e)); } .lk-bgs [aria-pressed=true] span ha-icon{ opacity:1; transform:none; }
-.lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:none; box-shadow:0 0 0 2px var(--hg-glass-bg, var(--hg-sh-1e242c)), 0 0 0 4px var(--hg-accent, var(--hg-bg-63d71e)); }
+.lk-bgs span[data-err]::after{ content:attr(data-et); position:absolute; inset:auto 6px 6px 6px; font-size:11px; line-height:1.2; padding:3px 6px; border-radius:8px; background:var(--hg-bg-000000-045); color:var(--hg-tx-ffffff); text-align:center; }
 .lk-row{ display:flex; gap:8px; align-items:center; } .lk-url{ flex:1 1 auto; min-width:0; }
 .lk-mini{ all:unset; position:relative; z-index:1; cursor:pointer; height:32px; padding:0 12px; margin:0; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:13px; font-weight:600; display:grid; place-items:center; flex:none; }
 .lk-up{ all:unset; cursor:pointer; height:44px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); font-size:13px; font-weight:600; flex:none; } .lk-up ha-icon{ width:18px; height:18px; }
@@ -7658,6 +7664,10 @@ const HG_EDIT = {
   },
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
+    /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
+    if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
+      fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
+        if (m && m[1] !== HG_BUILD) this._eToast(hgTr(`Załadowana wersja ${HG_BUILD.split('+')[0]} jest starsza niż na serwerze (${m[1].split('+')[0]}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).`, `Loaded version ${HG_BUILD.split('+')[0]} differs from the server (${m[1].split('+')[0]}). Reload without cache (Ctrl+Shift+R).`)); }).catch(() => {}); }
     if (this._editing || !this._isAdmin()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
@@ -7795,7 +7805,7 @@ const HG_EDIT = {
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
       const pr = this._eRefresh(pg); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
     if (a === 'cfgsave') return this._eCfgSave();
-    if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
+    if (a === 'cfgz' || a === 'cfgt' || a === 'cfgw') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
     if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, hgTr('Usunięto encję', 'Entity removed')); }
     if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
@@ -7949,6 +7959,8 @@ const HG_EDIT = {
       <div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
+      ${ct.page ? (() => { const w0 = (L.conf[k] && L.conf[k].w) || '', box = (f) => `<span aria-hidden="true" style="display:flex;gap:3px;width:44px;height:22px;flex:none"><i style="flex:1;border-radius:4px;background:${f ? 'currentColor' : 'color-mix(in srgb, currentColor 40%, transparent)'}"></i>${f ? '' : '<i style="flex:1;border-radius:4px;border:1.5px dashed color-mix(in srgb, currentColor 35%, transparent)"></i>'}</span>`;
+        return `<div class="hs-fl"><span>${hgTr('Szerokość', 'Width')}</span><div class="hs-f wrap" role="radiogroup" aria-label="${hgTr('Szerokość', 'Width')}">${[['', hgTr('Automatyczna', 'Automatic'), null], ['full', hgTr('Pełna szerokość', 'Full width'), 1], ['half', hgTr('Połowa', 'Half'), 0]].map(([v, l, f]) => `<button data-hge="cfgw" data-w="${v}" role="radio" aria-pressed="${w0 === v}" aria-checked="${w0 === v}" style="gap:8px">${f == null ? '' : box(f)}${l}</button>`).join('')}</div><small style="opacity:.6;font-size:12px">${hgTr('Na telefonie każda sekcja ma pełną szerokość.', 'On phones every section is full width.')}</small></div>`; })() : ''}
       ${canSz ? `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', hgTr('S · mały', 'S · small')], ['m', hgTr('M · średni', 'M · medium')], ['l', hgTr('L · cała szerokość', 'L · full width')]].map(([v, l]) => `<button data-hge="cfgz" data-z="${v}" aria-pressed="${z === v}">${l}</button>`).join('')}</div></div>` : ''}
       </div>
       <div class="hs-ac"><button class="hs-b2" data-hge="sheetclose">${hgTr('Anuluj', 'Cancel')}</button><button class="hs-b" data-hge="cfgsave">${hgTr('Zapisz', 'Save')}</button></div></div>`;
@@ -7956,7 +7968,7 @@ const HG_EDIT = {
     this._eCfgPv();
   },
   _eCfgVals() { const S = this._eSheetEl, g = (q) => S.querySelector(q);
-    return { n: g('[name=n]').value.trim(), i: /^mdi:[a-z0-9-]+$/.test(g('[name=i]').value.trim()) ? g('[name=i]').value.trim() : '', t: (g('[data-hge=cfgt][aria-pressed=true]') || { dataset: { t: '' } }).dataset.t, z: (g('[data-hge=cfgz][aria-pressed=true]') || { dataset: {} }).dataset.z }; },
+    return { n: g('[name=n]').value.trim(), i: /^mdi:[a-z0-9-]+$/.test(g('[name=i]').value.trim()) ? g('[name=i]').value.trim() : '', t: (g('[data-hge=cfgt][aria-pressed=true]') || { dataset: { t: '' } }).dataset.t, w: g('[data-hge=cfgw]') ? (g('[data-hge=cfgw][aria-pressed=true]') || { dataset: { w: '' } }).dataset.w : null, z: (g('[data-hge=cfgz][aria-pressed=true]') || { dataset: {} }).dataset.z }; },
   /* podgląd: kafel (typy kafli) albo kopia bieżącego elementu z klasą trybu, nazwą i ikoną */
   _eCfgPv() {
     const R = this._eCfgR, S0 = R.S, h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv) return;
@@ -8015,6 +8027,7 @@ const HG_EDIT = {
       if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { for (const f of ['n', 'i', 't']) if (V[f]) x[f] = V[f]; else delete x[f]; } }
       else if (S0.kind === 'sec') { if (V.n) L.names[R.k] = V.n; else delete L.names[R.k]; const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['i', 't']) if (V[f]) cf[f] = V[f]; else delete cf[f]; }
       else { const cf = L.conf[R.k] = L.conf[R.k] || {}; for (const f of ['n', 'i']) if (V[f]) cf[f] = V[f]; else delete cf[f]; if (V.t && V.t !== 'card') cf.t = V.t; else delete cf.t; }
+      if (V.w != null) { const cw = L.conf[R.k] = L.conf[R.k] || {}; if (V.w === 'full' || V.w === 'half') cw.w = V.w; else delete cw.w; }
       if (V.z) { if (V.z === 's') delete L.size[R.k]; else L.size[R.k] = V.z; }
     });
     this._eSheet(false); this._eToast(hgTr('Zapisano ustawienia', 'Settings saved')); return this._eRefresh(R.sc === this._pageScope());
@@ -8047,7 +8060,7 @@ const HG_EDIT = {
       <section class="lk-g"><h4>${H.icon('mdi:image-outline')}${hgTr('Tło', 'Background')}</h4>
         <div class="lk-bgs">${HG_BGS.map(([u, l, pu, th], i) => { const on = i ? !!bg && bg.kind !== 'color' && bg.kind !== 'gradient' && bg.v === u : !bg;
           const src = th || u || (HG_DEFAULT_BG.kind === 'image' ? HG_DEFAULT_BG.v : '');
-          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="this.remove()">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
+          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove()">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
         <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">${hgTr('Ustaw', 'Set')}</button></span>
           <button class="lk-up" data-hge="bgup" title="${hgTr('Prześlij zdjęcie do Home Assistant', 'Upload an image to Home Assistant')}">${H.icon('mdi:upload')}<span>${hgTr('Prześlij', 'Upload')}</span></button><input type="file" accept="image/*" hidden></div>
         <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>
