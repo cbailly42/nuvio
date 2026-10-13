@@ -291,14 +291,88 @@ const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new
   for (const slot of card.$.querySelectorAll('.cmslot[data-cm]')) { const k = slot.dataset.cm, m = HG_CM.get(k); if (!m || !customElements.get(m.c)) continue; const sig = k + JSON.stringify(m.cfg); let el = card._cmM.get(sig);
     if (!el) { el = document.createElement(m.c); try { el.setConfig(Object.assign({ type: 'custom:' + m.c }, m.cfg)); } catch (e) { /* zła konfiguracja – pusta karta */ } card._cmM.set(sig, el); }
     if (el.parentElement !== slot) slot.appendChild(el); el.hass = h; } };
+/* ===== makiety podglądu w galerii „Dodaj komponent”: przykładowe dane, ten sam system wizualny (szkło, akcent, czarny na akcencie) ===== */
+const HG_MOCK_CSS = `
+.mk{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:6px; padding:10px 12px; box-sizing:border-box; color:inherit; font-size:11px; line-height:1.2; }
+.mk-tag{ position:absolute; right:8px; bottom:5px; font-size:9px; letter-spacing:.04em; text-transform:uppercase; opacity:.5; font-weight:600; }
+.mk-g{ background:rgba(255,255,255,.10); border-radius:10px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.10); }
+.mk-r{ display:flex; align-items:center; gap:8px; min-width:0; } .mk-r > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mk ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; flex:none; } .mk-r > span.mk-ic, .mk-r > span.mk-sw, .mk-r > span.mk-art, .mk-r > span.mk-cir{ flex:none; overflow:visible; }
+.mk-ic{ flex:none; width:24px; height:24px; border-radius:8px; display:grid; place-items:center; background:rgba(255,255,255,.12); } .mk-ic ha-icon{ width:15px; height:15px; --mdc-icon-size:15px; }
+.mk-on .mk-ic, .mk-ic.on{ background:var(--hg-accent); color:var(--hg-on-accent, #111); }
+.mk-sw{ flex:none; width:26px; height:15px; border-radius:8px; background:rgba(255,255,255,.22); position:relative; } .mk-sw::after{ content:''; position:absolute; left:2px; top:2px; width:11px; height:11px; border-radius:50%; background:#fff; transition:transform .3s; }
+.mk-sw.on{ background:var(--hg-accent); } .mk-sw.on::after{ transform:translateX(11px); background:var(--hg-on-accent, #111); }
+.mk-v{ font-size:22px; font-weight:600; letter-spacing:-.02em; } .mk-v small{ font-size:11px; opacity:.6; font-weight:500; margin-left:2px; }
+.mk-s{ opacity:.6; font-size:10px; }
+.mk-tr{ height:10px; border-radius:6px; background:rgba(255,255,255,.14); overflow:hidden; } .mk-tr i{ display:block; height:100%; width:var(--w,60%); background:var(--hg-accent); border-radius:inherit; transform-origin:left; animation:mkFill 1.1s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes mkFill{ from{ transform:scaleX(.15); } }
+.mk-btn{ display:inline-flex; align-items:center; justify-content:center; gap:5px; height:26px; padding:0 12px; border-radius:13px; background:var(--hg-accent); color:var(--hg-on-accent, #111); font-weight:600; font-size:11px; }
+.mk-btn.gh{ background:rgba(255,255,255,.12); color:inherit; } .mk-btn ha-icon{ width:14px; height:14px; --mdc-icon-size:14px; }
+.mk-chip{ display:flex; align-items:center; justify-content:space-between; height:28px; padding:0 10px; border-radius:10px; background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px var(--hg-accent); }
+.mk-st{ display:flex; align-items:center; justify-content:space-between; gap:8px; } .mk-st b{ font-size:20px; font-weight:600; }
+.mk-cir{ width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.12); font-size:16px; font-weight:600; } .mk-cir.on{ background:var(--hg-accent); color:var(--hg-on-accent, #111); }
+.mk svg{ display:block; overflow:visible; } .mk .acc{ stroke:var(--hg-accent); } .mk .accf{ fill:var(--hg-accent); }
+.mk-dash{ stroke-dasharray:120; animation:mkArc 1.2s cubic-bezier(.2,.8,.2,1) both; } @keyframes mkArc{ from{ stroke-dashoffset:120; } }
+.mk-grid{ display:grid; grid-template-columns:repeat(var(--c,3), minmax(0,1fr)); gap:5px; }
+.mk-sc{ height:30px; border-radius:9px; display:grid; place-items:center; background:rgba(255,255,255,.10); } .mk-sc.on{ background:var(--hg-accent); color:var(--hg-on-accent, #111); } .mk-sc ha-icon{ width:15px; height:15px; --mdc-icon-size:15px; }
+.mk-cam{ border-radius:10px; background:linear-gradient(160deg, #4a5a68, #222c35); position:relative; overflow:hidden; } .mk-cam::before{ content:''; position:absolute; left:10%; right:30%; bottom:0; height:45%; background:linear-gradient(#3d4a3a, #2a3428); clip-path:polygon(0 100%, 30% 20%, 55% 60%, 75% 10%, 100% 100%); opacity:.8; }
+.mk-live{ position:absolute; left:6px; top:6px; display:flex; align-items:center; gap:4px; font-size:9px; font-weight:700; padding:2px 6px; border-radius:6px; background:rgba(0,0,0,.45); color:#fff; } .mk-live i{ width:6px; height:6px; border-radius:50%; background:#ff5a5a; animation:mkBlink 1.4s infinite; }
+@keyframes mkBlink{ 50%{ opacity:.3; } }
+.mk-art{ flex:none; width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg, var(--hg-accent), #2a6cff); }
+.mk-av{ width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; color:#111; box-shadow:0 0 0 2px rgba(0,0,0,.25); }
+.mk-map{ border-radius:10px; background:repeating-linear-gradient(35deg, rgba(255,255,255,.05) 0 8px, transparent 8px 16px), linear-gradient(160deg, #2c3a44, #1d262d); position:relative; }
+.mk-pin{ position:absolute; width:12px; height:12px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:var(--hg-accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--hg-accent) 30%, transparent); }
+@media (prefers-reduced-motion:reduce){ .mk *{ animation:none !important; } }
+`;
+const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-tag">${hgTr('Podgląd', 'Preview')}</span>`;
+  const spark = (pts, fill) => `<svg viewBox="0 0 100 34" preserveAspectRatio="none" style="width:100%;height:36px">${fill ? `<path d="M0 34 L${pts} L100 34Z" class="accf" opacity=".18"/>` : ''}<polyline points="${pts}" fill="none" class="acc mk-dash" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+  const M = {
+    slider: `<div class="mk-r"><span>${hgTr('Salon · jasność', 'Living room · brightness')}</span><b>72%</b></div><div class="mk-tr" style="height:14px"><i style="--w:72%"></i></div>`,
+    button: `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="mk-cir on" style="width:38px;height:38px">${I('mdi:power')}</span><span>${hgTr('Uruchom', 'Run')}</span></div>`,
+    entities: [['mdi:lightbulb', hgTr('Lampa', 'Lamp'), 1], ['mdi:fan', hgTr('Wentylator', 'Fan'), 0], ['mdi:television', 'TV', 1]].map(([i, n, on]) => `<div class="mk-r${on ? ' mk-on' : ''}"><span class="mk-ic">${I(i)}</span><span>${n}</span><span class="mk-sw${on ? ' on' : ''}"></span></div>`).join(''),
+    select: `<span class="mk-s">${hgTr('Tryb', 'Mode')}</span><div class="mk-chip"><span>${hgTr('Komfort', 'Comfort')}</span>${I('mdi:chevron-down')}</div>`,
+    stepper: `<span class="mk-s">${hgTr('Licznik', 'Counter')}</span><div class="mk-st"><span class="mk-cir">−</span><b>12</b><span class="mk-cir on">+</span></div>`,
+    gauge: `<div style="display:grid;place-items:center"><svg viewBox="0 0 100 58" style="width:110px;height:64px"><path d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="9" stroke-linecap="round"/><path d="M10 52 A40 40 0 0 1 78 22" fill="none" class="acc mk-dash" stroke-width="9" stroke-linecap="round"/><text x="50" y="50" text-anchor="middle" font-size="17" font-weight="600" fill="currentColor">64%</text></svg></div>`,
+    switch: `<div class="mk-g mk-r mk-on" style="padding:10px"><span class="mk-ic">${I('mdi:lightbulb-on')}</span><span><b>${hgTr('Lampa', 'Lamp')}</b><br><span class="mk-s">${hgTr('Włączone', 'On')}</span></span><span class="mk-sw on"></span></div>`,
+    sensor: `<div class="mk-g" style="padding:10px"><div class="mk-r"><span class="mk-ic">${I('mdi:thermometer')}</span><span class="mk-s">${hgTr('Temperatura', 'Temperature')}</span></div><div class="mk-v">21.4<small>°C</small></div></div>`,
+    chart: `<div class="mk-r"><span class="mk-s">${hgTr('Wilgotność · 24 h', 'Humidity · 24 h')}</span><b>48%</b></div>${spark('0,24 12,20 24,22 36,14 48,17 60,9 72,13 84,6 100,10', 1)}`,
+    climate: `<div style="display:flex;align-items:center;justify-content:center;gap:12px"><span class="mk-cir">‹</span><div style="text-align:center"><div class="mk-s">${hgTr('Grzanie', 'Heating')}</div><div class="mk-v">21<small>°</small></div></div><span class="mk-cir">›</span></div><div class="mk-tr"><i style="--w:55%"></i></div>`,
+    cover: `<div class="mk-r"><span class="mk-ic">${I('mdi:window-shutter')}</span><span>${hgTr('Roleta · 40%', 'Blind · 40%')}</span></div><div class="mk-grid"><span class="mk-sc">${I('mdi:arrow-up')}</span><span class="mk-sc">${I('mdi:stop')}</span><span class="mk-sc on">${I('mdi:arrow-down')}</span></div>`,
+    run: `<div class="mk-g mk-r" style="padding:10px"><span class="mk-ic on">${I('mdi:play')}</span><span><b>${hgTr('Dobranoc', 'Good night')}</b><br><span class="mk-s">${hgTr('Scena', 'Scene')}</span></span></div>`,
+    media1: `<div class="mk-r"><span class="mk-art"></span><span><b>${hgTr('Ulubiony utwór', 'Favourite song')}</b><br><span class="mk-s">${hgTr('Wykonawca', 'Artist')}</span></span></div><div class="mk-tr" style="height:5px"><i style="--w:38%"></i></div>`,
+    cam1: `<div class="mk-cam" style="flex:1"><span class="mk-live"><i></i>LIVE</span></div>`,
+    scenes: `<div class="mk-grid" style="--c:3">${[['mdi:weather-sunset-up', 1], ['mdi:movie-open', 0], ['mdi:weather-night', 0], ['mdi:home-export-outline', 0], ['mdi:silverware-fork-knife', 0], ['mdi:sofa', 0]].map(([i, on]) => `<span class="mk-sc${on ? ' on' : ''}">${I(i)}</span>`).join('')}</div>`,
+    cameras: `<div class="mk-grid" style="--c:2;flex:1">${[0, 1, 2, 3].map((k) => `<div class="mk-cam" style="min-height:34px">${k ? '' : '<span class="mk-live"><i></i>LIVE</span>'}</div>`).join('')}</div>`,
+    players: [[hgTr('Salon', 'Living room'), 1], [hgTr('Kuchnia', 'Kitchen'), 0]].map(([n, on]) => `<div class="mk-r"><span class="mk-art" style="width:24px;height:24px;border-radius:7px${on ? '' : ';filter:grayscale(1);opacity:.5'}"></span><span>${n}</span><span class="mk-ic${on ? ' on' : ''}">${I(on ? 'mdi:pause' : 'mdi:play')}</span></div>`).join(''),
+    power: `<div class="mk-r"><span class="mk-v">3.42<small>kW</small></span><span></span><span class="mk-s">${hgTr('teraz', 'now')}</span></div><div class="mk-tr"><i style="--w:34%"></i></div>`,
+    energy: `<div style="display:flex;align-items:flex-end;gap:5px;height:52px">${[40, 62, 35, 80, 55, 70, 46].map((v, k) => `<i style="flex:1;height:${v}%;border-radius:4px;background:${k === 3 ? 'var(--hg-accent)' : 'rgba(255,255,255,.18)'}"></i>`).join('')}</div><span class="mk-s">${hgTr('Energia · tydzień', 'Energy · week')}</span>`,
+    weather: `<div class="mk-r"><span style="font-size:30px;line-height:1">⛅</span><span><span class="mk-v">22<small>°</small></span><br><span class="mk-s">${hgTr('Słonecznie', 'Sunny')}</span></span></div>`,
+    people: `<div style="display:flex;gap:6px;justify-content:center">${[['M', '#a3e635'], ['A', '#7dd3fc'], ['Z', '#f9a8d4']].map(([l, c]) => `<span class="mk-av" style="background:${c}">${l}</span>`).join('')}</div><span class="mk-s" style="text-align:center">${hgTr('2 osoby w domu', '2 people home')}</span>`,
+    alarm: `<div class="mk-r"><span class="mk-ic on" style="width:34px;height:34px">${I('mdi:shield-check')}</span><span><b>${hgTr('Uzbrojony', 'Armed')}</b><br><span class="mk-s">${hgTr('Poza domem', 'Away')}</span></span></div>`,
+    robots: `<div class="mk-r"><span class="mk-ic on" style="width:34px;height:34px;border-radius:50%">${I('mdi:robot-vacuum')}</span><span><b>${hgTr('Sprząta', 'Cleaning')}</b><br><span class="mk-s">${hgTr('Bateria 82%', 'Battery 82%')}</span></span></div><div class="mk-tr" style="height:5px"><i style="--w:60%"></i></div>`,
+    agenda: [['09:00', hgTr('Spotkanie', 'Meeting')], ['18:30', hgTr('Trening', 'Workout')]].map(([t, n], k) => `<div class="mk-r"><i style="flex:none;width:3px;height:22px;border-radius:2px;background:${k ? 'rgba(255,255,255,.3)' : 'var(--hg-accent)'}"></i><span><b>${n}</b><br><span class="mk-s">${t}</span></span></div>`).join(''),
+    map: `<div class="mk-map" style="flex:1"><span class="mk-pin" style="left:30%;top:35%"></span><span class="mk-pin" style="left:66%;top:52%;filter:hue-rotate(160deg)"></span></div>`,
+  };
+  return `<div class="mk" aria-hidden="true">${M[id] || `<div style="display:grid;place-items:center;opacity:.5">${I('mdi:card-outline')}</div>`}${tag}</div>`; };
+/* podgląd na żywo tylko z dobrą encją: wszystkie domyślne encje mają znany stan */
+const hgPvGood = (h, v) => { if (window.__hgPvMock) return false; const es = []; for (const x of Object.values(v || {})) for (const y of [].concat(x)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) es.push(e); }
+  return es.length > 0 && es.every((e) => { const s = h.states[e]; return s && !['unknown', 'unavailable', ''].includes(s.state); }); };
 const HG_COMP_CSS = `
 .cgh{ margin:18px 2px 10px; font-size:13px; font-weight:600; letter-spacing:.02em; display:flex; flex-direction:column; gap:2px; } .cgh small{ font-size:12px; font-weight:400; opacity:.62; letter-spacing:0; } .cq + .cgh{ margin-top:14px; }
 .cg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; } @media (max-width:560px){ .cg{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
 .cg button{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; padding:8px; border-radius:20px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 8%, transparent); transition:transform .15s, box-shadow .15s; min-width:0; }
 .cg button:hover:not(.na){ transform:translateY(-2px); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--hg-accent) 60%, transparent), 0 10px 24px rgba(0,0,0,.18); } .cg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-.cg .th{ position:relative; height:96px; border-radius:14px; overflow:hidden; background:color-mix(in srgb, currentColor 6%, transparent); pointer-events:none; } .cg .th > .tg2, .cg .th > .cmf{ position:absolute; left:0; top:0; width:250%; transform:scale(.4); transform-origin:top left; }
+.cg .th{ position:relative; height:112px; flex:none; border-radius:14px; overflow:hidden; background:color-mix(in srgb, currentColor 6%, transparent); pointer-events:none; } .cg .th > .tg2, .cg .th > .cmf{ position:absolute; left:0; top:0; width:250%; transform:scale(.4); transform-origin:top left; }
 .cg .th .ph{ position:absolute; inset:0; display:grid; place-items:center; } .cg .th .ph ha-icon{ width:34px; height:34px; opacity:.5; }
 .cg b{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; } .cg b ha-icon{ width:18px; height:18px; opacity:.75; flex:none; } .cg small{ font-size:12px; opacity:.66; line-height:1.3; }
+.cg{ grid-auto-rows:1fr; } .cg button{ min-width:0; } .cg b > span{ min-width:0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; line-height:1.2; overflow-wrap:anywhere; }
+.cg .cd{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
+.cg .cna{ display:flex; align-items:center; gap:5px; margin-top:auto; font-size:11.5px; opacity:.85; font-weight:600; } .cg .cna ha-icon{ width:14px; height:14px; --mdc-icon-size:14px; flex:none; }
+.cg .cdom{ font-size:10.5px; opacity:.45; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:-4px; }
+.cg button.na{ opacity:1 !important; filter:none !important; } .cg button.na .th{ filter:saturate(.35); opacity:.7; } .cg button.na b, .cg button.na .cd{ opacity:.8; }
+.cg .th.live{ background:transparent; }
+.cg .th .mk{ animation:mkIn .35s cubic-bezier(.2,.8,.2,1) both; } @keyframes mkIn{ from{ transform:translateY(4px); opacity:.0; } }
+@media (max-width:520px){ .cg .th{ height:96px; } .mk{ padding:8px 10px; } .mk-v{ font-size:19px; } }
 .cg .na{ opacity:.48; cursor:default; } .cg .na small em{ font-style:normal; display:block; margin-top:3px; color:inherit; opacity:.95; }
 .cq{ display:flex; gap:8px; align-items:center; } .cq .hs-s{ flex:1; }
 .hs-pvb .cmf{ display:block; } .hs-pvf .cmf{ display:block; }
@@ -385,16 +459,17 @@ const HG_COMP_EDIT = {
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
     const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
-      return `<button class="${miss ? 'na' : ''}" data-hge="cgo" data-c="${C.id}" ${miss ? 'aria-disabled="true"' : ''}><div class="th" data-th="${C.id}"><div class="ph">${H.icon(C.i)}</div></div><b>${H.icon(C.i)}${H.esc(C.n)}</b><small>${H.esc(C.d)}${miss ? `<em>${hgTr('Brak encji', 'No entities')}: ${H.esc(miss.l.toLowerCase())} (${H.esc(miss.dom.join(', '))}${miss.dc ? ' · ' + H.esc(miss.dc.join(', ')) : ''})</em>` : ''}</small></button>`; };
-    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Dodaj komponent', 'Add component')}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${hgTr('Dodaj komponent', 'Add component')}<small style="margin-left:8px;font-weight:500;opacity:.55;font-size:12px" title="${hgTr('Wersja załadowanej paczki', 'Loaded bundle version')}">v${H.esc(String(HG_BUILD).split('+')[0])}</small></b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      const dom = miss ? `${miss.l.toLowerCase()}: ${miss.dom.join(', ')}${miss.dc ? ' · ' + miss.dc.join(', ') : ''}` : '';
+      return `<button class="${miss ? 'na' : ''}" role="listitem" data-hge="cgo" data-c="${C.id}"${miss ? ` title="${H.esc(hgTr('Wymaga', 'Needs') + ' ' + dom)}"` : ''}><div class="th" data-th="${C.id}">${hgMockHtml(C.id)}</div><b>${H.icon(C.i)}<span>${H.esc(C.n)}</span></b><small class="cd">${H.esc(C.d)}</small>${miss ? `<small class="cna">${H.icon('mdi:link-variant-off')}<span>${hgTr('Brak pasującej encji', 'No matching entity')}</span></small><small class="cdom">${H.esc(dom)}</small>` : ''}</button>`; };
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Dodaj komponent', 'Add component')}"><style>${HG_STY_CSS}${HG_COMP_CSS}${HG_MOCK_CSS}</style><div class="hs-h"><b>${hgTr('Dodaj komponent', 'Add component')}<small style="margin-left:8px;font-weight:500;opacity:.55;font-size:12px" title="${hgTr('Wersja załadowanej paczki', 'Loaded bundle version')}">v${H.esc(String(HG_BUILD).split('+')[0])}</small></b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="cq"><button class="hs-r" data-hge="cgent" style="min-height:48px">${H.icon('mdi:magnify')}<span class="hs-t"><b>${hgTr('Szukaj encji', 'Search entities')}</b><small>${hgTr('Szybkie dodanie pojedynczej encji jako kafelka', 'Quickly add a single entity as a tile')}</small></span></button></div>
       ${bas.length ? `<h4 class="cgh">${hgTr('Podstawowe', 'Basic')}<small>${hgTr('Uniwersalne elementy dla dowolnych encji', 'General controls for any entity')}</small></h4><div class="cg" role="list">${bas.map(card).join('')}</div>` : ''}
       ${rest.length ? `<h4 class="cgh">${hgTr('Karty', 'Cards')}<small>${hgTr('Gotowe karty dla konkretnych rodzajów urządzeń', 'Ready made cards for specific device types')}</small></h4><div class="cg" role="list">${rest.map(card).join('')}</div>` : ''}</div></div>`;
     /* miniatury na żywo: kafel z pierwszą pasującą encją albo pomniejszona karta */
-    requestAnimationFrame(() => { for (const C of list) { const th = S.querySelector(`[data-th="${C.id}"]`); if (!th) continue; const v = this._eCompDef(C); if (!v) continue;
+    requestAnimationFrame(() => { for (const C of list) { const th = S.querySelector(`[data-th="${C.id}"]`); if (!th) continue; const v = this._eCompDef(C); if (!v || !hgPvGood(h, v)) continue;   /* bez dobrej encji zostaje makieta */
       const box = document.createElement('div'); if (C.tile) { box.className = 'tg2 one'; box.innerHTML = hgTileHtml(h, v.e, 's', { t: C.tile }); hgSlots({ _hass: h, $: box }); }
       else { box.className = 'cmf'; const cc = hgCompCard(C, v), el = document.createElement(cc); try { el.setConfig(Object.assign({ type: 'custom:' + cc }, C.cfg(v, h))); el._hgPv = true; } catch (e) { continue; } box.appendChild(el); el.hass = h; }
-      th.firstChild.remove(); th.appendChild(box); } });
+      th.firstChild.remove(); th.appendChild(box); th.classList.add('live'); } });
   },
   /* domyślne wartości slotów (pierwsze pasujące encje, listy: do 4) */
   _eCompDef(C) { const h = this._hass, v = {};
@@ -444,7 +519,7 @@ const HG_COMP_EDIT = {
       [A[i], A[j]] = [A[j], A[i]]; R.v[key] = A; this._eComp(R.cid, R); const nh = this._eSheetEl && this._eSheetEl.querySelector(`.hs-er[data-ak="${CSS.escape(key)}"][data-ai="${j}"] [data-hgdrag]`); if (nh) nh.focus(); }); },
   _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
     if (a === 'cgent') return this._eSheet('add', this._eGalCt, this._eGalSc);
-    if (a === 'cgo') { if (b.classList.contains('na')) return; this._eCompR = null; return this._eComp(b.dataset.c); }
+    if (a === 'cgo') { this._eCompR = null; return this._eComp(b.dataset.c); }
     if (a === 'cback') return this._eGallery(this._eGalCt, this._eGalSc);
     if (a === 'ctyp') { R.t = b.dataset.t; for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } return this._eCompPv(); }
     if (a === 'cmod') { R.v = Object.assign({}, R.v, { mode: b.dataset.m }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); return this._eCompPv(); }

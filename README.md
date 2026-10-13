@@ -258,6 +258,10 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.11
+- Changed: designed previews in the + Add gallery. Every component shows a small mock with sample data, marked as a preview (slider with fill, button, entity rows with toggles, select, stepper, gauge arc, light, sensor value, sparkline, climate, cover, scenes, media player, cameras, power, energy, weather, people, alarm, robots, agenda, map) in the same glass and accent style. A live preview with a real entity is used only when every entity it needs has a known state.
+- Changed: components without a matching entity stay selectable, are only slightly dimmed and show one short line (No matching entity) with the required domains in smaller text and a tooltip. Cards have equal heights, previews have one height and long texts are clamped on phone, tablet and desktop.
+
 ### 0.3.10
 - New: panel width per view. Every view (built in and custom) offers **Narrow panel** (a right column like the main Panel, leaving the left side for the title and background) or **Full width panel** (like Rooms), with small previews. The choice is in the view title sheet (edit mode, title) and in the custom view form, applies live without reopening the dialog and is saved per view. A narrow panel holds at most two columns; on phones the panel is always full width.
 - Changed: the empty view hint stays visible until a custom view has three items and sits below the tiles, so a view with a single row no longer looks empty.
