@@ -45,6 +45,7 @@ and entities from Home Assistant and generates the views. Everything can then be
 - **Auto-generated dashboard** (dashboard strategy `custom:nuvio`): Home, Rooms (+ room detail), Media, Cameras, Family, Energy.
   Each view appears only if you have matching entities; missing integrations are simply hidden.
 - **First-run wizard** (admins): language (Polski / English), views, visible rooms.
+- **Empty rooms**: a room with no devices offers **Import from area** (preview of the area's entities plus name matches, with checkboxes; **Pick entities** to choose any entity by hand; optionally also assign them to the area in Home Assistant) and **Create custom layout** (edit mode with an empty room and the + Add gallery). Area settings stays as a secondary link.
 - **Edit mode**: drag & drop, hide/restore, S/M/L sizes, add tiles from any entity, swap entities, display styles with live preview,
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
@@ -149,7 +150,7 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/areas.png" alt="Rooms" width="100%"><br><b>Rooms</b> <code>custom:nuvio-areas-card</code><br>Every HA area with temperature, humidity, lights, motion and climate. Area registry.</td>
-<td width="50%" valign="top"><img src="docs/components/room.png" alt="Room" width="100%"><br><b>Room</b> <code>custom:nuvio-room-card</code><br>All entities of one area grouped by kind (lights, climate, covers, switches…). Opened as <code>?area=<id></code>.</td>
+<td width="50%" valign="top"><img src="docs/components/room.png" alt="Room" width="100%"><br><b>Room</b> <code>custom:nuvio-room-card</code><br>All entities of one area grouped by kind (lights, climate, covers, switches…). Opened as <code>?area=<id></code>. An empty room offers Import from area or Create custom layout.<br><img src="docs/components/empty-room.png" alt="Empty room: import from area" width="100%"></td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/link.png" alt="Link" width="100%"><br><b>Link</b> <code>custom:nuvio-link-card</code><br>Navigation or action tile. Any path or action.</td>
@@ -254,6 +255,9 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
+
+### 0.3.0
+- New: empty room view with two actions. **Import from area** shows the area's entities (and entities whose name matches the room) with checkboxes, a **Pick entities** search for manual choice, and an option to also assign them to the area in Home Assistant; selected entities become tiles arranged by type (climate and cameras large, media medium). **Create custom layout** opens edit mode with an empty room and the + Add gallery.
 
 ### 0.2.1
 - Fixed: HACS registered `nuvio.zip` instead of `nuvio.js` as the dashboard resource, so the dashboard strategy never loaded ("Timeout waiting for strategy element").

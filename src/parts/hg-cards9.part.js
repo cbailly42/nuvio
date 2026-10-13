@@ -988,8 +988,7 @@ ha-card.wmc{ gap:var(--s2); }
       return { k, html: RL.size[k] ? html3.replace(/^(\s*<div class="blk)/, `$1 ${HGL.szc(RL.size[k])}`) : html3 }; });
     const hidR = new Set(RL.hidden);
     blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
-    if (!blocks.length) return `<ha-card class="glass"><div class="empty"><b>${hgTr('Brak urządzeń w tym pokoju', 'No devices in this room')}</b>${hgTr(`Przypisz urządzenia do obszaru „${H.esc(a.name)}” w ustawieniach Home Assistant.`, `Assign devices to the “${H.esc(a.name)}” area in Home Assistant settings.`)}
-      ${a.virtual ? '' : `<button class="lnk" data-act="area" data-a="${H.esc(a.id)}">${H.icon('mdi:cog-outline')}${hgTr('Ustawienia obszaru', 'Area settings')}</button>`}</div></ha-card>`;
+    if (!blocks.length) return HGL.editing ? `<div class="wrap" data-hgl="${H.esc(RS)}" data-hgsz="1"></div>` : HGRoomX.emptyHtml(h, a, RS);
     return `<div class="wrap ${Object.keys(RL.size).length ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
@@ -1042,6 +1041,7 @@ ha-card.wmc{ gap:var(--s2); }
     if (act === 'robots') return H.navigate(this._config.robots_path);
     if (act === 'dev') return H.navigate('/config/devices/device/' + t.dataset.d);
     if (act === 'area') return H.navigate('/config/areas/area/' + t.dataset.a);
+    if (act === 'rximp' || act === 'rxlay') { const a = this._a || this._area(); if (!a) return; return act === 'rximp' ? HGRoomX.open(this, a, 'room:' + a.id) : HGRoomX.layout(this, 'room:' + a.id); }
     if (act === 'rooms') return H.navigate(HG_P('rooms'));
     if (act === 'unv') { this._showUn = !this._showUn; return this.rerender(); }
     if (act === 'dmore') { const d = t.dataset.d, o = this._devOpen = this._devOpen || new Set(); o.has(d) ? o.delete(d) : o.add(d); return this.rerender(); }
