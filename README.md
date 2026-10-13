@@ -18,7 +18,7 @@
 
 ---
 
-Nuvio is a complete dashboard — pages, navigation, cards and an in-place editor — shipped as a single
+Nuvio is a complete dashboard (pages, navigation, cards and an in-place editor) shipped as a single
 frontend plugin. It contains **no hard-coded entities**: on first start it reads your areas, devices
 and entities from Home Assistant and generates the views. Everything can then be changed in edit mode.
 
@@ -43,12 +43,137 @@ and entities from Home Assistant and generates the views. Everything can then be
 ## Features
 
 - **Auto-generated dashboard** (dashboard strategy `custom:nuvio`): Home, Rooms (+ room detail), Media, Cameras, Family, Energy.
-  Each view appears only if you have matching entities — missing integrations are simply hidden.
+  Each view appears only if you have matching entities; missing integrations are simply hidden.
 - **First-run wizard** (admins): language (Polski / English), views, visible rooms.
 - **Edit mode**: drag & drop, hide/restore, S/M/L sizes, add tiles from any entity, swap entities, display styles with live preview,
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
 - **Light and dark mode**, touch friendly, reduced-motion aware.
+
+## Components
+
+Every card can be used on its own as `custom:nuvio-<name>-card` (for example in a regular dashboard after *Take control*). Screenshots: dark theme, default background, demo data.
+
+<details open>
+<summary><b>Home & climate</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/weather.png" alt="Weather" width="100%"><br><b>Weather</b> <code>custom:nuvio-weather-card</code><br>Current conditions, hourly forecast and sunrise/sunset; tap for daily details. <code>weather.*</code>, optional temperature sensor, <code>sun.sun</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Large target temperature with a slider, HVAC modes, fan and swing. <code>climate.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/light.png" alt="Light" width="100%"><br><b>Light</b> <code>custom:nuvio-light-card</code><br>Brightness slider for one light. <code>light.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/switch.png" alt="Switch" width="100%"><br><b>Switch</b> <code>custom:nuvio-switch-card</code><br>Glass toggle as a row or a tile. <code>switch.*</code>, <code>input_boolean.*</code>, <code>fan.*</code> and other on/off entities.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/scenes.png" alt="Scenes & scripts" width="100%"><br><b>Scenes & scripts</b> <code>custom:nuvio-scenes-card</code><br>Several scenes or scripts as buttons with a confirmation animation. <code>scene.*</code>, <code>script.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/script.png" alt="Script" width="100%"><br><b>Script</b> <code>custom:nuvio-script-card</code><br>A single tile that runs one script. <code>script.*</code>, <code>scene.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/sensors.png" alt="Sensors" width="100%"><br><b>Sensors</b> <code>custom:nuvio-sensors-card</code><br>Auto-discovered motion, occupancy, door, window, moisture and other binary sensors with filters. <code>binary_sensor.*</code>.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Energy</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/power.png" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current power with a sparkline of the last hours. <code>sensor.*</code> with <code>device_class: power</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/phases.png" alt="Phases" width="100%"><br><b>Phases</b> <code>custom:nuvio-phases-card</code><br>Power, voltage and current per phase with load bars. Power / voltage / current sensors per phase.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/energy-stats.png" alt="Energy statistics" width="100%"><br><b>Energy statistics</b> <code>custom:nuvio-energy-stats-card</code><br>Consumption vs production for today, this week and this month with a chart. Long-term statistics or the HA Energy dashboard settings.</td>
+<td width="50%" valign="top"><img src="docs/components/week.png" alt="Energy week" width="100%"><br><b>Energy week</b> <code>custom:nuvio-week-card</code><br>Grid consumption and PV production for the last 7 days. Energy statistics.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/solar.png" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-solar-card</code><br>PV production over the last days as an area chart. One energy statistic plus an optional today sensor.</td>
+<td width="50%" valign="top"><img src="docs/components/pv.png" alt="Photovoltaics" width="100%"><br><b>Photovoltaics</b> <code>custom:nuvio-pv-card</code><br>Inverter state, power now, energy today, strings and temperature. Inverter sensors.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Media & cameras</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/players.png" alt="Media players" width="100%"><br><b>Media players</b> <code>custom:nuvio-players-card</code><br>All players with artwork, title, progress, transport, volume and source. <code>media_player.*</code> (auto-discovered).</td>
+<td width="50%" valign="top"><img src="docs/components/media.png" alt="Media player" width="100%"><br><b>Media player</b> <code>custom:nuvio-media-card</code><br>Compact card for a single player. <code>media_player.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/camera.png" alt="Camera" width="100%"><br><b>Camera</b> <code>custom:nuvio-camera-card</code><br>Snapshot refreshed every few seconds, live view on tap. <code>camera.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/cameras.png" alt="Cameras" width="100%"><br><b>Cameras</b> <code>custom:nuvio-cameras-card</code><br>Working cameras as large tiles, unavailable ones collapsed into chips. <code>camera.*</code>.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>People & calendar</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/people.png" alt="Household" width="100%"><br><b>Household</b> <code>custom:nuvio-people-card</code><br>Everyone with avatar, zone and time since the last change. <code>person.*</code>, optional <code>zone.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/person.png" alt="Person" width="100%"><br><b>Person</b> <code>custom:nuvio-person-card</code><br>One person with avatar and current zone. <code>person.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/agenda.png" alt="Agenda" width="100%"><br><b>Agenda</b> <code>custom:nuvio-agenda-card</code><br>Upcoming events grouped by day, colour per calendar. <code>calendar.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/month.png" alt="Month" width="100%"><br><b>Month</b> <code>custom:nuvio-month-card</code><br>Month grid with event dots and the selected day list. <code>calendar.*</code>.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Security & devices</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/alarm.png" alt="Alarm" width="100%"><br><b>Alarm</b> <code>custom:nuvio-alarm-card</code><br>Alarm state and arm/disarm modes based on supported features, with a code keypad. <code>alarm_control_panel.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/robots.png" alt="Robots" width="100%"><br><b>Robots</b> <code>custom:nuvio-robots-card</code><br>Vacuums and mowers: state, start/dock/locate, suction and last clean. <code>vacuum.*</code>, <code>lawn_mower.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/net.png" alt="Network" width="100%"><br><b>Network</b> <code>custom:nuvio-net-card</code><br>Internet status, latency and speed; other sections cover gateway, access points, Wi-Fi and clients. UniFi entities.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Rooms & navigation</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/areas.png" alt="Rooms" width="100%"><br><b>Rooms</b> <code>custom:nuvio-areas-card</code><br>Every HA area with temperature, humidity, lights, motion and climate. Area registry.</td>
+<td width="50%" valign="top"><img src="docs/components/room.png" alt="Room" width="100%"><br><b>Room</b> <code>custom:nuvio-room-card</code><br>All entities of one area grouped by kind (lights, climate, covers, switches…). Opened as <code>?area=<id></code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/link.png" alt="Link" width="100%"><br><b>Link</b> <code>custom:nuvio-link-card</code><br>Navigation or action tile. Any path or action.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+**Other cards**
+
+- `custom:nuvio-map-card`: the native HA map in a glass frame (no screenshot: map tiles need internet access).
+- `custom:nuvio-energy-card`: load percentage of the total phase power against your maximum (no screenshot yet: it does not render correctly outside a fixed-height grid).
+- `custom:nuvio-bars-card`: daily consumption bars from statistics (no screenshot yet: same fixed-height issue).
+- `custom:nuvio-tiles-card`: tiles you add in edit mode (shown in every view after you add tiles).
+- `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
+
+### Planned
+
+From [docs/STATUS.md](docs/STATUS.md). There are no other planned components in the code (no TODOs or "coming soon" entries).
+
+| Item | Status |
+|---|---|
+| View editor: add, rename and reorder whole views | not started |
+| Full i18n of cards and edit mode (UI outside the strategy and wizard is Polish only) | partial |
+| Config export / import UI | not started |
+| Empty-state hints on an empty Home view | not started |
 
 ## Installation
 
@@ -63,7 +188,7 @@ and entities from Home Assistant and generates the views. Everything can then be
      type: custom:nuvio
    ```
 
-4. Open the dashboard — the wizard starts on first visit.
+4. Open the dashboard. The wizard starts on first visit.
 
 ### Manual
 
@@ -92,7 +217,7 @@ strategy:
 ```
 
 > [!TIP]
-> To take over a generated dashboard as plain YAML, use *Take control* in the dashboard editor — all `custom:nuvio-*` cards keep working.
+> To take over a generated dashboard as plain YAML, use *Take control* in the dashboard editor. All `custom:nuvio-*` cards keep working.
 
 ## Presets
 
@@ -112,6 +237,6 @@ Releases are built by GitHub Actions on `v*` tags.
 Nuvio is released under the [MIT License](LICENSE).
 
 Bundled third-party assets:
-- [DM Sans](dist/assets/fonts/OFL.txt) — SIL Open Font License 1.1
-- [Meteocons](dist/assets/meteocons/LICENSE) by Bas Milius — MIT
+- [DM Sans](dist/assets/fonts/OFL.txt): SIL Open Font License 1.1
+- [Meteocons](dist/assets/meteocons/LICENSE) by Bas Milius, MIT
 - [Default background photo](dist/assets/bg/CREDITS.md): "House in forest" by Flo Pappert, CC0 1.0 (via Wikimedia Commons)

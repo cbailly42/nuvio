@@ -18,7 +18,7 @@
 
 ---
 
-Nuvio to kompletny pulpit — widoki, nawigacja, karty i edytor na miejscu — w jednej wtyczce frontendu.
+Nuvio to kompletny pulpit (widoki, nawigacja, karty i edytor na miejscu) w jednej wtyczce frontendu.
 Nie zawiera **żadnych encji na sztywno**: przy pierwszym uruchomieniu odczytuje obszary, urządzenia i encje
 z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 
@@ -43,12 +43,137 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 ## Funkcje
 
 - **Pulpit generowany automatycznie** (strategia `custom:nuvio`): Panel, Pokoje (+ szczegóły pokoju), Multimedia, Kamery, Rodzina, Energia.
-  Widok pojawia się tylko, gdy masz pasujące encje — brakujące integracje są po prostu ukrywane.
+  Widok pojawia się tylko, gdy masz pasujące encje; brakujące integracje są po prostu ukrywane.
 - **Kreator pierwszego uruchomienia** (administrator): język (Polski / English), widoki, widoczne pokoje.
 - **Tryb edycji**: przeciąganie, ukrywanie i przywracanie, rozmiary S/M/L, dodawanie kafli z dowolnej encji, podmiana encji,
   style wyświetlania z podglądem na żywo, wygląd (kolor akcentu z automatycznym kontrastem WCAG, tło: zdjęcie / kolor / gradient, przyciemnienie).
 - **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
 - **Tryb jasny i ciemny**, obsługa dotyku, szacunek dla „ogranicz ruch”.
+
+## Komponenty
+
+Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w zwykłym pulpicie po *Przejmij kontrolę*). Zrzuty: ciemny motyw, domyślne tło, dane demo.
+
+<details open>
+<summary><b>Dom i klimat</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/weather.png" alt="Pogoda" width="100%"><br><b>Pogoda</b> <code>custom:nuvio-weather-card</code><br>Bieżąca pogoda, prognoza godzinowa, wschód i zachód słońca; po dotknięciu szczegóły dni. <code>weather.*</code>, opcjonalny czujnik temperatury, <code>sun.sun</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Klimatyzacja" width="100%"><br><b>Klimatyzacja</b> <code>custom:nuvio-ac-card</code><br>Duża temperatura docelowa z suwakiem, tryby HVAC, nawiew i lamele. <code>climate.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/light.png" alt="Oświetlenie" width="100%"><br><b>Oświetlenie</b> <code>custom:nuvio-light-card</code><br>Suwak jasności jednego światła. <code>light.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/switch.png" alt="Przełącznik" width="100%"><br><b>Przełącznik</b> <code>custom:nuvio-switch-card</code><br>Przełącznik w stylu glass jako wiersz lub kafel. <code>switch.*</code>, <code>input_boolean.*</code>, <code>fan.*</code> i inne encje wł./wył.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/scenes.png" alt="Sceny i skrypty" width="100%"><br><b>Sceny i skrypty</b> <code>custom:nuvio-scenes-card</code><br>Kilka scen lub skryptów jako przyciski z animacją potwierdzenia. <code>scene.*</code>, <code>script.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/script.png" alt="Skrypt" width="100%"><br><b>Skrypt</b> <code>custom:nuvio-script-card</code><br>Pojedynczy kafel uruchamiający skrypt. <code>script.*</code>, <code>scene.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/sensors.png" alt="Czujniki" width="100%"><br><b>Czujniki</b> <code>custom:nuvio-sensors-card</code><br>Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien, zalania i inne, z filtrami. <code>binary_sensor.*</code>.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Energia</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/power.png" alt="Moc teraz" width="100%"><br><b>Moc teraz</b> <code>custom:nuvio-power-card</code><br>Moc chwilowa z linią z ostatnich godzin. <code>sensor.*</code> z <code>device_class: power</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/phases.png" alt="Fazy" width="100%"><br><b>Fazy</b> <code>custom:nuvio-phases-card</code><br>Moc, napięcie i prąd na każdej fazie z paskami obciążenia. Czujniki mocy, napięcia i prądu dla faz.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/energy-stats.png" alt="Energia (statystyki)" width="100%"><br><b>Energia (statystyki)</b> <code>custom:nuvio-energy-stats-card</code><br>Zużycie i produkcja: dziś, tydzień, miesiąc, z wykresem. Statystyki długoterminowe albo ustawienia panelu Energia HA.</td>
+<td width="50%" valign="top"><img src="docs/components/week.png" alt="Energia: tydzień" width="100%"><br><b>Energia: tydzień</b> <code>custom:nuvio-week-card</code><br>Zużycie z sieci i produkcja PV z 7 dni. Statystyki energii.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/solar.png" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-solar-card</code><br>Produkcja PV z ostatnich dni jako wykres. Jedna statystyka energii i opcjonalny czujnik „dziś”.</td>
+<td width="50%" valign="top"><img src="docs/components/pv.png" alt="Fotowoltaika" width="100%"><br><b>Fotowoltaika</b> <code>custom:nuvio-pv-card</code><br>Stan falownika, moc teraz, energia dziś, stringi i temperatura. Czujniki falownika.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Multimedia i kamery</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/players.png" alt="Multimedia" width="100%"><br><b>Multimedia</b> <code>custom:nuvio-players-card</code><br>Wszystkie odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność i źródło. <code>media_player.*</code> (wykrywane automatycznie).</td>
+<td width="50%" valign="top"><img src="docs/components/media.png" alt="Odtwarzacz" width="100%"><br><b>Odtwarzacz</b> <code>custom:nuvio-media-card</code><br>Kompaktowa karta jednego odtwarzacza. <code>media_player.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/camera.png" alt="Kamera" width="100%"><br><b>Kamera</b> <code>custom:nuvio-camera-card</code><br>Migawka odświeżana co kilka sekund, podgląd na żywo po dotknięciu. <code>camera.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/cameras.png" alt="Kamery" width="100%"><br><b>Kamery</b> <code>custom:nuvio-cameras-card</code><br>Działające kamery jako duże kafle, niedostępne zwinięte do chipów. <code>camera.*</code>.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Domownicy i kalendarz</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/people.png" alt="Domownicy" width="100%"><br><b>Domownicy</b> <code>custom:nuvio-people-card</code><br>Wszyscy z awatarem, strefą i czasem od zmiany. <code>person.*</code>, opcjonalnie <code>zone.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/person.png" alt="Osoba" width="100%"><br><b>Osoba</b> <code>custom:nuvio-person-card</code><br>Jedna osoba z awatarem i strefą. <code>person.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/agenda.png" alt="Agenda" width="100%"><br><b>Agenda</b> <code>custom:nuvio-agenda-card</code><br>Nadchodzące wydarzenia pogrupowane po dniach, kolor na kalendarz. <code>calendar.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/month.png" alt="Miesiąc" width="100%"><br><b>Miesiąc</b> <code>custom:nuvio-month-card</code><br>Siatka miesiąca z kropkami wydarzeń i listą wybranego dnia. <code>calendar.*</code>.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Bezpieczeństwo i urządzenia</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/alarm.png" alt="Alarm" width="100%"><br><b>Alarm</b> <code>custom:nuvio-alarm-card</code><br>Stan alarmu i tryby uzbrajania wg obsługiwanych funkcji, z klawiaturą kodu. <code>alarm_control_panel.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/robots.png" alt="Roboty" width="100%"><br><b>Roboty</b> <code>custom:nuvio-robots-card</code><br>Odkurzacze i kosiarki: stan, start, baza, lokalizacja, moc ssania i ostatnie sprzątanie. <code>vacuum.*</code>, <code>lawn_mower.*</code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/net.png" alt="Sieć" width="100%"><br><b>Sieć</b> <code>custom:nuvio-net-card</code><br>Stan internetu, opóźnienie i prędkość; inne sekcje: bramka, punkty dostępowe, Wi-Fi i klienci. Encje UniFi.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Pokoje i nawigacja</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/areas.png" alt="Pokoje" width="100%"><br><b>Pokoje</b> <code>custom:nuvio-areas-card</code><br>Wszystkie obszary HA: temperatura, wilgotność, światła, ruch, klimatyzacja. Rejestr obszarów.</td>
+<td width="50%" valign="top"><img src="docs/components/room.png" alt="Pokój" width="100%"><br><b>Pokój</b> <code>custom:nuvio-room-card</code><br>Wszystkie encje pokoju pogrupowane wg rodzaju (światła, klimatyzacja, rolety, przełączniki…). Adres <code>?area=<id></code>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/link.png" alt="Link" width="100%"><br><b>Link</b> <code>custom:nuvio-link-card</code><br>Kafel nawigacji lub akcji. Dowolna ścieżka lub akcja.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+**Pozostałe karty**
+
+- `custom:nuvio-map-card`: natywna mapa HA w szklanej ramce (bez zrzutu: kafelki mapy wymagają internetu).
+- `custom:nuvio-energy-card`: procent obciążenia (suma faz względem mocy maksymalnej) (bez zrzutu: poza siatką o stałej wysokości renderuje się niepoprawnie).
+- `custom:nuvio-bars-card`: dzienne słupki zużycia ze statystyk (bez zrzutu: ten sam problem z wysokością).
+- `custom:nuvio-tiles-card`: kafelki dodane w trybie edycji (pojawiają się w widoku po dodaniu kafli).
+- `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
+
+### Planowane
+
+Na podstawie [docs/STATUS.md](docs/STATUS.md). W kodzie nie ma innych planowanych komponentów (brak TODO i pozycji „wkrótce”).
+
+| Pozycja | Status |
+|---|---|
+| Edytor widoków: dodawanie, zmiana nazw i kolejności całych widoków | nie rozpoczęte |
+| Pełne tłumaczenie kart i trybu edycji (poza strategią i kreatorem interfejs jest tylko po polsku) | częściowo |
+| Eksport i import konfiguracji w interfejsie | nie rozpoczęte |
+| Podpowiedzi dla pustego widoku Panel | nie rozpoczęte |
 
 ## Instalacja
 
@@ -63,7 +188,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
      type: custom:nuvio
    ```
 
-4. Otwórz pulpit — przy pierwszej wizycie uruchomi się kreator.
+4. Otwórz pulpit. Przy pierwszej wizycie uruchomi się kreator.
 
 ### Ręcznie
 
@@ -92,7 +217,7 @@ strategy:
 ```
 
 > [!TIP]
-> Aby przejąć wygenerowany pulpit jako zwykły YAML, użyj *Przejmij kontrolę* w edytorze pulpitu — wszystkie karty `custom:nuvio-*` dalej działają.
+> Aby przejąć wygenerowany pulpit jako zwykły YAML, użyj *Przejmij kontrolę* w edytorze pulpitu. Wszystkie karty `custom:nuvio-*` dalej działają.
 
 ## Presety
 
@@ -112,6 +237,6 @@ Wydania budują GitHub Actions na tagach `v*`.
 Nuvio jest udostępniany na [licencji MIT](LICENSE).
 
 Dołączone zasoby zewnętrzne:
-- [DM Sans](dist/assets/fonts/OFL.txt) — SIL Open Font License 1.1
-- [Meteocons](dist/assets/meteocons/LICENSE) — Bas Milius, MIT
+- [DM Sans](dist/assets/fonts/OFL.txt): SIL Open Font License 1.1
+- [Meteocons](dist/assets/meteocons/LICENSE): Bas Milius, MIT
 - [Domyślne zdjęcie tła](dist/assets/bg/CREDITS.md): „House in forest”, autor Flo Pappert, CC0 1.0 (przez Wikimedia Commons)
