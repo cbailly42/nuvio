@@ -178,8 +178,8 @@ const HGLookX = {
       .lx-i{ flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
       .lx-i ha-icon{ width:20px; height:20px; } .lx-t{ flex:1; min-width:0; display:flex; flex-direction:column; } .lx-t b{ font-weight:600; font-size:14px; } .lx-t small{ opacity:.66; font-size:12px; line-height:1.3; }
       .lx-a{ all:unset; cursor:pointer; flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; } .lx-a:disabled{ opacity:.25; cursor:default; } .lx-a:not(:disabled):hover{ background:var(--hg-tile-bg); } .lx-a ha-icon{ width:20px; height:20px; }
-      .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; background:color-mix(in srgb, currentColor 22%, transparent); position:relative; transition:background .18s; } .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px var(--hg-sh-000000-030); transition:transform .18s; }
-      .lx-sw[aria-checked=true]{ background:var(--hg-accent); } .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .lx-sw:disabled{ opacity:.45; cursor:default; } .lx-sw:focus-visible, .lx-a:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+      .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; background:var(--hg-bg-80868e-038); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-022); backdrop-filter:blur(6px); position:relative; transition:background .18s; } .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px var(--hg-sh-000000-030); transition:transform .18s; }
+      .lx-sw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; } .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .lx-sw:disabled{ opacity:.45; cursor:default; } .lx-sw:focus-visible, .lx-a:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
       .lx-ok{ flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); margin-right:8px; } .lx-ok ha-icon{ width:16px; height:16px; } .lx-ap{ align-self:flex-end; height:38px; padding:0 16px; margin:0; }</style>`; },
   async act(page, b, a) { const h = page._hass;
     if (a === 'lx-v' || a === 'lx-up' || a === 'lx-dn') { const V = this.views(), v = b.dataset.v, o = V.order.slice(), on = new Set(V.on), i = o.indexOf(v);
@@ -226,7 +226,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.1+272566a9';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.1+17f9368e';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -577,6 +577,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-80868c-030:rgba(128,134,140,0.3);
   --hg-bg-80868c-035:rgba(128,134,140,0.35);
   --hg-bg-80868c-055:rgba(128,134,140,0.55);
+  --hg-bg-80868e-038:rgba(128,134,142,0.38);
   --hg-bg-969a9e-060:rgba(150,154,158,0.6);
   --hg-bg-96a0a6-055:rgba(150,160,166,0.55);
   --hg-bg-9aa0a6:#9AA0A6;
@@ -673,6 +674,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-ffffff-012:rgba(255,255,255,0.12);
   --hg-sh-ffffff-014:rgba(255,255,255,0.14);
   --hg-sh-ffffff-018-k:rgba(255,255,255,0.18);
+  --hg-sh-ffffff-022:rgba(255,255,255,0.22);
   --hg-sh-ffffff-025:rgba(255,255,255,0.25);
   --hg-sh-ffffff-085:rgba(255,255,255,0.85);
   --hg-sh-ffffff-090:rgba(255,255,255,0.9);
@@ -778,6 +780,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-80868c-030:rgba(115,121,127,0.3);
   --hg-bg-80868c-035:rgba(115,121,127,0.35);
   --hg-bg-80868c-055:rgba(115,121,127,0.55);
+  --hg-bg-80868e-038:rgba(113,119,127,0.38);
   --hg-bg-969a9e-060:rgba(97,101,105,0.6);
   --hg-bg-96a0a6-055:rgba(89,99,105,0.55);
   --hg-bg-9aa0a6:#595F65;
@@ -848,6 +851,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-eceef2:rgba(255,255,255,0.08);
   --hg-sh-ffffff-012:rgba(255,255,255,0.012);
   --hg-sh-ffffff-014:rgba(255,255,255,0.014);
+  --hg-sh-ffffff-022:rgba(255,255,255,0.022);
   --hg-sh-ffffff-025:rgba(255,255,255,0.025);
   --hg-sh-ffffff-085:rgba(255,255,255,0.08);
   --hg-sh-ffffff-090:rgba(255,255,255,0.08);
@@ -6498,6 +6502,10 @@ const HG_COMP_CSS = `
 .hs-h b{ display:flex; align-items:center; gap:8px; } .hs-h b ha-icon, .cq > button > ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; opacity:.8; } .cq > button{ gap:12px; }
 .cg .th > .tg2, .cg .th > .cmf{ width:182% !important; transform:scale(.55) !important; }
 `;
+/* lista encji bez duplikatów (po entity id; wpisy bez encji zostają) */
+const hgDedupArr = (A) => { if (!Array.isArray(A)) return A; const s = new Set(); return A.filter((y) => { const e = typeof y === 'string' ? y : y && y.entity; if (!e) return true; if (s.has(e)) return false; s.add(e); return true; }); };
+const hgDedupConf = (L) => { let ch = false; for (const cf of Object.values(L.conf || {})) { if (!cf || !cf.set) continue; for (const [k, v] of Object.entries(cf.set)) { const d = hgDedupArr(v); if (Array.isArray(v) && d.length !== v.length) { cf.set[k] = d; ch = true; } } }
+  for (const x of L.added || []) for (const k of Object.keys(x.cfg || {})) { const v = x.cfg[k]; const d = hgDedupArr(v); if (Array.isArray(v) && d.length !== v.length) { x.cfg[k] = d; if (x.v && Array.isArray(x.v[k])) x.v[k] = hgDedupArr(x.v[k]); ch = true; } } return ch; };
 const HG_COMP_EDIT = {
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
@@ -6553,9 +6561,9 @@ const HG_COMP_EDIT = {
       const rows = () => [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)];
       const mv = (e) => { const sib = rows().filter((x) => x !== row); let ref = null; for (const x of sib) { const r = x.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { ref = x; break; } }
         const last = sib[sib.length - 1]; if (ref) { if (row.nextElementSibling !== ref) box.insertBefore(row, ref); } else if (last && last.nextElementSibling !== row) box.insertBefore(row, last.nextElementSibling); };
-      const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); row.classList.remove('drag');
+      const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); row.classList.remove('drag');
         const ord = rows().map((x) => +x.dataset.ai), R = this._eCompR, A = R.v[key] || []; if (ord.every((v, i) => v === i)) return; R.v[key] = ord.map((i) => A[i]); this._eComp(R.cid, R); };
-      hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up); }); },
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up); }); },
   _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
     if (a === 'cgent') return this._eSheet('add', this._eGalCt, this._eGalSc);
     if (a === 'cgo') { if (b.classList.contains('na')) return; this._eCompR = null; return this._eComp(b.dataset.c); }
@@ -6999,10 +7007,15 @@ const HG_EDIT = {
     const LBL = { entity: 'Główna encja', temperature: 'Temperatura', temp: 'Temperatura', humidity: 'Wilgotność', hum: 'Wilgotność', power: 'Moc', energy: 'Energia', climate: 'Klimatyzacja', camera: 'Kamera', person: 'Osoba', entities: 'Encja', cameras: 'Kamera', camera_entity: 'Kamera', persons: 'Osoba', media_players: 'Odtwarzacz', lights: 'Światło', sensors: 'Czujnik' };
     if (x) return { kind: 'added', x, ents: [{ p: 'e', l: 'Encja', v: x.e }], types: hgTypeOpts(h, x.e), t: x.t || hgTypesFor(h, x.e)[0], n: x.n || '', i: x.i || '', dn: H.name(h, x.e), main: x.e };
     if (sc === this._pageScope()) { const cc = (this._config.cards || [])[this._lkeys.indexOf(k)] || {}, ents = [];
-      for (const [key, v] of Object.entries(cc)) { const cur = cf.set && cf.set[key] !== undefined ? cf.set[key] : v;
-        if (ok(cur)) ents.push({ p: key, l: LBL[key] || key, v: cur });
-        else if (Array.isArray(cur)) cur.forEach((y, i) => { const yy = typeof y === 'string' ? y : y && y.entity; if (ok(yy)) ents.push({ p: key + '.' + i, l: `${LBL[key] || key} ${i + 1}`, v: yy, ak: key, ai: i }); });
-        if (Array.isArray(cur) && cur.length && cur.every((y) => ok(typeof y === 'string' ? y : y && y.entity))) ents.push({ add: key, doms: [...new Set(cur.map((y) => String(typeof y === 'string' ? y : y.entity).split('.')[0]))] }); }
+      const seenE = new Set(), adds = [], eidOf = (y) => (typeof y === 'string' ? y : y && y.entity);
+      for (const [key, v] of Object.entries(cc)) { const cur = hgDedupArr(cf.set && cf.set[key] !== undefined ? cf.set[key] : v);
+        if (ok(cur)) { if (!seenE.has(cur)) { seenE.add(cur); ents.push({ p: key, l: LBL[key] || key, v: cur }); } continue; }
+        if (!Array.isArray(cur)) continue; const valid = cur.map(eidOf).filter(ok);
+        /* lista-alias (te same encje pod inną nazwą klucza) – pomijamy, żeby nie dublować */
+        if (!valid.length || valid.every((e) => seenE.has(e))) continue;
+        cur.forEach((y, i) => { const yy = eidOf(y); if (ok(yy) && !seenE.has(yy)) { seenE.add(yy); ents.push({ p: key + '.' + i, l: `${LBL[key] || key} ${i + 1}`, v: yy, ak: key, ai: i }); } });
+        adds.push({ add: key, doms: [...new Set(valid.map((e) => e.split('.')[0]))] }); }
+      ents.push(...adds);
       const main = (ents[0] || {}).v;
       return { kind: 'card', cc, ents: ents.slice(0, 40), types: [['card', 'Normalny'], ...(main ? hgTypesFor(h, main).map((t) => [t, HG_TYPES[t]]) : [])], t: cf.t || 'card', n: cf.n || '', i: cf.i || '', dn: cc.title || cc.name || k.split('|')[0].replace(/^hg-|-card$/g, ''), main }; }
     if (sc === 'rooms') { const ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}, a = HGAreas.model(h, ac).byId[k] || {};
@@ -7014,6 +7027,7 @@ const HG_EDIT = {
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', 'Normalny'], ['compact', 'Kompaktowy'], ['minimal', 'Minimalny']], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
   _eCfg(ct, k) {
+    { const L0 = HGL.get(ct.scope); if (hgDedupConf(JSON.parse(JSON.stringify(L0)))) this._eSet(ct.scope, (L) => { hgDedupConf(L); }); }
     { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
       this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
     const h = this._hass, sc = ct.scope, L = HGL.get(sc), z = L.size[k] || 's', canSz = ct.page ? !this._config.panel.areas : ct.sz;
@@ -7056,7 +7070,7 @@ const HG_EDIT = {
     const wrap = document.createElement('div'); wrap.className = R.ct.el.className.replace('hge-on', ''); wrap.style.cssText = 'display:block;columns:auto;pointer-events:none'; wrap.appendChild(cl); sr.appendChild(wrap);
   },
   /* tablice encji karty (sceny, kamery, …): nadpisanie cf.set[key] – dodaj / usuń / kolejność, potem odśwież widok i wróć do ustawień */
-  _eCfgArrGet(R, key) { const cf = HGL.get(R.sc).conf[R.k] || {}; return ((cf.set && cf.set[key]) || (R.S.cc && R.S.cc[key]) || []).slice(); },
+  _eCfgArrGet(R, key) { const cf = HGL.get(R.sc).conf[R.k] || {}; return hgDedupArr((cf.set && cf.set[key]) || (R.S.cc && R.S.cc[key]) || []); },
   _eCfgArr(R, key, fn, msg) { const A = this._eCfgArrGet(R, key); fn(A);
     this._eSet(R.sc, (L) => { const cf = L.conf[R.k] = L.conf[R.k] || {}; cf.set = cf.set || {}; cf.set[key] = A; });
     if (msg) this._eToast(msg); const pg = R.sc === this._pageScope(), re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, R.k), 120); };
@@ -7067,10 +7081,10 @@ const HG_EDIT = {
       const mv = (e) => { const sib = [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)].filter((x) => x !== row); let ref = null;
         for (const x of sib) { const r = x.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { ref = x; break; } }
         const last = sib[sib.length - 1]; if (ref) { if (row.nextElementSibling !== ref) box.insertBefore(row, ref); } else if (last && last.nextElementSibling !== row) box.insertBefore(row, last.nextElementSibling); };
-      const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); row.classList.remove('drag');
+      const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); row.classList.remove('drag');
         const ord = [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)].map((x) => +x.dataset.ai); if (ord.every((v, i) => v === i)) return;
         this._eCfgArr(this._eCfgR, key, (A) => { const src = A.slice(); A.length = 0; for (const i of ord) A.push(src[i]); for (let i = 0; i < src.length; i++) if (!ord.includes(i)) A.push(src[i]); }, 'Zmieniono kolejność'); };
-      hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up); });
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up); });
   },
   _eCfgSet(R, nv) {
     const S0 = R.S, p = R.path;
@@ -7104,6 +7118,9 @@ const HG_EDIT = {
   /* tło strony: nadpisanie z „Wygląd” ma pierwszeństwo przed zdjęciem z CFG (zmienne na hoście usuwane) */
   _eBgSync() { const A = HGApp.get(); if (A.bg) { this.style.removeProperty('--hg-bg-wide'); this.style.removeProperty('--hg-bg-portrait'); } else if (this._bgDef) { for (const [k, v] of this._bgDef) if (v) this.style.setProperty(k, `url('${v}')`); } this._glassRefresh && this._glassRefresh(); },
   _eLook() {
+    /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */
+    { const S0 = this._eSheetEl, sc0 = S0 && S0.querySelector('.hge-sheet.lk .hs-sc'); if (sc0) { const fe = S0.querySelector(':focus') || (S0.getRootNode && S0.getRootNode().activeElement), key = fe && fe.dataset ? ['hge', 'v', 'k', 'c'].map((x) => fe.dataset[x] || '').join('|') : ''; const top = sc0.scrollTop;
+      requestAnimationFrame(() => { const S1 = this._eSheetEl, sc1 = S1 && S1.querySelector('.hge-sheet.lk .hs-sc'); if (!sc1) return; sc1.scrollTop = top; if (key) { const el = [...S1.querySelectorAll('button')].find((b) => ['hge', 'v', 'k', 'c'].map((x) => b.dataset[x] || '').join('|') === key); if (el) el.focus({ preventScroll: true }); } }); } }
     this._eSheet('cfg'); const S = this._eSheetEl, A = HGApp.get(), acc = (A.accent || ('#' + '63D71E')).toUpperCase(), bg = A.bg || null, dim = A.dim != null ? A.dim : 0.4;
     const T = HGApp.tokens(acc);
     const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
