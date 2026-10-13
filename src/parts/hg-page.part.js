@@ -1153,6 +1153,61 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .hav{ width:34px; height:34px; border-radius:9px; font-size:12px; }
 :host([mode=phone]) .avs{ gap:4px; }
 :host([mode=phone]) .back{ display:none; }
+
+/* ===== UI polish: wspólne tokeny arkuszy (promienie 8/12/16/24/28, odstępy 4/8, przyciski 36/44, akcent tylko lime) ===== */
+:host{ --ui-r2:12px; --ui-r3:16px; --ui-r4:24px; --ui-rs:28px; --ui-t:150ms cubic-bezier(.2,0,0,1);
+  --ui-sec:color-mix(in srgb, currentColor 8%, transparent); --ui-sec2:color-mix(in srgb, currentColor 14%, transparent); --ui-rim:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); --ui-sel:inset 0 0 0 1.5px var(--hg-accent); }
+.hge-sheet{ border-radius:var(--ui-rs); padding:16px; gap:12px; }
+:host([mode=phone]) .hge-sheet{ border-radius:var(--ui-rs) var(--ui-rs) 0 0; }
+.hs-h{ min-height:40px; } .hs-h b{ font-size:17px; font-weight:600; letter-spacing:-.01em; }
+.hs-x{ width:36px; height:36px; background:var(--ui-sec); box-shadow:var(--ui-rim); } .hs-x ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
+.hs-sc{ gap:16px; }
+.hs-fl{ gap:8px; } .hs-fl > span:not(.hs-s), .hge-sheet .lcv-f > span, .hge-sheet .lcv-n > span, .hs-pv > small{ font-size:12px; font-weight:500; opacity:.7; padding-left:18px; letter-spacing:.01em; }
+.hs-s{ background:var(--ui-sec); box-shadow:var(--ui-rim); } .hs-s:focus-within{ box-shadow:var(--ui-sel); }
+/* przyciski: główny lime z czarnym tekstem, drugorzędny szklany */
+.hs-b, .hge-sheet .lk-mini, .hge-sheet .lx-hbtn.ok, .hs-ac > .hs-b{ height:36px; padding:0 16px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font:600 14px/1 inherit; box-shadow:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.hs-ac > .hs-b, .hs-ac > .hs-b2, .hge-sheet .lcv-a .lx-hbtn{ height:44px; padding:0 20px; }
+.hs-b2, .hge-sheet .lx-hbtn:not(.ok), .hs-ac > .hs-b2{ height:36px; padding:0 16px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font:500 14px/1 inherit; display:inline-flex; align-items:center; justify-content:center; gap:8px; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+.hs-b ha-icon, .hs-b2 ha-icon, .hge-sheet .lx-hbtn ha-icon, .hge-sheet .lk-mini ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.hs-b:disabled{ opacity:.4; cursor:default; }
+.hs-ac{ gap:8px; padding-top:4px; }
+/* segmenty / chipy */
+.hs-f{ gap:8px; } .hs-f button{ height:36px; padding:0 14px; background:var(--ui-sec); box-shadow:var(--ui-rim); font:500 13px/1 inherit; display:inline-flex; align-items:center; gap:6px; } .hs-f button ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.hs-f button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; font-weight:600; }
+/* wiersze encji i list */
+.hs-r, .hge-sheet .lx-r{ border-radius:var(--ui-r3); min-height:56px; gap:12px; background:var(--ui-sec); box-shadow:none; }
+.hs-i, .hge-sheet .lx-i{ width:36px; height:36px; background:var(--ui-sec); }
+.hs-t b, .hge-sheet .lx-t b{ font-size:14px; font-weight:600; } .hs-t small, .hge-sheet .lx-t small{ font-size:12px; opacity:.66; font-style:normal; }
+.hs-p{ width:32px; height:32px; background:var(--ui-sec2); color:inherit; } .hs-del{ width:32px; height:32px; background:var(--ui-sec); } .hs-del:hover{ background:var(--ui-sec2); }
+.hs-add{ box-shadow:inset 0 0 0 1.5px color-mix(in srgb, currentColor 18%, transparent); background:transparent; border-style:dashed; } .hs-add .hs-i{ background:var(--hg-accent); color:var(--hg-on-accent); }
+/* Wygląd: sekcje, widoki, integracje */
+.hge-sheet .lk-g{ border-radius:var(--ui-rs); padding:16px; gap:12px; background:color-mix(in srgb, currentColor 5%, transparent); box-shadow:var(--ui-rim); }
+.hge-sheet .lk-g h4{ font-size:15px; font-weight:600; } .hge-sheet .lk-hn{ font-size:12px; opacity:.66; }
+.hge-sheet .lx-l{ gap:8px; } .hge-sheet .lx-r{ padding:8px 12px 8px 8px; } .hge-sheet .lx-r.na{ opacity:.72; } .hge-sheet .lx-r.na .lx-t small{ font-style:normal; }
+.hge-sheet .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 18%, transparent); }
+.hge-sheet .lx-a{ width:36px; height:36px; } .hge-sheet .lx-a:not(:disabled):hover{ background:var(--ui-sec); }
+.hge-sheet .lx-sw{ background:var(--ui-sec2); box-shadow:var(--ui-rim); backdrop-filter:none; } .hge-sheet .lx-sw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; }
+.hge-sheet .lx-hb{ margin:0 0 4px 56px; justify-content:flex-start; gap:8px; } .hge-sheet .lx-hb .lx-hbtn.ok{ background:var(--ui-sec); box-shadow:var(--ui-rim); color:inherit; font-weight:500; } .hge-sheet .lx-hb .lx-hbtn.ok ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
+.hge-sheet .lx-hb ~ .lx-hb .lx-hl{ display:none; } .hge-sheet .lx-hl{ font-size:12px; opacity:.7; margin-left:4px; }
+.hge-sheet .lx-ok{ width:28px; height:28px; } .hge-sheet .lx-new{ margin-top:4px; }
+/* formularz własnego widoku */
+.hge-sheet .lcv{ border-radius:var(--ui-r4); padding:16px; gap:16px; background:color-mix(in srgb, currentColor 5%, transparent); box-shadow:var(--ui-rim); }
+.hge-sheet .lcv-h{ font-size:15px; font-weight:600; } .hge-sheet .lcv-f{ gap:8px; } .hge-sheet .lcv-f > span{ padding-right:18px; }
+.hge-sheet .lcv input, .hge-sheet .lcv select{ height:44px; padding:0 18px; border-radius:999px; background:var(--ui-sec); box-shadow:var(--ui-rim); font-size:15px; }
+.hge-sheet .lcv input:focus, .hge-sheet .lcv select:focus{ box-shadow:var(--ui-sel); } .hge-sheet .lcv input:disabled{ opacity:.6; }
+.hge-sheet .lcv-p{ gap:4px; padding-left:18px; } .hge-sheet .lcv-ic{ gap:8px; } .hge-sheet .lcv-ic button{ width:40px; height:40px; border-radius:var(--ui-r2); background:var(--ui-sec); }
+.hge-sheet .lcv-ic button[aria-pressed=true], .hge-sheet .lcv-l button[aria-pressed=true]{ box-shadow:var(--ui-sel); background:color-mix(in srgb, var(--hg-accent) 12%, transparent); color:inherit; }
+.hge-sheet .lcv-l button{ border-radius:var(--ui-r3); padding:12px; background:var(--ui-sec); } .hge-sheet .lcv-l button b{ font-size:14px; font-weight:600; } .hge-sheet .lcv-l button ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
+.hge-sheet .lcv-r{ gap:8px; } .hge-sheet .lcv-n{ gap:8px; } .hge-sheet .lcv-n > span{ padding-left:18px; }
+.hge-sheet .lcv-e{ color:inherit; font-weight:500; padding-left:18px; } .hge-sheet .lcv-del{ color:inherit; } .hge-sheet .lcv-a{ gap:8px; }
+/* galeria komponentów */
+.hge-sheet .cg{ gap:12px; } .hge-sheet .cg button{ border-radius:20px; padding:8px; gap:8px; background:var(--ui-sec); box-shadow:var(--ui-rim); } .hge-sheet .cg .th{ border-radius:var(--ui-r2); }
+.hge-sheet .cg button:hover:not(.na){ box-shadow:var(--ui-sel); transform:none; } .hge-sheet .cg b{ padding:0 4px; } .hge-sheet .cg small{ padding:0 4px 4px; }
+/* stany: fokus, ruch, nacisk */
+.hge-sheet :is(button, a, input, select, [role=button]):focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.hge-sheet :is(button, .hs-r, .hs-s, .hge-sheet .lx-sw, .hge-sheet .lx-sw i){ transition:background-color var(--ui-t), box-shadow var(--ui-t), transform var(--ui-t), opacity var(--ui-t), color var(--ui-t); }
+.hge-sheet button:active:not(:disabled){ transform:scale(.96); } .hge-sheet .lx-sw:active i{ transform:scale(.96); } .hge-sheet .lx-sw[aria-checked=true]:active i{ transform:translateX(18px) scale(.96); }
+@media (prefers-reduced-motion:reduce){ .hge-sheet *{ transition:none !important; } .hge-sheet button:active{ transform:none !important; } }
 `);
   }
 }
