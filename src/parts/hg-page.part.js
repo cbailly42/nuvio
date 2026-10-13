@@ -1168,7 +1168,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
   background:rgba(30,34,40,.66); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid rgba(255,255,255,.16); box-shadow:0 20px 50px rgba(0,0,0,.4);
   animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
 .hs-cfb b{ font-size:16px; } .hs-cfb small{ font-size:13px; opacity:.72; line-height:1.35; } .hs-cfb div{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
-.hs-bd{ background:#FF6B6B !important; color:#1F0A0A !important; }
+.hs-bd{ background:var(--error-color, #DB4437) !important; color:var(--text-primary-color, #fff) !important; }
 @keyframes hgCfIn{ from{ transform:translateY(8px) scale(.97); } }
 .hs-bk{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; margin-right:6px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.10); transition:background .15s ease, transform .15s ease; }
 .hs-bk:hover{ background:rgba(255,255,255,.18); transform:translateX(-2px); } .hs-bk:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .hs-bk ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }

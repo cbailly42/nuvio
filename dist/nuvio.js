@@ -505,7 +505,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.15+952848d1';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.15+9d8c0e99';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -916,6 +916,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-cccccc:#CCCCCC;
   --hg-bg-cccccc-k:#CCCCCC;
   --hg-bg-d6dae0-055:rgba(214,218,224,0.55);
+  --hg-bg-db4437:#DB4437;
   --hg-bg-e2dceb:#E2DCEB;
   --hg-bg-e4e5e7:#E4E5E7;
   --hg-bg-e4e6e9:#E4E6E9;
@@ -938,7 +939,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ff5a52-016:rgba(255,90,82,0.16);
   --hg-bg-ff5a5a:#FF5A5A;
   --hg-bg-ff6b5b:#FF6B5B;
-  --hg-bg-ff6b6b:#FF6B6B;
   --hg-bg-ffe3de:#FFE3DE;
   --hg-bg-ffe3df:#FFE3DF;
   --hg-bg-ffffff:#FFFFFF;
@@ -1041,7 +1041,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-1e2023:#111111;
   --hg-tx-1e2023-k:#111111;
   --hg-tx-1e2023-on:#111111;
-  --hg-tx-1f0a0a-on:#1F0A0A;
   --hg-tx-1f2125:#111111;
   --hg-tx-1f2125-k:#111111;
   --hg-tx-2a2d31:#3A3D42;
@@ -7114,7 +7113,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
   background:var(--hg-bg-1e2228-066); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid var(--hg-bd-ffffff-016); box-shadow:0 20px 50px var(--hg-sh-000000-040);
   animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
 .hs-cfb b{ font-size:16px; } .hs-cfb small{ font-size:13px; opacity:.72; line-height:1.35; } .hs-cfb div{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
-.hs-bd{ background:var(--hg-bg-ff6b6b) !important; color:var(--hg-tx-1f0a0a-on) !important; }
+.hs-bd{ background:var(--error-color, var(--hg-bg-db4437)) !important; color:var(--text-primary-color, var(--hg-tx-ffffff)) !important; }
 @keyframes hgCfIn{ from{ transform:translateY(8px) scale(.97); } }
 .hs-bk{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; margin-right:6px; border-radius:50%; display:grid; place-items:center; background:var(--hg-bg-ffffff-010); transition:background .15s ease, transform .15s ease; }
 .hs-bk:hover{ background:var(--hg-bg-ffffff-018); transform:translateX(-2px); } .hs-bk:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .hs-bk ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
@@ -7723,7 +7722,7 @@ const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
     const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle')); b.title = hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
   _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
-  _eHead() { this._eStk = []; this._eSnapTake(); const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
+  _eHead() { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
     const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Tytuł widoku', 'View title')}"><style>${HG_STY_CSS}
       .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:var(--hg-tx-ff6b6b); opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } }
@@ -7756,7 +7755,7 @@ const HG_COMP_EDIT = {
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
-    this._eStk = []; this._eSnapTake();   /* galeria to poziom główny */
+    this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null;   /* galeria to poziom główny, bez szkicu */
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
     const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
@@ -7900,8 +7899,8 @@ const HGE_CSS = `
 .hge .hge-cf button[data-hge=cfno]{ background:var(--hg-bg-000000-008); }
 /* kontener dodanych kafli to nie slot: bez własnej ramki (ramki mają kafle w środku) */
 .hge-on > [data-hgk="_tiles"], [data-hgl].hge-on > [data-hgk="_tiles"]{ outline:none !important; animation:none !important; }
-.hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, var(--hg-bg-a0e63c-008)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0; width:100%; height:100%; box-sizing:border-box; }
-.hge-addw{ min-height:76px; display:flex; } .hge-addw > .hge-add{ flex:1; }
+.hge-add{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:76px; border-radius:var(--r-md, 18px); border:1.5px dashed var(--hg-accent); background:var(--hg-accent-faint, var(--hg-bg-a0e63c-008)); color:inherit; font:500 15px/1 inherit; cursor:pointer; break-inside:avoid; margin:0; width:100%; box-sizing:border-box; }
+.hge-addw{ min-height:76px; display:flex; align-self:start; } .hge-addw > .hge-add{ flex:1; }
 .hge-add ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); }
 `;
 
@@ -8189,6 +8188,7 @@ const HG_EDIT = {
     if (a === 'sback') return this._eBack();
     if (a === 'cfstay') { const c = b.closest('.hs-cf'); if (c) c.remove(); return; }
     if (a === 'cfdrop') return this._eSheet(false);
+    if (a === 'sheetclose' && !b.matches('.hs-x, .hge-scrim, .hs-b2')) return this._eSheet(false);   /* przycisk główny (Gotowe) zatwierdza bez pytania */
     if (a === 'sheetclose') return (this._eStk || []).length && b.classList.contains('hs-x') ? this._eBack() : this._eClose();
     if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) { const sc0 = this._eSc, ct0 = this._eSheetCt; return this._eGo(() => this._eSheet('add', ct0, sc0), () => this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n)); }
     if (a === 'addt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } const pv = this._eSheetEl.querySelector('.hs-pvb'); pv.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: pv }); hgPvLive(pv); return; }
@@ -8498,8 +8498,9 @@ const HG_EDIT = {
   /* niezapisane zmiany: migawka stanu formularza przy otwarciu poziomu głównego */
   _eSnapVal() { const S = this._eSheetEl, rep = (k, v) => (v && (v.nodeType || typeof v === 'function') ? undefined : v);
     try { return JSON.stringify([this._eCompR, this._eCfgR && this._eCfgR.v, this._eCfgR && this._eCfgR.set, S ? [...S.querySelectorAll('.hge-sheet input:not([type=search]), .hge-sheet select, .hge-sheet textarea')].filter((i) => !i.closest('.hs-s.srch')).map((i) => i.type === 'checkbox' ? i.checked : i.value) : []], rep); } catch (e) { return ''; } },
-  _eSnapTake() { this._eSnap = null; requestAnimationFrame(() => { this._eSnap = this._eSnapVal(); }); },
-  _eDirtySheet() { return this._eSnap != null && this._eSnapVal() !== this._eSnap; },
+  /* migawka formularza arkusza (osobna od this._eSnap trybu edycji): tylko formularze z zapisem (ustawienia karty, komponent) */
+  _eSnapTake() { const t = this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; requestAnimationFrame(() => { if (t === this._eShT) this._eShSnap = this._eSnapVal(); }); },
+  _eDirtySheet() { return this._eShSnap != null && this._eSnapVal() !== this._eShSnap; },
   _eClose() { const S = this._eSheetEl, sh = S && S.querySelector('.hge-sheet'); if (!sh || !this._eDirtySheet()) return this._eSheet(false);
     if (sh.querySelector('.hs-cf')) return; sh.insertAdjacentHTML('beforeend', `<div class="hs-cf" role="alertdialog" aria-modal="true" aria-labelledby="hscf-t"><div class="hs-cfb"><b id="hscf-t">${hgTr('Odrzucić zmiany?', 'Discard changes?')}</b><small>${hgTr('Niezapisane zmiany w tym oknie zostaną utracone.', 'Unsaved changes in this sheet will be lost.')}</small><div><button class="hs-b2" data-hge="cfstay">${hgTr('Zostań', 'Stay')}</button><button class="hs-b hs-bd" data-hge="cfdrop">${hgTr('Odrzuć', 'Discard')}</button></div></div></div>`);
     requestAnimationFrame(() => { const b = sh.querySelector('[data-hge=cfstay]'); if (b) b.focus(); }); },
@@ -8516,7 +8517,7 @@ const HG_EDIT = {
       const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast(hgTr('Ustawiono przesłane zdjęcie', 'Uploaded image set')); this._eLook(); }, (e) => this._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')'));
   },
   _eSheet(mode, ct, scOver) {
-    if (!mode) { this._eRepl = null; this._eStk = []; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
+    if (!mode) { this._eRepl = null; this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
     this._eSheetOpen = mode; this._eSheetCt = ct; if (!this._eBacking) { this._eF = 'all'; this._eQ = ''; }
     let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); this._eStk = [];
       setTimeout(() => L.classList.add('opened'), 320); new MutationObserver(() => this._eDeco()).observe(L, { childList: true });

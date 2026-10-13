@@ -258,6 +258,11 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.16
+- Fixed: Done, Save and other primary buttons commit and close without asking. The Discard changes confirm appears only when closing a form with unsaved changes (card settings, component form) with X, Escape, the backdrop or a swipe; sheets that apply changes live (Appearance, title, Restore hidden, the gallery) never ask.
+- Fixed: cancelling edit mode restores the layout correctly again (the unsaved changes check from 0.3.13 overwrote the edit mode snapshot).
+- Fixed: the Discard button uses the Home Assistant error colour instead of a fixed red, and the Add tile in edit mode keeps the size of a small tile.
+
 ### 0.3.15
 - Fixed: the hide panel button switches its icon (eye) and label and reports its state with aria-pressed.
 - Fixed: long entity names on tiles no longer get cut at the top and bottom; they wrap to 2 lines with an ellipsis, and unknown values show No data instead of a dash.

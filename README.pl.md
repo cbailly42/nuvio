@@ -258,6 +258,11 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.16
+- Poprawka: Gotowe, Zapisz i inne główne przyciski zatwierdzają i zamykają bez pytania. Pytanie o odrzucenie zmian pojawia się tylko przy zamykaniu formularza z niezapisanymi zmianami (ustawienia karty, formularz komponentu) przez X, Escape, tło lub przeciągnięcie; arkusze stosujące zmiany na żywo (Wygląd, tytuł, Przywróć ukryte, galeria) nigdy nie pytają.
+- Poprawka: anulowanie trybu edycji znów poprawnie przywraca układ (sprawdzanie niezapisanych zmian z 0.3.13 nadpisywało migawkę trybu edycji).
+- Poprawka: przycisk Odrzuć używa koloru błędu z Home Assistant zamiast stałej czerwieni, a kafelek Dodaj w trybie edycji ma rozmiar małego kafelka.
+
 ### 0.3.15
 - Poprawka: przycisk ukrywania panelu zmienia ikonę (oko) i etykietę oraz podaje stan przez aria-pressed.
 - Poprawka: długie nazwy encji na kafelkach nie są już ucięte u góry i u dołu; zawijają się do 2 linii z wielokropkiem, a nieznane wartości pokazują Brak danych zamiast kreski.
