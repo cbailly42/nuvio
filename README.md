@@ -258,6 +258,10 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.9
+- Fixed: custom view layouts now really differ. **Grid** keeps equal rows with cards stretched to the row height, **Columns** stacks cards top down in each column in order without aligning rows, **Masonry** places each card in the shortest column, and **Panel** shows the weather on top with two columns. Saved per view and applied after reload.
+- Fixed: the view settings dialog updates in place. Choosing a layout, icon or other option no longer closes and reopens the dialog; scroll position, typed text and focus are kept.
+
 ### 0.3.8
 - New: one glass select for all of Nuvio. Every dropdown (view columns per device, max width, media player source) now uses a glass trigger that matches the inputs and an animated glass list with the blur visible from the first frame, a check mark in the theme accent on the selected option, full keyboard support (arrows, Home, End, Enter, Esc, type to search), ARIA listbox semantics, closing on outside click, flipping up near the bottom edge and larger touch targets on phones. The list renders above sheets and other glass, so it is never clipped. The native select stays underneath as the source of the value.
 

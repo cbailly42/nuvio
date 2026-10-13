@@ -328,10 +328,19 @@ class HGPage extends HTMLElement {
   _mas() { const el = this._panelEl; if (!el || !this._cardWraps) return;
     if (!this._masRO) this._masRO = new ResizeObserver(() => { cancelAnimationFrame(this._masF); this._masF = requestAnimationFrame(() => this._masOn && this._masLay()); });
     for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
-  _masLay() { const el = this._panelEl, gap = parseFloat(getComputedStyle(el).rowGap) || 0;
-    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild); for (const w of W) { w.style.minHeight = '0px'; w.style.gridRowEnd = 'span 1'; }
+  /* własne widoki: jawne rozmieszczenie w rzędach 4 px. masonry: karta do najkrótszej kolumny; cols: kolumny po kolei (bez wyrównania rzędów) */
+  _masLay() { const el = this._panelEl, cs = getComputedStyle(el), gap = parseFloat(cs.rowGap) || 0, n = Math.max(1, cs.gridTemplateColumns.split(' ').filter(Boolean).length), cols = this._masMode === 'cols';
+    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild);
+    for (const w of W) { if (w.dataset.masGc == null) w.dataset.masGc = w.style.gridColumn || ''; w.style.minHeight = '0px'; w.style.gridRow = ''; w.style.gridRowEnd = 'span 1'; }
+    const spanOf = (w) => { const g = w.dataset.masGc; if (/1\s*\/\s*-1/.test(g)) return n; const m = /span\s+(\d+)/.exec(g); return Math.min(n, m ? +m[1] : 1); };
     const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
-    W.forEach((w, i) => { w.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); }); }
+    const H = new Array(n).fill(0); let cur = 0;
+    W.forEach((w, i) => { const s = spanOf(w), k = Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); let col = 0;
+      if (s >= n) col = 0;
+      else if (cols) { if (cur + s > n) cur = 0; col = cur; cur = (cur + s) % n; }
+      else { let best = Infinity; for (let c = 0; c + s <= n; c++) { const t = Math.max(...H.slice(c, c + s)); if (t < best) { best = t; col = c; } } }
+      const top = Math.max(...H.slice(col, col + s)); for (let c = col; c < col + s; c++) H[c] = top + k;
+      w.style.gridColumn = `${col + 1} / span ${s}`; w.style.gridRow = `${top + 1} / span ${k}`; }); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
     if (mode === 'phone') {
@@ -363,8 +372,9 @@ class HGPage extends HTMLElement {
     });
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
-    el.style.alignItems = p.align === 'start' || p.masonry ? 'start' : '';
-    if (p.masonry && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; for (const w of this._cardWraps) w.style.gridRowEnd = ''; }
+    el.style.alignItems = p.align === 'start' || p.masonry || p.flow === 'cols' ? 'start' : p.flow === 'grid' ? 'stretch' : '';
+    const mm = p.masonry ? 'masonry' : p.flow === 'cols' ? 'cols' : '';
+    if (mm && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masMode = mm; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; this._masMode = ''; for (const w of this._cardWraps) { w.style.gridRowEnd = ''; w.style.gridRow = ''; if (w.dataset.masGc != null) { w.style.gridColumn = w.dataset.masGc; delete w.dataset.masGc; } } }
     this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
     this.toggleAttribute('wide-panel', !!p.wide);
     this.toggleAttribute('fit-panel', !!p.fit);

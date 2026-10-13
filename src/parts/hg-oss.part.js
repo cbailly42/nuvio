@@ -60,7 +60,7 @@ const HGModel = {
 const HG_LAYS = [['grid', hgTrLazy('Siatka', 'Grid'), 'mdi:view-grid-outline', hgTrLazy('Równe rzędy kart', 'Even rows of cards')], ['cols', hgTrLazy('Kolumny', 'Columns'), 'mdi:view-column-outline', hgTrLazy('Karty ułożone od góry, bez wyrównania rzędów', 'Cards stacked from the top, rows not aligned')],
   ['masonry', 'Masonry', 'mdi:view-dashboard-variant-outline', hgTrLazy('Karty dopasowane wysokością, bez pustych miejsc', 'Cards fitted by height, no gaps')], ['panel', 'Panel', 'mdi:view-agenda-outline', hgTrLazy('Jak strona główna: pogoda u góry, karty pod spodem', 'Like the home page: weather on top, cards below')]];
 const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k] || d)), r = (k) => `repeat(${k}, minmax(0, 1fr))`, cm = n('cm', 1), ct = n('ct', 2), cd = n('cd', c.lay === 'panel' ? 2 : 3);
-  return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { align: 'start' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
+  return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { flow: 'cols' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(!c.lay || c.lay === 'grid' ? { flow: 'grid' } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
 /* --- generator konfiguracji (strategia pulpitu) --- */
 async function hgGenerate(hass, opt) {
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */

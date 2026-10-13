@@ -258,6 +258,10 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.9
+- Poprawka: układy własnych widoków naprawdę się różnią. **Siatka** to równe rzędy z kartami rozciągniętymi do wysokości rzędu, **Kolumny** układają karty od góry w każdej kolumnie po kolei bez wyrównania rzędów, **Masonry** wstawia każdą kartę do najkrótszej kolumny, a **Panel** pokazuje pogodę u góry i dwie kolumny. Zapisywane dla każdego widoku i stosowane po odświeżeniu.
+- Poprawka: okno ustawień widoku aktualizuje się na miejscu. Wybór układu, ikony czy innej opcji nie zamyka już i nie otwiera okna od nowa; zostają pozycja przewinięcia, wpisany tekst i fokus.
+
 ### 0.3.8
 - Nowe: jeden szklany select w całym Nuvio. Każda lista wyboru (kolumny widoku na urządzeniach, maks. szerokość, źródło odtwarzacza) ma teraz szklany przycisk pasujący do pól i animowaną szklaną listę z rozmyciem widocznym od pierwszej klatki, znacznik w kolorze akcentu przy wybranej opcji, pełną obsługę klawiatury (strzałki, Home, End, Enter, Esc, wyszukiwanie przez pisanie), semantykę ARIA listbox, zamykanie po kliknięciu obok, otwieranie w górę przy dolnej krawędzi i większe pola dotyku na telefonach. Lista wyświetla się nad arkuszami i innym szkłem, więc nigdy nie jest ucięta. Natywny select zostaje pod spodem jako źródło wartości.
 

@@ -156,7 +156,7 @@ const HGModel = {
 const HG_LAYS = [['grid', hgTrLazy('Siatka', 'Grid'), 'mdi:view-grid-outline', hgTrLazy('Równe rzędy kart', 'Even rows of cards')], ['cols', hgTrLazy('Kolumny', 'Columns'), 'mdi:view-column-outline', hgTrLazy('Karty ułożone od góry, bez wyrównania rzędów', 'Cards stacked from the top, rows not aligned')],
   ['masonry', 'Masonry', 'mdi:view-dashboard-variant-outline', hgTrLazy('Karty dopasowane wysokością, bez pustych miejsc', 'Cards fitted by height, no gaps')], ['panel', 'Panel', 'mdi:view-agenda-outline', hgTrLazy('Jak strona główna: pogoda u góry, karty pod spodem', 'Like the home page: weather on top, cards below')]];
 const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k] || d)), r = (k) => `repeat(${k}, minmax(0, 1fr))`, cm = n('cm', 1), ct = n('ct', 2), cd = n('cd', c.lay === 'panel' ? 2 : 3);
-  return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { align: 'start' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
+  return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { flow: 'cols' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(!c.lay || c.lay === 'grid' ? { flow: 'grid' } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
 /* --- generator konfiguracji (strategia pulpitu) --- */
 async function hgGenerate(hass, opt) {
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */
@@ -501,7 +501,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.8+cf2412a8';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.8+a0c7e651';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6221,10 +6221,19 @@ class HGPage extends HTMLElement {
   _mas() { const el = this._panelEl; if (!el || !this._cardWraps) return;
     if (!this._masRO) this._masRO = new ResizeObserver(() => { cancelAnimationFrame(this._masF); this._masF = requestAnimationFrame(() => this._masOn && this._masLay()); });
     for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
-  _masLay() { const el = this._panelEl, gap = parseFloat(getComputedStyle(el).rowGap) || 0;
-    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild); for (const w of W) { w.style.minHeight = '0px'; w.style.gridRowEnd = 'span 1'; }
+  /* własne widoki: jawne rozmieszczenie w rzędach 4 px. masonry: karta do najkrótszej kolumny; cols: kolumny po kolei (bez wyrównania rzędów) */
+  _masLay() { const el = this._panelEl, cs = getComputedStyle(el), gap = parseFloat(cs.rowGap) || 0, n = Math.max(1, cs.gridTemplateColumns.split(' ').filter(Boolean).length), cols = this._masMode === 'cols';
+    const W = this._cardWraps.filter((w) => !w.hidden && w.firstElementChild);
+    for (const w of W) { if (w.dataset.masGc == null) w.dataset.masGc = w.style.gridColumn || ''; w.style.minHeight = '0px'; w.style.gridRow = ''; w.style.gridRowEnd = 'span 1'; }
+    const spanOf = (w) => { const g = w.dataset.masGc; if (/1\s*\/\s*-1/.test(g)) return n; const m = /span\s+(\d+)/.exec(g); return Math.min(n, m ? +m[1] : 1); };
     const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
-    W.forEach((w, i) => { w.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); }); }
+    const H = new Array(n).fill(0); let cur = 0;
+    W.forEach((w, i) => { const s = spanOf(w), k = Math.max(1, Math.ceil((hs[i] + gap) / (4 + gap))); let col = 0;
+      if (s >= n) col = 0;
+      else if (cols) { if (cur + s > n) cur = 0; col = cur; cur = (cur + s) % n; }
+      else { let best = Infinity; for (let c = 0; c + s <= n; c++) { const t = Math.max(...H.slice(c, c + s)); if (t < best) { best = t; col = c; } } }
+      const top = Math.max(...H.slice(col, col + s)); for (let c = col; c < col + s; c++) H[c] = top + k;
+      w.style.gridColumn = `${col + 1} / span ${s}`; w.style.gridRow = `${top + 1} / span ${k}`; }); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
     if (mode === 'phone') {
@@ -6256,8 +6265,9 @@ class HGPage extends HTMLElement {
     });
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
-    el.style.alignItems = p.align === 'start' || p.masonry ? 'start' : '';
-    if (p.masonry && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; for (const w of this._cardWraps) w.style.gridRowEnd = ''; }
+    el.style.alignItems = p.align === 'start' || p.masonry || p.flow === 'cols' ? 'start' : p.flow === 'grid' ? 'stretch' : '';
+    const mm = p.masonry ? 'masonry' : p.flow === 'cols' ? 'cols' : '';
+    if (mm && mode !== 'phone') { el.style.gridAutoRows = '4px'; this._masMode = mm; this._masOn = true; this._mas(); } else if (this._masOn) { this._masOn = false; this._masMode = ''; for (const w of this._cardWraps) { w.style.gridRowEnd = ''; w.style.gridRow = ''; if (w.dataset.masGc != null) { w.style.gridColumn = w.dataset.masGc; delete w.dataset.masGc; } } }
     this.toggleAttribute('scroll', !!(p.scroll || this._hasTiles2()));
     this.toggleAttribute('wide-panel', !!p.wide);
     this.toggleAttribute('fit-panel', !!p.fit);
@@ -8175,7 +8185,7 @@ const HG_EDIT = {
     const T = HGApp.tokens(acc);
     const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
     const ck = H.icon('mdi:check');
-    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide lk" role="dialog" aria-modal="true" aria-label="${hgTr('Wygląd', 'Appearance')}"><style>${HG_LOOK_CSS}</style><div class="hs-h"><b>${hgTr('Wygląd', 'Appearance')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc lk-sc">
+    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide lk" role="dialog" aria-modal="true" aria-label="${hgTr('Wygląd', 'Appearance')}"><style>${HG_LOOK_CSS}</style><div class="hs-h"><b>${hgTr('Wygląd', 'Appearance')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc lk-sc">
       <section class="lk-g"><h4>${H.icon('mdi:palette-outline')}${hgTr('Akcent', 'Accent')}</h4>
         <div class="lk-sw">${HG_ACCENTS.map(([c, l0, l1]) => { const l = H.esc(hgTr(l0, l1)); return `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`; }).join('')}
         <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="${hgTr('Własny kolor akcentu', 'Custom accent colour')}"><small>${hgTr('Własny', 'Custom')}</small></label></div>
@@ -8194,6 +8204,11 @@ const HG_EDIT = {
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${window.HGLookX ? HGLookX.html(this) : ''}
       </div><div class="lk-ft"><button class="lk-gh" data-hge="lookreset">${H.icon('mdi:restore')}${hgTr('Przywróć domyślne', 'Reset to default')}</button><button class="lk-ok" data-hge="sheetclose">${hgTr('Gotowe', 'Done')}</button></div></div>`;
+    /* otwarty arkusz: aktualizacja na miejscu (bez ponownej animacji otwarcia), przewijany kontener zostaje, więc pozycja przewinięcia też */
+    { const old = S.querySelector('.hge-sheet.lk'); if (old) { const tp = document.createElement('template'); tp.innerHTML = html; const nw = tp.content.querySelector('.hge-sheet');
+      const oc = [...old.children], nc = [...nw.children];
+      if (oc.length === nc.length) nc.forEach((n, j) => { const o = oc[j]; if (o.classList.contains('hs-sc') && n.classList.contains('hs-sc')) { const t0 = o.scrollTop; o.replaceChildren(...n.childNodes); o.scrollTop = t0; } else o.replaceWith(n); });
+      else old.replaceChildren(...nw.childNodes); } else S.innerHTML = html; }
     const gu = () => { const v1 = S.querySelector('[name=bgc1]').value, v2 = S.querySelector('[name=bgc2]').value; S.querySelector('.lk-gp').style.background = `linear-gradient(135deg,${v1},${v2})`; S.querySelectorAll('.lk-st i')[0].style.background = v1; S.querySelectorAll('.lk-st i')[1].style.background = v2; };
     S.querySelectorAll('[name=bgc1],[name=bgc2]').forEach((x) => x.addEventListener('input', gu));
     S.querySelector('[name=acc]').addEventListener('change', (e) => { this._eApp((A2) => { A2.accent = e.target.value.toUpperCase(); }); this._eLook(); });
