@@ -414,6 +414,8 @@ class HGPage extends HTMLElement {
     this._panel = true;
     // przewijany panel: wskaźnik „więcej poniżej” (bez gradientu/maski – maska tworzyłaby nowy backdrop root dla szkła)
     this._panelEl.addEventListener('scroll', () => this._moreUpd(), { passive: true });
+    /* pusty stan widoku na żywo: po usunięciu, ukryciu, cofnięciu, w edycji i bez niej */
+    new MutationObserver(() => this._vEmpty()).observe(this._panelEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden'] }); this._vEmpty();
     this._pro = this._pro || new ResizeObserver(() => this._moreUpd());
     const bgc = c.background || {};
     // zdjęcie tła ustawiane dopiero po zdekodowaniu, potem jednorazowe odświeżenie szkła: Chrome (GPU, Retina) potrafi zostawić
@@ -652,6 +654,13 @@ class HGPage extends HTMLElement {
     if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
       const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || ''); U.stale = m && m[1] !== HG_BUILD ? m[1].split('+')[0] : null; done(); }).catch(() => {});
     done(); }
+  _vEmpty() { clearTimeout(this._veT); this._veT = setTimeout(() => { const P = this._panelEl; if (!P || !P.isConnected) return;
+    const vis = [...P.children].some((c) => c.classList.contains('cw') && c.dataset.hgk && !c.hidden && c.style.display !== 'none' && getComputedStyle(c).display !== 'none');
+    let e = P.querySelector(':scope > .vempty'); if (vis) { if (e) e.remove(); return; } if (e) return;
+    const admin = !!(this._hass && this._hass.user && this._hass.user.is_admin); e = document.createElement('div'); e.className = 'vempty'; e.setAttribute('role', 'note');
+    e.innerHTML = `<span class="vei">${H.icon('mdi:view-grid-plus-outline')}</span><b>${hgTr('Pusty widok', 'Empty view')}</b><small>${hgTr('Ten widok nie ma jeszcze żadnych widżetów.', 'This view has no widgets yet.')}</small>${admin ? `<button type="button">${H.icon('mdi:plus')}<span>${hgTr('Dodaj widżet', 'Add widget')}</span></button>` : ''}`;
+    const b = e.querySelector('button'); if (b) b.addEventListener('click', () => { if (!this._editing && this._editEnter) this._editEnter(); this._eGallery(null, this._pageScope() + ':tiles'); });
+    P.appendChild(e); }, 120); }
   _updDot() { const U = this._upd || {}; return !!(U.v || U.stale); }
   _updFoot() { const U = this._upd || {}, run = String(HG_BUILD).split('+')[0];
     const pill = U.stale ? `<button class="mupd" data-act="updreload">${H.icon('mdi:refresh')}<span>${hgTr(`Odśwież, aby wczytać v${H.esc(U.stale)}`, `Reload to load v${H.esc(U.stale)}`)}</span></button>`
@@ -984,6 +993,12 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .ri.act[data-act=railmore], .ri.act[data-act=more], .ri[aria-expanded=true]{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; text-shadow:none !important; }
 .ri:focus{ outline:none; } .ri:focus-visible, .tab:focus-visible, .cir:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 /* ----- panel ----- */
+.vempty{ grid-column:1 / -1; min-height:min(60vh, 420px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; padding:24px; color:var(--hg-tx, inherit); animation:hgVeIn .3s ease both; }
+.vempty .vei{ width:56px; height:56px; border-radius:18px; display:grid; place-items:center; background:var(--hg-accent-faint); color:var(--hg-accent-tx, var(--hg-accent)); margin-bottom:4px; } .vempty .vei ha-icon, .vempty .vei svg{ --mdc-icon-size:28px; width:28px; height:28px; }
+.vempty b{ font-size:18px; font-weight:600; } .vempty small{ font-size:13.5px; opacity:.72; max-width:300px; }
+.vempty button{ all:unset; cursor:pointer; margin-top:8px; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 18px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent, #0B0F0A); font-weight:600; font-size:14px; transition:transform .15s; }
+.vempty button:active{ transform:scale(.96); } .vempty button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; } .vempty button ha-icon, .vempty button svg{ --mdc-icon-size:18px; width:18px; height:18px; }
+@keyframes hgVeIn{ from{ transform:translateY(8px); } } @media (prefers-reduced-motion:reduce){ .vempty{ animation:none; } }
 .panel{ display:grid; gap:var(--s2); padding:var(--s3); border-radius:var(--r-lg); --hg-u: calc(var(--hg-u0, 1.3px) * var(--hg-zoom, 1)); --k: var(--hg-u); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); 
   background: var(--hg-panel-bg);
   border:0; -webkit-backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%); backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%);

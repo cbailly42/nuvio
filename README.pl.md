@@ -258,6 +258,10 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.14
+- Poprawka: widok lub panel bez widocznych elementów pokazuje pusty stan „Pusty widok” z przyciskiem Dodaj widżet, na żywo po usunięciu, ukryciu, cofnięciu lub ponowieniu, w trybie edycji i zwykłym, we wszystkich rodzajach widoków. Cofnięcie przywraca elementy i ukrywa pusty stan.
+- Poprawka: przycisk Cofnij w powiadomieniach używa koloru tekstu dopasowanego do akcentu motywu.
+
 ### 0.3.13
 - Poprawka: formularz komponentu otwarty z ustawień karty wraca tam, skąd go otwarto (Wstecz go zamyka), a nie do galerii. Wszystkie arkusze edycji używają jednego stosu nawigacji.
 - Ulepszenie: wpisany tekst, wyszukiwanie i wybory zostają przy przechodzeniu w przód i wstecz, pozycja przewinięcia jest pamiętana dla każdego kroku, fokus trafia na tytuł kroku i wraca do przycisku, który go otworzył. Escape cofa o krok. Zamknięcie z niezapisanymi zmianami pyta o potwierdzenie (Odrzuć albo Zostań), tylko gdy coś się zmieniło. Na telefonie przeciągnięcie w dół zamyka tylko najwyższy poziom, a przeciągnięcie od lewej krawędzi cofa o krok. Animacje respektują ograniczenie ruchu.

@@ -505,7 +505,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.13+c8eeb658';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.13+9a5af675';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6356,6 +6356,8 @@ class HGPage extends HTMLElement {
     this._panel = true;
     // przewijany panel: wskaźnik „więcej poniżej” (bez gradientu/maski – maska tworzyłaby nowy backdrop root dla szkła)
     this._panelEl.addEventListener('scroll', () => this._moreUpd(), { passive: true });
+    /* pusty stan widoku na żywo: po usunięciu, ukryciu, cofnięciu, w edycji i bez niej */
+    new MutationObserver(() => this._vEmpty()).observe(this._panelEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden'] }); this._vEmpty();
     this._pro = this._pro || new ResizeObserver(() => this._moreUpd());
     const bgc = c.background || {};
     // zdjęcie tła ustawiane dopiero po zdekodowaniu, potem jednorazowe odświeżenie szkła: Chrome (GPU, Retina) potrafi zostawić
@@ -6594,6 +6596,13 @@ class HGPage extends HTMLElement {
     if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
       const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || ''); U.stale = m && m[1] !== HG_BUILD ? m[1].split('+')[0] : null; done(); }).catch(() => {});
     done(); }
+  _vEmpty() { clearTimeout(this._veT); this._veT = setTimeout(() => { const P = this._panelEl; if (!P || !P.isConnected) return;
+    const vis = [...P.children].some((c) => c.classList.contains('cw') && c.dataset.hgk && !c.hidden && c.style.display !== 'none' && getComputedStyle(c).display !== 'none');
+    let e = P.querySelector(':scope > .vempty'); if (vis) { if (e) e.remove(); return; } if (e) return;
+    const admin = !!(this._hass && this._hass.user && this._hass.user.is_admin); e = document.createElement('div'); e.className = 'vempty'; e.setAttribute('role', 'note');
+    e.innerHTML = `<span class="vei">${H.icon('mdi:view-grid-plus-outline')}</span><b>${hgTr('Pusty widok', 'Empty view')}</b><small>${hgTr('Ten widok nie ma jeszcze żadnych widżetów.', 'This view has no widgets yet.')}</small>${admin ? `<button type="button">${H.icon('mdi:plus')}<span>${hgTr('Dodaj widżet', 'Add widget')}</span></button>` : ''}`;
+    const b = e.querySelector('button'); if (b) b.addEventListener('click', () => { if (!this._editing && this._editEnter) this._editEnter(); this._eGallery(null, this._pageScope() + ':tiles'); });
+    P.appendChild(e); }, 120); }
   _updDot() { const U = this._upd || {}; return !!(U.v || U.stale); }
   _updFoot() { const U = this._upd || {}, run = String(HG_BUILD).split('+')[0];
     const pill = U.stale ? `<button class="mupd" data-act="updreload">${H.icon('mdi:refresh')}<span>${hgTr(`Odśwież, aby wczytać v${H.esc(U.stale)}`, `Reload to load v${H.esc(U.stale)}`)}</span></button>`
@@ -6926,6 +6935,12 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .ri.act[data-act=railmore], .ri.act[data-act=more], .ri[aria-expanded=true]{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; text-shadow:none !important; }
 .ri:focus{ outline:none; } .ri:focus-visible, .tab:focus-visible, .cir:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 /* ----- panel ----- */
+.vempty{ grid-column:1 / -1; min-height:min(60vh, 420px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; padding:24px; color:var(--hg-tx, inherit); animation:hgVeIn .3s ease both; }
+.vempty .vei{ width:56px; height:56px; border-radius:18px; display:grid; place-items:center; background:var(--hg-accent-faint); color:var(--hg-accent-tx, var(--hg-accent)); margin-bottom:4px; } .vempty .vei ha-icon, .vempty .vei svg{ --mdc-icon-size:28px; width:28px; height:28px; }
+.vempty b{ font-size:18px; font-weight:600; } .vempty small{ font-size:13.5px; opacity:.72; max-width:300px; }
+.vempty button{ all:unset; cursor:pointer; margin-top:8px; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 18px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent, var(--hg-tx-0b0f0a)); font-weight:600; font-size:14px; transition:transform .15s; }
+.vempty button:active{ transform:scale(.96); } .vempty button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; } .vempty button ha-icon, .vempty button svg{ --mdc-icon-size:18px; width:18px; height:18px; }
+@keyframes hgVeIn{ from{ transform:translateY(8px); } } @media (prefers-reduced-motion:reduce){ .vempty{ animation:none; } }
 .panel{ display:grid; gap:var(--s2); padding:var(--s3); border-radius:var(--r-lg); --hg-u: calc(var(--hg-u0, 1.3px) * var(--hg-zoom, 1)); --k: var(--hg-u); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); 
   background: var(--hg-panel-bg);
   border:0; -webkit-backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%); backdrop-filter: blur(calc(16px * var(--hg-bf, 1))) saturate(120%);
@@ -7632,7 +7647,7 @@ const HGToast = window.__hgToast || (window.__hgToast = {
   transition:transform .38s cubic-bezier(.2,.9,.25,1), opacity .3s; transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
 .hgt .t.in{ opacity:0; transform:translateY(24px) scale(.96); } .hgt .t.out{ opacity:0; transform:translateY(16px) scale(.9) !important; }
 .hgt .t::before{ content:''; flex:none; width:8px; height:8px; border-radius:50%; background:var(--hg-accent, var(--hg-bg-63d71e)); } .hgt.lt .t{ background:var(--hg-bg-ffffff-090); color:var(--hg-tx-1e2023); box-shadow:0 12px 32px var(--hg-sh-000000-014), inset 0 0 0 1px var(--hg-sh-000000-008); } .hgt .t span{ flex:1; min-width:0; } .hgt .t em{ font-style:normal; font-weight:600; font-size:12px; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, currentColor 12%, transparent); }
-.hgt .t button{ all:unset; cursor:pointer; font-weight:700; font-size:13px; height:32px; padding:0 14px; display:inline-flex; align-items:center; border-radius:999px; background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-tx-0b0f0a-on); font-weight:600; transition:transform 150ms; } .hgt .t button:active{ transform:scale(.96); } .hgt .t button:focus-visible{ outline:2px solid var(--hg-accent, var(--hg-tx-63d71e)); outline-offset:2px; }
+.hgt .t button{ all:unset; cursor:pointer; font-weight:700; font-size:13px; height:32px; padding:0 14px; display:inline-flex; align-items:center; border-radius:999px; background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-on-accent, var(--hg-tx-0b0f0a-on)); font-weight:600; transition:transform 150ms; } .hgt .t button:active{ transform:scale(.96); } .hgt .t button:focus-visible{ outline:2px solid var(--hg-accent, var(--hg-tx-63d71e)); outline-offset:2px; }
 @media (prefers-reduced-motion:reduce){ .hgt .t{ transition:opacity .2s; } }`;
     el.appendChild(st); document.body.appendChild(el);
     el.addEventListener('mouseenter', () => { this.exp = true; this.pause(true); this.lay(); }); el.addEventListener('mouseleave', () => { this.exp = false; this.pause(false); this.lay(); });

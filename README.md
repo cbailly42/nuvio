@@ -258,6 +258,10 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.14
+- Fixed: a view or panel with no visible items shows the Empty view state with an Add widget button, live after deleting, hiding, undo or redo, in edit mode and normal mode, on every view type. Undo restores the items and hides it again.
+- Fixed: the Undo button in notifications uses the text color that matches the theme accent.
+
 ### 0.3.13
 - Fixed: the component form opened from card settings goes back to where it was opened from (Back closes it) instead of the gallery. Every edit sheet now uses one navigation stack.
 - Improved: typed text, search and selections survive going back and forth, scroll position is kept per step, focus moves to the step title and returns to the control that opened the step. Escape steps back. Closing with unsaved changes asks for confirmation (Discard or Stay), only when something changed. On a phone, swipe down closes only the top level and a swipe from the left edge goes one step back. Slides follow reduced motion settings.
