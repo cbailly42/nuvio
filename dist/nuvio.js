@@ -1,3 +1,99 @@
+/* ===== hg-select: jeden szklany select dla całego Nuvio =====
+   Progresywne ulepszenie: natywny <select> zostaje w DOM jako źródło prawdy (value, 'change', formularze),
+   a obok niego rysujemy szklany przycisk i listę (ARIA listbox). Wystarczy hgSelWatch(shadowRoot). */
+const HGS_CSS = `
+.hgs-n{ position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important; overflow:hidden !important; clip-path:inset(50%) !important; }
+.hgs-t{ all:unset; box-sizing:border-box; display:flex; align-items:center; gap:8px; width:100%; min-height:40px; padding:0 10px 0 12px; border-radius:12px; cursor:pointer;
+  font:inherit; font-size:14px; color:inherit; background:var(--hg-bg-ffffff-008); border:1px solid var(--hg-bd-ffffff-016); box-shadow:inset 0 1px 0 var(--hg-sh-ffffff-008);
+  transition:border-color .15s ease, background .15s ease, box-shadow .15s ease; -webkit-tap-highlight-color:transparent; }
+.hgs-t:hover{ background:var(--hg-bg-ffffff-012); border-color:var(--hg-bd-ffffff-026); }
+.hgs-t:focus-visible, .hgs-t[aria-expanded=true]{ border-color:var(--hg-accent, var(--hg-bd-a3e635)); box-shadow:0 0 0 3px color-mix(in srgb, var(--hg-accent, var(--hg-sh-a3e635)) 28%, transparent); }
+.hgs-t[disabled]{ opacity:.5; cursor:default; }
+.hgs-v{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+.hgs-c{ flex:none; width:18px; height:18px; opacity:.7; transition:transform .22s cubic-bezier(.2,.8,.2,1); }
+.hgs-t[aria-expanded=true] .hgs-c{ transform:rotate(180deg); }
+.hgs-l{ position:fixed; z-index:2147483000; box-sizing:border-box; margin:0; padding:6px; list-style:none; overflow:auto; overscroll-behavior:contain; border-radius:16px; color:var(--hg-tx-ffffff);
+  background:var(--hg-bg-1c2026-062); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid var(--hg-bd-ffffff-016); box-shadow:0 18px 48px var(--hg-sh-000000-038), inset 0 1px 0 var(--hg-sh-ffffff-010);
+  font-size:14px; clip-path:inset(0 0 100% 0 round 16px); transform:translateY(-6px) scale(.98); transform-origin:top center;
+  transition:clip-path .24s cubic-bezier(.2,.8,.2,1), transform .24s cubic-bezier(.2,.8,.2,1); }
+.hgs-l.up{ clip-path:inset(100% 0 0 0 round 16px); transform:translateY(6px) scale(.98); transform-origin:bottom center; }
+.hgs-l.in{ clip-path:inset(0 0 0 0 round 16px); transform:none; }
+.hgs-o{ display:flex; align-items:center; gap:10px; min-height:40px; padding:0 10px 0 12px; border-radius:10px; cursor:pointer; user-select:none; opacity:0; transform:translateY(-3px);
+  transition:background .12s ease, opacity .2s ease, transform .2s ease; }
+.hgs-l.in .hgs-o{ opacity:1; transform:none; }
+.hgs-o > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hgs-o.on{ background:var(--hg-bg-ffffff-012); }
+.hgs-o[aria-selected=true]{ color:var(--hg-accent, var(--hg-tx-a3e635)); font-weight:600; }
+.hgs-o svg{ flex:none; width:18px; height:18px; opacity:0; transform:scale(.6); transition:opacity .15s ease, transform .2s cubic-bezier(.2,.8,.2,1); }
+.hgs-o[aria-selected=true] svg{ opacity:1; transform:none; }
+.hgs-o[aria-disabled=true]{ opacity:.4 !important; cursor:default; }
+@media (pointer:coarse){ .hgs-t{ min-height:44px; font-size:16px; } .hgs-o{ min-height:46px; font-size:16px; } }
+@media (prefers-reduced-motion:reduce){ .hgs-l, .hgs-o, .hgs-c, .hgs-o svg{ transition:none !important; } }
+@media (prefers-color-scheme:light){ :host(:not([dark])) .hgs-l.lt{ background:var(--hg-bg-ffffff-072); color:var(--hg-tx-1f2125); border-color:var(--hg-bd-000000-008); } }
+`;
+const HGS_CHEV = '<svg class="hgs-c" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>';
+const HGS_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+let hgsN = 0; const hgsOpen = new Set();   /* inne handlery Escape (arkusz, menu) ustępują, dopóki lista jest otwarta */   /* otwarte listy: zamykane, gdy ich przycisk zniknie z DOM (przerysowanie arkusza) */
+const hgsEsc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function hgSelUp(sel) {
+  if (sel.dataset.hgs || sel.multiple || sel.size > 1) return;
+  const root = sel.getRootNode(); if (!root || !root.appendChild) return;
+  if (!root.querySelector('style[data-hgs]')) { const st = document.createElement('style'); st.dataset.hgs = '1'; st.textContent = HGS_CSS; (root.head || root).appendChild(st); }
+  const id = 'hgs' + (++hgsN); sel.dataset.hgs = id; sel.classList.add('hgs-n'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+  const t = document.createElement('button'); t.type = 'button'; t.className = 'hgs-t'; t.setAttribute('aria-haspopup', 'listbox'); t.setAttribute('aria-expanded', 'false');
+  const lab = sel.getAttribute('aria-label') || (sel.closest('label') && (sel.closest('label').querySelector('span') || {}).textContent) || '';
+  if (lab) t.setAttribute('aria-label', lab.trim());
+  sel.after(t);
+  let L = null, act = -1, ta = '', taT = 0;
+  const opts = () => [...sel.options];
+  const paint = () => { const o = sel.options[sel.selectedIndex]; t.innerHTML = `<span class="hgs-v">${hgsEsc(o ? o.text : '')}</span>${HGS_CHEV}`; t.disabled = sel.disabled; };
+  const mark = (i) => { act = i; if (!L) return; L.querySelectorAll('.hgs-o').forEach((n, k) => n.classList.toggle('on', k === i)); const n = L.children[i]; if (n) { L.setAttribute('aria-activedescendant', n.id); n.scrollIntoView({ block: 'nearest' }); } };
+  const pick = (i) => { const o = sel.options[i]; if (!o || o.disabled) return; if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true, composed: true })); sel.dispatchEvent(new Event('change', { bubbles: true, composed: true })); } paint(); close(true); };
+  const place = () => { if (!L) return; const r = t.getBoundingClientRect(), vh = innerHeight, vw = innerWidth, gap = 6;
+    const want = Math.min(L.scrollHeight, 320), below = vh - r.bottom - gap - 8, above = r.top - gap - 8, up = below < Math.min(want, 200) && above > below;
+    const w = Math.max(r.width, Math.min(220, vw - 16)); L.style.width = w + 'px'; L.style.left = Math.max(8, Math.min(r.left, vw - w - 8)) + 'px';
+    L.style.maxHeight = Math.max(120, Math.min(320, up ? above : below)) + 'px';
+    if (up) { L.style.top = ''; L.style.bottom = (vh - r.top + gap) + 'px'; } else { L.style.bottom = ''; L.style.top = (r.bottom + gap) + 'px'; }
+    L.classList.toggle('up', up); };
+  const out = (e) => { if (!L) return; const p = e.composedPath(); if (!p.includes(L) && !p.includes(t)) close(false); };
+  const rep = () => place();
+  const gone = () => { if (!t.isConnected) close(false); };
+  function open() { if (L || sel.disabled) return; L = document.createElement('ul'); L.className = 'hgs-l'; L.id = id + 'l'; L.setAttribute('role', 'listbox'); L.tabIndex = -1;
+    if (lab) L.setAttribute('aria-label', lab.trim());
+    L.innerHTML = opts().map((o, i) => `<li class="hgs-o" role="option" id="${id}o${i}" aria-selected="${i === sel.selectedIndex}"${o.disabled ? ' aria-disabled="true"' : ''} style="transition-delay:${Math.min(i, 8) * 18}ms">${HGS_TICK}<span>${hgsEsc(o.text)}</span></li>`).join('');
+    root.appendChild(L); hgsOpen.add(gone); if (t.getRootNode().activeElement !== t) t.focus({ preventScroll: true }); t.setAttribute('aria-expanded', 'true'); t.setAttribute('aria-controls', L.id); place(); mark(Math.max(0, sel.selectedIndex));
+    L.addEventListener('pointerdown', (e) => e.preventDefault());   // fokus zostaje na przycisku
+    L.addEventListener('click', (e) => { const li = e.target.closest('.hgs-o'); if (li) pick([...L.children].indexOf(li)); });
+    L.addEventListener('pointermove', (e) => { const li = e.target.closest('.hgs-o'); if (li) { const i = [...L.children].indexOf(li); if (i !== act) mark(i); } });
+    requestAnimationFrame(() => L && L.classList.add('in'));
+    document.addEventListener('pointerdown', out, true); addEventListener('resize', rep); addEventListener('scroll', rep, true); }
+  function close(focus) { if (!L) return; const l = L; L = null; hgsOpen.delete(gone); t.setAttribute('aria-expanded', 'false'); t.removeAttribute('aria-controls');
+    l.classList.remove('in'); l.style.pointerEvents = 'none'; setTimeout(() => l.remove(), 240);
+    document.removeEventListener('pointerdown', out, true); removeEventListener('resize', rep); removeEventListener('scroll', rep, true); if (focus && t.isConnected) t.focus(); }
+  const step = (d) => { const o = opts(); let i = act; for (let k = 0; k < o.length; k++) { i = (i + d + o.length) % o.length; if (!o[i].disabled) break; } mark(i); };
+  t.addEventListener('click', () => (L ? close(true) : open()));
+  t.addEventListener('keydown', (e) => { const k = e.key;
+    if (!L && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(k)) { e.preventDefault(); open(); return; }
+    if (!L) { if (k.length === 1) { e.preventDefault(); open(); } else return; }
+    if (k === 'ArrowDown') { e.preventDefault(); step(1); } else if (k === 'ArrowUp') { e.preventDefault(); step(-1); }
+    else if (k === 'Home') { e.preventDefault(); mark(0); } else if (k === 'End') { e.preventDefault(); mark(sel.options.length - 1); }
+    else if (k === 'Enter' || k === ' ') { if (k === ' ' && ta) { ta += ' '; e.preventDefault(); return; } e.preventDefault(); pick(act); }
+    else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+    else if (k === 'Tab') close(false);
+    if (k.length === 1 && k !== ' ' || (k === ' ' && ta)) { clearTimeout(taT); ta += k.toLowerCase(); taT = setTimeout(() => { ta = ''; }, 600);
+      const o = opts(), n = o.length; for (let s = 0; s < n; s++) { const i = (act + (ta.length === 1 ? 1 : 0) + s) % n; if (o[i].text.toLowerCase().startsWith(ta)) { mark(i); break; } } } });
+  sel.addEventListener('change', paint);
+  new MutationObserver(paint).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+  paint();
+}
+function hgSelWatch(root) {
+  if (!root || root.__hgs) return; root.__hgs = 1;
+  const scan = () => root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp);
+  new MutationObserver((m) => { hgsOpen.forEach((f) => f()); if (m.some((r) => r.addedNodes.length)) scan(); }).observe(root, { childList: true, subtree: true }); scan();
+}
+window.hgSelWatch = hgSelWatch;
+
 /* ===== nuvio (wersja dystrybucyjna): baza zasobów, ścieżki, i18n, strategia pulpitu, kreator pierwszego uruchomienia ===== */
 const HG_ASSET = (() => { try { const u = import.meta.url; if (u) return u.replace(/[^/]*([?#].*)?$/, ''); } catch (e) { /* brak */ }
   try { const s = document.currentScript && document.currentScript.src; if (s) return s.replace(/[^/]*(\?.*)?$/, ''); } catch (e) { /* brak */ }
@@ -405,7 +501,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.7+682063b2';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.7+cf2412a8';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -552,6 +648,7 @@ class HGBase extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    hgSelWatch(this.shadowRoot);
     this._sig = null;
     const down = () => { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); };
     const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }, 60); };
@@ -701,10 +798,13 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-008:rgba(0,0,0,0.08);
   --hg-bd-000000-010:rgba(0,0,0,0.1);
   --hg-bd-1f2125:#1F2125;
+  --hg-bd-a3e635:#A3E635;
   --hg-bd-e53935:#E53935;
+  --hg-bd-ffffff-016:rgba(255,255,255,0.16);
   --hg-bd-ffffff-016-k:rgba(255,255,255,0.16);
   --hg-bd-ffffff-018:rgba(255,255,255,0.18);
   --hg-bd-ffffff-022:rgba(255,255,255,0.22);
+  --hg-bd-ffffff-026:rgba(255,255,255,0.26);
   --hg-bd-ffffff-030:rgba(255,255,255,0.3);
   --hg-bd-ffffff-042-k:rgba(255,255,255,0.42);
   --hg-bd-ffffff-045:rgba(255,255,255,0.45);
@@ -747,6 +847,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-181e26-098:rgba(24,30,38,0.98);
   --hg-bg-181e28-074:rgba(24,30,40,0.74);
   --hg-bg-1c1c1e-k:#1C1C1E;
+  --hg-bg-1c2026-062:rgba(28,32,38,0.62);
   --hg-bg-1e1e1e-055:rgba(30,30,30,0.55);
   --hg-bg-1e2023:#1E2023;
   --hg-bg-1e2023-084:rgba(30,32,35,0.84);
@@ -815,6 +916,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffe3de:#FFE3DE;
   --hg-bg-ffe3df:#FFE3DF;
   --hg-bg-ffffff:#FFFFFF;
+  --hg-bg-ffffff-008:rgba(255,255,255,0.08);
   --hg-bg-ffffff-012:rgba(255,255,255,0.12);
   --hg-bg-ffffff-012-k:rgba(255,255,255,0.12);
   --hg-bg-ffffff-013-k:rgba(255,255,255,0.13);
@@ -870,6 +972,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-000000-030-k:rgba(0,0,0,0.3);
   --hg-sh-000000-032:rgba(0,0,0,0.32);
   --hg-sh-000000-035:rgba(0,0,0,0.35);
+  --hg-sh-000000-038:rgba(0,0,0,0.38);
   --hg-sh-000000-040:rgba(0,0,0,0.4);
   --hg-sh-000000-045:rgba(0,0,0,0.45);
   --hg-sh-000000-050:rgba(0,0,0,0.5);
@@ -881,7 +984,10 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-7f7f7f-020:rgba(127,127,127,0.2);
   --hg-sh-7f7f7f-022:rgba(127,127,127,0.22);
   --hg-sh-96a0a6-090-k:rgba(150,160,166,0.9);
+  --hg-sh-a3e635:#A3E635;
   --hg-sh-eceef2:#ECEEF2;
+  --hg-sh-ffffff-008:rgba(255,255,255,0.08);
+  --hg-sh-ffffff-010:rgba(255,255,255,0.1);
   --hg-sh-ffffff-012:rgba(255,255,255,0.12);
   --hg-sh-ffffff-014:rgba(255,255,255,0.14);
   --hg-sh-ffffff-018-k:rgba(255,255,255,0.18);
@@ -921,6 +1027,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-8a8e94:#3A3D42;
   --hg-tx-9a9ea4:#3A3D42;
   --hg-tx-9aa0a6:#3A3D42;
+  --hg-tx-a3e635:#A3E635;
   --hg-tx-a4a8ae:#3A3D42;
   --hg-tx-b3261e:#931F18;
   --hg-tx-b3261e-on:#931F18;
@@ -958,8 +1065,10 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-008:rgba(255,255,255,0.112);
   --hg-bd-000000-010:rgba(255,255,255,0.14);
   --hg-bd-1f2125:rgba(255,255,255,0.14);
+  --hg-bd-ffffff-016:rgba(255,255,255,0.05);
   --hg-bd-ffffff-018:rgba(255,255,255,0.05);
   --hg-bd-ffffff-022:rgba(255,255,255,0.05);
+  --hg-bd-ffffff-026:rgba(255,255,255,0.05);
   --hg-bd-ffffff-030:rgba(255,255,255,0.05);
   --hg-bd-ffffff-045:rgba(255,255,255,0.063);
   --hg-bd-ffffff-055:rgba(255,255,255,0.077);
@@ -1033,6 +1142,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffe3de:#5C281F;
   --hg-bg-ffe3df:#5C261F;
   --hg-bg-ffffff:#2E2E33;
+  --hg-bg-ffffff-008:rgba(255,255,255,0.048);
   --hg-bg-ffffff-012:rgba(255,255,255,0.072);
   --hg-bg-ffffff-016:rgba(255,255,255,0.096);
   --hg-bg-ffffff-020:rgba(255,255,255,0.12);
@@ -1074,6 +1184,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-000000-030:rgba(0,0,0,0.6);
   --hg-sh-000000-032:rgba(0,0,0,0.6);
   --hg-sh-000000-035:rgba(0,0,0,0.6);
+  --hg-sh-000000-038:rgba(0,0,0,0.6);
   --hg-sh-000000-040:rgba(0,0,0,0.6);
   --hg-sh-000000-045:rgba(0,0,0,0.6);
   --hg-sh-000000-050:rgba(0,0,0,0.6);
@@ -1084,6 +1195,8 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-7f7f7f-020:rgba(0,0,0,0.44);
   --hg-sh-7f7f7f-022:rgba(0,0,0,0.484);
   --hg-sh-eceef2:rgba(255,255,255,0.08);
+  --hg-sh-ffffff-008:rgba(255,255,255,0.008);
+  --hg-sh-ffffff-010:rgba(255,255,255,0.01);
   --hg-sh-ffffff-012:rgba(255,255,255,0.012);
   --hg-sh-ffffff-014:rgba(255,255,255,0.014);
   --hg-sh-ffffff-020:rgba(255,255,255,0.02);
@@ -1116,6 +1229,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-8a8e94:#B4B8BE;
   --hg-tx-9a9ea4:#B4B8BE;
   --hg-tx-9aa0a6:#B4B8BE;
+  --hg-tx-a3e635:#C5EF80;
   --hg-tx-a4a8ae:#B4B8BE;
   --hg-tx-b3261e:#FF9B94;
   --hg-tx-b3261e-on:#B3261E;
@@ -5913,6 +6027,7 @@ class HGPage extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    hgSelWatch(this.shadowRoot);
     this._notif = {};
     this._cards = [];
     this.shadowRoot.addEventListener('click', (e) => this._click(e));
@@ -6408,7 +6523,7 @@ class HGPage extends HTMLElement {
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
     L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}</div>`;
-    this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
+    this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
   /* telefon: arkusz „Więcej” (warstwa nad stroną): zamykanie tapnięciem w tło, przesunięciem w dół, Escape */
@@ -6431,7 +6546,7 @@ class HGPage extends HTMLElement {
     L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="${hgTr('Więcej', 'More')}"><i class="grab" aria-hidden="true"></i>
       <div class="sg">${more.map((m, i) => `<button class="st ${m.match && hgMatch(m.match, path) ? 'act' : ''}" data-act="sheetnav" data-i="${i}">${H.icon(m.icon)}<span>${H.esc(m.label)}</span></button>`).join('')}</div></div>`;
     requestAnimationFrame(() => requestAnimationFrame(() => L.classList.add('in')));
-    this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape') { e.preventDefault(); this._openSheet(false); } });
+    this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape' && !hgsOpen.size) { e.preventDefault(); this._openSheet(false); } });
     document.addEventListener('keydown', this._sheetKey, true);
     const sh = L.querySelector('.sheet'); let y0 = null;
     sh.addEventListener('pointerdown', (e) => { y0 = e.clientY; }, { passive: true });
@@ -7764,7 +7879,7 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
       /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
       else if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && e.composedPath()[0] && e.composedPath()[0].dataset && e.composedPath()[0].dataset.hge === 'drag') { e.preventDefault(); this._eKeyMove(e.composedPath()[0], /Up|Left/.test(e.key) ? -1 : 1); }
       else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };

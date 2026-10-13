@@ -748,7 +748,7 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape' && hgsOpen.size) return; if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm(hgTr('Odrzucić niezapisane zmiany układu?', 'Discard unsaved layout changes?'))) this._editExit(false); }
       /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
       else if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && e.composedPath()[0] && e.composedPath()[0].dataset && e.composedPath()[0].dataset.hge === 'drag') { e.preventDefault(); this._eKeyMove(e.composedPath()[0], /Up|Left/.test(e.key) ? -1 : 1); }
       else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };

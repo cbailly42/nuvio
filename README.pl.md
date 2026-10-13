@@ -258,6 +258,9 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.8
+- Nowe: jeden szklany select w całym Nuvio. Każda lista wyboru (kolumny widoku na urządzeniach, maks. szerokość, źródło odtwarzacza) ma teraz szklany przycisk pasujący do pól i animowaną szklaną listę z rozmyciem widocznym od pierwszej klatki, znacznik w kolorze akcentu przy wybranej opcji, pełną obsługę klawiatury (strzałki, Home, End, Enter, Esc, wyszukiwanie przez pisanie), semantykę ARIA listbox, zamykanie po kliknięciu obok, otwieranie w górę przy dolnej krawędzi i większe pola dotyku na telefonach. Lista wyświetla się nad arkuszami i innym szkłem, więc nigdy nie jest ucięta. Natywny select zostaje pod spodem jako źródło wartości.
+
 ### 0.3.7
 - Nowe: zapasowe źródło zdjęć i czcionek. Nuvio wczytuje tła, miniatury w galerii i czcionki najpierw z lokalnej instalacji, a gdy plik się nie wczyta, z jsDelivr przypiętego do działającej wersji (`cdn.jsdelivr.net/gh/kczepiec/nuvio@v<wersja>/dist/`). Bez internetu nadal działają pliki lokalne.
 - Poprawka: szwy na szkle przy tle ze zdjęciem. Przyciemnienie tła to teraz jedna nakładka zamiast filtra CSS na pełnoekranowym zdjęciu, a warstwy tła są znów zwykłymi warstwami fixed, więc rozmyte elementy próbkują jednolite tło.

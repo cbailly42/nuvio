@@ -258,6 +258,9 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.8
+- New: one glass select for all of Nuvio. Every dropdown (view columns per device, max width, media player source) now uses a glass trigger that matches the inputs and an animated glass list with the blur visible from the first frame, a check mark in the theme accent on the selected option, full keyboard support (arrows, Home, End, Enter, Esc, type to search), ARIA listbox semantics, closing on outside click, flipping up near the bottom edge and larger touch targets on phones. The list renders above sheets and other glass, so it is never clipped. The native select stays underneath as the source of the value.
+
 ### 0.3.7
 - New: remote fallback for images and fonts. Nuvio loads backgrounds, gallery thumbnails and fonts from the local install first and, if a file fails to load, from jsDelivr pinned to the running version (`cdn.jsdelivr.net/gh/kczepiec/nuvio@v<version>/dist/`). Offline installs keep working with local files.
 - Fixed: glass seams on photo backgrounds. Background dimming is now a single overlay instead of a CSS filter on the full screen photo, and the background layers are plain fixed layers again, so blurred elements sample one uniform backdrop.

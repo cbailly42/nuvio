@@ -157,6 +157,7 @@ class HGBase extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    hgSelWatch(this.shadowRoot);
     this._sig = null;
     const down = () => { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); };
     const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }, 60); };

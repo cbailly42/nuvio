@@ -134,6 +134,7 @@ class HGPage extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    hgSelWatch(this.shadowRoot);
     this._notif = {};
     this._cards = [];
     this.shadowRoot.addEventListener('click', (e) => this._click(e));
@@ -629,7 +630,7 @@ class HGPage extends HTMLElement {
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
     L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}</div>`;
-    this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
+    this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
   /* telefon: arkusz „Więcej” (warstwa nad stroną): zamykanie tapnięciem w tło, przesunięciem w dół, Escape */
@@ -652,7 +653,7 @@ class HGPage extends HTMLElement {
     L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="${hgTr('Więcej', 'More')}"><i class="grab" aria-hidden="true"></i>
       <div class="sg">${more.map((m, i) => `<button class="st ${m.match && hgMatch(m.match, path) ? 'act' : ''}" data-act="sheetnav" data-i="${i}">${H.icon(m.icon)}<span>${H.esc(m.label)}</span></button>`).join('')}</div></div>`;
     requestAnimationFrame(() => requestAnimationFrame(() => L.classList.add('in')));
-    this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape') { e.preventDefault(); this._openSheet(false); } });
+    this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape' && !hgsOpen.size) { e.preventDefault(); this._openSheet(false); } });
     document.addEventListener('keydown', this._sheetKey, true);
     const sh = L.querySelector('.sheet'); let y0 = null;
     sh.addEventListener('pointerdown', (e) => { y0 = e.clientY; }, { passive: true });
