@@ -134,6 +134,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
 .cv .fr{ width:100% !important; aspect-ratio:var(--aspn, 16 / 9) !important; }
 .cv .un{ aspect-ratio:16 / 9; color:#45494F; flex-direction:column; justify-content:center; gap:var(--s1); border-radius:var(--r-sm); background:rgba(30,36,46,.08); padding:0; } .cv .un ha-icon{ width:28px; height:28px; opacity:.7; } .cv .fr img{ object-fit:cover; }
 .fr:fullscreen img, .fr:-webkit-full-screen img{ object-fit:contain; }`); }
+  setConfig(c) { this._sk = false; super.setConfig(c); }   // nowa konfiguracja -> szkielet od nowa
   /* szkielet budowany raz; zmiany stanu aktualizują tylko tekst/klasy (bez podmiany <img> -> bez mrugania) */
   _update() {
     if (!this._config || !this._hass) return;

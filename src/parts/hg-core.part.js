@@ -83,6 +83,8 @@ const H = {
   ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
   num: (hass, e) => { const s = H.st(hass, e); const v = s ? parseFloat(s.state) : NaN; return isFinite(v) ? v : null; },
   esc: (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
+  /* adres do CSS url('…') w atrybucie style: znaki zamykające url() / cudzysłów kodowane procentowo, potem escape HTML */
+  cssUrl: (u) => H.esc(String(u ?? '').replace(/['"()\\\s]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))),
   fire: (node, type, detail) => node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true })),
   navigate: (path) => {
     const nav = () => { history.pushState(null, '', path); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); };

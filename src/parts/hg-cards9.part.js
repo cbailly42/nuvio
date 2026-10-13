@@ -30,11 +30,13 @@ const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch
 const hgPl = (n, one, few, many) => `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
 
 const HGAreas = {
-  _memo: new WeakMap(),
-  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas) albo liczba encji */
+  _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
+  /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
+  _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
+  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
   model(h, cfg) {
-    cfg = cfg || {};
-    const key = [h.entities, h.devices, h.areas, Object.keys(h.states).length];
+    cfg = cfg || this._e;
+    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
     const m0 = this._memo.get(cfg);
     if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
     const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
@@ -111,11 +113,12 @@ const HGAreas = {
       } else sec[k].push(e);
     }
     sec.misc = [...misc.values()];
-    // to samo urządzenie pod kilkoma encjami o tej samej nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
+    // to samo urządzenie pod kilkoma encjami o tej samej (pełnej) nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
     for (const k of ['light', 'sw', 'media']) {
       const best = new Map();
-      for (const e of sec[k]) { const n = hgNorm(this.name(h, e, a, cfg)), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
-      sec[k] = sec[k].filter((e) => best.get(hgNorm(this.name(h, e, a, cfg))) === e);
+      const fn = (e) => hgNorm((cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e));   // pełna nazwa: różne urządzenia o tej samej nazwie po obcięciu pokoju zostają
+      for (const e of sec[k]) { const n = fn(e), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
+      sec[k] = sec[k].filter((e) => best.get(fn(e)) === e);
     }
     a.sec = sec;
     // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
@@ -326,7 +329,7 @@ const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
 const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
 /* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
 class HGRoomCard extends HGBase {
-  defaults() { return { areas: {}, refresh: 10, robots_path: HG_P('roboty') }; }
+  defaults() { return { areas: {}, robots_path: HG_P('roboty') }; }
   constructor() {
     super();
     this._ac = new Map();
@@ -341,11 +344,11 @@ class HGRoomCard extends HGBase {
   }
   connectedCallback() {
     window.addEventListener('location-changed', this._onLoc); window.addEventListener('popstate', this._onLoc);
-    super.connectedCallback(); this._onLoc(); this._camTimer();
+    super.connectedCallback(); this._onLoc();
     this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub);
   }
-  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._ct); this._ct = 0; clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
-  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; }
+  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
+  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; if (this._cams) for (const el of this._cams.values()) el.hass = h; }
   get hass() { return this._hass; }
   _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = HGAreas.areaFromUrl(); return m.byId[this._aid] || null; }
   ents() {
@@ -655,11 +658,13 @@ ha-card.wmc{ gap:var(--s2); }
     const phase = eJob && job !== 'none' ? lab(eJob, HG_WM_JOB) : '';
     const msL = eMs ? lab(eMs, HG_WM_MS) : '';
     const status = done ? 'Pranie zakończone' : run || pause ? [msL, phase].filter(Boolean).join(' · ') : off ? 'Wyłączona' : 'Gotowa';
-    // czas i postęp: koniec z completion_time; start = ostatnia zmiana machine_state na „run” (prawdziwe dane, bez zgadywania)
+    // czas i postęp: koniec z completion_time; start = pierwsza zmiana machine_state na „run” w tym cyklu (prawdziwe dane, bez zgadywania)
     let rem = '', endT = '', pct = null;
+    const wmS = this._wmS || (this._wmS = new Map());    // pierwszy start cyklu: wznowienie po pauzie zmienia last_changed, nie zeruje postępu
+    if (!run && !pause) wmS.delete(eMs); else if (run && !wmS.has(eMs)) wmS.set(eMs, +new Date(st(eMs).last_changed));
     if (eEnd && (run || pause)) { const d = new Date(st(eEnd).state), m = Math.round((d - Date.now()) / 60000);
       if (!isNaN(d) && m > 0) { rem = m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; endT = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-        if (run) { const s0 = new Date(st(eMs).last_changed), tot = d - s0; if (tot > 60000) pct = Math.max(0, Math.min(1, (Date.now() - s0) / tot)); } } }
+        if (run) { const s0 = wmS.get(eMs), tot = d - s0; if (tot > 60000) pct = Math.max(0, Math.min(1, (Date.now() - s0) / tot)); } } }
     if (done) pct = 1;
     const spinV = eSpin ? parseInt(st(eSpin).state, 10) : NaN, spd = isFinite(spinV) ? (1.1 - Math.min(spinV, 1600) / 1600 * .85).toFixed(2) : '.45';
     const remote = eRem && st(eRem).state === 'on';
@@ -739,8 +744,8 @@ ha-card.wmc{ gap:var(--s2); }
       <div class="sth"><div><b>${H.esc(CW.title || 'Ciepła woda')}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="Szczegóły bojlera">${H.icon('mdi:arrow-top-right')}</button></div>
       <div class="cwm">
         <div class="cwt" role="img" aria-label="Zbiornik: ${cur != null ? H.fmt(cur, 0) + '°C' : 'brak danych'}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
-        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}Grzeje do ${H.fmt(tgt, 0)}°` : H.esc(state)}</span>
-          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="Obniż nastawę">${H.icon('mdi:minus')}</button><span class="cwg"><small>Nastawa</small><b>${H.fmt(tgt, 0)}°</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="Podwyższ nastawę">${H.icon('mdi:plus')}</button></div></div>
+        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}Grzeje${isNaN(tgt) ? '' : ` do ${H.fmt(tgt, 0)}°`}` : H.esc(state)}</span>
+          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="Obniż nastawę">${H.icon('mdi:minus')}</button><span class="cwg"><small>Nastawa</small><b>${isNaN(tgt) ? '–' : H.fmt(tgt, 0) + '°'}</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="Podwyższ nastawę">${H.icon('mdi:plus')}</button></div></div>
         <div class="cwi">${info.map(([v, u, l, hot]) => `<div class="cwp ${hot ? 'on' : ''}"><b>${H.esc(v)}<em>${H.esc(u)}</em></b><small>${H.esc(l)}</small></div>`).join('')}</div>
       </div>
       <div class="stg2">${sws}</div></ha-card></div>`;
@@ -806,13 +811,13 @@ ha-card.wmc{ gap:var(--s2); }
     const app = at.app_name && !/^[a-z]+\.[a-z0-9.]+$/i.test(at.app_name) ? at.app_name : '', src = at.source || '';
     const title = at.media_title || app || ST[s.state] || H.stateLabel(s.state);
     const sub = [at.media_title ? (at.media_artist || at.media_album_name || app) : '', at.media_series_title].filter(Boolean).join(' · ') || (at.media_title || app ? ST[s.state] || '' : nm);
-    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy" crossorigin="anonymous">` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
+    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy"${/^\/(?!\/)/.test(at.entity_picture) ? ' crossorigin="anonymous"' : ''}>` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
     const dur = Number(at.media_duration) || 0, has = dur > 0 && at.media_position != null && (f & 2 || true);
     const pos = has ? Math.min(dur, Number(at.media_position) + (pl && at.media_position_updated_at ? (Date.now() - new Date(at.media_position_updated_at)) / 1000 : 0)) : 0;
     const tm = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
     const prog = has ? `<div class="mpg" data-dur="${dur}" data-pos="${pos.toFixed(1)}" data-t="${Date.now()}" data-pl="${pl ? 1 : 0}"><div class="mpt"><i style="transform:scaleX(${(pos / dur).toFixed(4)})"></i></div><div class="mpn"><span>${tm(pos)}</span><span>-${tm(dur - pos)}</span></div></div>` : '';
     const B = (a, ic, lab, big) => `<button class="mb ${big ? 'big' : ''}" data-act="${a}" data-e="${E}" aria-label="${lab}">${H.icon(ic)}</button>`;
-    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', 'Poprzedni') : '', (f & 1) || (f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? 'Pauza' : 'Odtwarzaj', 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', 'Następny') : ''].join('') : '';
+    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', 'Poprzedni') : '', (pl ? f & 1 : f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? 'Pauza' : 'Odtwarzaj', 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', 'Następny') : ''].join('') : '';
     const vl = at.volume_level, mu = !!at.is_volume_muted, vp = vl != null ? Math.round(vl * 100) : null;
     const vol = !off && (f & 4) && vp != null ? `<div class="mpv">${f & 8 ? `<button class="mb sm" data-act="mpmu" data-e="${E}" aria-label="${mu ? 'Wyłącz wyciszenie' : 'Wycisz'}" aria-pressed="${mu}">${H.icon(mu || vp === 0 ? 'mdi:volume-off' : vp < 40 ? 'mdi:volume-medium' : 'mdi:volume-high')}</button>` : H.icon('mdi:volume-high')}
       <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc('Głośność: ' + nm)}"><output>${vp}%</output></div>` : '';
@@ -880,7 +885,7 @@ ha-card.wmc{ gap:var(--s2); }
       const [v, u] = dom === 'binary_sensor' ? [s.state === 'on' ? 'Tak' : 'Nie', ''] : dom === 'select' ? [HGDev.stPl(s.state), ''] : this._num(s);
       return `<button class="row sub" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(U[u] || u)}</em>` : ''}</span></button>`;
     }).join('') + `<button class="lnk sm" data-act="dev" data-d="${H.esc(g.d)}">${H.icon('mdi:cog-outline')}Ustawienia urządzenia</button>` : '';
-    const tg = main ? this.toggleHtml(st(main).state === 'on', 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
+    const tg = main ? this.toggleHtml(['on', 'open'].includes(st(main).state), 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
     return `<div class="blk"><ha-card class="glass dv ${on ? 'on' : ''}">
       <div class="dh"><span class="ri">${H.icon(icon)}</span><button class="tx" data-act="${main ? 'more' : 'dev'}" ${main ? `data-e="${H.esc(main)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + (status ? ', ' + status : ''))}"><b>${H.esc(title)}</b>${status ? `<span>${H.esc(status)}</span>` : ''}</button>${tg}</div>
       ${mx ? `<div class="mx">${mx}</div>` : ''}${warns.length ? `<div class="wr">${warns.map(([i, t]) => `<span class="wc">${H.icon(i)}${H.esc(t)}</span>`).join('')}</div>` : ''}
@@ -930,10 +935,10 @@ ha-card.wmc{ gap:var(--s2); }
     for (const e of M) blocks.push(this._player(e));
     // rolety
     const C = S.cover.filter(ok);
-    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, 'Roleta'), p = s.attributes.current_position;
+    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, 'Roleta'), p = s.attributes.current_position, cf = s.attributes.supported_features ?? 11;
       const st = { open: 'Otwarta', closed: 'Zamknięta', opening: 'Otwiera się', closing: 'Zamyka się' }[s.state] || H.stateLabel(s.state);
       return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + p + '%' : ''}</span></button>
-        <div class="bts"><button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="Otwórz">${H.icon('mdi:arrow-up')}</button><button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="Zatrzymaj">${H.icon('mdi:stop')}</button><button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="Zamknij">${H.icon('mdi:arrow-down')}</button></div></div>`; }).join(''), C.length);
+        <div class="bts">${cf & 1 ? `<button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="Otwórz">${H.icon('mdi:arrow-up')}</button>` : ''}${cf & 8 ? `<button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="Zatrzymaj">${H.icon('mdi:stop')}</button>` : ''}${cf & 2 ? `<button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="Zamknij">${H.icon('mdi:arrow-down')}</button>` : ''}</div></div>`; }).join(''), C.length);
     // kamery: osadzona karta kamery (miniatura, podgląd na żywo, pełny ekran)
     for (const e of S.cam) if (ok(e)) blocks.push(`<div class="blk"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`);
     // urządzenia: jedna karta na urządzenie (encje mediów/klimatyzacji/kamer należą do swoich komponentów)
@@ -1006,17 +1011,6 @@ ha-card.wmc{ gap:var(--s2); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
-    this._camLoad();
-  }
-  _camLoad() {
-    for (const img of this.$.querySelectorAll('img[data-cam]')) {
-      const s = this._hass.states[img.dataset.cam]; if (!s || !s.attributes.entity_picture) continue;
-      const u = s.attributes.entity_picture; img.src = u + (u.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 1000);
-    }
-  }
-  _camTimer() {
-    clearInterval(this._ct);
-    this._ct = setInterval(() => { if (!document.hidden && this.isConnected && this._hass && this.$) this._camLoad(); }, Math.max(5, this._config ? this._config.refresh : 10) * 1000);
   }
   onAct(act, t) {
     const h = this._hass, e = t.dataset.e;
@@ -1032,11 +1026,11 @@ ha-card.wmc{ gap:var(--s2); }
     if (act === 'cwus') { const e = t.dataset.e; return H.call(h, 'switch', h.states[e] && h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
     if (act === 'sta') return H.call(h, 'automation', h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e });
     if (act === 'wm') return H.call(h, 'select', 'select_option', { entity_id: e, option: t.dataset.o });
-    if (act === 'mpp') return H.call(h, 'media_player', 'media_play_pause', { entity_id: e });
+    if (act === 'mpp') return H.call(h, 'media_player', h.states[e].state === 'playing' && (h.states[e].attributes.supported_features & 1) ? 'media_pause' : 'media_play', { entity_id: e });
     if (act === 'mpprev') return H.call(h, 'media_player', 'media_previous_track', { entity_id: e });
     if (act === 'mpnext') return H.call(h, 'media_player', 'media_next_track', { entity_id: e });
     if (act === 'mpmu') return H.call(h, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !h.states[e].attributes.is_volume_muted });
-    if (act === 'mpw') return H.call(h, 'media_player', h.states[e].state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e });
+    if (act === 'mpw') return H.call(h, 'media_player', ['off', 'standby'].includes(h.states[e].state) ? 'turn_on' : 'turn_off', { entity_id: e });
     if (act === 'cov') return H.call(h, 'cover', t.dataset.s, { entity_id: e });
     if (act === 'robots') return H.navigate(this._config.robots_path);
     if (act === 'dev') return H.navigate('/config/devices/device/' + t.dataset.d);

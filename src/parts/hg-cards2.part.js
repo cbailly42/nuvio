@@ -61,7 +61,7 @@ class HGSolarCard extends HGBase {
     if (!this._hass || !this._config || !this._config.statistic || (this._loading && !force)) return;
     this._loading = true;
     try {
-      if (force) HGStats.cache = {};
+      if (force) delete HGStats.cache[this._config.statistic + this._config.days];   // tylko własny wpis (inne karty zachowują pamięć)
       const v = await HGStats.daily(this._hass, [this._config.statistic], this._config.days);
       this._data = { t: Date.now(), v }; this._err = null;
     } catch (e) { this._err = String(e && e.message || e); }
@@ -106,7 +106,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     if (todayState != null && isFinite(todayState) && todayState > vals[vals.length - 1]) vals[vals.length - 1] = todayState;
     const n = vals.length, sel = this._sel == null ? n - 1 : this._sel;
     const W = this._w || 400, Hh = 100;
-    const pad = 0.06, xs = vals.map((_, i) => (pad + (i * (1 - 2 * pad)) / (n - 1)) * 100);
+    const pad = 0.06, xs = vals.map((_, i) => (n > 1 ? pad + (i * (1 - 2 * pad)) / (n - 1) : 0.5) * 100);   // days:1 -> punkt na środku
     const mx = Math.max(...vals, 0.001) * 1.15;
     const yv = (v) => 70 - (v / mx) * 58;   // % wysokości wykresu
     const pts = vals.map((v, i) => [xs[i], yv(v)]);
@@ -209,7 +209,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
     const nm = c.name || H.name(this._hass, c.entity);
     if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>brak encji</div></ha-card>`;
     const a = s.attributes, sf = a.supported_features || 0, st = s.state;
-    const pic = a.entity_picture ? `style="background-image:url('${H.esc(a.entity_picture)}')"` : '';
+    const pic = a.entity_picture ? `style="background-image:url('${H.cssUrl(a.entity_picture)}')"` : '';
     const sub = [a.media_title, a.media_artist].filter(Boolean).join(' · ') || H.stateLabel(st);
     const AL = { prev: 'Poprzedni', next: 'Następny', on: 'Włącz', off: 'Wyłącz' };
     const b = (f, act, ic, cls = '') => (sf & f ? `<button class="cb ${cls}" data-act="${act}" aria-label="${AL[act]}" title="${AL[act]}">${H.icon(ic)}</button>` : '');
@@ -235,7 +235,7 @@ const hgAvatar = (hass, e, cls = 'av') => {
   const pic = s && s.attributes.entity_picture;
   const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
   const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
-  return pic ? `<span class="${cls}" style="background-image:url('${H.esc(pic)}')"></span>`
+  return pic ? `<span class="${cls}" style="background-image:url('${H.cssUrl(pic)}')"></span>`
     : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
 };
 class HGPersonCard extends HGBase {

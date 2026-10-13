@@ -33,6 +33,7 @@ function hgBmPassThrough(on) {
    Stary hg-page zapisuje w HGNav położenie wskaźników (zakładka, szyna) i panelu tuż przed zmianą adresu; nowy w connectedCallback /
    po pierwszym zbudowaniu przesuwa wskaźniki z poprzedniej pozycji (transform).
    Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
+const HG_NO_AREAS = {};   /* stały pusty obiekt: HGAreas.model zapamiętuje model po referencji konfiguracji */
 const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
 const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
@@ -158,7 +159,8 @@ class HGPage extends HTMLElement {
       notifications_action: { notifications: true }, mail_action: { notifications: true },
       menu: [], storage_key: 'home-glass', zoom: { min: 0.8, max: 1.3, step: 0.1 },
     }, c);
-    this._built = false;
+    if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
+    this._built = false; this._w = null;
     this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
     if (this._hass) this._build();
   }
@@ -232,6 +234,8 @@ class HGPage extends HTMLElement {
     this._onVis = this._onVis || (() => { this._syncPlay(); if (!document.hidden) { HGVer.check(this._hass); this._glassRefresh(); } });
     document.addEventListener('visibilitychange', this._onVis);
     this._syncPlay();
+    this._hglSub = this._hglSub || (() => { if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
+    HGL.subs.add(this._hglSub);
     hgBmPassThrough(true);
     this.toggleAttribute('lite', hgLite());
     this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this);
@@ -240,7 +244,9 @@ class HGPage extends HTMLElement {
     if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
   }
   disconnectedCallback() {
-    if (this._editing) this._editExit(false);
+    HGL.subs.delete(this._hglSub);
+    if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
+    document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
     if (this._config && this._config.redirect) return;
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('location-changed', this._onLoc);
@@ -265,7 +271,7 @@ class HGPage extends HTMLElement {
       this._unsub.catch(() => { this._unsub = null; });
     } catch (e) { /* brak subskrypcji – brak kropki */ }
   }
-  _ls(k, v) { const key = this._config.storage_key + ':' + k; if (v === undefined) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } } localStorage.setItem(key, JSON.stringify(v)); }
+  _ls(k, v) { const key = this._config.storage_key + ':' + k; if (v === undefined) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } } try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* pamięć zablokowana / pełna */ } }
 
   /* ---------- tryb i skala ---------- */
   _layout() {
@@ -348,8 +354,10 @@ class HGPage extends HTMLElement {
   }
 
   /* ---------- budowa ---------- */
+  /* podpis zapisanego układu tego widoku: późno wczytane dane użytkownika (HGL.load > 900 ms) -> przebudowa */
+  _layoutSig() { const sc = this._pageScope && this._pageScope(); return sc ? JSON.stringify([HGL.data.s[sc] || null, HGL.data.s[sc + ':tiles'] || null]) : ''; }
   async _build() {
-    if (this._building) return; this._building = true;
+    if (this._building) { this._rebuild = true; return; } this._building = true; this._rebuild = false;
     const c = this._config;
     const sr = this.shadowRoot;
     sr.innerHTML = `<style>${HG_BASE}${this._css()}</style>
@@ -389,14 +397,14 @@ class HGPage extends HTMLElement {
     const helpers = HG_HELPERS || (window.loadCardHelpers ? (HG_HELPERS = await window.loadCardHelpers()) : null);
     this._cards = []; this._cardWraps = [];
     if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
-    if (this._config._hgAuto && HGL.loaded && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    if (this._config._hgAuto && HGL.loaded && !HGL.failed && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
     const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
     if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
     for (const cc of LC) {
       const w = document.createElement('div'); w.className = 'cw'; w.dataset.hgk = cc._k;
       if (cc._hid) { w.hidden = true; w.style.display = 'none'; }
       let el;
-      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles;
+      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid;
       try {
         if (helpers) el = helpers.createCardElement(conf);
         else { el = document.createElement(conf.type.replace('custom:', '')); el.setConfig(conf); }
@@ -405,7 +413,8 @@ class HGPage extends HTMLElement {
       w.appendChild(el); this._panelEl.appendChild(w);
       this._cards.push(el); this._cardWraps.push(w);
     }
-    this._built = true; this._building = false;
+    this._built = true; this._building = false; this._lsig = this._layoutSig();
+    if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
     this._sigTop = this._sigRail = this._sigHub = null;
     this._paintHead(); this._paintTools();
     this._paintTop(true); this._paintRail(true); this._paintHub(true);
@@ -493,7 +502,7 @@ class HGPage extends HTMLElement {
   }
   /* nagłówek widoku pokoju: przycisk „Pokoje”, ikona i nazwa pokoju, temperatura / wilgotność (adres ?area=<id>) */
   _roomHead() {
-    const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || {}), a = m.byId[HGAreas.areaFromUrl()];
+    const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()];
     const back = `<button class="rback" data-act="roomback" aria-label="Wróć do pokoi">${H.icon('mdi:chevron-left')}<span>Pokoje</span></button>`;
     if (!a) return `${back}<h1>Pokój</h1><p>Nie znaleziono pokoju</p>`;
     const env = HGAreas.env(h, a), S = a.sec || {}, okS = (e) => H.ok(h.states[e]);
@@ -684,7 +693,7 @@ class HGPage extends HTMLElement {
     if (!force && sig === this._sigRail) return; this._sigRail = sig;
     const btn = (r) => `<button class="ri ${r.act ? 'act' : ''}" data-act="rail" data-i="${r.i}" aria-label="${H.esc(r.label)}" title="${H.esc(r.label)}">${r.svg && HG_SVG[r.svg] ? HG_SVG[r.svg] : H.icon(r.icon)}</button>`;
     const moreB = ov.size ? `<button class="ri ${moreAct ? 'act' : ''}" data-act="railmore" aria-haspopup="dialog" aria-expanded="${!!(this._sheetOpen && this._sheetMode === 'rail')}" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-grid')}</button>` : '';
-    this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + btn(items[items.length - 1]) + '<i class="rind" aria-hidden="true"></i>';
+    this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + (items.length ? btn(items[items.length - 1]) : '') + '<i class="rind" aria-hidden="true"></i>';
     this._placeInd();
     if (!this._rfChk) { this._rfChk = true; requestAnimationFrame(() => { this._rfChk = false; this._paintRail(); }); }   // ponowny pomiar po malowaniu
     if (!this._rfT) { this._rfT = true; for (const ms of [400, 1200, 3000]) setTimeout(() => { if (this.isConnected) this._paintRail(); }, ms); }

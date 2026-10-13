@@ -10,8 +10,10 @@ class HGPlayersCard extends HGBase {
       exclude_platforms: ['browser_mod'], exclude: [] };
   }
   _list() {
-    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
-    if (this._lc && this._lc.key === key) return this._lc.list;
+    const h = this._hass, c = this._config;
+    if (this._lc && this._lc.st === h.states && this._lc.ent === h.entities) return this._lc.list;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + (h.entities ? hgNKeys(h.entities) : 0);
+    if (this._lc && this._lc.key === key && this._lc.ent === h.entities) { this._lc.st = h.states; return this._lc.list; }
     const reg = h.entities || {}, seen = new Set(), names = new Map(), out = [];
     const nm = (e) => c.names[e] || (h.states[e] && h.states[e].attributes.friendly_name) || e;
     const add = (e, forced) => {
@@ -26,7 +28,7 @@ class HGPlayersCard extends HGBase {
     };
     for (const e of c.entities) add(e, true);
     if (c.discover) for (const e of Object.keys(h.states)) if (e.startsWith('media_player.')) add(e, false);
-    this._lc = { key, list: out }; this._entsC = null;
+    this._lc = { key, st: h.states, ent: h.entities, list: out }; this._entsC = null;
     return out;
   }
   ents() { return this._hass ? this._list() : this._config.entities; }
@@ -113,7 +115,7 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
   }
   _cov(e, s, cls = '') {
     const a = s.attributes, pic = a.entity_picture, icon = this._config.icons[e] || (/tv|dekoder|tele/.test(e) ? 'mdi:television-box' : /nest|gh|home/.test(e) ? 'mdi:cast-audio' : 'mdi:speaker');
-    return pic ? `<span class="cov ${cls}" style="background-image:url('${H.esc(pic)}')" aria-hidden="true"></span>` : `<span class="cov ${cls}" aria-hidden="true">${H.icon(icon)}</span>`;
+    return pic ? `<span class="cov ${cls}" style="background-image:url('${H.cssUrl(pic)}')" aria-hidden="true"></span>` : `<span class="cov ${cls}" aria-hidden="true">${H.icon(icon)}</span>`;
   }
   render() {
     const c = this._config, h = this._hass, list = this._list(), nm = (e) => c.names[e] || H.name(h, e);
@@ -128,25 +130,25 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
       if (a.media_duration > 0 && a.media_position != null) {
         const upd = Date.parse(a.media_position_updated_at || s.last_updated), pos = Math.min(a.media_duration, a.media_position + (s.state === 'playing' ? (Date.now() - upd) / 1000 : 0));
         pg = `<div class="pg"><span>${fmtT(pos)}</span><span class="tr"><i style="--p0:${((pos / a.media_duration) * 100).toFixed(2)}%;--dur:${Math.max(0, a.media_duration - pos).toFixed(0)}s"></i></span><span>${fmtT(a.media_duration)}</span></div>`;
-      } else if (a.media_start_time && a.media_end_time) {
+      } else if (typeof a.media_start_time === 'string' && typeof a.media_end_time === 'string') {
         // program TV (Enigma2): postęp audycji wg godzin z EPG
         const [sh, sm] = a.media_start_time.split(':').map(Number), [eh, em] = a.media_end_time.split(':').map(Number);
         const now = new Date(), st0 = new Date(now); st0.setHours(sh, sm, 0, 0); const en = new Date(now); en.setHours(eh, em, 0, 0); if (en <= st0) en.setDate(en.getDate() + 1);
         const dur = (en - st0) / 1000, pos = Math.min(dur, Math.max(0, (now - st0) / 1000));
-        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${a.media_start_time}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${a.media_end_time}</span></div>`;
+        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${H.esc(a.media_start_time)}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${H.esc(a.media_end_time)}</span></div>`;
       }
       const vol = (f & HG_MP.VOL_SET) && a.volume_level != null ? Math.round(a.volume_level * 100) : null;
       const volH = vol != null ? `<label class="vol">${H.icon(a.is_volume_muted ? 'mdi:volume-off' : 'mdi:volume-high')}<input type="range" min="0" max="100" step="1" value="${vol}" style="--v:${vol}%" data-act="vol" data-e="${e}" aria-label="Głośność: ${H.esc(nm(e))}"><output>${vol}%</output></label>`
         : (f & HG_MP.VOL_STEP) ? `<span class="vol">${H.icon('mdi:volume-high')}<button class="cb" data-act="vdn" data-e="${e}" aria-label="Ciszej">${H.icon('mdi:minus')}</button><button class="cb" data-act="vup" data-e="${e}" aria-label="Głośniej">${H.icon('mdi:plus')}</button></span>` : '';
       const srcs = (f & HG_MP.SOURCE) && Array.isArray(a.source_list) && a.source_list.length ? a.source_list : null;
       const srcH = srcs ? `<select data-act="src" data-e="${e}" aria-label="Źródło: ${H.esc(nm(e))}">${(a.source && !srcs.includes(a.source) ? [a.source] : []).concat(srcs).map((x) => `<option ${x === a.source || x === a.app_name ? 'selected' : ''}>${H.esc(x)}</option>`).join('')}${!a.source && !srcs.includes(a.app_name) ? '<option selected value="">Źródło…</option>' : ''}</select>` : '';
-      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${HG_MP_ST[s.state] || s.state}</span></span>
+      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${H.esc(HG_MP_ST[s.state] || s.state)}</span></span>
           <span class="ttl">${H.esc(title)}</span>${sub ? `<span class="sub">${H.esc(sub)}</span>` : ''}</div></div>
         ${pg}<div class="ctl">${this._ctl(e, s, true)}<span class="sp2"></span>${this._pw(e, s)}<button class="cb" data-act="more" data-e="${e}" aria-label="Szczegóły" title="Szczegóły">${H.icon('mdi:dots-horizontal')}</button></div>
         ${volH || srcH ? `<div class="row2">${volH}${srcH}</div>` : ''}</div>`;
     }).join('');
     const sm = idle.map((e) => { const s = h.states[e], a = s.attributes;
-      return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${HG_MP_ST[s.state] || s.state}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
+      return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${H.esc(HG_MP_ST[s.state] || s.state)}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
         ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
     const unN = [...new Set(un.map(nm))];
     const unH = unN.length ? `<div class="un">Niedostępne:${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
@@ -191,7 +193,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const c = this._config, h = this._hass;
     let tot = 0, n = 0;
     const rows = c.phases.map((p) => {
-      const w = H.num(h, p.power), v = H.num(h, p.voltage), a = H.num(h, p.current);
+      const w = hgW(h, p.power), v = H.num(h, p.voltage), a = H.num(h, p.current);
       if (w == null) return `<div class="ph na"><span class="n">${H.esc(p.name)}</span><span class="b"></span><span class="w">–</span><div class="va">niedostępna</div></div>`;
       const ww = Math.abs(w); tot += ww; n++;
       const pct = Math.min(100, (ww / c.phase_max) * 100);
@@ -233,6 +235,7 @@ class HGEnergyStatsCard extends HGBase {
     return { title: 'Zużycie i produkcja', icon: 'mdi:chart-bar', consumption: null, production: null, price: null, currency: 'zł',
       colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent)' }, link: '/energy' };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
   _extraSig() { return [this._d ? this._d.t : 0, this._mode || 'week', this._sel]; }
   connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000); }
@@ -378,7 +381,7 @@ class HGPvCard extends HGBase {
       if (!this._last) this._last = { t: Date.now(), d: null, s: 0 }; else this._last.t = Date.now(); } } catch (e) { this._last = { t: Date.now(), d: null, s: 0 }; }
     // dziś wg historii czujnika dziennego: suma odcinków między zerowaniami (falownik zeruje licznik po każdym ponownym uruchomieniu;
     // licznik całkowity po powrocie skacze o produkcję z okresów, których HA nie widział -> zawyża)
-    try { const c = this._config; if (c.today) { const m0 = new Date(); m0.setHours(0, 0, 0, 0);
+    try { const c = this._config; if (c.today) { const m0 = new Date(HGStats.midnight(Date.now(), HGStats.tz(h)));   // północ w strefie HA
       const r = await h.callWS({ type: 'history/history_during_period', start_time: m0.toISOString(), entity_ids: [c.today], minimal_response: true, no_attributes: true });
       const arr = (r && r[c.today]) || []; let tot = 0, seg = 0, any = false;
       for (const x of arr) { const v = parseFloat(x.s != null ? x.s : x.state); if (!isFinite(v)) continue; any = true; if (v + 0.001 < seg) { tot += seg; seg = v; } else seg = v; }
@@ -403,7 +406,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.power), on = H.ok(s);
-    const w = H.num(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
+    const w = hgW(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
     const col = on ? (w > 0 ? 'var(--hg-accent)' : '#6E747A') : '#6E747A';
     const since = s ? hgRel(new Date(s.last_changed)) : '';
     const lbl = on ? (w > 0 ? 'Produkuje' : 'Brak produkcji (noc / zachmurzenie)') : 'Falownik offline';
@@ -414,7 +417,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const tday = dsum != null ? dsum : this._today;
     const dz = tday == null ? ['–', ''] : tday < 0.05 && w > 0 ? ['< 0,1', 'kWh'] : [H.fmt(tday, 1), 'kWh'];
     const kv = [['Teraz', w != null ? [H.fmt(w, 0), 'W'] : ['–', '']], ['Dziś', dz]];
-    for (const st of c.strings) { const v = H.num(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
+    for (const st of c.strings) { const v = hgW(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
     if (c.temperature) kv.push(['Temperatura falownika', tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
     const L = this._last;
     const last = L && L.d ? `Ostatnia produkcja: <b>${H.esc(L.d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.` : L ? 'Brak produkcji w statystykach z ostatnich 30 dni.' : '';

@@ -4,27 +4,52 @@
    kopia w localStorage (home-glass:layout) jako zapas / natychmiastowy odczyt. */
 const HGL = window.__hgL || (window.__hgL = {
   KEY: 'home_glass_layout', LS: 'home-glass:layout',
-  data: (() => { try { return JSON.parse(localStorage.getItem('home-glass:layout') || 'null') || { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
-  subs: new Set(), loaded: false, _p: null,
+  /* kopia lokalna per użytkownik HA (wspólny tablet): klucz home-glass:layout:<user_id>; „:last” = ostatni użytkownik do natychmiastowego odczytu przed load() */
+  _lsKey(uid) { return this.LS + ':' + (uid || 'anon'); },
+  _lsRead(uid) { try { const v = JSON.parse(localStorage.getItem(this._lsKey(uid)) || 'null'); return v && v.s ? v : null; } catch (e) { return null; } },
+  data: (() => { try { const u = localStorage.getItem('home-glass:layout:last'); const v = u && JSON.parse(localStorage.getItem('home-glass:layout:' + u) || 'null'); return v && v.s ? v : { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
+  subs: new Set(), loaded: false, failed: false, editing: false, _p: null, _uid: null, _base: null,
   get(sc) { const x = this.data.s[sc] || {}; return { order: x.order || [], hidden: x.hidden || [], size: x.size || {}, added: x.added || [], names: x.names || {}, conf: x.conf || {} }; },
   set(sc, v) { const o = { order: v.order || [], hidden: v.hidden || [], size: v.size || {}, added: v.added || [], names: v.names || {}, conf: v.conf || {} };
     for (const k of Object.keys(o.conf)) if (!o.conf[k] || !Object.keys(o.conf[k]).length) delete o.conf[k];
     if (!o.order.length && !o.hidden.length && !Object.keys(o.size).length && !o.added.length && !Object.keys(o.names).length && !Object.keys(o.conf).length) delete this.data.s[sc]; else this.data.s[sc] = o; },
+  /* zrzut stanu serwera (po load/save) – przy zapisie wysyłamy tylko to, co zmieniło się względem niego */
+  _snap(v) { const x = v || { s: {} }; return { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])), app: JSON.stringify(x.app || null), wiz: JSON.stringify(x.wiz || null) }; },
+  _fetch(h) { return h.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { const v = r && r.value; return v && v.s ? v : null; }); },
   load(h) {
     if (this._p) return this._p;
-    const c = h && h.connection;
-    this._p = !c ? Promise.resolve() : c.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => {
-      const v = r && r.value; this.loaded = true;
-      if (v && v.s && (v.ts || 0) >= (this.data.ts || 0)) { this.data = v; this._ls(); this.notify(); }
+    const c = h && h.connection, uid = h && h.user && h.user.id;
+    if (uid && uid !== this._uid) {
+      this._uid = uid; try { localStorage.setItem('home-glass:layout:last', uid); } catch (e) {}
+      if (this.data.uid !== uid) this.data = this._lsRead(uid) || { v: 1, ts: 0, s: {} };   /* cudzy układ z poprzedniej sesji -> odrzuć */
+    }
+    this._p = !c ? Promise.resolve() : this._fetch(h).then((v) => {
+      this.loaded = true; this._base = this._snap(v);
+      /* serwer jest źródłem prawdy (zegary urządzeń się różnią); w trakcie edycji nie podmieniamy danych – scalenie nastąpi przy zapisie */
+      if (v && !this.editing) { this.data = v; this._ls(); this.notify(); }
       HGApp.apply();
-    }, () => { this.loaded = true; });
+    }, () => { this.loaded = true; this.failed = true; });
     return this._p;
   },
-  _ls() { try { localStorage.setItem(this.LS, JSON.stringify(this.data)); } catch (e) {} },
-  save(h) {
-    this.data.ts = Date.now(); this._ls();
-    if (window.__hgDryRun || !h || !h.connection) return Promise.resolve('local');
-    return h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: this.data }).then(() => 'ha', () => 'local');
+  _ls() { try { if (this._uid) this.data.uid = this._uid; localStorage.setItem(this._lsKey(this._uid || this.data.uid), JSON.stringify(this.data)); } catch (e) {} },
+  /* zapis: najpierw świeża wersja z serwera, potem nałożenie tylko zmienionych zakresów (inne urządzenie mogło zapisać w międzyczasie) */
+  async save(h) {
+    this.data.ts = Date.now();
+    if (window.__hgDryRun || !h || !h.connection) { this._ls(); return 'local'; }
+    try {
+      const srv = await this._fetch(h), base = this._base || this._snap(null), out = srv ? JSON.parse(JSON.stringify(srv)) : { v: 1, s: {} };
+      out.s = out.s || {};
+      for (const k of new Set([...Object.keys(this.data.s), ...Object.keys(base.s)])) {
+        const mine = this.data.s[k] ? JSON.stringify(this.data.s[k]) : undefined;
+        if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
+        if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
+      }
+      for (const k of ['app', 'wiz']) if (JSON.stringify(this.data[k] || null) !== base[k]) { if (this.data[k]) out[k] = this.data[k]; else delete out[k]; }
+      out.ts = this.data.ts; delete out.uid;
+      await h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: out });
+      this.data = out; this._base = this._snap(out); this._ls(); this.failed = false; this.notify();
+      return 'ha';
+    } catch (e) { this._ls(); return 'local'; }
   },
   notify() { HGApp.apply(); for (const f of [...this.subs]) try { f(); } catch (e) {} },
   /* kolejność listy elementów wg zapisanych kluczy (nieznane na końcu, w kolejności bazowej) */
@@ -48,7 +73,11 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const base = { '--hg-accent': this.hex(c), '--hg-on-accent': on, '--hg-accent-hi': this.hex(this.mix(c, [255, 255, 255], 0.25)), '--hg-accent-lo': this.hex(this.mix(c, [0, 0, 0], 0.35)),
       '--hg-accent-soft': 'rgb' + `a(${r},.22)`, '--hg-accent-faint': 'rgb' + `a(${r},.10)`, '--hg-accent-glow': 'rgb' + `a(${r},.30)` };
     return { light: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [236, 238, 241]) }), dark: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [40, 44, 50]) }) }; },
-  get() { return (HGL.data.app) || {}; },
+  /* dane wyglądu trafiają do CSS i atrybutów HTML: kolory tylko #RRGGBB, adres tła tylko /… lub https://… */
+  get() { const a = HGL.data.app || {}, hx = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v), o = Object.assign({}, a);
+    if (o.accent != null && !hx(o.accent)) delete o.accent; if (o.dim != null && !isFinite(Number(o.dim))) delete o.dim;
+    const b = o.bg; if (b && typeof b === 'object') { const okC = b.kind === 'color' || b.kind === 'gradient' ? hx(b.v) && (b.v2 == null || hx(b.v2)) : typeof b.v === 'string' && /^(\/|https?:\/\/)/.test(b.v) && !/[\s"'()<>\\]/.test(b.v); if (!okC) delete o.bg; }
+    return o; },
   set(v) { HGL.data.app = v; this.apply(); },
   css(o) { return Object.entries(o).map(([k, v]) => `${k}: ${v} !important;`).join(' '); },
   bgImg(b) { if (!b) return null;
@@ -165,8 +194,8 @@ const hgTileAct = (card, act, t) => {
   if (act === 'ttog') { if (d === 'lock') H.call(h, 'lock', s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e }); else H.call(h, 'homeassistant', 'toggle', { entity_id: e }); return true; }
   if (act === 'trun') { H.call(h, d === 'scene' ? 'scene' : d === 'script' ? 'script' : d, d === 'scene' || d === 'script' ? 'turn_on' : 'press', { entity_id: e }); return true; }
   if (act === 'tcov') { H.call(h, 'cover', t.dataset.s, { entity_id: e }); return true; }
-  if (act === 'tmp') { H.call(h, 'media_player', 'media_play_pause', { entity_id: e }); return true; }
-  if (act === 'tmw') { H.call(h, 'media_player', s.state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e }); return true; }
+  if (act === 'tmp') { const f = s.attributes.supported_features || 0, pp = (f & 1) && (f & 16384); H.call(h, 'media_player', pp ? 'media_play_pause' : s.state === 'playing' ? 'media_pause' : 'media_play', { entity_id: e }); return true; }
+  if (act === 'tmw') { H.call(h, 'media_player', ['off', 'standby'].includes(s.state) ? 'turn_on' : 'turn_off', { entity_id: e }); return true; }
   return false;
 };
 /* osadzenie kart klimatyzacji / kamer w slotach (jak w karcie pokoju) */
@@ -462,7 +491,7 @@ const HG_EDIT = {
       else { const b = this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]'); if (b && this._eAddE) { p2.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: p2 }); hgPvLive(p2); } } }, 1000);
   },
   /* klucz karty panelu: typ + pierwsza encja/tytuł/obszar (+ numer przy powtórzeniach) */
-  _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
+  _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc._hgid || cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
   _pageScope() { const v = this._config.view; return ['rooms', 'pokoj'].includes(v) ? null : v; },
   /* bazowe karty z CFG + nadpisania: kolejność (zamiana obszarów siatki albo kolejność DOM), ukryte, rozmiar, kafle dodane */
   _applyLayout(cards) {
@@ -499,14 +528,15 @@ const HG_EDIT = {
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
     if (this._editing || !this._isAdmin()) return;
-    this._editing = true; this._eSnap = JSON.stringify(HGL.data);
+    this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     this._eWire(); this._eDecorate(); this._eBar();
   },
+  _eDirty() { return this._editing && this._eSnap !== JSON.stringify(HGL.data); },
   _editExit(save) {
     if (!this._editing) return;
-    this._editing = false; this.removeAttribute('editing');
+    this._editing = false; HGL.editing = false; this.removeAttribute('editing');
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); };
@@ -585,7 +615,9 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else this._editExit(false); } };
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm('Odrzucić niezapisane zmiany układu?')) this._editExit(false); }
+      /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
+      else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };
     this._eL = [['pointerdown', onDown, true], ['click', onClick, true], ['touchmove', onTm, { passive: false, capture: true }], ['keydown', onKey, true]];
     for (const [t, f, o] of this._eL) window.addEventListener(t, f, o);
   },
@@ -632,7 +664,8 @@ const HG_EDIT = {
     if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
     if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, 'Usunięto encję'); }
-    if (a === 'cfgent') { this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.p, old: b.dataset.v }); return this._eSheet('add', null, this._eCfgR.sc); }
+    if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
+      this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
     const d = b._d || b.closest('.hge'); if (!d) return;
     const ct = d._ct, it = d._it, k = it.dataset.hgk;
@@ -669,7 +702,7 @@ const HG_EDIT = {
   },
   /* przeciąganie: mysz – od razu z uchwytu albo po 6 px; dotyk – uchwyt od razu, kafel po przytrzymaniu 380 ms */
   _eDown(e) {
-    if (e.button > 0) return;
+    if (e.button > 0 || e.isPrimary === false || (this._drag && this._drag.on)) return;   /* drugi palec nie przejmuje przeciągania */
     const { ctl, it, inBar } = this._ePath(e); if (inBar) return;
     if (ctl && ctl.dataset.hge !== 'drag') return;
     if (!it) return;
@@ -719,7 +752,11 @@ const HG_EDIT = {
     const items = this._eItems(ct);
     if (ct.page && this._config.panel.areas) {
       const base = (this._config.cards || []).map((c) => c.area), byArea = new Map(items.map((w) => [getComputedStyle(w).gridRowStart, w.dataset.hgk]));
-      const all = this._lkeys; const ord = base.map((a, i) => byArea.get(a) || all[i]);
+      /* sloty ukrytych kart: klucz z bieżącego układu (nie bazowego), bez duplikatów – inaczej ukryta karta znikała na stałe */
+      const all = this._lkeys, cur = (this._lc || []).map((c) => c._k), vis = new Set(byArea.values());
+      const ord = base.map((a, i) => byArea.get(a) || (cur[i] && !vis.has(cur[i]) ? cur[i] : null));
+      const miss = all.filter((k) => !ord.includes(k)), seen = new Set();
+      for (let i = 0; i < ord.length; i++) { if (!ord[i] || seen.has(ord[i])) ord[i] = miss.shift() || all[i]; seen.add(ord[i]); }
       this._eSet(ct.scope, (L) => { L.order = ord; });
     } else this._eSet(ct.scope, (L) => { L.order = items.map((w) => w.dataset.hgk); });
   },
@@ -876,9 +913,10 @@ const HG_EDIT = {
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   _eUpload(f) {
-    if (!f) return; const h = this._hass, tok = h && h.auth && h.auth.data && h.auth.data.access_token; if (!tok) return this._eToast('Brak sesji – nie można przesłać');
+    if (!f) return; const h = this._hass; if (!h || !h.fetchWithAuth) return this._eToast('Brak sesji – nie można przesłać');
     const fd = new FormData(); fd.append('file', f, f.name); this._eToast('Przesyłanie…');
-    fetch('/api/image/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + tok }, body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => {
+    /* fetchWithAuth odświeża wygasły token (tablety otwarte dłużej niż 30 min) */
+    h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => {
       const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast('Ustawiono przesłane zdjęcie'); this._eLook(); }, (e) => this._eToast('Nie udało się przesłać (' + e + ')'));
   },
   _eSheet(mode, ct, scOver) {
@@ -909,7 +947,7 @@ const HG_EDIT = {
     const rx = /\b[a-z_]+\.[a-z0-9_]+\b/g, js = JSON.stringify(this._config.cards || []);
     for (const m of js.match(rx) || []) if (h.states[m]) S.add(m);
     const walk = (r, d) => { if (!r || d > 4) return; for (const el of r.querySelectorAll('[data-e],[data-ac],[data-cam],[data-entity],[data-hgk]')) { for (const v of [el.dataset.e, el.dataset.ac, el.dataset.cam, el.dataset.entity, el.dataset.hgk]) if (v && h.states[v]) S.add(v); }
-      for (const el of r.querySelectorAll('*')) if (el.shadowRoot && el.tagName.startsWith('HG-')) walk(el.shadowRoot, d + 1); };
+      for (const el of r.querySelectorAll('*')) if (el.shadowRoot && /^(HG|NUVIO)-/.test(el.tagName)) walk(el.shadowRoot, d + 1); };
     walk(this.shadowRoot, 0);
     for (const sc of Object.keys(HGL.data.s)) for (const x of HGL.get(sc).added) if (sc === this._eSc) S.add(x.e);
     return S;

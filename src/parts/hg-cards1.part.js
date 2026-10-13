@@ -1,3 +1,9 @@
+/* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
+const hgW = (hass, e) => { const v = H.num(hass, e); if (v == null) return null; const u = String(H.st(hass, e).attributes.unit_of_measurement || '').trim(); return u === 'kW' ? v * 1000 : u === 'MW' ? v * 1e6 : v; };
+/* scalanie konfiguracji: zagnieżdżone obiekty domyślne (progi, etykiety, kolory) uzupełniane kluczami, nie zastępowane w całości */
+const hgDeep = (d, c) => { if (!c) return c; const o = Object.assign({}, c); for (const k in d) { const a = d[k], b = c[k]; if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) o[k] = Object.assign({}, a, b); } return o; };
+/* liczba kluczy obiektu (hass.states / hass.entities) liczona raz na referencję – wspólna dla kart z wykrywaniem encji */
+const hgNKeysM = new WeakMap(), hgNKeys = (o) => { let n = hgNKeysM.get(o); if (n == null) { n = Object.keys(o).length; hgNKeysM.set(o, n); } return n; };
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
   defaults() {
@@ -5,6 +11,7 @@ class HGEnergyCard extends HGBase {
       labels: { low: 'Niskie zużycie', medium: 'Średnie zużycie', high: 'Wysokie zużycie' }, expand: null,
       calc_label: 'Suma faz względem mocy maksymalnej' };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return this._config.entities; }
   css() {
     return U(`
@@ -25,7 +32,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   }
   data() {
     const c = this._config; let tot = 0, n = 0;
-    for (const e of c.entities) { const v = H.num(this._hass, e); if (v != null) { tot += Math.abs(v); n++; } }   // obciążenie fazy = |P| (eksport PV też płynie przez zabezpieczenie)
+    for (const e of c.entities) { const v = hgW(this._hass, e); if (v != null) { tot += Math.abs(v); n++; } }   // obciążenie fazy = |P| (eksport PV też płynie przez zabezpieczenie)
     if (!n) return null;
     const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
     return { tot, pct, lvl: pct < c.thresholds.low ? 'low' : pct < c.thresholds.high ? 'medium' : 'high' };
@@ -42,7 +49,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
         <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
         <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
     }
-    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(H.num(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
       <div class="scale"><span>0</span><span>50</span><span>100</span></div>
@@ -136,6 +143,7 @@ ha-card.glass > *{ flex-shrink:0; }
 .c1 .num{ font-size:32px; }
 .c2{ display:flex; align-items:center; gap:var(--s1); } .c2 .bar{ flex:1; } .c2 .kb{ margin-left:auto; }
 .mm{ display:flex; gap:6px; flex:none; } .mm .mb span{ display:none; } .mm .mb i{ width:44px; height:44px; border-radius:var(--r-sm); } .mm .mb i ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
+.num.rng{ font-size:calc(var(--ts, 72px) * .55); } .c1 .num.rng{ font-size:22px; }
 `);
   }
   _eff(s) {
@@ -154,7 +162,7 @@ ha-card.glass > *{ flex-shrink:0; }
     const e = h.entities && h.entities[c.entity], dv = e && e.device_id && h.devices ? h.devices[e.device_id] : null, ar = (e && e.area_id) || (dv && dv.area_id);
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
-  _lim(s) { const a = s.attributes; return { step: a.target_temp_step || 1, mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
+  _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
   _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return 'Wyłączona'; return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : `${m.l} do ${H.fmt(t)}°`; }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
@@ -168,10 +176,11 @@ ha-card.glass > *{ flex-shrink:0; }
     const hv = a.hvac_modes || [], seen = new Set();
     const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
     const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
-    const num = `<div class="num" aria-live="polite">${t != null ? H.fmt(t) : '–'}<sup>°</sup></div>`;
+    const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
+    const num = `<div class="num${rng ? ' rng' : ''}" aria-live="polite">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
     const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
     const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', 'Obniż temperaturę')}${num}${cv(1, 'mdi:chevron-right', 'Podwyższ temperaturę')}</div>`;
-    const bar = `<div class="bar" role="slider" tabindex="${on ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
     const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? 'Wyłącz klimatyzację' : 'Włącz klimatyzację'}" title="${on ? 'Wyłącz' : 'Włącz'}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? 'Włączona' : 'Wyłączona'}</span><span class="sh">${on ? 'Wł.' : 'Wył.'}</span></button>`;
     const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
     const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
@@ -218,16 +227,21 @@ ha-card.glass > *{ flex-shrink:0; }
       this._wired = true;
       const R = this.shadowRoot;
       const valAt = (bar, x) => { const s = H.st(this._hass, this._config.entity), { mn, mx } = this._lim(s), r = bar.getBoundingClientRect(); return mn + Math.max(0, Math.min(1, (x - r.left) / r.width)) * (mx - mn); };
+      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
+        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp);
+        window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); };
+      this._acEnd = end;
       R.addEventListener('pointerdown', (e) => {
         const p = e.composedPath(), bar = p.find((n) => n.classList && n.classList.contains('bar')), cv = p.find((n) => n.classList && n.classList.contains('cv'));
         const card = R.querySelector('ha-card'); if (!card || card.classList.contains('off')) return;
+        if (bar && this._eff(H.st(this._hass, this._config.entity)).t == null) return;   // zakres low/high: pasek nieaktywny
+        // puszczenie poza kartą / utrata przechwycenia: zatrzymaj powtarzanie i przeciąganie
+        if (bar || cv) { window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end); }
         if (bar) { e.preventDefault(); this._touching = true; bar.setPointerCapture && bar.setPointerCapture(e.pointerId); bar.classList.add('drag'); this._drag = bar; this._setT(valAt(bar, e.clientX), 60000); return; }
-        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
+        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
           go(); clearInterval(this._rp); clearTimeout(this._rd); this._rd = setTimeout(() => { this._rp = setInterval(go, 160); }, 420); this._cvEl = cv; }
       });
       R.addEventListener('pointermove', (e) => { if (this._drag) this._setT(valAt(this._drag, e.clientX), 60000); });
-      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
-        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp); };
       R.addEventListener('pointerup', end); R.addEventListener('pointercancel', end);
       R.addEventListener('keydown', (e) => { const b = e.composedPath()[0]; if (!b.classList || !b.classList.contains('bar')) return; const s = H.st(this._hass, this._config.entity), { step } = this._lim(s), t = this._eff(s).t; if (t == null) return;
         const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key]; if (d) { e.preventDefault(); this._setT(t + d * step, 700); } });
@@ -264,6 +278,7 @@ ha-card.glass > *{ flex-shrink:0; }
       }
     }
   }
+  disconnectedCallback() { if (this._acEnd) this._acEnd(); clearTimeout(this._rd); clearInterval(this._rp); if (this._ct) { clearTimeout(this._ct); this._ct = 0; this._commit(); } }
   _set(o) { this._opt = { ...o, ts: Date.now() }; this.rerender(); }
   _okey() { return 'home-glass:ac-open:' + this._config.entity + (this._config.compact ? ':c' : ''); }
   _isOpen() { if (this._open == null) { try { this._open = sessionStorage.getItem(this._okey()) === '1'; } catch (e) { this._open = false; } } return this._open; }

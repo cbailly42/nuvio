@@ -46,7 +46,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const x = this._config.scripts[Number(t.dataset.i)]; if (!x) return;
     const r = t.getBoundingClientRect(), px = (e && e.clientX ? e.clientX : r.left + r.width / 2) - r.left, py = (e && e.clientY ? e.clientY : r.top + r.height / 2) - r.top;
     const rp = document.createElement('i'); rp.className = 'rp'; rp.style.left = px + 'px'; rp.style.top = py + 'px'; t.appendChild(rp);
-    H.call(this._hass, 'script', 'turn_on', { entity_id: x.entity });
+    H.call(this._hass, String(x.entity).split('.')[0] === 'scene' ? 'scene' : 'script', 'turn_on', { entity_id: x.entity });   // scene.* -> scene.turn_on
     clearTimeout(this._okT); clearTimeout(this._okT2);
     this._okT2 = setTimeout(() => { this._ok = x.entity; this.rerender(); this._okT = setTimeout(() => { this._ok = ''; this.rerender(); }, 2200); }, 420);
   }
@@ -95,7 +95,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
     const c = this._config, h = this._hass;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
       ${c.expand ? `<button class="ib" data-act="expand" aria-label="Raporty" title="Raporty">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
-    let tot = 0, n = 0; for (const e of c.entities) { const v = H.num(h, e); if (v != null) { tot += Math.abs(v); n++; } }
+    let tot = 0, n = 0; for (const e of c.entities) { const v = hgW(h, e); if (v != null) { tot += Math.abs(v); n++; } }
     if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
     const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
     const lvl = pct < 30 ? 'Niskie' : pct < 70 ? 'Średnie' : 'Wysokie';
@@ -113,7 +113,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
       svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
         <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/></svg>`;
     }
-    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(H.num(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% ${lvl}</span></div>
       <div class="gg" style="--p:${pct.toFixed(1)}%" title="${Math.round(pct)}% ${lvl}"><i></i></div><div class="gl"><span>0</span><span>100%</span></div>
@@ -177,6 +177,7 @@ class HGWeekCard extends HGBase {
     return { title: 'Energia · tydzień', icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
       labels: { consumption: 'Zużycie', production: 'Produkcja' }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
   _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._hide ? [...this._hide].join() : '']; }
   connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000);
@@ -241,7 +242,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
     const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
     const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: pokaż/ukryj na wykresie">
-      <small><i></i>${H.esc(s.label)} · 7 dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+      <small><i></i>${H.esc(s.label)} · ${n} dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
     const dayName = (d, i) => (i === n - 1 ? 'dziś' : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));

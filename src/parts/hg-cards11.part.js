@@ -34,7 +34,7 @@ class HGNetCard extends HGBase {
   _n() { return this._config.net || {}; }
   _clientEnts() {
     const h = this._hass, n = this._n(), cl = n.clients || {}, ex = new Set(cl.exclude || []);
-    const key = h.entities ? Object.keys(h.entities).length : 0;
+    const key = h.entities;      // rejestr encji: nowy obiekt przy każdej zmianie
     if (this._clK === key && this._clL) return this._clL;
     const L = Object.values(h.entities || {}).filter((e) => e.platform === (cl.platform || 'unifi') && e.entity_id.startsWith('device_tracker.') && !ex.has(e.entity_id) && !e.hidden).map((e) => e.entity_id);
     this._clK = key; this._clL = L; return L;
@@ -52,13 +52,15 @@ class HGNetCard extends HGBase {
   _extraSig() { return [this._config.section === 'wan' ? (this._hist || []).length : 0, this._flt, this._srt, Math.floor(Date.now() / 60000)]; }
   set hass(h) { const first = !this._hass; this._hass = h; window.__hgHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
   get hass() { return this._hass; }
+  connectedCallback() { super.connectedCallback(); if (this._hass && this._config && this._config.section === 'wan' && !this._hT) this._ldHist(); }
+  disconnectedCallback() { clearTimeout(this._hT); this._hT = 0; }
   async _ldHist() {
-    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true;
+    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true; clearTimeout(this._hT); this._hT = 0;
     try {
       const r = await h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 24 * 3600e3).toISOString(), entity_ids: [e.entity], minimal_response: true, no_attributes: true });
       this._hist = ((r && r[e.entity]) || []).map((x) => parseFloat(x.s)).filter((v) => isFinite(v)); this.rerender();
     } catch (err) { this._hist = []; }
-    this._hl = false; setTimeout(() => this.isConnected && this._ldHist(), 10 * 60000);
+    this._hl = false; if (this.isConnected) this._hT = setTimeout(() => { this._hT = 0; if (this.isConnected) this._ldHist(); }, 10 * 60000);
   }
   css() {
     return U(`

@@ -75,8 +75,12 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
         <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), 'zmiana ' + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : 'Brak encji ' + H.esc(c.entity)}</span></div></div>
       ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
   }
-  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); }; } }
+  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
+    i.onblur = () => { if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }; } }
+  /* pole kodu z fokusem: nie podmieniaj DOM (utrata fokusu/klawiatury) – przerysuj po blur */
+  _doUpdate(force) { const i = this.$ && this.$.querySelector('.pw'); if (i && this.shadowRoot.activeElement === i) { this._pendingUpd = true; return; } return super._doUpdate(force); }
   _send(m, code) {
+    const pw = this.$.querySelector('.pw'); if (pw) pw.blur();
     const d = { entity_id: this._config.entity }; if (code) d.code = code;
     this._pend = null; this._code = '';
     H.call(this._hass, 'alarm_control_panel', 'alarm_' + m, d);
@@ -114,8 +118,10 @@ class HGSensorsCard extends HGBase {
   _extraSig() { return [this._tab || 'all', !!this._showUn, Math.floor(Date.now() / 60000), this._disc && this._disc.key]; }
   /* wykrywanie tylko gdy zmieni się liczba encji lub rejestr (nie przy każdym hass) */
   _discover() {
-    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
-    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) return this._disc;
+    const h = this._hass, c = this._config;
+    if (this._disc && this._disc.st === h.states && this._disc.ent === h.entities) return this._disc;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + (h.entities ? hgNKeys(h.entities) : 0);
+    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) { this._disc.st = h.states; return this._disc; }
     const reg = h.entities || {}, dev = h.devices || {};
     const exc = c.exclude.map(hgGlob), inc = c.include.map(hgGlob);
     const list = [];
@@ -143,7 +149,7 @@ class HGSensorsCard extends HGBase {
       for (const x of list) if (x.dev && byDev[x.dev]) x.lux = byDev[x.dev][0];
     }
     this._entsC = null;
-    return (this._disc = { key, ent: h.entities, list });
+    return (this._disc = { key, ent: h.entities, st: h.states, list });
   }
   ents() { if (!this._hass) return []; return this._discover().list.flatMap((x) => (x.lux ? [x.e, x.lux] : [x.e])); }
   _changed() { const k = this._disc && this._disc.key; this._discover(); if (this._disc.key !== k) { this._entsC = null; this._prevStates = null; } return super._changed(); }

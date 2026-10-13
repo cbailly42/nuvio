@@ -167,17 +167,19 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
     const k = `${y}-${m}`; if (this._k === k) return; this._k = k;
     const cals = HGCal.cals(this._hass, this._config.calendars);
     const res = await HGCal.fetch(this._hass, cals, new Date(y, m, 1), new Date(y, m + 1, 1));
-    if (this._k !== k) return; this._res = res; this._n = (this._n || 0) + 1; this.rerender();
+    if (this._k !== k) return; this._res = res; this._rk = k; this._n = (this._n || 0) + 1; this.rerender();
+    clearTimeout(this._rt); this._rt = setTimeout(() => { this._k = null; this.rerender(); }, 300000);   // odświeżanie co 5 min (jak agenda)
   }
+  disconnectedCallback() { clearTimeout(this._rt); this._k = null; this._stale = true; }
   render() {
     const c = this._config, now = new Date(), base = new Date(now.getFullYear(), now.getMonth() + (this._off || 0), 1);
     const y = base.getFullYear(), m = base.getMonth();
     this._load(y, m);
-    const res = this._k === `${y}-${m}` ? this._res : null;
+    const res = this._rk === `${y}-${m}` ? this._res : null;
     const byDay = {};
     for (const r of res || []) for (const e of r.ev) {
       const d = new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate());
-      const last = e.allDay ? new Date(e.end - 1) : e.end;
+      const last = e.allDay || e.end > e.start ? new Date(e.end - 1) : e.end;   // koniec wyłączny: wydarzenie do 00:00 nie zajmuje następnego dnia
       for (let i = 0; i < 62 && d <= last; i++) { (byDay[hgDayKey(d)] = byDay[hgDayKey(d)] || []).push(e); d.setDate(d.getDate() + 1); }
     }
     const first = (base.getDay() + 6) % 7, start = new Date(y, m, 1 - first);

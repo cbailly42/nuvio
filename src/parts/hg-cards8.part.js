@@ -28,8 +28,9 @@ class HGRobotsCard extends HGBase {
   defaults() { return { title: 'Roboty', icon: 'mdi:robot-vacuum', entities: [], exclude: [], names: {}, refresh_idle: 30, refresh_work: 5 }; }
   _disc() {
     const h = this._hass, c = this._config, reg = h.entities || {};
-    const key = Object.keys(h.states).length + ':' + Object.keys(reg).length;
-    if (this._d && this._d.key === key) return this._d;
+    if (this._d && this._d.st === h.states && this._d.ent === h.entities) return this._d;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + hgNKeys(reg);
+    if (this._d && this._d.key === key && this._d.ent === h.entities) { this._d.st = h.states; return this._d; }
     const ids = (c.entities.length ? c.entities : Object.keys(h.states).filter((e) => /^(vacuum|lawn_mower)\./.test(e)).sort())
       .filter((e) => !c.exclude.includes(e) && h.states[e] && !(reg[e] && reg[e].hidden));
     const byDev = {};
@@ -47,7 +48,7 @@ class HGRobotsCard extends HGBase {
         count: sens(/cleaning_count$/), total: sens(/total_cleaned_area$/), room: sens(/current_room$/) };
     });
     this._entsC = null;
-    return (this._d = { key, robots });
+    return (this._d = { key, st: h.states, ent: h.entities, robots });
   }
   ents() { const d = this._disc(); return d.robots.flatMap((r) => [r.e, r.cam, r.bat, r.hist, r.time, r.area, r.count, r.room, ...r.sels, ...r.cons.map((x) => x.e)]).filter(Boolean); }
   _extraSig() { return [this._d && this._d.key, Math.floor(Date.now() / 60000), [...(this._sel || new Map())].map(([k, v]) => k + [...v].join(','))]; }
@@ -181,7 +182,7 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
         <button class="rc go" data-act="seg" data-e="${r.e}" ${sel.size && !working ? '' : 'disabled'} aria-label="Sprzątaj wybrane pokoje">${H.icon('mdi:play')}Sprzątaj${sel.size ? ` (${sel.size})` : ''}</button></div></div>`;
     }
     // eksploatacja
-    const cons = r.cons.filter((x) => H.ok(h.states[x.e])).map((x) => {
+    const cons = r.cons.filter((x) => H.ok(h.states[x.e]) && H.num(h, x.e) != null).map((x) => {   // wartość nieliczbowa -> pomiń
       const v = H.num(h, x.e), t = x.t && H.num(h, x.t);
       const full = { 'Szczotka gł.': 'Szczotka główna' }[x.nm] || x.nm, dirty = /Czujnik/.test(x.nm) && v <= 0;
       return `<div class="cs ${v < 10 ? 'bad' : v <= 30 ? 'warn' : ''}" title="${H.esc(`${full}: ${Math.round(v)}%${t != null ? `, zostało ${H.fmt(t, 0)} h` : ''}`)}"><span class="cl">${H.esc(x.nm)}</span>
@@ -205,24 +206,27 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
       ${ctl ? `<div class="ctl">${ctl}</div>` : ''}${opts}${rooms}${cons ? `<div><div class="sec">Eksploatacja</div><div class="cons">${cons}</div></div>` : ''}${last}</div></div></div>`;
   }
   afterRender() {
-    if (this._io) this._io.disconnect();
+    if (this._io) this._io.disconnect();   // jeden obserwator na kartę: tylko przepięcie na nowe elementy mapy
+    else this._io = new IntersectionObserver((en) => { for (const e of en) e.target.__vis = e.isIntersecting; this._snap(); });
     this._maps = [...this.$.querySelectorAll('.map[data-cam]')];
-    this._io = new IntersectionObserver((en) => { for (const e of en) e.target.__vis = e.isIntersecting; this._snap(); });
     this._maps.forEach((m) => this._io.observe(m));
     this._sched();
   }
   _sched() {
     clearTimeout(this._mt);
     if (!this.isConnected) return;
-    const work = this._d && this._d.robots.some((r) => ['cleaning', 'mowing', 'returning'].includes((this._hass.states[r.e] || {}).state));
-    this._mt = setTimeout(() => { this._snap(); this._sched(); }, (work ? this._config.refresh_work : this._config.refresh_idle) * 1000);
+    this._mt = setTimeout(() => { this._snap(); this._sched(); }, this._ms());
   }
+  _ms() { const work = this._d && this._d.robots.some((r) => ['cleaning', 'mowing', 'returning'].includes((this._hass.states[r.e] || {}).state)); return (work ? this._config.refresh_work : this._config.refresh_idle) * 1000; }
   _snap() {
     if (document.hidden || !this.isConnected) return;
-    this._src = this._src || {}; this._asp = this._asp || {}; this._ld = this._ld || {};
+    this._src = this._src || {}; this._asp = this._asp || {}; this._ld = this._ld || {}; this._lt = this._lt || {};
+    const ms = this._ms();
     for (const m of this._maps || []) {
       const e = m.dataset.cam, s = this._hass.states[e];
       if (m.__vis === false || !H.ok(s) || !s.attributes.entity_picture || this._ld[e]) continue;
+      if (this._src[e] && Date.now() - (this._lt[e] || 0) < ms - 300) continue;   // przerysowanie karty nie pobiera mapy częściej niż co refresh_*
+      this._lt[e] = Date.now();
       const u = s.attributes.entity_picture, src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(), pre = new Image();
       this._ld[e] = true;
       pre.onload = () => {

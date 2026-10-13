@@ -74,8 +74,8 @@ async function hgGenerate(hass, opt) {
   const one = (a) => ({ wide: true, scroll: true, columns: '1fr', auto_rows: 'auto', areas: `"${a}"`, phone_areas: `"${a}"`, phone_columns: '1fr', tablet: { columns: '1fr' } });
   const dash = [];
   if (M.climate[0]) dash.push({ type: 'custom:nuvio-ac-card', entity: M.climate[0], title: t('climate'), min_h: 253 });
-  if (M.scenes.length) dash.push({ type: 'custom:nuvio-scenes-card', title: t('scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
-  if (M.power.length) dash.push({ type: 'custom:nuvio-power-card', title: t('power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
+  if (M.scenes.length) dash.push({ type: 'custom:nuvio-scenes-card', _hgid: 'scenes', title: t('scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
+  if (M.power.length) dash.push({ type: 'custom:nuvio-power-card', _hgid: 'power', title: t('power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
   const views = [];
   const view = (path, title, card, sub) => ({ title, path, type: 'panel', ...(sub ? { subview: true } : {}), cards: [card] });
   views.push(view('dashboard', t('panel'), base('dashboard', t('hello'), t('hello_sub'), dash, scroll, weather ? { weather } : {})));
@@ -209,7 +209,7 @@ window.HGLookX = HGLookX;
 /* kiosk: drawer fix */
 /* Kiosk Mode chowa <ha-sidebar>, ale nowy ha-drawer HA dalej rezerwuje --mdc-drawer-width (256px) -> ciemny pas. Zerujemy szerokość, gdy panel jest ukryty. */
 (() => { if (window.__hgKfix) return; window.__hgKfix = 1;
-  const tick = () => { try { const m = document.querySelector('home-assistant')?.shadowRoot?.querySelector('home-assistant-main'); if (!m) return; const sb = m.shadowRoot?.querySelector('ha-sidebar');
+  const tick = () => { if (document.hidden) return; try { const m = document.querySelector('home-assistant')?.shadowRoot?.querySelector('home-assistant-main'); if (!m) return; const sb = m.shadowRoot?.querySelector('ha-sidebar');
     const hid = !!sb && getComputedStyle(sb).display === 'none'; const on = m.dataset.hgKfix === '1';
     if (hid && !on) { m.style.setProperty('--mdc-drawer-width', '0px'); m.dataset.hgKfix = '1'; } else if (!hid && on) { m.style.removeProperty('--mdc-drawer-width'); delete m.dataset.hgKfix; } } catch (e) { /* brak HA */ } };
   setInterval(tick, 1200); tick(); })();
@@ -226,7 +226,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.1+17f9368e';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.1+66e62219';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -299,6 +299,8 @@ const H = {
   ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
   num: (hass, e) => { const s = H.st(hass, e); const v = s ? parseFloat(s.state) : NaN; return isFinite(v) ? v : null; },
   esc: (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
+  /* adres do CSS url('…') w atrybucie style: znaki zamykające url() / cudzysłów kodowane procentowo, potem escape HTML */
+  cssUrl: (u) => H.esc(String(u ?? '').replace(/['"()\\\s]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))),
   fire: (node, type, detail) => node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true })),
   navigate: (path) => {
     const nav = () => { history.pushState(null, '', path); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); };
@@ -976,6 +978,12 @@ ha-card.glass.warm{
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 `);
 
+/* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
+const hgW = (hass, e) => { const v = H.num(hass, e); if (v == null) return null; const u = String(H.st(hass, e).attributes.unit_of_measurement || '').trim(); return u === 'kW' ? v * 1000 : u === 'MW' ? v * 1e6 : v; };
+/* scalanie konfiguracji: zagnieżdżone obiekty domyślne (progi, etykiety, kolory) uzupełniane kluczami, nie zastępowane w całości */
+const hgDeep = (d, c) => { if (!c) return c; const o = Object.assign({}, c); for (const k in d) { const a = d[k], b = c[k]; if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) o[k] = Object.assign({}, a, b); } return o; };
+/* liczba kluczy obiektu (hass.states / hass.entities) liczona raz na referencję – wspólna dla kart z wykrywaniem encji */
+const hgNKeysM = new WeakMap(), hgNKeys = (o) => { let n = hgNKeysM.get(o); if (n == null) { n = Object.keys(o).length; hgNKeysM.set(o, n); } return n; };
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
   defaults() {
@@ -983,6 +991,7 @@ class HGEnergyCard extends HGBase {
       labels: { low: 'Niskie zużycie', medium: 'Średnie zużycie', high: 'Wysokie zużycie' }, expand: null,
       calc_label: 'Suma faz względem mocy maksymalnej' };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return this._config.entities; }
   css() {
     return U(`
@@ -1003,7 +1012,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   }
   data() {
     const c = this._config; let tot = 0, n = 0;
-    for (const e of c.entities) { const v = H.num(this._hass, e); if (v != null) { tot += Math.abs(v); n++; } }   // obciążenie fazy = |P| (eksport PV też płynie przez zabezpieczenie)
+    for (const e of c.entities) { const v = hgW(this._hass, e); if (v != null) { tot += Math.abs(v); n++; } }   // obciążenie fazy = |P| (eksport PV też płynie przez zabezpieczenie)
     if (!n) return null;
     const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
     return { tot, pct, lvl: pct < c.thresholds.low ? 'low' : pct < c.thresholds.high ? 'medium' : 'high' };
@@ -1020,7 +1029,7 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
         <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
         <div class="bar" role="meter" aria-label="Obciążenie" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
     }
-    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(H.num(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W z ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
       <div class="scale"><span>0</span><span>50</span><span>100</span></div>
@@ -1114,6 +1123,7 @@ ha-card.glass > *{ flex-shrink:0; }
 .c1 .num{ font-size:32px; }
 .c2{ display:flex; align-items:center; gap:var(--s1); } .c2 .bar{ flex:1; } .c2 .kb{ margin-left:auto; }
 .mm{ display:flex; gap:6px; flex:none; } .mm .mb span{ display:none; } .mm .mb i{ width:44px; height:44px; border-radius:var(--r-sm); } .mm .mb i ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
+.num.rng{ font-size:calc(var(--ts, 72px) * .55); } .c1 .num.rng{ font-size:22px; }
 `);
   }
   _eff(s) {
@@ -1132,7 +1142,7 @@ ha-card.glass > *{ flex-shrink:0; }
     const e = h.entities && h.entities[c.entity], dv = e && e.device_id && h.devices ? h.devices[e.device_id] : null, ar = (e && e.area_id) || (dv && dv.area_id);
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
-  _lim(s) { const a = s.attributes; return { step: a.target_temp_step || 1, mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
+  _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
   _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return 'Wyłączona'; return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : `${m.l} do ${H.fmt(t)}°`; }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
@@ -1146,10 +1156,11 @@ ha-card.glass > *{ flex-shrink:0; }
     const hv = a.hvac_modes || [], seen = new Set();
     const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
     const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
-    const num = `<div class="num" aria-live="polite">${t != null ? H.fmt(t) : '–'}<sup>°</sup></div>`;
+    const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
+    const num = `<div class="num${rng ? ' rng' : ''}" aria-live="polite">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
     const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
     const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', 'Obniż temperaturę')}${num}${cv(1, 'mdi:chevron-right', 'Podwyższ temperaturę')}</div>`;
-    const bar = `<div class="bar" role="slider" tabindex="${on ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="Temperatura docelowa" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
     const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? 'Wyłącz klimatyzację' : 'Włącz klimatyzację'}" title="${on ? 'Wyłącz' : 'Włącz'}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? 'Włączona' : 'Wyłączona'}</span><span class="sh">${on ? 'Wł.' : 'Wył.'}</span></button>`;
     const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
     const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
@@ -1196,16 +1207,21 @@ ha-card.glass > *{ flex-shrink:0; }
       this._wired = true;
       const R = this.shadowRoot;
       const valAt = (bar, x) => { const s = H.st(this._hass, this._config.entity), { mn, mx } = this._lim(s), r = bar.getBoundingClientRect(); return mn + Math.max(0, Math.min(1, (x - r.left) / r.width)) * (mx - mn); };
+      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
+        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp);
+        window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); };
+      this._acEnd = end;
       R.addEventListener('pointerdown', (e) => {
         const p = e.composedPath(), bar = p.find((n) => n.classList && n.classList.contains('bar')), cv = p.find((n) => n.classList && n.classList.contains('cv'));
         const card = R.querySelector('ha-card'); if (!card || card.classList.contains('off')) return;
+        if (bar && this._eff(H.st(this._hass, this._config.entity)).t == null) return;   // zakres low/high: pasek nieaktywny
+        // puszczenie poza kartą / utrata przechwycenia: zatrzymaj powtarzanie i przeciąganie
+        if (bar || cv) { window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end); }
         if (bar) { e.preventDefault(); this._touching = true; bar.setPointerCapture && bar.setPointerCapture(e.pointerId); bar.classList.add('drag'); this._drag = bar; this._setT(valAt(bar, e.clientX), 60000); return; }
-        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
+        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
           go(); clearInterval(this._rp); clearTimeout(this._rd); this._rd = setTimeout(() => { this._rp = setInterval(go, 160); }, 420); this._cvEl = cv; }
       });
       R.addEventListener('pointermove', (e) => { if (this._drag) this._setT(valAt(this._drag, e.clientX), 60000); });
-      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
-        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp); };
       R.addEventListener('pointerup', end); R.addEventListener('pointercancel', end);
       R.addEventListener('keydown', (e) => { const b = e.composedPath()[0]; if (!b.classList || !b.classList.contains('bar')) return; const s = H.st(this._hass, this._config.entity), { step } = this._lim(s), t = this._eff(s).t; if (t == null) return;
         const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key]; if (d) { e.preventDefault(); this._setT(t + d * step, 700); } });
@@ -1242,6 +1258,7 @@ ha-card.glass > *{ flex-shrink:0; }
       }
     }
   }
+  disconnectedCallback() { if (this._acEnd) this._acEnd(); clearTimeout(this._rd); clearInterval(this._rp); if (this._ct) { clearTimeout(this._ct); this._ct = 0; this._commit(); } }
   _set(o) { this._opt = { ...o, ts: Date.now() }; this.rerender(); }
   _okey() { return 'nuvio:ac-open:' + this._config.entity + (this._config.compact ? ':c' : ''); }
   _isOpen() { if (this._open == null) { try { this._open = sessionStorage.getItem(this._okey()) === '1'; } catch (e) { this._open = false; } } return this._open; }
@@ -1461,7 +1478,7 @@ class HGSolarCard extends HGBase {
     if (!this._hass || !this._config || !this._config.statistic || (this._loading && !force)) return;
     this._loading = true;
     try {
-      if (force) HGStats.cache = {};
+      if (force) delete HGStats.cache[this._config.statistic + this._config.days];   // tylko własny wpis (inne karty zachowują pamięć)
       const v = await HGStats.daily(this._hass, [this._config.statistic], this._config.days);
       this._data = { t: Date.now(), v }; this._err = null;
     } catch (e) { this._err = String(e && e.message || e); }
@@ -1506,7 +1523,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     if (todayState != null && isFinite(todayState) && todayState > vals[vals.length - 1]) vals[vals.length - 1] = todayState;
     const n = vals.length, sel = this._sel == null ? n - 1 : this._sel;
     const W = this._w || 400, Hh = 100;
-    const pad = 0.06, xs = vals.map((_, i) => (pad + (i * (1 - 2 * pad)) / (n - 1)) * 100);
+    const pad = 0.06, xs = vals.map((_, i) => (n > 1 ? pad + (i * (1 - 2 * pad)) / (n - 1) : 0.5) * 100);   // days:1 -> punkt na środku
     const mx = Math.max(...vals, 0.001) * 1.15;
     const yv = (v) => 70 - (v / mx) * 58;   // % wysokości wykresu
     const pts = vals.map((v, i) => [xs[i], yv(v)]);
@@ -1609,7 +1626,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
     const nm = c.name || H.name(this._hass, c.entity);
     if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>brak encji</div></ha-card>`;
     const a = s.attributes, sf = a.supported_features || 0, st = s.state;
-    const pic = a.entity_picture ? `style="background-image:url('${H.esc(a.entity_picture)}')"` : '';
+    const pic = a.entity_picture ? `style="background-image:url('${H.cssUrl(a.entity_picture)}')"` : '';
     const sub = [a.media_title, a.media_artist].filter(Boolean).join(' · ') || H.stateLabel(st);
     const AL = { prev: 'Poprzedni', next: 'Następny', on: 'Włącz', off: 'Wyłącz' };
     const b = (f, act, ic, cls = '') => (sf & f ? `<button class="cb ${cls}" data-act="${act}" aria-label="${AL[act]}" title="${AL[act]}">${H.icon(ic)}</button>` : '');
@@ -1635,7 +1652,7 @@ const hgAvatar = (hass, e, cls = 'av') => {
   const pic = s && s.attributes.entity_picture;
   const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
   const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
-  return pic ? `<span class="${cls}" style="background-image:url('${H.esc(pic)}')"></span>`
+  return pic ? `<span class="${cls}" style="background-image:url('${H.cssUrl(pic)}')"></span>`
     : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
 };
 class HGPersonCard extends HGBase {
@@ -1856,17 +1873,19 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
     const k = `${y}-${m}`; if (this._k === k) return; this._k = k;
     const cals = HGCal.cals(this._hass, this._config.calendars);
     const res = await HGCal.fetch(this._hass, cals, new Date(y, m, 1), new Date(y, m + 1, 1));
-    if (this._k !== k) return; this._res = res; this._n = (this._n || 0) + 1; this.rerender();
+    if (this._k !== k) return; this._res = res; this._rk = k; this._n = (this._n || 0) + 1; this.rerender();
+    clearTimeout(this._rt); this._rt = setTimeout(() => { this._k = null; this.rerender(); }, 300000);   // odświeżanie co 5 min (jak agenda)
   }
+  disconnectedCallback() { clearTimeout(this._rt); this._k = null; this._stale = true; }
   render() {
     const c = this._config, now = new Date(), base = new Date(now.getFullYear(), now.getMonth() + (this._off || 0), 1);
     const y = base.getFullYear(), m = base.getMonth();
     this._load(y, m);
-    const res = this._k === `${y}-${m}` ? this._res : null;
+    const res = this._rk === `${y}-${m}` ? this._res : null;
     const byDay = {};
     for (const r of res || []) for (const e of r.ev) {
       const d = new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate());
-      const last = e.allDay ? new Date(e.end - 1) : e.end;
+      const last = e.allDay || e.end > e.start ? new Date(e.end - 1) : e.end;   // koniec wyłączny: wydarzenie do 00:00 nie zajmuje następnego dnia
       for (let i = 0; i < 62 && d <= last; i++) { (byDay[hgDayKey(d)] = byDay[hgDayKey(d)] || []).push(e); d.setDate(d.getDate() + 1); }
     }
     const first = (base.getDay() + 6) % 7, start = new Date(y, m, 1 - first);
@@ -2082,6 +2101,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
 .cv .fr{ width:100% !important; aspect-ratio:var(--aspn, 16 / 9) !important; }
 .cv .un{ aspect-ratio:16 / 9; color:var(--hg-tx-45494f); flex-direction:column; justify-content:center; gap:var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-1e242e-008); padding:0; } .cv .un ha-icon{ width:28px; height:28px; opacity:.7; } .cv .fr img{ object-fit:cover; }
 .fr:fullscreen img, .fr:-webkit-full-screen img{ object-fit:contain; }`); }
+  setConfig(c) { this._sk = false; super.setConfig(c); }   // nowa konfiguracja -> szkielet od nowa
   /* szkielet budowany raz; zmiany stanu aktualizują tylko tekst/klasy (bez podmiany <img> -> bez mrugania) */
   _update() {
     if (!this._config || !this._hass) return;
@@ -2352,8 +2372,12 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
         <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), 'zmiana ' + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : 'Brak encji ' + H.esc(c.entity)}</span></div></div>
       ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
   }
-  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); }; } }
+  afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
+    i.onblur = () => { if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }; } }
+  /* pole kodu z fokusem: nie podmieniaj DOM (utrata fokusu/klawiatury) – przerysuj po blur */
+  _doUpdate(force) { const i = this.$ && this.$.querySelector('.pw'); if (i && this.shadowRoot.activeElement === i) { this._pendingUpd = true; return; } return super._doUpdate(force); }
   _send(m, code) {
+    const pw = this.$.querySelector('.pw'); if (pw) pw.blur();
     const d = { entity_id: this._config.entity }; if (code) d.code = code;
     this._pend = null; this._code = '';
     H.call(this._hass, 'alarm_control_panel', 'alarm_' + m, d);
@@ -2391,8 +2415,10 @@ class HGSensorsCard extends HGBase {
   _extraSig() { return [this._tab || 'all', !!this._showUn, Math.floor(Date.now() / 60000), this._disc && this._disc.key]; }
   /* wykrywanie tylko gdy zmieni się liczba encji lub rejestr (nie przy każdym hass) */
   _discover() {
-    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
-    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) return this._disc;
+    const h = this._hass, c = this._config;
+    if (this._disc && this._disc.st === h.states && this._disc.ent === h.entities) return this._disc;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + (h.entities ? hgNKeys(h.entities) : 0);
+    if (this._disc && this._disc.key === key && this._disc.ent === h.entities) { this._disc.st = h.states; return this._disc; }
     const reg = h.entities || {}, dev = h.devices || {};
     const exc = c.exclude.map(hgGlob), inc = c.include.map(hgGlob);
     const list = [];
@@ -2420,7 +2446,7 @@ class HGSensorsCard extends HGBase {
       for (const x of list) if (x.dev && byDev[x.dev]) x.lux = byDev[x.dev][0];
     }
     this._entsC = null;
-    return (this._disc = { key, ent: h.entities, list });
+    return (this._disc = { key, ent: h.entities, st: h.states, list });
   }
   ents() { if (!this._hass) return []; return this._discover().list.flatMap((x) => (x.lux ? [x.e, x.lux] : [x.e])); }
   _changed() { const k = this._disc && this._disc.key; this._discover(); if (this._disc.key !== k) { this._entsC = null; this._prevStates = null; } return super._changed(); }
@@ -2545,7 +2571,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const x = this._config.scripts[Number(t.dataset.i)]; if (!x) return;
     const r = t.getBoundingClientRect(), px = (e && e.clientX ? e.clientX : r.left + r.width / 2) - r.left, py = (e && e.clientY ? e.clientY : r.top + r.height / 2) - r.top;
     const rp = document.createElement('i'); rp.className = 'rp'; rp.style.left = px + 'px'; rp.style.top = py + 'px'; t.appendChild(rp);
-    H.call(this._hass, 'script', 'turn_on', { entity_id: x.entity });
+    H.call(this._hass, String(x.entity).split('.')[0] === 'scene' ? 'scene' : 'script', 'turn_on', { entity_id: x.entity });   // scene.* -> scene.turn_on
     clearTimeout(this._okT); clearTimeout(this._okT2);
     this._okT2 = setTimeout(() => { this._ok = x.entity; this.rerender(); this._okT = setTimeout(() => { this._ok = ''; this.rerender(); }, 2200); }, 420);
   }
@@ -2594,7 +2620,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
     const c = this._config, h = this._hass;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
       ${c.expand ? `<button class="ib" data-act="expand" aria-label="Raporty" title="Raporty">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
-    let tot = 0, n = 0; for (const e of c.entities) { const v = H.num(h, e); if (v != null) { tot += Math.abs(v); n++; } }
+    let tot = 0, n = 0; for (const e of c.entities) { const v = hgW(h, e); if (v != null) { tot += Math.abs(v); n++; } }
     if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>Brak źródła danych</b>Czujniki mocy niedostępne</div></ha-card>`;
     const pct = Math.max(0, Math.min(100, (tot / c.max_power) * 100));
     const lvl = pct < 30 ? 'Niskie' : pct < 70 ? 'Średnie' : 'Wysokie';
@@ -2612,7 +2638,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
       svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
         <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/></svg>`;
     }
-    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(H.num(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% z ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% ${lvl}</span></div>
       <div class="gg" style="--p:${pct.toFixed(1)}%" title="${Math.round(pct)}% ${lvl}"><i></i></div><div class="gl"><span>0</span><span>100%</span></div>
@@ -2676,6 +2702,7 @@ class HGWeekCard extends HGBase {
     return { title: 'Energia · tydzień', icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
       labels: { consumption: 'Zużycie', production: 'Produkcja' }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
   _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._hide ? [...this._hide].join() : '']; }
   connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000);
@@ -2740,7 +2767,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
     const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
     const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: pokaż/ukryj na wykresie">
-      <small><i></i>${H.esc(s.label)} · 7 dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+      <small><i></i>${H.esc(s.label)} · ${n} dni</small><b>${H.fmt(s.tot, 1)}<em>kWh · dziś ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
     const dayName = (d, i) => (i === n - 1 ? 'dziś' : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));
@@ -2776,8 +2803,10 @@ class HGPlayersCard extends HGBase {
       exclude_platforms: ['browser_mod'], exclude: [] };
   }
   _list() {
-    const h = this._hass, c = this._config, key = Object.keys(h.states).length + ':' + (h.entities ? Object.keys(h.entities).length : 0);
-    if (this._lc && this._lc.key === key) return this._lc.list;
+    const h = this._hass, c = this._config;
+    if (this._lc && this._lc.st === h.states && this._lc.ent === h.entities) return this._lc.list;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + (h.entities ? hgNKeys(h.entities) : 0);
+    if (this._lc && this._lc.key === key && this._lc.ent === h.entities) { this._lc.st = h.states; return this._lc.list; }
     const reg = h.entities || {}, seen = new Set(), names = new Map(), out = [];
     const nm = (e) => c.names[e] || (h.states[e] && h.states[e].attributes.friendly_name) || e;
     const add = (e, forced) => {
@@ -2792,7 +2821,7 @@ class HGPlayersCard extends HGBase {
     };
     for (const e of c.entities) add(e, true);
     if (c.discover) for (const e of Object.keys(h.states)) if (e.startsWith('media_player.')) add(e, false);
-    this._lc = { key, list: out }; this._entsC = null;
+    this._lc = { key, st: h.states, ent: h.entities, list: out }; this._entsC = null;
     return out;
   }
   ents() { return this._hass ? this._list() : this._config.entities; }
@@ -2879,7 +2908,7 @@ select{ font:inherit; font-size:var(--fs-sm); color:var(--hg-tx-2a2d31); height:
   }
   _cov(e, s, cls = '') {
     const a = s.attributes, pic = a.entity_picture, icon = this._config.icons[e] || (/tv|dekoder|tele/.test(e) ? 'mdi:television-box' : /nest|gh|home/.test(e) ? 'mdi:cast-audio' : 'mdi:speaker');
-    return pic ? `<span class="cov ${cls}" style="background-image:url('${H.esc(pic)}')" aria-hidden="true"></span>` : `<span class="cov ${cls}" aria-hidden="true">${H.icon(icon)}</span>`;
+    return pic ? `<span class="cov ${cls}" style="background-image:url('${H.cssUrl(pic)}')" aria-hidden="true"></span>` : `<span class="cov ${cls}" aria-hidden="true">${H.icon(icon)}</span>`;
   }
   render() {
     const c = this._config, h = this._hass, list = this._list(), nm = (e) => c.names[e] || H.name(h, e);
@@ -2894,25 +2923,25 @@ select{ font:inherit; font-size:var(--fs-sm); color:var(--hg-tx-2a2d31); height:
       if (a.media_duration > 0 && a.media_position != null) {
         const upd = Date.parse(a.media_position_updated_at || s.last_updated), pos = Math.min(a.media_duration, a.media_position + (s.state === 'playing' ? (Date.now() - upd) / 1000 : 0));
         pg = `<div class="pg"><span>${fmtT(pos)}</span><span class="tr"><i style="--p0:${((pos / a.media_duration) * 100).toFixed(2)}%;--dur:${Math.max(0, a.media_duration - pos).toFixed(0)}s"></i></span><span>${fmtT(a.media_duration)}</span></div>`;
-      } else if (a.media_start_time && a.media_end_time) {
+      } else if (typeof a.media_start_time === 'string' && typeof a.media_end_time === 'string') {
         // program TV (Enigma2): postęp audycji wg godzin z EPG
         const [sh, sm] = a.media_start_time.split(':').map(Number), [eh, em] = a.media_end_time.split(':').map(Number);
         const now = new Date(), st0 = new Date(now); st0.setHours(sh, sm, 0, 0); const en = new Date(now); en.setHours(eh, em, 0, 0); if (en <= st0) en.setDate(en.getDate() + 1);
         const dur = (en - st0) / 1000, pos = Math.min(dur, Math.max(0, (now - st0) / 1000));
-        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${a.media_start_time}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${a.media_end_time}</span></div>`;
+        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${H.esc(a.media_start_time)}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${H.esc(a.media_end_time)}</span></div>`;
       }
       const vol = (f & HG_MP.VOL_SET) && a.volume_level != null ? Math.round(a.volume_level * 100) : null;
       const volH = vol != null ? `<label class="vol">${H.icon(a.is_volume_muted ? 'mdi:volume-off' : 'mdi:volume-high')}<input type="range" min="0" max="100" step="1" value="${vol}" style="--v:${vol}%" data-act="vol" data-e="${e}" aria-label="Głośność: ${H.esc(nm(e))}"><output>${vol}%</output></label>`
         : (f & HG_MP.VOL_STEP) ? `<span class="vol">${H.icon('mdi:volume-high')}<button class="cb" data-act="vdn" data-e="${e}" aria-label="Ciszej">${H.icon('mdi:minus')}</button><button class="cb" data-act="vup" data-e="${e}" aria-label="Głośniej">${H.icon('mdi:plus')}</button></span>` : '';
       const srcs = (f & HG_MP.SOURCE) && Array.isArray(a.source_list) && a.source_list.length ? a.source_list : null;
       const srcH = srcs ? `<select data-act="src" data-e="${e}" aria-label="Źródło: ${H.esc(nm(e))}">${(a.source && !srcs.includes(a.source) ? [a.source] : []).concat(srcs).map((x) => `<option ${x === a.source || x === a.app_name ? 'selected' : ''}>${H.esc(x)}</option>`).join('')}${!a.source && !srcs.includes(a.app_name) ? '<option selected value="">Źródło…</option>' : ''}</select>` : '';
-      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${HG_MP_ST[s.state] || s.state}</span></span>
+      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${H.esc(HG_MP_ST[s.state] || s.state)}</span></span>
           <span class="ttl">${H.esc(title)}</span>${sub ? `<span class="sub">${H.esc(sub)}</span>` : ''}</div></div>
         ${pg}<div class="ctl">${this._ctl(e, s, true)}<span class="sp2"></span>${this._pw(e, s)}<button class="cb" data-act="more" data-e="${e}" aria-label="Szczegóły" title="Szczegóły">${H.icon('mdi:dots-horizontal')}</button></div>
         ${volH || srcH ? `<div class="row2">${volH}${srcH}</div>` : ''}</div>`;
     }).join('');
     const sm = idle.map((e) => { const s = h.states[e], a = s.attributes;
-      return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${HG_MP_ST[s.state] || s.state}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
+      return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${H.esc(HG_MP_ST[s.state] || s.state)}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
         ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
     const unN = [...new Set(un.map(nm))];
     const unH = unN.length ? `<div class="un">Niedostępne:${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
@@ -2957,7 +2986,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const c = this._config, h = this._hass;
     let tot = 0, n = 0;
     const rows = c.phases.map((p) => {
-      const w = H.num(h, p.power), v = H.num(h, p.voltage), a = H.num(h, p.current);
+      const w = hgW(h, p.power), v = H.num(h, p.voltage), a = H.num(h, p.current);
       if (w == null) return `<div class="ph na"><span class="n">${H.esc(p.name)}</span><span class="b"></span><span class="w">–</span><div class="va">niedostępna</div></div>`;
       const ww = Math.abs(w); tot += ww; n++;
       const pct = Math.min(100, (ww / c.phase_max) * 100);
@@ -2999,6 +3028,7 @@ class HGEnergyStatsCard extends HGBase {
     return { title: 'Zużycie i produkcja', icon: 'mdi:chart-bar', consumption: null, production: null, price: null, currency: 'zł',
       colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent)' }, link: '/energy' };
   }
+  setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
   _extraSig() { return [this._d ? this._d.t : 0, this._mode || 'week', this._sel]; }
   connectedCallback() { super.connectedCallback(); this._load(); clearInterval(this._iv); this._iv = setInterval(() => this._load(true), 5 * 60 * 1000); }
@@ -3144,7 +3174,7 @@ class HGPvCard extends HGBase {
       if (!this._last) this._last = { t: Date.now(), d: null, s: 0 }; else this._last.t = Date.now(); } } catch (e) { this._last = { t: Date.now(), d: null, s: 0 }; }
     // dziś wg historii czujnika dziennego: suma odcinków między zerowaniami (falownik zeruje licznik po każdym ponownym uruchomieniu;
     // licznik całkowity po powrocie skacze o produkcję z okresów, których HA nie widział -> zawyża)
-    try { const c = this._config; if (c.today) { const m0 = new Date(); m0.setHours(0, 0, 0, 0);
+    try { const c = this._config; if (c.today) { const m0 = new Date(HGStats.midnight(Date.now(), HGStats.tz(h)));   // północ w strefie HA
       const r = await h.callWS({ type: 'history/history_during_period', start_time: m0.toISOString(), entity_ids: [c.today], minimal_response: true, no_attributes: true });
       const arr = (r && r[c.today]) || []; let tot = 0, seg = 0, any = false;
       for (const x of arr) { const v = parseFloat(x.s != null ? x.s : x.state); if (!isFinite(v)) continue; any = true; if (v + 0.001 < seg) { tot += seg; seg = v; } else seg = v; }
@@ -3169,7 +3199,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.power), on = H.ok(s);
-    const w = H.num(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
+    const w = hgW(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
     const col = on ? (w > 0 ? 'var(--hg-accent)' : 'var(--hg-ac-6e747a)') : 'var(--hg-ac-6e747a)';
     const since = s ? hgRel(new Date(s.last_changed)) : '';
     const lbl = on ? (w > 0 ? 'Produkuje' : 'Brak produkcji (noc / zachmurzenie)') : 'Falownik offline';
@@ -3180,7 +3210,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const tday = dsum != null ? dsum : this._today;
     const dz = tday == null ? ['–', ''] : tday < 0.05 && w > 0 ? ['< 0,1', 'kWh'] : [H.fmt(tday, 1), 'kWh'];
     const kv = [['Teraz', w != null ? [H.fmt(w, 0), 'W'] : ['–', '']], ['Dziś', dz]];
-    for (const st of c.strings) { const v = H.num(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
+    for (const st of c.strings) { const v = hgW(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
     if (c.temperature) kv.push(['Temperatura falownika', tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
     const L = this._last;
     const last = L && L.d ? `Ostatnia produkcja: <b>${H.esc(L.d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.` : L ? 'Brak produkcji w statystykach z ostatnich 30 dni.' : '';
@@ -3226,8 +3256,9 @@ class HGRobotsCard extends HGBase {
   defaults() { return { title: 'Roboty', icon: 'mdi:robot-vacuum', entities: [], exclude: [], names: {}, refresh_idle: 30, refresh_work: 5 }; }
   _disc() {
     const h = this._hass, c = this._config, reg = h.entities || {};
-    const key = Object.keys(h.states).length + ':' + Object.keys(reg).length;
-    if (this._d && this._d.key === key) return this._d;
+    if (this._d && this._d.st === h.states && this._d.ent === h.entities) return this._d;   // te same obiekty -> bez liczenia
+    const key = hgNKeys(h.states) + ':' + hgNKeys(reg);
+    if (this._d && this._d.key === key && this._d.ent === h.entities) { this._d.st = h.states; return this._d; }
     const ids = (c.entities.length ? c.entities : Object.keys(h.states).filter((e) => /^(vacuum|lawn_mower)\./.test(e)).sort())
       .filter((e) => !c.exclude.includes(e) && h.states[e] && !(reg[e] && reg[e].hidden));
     const byDev = {};
@@ -3245,7 +3276,7 @@ class HGRobotsCard extends HGBase {
         count: sens(/cleaning_count$/), total: sens(/total_cleaned_area$/), room: sens(/current_room$/) };
     });
     this._entsC = null;
-    return (this._d = { key, robots });
+    return (this._d = { key, st: h.states, ent: h.entities, robots });
   }
   ents() { const d = this._disc(); return d.robots.flatMap((r) => [r.e, r.cam, r.bat, r.hist, r.time, r.area, r.count, r.room, ...r.sels, ...r.cons.map((x) => x.e)]).filter(Boolean); }
   _extraSig() { return [this._d && this._d.key, Math.floor(Date.now() / 60000), [...(this._sel || new Map())].map(([k, v]) => k + [...v].join(','))]; }
@@ -3379,7 +3410,7 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
         <button class="rc go" data-act="seg" data-e="${r.e}" ${sel.size && !working ? '' : 'disabled'} aria-label="Sprzątaj wybrane pokoje">${H.icon('mdi:play')}Sprzątaj${sel.size ? ` (${sel.size})` : ''}</button></div></div>`;
     }
     // eksploatacja
-    const cons = r.cons.filter((x) => H.ok(h.states[x.e])).map((x) => {
+    const cons = r.cons.filter((x) => H.ok(h.states[x.e]) && H.num(h, x.e) != null).map((x) => {   // wartość nieliczbowa -> pomiń
       const v = H.num(h, x.e), t = x.t && H.num(h, x.t);
       const full = { 'Szczotka gł.': 'Szczotka główna' }[x.nm] || x.nm, dirty = /Czujnik/.test(x.nm) && v <= 0;
       return `<div class="cs ${v < 10 ? 'bad' : v <= 30 ? 'warn' : ''}" title="${H.esc(`${full}: ${Math.round(v)}%${t != null ? `, zostało ${H.fmt(t, 0)} h` : ''}`)}"><span class="cl">${H.esc(x.nm)}</span>
@@ -3403,24 +3434,27 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
       ${ctl ? `<div class="ctl">${ctl}</div>` : ''}${opts}${rooms}${cons ? `<div><div class="sec">Eksploatacja</div><div class="cons">${cons}</div></div>` : ''}${last}</div></div></div>`;
   }
   afterRender() {
-    if (this._io) this._io.disconnect();
+    if (this._io) this._io.disconnect();   // jeden obserwator na kartę: tylko przepięcie na nowe elementy mapy
+    else this._io = new IntersectionObserver((en) => { for (const e of en) e.target.__vis = e.isIntersecting; this._snap(); });
     this._maps = [...this.$.querySelectorAll('.map[data-cam]')];
-    this._io = new IntersectionObserver((en) => { for (const e of en) e.target.__vis = e.isIntersecting; this._snap(); });
     this._maps.forEach((m) => this._io.observe(m));
     this._sched();
   }
   _sched() {
     clearTimeout(this._mt);
     if (!this.isConnected) return;
-    const work = this._d && this._d.robots.some((r) => ['cleaning', 'mowing', 'returning'].includes((this._hass.states[r.e] || {}).state));
-    this._mt = setTimeout(() => { this._snap(); this._sched(); }, (work ? this._config.refresh_work : this._config.refresh_idle) * 1000);
+    this._mt = setTimeout(() => { this._snap(); this._sched(); }, this._ms());
   }
+  _ms() { const work = this._d && this._d.robots.some((r) => ['cleaning', 'mowing', 'returning'].includes((this._hass.states[r.e] || {}).state)); return (work ? this._config.refresh_work : this._config.refresh_idle) * 1000; }
   _snap() {
     if (document.hidden || !this.isConnected) return;
-    this._src = this._src || {}; this._asp = this._asp || {}; this._ld = this._ld || {};
+    this._src = this._src || {}; this._asp = this._asp || {}; this._ld = this._ld || {}; this._lt = this._lt || {};
+    const ms = this._ms();
     for (const m of this._maps || []) {
       const e = m.dataset.cam, s = this._hass.states[e];
       if (m.__vis === false || !H.ok(s) || !s.attributes.entity_picture || this._ld[e]) continue;
+      if (this._src[e] && Date.now() - (this._lt[e] || 0) < ms - 300) continue;   // przerysowanie karty nie pobiera mapy częściej niż co refresh_*
+      this._lt[e] = Date.now();
       const u = s.attributes.entity_picture, src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(), pre = new Image();
       this._ld[e] = true;
       pre.onload = () => {
@@ -3490,11 +3524,13 @@ const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch
 const hgPl = (n, one, few, many) => `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
 
 const HGAreas = {
-  _memo: new WeakMap(),
-  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas) albo liczba encji */
+  _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
+  /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
+  _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
+  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
   model(h, cfg) {
-    cfg = cfg || {};
-    const key = [h.entities, h.devices, h.areas, Object.keys(h.states).length];
+    cfg = cfg || this._e;
+    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
     const m0 = this._memo.get(cfg);
     if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
     const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
@@ -3571,11 +3607,12 @@ const HGAreas = {
       } else sec[k].push(e);
     }
     sec.misc = [...misc.values()];
-    // to samo urządzenie pod kilkoma encjami o tej samej nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
+    // to samo urządzenie pod kilkoma encjami o tej samej (pełnej) nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
     for (const k of ['light', 'sw', 'media']) {
       const best = new Map();
-      for (const e of sec[k]) { const n = hgNorm(this.name(h, e, a, cfg)), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
-      sec[k] = sec[k].filter((e) => best.get(hgNorm(this.name(h, e, a, cfg))) === e);
+      const fn = (e) => hgNorm((cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e));   // pełna nazwa: różne urządzenia o tej samej nazwie po obcięciu pokoju zostają
+      for (const e of sec[k]) { const n = fn(e), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
+      sec[k] = sec[k].filter((e) => best.get(fn(e)) === e);
     }
     a.sec = sec;
     // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
@@ -3786,7 +3823,7 @@ const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
 const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
 /* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
 class HGRoomCard extends HGBase {
-  defaults() { return { areas: {}, refresh: 10, robots_path: HG_P('roboty') }; }
+  defaults() { return { areas: {}, robots_path: HG_P('roboty') }; }
   constructor() {
     super();
     this._ac = new Map();
@@ -3801,11 +3838,11 @@ class HGRoomCard extends HGBase {
   }
   connectedCallback() {
     window.addEventListener('location-changed', this._onLoc); window.addEventListener('popstate', this._onLoc);
-    super.connectedCallback(); this._onLoc(); this._camTimer();
+    super.connectedCallback(); this._onLoc();
     this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub);
   }
-  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._ct); this._ct = 0; clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
-  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; }
+  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
+  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; if (this._cams) for (const el of this._cams.values()) el.hass = h; }
   get hass() { return this._hass; }
   _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = HGAreas.areaFromUrl(); return m.byId[this._aid] || null; }
   ents() {
@@ -4115,11 +4152,13 @@ ha-card.wmc{ gap:var(--s2); }
     const phase = eJob && job !== 'none' ? lab(eJob, HG_WM_JOB) : '';
     const msL = eMs ? lab(eMs, HG_WM_MS) : '';
     const status = done ? 'Pranie zakończone' : run || pause ? [msL, phase].filter(Boolean).join(' · ') : off ? 'Wyłączona' : 'Gotowa';
-    // czas i postęp: koniec z completion_time; start = ostatnia zmiana machine_state na „run” (prawdziwe dane, bez zgadywania)
+    // czas i postęp: koniec z completion_time; start = pierwsza zmiana machine_state na „run” w tym cyklu (prawdziwe dane, bez zgadywania)
     let rem = '', endT = '', pct = null;
+    const wmS = this._wmS || (this._wmS = new Map());    // pierwszy start cyklu: wznowienie po pauzie zmienia last_changed, nie zeruje postępu
+    if (!run && !pause) wmS.delete(eMs); else if (run && !wmS.has(eMs)) wmS.set(eMs, +new Date(st(eMs).last_changed));
     if (eEnd && (run || pause)) { const d = new Date(st(eEnd).state), m = Math.round((d - Date.now()) / 60000);
       if (!isNaN(d) && m > 0) { rem = m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; endT = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-        if (run) { const s0 = new Date(st(eMs).last_changed), tot = d - s0; if (tot > 60000) pct = Math.max(0, Math.min(1, (Date.now() - s0) / tot)); } } }
+        if (run) { const s0 = wmS.get(eMs), tot = d - s0; if (tot > 60000) pct = Math.max(0, Math.min(1, (Date.now() - s0) / tot)); } } }
     if (done) pct = 1;
     const spinV = eSpin ? parseInt(st(eSpin).state, 10) : NaN, spd = isFinite(spinV) ? (1.1 - Math.min(spinV, 1600) / 1600 * .85).toFixed(2) : '.45';
     const remote = eRem && st(eRem).state === 'on';
@@ -4199,8 +4238,8 @@ ha-card.wmc{ gap:var(--s2); }
       <div class="sth"><div><b>${H.esc(CW.title || 'Ciepła woda')}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="Szczegóły bojlera">${H.icon('mdi:arrow-top-right')}</button></div>
       <div class="cwm">
         <div class="cwt" role="img" aria-label="Zbiornik: ${cur != null ? H.fmt(cur, 0) + '°C' : 'brak danych'}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
-        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}Grzeje do ${H.fmt(tgt, 0)}°` : H.esc(state)}</span>
-          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="Obniż nastawę">${H.icon('mdi:minus')}</button><span class="cwg"><small>Nastawa</small><b>${H.fmt(tgt, 0)}°</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="Podwyższ nastawę">${H.icon('mdi:plus')}</button></div></div>
+        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}Grzeje${isNaN(tgt) ? '' : ` do ${H.fmt(tgt, 0)}°`}` : H.esc(state)}</span>
+          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="Obniż nastawę">${H.icon('mdi:minus')}</button><span class="cwg"><small>Nastawa</small><b>${isNaN(tgt) ? '–' : H.fmt(tgt, 0) + '°'}</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="Podwyższ nastawę">${H.icon('mdi:plus')}</button></div></div>
         <div class="cwi">${info.map(([v, u, l, hot]) => `<div class="cwp ${hot ? 'on' : ''}"><b>${H.esc(v)}<em>${H.esc(u)}</em></b><small>${H.esc(l)}</small></div>`).join('')}</div>
       </div>
       <div class="stg2">${sws}</div></ha-card></div>`;
@@ -4266,13 +4305,13 @@ ha-card.wmc{ gap:var(--s2); }
     const app = at.app_name && !/^[a-z]+\.[a-z0-9.]+$/i.test(at.app_name) ? at.app_name : '', src = at.source || '';
     const title = at.media_title || app || ST[s.state] || H.stateLabel(s.state);
     const sub = [at.media_title ? (at.media_artist || at.media_album_name || app) : '', at.media_series_title].filter(Boolean).join(' · ') || (at.media_title || app ? ST[s.state] || '' : nm);
-    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy" crossorigin="anonymous">` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
+    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy"${/^\/(?!\/)/.test(at.entity_picture) ? ' crossorigin="anonymous"' : ''}>` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
     const dur = Number(at.media_duration) || 0, has = dur > 0 && at.media_position != null && (f & 2 || true);
     const pos = has ? Math.min(dur, Number(at.media_position) + (pl && at.media_position_updated_at ? (Date.now() - new Date(at.media_position_updated_at)) / 1000 : 0)) : 0;
     const tm = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
     const prog = has ? `<div class="mpg" data-dur="${dur}" data-pos="${pos.toFixed(1)}" data-t="${Date.now()}" data-pl="${pl ? 1 : 0}"><div class="mpt"><i style="transform:scaleX(${(pos / dur).toFixed(4)})"></i></div><div class="mpn"><span>${tm(pos)}</span><span>-${tm(dur - pos)}</span></div></div>` : '';
     const B = (a, ic, lab, big) => `<button class="mb ${big ? 'big' : ''}" data-act="${a}" data-e="${E}" aria-label="${lab}">${H.icon(ic)}</button>`;
-    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', 'Poprzedni') : '', (f & 1) || (f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? 'Pauza' : 'Odtwarzaj', 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', 'Następny') : ''].join('') : '';
+    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', 'Poprzedni') : '', (pl ? f & 1 : f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? 'Pauza' : 'Odtwarzaj', 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', 'Następny') : ''].join('') : '';
     const vl = at.volume_level, mu = !!at.is_volume_muted, vp = vl != null ? Math.round(vl * 100) : null;
     const vol = !off && (f & 4) && vp != null ? `<div class="mpv">${f & 8 ? `<button class="mb sm" data-act="mpmu" data-e="${E}" aria-label="${mu ? 'Wyłącz wyciszenie' : 'Wycisz'}" aria-pressed="${mu}">${H.icon(mu || vp === 0 ? 'mdi:volume-off' : vp < 40 ? 'mdi:volume-medium' : 'mdi:volume-high')}</button>` : H.icon('mdi:volume-high')}
       <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc('Głośność: ' + nm)}"><output>${vp}%</output></div>` : '';
@@ -4340,7 +4379,7 @@ ha-card.wmc{ gap:var(--s2); }
       const [v, u] = dom === 'binary_sensor' ? [s.state === 'on' ? 'Tak' : 'Nie', ''] : dom === 'select' ? [HGDev.stPl(s.state), ''] : this._num(s);
       return `<button class="row sub" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(U[u] || u)}</em>` : ''}</span></button>`;
     }).join('') + `<button class="lnk sm" data-act="dev" data-d="${H.esc(g.d)}">${H.icon('mdi:cog-outline')}Ustawienia urządzenia</button>` : '';
-    const tg = main ? this.toggleHtml(st(main).state === 'on', 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
+    const tg = main ? this.toggleHtml(['on', 'open'].includes(st(main).state), 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
     return `<div class="blk"><ha-card class="glass dv ${on ? 'on' : ''}">
       <div class="dh"><span class="ri">${H.icon(icon)}</span><button class="tx" data-act="${main ? 'more' : 'dev'}" ${main ? `data-e="${H.esc(main)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + (status ? ', ' + status : ''))}"><b>${H.esc(title)}</b>${status ? `<span>${H.esc(status)}</span>` : ''}</button>${tg}</div>
       ${mx ? `<div class="mx">${mx}</div>` : ''}${warns.length ? `<div class="wr">${warns.map(([i, t]) => `<span class="wc">${H.icon(i)}${H.esc(t)}</span>`).join('')}</div>` : ''}
@@ -4390,10 +4429,10 @@ ha-card.wmc{ gap:var(--s2); }
     for (const e of M) blocks.push(this._player(e));
     // rolety
     const C = S.cover.filter(ok);
-    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, 'Roleta'), p = s.attributes.current_position;
+    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, 'Roleta'), p = s.attributes.current_position, cf = s.attributes.supported_features ?? 11;
       const st = { open: 'Otwarta', closed: 'Zamknięta', opening: 'Otwiera się', closing: 'Zamyka się' }[s.state] || H.stateLabel(s.state);
       return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + p + '%' : ''}</span></button>
-        <div class="bts"><button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="Otwórz">${H.icon('mdi:arrow-up')}</button><button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="Zatrzymaj">${H.icon('mdi:stop')}</button><button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="Zamknij">${H.icon('mdi:arrow-down')}</button></div></div>`; }).join(''), C.length);
+        <div class="bts">${cf & 1 ? `<button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="Otwórz">${H.icon('mdi:arrow-up')}</button>` : ''}${cf & 8 ? `<button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="Zatrzymaj">${H.icon('mdi:stop')}</button>` : ''}${cf & 2 ? `<button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="Zamknij">${H.icon('mdi:arrow-down')}</button>` : ''}</div></div>`; }).join(''), C.length);
     // kamery: osadzona karta kamery (miniatura, podgląd na żywo, pełny ekran)
     for (const e of S.cam) if (ok(e)) blocks.push(`<div class="blk"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`);
     // urządzenia: jedna karta na urządzenie (encje mediów/klimatyzacji/kamer należą do swoich komponentów)
@@ -4466,17 +4505,6 @@ ha-card.wmc{ gap:var(--s2); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
-    this._camLoad();
-  }
-  _camLoad() {
-    for (const img of this.$.querySelectorAll('img[data-cam]')) {
-      const s = this._hass.states[img.dataset.cam]; if (!s || !s.attributes.entity_picture) continue;
-      const u = s.attributes.entity_picture; img.src = u + (u.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 1000);
-    }
-  }
-  _camTimer() {
-    clearInterval(this._ct);
-    this._ct = setInterval(() => { if (!document.hidden && this.isConnected && this._hass && this.$) this._camLoad(); }, Math.max(5, this._config ? this._config.refresh : 10) * 1000);
   }
   onAct(act, t) {
     const h = this._hass, e = t.dataset.e;
@@ -4492,11 +4520,11 @@ ha-card.wmc{ gap:var(--s2); }
     if (act === 'cwus') { const e = t.dataset.e; return H.call(h, 'switch', h.states[e] && h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
     if (act === 'sta') return H.call(h, 'automation', h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e });
     if (act === 'wm') return H.call(h, 'select', 'select_option', { entity_id: e, option: t.dataset.o });
-    if (act === 'mpp') return H.call(h, 'media_player', 'media_play_pause', { entity_id: e });
+    if (act === 'mpp') return H.call(h, 'media_player', h.states[e].state === 'playing' && (h.states[e].attributes.supported_features & 1) ? 'media_pause' : 'media_play', { entity_id: e });
     if (act === 'mpprev') return H.call(h, 'media_player', 'media_previous_track', { entity_id: e });
     if (act === 'mpnext') return H.call(h, 'media_player', 'media_next_track', { entity_id: e });
     if (act === 'mpmu') return H.call(h, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !h.states[e].attributes.is_volume_muted });
-    if (act === 'mpw') return H.call(h, 'media_player', h.states[e].state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e });
+    if (act === 'mpw') return H.call(h, 'media_player', ['off', 'standby'].includes(h.states[e].state) ? 'turn_on' : 'turn_off', { entity_id: e });
     if (act === 'cov') return H.call(h, 'cover', t.dataset.s, { entity_id: e });
     if (act === 'robots') return H.navigate(this._config.robots_path);
     if (act === 'dev') return H.navigate('/config/devices/device/' + t.dataset.d);
@@ -4553,6 +4581,8 @@ class HGWeatherCard extends HGBase {
   defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: 'Na zewnątrz', icon_base: HG_ASSET + 'assets/meteocons/', icon_v: '1', variant: 'card' }; }
   ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun].filter(Boolean); }
   _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
+  setConfig(c) { const o = this._config; if (o && this._u && ((c && c.entity) || '') !== o.entity) { for (const u of this._u) u(); this._u = null; this._hourly = this._daily = this._hf = this._df = null; }
+    super.setConfig(c); if (this._hass && !this._u) this._subscribe(); }
   set hass(h) { const first = !this._hass; this._hass = h; if (first || !this._u) this._subscribe(); this._update(); }
   get hass() { return this._hass; }
   connectedCallback() { super.connectedCallback(); if (this._hass) this._subscribe(); }
@@ -4633,6 +4663,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .hrs.al{ gap:0; grid-auto-columns:56px; }
 `);
   }
+  _pu() { const w = this._hass && this._hass.states[this._config.entity]; return (w && w.attributes.precipitation_unit) || 'mm'; }
   _tNow() {
     const h = this._hass, c = this._config, s = h.states[c.temp_sensor];
     if (H.ok(s) && isFinite(parseFloat(s.state))) return { v: parseFloat(s.state), src: 'sensor' };
@@ -4654,20 +4685,20 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     return (this._hourly || []).filter((f) => Date.parse(f.datetime) > now - 3600000).slice(0, this._config.hours);
   }
   _hourCells(hr, wide) {
-    const c = this._config;
+    const c = this._config, pu = this._pu();
     return hr.map((f, i) => {
       const d = new Date(f.datetime), pp = f.precipitation_probability, mm = f.precipitation, ws = f.wind_speed;
-      const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${Math.round(pp)}%</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' mm' : '') : ''}</i>` : '';
+      const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${Math.round(pp)}%</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' ' + pu : '') : ''}</i>` : '';
       const wn = wide && ws != null ? `<i class="wn">${H.icon('mdi:weather-windy')}${H.fmt(ws, 0)}</i>` : '';
-      const mmx = wide && pp != null && mm != null && mm > 0 ? `<i class="wet">${H.fmt(mm, 1)} mm</i>` : '';
-      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? 'Teraz' : 'Godz. ' + d.getHours()}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(f.temperature, 0)}°${pp != null ? `, opady ${Math.round(pp)}%` : mm != null ? `, opady ${H.fmt(mm, 1)} mm` : ''}`)}">
+      const mmx = wide && pp != null && mm != null && mm > 0 ? `<i class="wet">${H.fmt(mm, 1)} ${pu}</i>` : '';
+      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? 'Teraz' : 'Godz. ' + d.getHours()}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(f.temperature, 0)}°${pp != null ? `, opady ${Math.round(pp)}%` : mm != null ? `, opady ${H.fmt(mm, 1)} ${pu}` : ''}`)}">
         <small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy" decoding="async"><b>${H.fmt(f.temperature, 0)}°</b>${pr}${mmx}${wn}</div>`;
     }).join('');
   }
   _tline(hr) {
     if (hr.length < 2) return '';
-    const ts = hr.map((f) => f.temperature).filter((t) => t != null); if (!ts.length) return '';
-    const stops = hr.map((f, i) => `${HGWx.tcol(f.temperature)} ${((i + .5) / hr.length * 100).toFixed(1)}%`).join(',');
+    const ts = hr.map((f) => f.temperature).filter((t) => t != null); if (ts.length < 2) return '';
+    const stops = hr.map((f, i) => f.temperature == null ? '' : `${HGWx.tcol(f.temperature)} ${((i + .5) / hr.length * 100).toFixed(1)}%`).filter(Boolean).join(',');
     const t0 = Date.parse(hr[0].datetime), frac = Math.max(0, Math.min(1, (Date.now() - t0) / 3600000));
     const kx = ((frac + .5) / hr.length) * 100;
     return `<div class="tl" style="background:linear-gradient(90deg, ${stops})" aria-hidden="true"><span class="kn" style="left:${kx.toFixed(2)}%"></span></div>`;
@@ -4717,9 +4748,9 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const lbl = `Na zewnątrz: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, maks ${H.fmt(mm[0], 0)}°, min ${H.fmt(mm[1], 0)}°` : ''} – prognoza szczegółowa`;
     const chip = `<button class="chip" data-act="expand" aria-label="${H.esc(lbl)}" title="${H.esc(cond)}"><img src="${HGWx.icon(c, w.state, night, false)}" alt=""><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''}</b><span class="f">${H.esc(cond)}</span><span class="s">${H.esc(HG_WX_SHORT[cond] || cond)}</span></button>`;
     if (this.hasAttribute('compact')) return chip;
-    const first = !this._shown; this._shown = true;
+    const first = !this._shown, pu = this._pu(); this._shown = true;
     const nx = this._hrs().slice(1, 6).map((f) => { const d = new Date(f.datetime);
-      return `<span class="hc"><small>${String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt=""><b>${H.fmt(f.temperature, 0)}°</b>${f.precipitation > 0 ? `<em>${H.fmt(f.precipitation, 1)} mm</em>` : ''}</span>`; }).join('');
+      return `<span class="hc"><small>${String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt=""><b>${H.fmt(f.temperature, 0)}°</b>${f.precipitation > 0 ? `<em>${H.fmt(f.precipitation, 1)} ${pu}</em>` : ''}</span>`; }).join('');
     return `<button class="hero ${first && !HGWx.still() ? 'anim' : ''}" data-act="expand" aria-label="${H.esc(lbl)}" title="Prognoza szczegółowa">
       <span class="big">${isFinite(t) ? H.fmt(t, 0) : '–'}<sup>°</sup><img src="${HGWx.icon(c, w.state, night, true)}" alt=""></span>
       <span class="cd2">${H.esc(cond)}</span>${mm ? `<span class="mm"><span><i>↑</i>${H.fmt(mm[0], 0)}°</span>${mm[1] != null ? `<span><i>↓</i>${H.fmt(mm[1], 0)}°</span>` : ''}</span>` : ''}${nx ? `<span class="nx" aria-hidden="true">${nx}</span>` : ''}</button>`;
@@ -4823,11 +4854,11 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   _xUpd() {
     if (!this._x) return;
     const c = this._config, h = this._hass, w = h.states[c.entity]; if (!w) return;
-    const at = w.attributes, cond = (HG_WX_COND[w.state] || [w.state])[0], t = parseFloat(at.temperature), night = this._night(new Date());
+    const at = w.attributes, pu = at.precipitation_unit || 'mm', cond = (HG_WX_COND[w.state] || [w.state])[0], t = parseFloat(at.temperature), night = this._night(new Date());
     const DN = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
     const dl = (d) => { const t0 = new Date(); t0.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0); const n = Math.round((dd - t0) / 86400000); return n === 0 ? 'Dziś' : n === 1 ? 'Jutro' : DN[dd.getDay()]; };
     // kafle szczegółów (tylko prawdziwe atrybuty)
-    const WD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], wd = at.wind_bearing != null ? WD[Math.round(at.wind_bearing / 45) % 8] : '';
+    const WD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], wd = at.wind_bearing == null || at.wind_bearing === '' ? '' : isFinite(at.wind_bearing) ? WD[((Math.round(at.wind_bearing / 45) % 8) + 8) % 8] : String(at.wind_bearing);
     const det = [at.humidity != null ? ['mdi:water-percent', 'Wilgotność', H.fmt(at.humidity, 0), '%'] : null,
       at.wind_speed != null ? ['mdi:weather-windy', 'Wiatr', H.fmt(at.wind_speed, 0), `${at.wind_speed_unit || 'km/h'}${wd ? ' ' + wd : ''}`] : null,
       at.pressure != null ? ['mdi:gauge', 'Ciśnienie', H.fmt(at.pressure, 0), at.pressure_unit || 'hPa'] : null,
@@ -4837,14 +4868,14 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const hr = this._hrs();
     const hrs = hr.map((f, i) => { const d = new Date(f.datetime);
       return `<div class="hc ${i === 0 ? 'nw' : ''}"><small>${i === 0 ? 'Teraz' : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy"><b>${H.fmt(f.temperature, 0)}°</b>
-        <span class="d" style="background:${HGWx.tcol(f.temperature)}"></span><i>${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' mm' : ''}</i></div>`; }).join('');
+        <span class="d" style="background:${HGWx.tcol(f.temperature)}"></span><i>${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</i></div>`; }).join('');
     // dni: pasek zakresu na wspólnej skali
     const D = (this._daily || []).slice(0, 7).filter((f) => f.temperature != null);
     const lo = Math.min(...D.map((f) => f.templow ?? f.temperature)), hi = Math.max(...D.map((f) => f.temperature)), sp = Math.max(1, hi - lo);
     const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === 'Dziś';
       const nowDot = isT && isFinite(t) ? `<u style="left:${Math.max(0, Math.min(100, ((t - lo) / sp) * 100)).toFixed(1)}%"></u>` : '';
-      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(a, 0)}° do ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, opady ${H.fmt(f.precipitation, 1)} mm` : ''}`)}">
-        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc((HG_WX_COND[f.condition] || [f.condition])[0])}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' mm' : ''}</span>
+      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${(HG_WX_COND[f.condition] || [f.condition])[0]}, ${H.fmt(a, 0)}° do ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, opady ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`)}">
+        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc((HG_WX_COND[f.condition] || [f.condition])[0])}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
         <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
     // słońce
     const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static/${n}.svg?v=${c.icon_v}`;
@@ -4898,7 +4929,7 @@ class HGNetCard extends HGBase {
   _n() { return this._config.net || {}; }
   _clientEnts() {
     const h = this._hass, n = this._n(), cl = n.clients || {}, ex = new Set(cl.exclude || []);
-    const key = h.entities ? Object.keys(h.entities).length : 0;
+    const key = h.entities;      // rejestr encji: nowy obiekt przy każdej zmianie
     if (this._clK === key && this._clL) return this._clL;
     const L = Object.values(h.entities || {}).filter((e) => e.platform === (cl.platform || 'unifi') && e.entity_id.startsWith('device_tracker.') && !ex.has(e.entity_id) && !e.hidden).map((e) => e.entity_id);
     this._clK = key; this._clL = L; return L;
@@ -4916,13 +4947,15 @@ class HGNetCard extends HGBase {
   _extraSig() { return [this._config.section === 'wan' ? (this._hist || []).length : 0, this._flt, this._srt, Math.floor(Date.now() / 60000)]; }
   set hass(h) { const first = !this._hass; this._hass = h; window.__hgHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
   get hass() { return this._hass; }
+  connectedCallback() { super.connectedCallback(); if (this._hass && this._config && this._config.section === 'wan' && !this._hT) this._ldHist(); }
+  disconnectedCallback() { clearTimeout(this._hT); this._hT = 0; }
   async _ldHist() {
-    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true;
+    const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true; clearTimeout(this._hT); this._hT = 0;
     try {
       const r = await h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 24 * 3600e3).toISOString(), entity_ids: [e.entity], minimal_response: true, no_attributes: true });
       this._hist = ((r && r[e.entity]) || []).map((x) => parseFloat(x.s)).filter((v) => isFinite(v)); this.rerender();
     } catch (err) { this._hist = []; }
-    this._hl = false; setTimeout(() => this.isConnected && this._ldHist(), 10 * 60000);
+    this._hl = false; if (this.isConnected) this._hT = setTimeout(() => { this._hT = 0; if (this.isConnected) this._ldHist(); }, 10 * 60000);
   }
   css() {
     return U(`
@@ -5163,6 +5196,7 @@ function hgBmPassThrough(on) {
    Stary nuvio-page zapisuje w HGNav położenie wskaźników (zakładka, szyna) i panelu tuż przed zmianą adresu; nowy w connectedCallback /
    po pierwszym zbudowaniu przesuwa wskaźniki z poprzedniej pozycji (transform).
    Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
+const HG_NO_AREAS = {};   /* stały pusty obiekt: HGAreas.model zapamiętuje model po referencji konfiguracji */
 const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
 const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
@@ -5288,7 +5322,8 @@ class HGPage extends HTMLElement {
       notifications_action: { notifications: true }, mail_action: { notifications: true },
       menu: [], storage_key: 'nuvio', zoom: { min: 0.8, max: 1.3, step: 0.1 },
     }, c);
-    this._built = false;
+    if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
+    this._built = false; this._w = null;
     this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
     if (this._hass) this._build();
   }
@@ -5362,6 +5397,8 @@ class HGPage extends HTMLElement {
     this._onVis = this._onVis || (() => { this._syncPlay(); if (!document.hidden) { HGVer.check(this._hass); this._glassRefresh(); } });
     document.addEventListener('visibilitychange', this._onVis);
     this._syncPlay();
+    this._hglSub = this._hglSub || (() => { if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
+    HGL.subs.add(this._hglSub);
     hgBmPassThrough(true);
     this.toggleAttribute('lite', hgLite());
     this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this);
@@ -5370,7 +5407,9 @@ class HGPage extends HTMLElement {
     if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
   }
   disconnectedCallback() {
-    if (this._editing) this._editExit(false);
+    HGL.subs.delete(this._hglSub);
+    if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
+    document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
     if (this._config && this._config.redirect) return;
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('location-changed', this._onLoc);
@@ -5395,7 +5434,7 @@ class HGPage extends HTMLElement {
       this._unsub.catch(() => { this._unsub = null; });
     } catch (e) { /* brak subskrypcji – brak kropki */ }
   }
-  _ls(k, v) { const key = this._config.storage_key + ':' + k; if (v === undefined) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } } localStorage.setItem(key, JSON.stringify(v)); }
+  _ls(k, v) { const key = this._config.storage_key + ':' + k; if (v === undefined) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } } try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* pamięć zablokowana / pełna */ } }
 
   /* ---------- tryb i skala ---------- */
   _layout() {
@@ -5478,8 +5517,10 @@ class HGPage extends HTMLElement {
   }
 
   /* ---------- budowa ---------- */
+  /* podpis zapisanego układu tego widoku: późno wczytane dane użytkownika (HGL.load > 900 ms) -> przebudowa */
+  _layoutSig() { const sc = this._pageScope && this._pageScope(); return sc ? JSON.stringify([HGL.data.s[sc] || null, HGL.data.s[sc + ':tiles'] || null]) : ''; }
   async _build() {
-    if (this._building) return; this._building = true;
+    if (this._building) { this._rebuild = true; return; } this._building = true; this._rebuild = false;
     const c = this._config;
     const sr = this.shadowRoot;
     sr.innerHTML = `<style>${HG_BASE}${this._css()}</style>
@@ -5519,14 +5560,14 @@ class HGPage extends HTMLElement {
     const helpers = HG_HELPERS || (window.loadCardHelpers ? (HG_HELPERS = await window.loadCardHelpers()) : null);
     this._cards = []; this._cardWraps = [];
     if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
-    if (this._config._hgAuto && HGL.loaded && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    if (this._config._hgAuto && HGL.loaded && !HGL.failed && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
     const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
     if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
     for (const cc of LC) {
       const w = document.createElement('div'); w.className = 'cw'; w.dataset.hgk = cc._k;
       if (cc._hid) { w.hidden = true; w.style.display = 'none'; }
       let el;
-      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles;
+      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid;
       try {
         if (helpers) el = helpers.createCardElement(conf);
         else { el = document.createElement(conf.type.replace('custom:', '')); el.setConfig(conf); }
@@ -5535,7 +5576,8 @@ class HGPage extends HTMLElement {
       w.appendChild(el); this._panelEl.appendChild(w);
       this._cards.push(el); this._cardWraps.push(w);
     }
-    this._built = true; this._building = false;
+    this._built = true; this._building = false; this._lsig = this._layoutSig();
+    if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
     this._sigTop = this._sigRail = this._sigHub = null;
     this._paintHead(); this._paintTools();
     this._paintTop(true); this._paintRail(true); this._paintHub(true);
@@ -5623,7 +5665,7 @@ class HGPage extends HTMLElement {
   }
   /* nagłówek widoku pokoju: przycisk „Pokoje”, ikona i nazwa pokoju, temperatura / wilgotność (adres ?area=<id>) */
   _roomHead() {
-    const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || {}), a = m.byId[HGAreas.areaFromUrl()];
+    const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()];
     const back = `<button class="rback" data-act="roomback" aria-label="Wróć do pokoi">${H.icon('mdi:chevron-left')}<span>Pokoje</span></button>`;
     if (!a) return `${back}<h1>Pokój</h1><p>Nie znaleziono pokoju</p>`;
     const env = HGAreas.env(h, a), S = a.sec || {}, okS = (e) => H.ok(h.states[e]);
@@ -5814,7 +5856,7 @@ class HGPage extends HTMLElement {
     if (!force && sig === this._sigRail) return; this._sigRail = sig;
     const btn = (r) => `<button class="ri ${r.act ? 'act' : ''}" data-act="rail" data-i="${r.i}" aria-label="${H.esc(r.label)}" title="${H.esc(r.label)}">${r.svg && HG_SVG[r.svg] ? HG_SVG[r.svg] : H.icon(r.icon)}</button>`;
     const moreB = ov.size ? `<button class="ri ${moreAct ? 'act' : ''}" data-act="railmore" aria-haspopup="dialog" aria-expanded="${!!(this._sheetOpen && this._sheetMode === 'rail')}" aria-label="Więcej" title="Więcej">${H.icon('mdi:dots-grid')}</button>` : '';
-    this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + btn(items[items.length - 1]) + '<i class="rind" aria-hidden="true"></i>';
+    this._railEl.innerHTML = items.slice(0, -1).map(btn).join('') + moreB + (items.length ? btn(items[items.length - 1]) : '') + '<i class="rind" aria-hidden="true"></i>';
     this._placeInd();
     if (!this._rfChk) { this._rfChk = true; requestAnimationFrame(() => { this._rfChk = false; this._paintRail(); }); }   // ponowny pomiar po malowaniu
     if (!this._rfT) { this._rfT = true; for (const ms of [400, 1200, 3000]) setTimeout(() => { if (this.isConnected) this._paintRail(); }, ms); }
@@ -6280,27 +6322,52 @@ console.info(`%c HOME-GLASS %c ${HG_VER} `, 'background:var(--hg-accent);color:v
    kopia w localStorage (nuvio:layout) jako zapas / natychmiastowy odczyt. */
 const HGL = window.__hgL || (window.__hgL = {
   KEY: 'nuvio_layout', LS: 'nuvio:layout',
-  data: (() => { try { return JSON.parse(localStorage.getItem('nuvio:layout') || 'null') || { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
-  subs: new Set(), loaded: false, _p: null,
+  /* kopia lokalna per użytkownik HA (wspólny tablet): klucz nuvio:layout:<user_id>; „:last” = ostatni użytkownik do natychmiastowego odczytu przed load() */
+  _lsKey(uid) { return this.LS + ':' + (uid || 'anon'); },
+  _lsRead(uid) { try { const v = JSON.parse(localStorage.getItem(this._lsKey(uid)) || 'null'); return v && v.s ? v : null; } catch (e) { return null; } },
+  data: (() => { try { const u = localStorage.getItem('nuvio:layout:last'); const v = u && JSON.parse(localStorage.getItem('nuvio:layout:' + u) || 'null'); return v && v.s ? v : { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
+  subs: new Set(), loaded: false, failed: false, editing: false, _p: null, _uid: null, _base: null,
   get(sc) { const x = this.data.s[sc] || {}; return { order: x.order || [], hidden: x.hidden || [], size: x.size || {}, added: x.added || [], names: x.names || {}, conf: x.conf || {} }; },
   set(sc, v) { const o = { order: v.order || [], hidden: v.hidden || [], size: v.size || {}, added: v.added || [], names: v.names || {}, conf: v.conf || {} };
     for (const k of Object.keys(o.conf)) if (!o.conf[k] || !Object.keys(o.conf[k]).length) delete o.conf[k];
     if (!o.order.length && !o.hidden.length && !Object.keys(o.size).length && !o.added.length && !Object.keys(o.names).length && !Object.keys(o.conf).length) delete this.data.s[sc]; else this.data.s[sc] = o; },
+  /* zrzut stanu serwera (po load/save) – przy zapisie wysyłamy tylko to, co zmieniło się względem niego */
+  _snap(v) { const x = v || { s: {} }; return { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])), app: JSON.stringify(x.app || null), wiz: JSON.stringify(x.wiz || null) }; },
+  _fetch(h) { return h.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { const v = r && r.value; return v && v.s ? v : null; }); },
   load(h) {
     if (this._p) return this._p;
-    const c = h && h.connection;
-    this._p = !c ? Promise.resolve() : c.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => {
-      const v = r && r.value; this.loaded = true;
-      if (v && v.s && (v.ts || 0) >= (this.data.ts || 0)) { this.data = v; this._ls(); this.notify(); }
+    const c = h && h.connection, uid = h && h.user && h.user.id;
+    if (uid && uid !== this._uid) {
+      this._uid = uid; try { localStorage.setItem('nuvio:layout:last', uid); } catch (e) {}
+      if (this.data.uid !== uid) this.data = this._lsRead(uid) || { v: 1, ts: 0, s: {} };   /* cudzy układ z poprzedniej sesji -> odrzuć */
+    }
+    this._p = !c ? Promise.resolve() : this._fetch(h).then((v) => {
+      this.loaded = true; this._base = this._snap(v);
+      /* serwer jest źródłem prawdy (zegary urządzeń się różnią); w trakcie edycji nie podmieniamy danych – scalenie nastąpi przy zapisie */
+      if (v && !this.editing) { this.data = v; this._ls(); this.notify(); }
       HGApp.apply();
-    }, () => { this.loaded = true; });
+    }, () => { this.loaded = true; this.failed = true; });
     return this._p;
   },
-  _ls() { try { localStorage.setItem(this.LS, JSON.stringify(this.data)); } catch (e) {} },
-  save(h) {
-    this.data.ts = Date.now(); this._ls();
-    if (window.__hgDryRun || !h || !h.connection) return Promise.resolve('local');
-    return h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: this.data }).then(() => 'ha', () => 'local');
+  _ls() { try { if (this._uid) this.data.uid = this._uid; localStorage.setItem(this._lsKey(this._uid || this.data.uid), JSON.stringify(this.data)); } catch (e) {} },
+  /* zapis: najpierw świeża wersja z serwera, potem nałożenie tylko zmienionych zakresów (inne urządzenie mogło zapisać w międzyczasie) */
+  async save(h) {
+    this.data.ts = Date.now();
+    if (window.__hgDryRun || !h || !h.connection) { this._ls(); return 'local'; }
+    try {
+      const srv = await this._fetch(h), base = this._base || this._snap(null), out = srv ? JSON.parse(JSON.stringify(srv)) : { v: 1, s: {} };
+      out.s = out.s || {};
+      for (const k of new Set([...Object.keys(this.data.s), ...Object.keys(base.s)])) {
+        const mine = this.data.s[k] ? JSON.stringify(this.data.s[k]) : undefined;
+        if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
+        if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
+      }
+      for (const k of ['app', 'wiz']) if (JSON.stringify(this.data[k] || null) !== base[k]) { if (this.data[k]) out[k] = this.data[k]; else delete out[k]; }
+      out.ts = this.data.ts; delete out.uid;
+      await h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: out });
+      this.data = out; this._base = this._snap(out); this._ls(); this.failed = false; this.notify();
+      return 'ha';
+    } catch (e) { this._ls(); return 'local'; }
   },
   notify() { HGApp.apply(); for (const f of [...this.subs]) try { f(); } catch (e) {} },
   /* kolejność listy elementów wg zapisanych kluczy (nieznane na końcu, w kolejności bazowej) */
@@ -6324,7 +6391,11 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const base = { '--hg-accent': this.hex(c), '--hg-on-accent': on, '--hg-accent-hi': this.hex(this.mix(c, [255, 255, 255], 0.25)), '--hg-accent-lo': this.hex(this.mix(c, [0, 0, 0], 0.35)),
       '--hg-accent-soft': 'rgb' + `a(${r},.22)`, '--hg-accent-faint': 'rgb' + `a(${r},.10)`, '--hg-accent-glow': 'rgb' + `a(${r},.30)` };
     return { light: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [236, 238, 241]) }), dark: Object.assign({}, base, { '--hg-accent-tx': this.tx(c, [40, 44, 50]) }) }; },
-  get() { return (HGL.data.app) || {}; },
+  /* dane wyglądu trafiają do CSS i atrybutów HTML: kolory tylko #RRGGBB, adres tła tylko /… lub https://… */
+  get() { const a = HGL.data.app || {}, hx = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v), o = Object.assign({}, a);
+    if (o.accent != null && !hx(o.accent)) delete o.accent; if (o.dim != null && !isFinite(Number(o.dim))) delete o.dim;
+    const b = o.bg; if (b && typeof b === 'object') { const okC = b.kind === 'color' || b.kind === 'gradient' ? hx(b.v) && (b.v2 == null || hx(b.v2)) : typeof b.v === 'string' && /^(\/|https?:\/\/)/.test(b.v) && !/[\s"'()<>\\]/.test(b.v); if (!okC) delete o.bg; }
+    return o; },
   set(v) { HGL.data.app = v; this.apply(); },
   css(o) { return Object.entries(o).map(([k, v]) => `${k}: ${v} !important;`).join(' '); },
   bgImg(b) { if (!b) return null;
@@ -6441,8 +6512,8 @@ const hgTileAct = (card, act, t) => {
   if (act === 'ttog') { if (d === 'lock') H.call(h, 'lock', s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e }); else H.call(h, 'homeassistant', 'toggle', { entity_id: e }); return true; }
   if (act === 'trun') { H.call(h, d === 'scene' ? 'scene' : d === 'script' ? 'script' : d, d === 'scene' || d === 'script' ? 'turn_on' : 'press', { entity_id: e }); return true; }
   if (act === 'tcov') { H.call(h, 'cover', t.dataset.s, { entity_id: e }); return true; }
-  if (act === 'tmp') { H.call(h, 'media_player', 'media_play_pause', { entity_id: e }); return true; }
-  if (act === 'tmw') { H.call(h, 'media_player', s.state === 'off' ? 'turn_on' : 'turn_off', { entity_id: e }); return true; }
+  if (act === 'tmp') { const f = s.attributes.supported_features || 0, pp = (f & 1) && (f & 16384); H.call(h, 'media_player', pp ? 'media_play_pause' : s.state === 'playing' ? 'media_pause' : 'media_play', { entity_id: e }); return true; }
+  if (act === 'tmw') { H.call(h, 'media_player', ['off', 'standby'].includes(s.state) ? 'turn_on' : 'turn_off', { entity_id: e }); return true; }
   return false;
 };
 /* osadzenie kart klimatyzacji / kamer w slotach (jak w karcie pokoju) */
@@ -6738,7 +6809,7 @@ const HG_EDIT = {
       else { const b = this._eSheetEl.querySelector('[data-hge=addt][aria-pressed=true]'); if (b && this._eAddE) { p2.innerHTML = hgTileHtml(this._hass, this._eAddE, 's', { t: b.dataset.t }); hgSlots({ _hass: this._hass, $: p2 }); hgPvLive(p2); } } }, 1000);
   },
   /* klucz karty panelu: typ + pierwsza encja/tytuł/obszar (+ numer przy powtórzeniach) */
-  _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
+  _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc._hgid || cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
   _pageScope() { const v = this._config.view; return ['rooms', 'pokoj'].includes(v) ? null : v; },
   /* bazowe karty z CFG + nadpisania: kolejność (zamiana obszarów siatki albo kolejność DOM), ukryte, rozmiar, kafle dodane */
   _applyLayout(cards) {
@@ -6775,14 +6846,15 @@ const HG_EDIT = {
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
     if (this._editing || !this._isAdmin()) return;
-    this._editing = true; this._eSnap = JSON.stringify(HGL.data);
+    this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     this._eWire(); this._eDecorate(); this._eBar();
   },
+  _eDirty() { return this._editing && this._eSnap !== JSON.stringify(HGL.data); },
   _editExit(save) {
     if (!this._editing) return;
-    this._editing = false; this.removeAttribute('editing');
+    this._editing = false; HGL.editing = false; this.removeAttribute('editing');
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); };
@@ -6861,7 +6933,9 @@ const HG_EDIT = {
   },
   _eSet(sc, f) { const L = HGL.get(sc); f(L); HGL.set(sc, L); },
   _eWire() {
-    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else this._editExit(false); } };
+    const onDown = (e) => this._eDown(e), onClick = (e) => this._eClick(e), onTm = (e) => { if (this._drag && this._drag.on) e.preventDefault(); }, onKey = (e) => { if (e.key === 'Escape') { if (this._eSheetOpen) this._eSheet(false); else if (!this._eDirty() || window.confirm('Odrzucić niezapisane zmiany układu?')) this._editExit(false); }
+      /* klawiatura: elementy role=button (chipy rozmiaru itd.) aktywowane Enter / Spacją */
+      else if (e.key === 'Enter' || e.key === ' ') { const t = e.composedPath()[0]; if (t && t.tagName !== 'BUTTON' && t.getAttribute && t.getAttribute('role') === 'button' && t.dataset && t.dataset.hge) { e.preventDefault(); t.click(); } } };
     this._eL = [['pointerdown', onDown, true], ['click', onClick, true], ['touchmove', onTm, { passive: false, capture: true }], ['keydown', onKey, true]];
     for (const [t, f, o] of this._eL) window.addEventListener(t, f, o);
   },
@@ -6908,7 +6982,8 @@ const HG_EDIT = {
     if (a === 'cfgz' || a === 'cfgt') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
     if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, 'Usunięto encję'); }
-    if (a === 'cfgent') { this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.p, old: b.dataset.v }); return this._eSheet('add', null, this._eCfgR.sc); }
+    if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
+      this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eSheet('add', null, this._eCfgR.sc); }
     if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
     const d = b._d || b.closest('.hge'); if (!d) return;
     const ct = d._ct, it = d._it, k = it.dataset.hgk;
@@ -6945,7 +7020,7 @@ const HG_EDIT = {
   },
   /* przeciąganie: mysz – od razu z uchwytu albo po 6 px; dotyk – uchwyt od razu, kafel po przytrzymaniu 380 ms */
   _eDown(e) {
-    if (e.button > 0) return;
+    if (e.button > 0 || e.isPrimary === false || (this._drag && this._drag.on)) return;   /* drugi palec nie przejmuje przeciągania */
     const { ctl, it, inBar } = this._ePath(e); if (inBar) return;
     if (ctl && ctl.dataset.hge !== 'drag') return;
     if (!it) return;
@@ -6995,7 +7070,11 @@ const HG_EDIT = {
     const items = this._eItems(ct);
     if (ct.page && this._config.panel.areas) {
       const base = (this._config.cards || []).map((c) => c.area), byArea = new Map(items.map((w) => [getComputedStyle(w).gridRowStart, w.dataset.hgk]));
-      const all = this._lkeys; const ord = base.map((a, i) => byArea.get(a) || all[i]);
+      /* sloty ukrytych kart: klucz z bieżącego układu (nie bazowego), bez duplikatów – inaczej ukryta karta znikała na stałe */
+      const all = this._lkeys, cur = (this._lc || []).map((c) => c._k), vis = new Set(byArea.values());
+      const ord = base.map((a, i) => byArea.get(a) || (cur[i] && !vis.has(cur[i]) ? cur[i] : null));
+      const miss = all.filter((k) => !ord.includes(k)), seen = new Set();
+      for (let i = 0; i < ord.length; i++) { if (!ord[i] || seen.has(ord[i])) ord[i] = miss.shift() || all[i]; seen.add(ord[i]); }
       this._eSet(ct.scope, (L) => { L.order = ord; });
     } else this._eSet(ct.scope, (L) => { L.order = items.map((w) => w.dataset.hgk); });
   },
@@ -7152,9 +7231,10 @@ const HG_EDIT = {
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   _eUpload(f) {
-    if (!f) return; const h = this._hass, tok = h && h.auth && h.auth.data && h.auth.data.access_token; if (!tok) return this._eToast('Brak sesji – nie można przesłać');
+    if (!f) return; const h = this._hass; if (!h || !h.fetchWithAuth) return this._eToast('Brak sesji – nie można przesłać');
     const fd = new FormData(); fd.append('file', f, f.name); this._eToast('Przesyłanie…');
-    fetch('/api/image/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + tok }, body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => {
+    /* fetchWithAuth odświeża wygasły token (tablety otwarte dłużej niż 30 min) */
+    h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => {
       const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast('Ustawiono przesłane zdjęcie'); this._eLook(); }, (e) => this._eToast('Nie udało się przesłać (' + e + ')'));
   },
   _eSheet(mode, ct, scOver) {
@@ -7185,7 +7265,7 @@ const HG_EDIT = {
     const rx = /\b[a-z_]+\.[a-z0-9_]+\b/g, js = JSON.stringify(this._config.cards || []);
     for (const m of js.match(rx) || []) if (h.states[m]) S.add(m);
     const walk = (r, d) => { if (!r || d > 4) return; for (const el of r.querySelectorAll('[data-e],[data-ac],[data-cam],[data-entity],[data-hgk]')) { for (const v of [el.dataset.e, el.dataset.ac, el.dataset.cam, el.dataset.entity, el.dataset.hgk]) if (v && h.states[v]) S.add(v); }
-      for (const el of r.querySelectorAll('*')) if (el.shadowRoot && el.tagName.startsWith('HG-')) walk(el.shadowRoot, d + 1); };
+      for (const el of r.querySelectorAll('*')) if (el.shadowRoot && /^(HG|NUVIO)-/.test(el.tagName)) walk(el.shadowRoot, d + 1); };
     walk(this.shadowRoot, 0);
     for (const sc of Object.keys(HGL.data.s)) for (const x of HGL.get(sc).added) if (sc === this._eSc) S.add(x.e);
     return S;
