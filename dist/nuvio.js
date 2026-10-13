@@ -282,7 +282,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.2+a67a2d60';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.2+edbf0071';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -540,7 +540,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-000000-025:rgba(0,0,0,0.25);
   --hg-ac-000000-028:rgba(0,0,0,0.28);
   --hg-ac-000000-045:rgba(0,0,0,0.45);
-  --hg-ac-000000-085:rgba(0,0,0,0.85);
   --hg-ac-1e2023:#1E2023;
   --hg-ac-34c759:#34C759;
   --hg-ac-5a5e64:#5A5E64;
@@ -560,7 +559,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-f0955a:#F0955A;
   --hg-ac-f9c80e:#F9C80E;
   --hg-ac-ff6b8b:#FF6B8B;
-  --hg-ac-ffffff:#FFFFFF;
   --hg-ac-ffffff-035:rgba(255,255,255,0.35);
   --hg-ac-ffffff-k:#FFFFFF;
   --hg-bd-000000-005:rgba(0,0,0,0.05);
@@ -605,7 +603,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-080c12-036:rgba(8,12,18,0.36);
   --hg-bg-08101e-038-k:rgba(8,16,30,0.38);
   --hg-bg-0a0e14-032:rgba(10,14,20,0.32);
-  --hg-bg-0b0f0a:#0B0F0A;
+  --hg-bg-0b0f0a-090:rgba(11,15,10,0.9);
   --hg-bg-0e1014-026-k:rgba(14,16,20,0.26);
   --hg-bg-0e1014-032:rgba(14,16,20,0.32);
   --hg-bg-0e1014-036:rgba(14,16,20,0.36);
@@ -649,7 +647,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-96a0a6-055:rgba(150,160,166,0.55);
   --hg-bg-9aa0a6:#9AA0A6;
   --hg-bg-9aa3ad:#9AA3AD;
-  --hg-bg-9be15d:#9BE15D;
   --hg-bg-a0a4a8-055:rgba(160,164,168,0.55);
   --hg-bg-a0e63c-008:rgba(160,230,60,0.08);
   --hg-bg-a9adb2:#A9ADB2;
@@ -753,11 +750,13 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-ffffff-020:rgba(255,255,255,0.2);
   --hg-sh-ffffff-022:rgba(255,255,255,0.22);
   --hg-sh-ffffff-025:rgba(255,255,255,0.25);
+  --hg-sh-ffffff-035:rgba(255,255,255,0.35);
   --hg-sh-ffffff-070:rgba(255,255,255,0.7);
   --hg-sh-ffffff-085:rgba(255,255,255,0.85);
   --hg-sh-ffffff-090:rgba(255,255,255,0.9);
   --hg-tx-000000:#111111;
   --hg-tx-0b0f0a:#111111;
+  --hg-tx-0b0f0a-095-on:rgba(11,15,10,0.95);
   --hg-tx-111111:#111111;
   --hg-tx-111214-k:#111111;
   --hg-tx-14181d:#111111;
@@ -776,6 +775,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-4a4e54:#3A3D42;
   --hg-tx-4d5157:#3A3D42;
   --hg-tx-5a5e64:#3A3D42;
+  --hg-tx-63d71e:#63D71E;
   --hg-tx-6a6e74:#3A3D42;
   --hg-tx-6a6e75:#3A3D42;
   --hg-tx-7a7e84:#3A3D42;
@@ -840,7 +840,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-000000-018:rgba(255,255,255,0.16);
   --hg-bg-000000-020:rgba(255,255,255,0.16);
   --hg-bg-000000-028:rgba(255,255,255,0.16);
-  --hg-bg-0b0f0a:#ECECEF;
   --hg-bg-181e26-005:rgba(255,255,255,0.065);
   --hg-bg-181e26-098:#ECECEF;
   --hg-bg-1e2023:#ECECEF;
@@ -947,6 +946,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-ffffff-020:rgba(255,255,255,0.02);
   --hg-sh-ffffff-022:rgba(255,255,255,0.022);
   --hg-sh-ffffff-025:rgba(255,255,255,0.025);
+  --hg-sh-ffffff-035:rgba(255,255,255,0.035);
   --hg-sh-ffffff-070:rgba(255,255,255,0.07);
   --hg-sh-ffffff-085:rgba(255,255,255,0.08);
   --hg-sh-ffffff-090:rgba(255,255,255,0.08);
@@ -966,6 +966,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-4a4e54:#DFE1E3;
   --hg-tx-4d5157:#DEDFE2;
   --hg-tx-5a5e64:#D9DBDD;
+  --hg-tx-63d71e:#AAEE82;
   --hg-tx-6a6e74:#D3D4D7;
   --hg-tx-6a6e75:#D3D4D7;
   --hg-tx-7a7e84:#CDCED1;
@@ -6602,7 +6603,44 @@ const HG_COMP_CSS = `
 const hgDedupArr = (A) => { if (!Array.isArray(A)) return A; const s = new Set(); return A.filter((y) => { const e = typeof y === 'string' ? y : y && y.entity; if (!e) return true; if (s.has(e)) return false; s.add(e); return true; }); };
 const hgDedupConf = (L) => { let ch = false; for (const cf of Object.values(L.conf || {})) { if (!cf || !cf.set) continue; for (const [k, v] of Object.entries(cf.set)) { const d = hgDedupArr(v); if (Array.isArray(v) && d.length !== v.length) { cf.set[k] = d; ch = true; } } }
   for (const x of L.added || []) for (const k of Object.keys(x.cfg || {})) { const v = x.cfg[k]; const d = hgDedupArr(v); if (Array.isArray(v) && d.length !== v.length) { x.cfg[k] = d; if (x.v && Array.isArray(x.v[k])) x.v[k] = hgDedupArr(x.v[k]); ch = true; } } return ch; };
+/* pusty wrapper (karta bez treści po usunięciu / bez danych) – bez uchwytów, zwinięty; wraca, gdy treść się pojawi */
+const hgIsGhost = (it) => { let hgt = 0; for (const c of it.children) { if (c.classList.contains('hge') || c.tagName === 'STYLE') continue; hgt += c.offsetHeight; } return hgt < 8 && !it.querySelector('.cmslot'); };
+const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new Set(a)]; if (r.length !== a.length) ch = true; return r; };
+  L.hidden = uq(L.hidden || []); L.order = uq(L.order || []); const seen = new Set(); L.added = (L.added || []).filter((x) => { if (!x || !x.e || seen.has(x.e)) { ch = true; return false; } seen.add(x.e); return true; }); return ch; };
+const HGToast = window.__hgToast || (window.__hgToast = {
+  L: [], el: null,
+  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', 'Powiadomienia');
+    const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10000; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
+.hgt .t{ position:absolute; left:0; right:0; bottom:0; box-sizing:border-box; display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 8px 8px 16px; border-radius:18px; background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-tx-0b0f0a-095-on); box-shadow:0 10px 30px var(--hg-sh-000000-028), inset 0 0 0 1px var(--hg-sh-ffffff-035); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  transition:transform .38s cubic-bezier(.2,.9,.25,1), opacity .3s; transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
+.hgt .t.in{ opacity:0; transform:translateY(24px) scale(.96); } .hgt .t.out{ opacity:0; transform:translateY(16px) scale(.9) !important; }
+.hgt .t span{ flex:1; min-width:0; } .hgt .t em{ font-style:normal; font-weight:700; font-size:12px; padding:2px 7px; border-radius:999px; background:var(--hg-bg-000000-014); }
+.hgt .t button{ all:unset; cursor:pointer; font-weight:700; font-size:13px; padding:8px 14px; border-radius:12px; background:var(--hg-bg-0b0f0a-090); color:var(--hg-accent, var(--hg-tx-63d71e)); } .hgt .t button:focus-visible{ outline:2px solid var(--hg-tx-0b0f0a); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ .hgt .t{ transition:opacity .2s; } }`;
+    el.appendChild(st); document.body.appendChild(el);
+    el.addEventListener('mouseenter', () => { this.exp = true; this.pause(true); this.lay(); }); el.addEventListener('mouseleave', () => { this.exp = false; this.pause(false); this.lay(); });
+    return el; },
+  lay() { const v = this.L.filter((x) => !x.gone).slice(-6).reverse(); let y = 0;
+    v.forEach((x, i) => { const n = x.n; n.style.zIndex = 100 - i; n.style.pointerEvents = i < 3 ? 'auto' : 'none';
+      if (this.exp) { n.style.transform = `translateY(${-y}px)`; n.style.opacity = i < 3 ? 1 : 0; y += n.offsetHeight + 8; }
+      else n.style.transform = `translateY(${-i * 10}px) scale(${1 - i * 0.05})`, n.style.opacity = i < 3 ? (i ? 0.9 - i * 0.15 : 1) : 0; }); },
+  pause(p) { const now = Date.now(); for (const x of this.L) { if (p) { if (x.tm) { clearTimeout(x.tm); x.tm = 0; x.left = Math.max(800, x.end - now); } } else if (!x.tm && !x.gone) this.arm(x, x.left || 2600); } },
+  arm(x, ms) { clearTimeout(x.tm); x.end = Date.now() + ms; x.tm = setTimeout(() => this.drop(x), ms); },
+  drop(x) { if (x.gone) return; x.gone = true; clearTimeout(x.tm); x.n.classList.add('out'); setTimeout(() => { x.n.remove(); this.L = this.L.filter((y) => y !== x); this.lay(); }, 320); this.lay(); },
+  show(t, undo) { const box = this.box(), ms = undo ? 6000 : 2600; box.style.bottom = `calc(${this.off || 20}px + env(safe-area-inset-bottom, 0px))`;
+    const same = this.L.find((x) => !x.gone && x.t === t && !undo && !x.undo);
+    if (same) { same.c++; same.n.querySelector('em') ? (same.n.querySelector('em').textContent = '×' + same.c) : same.n.querySelector('span').insertAdjacentHTML('afterend', `<em>×${same.c}</em>`); this.L = this.L.filter((y) => y !== same).concat(same); this.arm(same, ms); return this.lay(); }
+    const n = document.createElement('div'); n.className = 't in'; n.setAttribute('role', 'status'); const sp = document.createElement('span'); sp.textContent = t; n.appendChild(sp);
+    const x = { t, n, c: 1, undo: !!undo };
+    if (undo) { const u = document.createElement('button'); u.textContent = 'Cofnij'; u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
+    let sx = null; n.addEventListener('pointerdown', (e) => { sx = e.clientX; }); n.addEventListener('pointermove', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 6) n.style.translate = (e.clientX - sx) + 'px 0'; });
+    n.addEventListener('pointerup', (e) => { const dx = sx == null ? 0 : e.clientX - sx; sx = null; n.style.translate = ''; if (Math.abs(dx) > 60 || (Math.abs(dx) < 6 && !e.target.closest('button') && (this.exp || window.matchMedia('(hover:none)').matches))) this.drop(x); else if (Math.abs(dx) < 6 && !this.exp) { this.exp = true; this.lay(); } });
+    box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));
+    if (!this.exp) this.arm(x, ms); else x.left = ms; },
+});
 const HG_COMP_EDIT = {
+  _eGhostSweep() { if (!this._eOn && !this.classList.contains('hge')) {} for (const ct of this._eConts()) for (const it of this._eItems(ct)) { const g = hgIsGhost(it), d = it.querySelector(':scope > .hge');
+      if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
@@ -6710,6 +6748,7 @@ hgReg('nuvio-tiles-card', HGTilesCard, 'Nuvio – Moje kafelki', 'Kafelki dodane
 
 /* style trybu edycji wstrzykiwane do cieni kart (elementy z data-hgk w kontenerach data-hgl) */
 const HGE_CSS = `
+.hge-on > .hge-ghost{ display:none !important; }
 [data-hgl] > [data-hgk]{ position:relative; }
 .hge-on [data-hgl] > [data-hgk], [data-hgl].hge-on > [data-hgk]{ outline:1.5px dashed var(--hg-accent); outline-offset:3px; border-radius:var(--r-md, 18px); animation:hgeW 1.6s ease-in-out infinite; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
 [data-hgl] > [data-hgk]:nth-child(2n){ animation-delay:-.8s; }
@@ -6875,21 +6914,21 @@ const HG_EDIT = {
     this._editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
-    this._eWire(); this._eDecorate(); this._eBar();
+    for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
+    this._eWire(); this._eDecorate(); this._eGhostSweep(); this._eBar();
+    clearInterval(this._eGh); this._eGh = setInterval(() => { if (!this._editing) return clearInterval(this._eGh); if (this._drag && this._drag.on) return; this._eGhostSweep(); this._eDecorate(); }, 700);
   },
   _editExit(save) {
     if (!this._editing) return;
-    this._editing = false; this.removeAttribute('editing');
+    this._editing = false; this.removeAttribute('editing'); clearInterval(this._eGh); for (const ct of this._eConts()) for (const g of ct.el.querySelectorAll(':scope > .hge-ghost')) g.classList.remove('hge-ghost');
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); };
     if (save) HGL.save(this._hass).then((w) => { this._eToast(w === 'ha' ? 'Zapisano układ (synchronizacja przez Home Assistant)' : 'Zapisano układ na tym urządzeniu'); fin(); }); else fin();
   },
-  _eToast(t, undo) { const d = document.createElement('div'); d.className = 'hge-toast'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d);
-    if (undo) { const u = document.createElement('button'); u.textContent = 'Cofnij'; Object.assign(u.style, { marginLeft: '12px', border: '0', borderRadius: '999px', padding: '6px 12px', background: 'var(--hg-ac-000000-085)', color: 'var(--hg-ac-ffffff)', font: '600 13px/1 system-ui, sans-serif', cursor: 'pointer' });
-      u.addEventListener('click', (ev) => { ev.stopPropagation(); d.remove(); undo(); }, true); d.appendChild(u); d.style.pointerEvents = 'auto'; }
-    Object.assign(d.style, { position: 'fixed', left: '50%', bottom: '28px', transform: 'translateX(-50%)', zIndex: 9999, padding: '10px 16px', borderRadius: '999px', background: 'var(--hg-accent, var(--hg-bg-9be15d))', color: 'var(--hg-on-accent, var(--hg-bg-0b0f0a))', font: '500 14px/1.2 system-ui, sans-serif', boxShadow: '0 8px 24px var(--hg-bg-000000-030)' });
-    setTimeout(() => d.remove(), undo ? 6000 : 2600); },
+  /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
+     rozwija się po najechaniu / dotknięciu, przesunięcie lub dotyk zamyka, auto-zamknięcie pauzowane, identyczne komunikaty łączone (×n) */
+  _eToast(t, undo) { HGToast.off = this._editing ? 84 : 20; HGToast.show(t, undo); },
   /* odświeżenie po zmianie układu: karty przerysowane (z odmrożeniem), dekoracje od nowa */
   _eRefresh(page) {
     HG_FREEZE.on = false;
@@ -6908,7 +6947,7 @@ const HG_EDIT = {
       ct.el.classList.add('hge-on'); ct.el.classList.toggle('hge-lite', lite);
       const areas = ct.page && !!this._config.panel.areas;
       for (const it of this._eItems(ct)) {
-        if (it.querySelector(':scope > .hge') || (!ct.page && it.offsetHeight < 8)) continue;
+        if (it.querySelector(':scope > .hge') || hgIsGhost(it)) continue;
         const k = it.dataset.hgk, L = HGL.get(ct.scope), z = L.size[k] || 's', canSz = ct.page ? !areas : ct.sz;
         const d = document.createElement('div'); d.className = 'hge';
         d.innerHTML = `<button class="hh" data-hge="drag" aria-label="Przeciągnij, aby zmienić kolejność" title="Przeciągnij">${H.icon('mdi:drag')}</button>`
