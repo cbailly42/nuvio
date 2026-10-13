@@ -9,6 +9,17 @@ for pat in [r"home-glass", r"\bhg-(?:page|[a-z]+-card)\b", r"/local/images/", r"
         s = js[max(0, m.start() - 40):m.end() + 20].replace('\n', ' ')
         if re.search(r'vacuum_clean_segment|\.turn_on|\.turn_off|\.toggle', s): continue
         bad.append(s)
+# optional HACS packages must never be imported / fetched by Nuvio itself (detection only)
+for m in re.finditer(r"(?:import\s*\(|import\s+[^;]*from\s*|fetch\s*\()\s*['\"`][^'\"`]*(?:kiosk-mode|custom-sidebar|card-mod)", js): bad.append('optional package loaded directly: ' + m.group(0)[:80])
+# every bundled background listed in CREDITS.md and within size budget
+bd = os.path.join(R, 'dist', 'assets', 'backgrounds')
+if os.path.isdir(bd):
+    cr = open(os.path.join(bd, 'CREDITS.md')).read()
+    for f in sorted(os.listdir(bd)):
+        if not f.endswith('.webp'): continue
+        i, kind = f[:-5].rsplit('-', 1); kb = os.path.getsize(os.path.join(bd, f)) / 1024
+        if f'`{i}`' not in cr: bad.append(f'background {f} missing from CREDITS.md')
+        if kb > {'wide': 250, 'portrait': 120, 'thumb': 16}.get(kind, 0): bad.append(f'background {f} too large ({kb:.0f} KB)')
 if bad:
     print('HARDCODED CONTENT FOUND:'); [print('  ', b) for b in bad[:40]]; sys.exit(1)
 print('guard OK – no house-specific ids in dist/nuvio.js')
