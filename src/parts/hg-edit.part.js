@@ -128,13 +128,13 @@ const HG_TILE_CSS = `
 @container (max-width: 460px){ .hgtl.hgsz-m{ grid-column:1 / -1; } }
 .hgtl.k-clim, .hgtl.k-cam{ padding:0; background:none; box-shadow:none; display:block; }
 .hgtl.k-clim > div, .hgtl.k-cam > div{ height:100%; }
-.hgtl .hgtb{ flex:1; display:flex; align-items:center; gap:10px; min-width:0; background:none; border:0; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
-.hgtl .ti{ flex:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); }
+.hgtl .hgtb{ flex:1 1 0; display:flex; flex-wrap:nowrap; align-items:center; gap:10px; min-width:0; overflow:hidden; background:none; border:0; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.hgtl .ti{ flex:none; position:static; margin:0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); }
 .hgtl .ti ha-icon{ width:20px; height:20px; }
 .hgtl.on .ti{ background:var(--hg-accent); color:var(--hg-on-accent); }
-.hgtl .tn{ display:flex; flex-direction:column; min-width:0; } .hgtl .tn b{ font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hgtl .tn{ display:flex; flex-direction:column; flex:1 1 0; min-width:0; overflow:hidden; } .hgtl .tn b{ font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; white-space:normal; overflow:hidden; overflow-wrap:anywhere; line-height:1.25; }
 .hgtl .tn small{ opacity:.66; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hgtl.on .tn small{ color:var(--hg-accent-tx); opacity:1; }
-.hgtl .tv{ flex:none; font-size:30px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .hgtl .tv.tx{ font-size:15px; font-weight:600; letter-spacing:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; } .hgtl .tv em{ font-style:normal; font-size:13px; opacity:.65; margin-left:3px; font-weight:400; }
+.hgtl .tv{ flex:none; margin-left:auto; align-self:center; text-align:right; font-size:30px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .hgtl .tv.tx{ font-size:15px; font-weight:600; letter-spacing:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; } .hgtl .tv em{ font-style:normal; font-size:13px; opacity:.65; margin-left:3px; font-weight:400; }
 .hgtl.un{ opacity:.6; }
 .tg2.one{ grid-template-columns:1fr; height:100%; } .tg2.one > .hgtl{ height:100%; }
 .hgtl.k-compact{ min-height:52px; padding:6px 12px 6px 6px; border-radius:999px; } .hgtl.k-compact .ti{ width:36px; height:36px; } .hgtl.k-compact .cs{ flex:none; margin-left:auto; opacity:.8; font-size:13px; white-space:nowrap; }
