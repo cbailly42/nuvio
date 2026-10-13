@@ -218,7 +218,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.1.0+5c3e6a16';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.1.0+ce2a151c';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -6192,6 +6192,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-s input[type=search]::-webkit-search-cancel-button{ -webkit-appearance:none; }
 .hs-s .hs-clr{ flex:none; width:32px; height:32px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; } .hs-s .hs-clr[hidden]{ display:none; } .hs-s .hs-clr ha-icon{ width:16px; height:16px; }
 .hs-s .hs-b{ height:34px; }
+/* przycisk w polu: równy odstęp 5 px od krawędzi (44 = 5 + 34 + 5), promień koncentryczny = promień pola − odstęp */
+.hs-s:has(> button:last-child:not([hidden])){ padding-right:5px; } .hs-s > button:last-child{ flex:none; height:34px; min-width:34px; margin:0; border-radius:calc(22px - 5px); box-sizing:border-box; } .hs-s > .hs-clr:last-child{ width:34px; }
+.hs-s > input{ padding-right:4px; text-overflow:ellipsis; }
 .hs-f{ display:flex; gap:8px; flex:none; overflow-x:auto; scrollbar-width:none; padding:2px 2px 4px; -webkit-mask-image:linear-gradient(90deg, var(--hg-ac-000000) calc(100% - 28px), transparent); mask-image:linear-gradient(90deg, var(--hg-ac-000000) calc(100% - 28px), transparent); }
 .hs-f::-webkit-scrollbar{ display:none; }
 .hs-f.wrap{ flex-wrap:wrap; overflow:visible; -webkit-mask-image:none; mask-image:none; }
@@ -6513,7 +6516,7 @@ const HG_LOOK_CSS = `
 .lk-bgs [aria-pressed=true] span{ box-shadow:0 0 0 2px var(--hg-glass-bg, var(--hg-sh-1e242c)), 0 0 0 4px var(--hg-accent, var(--hg-bg-63d71e)); } .lk-bgs [aria-pressed=true] span ha-icon{ opacity:1; transform:none; }
 .lk-bgs small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; } .lk-bgs button:focus-visible span{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .lk-row{ display:flex; gap:8px; align-items:center; } .lk-url{ flex:1 1 auto; min-width:0; }
-.lk-mini{ all:unset; position:relative; z-index:1; cursor:pointer; height:32px; padding:0 12px; margin-right:-6px; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:13px; font-weight:600; display:grid; place-items:center; flex:none; }
+.lk-mini{ all:unset; position:relative; z-index:1; cursor:pointer; height:32px; padding:0 12px; margin:0; border-radius:999px; background:var(--hg-accent); color:var(--hg-on-accent); font-size:13px; font-weight:600; display:grid; place-items:center; flex:none; }
 .lk-up{ all:unset; cursor:pointer; height:44px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); font-size:13px; font-weight:600; flex:none; } .lk-up ha-icon{ width:18px; height:18px; }
 .lk-grd{ display:grid; grid-template-columns:64px 1fr 1fr; grid-template-rows:auto auto; gap:8px 10px; align-items:center; }
 .lk-gp{ grid-row:span 2; width:64px; height:84px; border-radius:14px; box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); }

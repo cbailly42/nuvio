@@ -1074,6 +1074,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-s input[type=search]::-webkit-search-cancel-button{ -webkit-appearance:none; }
 .hs-s .hs-clr{ flex:none; width:32px; height:32px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; } .hs-s .hs-clr[hidden]{ display:none; } .hs-s .hs-clr ha-icon{ width:16px; height:16px; }
 .hs-s .hs-b{ height:34px; }
+/* przycisk w polu: równy odstęp 5 px od krawędzi (44 = 5 + 34 + 5), promień koncentryczny = promień pola − odstęp */
+.hs-s:has(> button:last-child:not([hidden])){ padding-right:5px; } .hs-s > button:last-child{ flex:none; height:34px; min-width:34px; margin:0; border-radius:calc(22px - 5px); box-sizing:border-box; } .hs-s > .hs-clr:last-child{ width:34px; }
+.hs-s > input{ padding-right:4px; text-overflow:ellipsis; }
 .hs-f{ display:flex; gap:8px; flex:none; overflow-x:auto; scrollbar-width:none; padding:2px 2px 4px; -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
 .hs-f::-webkit-scrollbar{ display:none; }
 .hs-f.wrap{ flex-wrap:wrap; overflow:visible; -webkit-mask-image:none; mask-image:none; }
