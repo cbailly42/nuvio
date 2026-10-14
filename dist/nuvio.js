@@ -599,7 +599,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.5.0+f06a4711';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.6.0+80f57b79';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -688,6 +688,12 @@ const H = {
   call: (hass, domain, service, data) => {
     if (window.__hgDryRun) { (window.__hgCalls = window.__hgCalls || []).push([domain, service, data]); return Promise.resolve(); }
     return hass.callService(domain, service, data);
+  },
+  /* wibracja: aplikacja HA (zdarzenie „haptic” na window, jak forwardHaptic we frontendzie HA), w przeglądarce navigator.vibrate */
+  haptic: (t = 'selection') => {
+    try { window.dispatchEvent(new CustomEvent('haptic', { detail: t })); } catch (e) { /* */ }
+    const app = window.externalApp || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus);
+    if (!app && navigator.vibrate && matchMedia('(pointer: coarse)').matches) try { navigator.vibrate(t === 'selection' ? 6 : t === 'heavy' ? 30 : 14); } catch (e) { /* */ }
   },
   icon: (i, cls = '') => `<ha-icon class="${cls}" icon="${H.esc(i)}"></ha-icon>`,
   name: (hass, e, fb) => { const s = H.st(hass, e); return (s && s.attributes.friendly_name) || fb || e; },
@@ -859,7 +865,12 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.30);
   --hg-lens: saturate(100%);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(210,218,226,.30); --hg-panel-flat: rgba(236,238,242,.82); --hg-warn: #931F18; --hg-trend-up: #7A1A14; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(30,32,35,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #3C4045; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(210,218,226,.30); --hg-panel-flat: rgba(236,238,242,.82); --hg-warn: #931F18; --hg-trend-up: #7A1A14; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(30,32,35,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: #9A3B05; --hg-ac-cool-tx: #0B5A9A; --hg-ac-dry-tx: #0C6B61; --hg-ac-neu-tx: #3C4045; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  /* klimatyzacja: kolory trybów (łuk, gałka, poświata) */
+  --hg-ac-heat: #FF8A3D; --hg-ac-cool: #2E9BF0; --hg-ac-dry: #22B8A8; --hg-ac-fan: #8C9BAD;
+  --hg-ac-heat-g: rgba(255,138,61,.42); --hg-ac-cool-g: rgba(46,155,240,.40); --hg-ac-dry-g: rgba(34,184,168,.38); --hg-ac-fan-g: rgba(140,155,173,.32);
+  /* wewnętrzne powierzchnie szkła (kafle w kartach, przyciski): jedno wypełnienie + refleks górnej krawędzi */
+  --hg-inner-bg: rgba(255,255,255,.42); --hg-inner-bg-h: rgba(255,255,255,.62); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.3);
   /* tryb lekki (dotyk): karty bez rozmycia, półprzezroczyste jednolite tło */
   --hg-glass-lite-c: rgba(232,237,242,.80); --hg-warm-lite-c: var(--hg-glass-lite-c);
   --hg-ac-000000:#000000;
@@ -880,7 +891,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-1e2023:#1E2023;
   --hg-ac-242c36-066:rgba(36,44,54,0.66);
   --hg-ac-34c759:#34C759;
-  --hg-ac-5a5e64:#5A5E64;
   --hg-ac-5ac8fa:#5AC8FA;
   --hg-ac-63d71e:#63D71E;
   --hg-ac-6e747a:#6E747A;
@@ -891,7 +901,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-a3a9b1:#A3A9B1;
   --hg-ac-a3e635:#A3E635;
   --hg-ac-b793ec:#B793EC;
-  --hg-ac-c4c8ce:#C4C8CE;
   --hg-ac-c62828:#C62828;
   --hg-ac-c9ccd0:#C9CCD0;
   --hg-ac-db4437:#DB4437;
@@ -925,6 +934,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-010:rgba(0,0,0,0.1);
   --hg-bd-1f2125:#1F2125;
   --hg-bd-7f7f7f-018:rgba(127,127,127,0.18);
+  --hg-bd-a3a9b1:#A3A9B1;
   --hg-bd-a3e635:#A3E635;
   --hg-bd-e53935:#E53935;
   --hg-bd-ffffff-016:rgba(255,255,255,0.16);
@@ -936,10 +946,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-ffffff-042-k:rgba(255,255,255,0.42);
   --hg-bd-ffffff-045:rgba(255,255,255,0.45);
   --hg-bd-ffffff-055:rgba(255,255,255,0.55);
-  --hg-bd-ffffff-070:rgba(255,255,255,0.7);
-  --hg-bd-ffffff-075:rgba(255,255,255,0.75);
-  --hg-bd-ffffff-080:rgba(255,255,255,0.8);
-  --hg-bd-ffffff-085:rgba(255,255,255,0.85);
   --hg-bg-000000:#000000;
   --hg-bg-000000-000:rgba(0,0,0,0);
   --hg-bg-000000-004:rgba(0,0,0,0.035);
@@ -1012,7 +1018,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-80868c-025:rgba(128,134,140,0.25);
   --hg-bg-80868c-030:rgba(128,134,140,0.3);
   --hg-bg-80868c-035:rgba(128,134,140,0.35);
-  --hg-bg-80868c-055:rgba(128,134,140,0.55);
   --hg-bg-80868e-038:rgba(128,134,142,0.38);
   --hg-bg-969a9e-060:rgba(150,154,158,0.6);
   --hg-bg-96a0a6-055:rgba(150,160,166,0.55);
@@ -1030,7 +1035,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-db4437:#DB4437;
   --hg-bg-e2dceb:#E2DCEB;
   --hg-bg-e4e5e7:#E4E5E7;
-  --hg-bg-e4e6e9:#E4E6E9;
   --hg-bg-e53935:#E53935;
   --hg-bg-e53935-010:rgba(229,57,53,0.1);
   --hg-bg-e5484d:#E5484D;
@@ -1074,7 +1078,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-045:rgba(255,255,255,0.12);
   --hg-bg-ffffff-050:rgba(255,255,255,0.12);
   --hg-bg-ffffff-055:rgba(255,255,255,0.12);
-  --hg-bg-ffffff-058:rgba(255,255,255,0.12);
   --hg-bg-ffffff-060:rgba(255,255,255,0.12);
   --hg-bg-ffffff-060-k:rgba(255,255,255,0.6);
   --hg-bg-ffffff-062:rgba(255,255,255,0.12);
@@ -1083,11 +1086,11 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-070:rgba(255,255,255,0.12);
   --hg-bg-ffffff-072:rgba(255,255,255,0.12);
   --hg-bg-ffffff-075:rgba(255,255,255,0.12);
-  --hg-bg-ffffff-080:rgba(255,255,255,0.12);
   --hg-bg-ffffff-085:rgba(255,255,255,0.85);
   --hg-bg-ffffff-090:rgba(255,255,255,0.9);
   --hg-bg-ffffff-095:rgba(255,255,255,0.95);
   --hg-bg-ffffff-k:#FFFFFF;
+  --hg-gx-000000:#000000;
   --hg-gx-000000-007:rgba(0,0,0,0.07);
   --hg-gx-000000-012:rgba(0,0,0,0.12);
   --hg-gx-000000-014:rgba(0,0,0,0.14);
@@ -1095,6 +1098,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-gx-000000-022:rgba(0,0,0,0.22);
   --hg-gx-80868c-025:rgba(128,134,140,0.25);
   --hg-gx-9aa6c8:#9AA6C8;
+  --hg-gx-a3a9b1:#A3A9B1;
   --hg-gx-fbd9c4:#FBD9C4;
   --hg-gx-ffffff:#FFFFFF;
   --hg-gx-ffffff-016:rgba(255,255,255,0.16);
@@ -1199,8 +1203,9 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(0,0,0,.18);
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.12); --hg-glass-sh-h: rgba(0,0,0,.40); --hg-hover-fill: rgba(255,255,255,.035);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(20,26,32,.22); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(20,26,32,.22); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: #FFB27F; --hg-ac-cool-tx: #8CCBFF; --hg-ac-dry-tx: #7FE3D7; --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
   --hg-glass-lite-c: rgba(120,128,136,.42); --hg-warm-lite-c: var(--hg-glass-lite-c);
+  --hg-inner-bg: rgba(255,255,255,.08); --hg-inner-bg-h: rgba(255,255,255,.13); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05);
   --hg-bd-000000-005:rgba(255,255,255,0.07);
   --hg-bd-000000-006:rgba(255,255,255,0.084);
   --hg-bd-000000-007:rgba(255,255,255,0.098);
@@ -1208,6 +1213,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-000000-010:rgba(255,255,255,0.14);
   --hg-bd-1f2125:rgba(255,255,255,0.14);
   --hg-bd-7f7f7f-018:rgba(255,255,255,0.12);
+  --hg-bd-a3a9b1:rgba(255,255,255,0.12);
   --hg-bd-ffffff-016:rgba(255,255,255,0.05);
   --hg-bd-ffffff-018:rgba(255,255,255,0.05);
   --hg-bd-ffffff-022:rgba(255,255,255,0.05);
@@ -1215,10 +1221,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bd-ffffff-030:rgba(255,255,255,0.05);
   --hg-bd-ffffff-045:rgba(255,255,255,0.063);
   --hg-bd-ffffff-055:rgba(255,255,255,0.077);
-  --hg-bd-ffffff-070:rgba(255,255,255,0.098);
-  --hg-bd-ffffff-075:rgba(255,255,255,0.105);
-  --hg-bd-ffffff-080:rgba(255,255,255,0.112);
-  --hg-bd-ffffff-085:rgba(255,255,255,0.119);
   --hg-bg-000000-000:rgba(255,255,255,0);
   --hg-bg-000000-004:rgba(255,255,255,0.046);
   --hg-bg-000000-005:rgba(255,255,255,0.065);
@@ -1261,7 +1263,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-80868c-025:rgba(115,121,127,0.25);
   --hg-bg-80868c-030:rgba(115,121,127,0.3);
   --hg-bg-80868c-035:rgba(115,121,127,0.35);
-  --hg-bg-80868c-055:rgba(115,121,127,0.55);
   --hg-bg-80868e-038:rgba(113,119,127,0.38);
   --hg-bg-969a9e-060:rgba(97,101,105,0.6);
   --hg-bg-96a0a6-055:rgba(89,99,105,0.55);
@@ -1276,7 +1277,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-d6dae0-055:rgba(255,255,255,0.075);
   --hg-bg-e2dceb:#2E2E33;
   --hg-bg-e4e5e7:#3A3A3F;
-  --hg-bg-e4e6e9:#2E2E33;
   --hg-bg-e53935-010:rgba(229,57,53,0.16);
   --hg-bg-e8eef4-062:rgba(255,255,255,0.082);
   --hg-bg-e9e5df:#2E2E33;
@@ -1307,7 +1307,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-045:rgba(255,255,255,0.065);
   --hg-bg-ffffff-050:rgba(255,255,255,0.07);
   --hg-bg-ffffff-055:rgba(255,255,255,0.075);
-  --hg-bg-ffffff-058:rgba(255,255,255,0.078);
   --hg-bg-ffffff-060:rgba(255,255,255,0.08);
   --hg-bg-ffffff-062:rgba(255,255,255,0.082);
   --hg-bg-ffffff-064:rgba(255,255,255,0.20);
@@ -1315,16 +1314,17 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-070:rgba(255,255,255,0.09);
   --hg-bg-ffffff-072:rgba(255,255,255,0.092);
   --hg-bg-ffffff-075:rgba(255,255,255,0.095);
-  --hg-bg-ffffff-080:rgba(255,255,255,0.1);
   --hg-bg-ffffff-085:rgba(46,46,51,0.85);
   --hg-bg-ffffff-090:rgba(46,46,51,0.9);
   --hg-bg-ffffff-095:rgba(46,46,51,0.95);
+  --hg-gx-000000:rgba(255,255,255,0.85);
   --hg-gx-000000-007:rgba(255,255,255,0.088);
   --hg-gx-000000-012:rgba(255,255,255,0.15);
   --hg-gx-000000-014:rgba(255,255,255,0.175);
   --hg-gx-000000-018:rgba(255,255,255,0.225);
   --hg-gx-000000-022:rgba(255,255,255,0.275);
   --hg-gx-80868c-025:rgba(120,126,132,0.25);
+  --hg-gx-a3a9b1:#535962;
   --hg-gx-ffffff:#2C2C30;
   --hg-gx-ffffff-016:rgba(44,44,48,0.16);
   --hg-sh-000000-006:rgba(0,0,0,0.132);
@@ -1550,17 +1550,25 @@ hgReg('nuvio-energy-card', HGEnergyCard, hgTr('Nuvio – Energia', 'Nuvio – En
    podświetlenie łuku i tekst „Chłodzi · 21°”. Wyłączona: wszystko szare i przygaszone. Dotknięcie: stan od razu (optymistycznie),
    potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
 const HG_AC_MODE = {
-  /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
-  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } }, heat: { c: 'var(--hg-accent)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
-  dry: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:water-percent', t: 'neu', get l() { return hgTr('Osuszanie', 'Drying'); } }, fan_only: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
-  heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
-  off: { c: 'var(--hg-ac-c4c8ce)', on: 'var(--hg-ac-5a5e64)', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
+  /* c: kolor trybu (łuk, gałka, aktywny przycisk), g: poświata, x: ikona na aktywnym przycisku, t: token tekstu statusu (kontrast w obu schematach) */
+  cool: { c: 'var(--hg-ac-cool)', g: 'var(--hg-ac-cool-g)', x: 'var(--hg-ac-cool-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } },
+  heat: { c: 'var(--hg-ac-heat)', g: 'var(--hg-ac-heat-g)', x: 'var(--hg-ac-heat-tx)', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
+  dry: { c: 'var(--hg-ac-dry)', g: 'var(--hg-ac-dry-g)', x: 'var(--hg-ac-dry-tx)', i: 'mdi:water-percent', t: 'dry', get l() { return hgTr('Osuszanie', 'Drying'); } },
+  fan_only: { c: 'var(--hg-ac-fan)', g: 'var(--hg-ac-fan-g)', x: 'var(--hg-ac-neu-tx)', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
+  heat_cool: { c: 'var(--hg-accent)', g: 'var(--hg-accent-glow)', x: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', g: 'var(--hg-accent-glow)', x: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
+  off: { c: 'var(--hg-ac-a3a9b1)', g: 'transparent', x: 'var(--hg-ac-neu-tx)', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
 };
 const HG_FAN_PL = { auto: 'Auto', low: 'Niski', medium: 'Średni', middle: 'Średni', mid: 'Średni', high: 'Wysoki', quiet: 'Cichy', silent: 'Cichy', turbo: 'Turbo', strong: 'Mocny', diffuse: 'Rozproszony', focus: 'Skupiony', on: 'Wł.', off: 'Wył.' };
 const HG_SWING_PL = { off: 'Stały', on: 'Ruch', horizontal: 'Poziomo', vertical: 'Pionowo', both: 'Oba', swing: 'Ruch' };
 const HG_FAN_EN = { auto: 'Auto', low: 'Low', medium: 'Medium', middle: 'Medium', mid: 'Medium', high: 'High', quiet: 'Quiet', silent: 'Silent', turbo: 'Turbo', strong: 'Strong', diffuse: 'Diffuse', focus: 'Focus', on: 'On', off: 'Off' };
 const HG_SWING_EN = { off: 'Fixed', on: 'Swing', horizontal: 'Horizontal', vertical: 'Vertical', both: 'Both', swing: 'Swing' };
-/* Klimatyzacja w stylu aplikacji Tesla: duża temperatura z chevronami, pasek temperatury (przeciągany), rząd dużych przycisków trybów */
+/* Klimatyzacja: szklane pokrętło (łuk 270°) z gradientem temperatury, gałką do przeciągania i poświatą trybu; rząd przycisków trybów.
+   Dotyk: przeciąganie po łuku (strona się nie przewija tylko wtedy, gdy palec trafi w łuk), przytrzymanie środka = szczegóły encji,
+   dotknięcie środka przy wyłączonej = włącz, przytrzymanie −/+ = powtarzanie, wibracja przy każdym kroku. Kompakt (pokoje): szklany suwak. */
+const HG_AC_G = { a0: 135, sw: 270, cx: 120, cy: 120, r: 100 };
+const hgAcPt = (f, r = HG_AC_G.r) => { const a = (HG_AC_G.a0 + HG_AC_G.sw * f) * Math.PI / 180; return [HG_AC_G.cx + r * Math.cos(a), HG_AC_G.cy + r * Math.sin(a)]; };
+const HG_AC_ARC = (() => { const [x0, y0] = hgAcPt(0), [x1, y1] = hgAcPt(1); return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${HG_AC_G.r} ${HG_AC_G.r} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; })();
+let hgAcUid = 0;
 class HGACCard extends HGBase {
   defaults() {
     return { title: hgTr('Klimatyzacja', 'Air conditioning'), compact: false,
@@ -1573,37 +1581,59 @@ class HGACCard extends HGBase {
 ha-card.glass{ display:flex; flex-direction:column; container-type:inline-size; padding:14px var(--s2); gap:var(--s1); min-height:0; user-select:none; -webkit-user-select:none; }
 ha-card.glass > *{ flex-shrink:0; }
 .hd{ min-height:32px; gap:var(--s1); } .hd .tt{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-2a2d31); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hd .tt span{ font-weight:400; color:var(--hg-tx-5a5e64); }
-/* temperatura */
-.temp{ flex:1 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:0; }
-.temp + .bw{ margin-top:-6px; }
-.lab{ font-size:var(--fs-xs); letter-spacing:.12em; text-transform:uppercase; color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; white-space:nowrap; }
-.tr{ display:grid; grid-template-columns:var(--cv, 56px) minmax(0, auto) var(--cv, 56px); align-items:center; justify-content:center; gap:var(--s1); width:100%; }
-.num{ font-size:var(--ts, 72px); font-weight:200; letter-spacing:-.04em; line-height:1; color:var(--hg-tx-16181b); font-variant-numeric:tabular-nums; text-align:center; white-space:nowrap; transition: color .2s; padding-right:.18em; position:relative; }
-.num sup{ position:absolute; top:.06em; right:0; font-size:.34em; font-weight:400; }
-.cv{ width:var(--cv, 56px); height:var(--cv, 56px); border-radius:50%; display:flex; align-items:center; justify-content:center; background:transparent; color:var(--hg-tx-2a2d31); transition: background .15s, transform .1s; touch-action:manipulation; }
-.cv ha-icon{ width:32px; height:32px; --mdc-icon-size:32px; } .cv:active, .cv.prs{ background:var(--hg-bg-000000-006); } .cv[disabled]{ opacity:.3; }
-@media (hover:hover) and (pointer:fine){ .cv:not([disabled]):hover{ background:var(--hg-bg-000000-004); } }
-.st{ font-size:var(--fs-sm); font-weight:600; color:var(--mt); white-space:nowrap; transition: color .2s; }
-/* pasek temperatury: zimny błękit -> ciepły pomarańcz (min..max), gałka nastawy, kreska bieżącej */
-.bw{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); }
-.bw small{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-variant-numeric:tabular-nums; }
-.bar{ position:relative; height:44px; cursor:pointer; touch-action:none; outline:none; }
-.bar .tk{ position:absolute; left:0; right:0; top:10px; height:24px; background:repeating-linear-gradient(90deg, var(--hg-bg-80868c-055) 0 1px, transparent 1px calc(100% / 28)); -webkit-mask:linear-gradient(90deg, transparent, var(--hg-ac-000000) 12%, var(--hg-ac-000000) 88%, transparent); mask:linear-gradient(90deg, transparent, var(--hg-ac-000000) 12%, var(--hg-ac-000000) 88%, transparent); transition: opacity .2s; }
-.bar .cu{ position:absolute; top:8px; width:2px; height:28px; margin-left:-1px; border-radius:1px; background:var(--hg-accent); opacity:.9; left:var(--pc); }
-.bar .kn{ position:absolute; top:0; left:var(--pp); width:22px; height:44px; margin-left:-11px; border-radius:11px; background:var(--hg-tile-bg); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 4px 14px var(--hg-sh-000000-022); transition: transform .12s; }
-.bar .kn::before{ content:''; position:absolute; left:50%; top:9px; bottom:9px; width:2px; margin-left:-1px; border-radius:1px; background:var(--hg-ink, var(--hg-bg-000000)); opacity:.75; }
-.bar.drag .kn{ transform:scale(1.15); } .bar:focus-visible .kn{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-/* przyciski trybów (styl dolnych kontrolek Tesli) */
+/* ----- pokrętło ----- */
+.dw{ position:relative; height:calc(var(--dz, 220px) * .9); }
+.fx .dw{ flex:1 1 0; height:auto; min-height:0; }
+.dial{ position:absolute; left:50%; top:50%; width:var(--dz, 220px); height:calc(var(--dz, 220px) * .9); transform:translate(-50%, -50%); }
+.ring{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; outline:none; cursor:pointer; touch-action:pan-y; -webkit-tap-highlight-color:transparent; }
+.ring path, .ring circle{ fill:none; }
+.ring .trk{ stroke:var(--hg-tile-bg); stroke-width:16; stroke-linecap:round; }
+.ring .grd{ stroke-width:16; stroke-linecap:round; opacity:.26; transition:opacity .3s; }
+.ring .val{ stroke-width:16; stroke-linecap:round; transition:stroke-dasharray .35s cubic-bezier(.2,0,0,1), stroke-dashoffset .35s cubic-bezier(.2,0,0,1), opacity .3s; filter:drop-shadow(0 0 6px var(--mg)); }
+.ring .tks{ stroke:var(--hg-ink, var(--hg-gx-000000)); stroke-opacity:.22; stroke-width:1.4; stroke-linecap:round; }
+.ring .cur{ fill:var(--hg-ink, var(--hg-gx-000000)); fill-opacity:.55; stroke:var(--hg-thumb); stroke-width:1.5; stroke-opacity:.9; }
+.ring .kn{ transition:transform .35s cubic-bezier(.2,0,0,1); }
+.ring .kn circle{ fill:var(--hg-thumb); stroke:var(--mc); stroke-width:4; filter:drop-shadow(0 2px 5px var(--hg-sh-000000-028)); transform-box:fill-box; transform-origin:center; transition:transform .18s cubic-bezier(.2,0,0,1), stroke .3s; }
+.drag .ring .kn, .drag .ring .val{ transition:none; }
+.drag .ring .kn circle{ transform:scale(1.22); }
+.ring:focus-visible .kn circle{ stroke:var(--hg-ink, var(--hg-gx-000000)); }
+.hit{ position:absolute; left:-2.5%; top:-2.78%; width:105%; height:116.67%; border-radius:50%; clip-path:circle(50%); touch-action:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.off .hit, .rng0 .hit{ touch-action:pan-y; }
+.glow{ position:absolute; left:50%; top:55.6%; width:62%; aspect-ratio:1; transform:translate(-50%, -50%); border-radius:50%; pointer-events:none;
+  background:radial-gradient(closest-side, var(--mg) 0%, transparent 100%); opacity:.5; transition:opacity .4s, background .4s; }
+.acting .glow{ animation:hgAcBreath 3.2s ease-in-out infinite; }
+@keyframes hgAcBreath{ 0%,100%{ opacity:.38; transform:translate(-50%, -50%) scale(.94); } 50%{ opacity:.7; transform:translate(-50%, -50%) scale(1.04); } }
+.ctr{ position:absolute; left:50%; top:55.6%; transform:translate(-50%, -50%); width:58%; aspect-ratio:1; border-radius:50%; padding-bottom:7%; touch-action:pan-y; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(var(--dz, 220px) * .012); text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.ctr .md{ display:inline-flex; align-items:center; gap:4px; max-width:100%; font-size:max(11px, calc(var(--dz, 220px) * .052)); font-weight:600; color:var(--mt); white-space:nowrap; transition:color .2s; }
+.ctr .md ha-icon{ width:1.2em; height:1.2em; --mdc-icon-size:1.2em; flex:none; } .ctr .md span{ overflow:hidden; text-overflow:ellipsis; }
+.acting .ctr .md ha-icon{ animation:hgpulse 2s ease-in-out infinite; }
+.num{ position:relative; font-size:calc(var(--dz, 220px) * .245); font-weight:200; letter-spacing:-.045em; line-height:.95; color:var(--hg-tx-16181b); font-variant-numeric:tabular-nums; white-space:nowrap; padding:0 .24em; transition:color .2s, transform .15s; }
+.num small{ font-size:.42em; font-weight:300; letter-spacing:-.02em; }
+.num sup{ position:absolute; top:.06em; right:.02em; font-size:.34em; font-weight:300; letter-spacing:0; }
+.num.rng{ font-size:calc(var(--dz, 220px) * .13); letter-spacing:-.02em; padding-right:.45em; }
+.drag .num{ transform:scale(1.04); }
+.ctr .lab{ font-size:max(10px, calc(var(--dz, 220px) * .046)); letter-spacing:.1em; text-transform:uppercase; color:var(--hg-tx-5a5e64); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.dial{ --cvs:max(var(--cvmin, 34px), calc(var(--dz, 220px) * .16)); }
+@media (pointer:coarse){ .dial{ --cvmin:42px; } }
+.cv{ position:absolute; top:93%; width:var(--cvs); height:var(--cvs); margin:calc(var(--cvs) / -2) 0 0 calc(var(--cvs) / -2);
+  border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-inner-bg, var(--hg-tile-bg)); box-shadow:var(--hg-inner-hi, none); color:var(--hg-tx-2a2d31); transition:background .15s, transform .12s; touch-action:manipulation; }
+.cv.mn{ left:37%; } .cv.pl{ left:63%; }
+.cv ha-icon{ width:55%; height:55%; --mdc-icon-size:100%; } .cv:active, .cv.prs{ transform:scale(.9); background:var(--hg-inner-bg-h, var(--hg-tile-bg)); } .cv[disabled]{ opacity:.3; }
+@media (hover:hover) and (pointer:fine){ .cv:not([disabled]):hover{ background:var(--hg-inner-bg-h, var(--hg-tile-bg)); } }
+/* wyłączona: łuk szary, bez poświaty */
+.off .ring .val, .off .ring .grd{ filter:grayscale(1); opacity:.32; } .off .ring .kn circle{ stroke:var(--hg-gx-a3a9b1); } .off .glow{ opacity:0; animation:none; } .off .num{ color:var(--hg-tx-6a6e74); }
+/* ----- przyciski trybów ----- */
 .mr{ display:grid; grid-template-columns:repeat(auto-fit, minmax(max(var(--bs, 56px), calc((100% - 3 * var(--s1)) / 4)), 1fr)); gap:var(--s1); }
 .mb i em{ display:block; font-style:normal; font-size:11px; font-weight:600; line-height:1.1; max-width:calc(100% - 6px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mb i.v{ flex-direction:column; gap:0; } .mb i.v ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; } .mb i.v em{ font-size:10px; }
 .mb{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; font-size:var(--fs-xs); line-height:1.15; color:var(--hg-tx-4a4e54); }
-.mb i{ width:var(--bs, 56px); height:var(--bs, 56px); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:var(--hg-tx-2a2d31); font-style:normal; transition: background .2s, color .2s, transform .1s; }
-.mb i ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; } .mb:active i{ transform:scale(.94); }
+.mb i{ width:var(--bs, 56px); height:var(--bs, 56px); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--hg-inner-bg, var(--hg-tile-bg)); box-shadow:var(--hg-inner-hi, none); color:var(--hg-tx-2a2d31); font-style:normal; transition: background .2s, color .2s, transform .12s, box-shadow .2s; }
+.mb i ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; } .mb:active i{ transform:scale(.92); }
+@media (hover:hover) and (pointer:fine){ .mb:hover i{ background:var(--hg-inner-bg-h, var(--hg-tile-bg)); } }
 .mb span{ max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mb .sh{ display:none; }
-.mb.act i{ background:var(--hg-accent-soft); color:var(--hg-accent-tx); box-shadow:0 0 18px var(--hg-accent-faint); } .mb.act{ color:var(--hg-tx-1e2023); font-weight:600; }
-.mb.pw.on i{ background:var(--hg-bg-000000-008); color:var(--hg-tx-1e2023); } .mb.pw.off i{ background:var(--hg-bg-6a6e74); color:var(--hg-tx-ffffff); } .mb.pw.off{ color:var(--hg-tx-1e2023); font-weight:600; }
-.tight .mb span{ display:none; } .nolab .lab, .nolab .bw small{ display:none; } .nolab .bw{ grid-template-columns:1fr; }
-/* desktop bez przewijania: rozwinięte tryby jako warstwa nad temperaturą (karta ma stałą wysokość) */
+.mb.act i{ background:color-mix(in srgb, var(--mc) 26%, transparent); color:var(--mx, var(--hg-accent-tx)); box-shadow:var(--hg-inner-hi, none), 0 0 18px color-mix(in srgb, var(--mc) 30%, transparent); } .mb.act{ color:var(--hg-tx-1e2023); font-weight:600; }
+.mb.pw.on i{ background:var(--hg-inner-bg-h, var(--hg-bg-000000-008)); color:var(--hg-tx-1e2023); } .mb.pw.off i{ background:var(--hg-bg-6a6e74); color:var(--hg-tx-ffffff); } .mb.pw.off{ color:var(--hg-tx-1e2023); font-weight:600; }
+.tight .mb span{ display:none; }
+/* rozwinięte tryby na stałej wysokości: warstwa nad pokrętłem */
 .ov .xp{ position:absolute; left:var(--s2); right:var(--s2); top:var(--xt, 48px); bottom:var(--xbm, 90px); display:block; z-index:3; border-radius:var(--r-md); padding:var(--s1);
   background:var(--hg-ov-bg); box-shadow:0 8px 24px var(--hg-sh-000000-018); overflow:auto; scrollbar-width:none;
   opacity:0; transform:translateY(8px) scale(.98); visibility:hidden; transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s; }
@@ -1613,27 +1643,31 @@ ha-card.glass > *{ flex-shrink:0; }
 .mr.top{ grid-template-columns:repeat(auto-fit, minmax(var(--bs, 56px), calc((100% - 3 * var(--s1)) / 4))); justify-content:start; }
 .xp{ display:grid; grid-template-rows:0fr; transition: grid-template-rows .18s ease; } .xp.open{ grid-template-rows:1fr; }
 .xi{ min-height:0; overflow:hidden; } .xi > *{ padding-top:var(--s1); opacity:0; transform:translateY(-6px); transition: opacity .18s ease, transform .18s ease; } .xp.open .xi > *{ opacity:1; transform:none; }
-.xb i ha-icon{ transition: transform .18s ease; } .xb[aria-expanded=true] i ha-icon{ transform:rotate(180deg); } .xb[aria-expanded=true] i{ background:var(--hg-bg-000000-008); }
+.xb i ha-icon{ transition: transform .18s ease; } .xb[aria-expanded=true] i ha-icon{ transform:rotate(180deg); } .xb[aria-expanded=true] i{ background:var(--hg-inner-bg-h, var(--hg-bg-000000-008)); }
 .xp.open ~ * .fanc, .mw:has(.xp.open) .fanc{ display:none; }
 @container (max-width: 268px){ .fanc{ display:none; } }
-@media (prefers-reduced-motion: reduce){ .xp, .xi > *, .xb i ha-icon{ transition:none; } }
 .mm.mx{ flex-wrap:wrap; }
 @container (max-width: 460px){ .mb .fl{ display:none; } .mb .sh{ display:inline; } }
-/* wyłączona */
-.off .num{ color:var(--hg-tx-6a6e74); } .off .bar .tk{ background:var(--hg-bg-000000-012); } .off .bar .kn{ box-shadow:0 0 0 1px var(--hg-sh-000000-012); background:var(--hg-bg-e4e6e9); }
-/* ----- kompakt (strony pokoi) ----- */
+/* ----- kompakt (strony pokoi): nazwa + nastawa, szklany suwak, tryby ----- */
 .c1{ display:flex; align-items:center; gap:var(--s1); min-height:44px; }
 .c1 .nm{ flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25; }
 .c1 .nm b{ font-size:var(--fs-sm); font-weight:600; color:var(--hg-tx-1e2023); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .c1 .nm span{ font-size:var(--fs-xs); font-weight:600; color:var(--mt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.c1 .tr{ width:auto; grid-template-columns:44px auto 44px; gap:0; }
-.c1 .cv{ width:44px; height:44px; } .c1 .cv ha-icon{ width:24px; height:24px; --mdc-icon-size:24px; }
-.c1 .num{ font-size:32px; }
-/* wąski kafel (S): nazwa i stan w pełnych dwóch liniach nad nastawą, mniejsza temperatura */
+.c1 .tr{ display:grid; grid-template-columns:44px auto 44px; align-items:center; }
+.c1 .sb{ position:static; margin:0; width:44px; height:44px; border-radius:50%; } .c1 .sb ha-icon{ width:22px; height:22px; }
+.c1 .num{ font-size:32px; text-align:center; padding:0 .22em; } .c1 .num.rng{ font-size:22px; }
 @container (max-width: 340px){ .c1{ flex-wrap:wrap; row-gap:4px; } .c1 .nm{ flex:1 1 100%; } .c1 .nm b, .c1 .nm span{ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; } .c1 .tr{ margin:0 auto; } .c1 .num{ font-size:28px; } }
-.c2{ display:flex; align-items:center; gap:var(--s1); } .c2 .bar{ flex:1; } .c2 .kb{ margin-left:auto; }
+.pill{ position:relative; height:40px; border-radius:20px; cursor:pointer; touch-action:pan-y; outline:none; background:var(--hg-inner-bg, var(--hg-tile-bg)); box-shadow:var(--hg-inner-hi, none); }
+.pill .pg{ position:absolute; inset:0; border-radius:inherit; opacity:.24; }
+.pill .pf{ position:absolute; inset:0; border-radius:inherit; clip-path:inset(0 calc(100% - var(--pp) - 20px) 0 0 round 20px); transition:clip-path .3s cubic-bezier(.2,0,0,1); box-shadow:0 0 14px var(--mg); }
+.pill .pc{ position:absolute; top:9px; bottom:9px; width:2px; margin-left:-1px; border-radius:1px; left:calc(20px + (100% - 40px) * var(--pcf)); background:var(--hg-ink, var(--hg-bg-000000)); opacity:.45; }
+.pill .pk{ position:absolute; top:4px; left:calc(20px + (100% - 40px) * var(--ppf)); width:32px; height:32px; margin-left:-16px; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); border:3px solid var(--mc); transition:left .3s cubic-bezier(.2,0,0,1), transform .15s; }
+.drag .pill .pk, .drag .pill .pf{ transition:none; } .drag .pill .pk{ transform:scale(1.12); }
+.pill:focus-visible .pk{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.off .pill .pf, .off .pill .pg{ filter:grayscale(1); opacity:.3; } .off .pill .pk{ border-color:var(--hg-bd-a3a9b1); }
+.c2{ display:flex; align-items:center; gap:var(--s1); } .c2 .kb{ margin-left:auto; }
 .mm{ display:flex; gap:6px; flex:none; } .mm .mb span{ display:none; } .mm .mb i{ width:44px; height:44px; border-radius:var(--r-sm); } .mm .mb i ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; }
-.num.rng{ font-size:calc(var(--ts, 72px) * .55); } .c1 .num.rng{ font-size:22px; }
+@media (prefers-reduced-motion: reduce){ .xp, .xi > *, .xb i ha-icon, .ring .kn, .ring .val, .pill .pk, .pill .pf{ transition:none; } }
 `);
   }
   _eff(s) {
@@ -1652,8 +1686,11 @@ ha-card.glass > *{ flex-shrink:0; }
     const e = h.entities && h.entities[c.entity], dv = e && e.device_id && h.devices ? h.devices[e.device_id] : null, ar = (e && e.area_id) || (dv && dv.area_id);
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
-  _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
+  _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); const mn = Number(a.min_temp ?? (f ? 60 : 16)), mx = Number(a.max_temp ?? (f ? 86 : 30)); return { step: a.target_temp_step || (f ? 1 : 0.5), mn, mx: mx > mn ? mx : mn + 1 }; }
   _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgTr('Wyłączona', 'Off'); return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgTr(`${m.l} do ${H.fmt(t)}°`, `${m.l} to ${H.fmt(t)}°`); }
+  /* gradient temperatury: kolory jak w karcie pogody (zimno -> ciepło), liczone dla zakresu nastaw */
+  _stops(mn, mx) { const n = 6; return Array.from({ length: n }, (_, i) => { const v = mn + (mx - mn) * i / (n - 1); return `<stop offset="${(i / (n - 1) * 100).toFixed(0)}%" stop-color="${HGWx.tcol(v)}"/>`; }).join(''); }
+  _numHtml(v) { const s = H.fmt(v), m = /^(-?\d+)([.,]\d+)?$/.exec(s); return m ? `${m[1]}${m[2] ? `<small>${m[2]}</small>` : ''}` : H.esc(s); }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
     const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button>`;
@@ -1665,46 +1702,69 @@ ha-card.glass > *{ flex-shrink:0; }
     const fr = (v) => Math.max(0, Math.min(1, (v - mn) / (mx - mn)));
     const hv = a.hvac_modes || [], seen = new Set();
     const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
-    const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
-    const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
-    const num = `<div class="num${rng ? ' rng' : ''}" aria-live="polite">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
-    const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
-    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', hgTr('Obniż temperaturę', 'Lower temperature'))}${num}${cv(1, 'mdi:chevron-right', hgTr('Podwyższ temperaturę', 'Raise temperature'))}</div>`;
-    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania)
+    const act = on && /^(heating|cooling|drying|fan|preheating|defrosting)$/.test(a.hvac_action || '');
+    const sty = `--mc:${m.c};--mx:${m.x};--mg:${m.g};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--ppf:${t != null ? fr(t).toFixed(4) : 0};--pcf:${cur != null ? fr(cur).toFixed(4) : 0}`;
     const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? hgTr('Wyłącz klimatyzację', 'Turn off air conditioning') : hgTr('Włącz klimatyzację', 'Turn on air conditioning')}" title="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? hgTr('Włączona', 'On') : hgTr('Wyłączona', 'Off')}</span><span class="sh">${on ? hgTr('Wł.', 'On') : hgTr('Wył.', 'Off')}</span></button>`;
-    const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
+    const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, ac = st === x.mode; return `<button class="mb ${ac ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${ac}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mx:${mm.x}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
     const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
     const en = hgCurLang() === 'en', fv = H.esc((en ? HG_FAN_EN : HG_FAN_PL)[fm] || fm), sv = H.esc((en ? HG_SWING_EN : HG_SWING_PL)[sw] || sw);
     const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="${hgTr(`Nawiew: ${fv} (zmień)`, `Fan: ${fv} (change)`)}" title="${hgTr(`Nawiew: ${fv} – zmień prędkość`, `Fan: ${fv} – change speed`)}"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">${hgTr('Nawiew', 'Fan')}</span><span class="sh">${hgTr('Nawiew', 'Fan')}</span></button>` : '';
     const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="${hgTr(`Kierunek nawiewu: ${sv} (zmień)`, `Swing: ${sv} (change)`)}" title="${hgTr(`Kierunek nawiewu: ${sv} – zmień`, `Swing: ${sv} – change`)}"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">${hgTr('Kierunek', 'Swing')}</span><span class="sh">${hgTr('Kier.', 'Swing')}</span></button>` : '';
-    const cls = `glass ${on ? 'on' : 'off'} ${c.compact ? 'compact' : ''}`;
-    /* zwijane tryby: zwinięte = zasilanie + aktywny tryb + „Tryby”; rozwinięte = pełna siatka (+ Nawiew/Kierunek) */
+    const cls = `glass ${on ? 'on' : 'off'} ${act ? 'acting' : ''} ${t == null ? 'rng0' : ''} ${c.compact ? 'compact' : ''}`;
     const open = this._isOpen();
     const am = on ? st : (this._last && hv.includes(this._last) ? this._last : null), amx = am && (modes.find((y) => y.mode === am) || { mode: am, label: (HG_AC_MODE[am] || {}).l || am });
     const actB = amx ? mb(amx).replace('class="mb ', 'class="mb cur ') : '';
     const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}" title="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">${hgTr('Tryby', 'Modes')}</span><span class="sh">${hgTr('Tryby', 'Modes')}</span></button>`;
     const xp = (inner) => `<div class="xp ${open ? 'open' : ''}"><div class="xi" ${open ? '' : 'inert'}>${inner}</div></div>`;
+    const can = on && t != null;
+    const sb = (d, ic, lab, x = '') => `<button class="cv ${x}" data-act="step" data-d="${d}" ${!can || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
+    const lo = hgTr('Obniż temperaturę', 'Lower temperature'), hi = hgTr('Podwyższ temperaturę', 'Raise temperature');
+    const numTxt = t != null ? this._numHtml(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–';
+    const aria = `role="slider" tabindex="${can ? 0 : -1}" aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${can ? '' : 'aria-disabled="true"'}`;
     if (c.compact) {
       const sub = [this._stat(st, t), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ');
-      return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${tr}</div>
-        ${bar}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
+      const pill = `<div class="pill" ${aria}><i class="pg" style="background:linear-gradient(90deg, ${HGWx.tcol(mn)}, ${HGWx.tcol((mn + mx) / 2)}, ${HGWx.tcol(mx)})"></i><i class="pf" style="background:linear-gradient(90deg, ${HGWx.tcol(mn)}, ${HGWx.tcol((mn + mx) / 2)}, ${HGWx.tcol(mx)})"></i>${cur != null ? '<i class="pc"></i>' : ''}${t != null ? '<i class="pk"></i>' : ''}</div>`;
+      return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div><div class="tr">${sb(-1, 'mdi:minus', lo, 'sb')}<div class="num${rng ? ' rng' : ''}" aria-live="polite">${numTxt}<sup>°</sup></div>${sb(1, 'mdi:plus', hi, 'sb')}</div></div>
+        ${pill}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
     }
+    /* łuk: ścieżka z pathLength=100 -> wypełnienie przez stroke-dasharray; zakres low/high jako odcinek łuku */
+    const uid = this._uid || (this._uid = 'hgac' + (++hgAcUid));
+    const step = (mx - mn) > 40 ? 5 : 1, tk = [];
+    for (let v = Math.ceil(mn / step) * step; v <= mx + 1e-9; v += step) { const f = fr(v), mj = Math.round(v) % 5 === 0, [x0, y0] = hgAcPt(f, mj ? 80 : 83), [x1, y1] = hgAcPt(f, 88); tk.push(`M${x0.toFixed(1)} ${y0.toFixed(1)}L${x1.toFixed(1)} ${y1.toFixed(1)}`); }
+    const vf = t != null ? fr(t) : 0, [kx, ky] = hgAcPt(vf);
+    const vd = t != null ? `stroke-dasharray="${(vf * 100).toFixed(2)} 200"` : rng ? `stroke-dasharray="${((fr(a.target_temp_high) - fr(a.target_temp_low)) * 100).toFixed(2)} 200" stroke-dashoffset="${(-fr(a.target_temp_low) * 100).toFixed(2)}"` : 'stroke-dasharray="0 200"';
+    const cp = cur != null ? hgAcPt(fr(cur)) : null;
+    const svg = `<svg class="ring" viewBox="0 0 240 216" ${aria}><defs><linearGradient id="${uid}" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="220" y2="0">${this._stops(mn, mx)}</linearGradient></defs>
+      <path class="trk" d="${HG_AC_ARC}" pathLength="100"/><path class="grd" d="${HG_AC_ARC}" pathLength="100" stroke="url(#${uid})"/><path class="tks" d="${tk.join('')}"/>
+      <path class="val" d="${HG_AC_ARC}" pathLength="100" stroke="url(#${uid})" ${vd}/>${cp ? `<circle class="cur" cx="${cp[0].toFixed(2)}" cy="${cp[1].toFixed(2)}" r="4"><title>${H.esc(c.room_label)} ${H.fmt(cur)}°</title></circle>` : ''}
+      ${t != null ? `<g class="kn" style="transform:translate(${kx.toFixed(2)}px, ${ky.toFixed(2)}px)"><circle r="13"/></g>` : ''}</svg>`;
+    const md = `<div class="md">${H.icon(m.i)}<span>${H.esc(on ? (act ? this._actL(a.hvac_action) : m.l) : hgTr('Wyłączona', 'Off'))}</span></div>`;
     const room = this._room();
     return `<ha-card class="${cls}" style="${sty}"><div class="hd"><span class="tt">${H.esc(c.title)}${room ? ` <span>· ${H.esc(room)}</span>` : ''}</span><span class="sp"></span>${kb}</div>
-      <div class="temp">${cur != null ? `<div class="lab">${H.esc(c.room_label)} ${H.fmt(cur)}°</div>` : ''}${tr}<div class="st" role="status">${H.esc(this._stat(st, t))}</div></div>
-      <div class="bw"><small>${H.fmt(mn)}°</small>${bar}<small>${H.fmt(mx)}°</small></div>
+      <div class="dw"><div class="dial"><div class="glow"></div>${svg}<div class="hit" aria-hidden="true"></div>
+        <div class="ctr" data-act="ctr" title="${on ? hgTr('Przytrzymaj: szczegóły', 'Hold: details') : hgTr('Dotknij, aby włączyć', 'Tap to turn on')}">${md}<div class="num${rng ? ' rng' : ''}" aria-live="polite">${numTxt}<sup>°</sup></div>${cur != null ? `<div class="lab">${H.esc(c.room_label)} ${H.fmt(cur)}°</div>` : ''}</div>
+        ${sb(-1, 'mdi:minus', lo, 'mn')}${sb(1, 'mdi:plus', hi, 'pl')}</div></div>
       <div class="mw"><div class="mr top">${pw}${actB}${fan ? fan.replace('class="mb"', 'class="mb fanc"') : ''}${xb}</div>${xp(`<div class="mr">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
   }
-  /* zmiana nastawy w miejscu (bez przerysowania pod palcem), zatwierdzenie z opóźnieniem */
+  _actL(x) { return ({ heating: hgTr('Grzeje', 'Heating'), cooling: hgTr('Chłodzi', 'Cooling'), drying: hgTr('Osusza', 'Drying'), fan: hgTr('Wentyluje', 'Fan'), preheating: hgTr('Podgrzewa', 'Preheating'), defrosting: hgTr('Odszrania', 'Defrosting') })[x] || x; }
+  /* nastawa w miejscu (bez przerysowania pod palcem): gałka, łuk, cyfry, aria; zatwierdzenie z opóźnieniem */
   _setT(v, commitMs) {
     const s = H.st(this._hass, this._config.entity); if (!s) return;
     const { step, mn, mx } = this._lim(s); v = Math.max(mn, Math.min(mx, Math.round((v - mn) / step) * step + mn)); v = +v.toFixed(1);
+    const prev = this._opt && this._opt.t != null ? this._opt.t : this._eff(s).t;
+    if (prev !== v) H.haptic('selection');
     this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
     const R = this.$, card = R.querySelector('ha-card'), fr = (v - mn) / (mx - mn);
-    if (card) { card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
-      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
-      const b = R.querySelector('.bar'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
-      R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); }); }
+    if (card) {
+      card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); card.style.setProperty('--ppf', fr.toFixed(4));
+      const n = R.querySelector('.num'); if (n) n.innerHTML = this._numHtml(v) + '<sup>°</sup>';
+      const kn = R.querySelector('.ring .kn'); if (kn) { const [x, y] = hgAcPt(fr); kn.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)`; }
+      const vl = R.querySelector('.ring .val'); if (vl) { vl.setAttribute('stroke-dasharray', `${(fr * 100).toFixed(2)} 200`); vl.removeAttribute('stroke-dashoffset'); }
+      if (this._config.compact) { const st = R.querySelector('.c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = [this._stat(this._eff(s).st, v), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · '); } }
+      const b = R.querySelector('[role=slider]'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
+      R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); });
+    }
     clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), commitMs);
   }
   _commit() {
@@ -1712,63 +1772,92 @@ ha-card.glass > *{ flex-shrink:0; }
     if (Number(s.attributes.temperature) !== this._opt.t) H.call(this._hass, 'climate', 'set_temperature', { entity_id: this._config.entity, temperature: this._opt.t });
     this._opt.ts = Date.now();
   }
+  /* punkt wskaźnika -> wartość: łuk (kąt, przerwa na dole przyciąga do bliższego końca bez przeskoku) albo suwak (x) */
+  _valAt(el, e) {
+    const s = H.st(this._hass, this._config.entity), { mn, mx } = this._lim(s), r = el.getBoundingClientRect();
+    let f;
+    if (el.classList.contains('pill')) f = (e.clientX - r.left - 20) / Math.max(1, r.width - 40);
+    else {
+      const k = r.width / 240, dx = e.clientX - (r.left + HG_AC_G.cx * k), dy = e.clientY - (r.top + HG_AC_G.cy * k);
+      const sw = ((Math.atan2(dy, dx) * 180 / Math.PI - HG_AC_G.a0) % 360 + 360) % 360;
+      f = sw <= HG_AC_G.sw ? sw / HG_AC_G.sw : (this._dragF != null ? (this._dragF > .5 ? 1 : 0) : (sw < (HG_AC_G.sw + 360) / 2 ? 1 : 0));
+    }
+    f = Math.max(0, Math.min(1, f)); this._dragF = f;
+    return mn + f * (mx - mn);
+  }
+  /* trafienie w łuk (pas wokół promienia), nie w środek pokrętła */
+  _onRing(svg, e) { const r = svg.getBoundingClientRect(), k = r.width / 240, d = Math.hypot(e.clientX - (r.left + HG_AC_G.cx * k), e.clientY - (r.top + HG_AC_G.cy * k)) / k; return d > 72 && d < 126; }
   afterRender() {
     if (!this._wired) {
       this._wired = true;
       const R = this.shadowRoot;
-      const valAt = (bar, x) => { const s = H.st(this._hass, this._config.entity), { mn, mx } = this._lim(s), r = bar.getBoundingClientRect(); return mn + Math.max(0, Math.min(1, (x - r.left) / r.width)) * (mx - mn); };
-      const end = () => { if (this._drag) { this._drag.classList.remove('drag'); this._drag = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); setTimeout(() => { this._touching = false; this._update(true); }, 300); }
-        if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp);
-        window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); };
+      const card = () => R.querySelector('ha-card');
+      const end = (e) => {
+        const g = this._g; this._g = null;
+        if (g && g.kind === 'pill' && !g.on && e && e.type === 'pointerup' && Math.abs(e.clientX - g.x) < 8 && Math.abs(e.clientY - g.y) < 8) this._setT(this._valAt(g.el, e), 700);   // dotknięcie suwaka: skok do miejsca
+        if (g && g.on) { card() && card().classList.remove('drag'); this._dragF = null; clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), 250); }
+        if (g) setTimeout(() => { this._touching = false; this._update(true); }, 300);
+        clearTimeout(this._lp); if (this._cvEl) { this._cvEl.classList.remove('prs'); this._cvEl = null; } clearTimeout(this._rd); clearInterval(this._rp);
+        window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
+      };
       this._acEnd = end;
+      const startDrag = (g, e) => { g.on = true; this._touching = true; const ce = g.cap || g.el; try { ce.setPointerCapture && ce.setPointerCapture(e.pointerId); } catch (x) { /* */ } card() && card().classList.add('drag'); this._setT(this._valAt(g.el, e), 60000); };
       R.addEventListener('pointerdown', (e) => {
-        const p = e.composedPath(), bar = p.find((n) => n.classList && n.classList.contains('bar')), cv = p.find((n) => n.classList && n.classList.contains('cv'));
-        const card = R.querySelector('ha-card'); if (!card || card.classList.contains('off')) return;
-        if (bar && this._eff(H.st(this._hass, this._config.entity)).t == null) return;   // zakres low/high: pasek nieaktywny
-        // puszczenie poza kartą / utrata przechwycenia: zatrzymaj powtarzanie i przeciąganie
-        if (bar || cv) { window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end); }
-        if (bar) { e.preventDefault(); this._touching = true; bar.setPointerCapture && bar.setPointerCapture(e.pointerId); bar.classList.add('drag'); this._drag = bar; this._setT(valAt(bar, e.clientX), 60000); return; }
-        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s = H.st(this._hass, this._config.entity); const t = this._eff(s).t; if (t == null) return; this._setT(t + d * this._lim(s).step, 700); };
-          go(); clearInterval(this._rp); clearTimeout(this._rd); this._rd = setTimeout(() => { this._rp = setInterval(go, 160); }, 420); this._cvEl = cv; }
+        if (e.button > 0) return;
+        const p = e.composedPath(), has = (c) => p.find((n) => n.classList && n.classList.contains(c));
+        const hit = has('hit'), ring = hit ? R.querySelector('.ring') : has('ring'), pill = has('pill'), cv = has('cv'), ctr = has('ctr');
+        const cd = card(); if (!cd) return;
+        const s = H.st(this._hass, this._config.entity), ok = !cd.classList.contains('off') && this._eff(s).t != null;
+        if (ring || pill || cv || ctr) { window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end); }
+        if (ring && ok && this._onRing(ring, e)) { e.preventDefault(); this._g = { kind: 'ring', el: ring, cap: p[0], x: e.clientX, y: e.clientY }; startDrag(this._g, e); return; }
+        if (pill && ok) { this._g = { kind: 'pill', el: pill, x: e.clientX, y: e.clientY }; if (e.pointerType === 'mouse') { e.preventDefault(); startDrag(this._g, e); } return; }
+        if ((ctr || (ring && !cv)) && !cv) {   // przytrzymanie środka: szczegóły encji
+          this._lpXY = [e.clientX, e.clientY]; this._lpFired = false; clearTimeout(this._lp);
+          this._lp = setTimeout(() => { this._lpFired = true; H.haptic('medium'); H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }, 520);
+          return;
+        }
+        if (cv && !cv.hasAttribute('disabled')) { this._ptrStep = true; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); cv.classList.add('prs'); const d = +cv.dataset.d, go = () => { const s2 = H.st(this._hass, this._config.entity); const t = this._eff(s2).t; if (t == null) return; this._setT(t + d * this._lim(s2).step, 700); };
+          go(); clearInterval(this._rp); clearTimeout(this._rd); this._rd = setTimeout(() => { this._rp = setInterval(go, 140); }, 420); this._cvEl = cv; }
       });
-      R.addEventListener('pointermove', (e) => { if (this._drag) this._setT(valAt(this._drag, e.clientX), 60000); });
+      R.addEventListener('pointermove', (e) => {
+        if (this._lpXY && Math.hypot(e.clientX - this._lpXY[0], e.clientY - this._lpXY[1]) > 8) { clearTimeout(this._lp); this._lpXY = null; }
+        const g = this._g; if (!g) return;
+        if (!g.on && g.kind === 'pill') { const dx = Math.abs(e.clientX - g.x), dy = Math.abs(e.clientY - g.y); if (dx > 6 && dx > dy) startDrag(g, e); else return; }
+        if (g.on) this._setT(this._valAt(g.el, e), 60000);
+      });
       R.addEventListener('pointerup', end); R.addEventListener('pointercancel', end);
-      R.addEventListener('keydown', (e) => { const b = e.composedPath()[0]; if (!b.classList || !b.classList.contains('bar')) return; const s = H.st(this._hass, this._config.entity), { step } = this._lim(s), t = this._eff(s).t; if (t == null) return;
-        const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key]; if (d) { e.preventDefault(); this._setT(t + d * step, 700); } });
+      R.addEventListener('contextmenu', (e) => { if (e.composedPath().find((n) => n.classList && (n.classList.contains('ctr') || n.classList.contains('hit')))) e.preventDefault(); });
+      R.addEventListener('keydown', (e) => { const b = e.composedPath()[0]; if (!b.getAttribute || b.getAttribute('role') !== 'slider') return; const s = H.st(this._hass, this._config.entity), { step, mn, mx } = this._lim(s), t = this._eff(s).t; if (t == null) return;
+        const k = e.key, d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageDown: -4, PageUp: 4 }[k];
+        if (d) { e.preventDefault(); this._setT(t + d * step, 700); } else if (k === 'Home' || k === 'End') { e.preventDefault(); this._setT(k === 'Home' ? mn : mx, 700); } });
     }
     if (!this._config.compact) { if (!this._ro && window.ResizeObserver) { this._ro = new ResizeObserver(() => this._fit()); this._ro.observe(this); } this._fit(); }
   }
-  /* rozmiar: cyfry ≈ szerokość × 0,28 (56–96 px), przyciski 56/64; na desktopie bez przewijania zmniejsza, aż treść się zmieści */
+  /* rozmiar pokrętła: z szerokości (przewijana strona) albo z wolnej wysokości (pulpit bez przewijania); przy braku miejsca chowa podpisy trybów */
   _fit() {
-    const card = this.$.querySelector('ha-card'); if (!card || !card.querySelector('.temp')) return;
+    const card = this.$.querySelector('ha-card'); const dw = card && card.querySelector('.dw'); if (!dw) return;
     const pg = this.getRootNode() && this.getRootNode().host, fixedH = !!(pg && pg.getAttribute && pg.getAttribute('mode') === 'wide' && !pg.hasAttribute('scroll'));
     const cs = getComputedStyle(card), W = card.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); if (W <= 0) return;
-    let ts = Math.round(Math.max(56, Math.min(80, W * 0.27))), bs = W >= 420 ? 64 : 56, cvs = W >= 340 ? 64 : 56, tight = false, nolab = false;
-    const apply = () => { this.style.setProperty('--ts', ts + 'px'); this.style.setProperty('--bs', bs + 'px'); this.style.setProperty('--cv', cvs + 'px'); card.classList.toggle('tight', tight); card.classList.toggle('nolab', nolab); };
-    card.classList.remove('ov', 'ovt'); apply();
-    /* wysokość docelowa (niezależna od trwającej animacji rozwijania) */
-    const xp = card.querySelector('.xp'), xi = xp && xp.firstElementChild;
-    const over = () => card.scrollHeight - card.clientHeight - (xp ? xp.getBoundingClientRect().height : 0) + (xp && xp.classList.contains('open') && xi.firstElementChild ? xi.firstElementChild.offsetHeight : 0);
-    const isOpen = !!(xp && xp.classList.contains('open'));
-    if (fixedH) {
-      const shrink = (f) => { let n = 0; while (f() > 1 && n++ < 16) { if (ts > 56) ts = Math.max(56, ts - 6); else if (!tight) tight = true; else if (!nolab) nolab = true; else if (bs > 48) bs -= 4; else if (cvs > 48) cvs -= 4; else return false; apply(); } return f() <= 1; };
-      const closed = () => card.scrollHeight - card.clientHeight - (xp ? xp.getBoundingClientRect().height : 0);
-      shrink(closed);
-      if (isOpen) {
-        const S = [ts, tight, nolab, bs, cvs];
-        /* rozwinięcie w układzie tylko kosztem cyfr; inaczej warstwa nad temperaturą (wymiary jak po zwinięciu) */
-        let n = 0; while (over() > 1 && n++ < 6 && ts > 56) { ts = Math.max(56, ts - 6); apply(); }
-        if (over() > 1) {
-          [ts, tight, nolab, bs, cvs] = S; apply(); card.classList.add('ov');
-          const top = card.querySelector('.mr.top'), hd = card.querySelector('.hd'), cr = card.getBoundingClientRect();
-          card.style.setProperty('--xt', Math.round(hd.getBoundingClientRect().bottom - cr.top + 4) + 'px');
-          card.style.setProperty('--xbm', Math.round(cr.bottom - top.getBoundingClientRect().top + 8) + 'px');
-          if (xi.firstElementChild.offsetHeight > xp.clientHeight - 16) card.classList.add('ovt');
-        }
-      }
+    const bs = W >= 420 ? 64 : 56; this.style.setProperty('--bs', bs + 'px');
+    card.classList.toggle('fx', fixedH); card.classList.remove('ov', 'ovt', 'tight');
+    let dz;
+    if (!fixedH) dz = Math.round(Math.max(170, Math.min(300, W * 0.88)));
+    else {
+      const fit = () => Math.min(W, dw.clientHeight / 0.9);
+      dz = fit(); if (dz < 200) { card.classList.add('tight'); dz = fit(); }
+      dz = Math.round(Math.max(120, Math.min(320, dz)));
+    }
+    this.style.setProperty('--dz', dz + 'px');
+    const xp = card.querySelector('.xp');
+    if (fixedH && xp && xp.classList.contains('open')) {
+      card.classList.add('ov');
+      const top = card.querySelector('.mr.top'), hd = card.querySelector('.hd'), cr = card.getBoundingClientRect();
+      card.style.setProperty('--xt', Math.round(hd.getBoundingClientRect().bottom - cr.top + 4) + 'px');
+      card.style.setProperty('--xbm', Math.round(cr.bottom - top.getBoundingClientRect().top + 8) + 'px');
+      const xi = xp.firstElementChild; if (xi.firstElementChild && xi.firstElementChild.offsetHeight > xp.clientHeight - 16) card.classList.add('ovt');
     }
   }
-  disconnectedCallback() { if (this._acEnd) this._acEnd(); clearTimeout(this._rd); clearInterval(this._rp); if (this._ct) { clearTimeout(this._ct); this._ct = 0; this._commit(); } }
+  disconnectedCallback() { if (this._acEnd) this._acEnd(); clearTimeout(this._rd); clearInterval(this._rp); clearTimeout(this._lp); if (this._ct) { clearTimeout(this._ct); this._ct = 0; this._commit(); } }
   _set(o) { this._opt = { ...o, ts: Date.now() }; this.rerender(); }
   _okey() { return 'nuvio:ac-open:' + this._config.entity + (this._config.compact ? ':c' : ''); }
   _isOpen() { if (this._open == null) { try { this._open = sessionStorage.getItem(this._okey()) === '1'; } catch (e) { this._open = false; } } return this._open; }
@@ -1784,8 +1873,10 @@ ha-card.glass > *{ flex-shrink:0; }
     const c = this._config, s = H.st(this._hass, c.entity); if (!s) return;
     const id = { entity_id: c.entity };
     if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: c.entity });
+    if (a === 'ctr') { if (this._lpFired) { this._lpFired = false; return; } if (this._eff(s).st === 'off') return this.onAct('toggle', el, ev); return; }
     if (a === 'step') { if (this._ptrStep) { this._ptrStep = false; return; } const t = this._eff(s).t; if (t != null) this._setT(t + (+el.dataset.d) * this._lim(s).step, 700); return; }
     if (a === 'toggle') {
+      H.haptic('light');
       const sf = s.attributes.supported_features || 0, cur = this._eff(s).st;
       if (cur === 'off') {
         const back = c.default_mode || this._last || (s.attributes.hvac_modes || []).find((x) => x !== 'off') || 'cool';
@@ -1795,10 +1886,10 @@ ha-card.glass > *{ flex-shrink:0; }
       this._set({ state: 'off' });
       return sf & 128 ? H.call(this._hass, 'climate', 'turn_off', id) : H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: 'off' });
     }
-    if (a === 'fan') { const L = s.attributes.fan_modes || [], i = L.indexOf(s.attributes.fan_mode); return H.call(this._hass, 'climate', 'set_fan_mode', { ...id, fan_mode: L[(i + 1) % L.length] }); }
-    if (a === 'swing') { const L = s.attributes.swing_modes || [], i = L.indexOf(s.attributes.swing_mode); return H.call(this._hass, 'climate', 'set_swing_mode', { ...id, swing_mode: L[(i + 1) % L.length] }); }
+    if (a === 'fan') { H.haptic('light'); const L = s.attributes.fan_modes || [], i = L.indexOf(s.attributes.fan_mode); return H.call(this._hass, 'climate', 'set_fan_mode', { ...id, fan_mode: L[(i + 1) % L.length] }); }
+    if (a === 'swing') { H.haptic('light'); const L = s.attributes.swing_modes || [], i = L.indexOf(s.attributes.swing_mode); return H.call(this._hass, 'climate', 'set_swing_mode', { ...id, swing_mode: L[(i + 1) % L.length] }); }
     if (a === 'xp') return this._setOpen(!this._isOpen());
-    if (a === 'mode') { if (this._isOpen() && !el.classList.contains('cur')) { this._open = false; try { sessionStorage.setItem(this._okey(), '0'); } catch (e) { /* */ } } this._set({ state: el.dataset.m }); return H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: el.dataset.m }); }
+    if (a === 'mode') { H.haptic('light'); if (this._isOpen() && !el.classList.contains('cur')) { this._open = false; try { sessionStorage.setItem(this._okey(), '0'); } catch (e) { /* */ } } this._set({ state: el.dataset.m }); return H.call(this._hass, 'climate', 'set_hvac_mode', { ...id, hvac_mode: el.dataset.m }); }
   }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
@@ -2763,10 +2854,10 @@ ha-card.wrap{ container-type:inline-size; }
 .empty ha-icon{ width:20u; height:20u; }
 .chips{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); padding:0 2u; }
 .chips:empty{ display:none; }
-.lbl{ display:inline-flex; align-items:center; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s1); border-radius:var(--r-sm); background:var(--hg-bg-ffffff-062); font-size:var(--fs-sm); color:var(--hg-tx-3a3e44); font-weight:400; margin-right:2u; }
+.lbl{ display:inline-flex; align-items:center; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s1); border-radius:var(--r-sm); background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); font-size:var(--fs-sm); color:var(--hg-tx-3a3e44); font-weight:400; margin-right:2u; }
 .chip{ position:relative; display:inline-flex; align-items:center; gap:5u; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s2); border-radius:var(--r-sm); font-size:var(--fs-sm); color:var(--hg-tx-4a4e54);
-  background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-075); box-shadow:var(--hg-sh); transition:background .2s; }
-.chip:hover{ background:var(--hg-bg-ffffff-080); }
+  background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); transition:background .2s; }
+.chip:hover{ background:var(--hg-inner-bg-h); }
 .chip ha-icon{ width:12u; height:12u; color:var(--hg-tx-8a8e94); }
 `);
   }
@@ -2841,8 +2932,8 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .st span{ display:block; font-size:var(--fs-sm); color:var(--hg-tx-5a5e64); margin-top:3u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .acts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap:var(--s1); }
 .ab{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:max(64px, var(--hg-tgt, 0px)); padding:var(--s1) var(--s1); border-radius:var(--r-sm); font-size:var(--fs-sm); font-weight:400;
-  background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-080); color:var(--hg-tx-2a2d31); transition:background .2s, transform .15s; text-align:center; }
-.ab ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; } .ab span{ max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ab:hover{ background:var(--hg-bg-ffffff-085); } .ab:active{ transform:scale(.97); }
+  background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); color:var(--hg-tx-2a2d31); transition:background .2s, transform .15s; text-align:center; }
+.ab ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; } .ab span{ max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ab:hover{ background:var(--hg-inner-bg-h); } .ab:active{ transform:scale(.97); }
 .ab.sel{ background:var(--c, var(--hg-accent)); color:var(--hg-tx-ffffff); border-color:transparent; }
 .ab.dis{ grid-column:1 / -1; flex-direction:row; min-height:max(48px, var(--hg-tgt, 0px)); gap:var(--s1); background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); border-color:var(--hg-bd-1f2125); }
 .kp{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-050); }
@@ -2976,7 +3067,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .tb.sel{ background:var(--hg-bg-ffffff); color:var(--hg-tx-1e2023); box-shadow:var(--hg-sh-sm); } .tb i{ font-style:normal; color:inherit; opacity:1; font-weight:600; margin-left:3u; }
 .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(max(calc(var(--k) * 148), 10.5em), 1fr)); gap:var(--s1); }
 .t{ position:relative; display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s2); border-radius:var(--r-sm); text-align:left; min-height:max(calc(var(--k) * 48), var(--hg-tgt, 0px));
-  background:var(--hg-bg-ffffff-055); border:1px solid var(--hg-bd-ffffff-070); transition:background .2s; min-width:0; }
+  background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); transition:background .2s; min-width:0; }
 .t .ic{ position:relative; width:28u; height:28u; border-radius:var(--r-sm); flex:none; display:flex; align-items:center; justify-content:center; background:var(--hg-bg-ecedee); color:var(--hg-tx-5a5e64); }
 .t .ic ha-icon{ width:15u; height:15u; }
 .t.on .ic{ background:var(--hg-accent); color:var(--hg-on-accent); }
@@ -3366,7 +3457,7 @@ class HGPlayersCard extends HGBase {
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
 .hd .cnt{ font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); font-weight:400; }
 .big{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 250)), 1fr)); gap:var(--s2); }
-.pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-bg-ffffff-062); border:1px solid var(--hg-bd-ffffff-085); overflow:hidden; min-width:0; contain:layout paint; }
+.pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); overflow:hidden; min-width:0; contain:layout paint; }
 .pl .art{ position:relative; display:flex; gap:var(--s2); align-items:center; min-width:0; }
 .cov{ width:64u; height:64u; border-radius:var(--r-sm); flex:none; background:var(--hg-bg-e9ecef) center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:var(--hg-tx-8a8e94); box-shadow:var(--hg-sh); }
 .cov ha-icon{ width:28u; height:28u; }
@@ -3399,7 +3490,7 @@ input[type=range]::-moz-range-thumb{ width:14u; height:14u; border:0; border-rad
 select{ font:inherit; font-size:var(--fs-sm); color:var(--hg-tx-2a2d31); height:max(calc(var(--k) * 26), var(--hg-tgt, 0px)); max-width:100%; min-width:0; flex:0 1 calc(var(--k) * 150); padding:0 var(--s4) 0 var(--s1); border-radius:var(--r-sm); border:1px solid var(--hg-bd-000000-008);
   background:var(--hg-bg-ffffff-075) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%235A5E64' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 5px center/16px; -webkit-appearance:none; appearance:none; }
 .sm{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 190)), 1fr)); gap:var(--s1); }
-.ci{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s1); border-radius:var(--r-md); background:var(--hg-bg-ffffff-050); border:1px solid var(--hg-bd-ffffff-075); min-width:0; }
+.ci{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s1); border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); min-width:0; }
 .ci .cov{ width:34u; height:34u; border-radius:var(--r-sm); box-shadow:none; } .ci .cov ha-icon{ width:17u; height:17u; }
 .ci .meta .ttl{ font-size:var(--fs-sm); -webkit-line-clamp:1; } .ci .meta .sub{ font-size:var(--fs-xs); }
 .un{ display:flex; flex-wrap:wrap; gap:5u; align-items:center; font-size:var(--fs-xs); color:var(--hg-tx-5a5e64); }
@@ -3807,7 +3898,7 @@ class HGRobotsCard extends HGBase {
     return U(`
 ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); }
 .list{ display:flex; flex-direction:column; gap:var(--s2); }
-.rb{ container-type:inline-size; border-radius:var(--r-md); background:var(--hg-bg-ffffff-058); border:1px solid var(--hg-bd-ffffff-085); padding:var(--s2); }
+.rb{ container-type:inline-size; border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); padding:var(--s2); }
 .g{ display:grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap:var(--s2); align-items:start; }
 .g.nomap{ grid-template-columns: minmax(0,1fr); }
 /* ilustracja stanu dla robota bez mapy (widoczna tylko w układzie dwóch kolumn, wyrównuje wysokość z kartą z mapą) */
@@ -4210,7 +4301,7 @@ class HGAreasCard extends HGBase {
 .grid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:var(--s2); }
 @container (min-width: 700px){ .grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 @container (min-width: 1000px){ .grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
-.tile{ position:relative; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto auto 1fr; column-gap:var(--s1); min-width:0; height:max(calc(var(--k) * 116), 150px); padding:var(--s2); border-radius:var(--r-md); cursor:pointer;
+.tile{ position:relative; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto auto 1fr; column-gap:var(--s1); min-width:0; height:auto; min-height:max(calc(var(--k) * 116), 150px); padding:var(--s2); border-radius:var(--r-md); cursor:pointer;
   background: var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
   color:var(--hg-tx-1e2023); text-align:left; transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s, background .4s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; outline:none; }
 .tile:active{ transform: scale(.98); }
