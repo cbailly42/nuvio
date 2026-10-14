@@ -599,7 +599,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.6.3+3c77b829';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.6.3+fd5fb5cd';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -9039,28 +9039,28 @@ const HG_WALL_SS = `
 .nw-g{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); }
 .nw-t{ font-size:clamp(84px, 22vmin, 240px); font-weight:300; line-height:.9; letter-spacing:-.035em; font-variant-numeric:tabular-nums; text-shadow:0 4px 40px ${K(0,0,0,.45)}; margin-left:-.04em; }
 .nw-d{ margin-top:clamp(6px, 1.4vmin, 14px); font-size:clamp(17px, 3.4vmin, 34px); font-weight:500; opacity:.92; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.5)}; } .nw-d::first-letter{ text-transform:uppercase; }
-.nw-r{ position:absolute; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); width:clamp(300px, 34vw, 440px); max-width:calc(100vw - 40px); display:flex; flex-direction:column; gap:clamp(12px, 2vmin, 20px); }
-@media (orientation:portrait){ .nw-r{ width:clamp(300px, 62vw, 480px); } }
-.nw-p{ box-sizing:border-box; border-radius:24px; padding:clamp(18px, 2.8vmin, 26px); background:linear-gradient(160deg, ${K(255,255,255,.16)}, ${K(255,255,255,.06)}), ${K(14,18,26,.42)}; -webkit-backdrop-filter:blur(30px) saturate(1.6); backdrop-filter:blur(30px) saturate(1.6);
+.nw-r{ position:absolute; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); width:clamp(260px, 25vw, 340px); max-width:calc(100vw - 40px); display:flex; flex-direction:column; gap:clamp(10px, 1.4vmin, 14px); }
+@media (orientation:portrait){ .nw-r{ width:clamp(260px, 44vw, 360px); } }
+.nw-p{ box-sizing:border-box; border-radius:24px; padding:clamp(13px, 1.9vmin, 18px) clamp(14px, 2.1vmin, 20px); background:linear-gradient(160deg, ${K(255,255,255,.16)}, ${K(255,255,255,.06)}), ${K(14,18,26,.42)}; -webkit-backdrop-filter:blur(30px) saturate(1.6); backdrop-filter:blur(30px) saturate(1.6);
   box-shadow:inset 0 1px 0 ${K(255,255,255,.22)}, inset 0 0 0 1px ${K(255,255,255,.08)}, 0 2px 6px ${K(0,0,0,.12)}, 0 18px 48px ${K(0,0,0,.28)}; text-shadow:0 1px 10px ${K(0,0,0,.35)}; animation:nwin .9s cubic-bezier(.2,.8,.2,1) both; }
 .nw-p + .nw-p{ animation-delay:.12s; } .nw-p[hidden]{ display:none; }
 @keyframes nwin{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
 .nw-w .nw-wm{ display:flex; align-items:center; gap:clamp(8px, 1.4vmin, 14px); }
-.nw-w .nw-wm img{ flex:none; width:clamp(84px, 13vmin, 128px); height:clamp(84px, 13vmin, 128px); margin:-10px -6px -10px -12px; filter:drop-shadow(0 6px 18px ${K(0,0,0,.35)}); }
-.nw-w .nw-wm b{ display:block; font-size:clamp(52px, 10vmin, 96px); font-weight:200; line-height:.9; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
-.nw-wx{ min-width:0; flex:1; display:flex; flex-direction:column; align-items:flex-end; text-align:right; gap:4px; font-size:clamp(15px, 2.2vmin, 20px); font-weight:500; }
+.nw-w .nw-wm img{ flex:none; width:clamp(58px, 8.5vmin, 84px); height:clamp(58px, 8.5vmin, 84px); margin:-8px -4px -8px -10px; filter:drop-shadow(0 6px 18px ${K(0,0,0,.35)}); }
+.nw-w .nw-wm b{ display:block; font-size:clamp(38px, 6.6vmin, 64px); font-weight:200; line-height:.9; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+.nw-wx{ min-width:0; flex:1; display:flex; flex-direction:column; align-items:flex-end; text-align:right; gap:3px; font-size:clamp(12px, 1.6vmin, 15px); font-weight:500; }
 .nw-wx span{ max-width:100%; line-height:1.2; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-wrap:balance; } .nw-wx small{ font-size:.85em; opacity:.72; font-variant-numeric:tabular-nums; }
-.nw-fc{ display:grid; grid-template-columns:repeat(var(--n, 4), 1fr); gap:4px; margin-top:clamp(14px, 2.2vmin, 20px); padding-top:clamp(12px, 2vmin, 18px); border-top:1px solid ${K(255,255,255,.14)}; }
-.nw-fc div{ display:flex; flex-direction:column; align-items:center; gap:2px; font-size:clamp(13px, 1.9vmin, 17px); font-variant-numeric:tabular-nums; }
-.nw-fc i{ font-style:normal; opacity:.65; font-size:.88em; font-weight:500; } .nw-fc img{ width:clamp(56px, 8vmin, 76px); height:clamp(56px, 8vmin, 76px); margin:-8px 0; } .nw-fc b{ font-weight:500; }
-.nw-e h5{ margin:0 0 clamp(12px, 1.8vmin, 16px); font-size:clamp(12px, 1.7vmin, 14px); font-weight:600; letter-spacing:.12em; text-transform:uppercase; opacity:.62; }
-.nw-e ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:clamp(12px, 1.8vmin, 16px); }
-.nw-e li{ position:relative; min-width:0; padding:2px 0 2px 16px; }
-.nw-e li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:4px; border-radius:2px; background:var(--c); box-shadow:0 0 12px var(--c); }
-.nw-e .nw-et{ display:flex; align-items:center; gap:8px; font-size:clamp(13px, 1.8vmin, 16px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
-.nw-e .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:2px 9px; border-radius:999px; background:var(--c); color:${K(10,12,16,1)}; text-shadow:none; opacity:1; }
+.nw-fc{ display:grid; grid-template-columns:repeat(var(--n, 4), 1fr); gap:4px; margin-top:clamp(8px, 1.3vmin, 12px); padding-top:clamp(8px, 1.3vmin, 12px); border-top:1px solid ${K(255,255,255,.14)}; }
+.nw-fc div{ display:flex; flex-direction:column; align-items:center; gap:0; font-size:clamp(11px, 1.4vmin, 13px); font-variant-numeric:tabular-nums; }
+.nw-fc i{ font-style:normal; opacity:.65; font-size:.88em; font-weight:500; } .nw-fc img{ width:clamp(38px, 5.2vmin, 50px); height:clamp(38px, 5.2vmin, 50px); margin:-6px 0; } .nw-fc b{ font-weight:500; }
+.nw-e h5{ margin:0 0 clamp(8px, 1.2vmin, 11px); font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.12em; text-transform:uppercase; opacity:.62; }
+.nw-e ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:clamp(8px, 1.2vmin, 11px); }
+.nw-e li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
+.nw-e li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
+.nw-e .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
+.nw-e .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:1px 7px; border-radius:999px; background:var(--c); color:${K(10,12,16,1)}; text-shadow:none; opacity:1; }
 .nw-e li.nx .nw-et{ opacity:1; }
-.nw-e .nw-en{ display:block; margin-top:2px; font-size:clamp(18px, 2.7vmin, 24px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nw-e .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 @media (prefers-reduced-motion:reduce){ .nw-p{ animation:none; } }
 .nw-h{ position:absolute; margin:0; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px)); text-align:right; font-size:clamp(12px, 2vmin, 15px); opacity:.55; letter-spacing:.04em; text-shadow:0 1px 8px ${K(0,0,0,.6)}; animation:nwh 4s ease-in-out infinite; }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
