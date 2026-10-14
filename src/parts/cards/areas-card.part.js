@@ -26,7 +26,7 @@ class HGAreasCard extends HGBase {
 @container (min-width: 700px){ .grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 @container (min-width: 1000px){ .grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
 .tile{ position:relative; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto auto 1fr; column-gap:var(--s1); min-width:0; height:auto; min-height:max(calc(var(--k) * 116), 150px); padding:var(--s2); border-radius:var(--r-md); cursor:pointer;
-  background: var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  background: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:#1E2023; text-align:left; transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s, background .4s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; outline:none; }
 .tile:active{ transform: scale(.98); }
 .tile.hgm-compact{ height:auto; min-height:104px; grid-template-rows:auto auto auto; } .tile.hgm-compact .mt{ display:none; } .tile.hgm-compact .env .t{ font-size:24px; }

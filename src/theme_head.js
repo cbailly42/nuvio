@@ -34,6 +34,18 @@
   --hg-inner-bg: rgba(255,255,255,.42); --hg-inner-bg-h: rgba(255,255,255,.62); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.3);
   /* tryb lekki (dotyk): karty bez rozmycia, półprzezroczyste jednolite tło */
   --hg-glass-lite-c: rgba(232,237,242,.80); --hg-warm-lite-c: var(--hg-glass-lite-c);
+  /* ===== tokeny projektu (wzór: inspiracja Sellution, 1:1): kształt, szkło, ruch, typografia. Komponenty używają tylko ich. ===== */
+  --hg-radius: 24px; --hg-radius-in: 16px; --hg-radius-pill: 999px; --hg-btn: 40px; --hg-btn-touch: 44px;
+  /* szkło: tafla ma jaśniejszy refleks od lewego górnego rogu, gasnący ku prawemu dolnemu; cienka jasna krawędź, mocniejsza u góry */
+  --hg-glass-sheen: linear-gradient(150deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.08) 45%, rgba(255,255,255,0) 75%);
+  --hg-edge: inset 0 1px 0 rgba(255,255,255,.70), inset 0 0 0 1px rgba(255,255,255,.34);
+  --hg-shadow-lg: 0 10px 32px rgba(20,30,40,.12); --hg-shadow-float: 0 8px 24px rgba(20,30,40,.14);
+  /* ruch: 4 czasy, 3 krzywe (spring = lekkie odbicie, linear() ze sprężyny ~0.6 tłumienia) */
+  --hg-t-fast: 120ms; --hg-t-base: 200ms; --hg-t-slow: 320ms; --hg-t-stagger: 30ms;
+  --hg-ease-out: cubic-bezier(.2,.8,.2,1); --hg-ease-in: cubic-bezier(.4,0,1,1);
+  --hg-spring: linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.4%, 1.067, 1.088 25.6%, 1.084 28.7%, 1.02 37.7%, 1.002 43%, .995 50.9%, 1);
+  /* typografia: 7 stopni, duże liczby cienkie */
+  --hg-fs-1: 11px; --hg-fs-2: 13px; --hg-fs-3: 15px; --hg-fs-4: 18px; --hg-fs-5: 24px; --hg-fs-6: 40px; --hg-fs-7: 64px; --hg-fw-num: 300;
 /*@LIGHT@*/
 }
 :root[data-hg-scheme=dark]{
@@ -47,9 +59,12 @@
   --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(0,0,0,.18);
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.12); --hg-glass-sh-h: rgba(0,0,0,.40); --hg-hover-fill: rgba(255,255,255,.035);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(20,26,32,.22); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(16,22,30,.34); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
   --hg-glass-lite-c: rgba(120,128,136,.42); --hg-warm-lite-c: var(--hg-glass-lite-c);
   --hg-inner-bg: rgba(255,255,255,.08); --hg-inner-bg-h: rgba(255,255,255,.13); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05);
+  --hg-glass-sheen: linear-gradient(150deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,0) 75%);
+  --hg-edge: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.08);
+  --hg-shadow-lg: 0 12px 40px rgba(0,0,0,.28); --hg-shadow-float: 0 8px 28px rgba(0,0,0,.30);
 /*@DARK@*/
 }`;
   /* soczewka SVG usunięta (szwy/tęczowe smugi w Chrome); sprzątanie po starej wersji */

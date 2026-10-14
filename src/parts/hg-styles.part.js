@@ -30,17 +30,18 @@ button{ font:inherit; color:inherit; background:none; border:0; padding:0; margi
 button *, [data-act] ha-icon{ pointer-events:none; }
 ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }
 /* szkło: domyślnie jasnoszare, .warm = kremowo-beżowe jak Energy/AC w projekcie */
-ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, 18u);
+ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, var(--hg-radius, 18u));
   /* szkło: przezroczyste wypełnienie + delikatny refleks (135°, biel -> przezroczystość 40%), bez kolorowych gradientów */
-  background: var(--hg-glass-lite, var(--hg-glass-bg));
+  background: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg));
   /* bez własnego backdrop-filter: karta leży na szklanym panelu, który już rozmywa tło (jedno rozmycie zamiast zagnieżdżonych) */
   border:0;
   /* własne rozmycie tylko gdy panel nie ma tła (panel_backdrop: false) */
   -webkit-backdrop-filter: var(--hg-card-bf, none); backdrop-filter: var(--hg-card-bf, none);
-  box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  /* cienka jasna krawędź (mocniejsza u góry) + miękki cień, jak w projekcie */
+  box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:#1E2023; padding:var(--s2); contain: layout paint style; }
 ha-card.glass.warm{
-  background: var(--hg-warm-lite, var(--hg-warm-bg)); }
+  background: var(--hg-glass-sheen, none), var(--hg-warm-lite, var(--hg-warm-bg)); }
 .hd{ display:flex; align-items:center; gap:var(--s1); min-height:20u; position:relative; z-index:2; }
 .hd .ic{ width:12u; height:12u; color:#2A2D31; flex:none; }
 .hd .tt{ font-size:var(--fs-md); font-weight:600; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

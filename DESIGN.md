@@ -18,6 +18,15 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
 - Rounded shapes: cards and sheets use the shared radius tokens, pills are fully rounded.
 - Icons are MDI (`ha-icon`) at consistent sizes (18 to 24 px in controls).
 
+## Design tokens
+
+All shape, glass, motion and type values live as CSS variables in `src/theme_head.js` (light set on `:root`, dark differences under `:root[data-hg-scheme=dark]`). New code uses these tokens instead of literal values:
+
+- Shape: `--hg-radius` (24 px), `--hg-radius-in` (16 px), `--hg-radius-pill`, `--hg-btn` (40 px) and `--hg-btn-touch` (44 px).
+- Glass: `--hg-glass-sheen` (light reflection from the top left corner, layered over the glass fill), `--hg-edge` (thin bright rim, stronger at the top), `--hg-shadow-lg` and `--hg-shadow-float`.
+- Motion: `--hg-t-fast` (120 ms), `--hg-t-base` (200 ms), `--hg-t-slow` (320 ms), `--hg-t-stagger` (30 ms), `--hg-ease-out`, `--hg-ease-in` and `--hg-spring`.
+- Type: `--hg-fs-1` to `--hg-fs-7` (11 to 64 px) and `--hg-fw-num` (300) for large numbers.
+
 ## Controls
 
 - No native controls are visible anywhere. Use the shared Nuvio controls:

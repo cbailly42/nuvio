@@ -618,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.11.2+db87e653';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.12.0+c84ec429';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -892,6 +892,18 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-inner-bg: rgba(255,255,255,.42); --hg-inner-bg-h: rgba(255,255,255,.62); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.3);
   /* tryb lekki (dotyk): karty bez rozmycia, półprzezroczyste jednolite tło */
   --hg-glass-lite-c: rgba(232,237,242,.80); --hg-warm-lite-c: var(--hg-glass-lite-c);
+  /* ===== tokeny projektu (wzór: inspiracja Sellution, 1:1): kształt, szkło, ruch, typografia. Komponenty używają tylko ich. ===== */
+  --hg-radius: 24px; --hg-radius-in: 16px; --hg-radius-pill: 999px; --hg-btn: 40px; --hg-btn-touch: 44px;
+  /* szkło: tafla ma jaśniejszy refleks od lewego górnego rogu, gasnący ku prawemu dolnemu; cienka jasna krawędź, mocniejsza u góry */
+  --hg-glass-sheen: linear-gradient(150deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.08) 45%, rgba(255,255,255,0) 75%);
+  --hg-edge: inset 0 1px 0 rgba(255,255,255,.70), inset 0 0 0 1px rgba(255,255,255,.34);
+  --hg-shadow-lg: 0 10px 32px rgba(20,30,40,.12); --hg-shadow-float: 0 8px 24px rgba(20,30,40,.14);
+  /* ruch: 4 czasy, 3 krzywe (spring = lekkie odbicie, linear() ze sprężyny ~0.6 tłumienia) */
+  --hg-t-fast: 120ms; --hg-t-base: 200ms; --hg-t-slow: 320ms; --hg-t-stagger: 30ms;
+  --hg-ease-out: cubic-bezier(.2,.8,.2,1); --hg-ease-in: cubic-bezier(.4,0,1,1);
+  --hg-spring: linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.4%, 1.067, 1.088 25.6%, 1.084 28.7%, 1.02 37.7%, 1.002 43%, .995 50.9%, 1);
+  /* typografia: 7 stopni, duże liczby cienkie */
+  --hg-fs-1: 11px; --hg-fs-2: 13px; --hg-fs-3: 15px; --hg-fs-4: 18px; --hg-fs-5: 24px; --hg-fs-6: 40px; --hg-fs-7: 64px; --hg-fw-num: 300;
   --hg-ac-000000:#000000;
   --hg-ac-000000-008:rgba(0,0,0,0.08);
   --hg-ac-000000-010:rgba(0,0,0,0.1);
@@ -1257,9 +1269,12 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(0,0,0,.18);
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.12); --hg-glass-sh-h: rgba(0,0,0,.40); --hg-hover-fill: rgba(255,255,255,.035);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(20,26,32,.22); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(16,22,30,.34); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
   --hg-glass-lite-c: rgba(120,128,136,.42); --hg-warm-lite-c: var(--hg-glass-lite-c);
   --hg-inner-bg: rgba(255,255,255,.08); --hg-inner-bg-h: rgba(255,255,255,.13); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05);
+  --hg-glass-sheen: linear-gradient(150deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,0) 75%);
+  --hg-edge: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.08);
+  --hg-shadow-lg: 0 12px 40px rgba(0,0,0,.28); --hg-shadow-float: 0 8px 28px rgba(0,0,0,.30);
   --hg-bd-000000-005:rgba(255,255,255,0.07);
   --hg-bd-000000-006:rgba(255,255,255,0.084);
   --hg-bd-000000-007:rgba(255,255,255,0.098);
@@ -1516,17 +1531,18 @@ button{ font:inherit; color:inherit; background:none; border:0; padding:0; margi
 button *, [data-act] ha-icon{ pointer-events:none; }
 ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }
 /* szkło: domyślnie jasnoszare, .warm = kremowo-beżowe jak Energy/AC w projekcie */
-ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, 18u);
+ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, var(--hg-radius, 18u));
   /* szkło: przezroczyste wypełnienie + delikatny refleks (135°, biel -> przezroczystość 40%), bez kolorowych gradientów */
-  background: var(--hg-glass-lite, var(--hg-glass-bg));
+  background: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg));
   /* bez własnego backdrop-filter: karta leży na szklanym panelu, który już rozmywa tło (jedno rozmycie zamiast zagnieżdżonych) */
   border:0;
   /* własne rozmycie tylko gdy panel nie ma tła (panel_backdrop: false) */
   -webkit-backdrop-filter: var(--hg-card-bf, none); backdrop-filter: var(--hg-card-bf, none);
-  box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  /* cienka jasna krawędź (mocniejsza u góry) + miękki cień, jak w projekcie */
+  box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:var(--hg-tx-1e2023); padding:var(--s2); contain: layout paint style; }
 ha-card.glass.warm{
-  background: var(--hg-warm-lite, var(--hg-warm-bg)); }
+  background: var(--hg-glass-sheen, none), var(--hg-warm-lite, var(--hg-warm-bg)); }
 .hd{ display:flex; align-items:center; gap:var(--s1); min-height:20u; position:relative; z-index:2; }
 .hd .ic{ width:12u; height:12u; color:var(--hg-tx-2a2d31); flex:none; }
 .hd .tt{ font-size:var(--fs-md); font-weight:600; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -4478,7 +4494,7 @@ class HGAreasCard extends HGBase {
 @container (min-width: 700px){ .grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 @container (min-width: 1000px){ .grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
 .tile{ position:relative; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto auto 1fr; column-gap:var(--s1); min-width:0; height:auto; min-height:max(calc(var(--k) * 116), 150px); padding:var(--s2); border-radius:var(--r-md); cursor:pointer;
-  background: var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh));
+  background: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg)); border:0; box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:var(--hg-tx-1e2023); text-align:left; transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s, background .4s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; outline:none; }
 .tile:active{ transform: scale(.98); }
 .tile.hgm-compact{ height:auto; min-height:104px; grid-template-rows:auto auto auto; } .tile.hgm-compact .mt{ display:none; } .tile.hgm-compact .env .t{ font-size:24px; }
@@ -7444,8 +7460,8 @@ class HGPage extends HTMLElement {
 /* ===== JEDNO SZKŁO dla wszystkich pływających powierzchni = dokładnie przepis kart (ha-card.glass przy panel_backdrop:false):
    wypełnienie, backdrop-filter, ramka, cień. Tokeny liczone na :host, więc lite/dotyk (--hg-bf, --hg-glass-lite, --hg-card-sh) działają tak samo jak w kartach. */
 :host{ --primary-color: var(--hg-accent); --accent-color: var(--hg-accent); --state-icon-active-color: var(--hg-accent); --state-active-color: var(--hg-accent); --state-light-active-color: var(--hg-accent); --state-switch-active-color: var(--hg-accent); --switch-checked-color: var(--hg-accent); --switch-checked-button-color: var(--hg-accent); --switch-checked-track-color: var(--hg-accent); --rgb-primary-color: 99,215,30; --rgb-state-light-color: 99,215,30; --rgb-state-switch-color: 99,215,30; --mush-rgb-amber: 99,215,30; --mush-rgb-orange: 99,215,30; --mush-rgb-blue: 99,215,30; --mush-rgb-green: 99,215,30; --mush-rgb-yellow: 99,215,30; --ha-card-background: var(--hg-glass-bg); --ha-card-border-width: 0; --ha-card-box-shadow: none; --ha-card-border-radius: 18px; --mdc-theme-primary: var(--hg-accent); --label-badge-blue: var(--hg-accent); --label-badge-yellow: var(--hg-accent);
-  --glass-bg: var(--hg-glass-lite, var(--hg-glass-bg)); --glass-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1));
-  --glass-border: 0 solid transparent; --glass-shadow: var(--hg-card-sh, var(--hg-sh)); }
+  --glass-bg: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg)); --glass-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1));
+  --glass-border: 0 solid transparent; --glass-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-float, var(--hg-sh))); }
 /* rozmycie na izolowanej warstwie ::after (inset:0, radius:inherit, z-index:-1) – element sam nie ma backdrop-filter
    (unika dwutonowego pasa Chrome na małych elementach; ta sama technika wszędzie = identyczny wygląd) */
 .tabs, .rail, .tools, .hub, .back, .cir, .user, .fc, .rback, .more, .menu, .sheet-l .sheet{ background: transparent !important; border: var(--glass-border) !important; box-shadow: var(--glass-shadow) !important;
