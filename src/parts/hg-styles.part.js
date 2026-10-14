@@ -3,6 +3,10 @@ const HG_BASE = U(`
 :host{ --k: var(--hg-u, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); display:block; font-family:'HG DM Sans','DM Sans',-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
   -webkit-font-smoothing:antialiased; color:#1E2023; height:100%; font-weight:400; }
 *{ box-sizing:border-box; }
+/* rozmiar kafelka S/M/L: treść skaluje się do szerokości kontenera (kafelek, slot panelu) */
+@container (max-width: 300px){ :host{ --k: calc(var(--hg-u, 1.3px) * .9); } .hd .tt small, .note{ display:none; } }
+@container (max-width: 220px){ :host{ --k: calc(var(--hg-u, 1.3px) * .8); } }
+@container (max-width: 160px){ :host{ --k: calc(var(--hg-u, 1.3px) * .7); } }
 button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 button *, [data-act] ha-icon{ pointer-events:none; }
 ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }

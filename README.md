@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.8.1-a3e635?style=flat-square" alt="v0.8.1">
+  <img src="https://img.shields.io/badge/version-v0.9.0-a3e635?style=flat-square" alt="v0.9.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -219,6 +219,10 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 
 **Appearance, Header and navigation** (0.8.0) also has: the weather entity for the header and an optional sensor with a `forecast` attribute for the hourly strip, the household strip position (left or next to the panel), and a per view table with the icon, a short label for the phone bar, desktop and tablet column count (built in views too), whether the view is in the sidebar and its order there. **Background gallery** has a focal point for the current background.
 
+**Settings** (0.9.0): Appearance is now a separate settings panel with tabs: Appearance, Views, Rooms, Header and navigation, Backgrounds, Screensaver and Backup. The view settings table has proper column labels and turns into labelled cards on a phone.
+
+**More components in + Add** (0.9.0): light with brightness, thermostat, big value, history graph, doors and windows, batteries, vacuum, mini player, clock, sun, note, image or page, and updates. Each one has a live preview, form fields and is included in export and import.
+
 ### Planned
 
 Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md).
@@ -321,9 +325,17 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.8.1 -m "Nuvio 0.8.1" && git push origin v0.8.1`.
+Only tagging by hand: `git tag -a v0.9.0 -m "Nuvio 0.9.0" && git push origin v0.9.0`.
 
 ## Changelog
+
+### 0.9.0
+- Added: 13 new components in + Add: light with brightness, thermostat, big value, history graph, doors and windows, batteries, vacuum, mini player, clock, sun, note, image or page, updates.
+- Added: settings panel with tabs (Appearance, Views, Rooms, Header and navigation, Backgrounds, Screensaver, Backup), labelled view settings table.
+- Changed: tile sizes S, M and L are real grid spans with dense packing, so smaller tiles sit next to each other.
+- Changed: card content scales with the tile size through container queries.
+- Changed: fuel price rows in the header settings are stacked cards with shorter sensor names grouped by integration.
+- Fixed: the title edit button stays next to the title in full width views.
 
 ### 0.8.1
 - Fixed: widgets added in edit mode now follow the view column count, so Energy and Network use the full width with 3 columns.

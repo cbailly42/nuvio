@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.8.1-a3e635?style=flat-square" alt="v0.8.1">
+  <img src="https://img.shields.io/badge/version-v0.9.0-a3e635?style=flat-square" alt="v0.9.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -219,6 +219,10 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 
 **Wygląd, Nagłówek i nawigacja** (0.8.0) ma też: encję pogody w nagłówku i opcjonalny czujnik z atrybutem `forecast` dla paska prognozy godzinowej, położenie paska domowników (po lewej albo przy panelu), oraz tabelę widoków z ikoną, krótką etykietą na pasek telefonu, liczbą kolumn na komputerze i tablecie (także w widokach wbudowanych), obecnością w pasku bocznym i kolejnością w nim. **Galeria teł** ma punkt ostrości bieżącego tła.
 
+**Ustawienia** (0.9.0): Wygląd to teraz osobny panel ustawień z kartami: Wygląd, Widoki, Pokoje, Nagłówek i nawigacja, Tła, Wygaszacz i Kopia zapasowa. Tabela ustawień widoków ma podpisane kolumny, a na telefonie zamienia się w karty z etykietami.
+
+**Więcej komponentów w + Dodaj** (0.9.0): światło z jasnością, termostat, duża wartość, wykres historii, drzwi i okna, baterie, odkurzacz, mini odtwarzacz, zegar, słońce, notatka, obraz lub strona oraz aktualizacje. Każdy ma podgląd na żywo, pola formularza i trafia do eksportu i importu.
+
 ### Planowane
 
 Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
@@ -321,9 +325,17 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.8.1 -m "Nuvio 0.8.1" && git push origin v0.8.1`.
+Sam tag ręcznie: `git tag -a v0.9.0 -m "Nuvio 0.9.0" && git push origin v0.9.0`.
 
 ## Lista zmian
+
+### 0.9.0
+- Dodano: 13 nowych komponentów w + Dodaj: światło z jasnością, termostat, duża wartość, wykres historii, drzwi i okna, baterie, odkurzacz, mini odtwarzacz, zegar, słońce, notatka, obraz lub strona, aktualizacje.
+- Dodano: panel ustawień z kartami (Wygląd, Widoki, Pokoje, Nagłówek i nawigacja, Tła, Wygaszacz, Kopia zapasowa) i podpisana tabela ustawień widoków.
+- Zmieniono: rozmiary kafelków S, M i L to prawdziwe zakresy siatki z gęstym układaniem, więc mniejsze kafelki stają obok siebie.
+- Zmieniono: treść kart skaluje się z rozmiarem kafelka (container queries).
+- Zmieniono: wiersze cen paliw w ustawieniach nagłówka to karty jedna pod drugą, z krótszymi nazwami czujników pogrupowanymi wg integracji.
+- Naprawiono: przycisk edycji tytułu zostaje obok tytułu w widokach na całą szerokość.
 
 ### 0.8.1
 - Naprawiono: widżety dodane w trybie edycji stosują liczbę kolumn widoku, więc Energia i Sieć zajmują pełną szerokość w 3 kolumnach.
