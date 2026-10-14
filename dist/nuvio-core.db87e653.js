@@ -618,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.11.1+a43c1b78';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.11.2+db87e653';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -1564,12 +1564,467 @@ ha-card.glass.warm{
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 `) + HG_RANGE_CSS;
 
+/* shared/card-utils: Pomocnicze funkcje kart: moc w W, głębokie scalanie konfiguracji, liczba kluczy obiektu. */
 /* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
 const hgW = (hass, e) => { const v = H.num(hass, e); if (v == null) return null; const u = String(H.st(hass, e).attributes.unit_of_measurement || '').trim(); return u === 'kW' ? v * 1000 : u === 'MW' ? v * 1e6 : v; };
 /* scalanie konfiguracji: zagnieżdżone obiekty domyślne (progi, etykiety, kolory) uzupełniane kluczami, nie zastępowane w całości */
 const hgDeep = (d, c) => { if (!c) return c; const o = Object.assign({}, c); for (const k in d) { const a = d[k], b = c[k]; if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) o[k] = Object.assign({}, a, b); } return o; };
 /* liczba kluczy obiektu (hass.states / hass.entities) liczona raz na referencję – wspólna dla kart z wykrywaniem encji */
 const hgNKeysM = new WeakMap(), hgNKeys = (o) => { let n = hgNKeysM.get(o); if (n == null) { n = Object.keys(o).length; hgNKeysM.set(o, n); } return n; };
+
+/* shared/climate-modes: Tryby HVAC (kolory, ikony, nazwy) dla karty klimatyzacji i pokoi. */
+/* ===================== KLIMATYZACJA ===================== */
+/* stan widoczny od razu, bez zmiany powierzchni szkła: mała pełna kropka trybu z ikoną (subtelna animacja), aktywny chip,
+   podświetlenie łuku i tekst „Chłodzi · 21°”. Wyłączona: wszystko szare i przygaszone. Dotknięcie: stan od razu (optymistycznie),
+   potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
+const HG_AC_MODE = {
+  /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
+  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } }, heat: { c: 'var(--hg-accent)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
+  dry: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:water-percent', t: 'neu', get l() { return hgTr('Osuszanie', 'Drying'); } }, fan_only: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
+  heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
+  off: { c: 'var(--hg-ac-c4c8ce)', on: 'var(--hg-ac-5a5e64)', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
+};
+
+/* shared/stats: Statystyki długoterminowe HA (recorder) z pamięcią podręczną, dla kart energii. */
+/* ===================== statystyki (wspólne) ===================== */
+const HGStats = {
+  cache: {},
+  async daily(hass, ids, days) {
+    const key = ids.join(',') + days;
+    const now = Date.now(), c = this.cache[key];
+    if (c && now - c.t < 5 * 60 * 1000) return c.v;
+    if (this.inflight && this.inflight[key]) return this.inflight[key];
+    (this.inflight = this.inflight || {})[key] = this._fetch(hass, ids, days, key, now).finally(() => { delete this.inflight[key]; });
+    return this.inflight[key];
+  },
+  /* granice dni w strefie HA (Europe/Warsaw), niezależnie od strefy przeglądarki */
+  tz(hass) { return (hass && hass.config && hass.config.time_zone) || Intl.DateTimeFormat().resolvedOptions().timeZone; },
+  key(d, tz) { return new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); },
+  midnight(ms, tz) {   // północ w strefie tz dla dnia zawierającego ms
+    const k = this.key(new Date(ms), tz), [y, m, d] = k.split('-').map(Number);
+    let t = Date.UTC(y, m - 1, d);
+    for (let i = 0; i < 3; i++) { const off = this.offset(t, tz); t = Date.UTC(y, m - 1, d) - off; }
+    return t;
+  },
+  offset(ms, tz) { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000; },
+  async _fetch(hass, ids, days, key, now) {
+    const tz = this.tz(hass);
+    const t0 = this.midnight(Date.now(), tz);
+    const dayStarts = [...Array(days)].map((_, i) => this.midnight(t0 - (days - 1 - i) * 86400000 + 43200000, tz));
+    const start = new Date(dayStarts[0]);
+    const r = await hass.callWS({ type: 'recorder/statistics_during_period', start_time: start.toISOString(), statistic_ids: ids, period: 'day', types: ['change'], units: { energy: 'kWh' } });
+    const out = {};
+    for (const id of ids) {
+      const m = {};
+      for (const row of r[id] || []) { const d = new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)); m[this.key(d, tz)] = row.change || 0; }
+      out[id] = m;
+    }
+    // dni jako Date w południe danego dnia (getDay/getDate poprawne także poza strefą HA); klucz = data w strefie HA
+    const dd = dayStarts.map((t) => { const k = this.key(new Date(t + 43200000), tz), [y, mo, da] = k.split('-').map(Number); const d = new Date(y, mo - 1, da, 12); d.__k = k; return d; });
+    const v = { days: dd, keys: dd.map((d) => d.__k), byId: out, has: ids.some((id) => (r[id] || []).length), present: Object.fromEntries(ids.map((id) => [id, new Set((r[id] || []).map((row) => this.key(new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)), tz)))])) };
+    this.cache[key] = { t: now, v };
+    return v;
+  },
+};
+
+/* shared/avatar: Awatar osoby (zdjęcie albo inicjały). */
+/* ===================== PERSON ===================== */
+const hgAvatar = (hass, e, cls = 'av') => {
+  const s = H.st(hass, e); const nm = H.name(hass, e, e);
+  const pic = s && s.attributes.entity_picture;
+  const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
+  const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
+  return pic ? `<span class="${cls}" style="background-image:url('${H.cssUrl(pic)}')"></span>`
+    : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
+};
+
+/* shared/calendar: Kalendarze HA: pobieranie wydarzeń, kolory, formatowanie godzin i dni. */
+/* ===================== MAPA + KALENDARZ ===================== */
+const HG_PAL = ['var(--hg-ac-f9c80e)', 'var(--hg-ac-f0955a)', 'var(--hg-ac-b793ec)', 'var(--hg-ac-5ac8fa)', 'var(--hg-ac-34c759)', 'var(--hg-ac-ff6b8b)', 'var(--hg-ac-8e9aaf)'];
+const hgTime = (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' });
+const hgDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/* --- kalendarze: wspólne pobieranie (REST /api/calendars, tylko odczyt) --- */
+const HGCal = {
+  cache: {},
+  parse(e, cal) {
+    const ad = !!(e.start && e.start.date && !e.start.dateTime);
+    const s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime || e.start);
+    const en = ad ? new Date((e.end && e.end.date ? e.end.date : e.start.date) + 'T00:00:00') : new Date((e.end && (e.end.dateTime || e.end)) || s);
+    return { title: e.summary || hgTr('(bez tytułu)', '(untitled)'), start: s, end: en, allDay: ad, loc: e.location || '', cal };
+  },
+  async fetch(hass, cals, start, end) {
+    const key = cals.map((c) => c.entity).join(',') + start.toISOString() + end.toISOString();
+    const hit = this.cache[key]; if (hit && Date.now() - hit.t < 300000) return hit.p;
+    const p = Promise.all(cals.map(async (c) => {
+      const s = H.st(hass, c.entity);
+      if (!s || s.state === 'unavailable') return { cal: c, err: hgTr('niedostępny', 'unavailable'), ev: [] };
+      try { const r = await hass.callApi('GET', `calendars/${c.entity}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
+        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: hgTr('błąd pobierania', 'fetch error'), ev: [] }; }
+    }));
+    this.cache[key] = { t: Date.now(), p }; return p;
+  },
+  cals(hass, list) {
+    return (list || []).map((c, i) => { const o = typeof c === 'string' ? { entity: c } : Object.assign({}, c);
+      o.color = o.color || HG_PAL[i % HG_PAL.length]; const s = H.st(hass, o.entity); o.name = o.name || (s ? s.attributes.friendly_name : o.entity); return o; });
+  },
+};
+
+/* shared/relative-time: Czas względny („5 min temu”). */
+const hgRel = (d) => {
+  const m = Math.max(0, Math.round((Date.now() - d) / 60000));
+  if (m < 1) return hgTr('przed chwilą', 'just now'); if (m < 60) return hgTr(`${m} min temu`, `${m} min ago`);
+  const h = Math.round(m / 60); if (h < 24) return hgTr(`${h} godz. temu`, `${h} h ago`);
+  const dd = Math.round(h / 24); return dd === 1 ? hgTr('wczoraj', 'yesterday') : hgTr(`${dd} dni temu`, `${dd} days ago`);
+};
+
+/* shared/camera: Wspólne dla kart kamer: wykrywanie niedostępnej kamery. */
+const hgCamUn = (s) => !s || s.state === 'unavailable' || s.state === 'unknown';
+
+/* shared/areas: Model pokoi (obszary, urządzenia i encje HA) używany przez karty pokoi, stronę i edytor. */
+const hgGlob = (pat) => new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+/* ===================== POKOJE (obszary HA) ===================== */
+/* Model pokoi: rejestr obszarów + rejestr encji/urządzeń z hass (hass.areas / hass.entities / hass.devices, bez dodatkowych zapytań).
+   Encja należy do obszaru: CFG assign (tylko wyświetlanie, rejestr HA bez zmian) > area_id encji > area_id urządzenia; merge łączy duplikaty obszarów.
+   Pomijane: ukryte, diagnostyczne/konfiguracyjne (entity_category), wyłączone (nie ma ich w hass.entities), platformy z exclude_platforms. */
+const HG_AREA_ICONS = [[/salon|living|wypoczyn/, 'mdi:sofa-outline'], [/kuchni|kitchen/, 'mdi:countertop-outline'], [/lazienk|bath|toalet|\bwc\b/, 'mdi:shower-head'],
+  [/sypialni|bedroom/, 'mdi:bed-king-outline'], [/biur|office|gabinet/, 'mdi:desk'], [/garaz|garage/, 'mdi:garage-variant'], [/ogrod|garden/, 'mdi:flower-outline'],
+  [/taras|balkon|balcony/, 'mdi:balcony'], [/ganek|weranda|porch/, 'mdi:home-import-outline'], [/wejsc|entrance|przedpok|hall/, 'mdi:door-open'],
+  [/piwnic|basement/, 'mdi:stairs-down'], [/pralni|laundry/, 'mdi:washing-machine'], [/korytarz|schod|stairs/, 'mdi:stairs'], [/parter|ground/, 'mdi:home-floor-0'],
+  [/pietro|poddasz|floor/, 'mdi:home-floor-1'], [/eliann|dziec|kids/, 'mdi:teddy-bear'], [/siec|network/, 'mdi:lan'], [/jadal|dining/, 'mdi:silverware-fork-knife']];
+const hgNorm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
+const HG_SKIP_DOM = new Set(['event', 'notify', 'update', 'device_tracker', 'tts', 'stt', 'conversation', 'ai_task', 'assist_satellite', 'infrared', 'zone', 'person',
+  'automation', 'script', 'sun', 'weather', 'calendar', 'image', 'todo', 'wake_word', 'tag', 'input_text', 'input_datetime', 'input_number', 'input_select', 'counter',
+  'timer', 'schedule', 'remote', 'group', 'persistent_notification', 'alarm_control_panel', 'date', 'time', 'datetime']);
+const HG_CTRL_DOM = new Set(['light', 'switch', 'climate', 'cover', 'fan', 'lock', 'humidifier', 'media_player', 'vacuum', 'water_heater', 'valve', 'lawn_mower', 'siren', 'camera']);
+const HG_LIGHTISH = /(swiatl|swiatel|oswietl|lamp|\bled\b|light|wlacznik|zarowk|kinkiet|zyrandol)/;
+const HG_TEMP_BAD = /(water|woda|wody|kettle|czajnik|boiler|bojler|heater|cpu|chip|procesor|battery|bateri|inverter|falownik|motor|silnik|pralk|washer|dryer|suszark|lodowk|fridge|zamrazark|freezer|piekarnik|oven|soc\b|core)/;
+const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', 'Lights'], ['clim', 'Klimatyzacja', 'mdi:thermostat', 'Climate'], ['media', 'Media', 'mdi:speaker', 'Media'],
+  ['cover', 'Rolety', 'mdi:window-shutter', 'Covers'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', 'Switches'], ['sens', 'Czujniki', 'mdi:gauge', 'Sensors'],
+  ['mot', 'Ruch i obecność', 'mdi:motion-sensor', 'Motion & presence'], ['door', 'Drzwi i okna', 'mdi:door', 'Doors & windows'], ['cam', 'Kamery', 'mdi:cctv', 'Cameras'], ['rob', 'Roboty', 'mdi:robot-vacuum', 'Robots'],
+  ['misc', 'Inne', 'mdi:tune-variant', 'Other']];
+const hgPl = (n, one, few, many, en1, enN) => en1 && hgCurLang() === 'en' ? `${n} ${n === 1 ? en1 : enN || en1 + 's'}` : `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
+
+const HGAreas = {
+  _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
+  /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
+  _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
+  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
+  /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
+  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own) || (cfg && this._gs && this._gs.has(cfg))) return cfg;
+    const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
+    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
+  model(h, cfg) {
+    cfg = this.glob(cfg) || this._e;
+    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
+    const m0 = this._memo.get(cfg);
+    if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
+    const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
+    const merge = cfg.merge || {}, assign = Object.assign({}, cfg.assign || {}), names = cfg.names || {}, icons = cfg.icons || {};
+    const exP = new Set(cfg.exclude_platforms || ['browser_mod']);
+    const exc = (cfg.exclude || []).map(hgGlob), unEx = (cfg.unassigned_exclude || []).map(hgGlob);
+    const list = [], byId = {};
+    const add = (id, name, icon, virtual) => {
+      if (byId[id] || (cfg.hide || []).includes(id)) return;
+      const a = { id, name, icon: icon || (HG_AREA_ICONS.find(([re]) => re.test(hgNorm(name) + ' ' + id)) || [0, 'mdi:home-outline'])[1], virtual: !!virtual, ents: [], strip: [name] };
+      byId[id] = a; list.push(a);
+    };
+    for (const a of Object.values(areasReg)) if (!merge[a.area_id]) add(a.area_id, names[a.area_id] || a.name, icons[a.area_id] || a.icon);
+    for (const [from, to] of Object.entries(merge)) { const a = areasReg[from]; if (a && byId[to]) byId[to].strip.push(a.name); }
+    for (const v of cfg.virtual || []) add(v.id, v.name, v.icon, true);
+    for (const v of cfg.virtual || []) for (const e of v.entities || []) if (!assign[e]) assign[e] = v.id;
+    const un = [];
+    for (const e of Object.keys(h.states)) {
+      const dom = e.slice(0, e.indexOf('.')), r = reg[e];
+      const forced = assign[e];
+      if (!forced) {
+        if (!r || r.hidden || r.entity_category || exP.has(r.platform) || HG_SKIP_DOM.has(dom) || exc.some((x) => x.test(e))) continue;
+      }
+      let aid = forced || (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null;
+      if (aid && merge[aid]) aid = merge[aid];
+      if (aid && byId[aid]) byId[aid].ents.push(e);
+      else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
+    }
+    if (cfg.unassigned !== false && un.length) { add('_none', hgTr('Bez pokoju', 'No room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
+    for (const a of list) this._classify(h, a, cfg);
+    const coll = new Intl.Collator(HG_LOC());
+    const ord = cfg.order || [];
+    list.sort((a, b) => {
+      const oa = ord.indexOf(a.id), ob = ord.indexOf(b.id);
+      if (oa >= 0 || ob >= 0) return (oa < 0 ? 999 : oa) - (ob < 0 ? 999 : ob);
+      const ta = a.id === '_none' ? 3 : a.id === 'siec' ? 2 : a.ents.length ? 0 : 1, tb = b.id === '_none' ? 3 : b.id === 'siec' ? 2 : b.ents.length ? 0 : 1;
+      return ta - tb || coll.compare(a.name, b.name);
+    });
+    // stała lista pokoi z CFG (kolejność jak w CFG); bez niej – wszystkie obszary
+    const rooms = Array.isArray(cfg.rooms) ? cfg.rooms.map((id) => byId[id]).filter(Boolean) : list;
+    const inRoom = new Set(rooms.flatMap((a) => a.ents));
+    const others = (cfg.others || []).filter((e, i, arr) => h.states[e] && arr.indexOf(e) === i && !inRoom.has(e));
+    const m = { key, list, byId, rooms, others };
+    this._memo.set(cfg, m);
+    return m;
+  },
+  _classify(h, a, cfg) {
+    const reg = h.entities || {}, sec = {};
+    for (const [k] of HG_SEC) sec[k] = [];
+    const robDev = new Set(a.ents.filter((e) => /^(vacuum|lawn_mower)\./.test(e)).map((e) => reg[e] && reg[e].device_id).filter(Boolean));
+    const misc = new Map(), inA = new Set(a.ents);
+    // ta sama fizyczna lampa raz: grupa (light z atrybutem entity_id) pomijana, gdy jej członek jest w tym pokoju
+    a.ents = a.ents.filter((e) => { const m = e.startsWith('light.') && h.states[e].attributes.entity_id; return !(Array.isArray(m) && m.some((x) => x !== e && inA.has(x))); });
+    for (const e of a.ents) {
+      const s = h.states[e], dom = e.slice(0, e.indexOf('.')), r = reg[e] || {}, at = s.attributes, dc = at.device_class;
+      const nmN = hgNorm((at.friendly_name || '') + ' ' + e);
+      if (r.device_id && robDev.has(r.device_id) && dom !== 'vacuum' && dom !== 'lawn_mower') continue;     // robot: jedna pozycja zamiast kilkudziesięciu encji
+      if (cfg.room_robots === false && (dom === 'vacuum' || dom === 'lawn_mower')) continue;               // roboty tylko w widoku Roboty
+      let k = 'misc';
+      if (dom === 'light') k = 'light';
+      else if (dom === 'switch') k = HG_LIGHTISH.test(nmN) ? 'light' : 'sw';
+      else if (['fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'].includes(dom)) k = 'sw';
+      else if (dom === 'climate' || dom === 'water_heater') k = 'clim';
+      else if (dom === 'media_player') k = 'media';
+      else if (dom === 'cover') k = 'cover';
+      else if (dom === 'camera') k = 'cam';
+      else if (dom === 'vacuum' || dom === 'lawn_mower') k = 'rob';
+      else if (dom === 'binary_sensor') k = ['motion', 'occupancy', 'presence'].includes(dc) ? 'mot' : ['door', 'window', 'opening', 'garage_door'].includes(dc) ? 'door' : 'sens';
+      else if (dom === 'sensor') k = dc || at.unit_of_measurement || isFinite(parseFloat(s.state)) ? 'sens' : 'misc';
+      if (k === 'misc') {
+        const g = r.device_id || e;
+        if (!misc.has(g)) misc.set(g, { dev: r.device_id || null, ents: [] });
+        misc.get(g).ents.push(e);
+      } else sec[k].push(e);
+    }
+    sec.misc = [...misc.values()];
+    // to samo urządzenie pod kilkoma encjami o tej samej (pełnej) nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
+    for (const k of ['light', 'sw', 'media']) {
+      const best = new Map();
+      const fn = (e) => hgNorm((cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e));   // pełna nazwa: różne urządzenia o tej samej nazwie po obcięciu pokoju zostają
+      for (const e of sec[k]) { const n = fn(e), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
+      sec[k] = sec[k].filter((e) => best.get(fn(e)) === e);
+    }
+    a.sec = sec;
+    // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
+    const ov = (cfg.sensors || {})[a.id] || {};
+    const pick = (dcx) => sec.sens.filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dcx && !HG_TEMP_BAD.test(hgNorm(h.states[e].attributes.friendly_name + ' ' + e)));
+    const ts = pick('temperature'), hs = pick('humidity');
+    const cl = sec.clim.filter((e) => e.startsWith('climate.'));
+    a.temp = ov.temperature === '-' ? null : ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
+    a.hum = ov.humidity === '-' ? null : ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
+    if (a.id === '_none') { a.temp = null; a.hum = null; }
+    const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
+    a.lights = sec.light;
+    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+  },
+  val(h, ref) {
+    if (!ref) return null;
+    const s = h.states[ref.e]; if (!H.ok(s)) return null;
+    const v = parseFloat(ref.attr ? s.attributes[ref.attr] : s.state);
+    return isFinite(v) ? v : null;
+  },
+  env(h, a) {
+    const t = this.val(h, a.temp), u = this.val(h, a.hum);
+    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
+  },
+  /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
+  name(h, e, a, cfg, fb) {
+    const n0 = (cfg && cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e);
+    let n = n0;
+    // prefiks nazwy urządzenia („Mi Air Purifier 3/3H Temperatura” -> „Temperatura”), jeśli coś zostaje
+    const r = !(cfg && cfg.entity_names && cfg.entity_names[e]) && h.entities && h.entities[e], d = r && r.device_id && h.devices && h.devices[r.device_id];
+    const dn = d && (d.name_by_user || d.name);
+    if (dn && n.toLowerCase().startsWith(dn.toLowerCase() + ' ')) { const rest = n.slice(dn.length).replace(/^[\s\-–·:*]+/, ''); if (rest) n = rest; }
+    n = n.replace(/^\*\s*/, '').replace(/\s\*\s/g, ' ');
+    for (const p of (a && a.strip) || []) {
+      const re = new RegExp('^\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\-–·:_]*', 'i');
+      n = n.replace(re, '');
+    }
+    for (const p of (a && a.strip) || []) n = n.replace(new RegExp('\\s+[-–·:]?\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$)', 'ig'), ' ');
+    n = n.replace(/\s+(zajętość|occupancy|contact|kontakt)$/i, '').replace(/\b(\p{L}+)\s+\1$/iu, '$1').replace(/^[\s\-–·:]+|[\s\-–·:]+$/g, '');
+    n = n.replace(/\s{2,}/g, ' ').trim();
+    if (!n) n = fb || n0;
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  },
+  areaFromUrl() { try { return new URLSearchParams(location.search).get('area'); } catch (e) { return null; } },
+};
+window.__nuvioAreas = HGAreas;
+
+/* shared/media: Czy odtwarzacz jest aktywny. */
+/* aktywny = coś gra / jest wstrzymane albo urządzenie włączone z treścią (np. dekoder Enigma2 ma stan „on” z kanałem) */
+const hgMpActive = (s) => !!s && (['playing', 'paused', 'buffering'].includes(s.state) || (s.state === 'on' && !!(s.attributes.media_title || s.attributes.media_channel)));
+
+/* shared/energy-prefs: Preferencje panelu Energia HA (energy/get_prefs). */
+/* --- wspólne: preferencje panelu Energia HA (energy/get_prefs) --- */
+const HGEnergyPrefs = {
+  async get(hass) {
+    if (this._v && Date.now() - this._t < 10 * 60 * 1000) return this._v;
+    if (this._p) return this._p;
+    this._p = hass.callWS({ type: 'energy/get_prefs' }).then((p) => {
+      const src = p.energy_sources || [];
+      const grid = src.filter((s) => s.type === 'grid'), solar = src.filter((s) => s.type === 'solar');
+      // HA 2025+: grid ma flow_from[]; starsze wersje: stat_energy_from bezpośrednio
+      const cons = grid.flatMap((g) => (g.flow_from ? g.flow_from.map((f) => f.stat_energy_from) : [g.stat_energy_from])).filter(Boolean);
+      const prices = grid.flatMap((g) => (g.flow_from ? g.flow_from : [g])).map((f) => f.number_energy_price).filter((x) => x != null);
+      const v = { consumption: cons, production: solar.map((s) => s.stat_energy_from).filter(Boolean),
+        price: prices.length && prices.every((x) => x === prices[0]) ? prices[0] : null };
+      this._v = v; this._t = Date.now(); return v;
+    }).finally(() => { this._p = null; });
+    return this._p;
+  },
+};
+
+/* shared/weather: Pogoda: nazwy warunków i subskrypcja prognozy (karta pogody i wygaszacz). */
+/* ===================== POGODA NA ZEWNĄTRZ ===================== */
+/* Źródło: weather.<x> (stan + atrybuty), prognoza godzinowa i dzienna przez WS weather/subscribe_forecast (jedna subskrypcja na typ,
+   współdzielona przez wszystkie instancje karty), temperatura „teraz” z fizycznego czujnika zewnętrznego (CFG temp_sensor), słońce z sun.sun.
+   Ikony: Meteocons (basmilius/weather-icons, MIT) hostowane lokalnie; animowana tylko duża ikona, w lite / reduced-motion wersja statyczna. */
+const HG_WX_COND = {
+  'clear-night': ['Bezchmurnie', 'clear-night', 'clear-night'], sunny: ['Słonecznie', 'clear-day', 'clear-night'], partlycloudy: ['Częściowe zachmurzenie', 'partly-cloudy-day', 'partly-cloudy-night'],
+  cloudy: ['Pochmurno', 'cloudy', 'cloudy'], fog: ['Mgła', 'fog-day', 'fog-night'], rainy: ['Deszcz', 'rain', 'rain'], pouring: ['Ulewa', 'extreme-rain', 'extreme-rain'],
+  snowy: ['Śnieg', 'snow', 'snow'], 'snowy-rainy': ['Deszcz ze śniegiem', 'sleet', 'sleet'], hail: ['Grad', 'hail', 'hail'], lightning: ['Burza', 'thunderstorms', 'thunderstorms'],
+  'lightning-rainy': ['Burza z deszczem', 'thunderstorms-rain', 'thunderstorms-rain'], windy: ['Wietrznie', 'wind', 'wind'], 'windy-variant': ['Wietrznie, pochmurno', 'wind', 'wind'],
+  exceptional: ['Zjawisko wyjątkowe', 'not-available', 'not-available'],
+};
+/* etykiety EN (HG_WX_COND[x][0] to PL); wybór przy użyciu: HGWx.cn() */
+const HG_WX_COND_EN = { 'clear-night': 'Clear', sunny: 'Sunny', partlycloudy: 'Partly cloudy', cloudy: 'Cloudy', fog: 'Fog', rainy: 'Rain', pouring: 'Pouring', snowy: 'Snow', 'snowy-rainy': 'Sleet', hail: 'Hail',
+  lightning: 'Thunderstorm', 'lightning-rainy': 'Thunderstorm, rain', windy: 'Windy', 'windy-variant': 'Windy, cloudy', exceptional: 'Exceptional' };
+const HGWx = {
+  subs: new Map(),   // key entity|type -> { data, cbs:Set, unsub, pending }
+  sub(hass, entity, type, cb) {
+    const k = entity + '|' + type; let s = this.subs.get(k);
+    if (!s) {
+      s = { data: null, cbs: new Set(), unsub: null };
+      this.subs.set(k, s);
+      try {
+        s.pending = hass.connection.subscribeMessage((m) => { s.data = (m && m.forecast) || []; for (const f of s.cbs) f(s.data); }, { type: 'weather/subscribe_forecast', forecast_type: type, entity_id: entity });
+        s.pending.then((u) => { s.unsub = u; if (!s.cbs.size) { u(); this.subs.delete(k); } }, () => { this.subs.delete(k); });
+      } catch (e) { this.subs.delete(k); }
+    }
+    s.cbs.add(cb); if (s.data) cb(s.data);
+    return () => { s.cbs.delete(cb); if (!s.cbs.size && s.unsub) { s.unsub(); this.subs.delete(k); } };
+  },
+  cn: (k) => (HG_WX_COND[k] ? hgTr(HG_WX_COND[k][0], HG_WX_COND_EN[k]) : k),
+  still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
+  icon(cfg, cond, night, anim) {
+    const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
+    return `${cfg.icon_base}${anim && !this.still() ? '' : 'static-'}${f}.svg?v=${cfg.icon_v}`;
+  },
+  // kolor temperatury: zimno (niebieski) -> ciepło (pomarańcz)
+  tcol(t) {
+    const st = [[-10, [76, 130, 230]], [0, [90, 170, 235]], [10, [96, 196, 160]], [18, [245, 196, 70]], [26, [245, 130, 50]], [34, [230, 70, 60]]];
+    if (t <= st[0][0]) return `rgb(${st[0][1]})`; if (t >= st[st.length - 1][0]) return `rgb(${st[st.length - 1][1]})`;
+    for (let i = 1; i < st.length; i++) if (t <= st[i][0]) { const [a, ca] = st[i - 1], [b, cb] = st[i], k = (t - a) / (b - a); return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(',')})`; }
+  },
+  hm: (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' }),
+};
+
+/* shared/confirm: Okno potwierdzenia HGConfirm (karty i edytor). */
+const HGConfirm = {
+  ask(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
+    return new Promise((res) => {
+      const x = document.createElement('div'); x.className = 'hg-confirm';
+      const sr = x.attachShadow({ mode: 'open' });
+      sr.innerHTML = `<style>${HG_BASE}${U(`
+:host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-036); animation:f .16s ease; }
+@keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
+.d{ width:min(380px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); display:flex; flex-direction:column; gap:16px; }
+.d b{ font-size:18px; font-weight:600; } .d p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); line-height:1.45; }
+.r{ display:flex; gap:8px; justify-content:flex-end; }
+.r button{ height:44px; padding:0 18px; border-radius:22px; font-size:var(--fs-sm); font-weight:600; background:var(--hg-bg-000000-006); color:var(--hg-tx-1e2023); }
+.r button.ok{ background:${danger ? 'var(--hg-ac-c62828)' : 'var(--hg-ac-1e2023)'}; color:var(--hg-tx-ffffff); }
+`)}</style><div class="d" role="alertdialog" aria-modal="true" aria-label="${H.esc(title)}"><b>${H.esc(title)}</b><p>${H.esc(text)}</p>
+        <div class="r">${info ? '' : `<button class="no" data-v="0">${hgTr('Anuluj', 'Cancel')}</button>`}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
+      const done = (v) => { document.removeEventListener('keydown', key); x.remove(); res(v); };
+      const key = (e) => { if (e.key === 'Escape') done(false); };
+      x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x) return done(false); const b = p.find((n) => n.dataset && n.dataset.v); if (b) done(b.dataset.v === '1'); });
+      document.addEventListener('keydown', key); document.body.appendChild(x);
+      setTimeout(() => { const n = sr.querySelector('.no') || sr.querySelector('.ok'); n && n.focus(); }, 30);
+    });
+  },
+};
+window.HGConfirm = window.HGConfirm || HGConfirm;
+
+/* shared/generic-controls: Kontrolki kart ogólnych: style, domeny, suwak, krok, wartości, akcja przycisku. */
+/* ===== komponenty ogólne: suwak, przycisk, lista encji, wybór, licznik, wskaźnik ===== */
+/* wspólne: przełącznik i przyciski w tokenach arkuszy (lime = główny, szkło = drugorzędny) */
+const HG_GEN_CSS = `
+.gsw{ all:unset; cursor:pointer; flex:none; position:relative; width:46px; height:28px; border-radius:999px; background:color-mix(in srgb, currentColor 16%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background-color 150ms; }
+.gsw .gkn{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 1px 4px var(--hg-sh-000000-030); transition:transform 150ms cubic-bezier(.2,0,0,1); }
+.gsw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; } .gsw[aria-checked=true] .gkn{ transform:translateX(18px); } .gsw:disabled{ opacity:.4; cursor:default; }
+.gb{ all:unset; cursor:pointer; box-sizing:border-box; flex:none; height:36px; padding:0 16px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:500;
+  background:color-mix(in srgb, currentColor 8%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background-color 150ms, transform 150ms, box-shadow 150ms; }
+.gb.ok, .gb[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; font-weight:600; } .gb:disabled{ opacity:.4; cursor:default; } .gb ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; }
+.gb.r{ width:44px; height:44px; padding:0; } .gb.r ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; }
+:is(.gb, .gsw, .gt, [role=slider], .gbig):focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+:is(.gb, .gbig):active:not(:disabled){ transform:scale(.96); }
+@media (prefers-reduced-motion:reduce){ .gsw .gkn, .gb, .gfl{ transition:none !important; } }
+.gic{ flex:none; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, currentColor 8%, transparent); transition:background-color 150ms, color 150ms; }
+.gic ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; } .gic.on{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
+button.gic{ all:unset; cursor:pointer; flex:none; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, currentColor 8%, transparent); }
+button.gic.on{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
+.gh{ display:flex; align-items:center; gap:12px; min-width:0; } .gn{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.gn b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.25; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; } .gn small{ font-size:12px; opacity:.66; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gv{ font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; } .gv small{ font-size:12px; font-weight:500; opacity:.66; margin-left:2px; }
+.un{ opacity:.55; }
+`;
+const hgDom = (e) => String(e || '').split('.')[0];
+const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 'siren', 'humidifier', 'climate', 'media_player', 'water_heater', 'vacuum', 'lock', 'cover', 'valve'];
+const HG_PRESS_DOM = ['script', 'scene', 'button', 'input_button', 'automation'];
+/* model suwaka: wartość, zakres i zapis wg domeny */
+const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.attributes) || {}, on = !!s && !['off', 'unavailable', 'unknown', 'closed', 'idle', 'standby'].includes(s.state);
+  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgTr('Poziom', 'Level') };
+  if (!s) return r;
+  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgTr('Jasność', 'Brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
+    r.set = (v) => (v <= 0 ? H.call(h, 'light', 'turn_off', { entity_id: e }) : H.call(h, 'light', 'turn_on', { entity_id: e, brightness_pct: v })); }
+  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgTr('Głośność', 'Volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
+  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgTr('Prędkość', 'Speed');
+    r.set = (v) => (v <= 0 ? H.call(h, 'fan', 'turn_off', { entity_id: e }) : H.call(h, 'fan', 'set_percentage', { entity_id: e, percentage: Math.round(v) })); }
+  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgTr('Otwarcie', 'Position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
+    r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
+  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
+    r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
+  else r.ok = false;
+  return r; };
+const hgStepRound = (v, m) => { const n = Math.round((v - m.min) / m.step) * m.step + m.min, dp = (String(m.step).split('.')[1] || '').length; return +Math.max(m.min, Math.min(m.max, n)).toFixed(dp); };
+const hgFmtV = (v, m) => `${H.fmt(v, (String(m.step).split('.')[1] || '').length)}${m.unit ? `<small>${H.esc(m.unit)}</small>` : ''}`;
+
+/* --- przycisk: skrypt, scena, button.press, automatyzacja albo dowolna akcja (tap_action) --- */
+const hgPress = (node, h, e, act) => { if (act) return H.action(node, h, act); const d = hgDom(e);
+  if (d === 'script') return H.call(h, 'script', 'turn_on', { entity_id: e }); if (d === 'scene') return H.call(h, 'scene', 'turn_on', { entity_id: e });
+  if (d === 'button' || d === 'input_button') return H.call(h, d, 'press', { entity_id: e }); if (d === 'automation') return H.call(h, 'automation', 'trigger', { entity_id: e });
+  if (d === 'lock') { const s = H.st(h, e); return H.call(h, 'lock', s && s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e }); }
+  return H.call(h, 'homeassistant', 'toggle', { entity_id: e }); };
+
+/* shared/compact-cards: Wspólne style i nagłówek kart ogólnych 0.9 (zegar, notatka, baterie, otwarcia…). */
+/* ===== Karty ogólne 0.9: zegar, notatka, obraz / iframe, baterie, otwarcia, światło, historia, termostat, odkurzacz, mini odtwarzacz, duża wartość, słońce, aktualizacje =====
+   Każda karta: szkło, ha-card jest kontenerem (container queries), więc treść dopasowuje się do rozmiaru S / M / L kafelka. */
+const HG_G14_CSS = HG_GEN_CSS + U(`
+ha-card.glass{ container-type:inline-size; height:auto; min-height:100%; display:flex; flex-direction:column; gap:10px; padding:14px; min-width:0; }
+.ph{ display:flex; flex-direction:column; gap:4px; font-size:12.5px; opacity:.7; } .ph b{ font-size:14px; opacity:1; }
+.ls{ display:flex; flex-direction:column; gap:2px; min-width:0; overflow:auto; }
+.li{ display:flex; align-items:center; gap:10px; min-height:40px; padding:4px 2px; min-width:0; } .li + .li{ border-top:1px solid color-mix(in srgb, currentColor 8%, transparent); }
+.li > ha-icon{ width:20px; height:20px; flex:none; opacity:.85; } .li .nm{ flex:1; min-width:0; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.li .vl{ flex:none; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; } .li.al .vl, .li.al > ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
+.bar{ position:relative; flex:none; width:64px; height:6px; border-radius:3px; background:color-mix(in srgb, currentColor 12%, transparent); overflow:hidden; } .bar i{ position:absolute; inset:0 auto 0 0; border-radius:3px; background:var(--hg-accent); }
+.bar.lo i{ background:var(--hg-bg-ff6b57); } .bar.md i{ background:var(--hg-bg-f5b83d); }
+.big{ font-size:44px; font-weight:600; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; } .big small{ font-size:.4em; font-weight:500; opacity:.7; margin-left:3px; letter-spacing:0; }
+.row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; } .sp{ flex:1; }
+.cnt{ margin-left:auto; flex:none; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; background:color-mix(in srgb, currentColor 8%, transparent); } .cnt.al{ background:var(--hg-accent); color:var(--hg-on-accent); }
+input[type=range].rg{ -webkit-appearance:none; appearance:none; width:100%; height:44px; background:transparent; margin:0; }
+input[type=range].rg::-webkit-slider-runnable-track{ height:14px; border-radius:7px; background:linear-gradient(90deg, var(--hg-accent) var(--v, 0%), color-mix(in srgb, currentColor 12%, transparent) var(--v, 0%)); }
+input[type=range].rg::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; margin-top:-6px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 2px 8px var(--hg-sh-000000-030); }
+input[type=range].rg::-moz-range-track{ height:14px; border-radius:7px; background:color-mix(in srgb, currentColor 12%, transparent); } input[type=range].rg::-moz-range-progress{ height:14px; border-radius:7px; background:var(--hg-accent); }
+input[type=range].rg::-moz-range-thumb{ width:26px; height:26px; border:0; border-radius:50%; background:var(--hg-bg-ffffff); }
+input[type=range].rg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; border-radius:8px; }
+@container (max-width: 240px){ ha-card.glass{ padding:12px; gap:8px; } .big{ font-size:34px; } .bar{ width:40px; } .hide-s{ display:none !important; } .gic{ width:34px; height:34px; } .gn b{ font-size:14px; } }
+@container (max-width: 170px){ .big{ font-size:28px; } .li .vl{ font-size:12px; } .bar{ display:none; } .hide-xs{ display:none !important; } .gb{ padding:0 10px; } }
+@container (min-width: 420px){ .big{ font-size:56px; } }
+`);
+const hgEnts = (h, dom, dc) => Object.keys(h.states).filter((e) => (!dom || dom.includes(hgDom(e))) && (!dc || dc.includes(h.states[e].attributes.device_class)) && !((h.entities || {})[e] || {}).hidden);
+const hgAgo14 = (iso) => { const t = Date.parse(iso); if (!isFinite(t)) return ''; const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? hgTr('przed chwilą', 'just now') : m < 60 ? hgTr(`${m} min temu`, `${m} min ago`) : m < 1440 ? hgTr(`${Math.round(m / 60)} godz. temu`, `${Math.round(m / 60)} h ago`) : hgTr(`${Math.round(m / 1440)} dni temu`, `${Math.round(m / 1440)} d ago`); };
+const hgMore = (n, e) => { if (e) H.fire(n, 'hass-more-info', { entityId: e }); };
+const hgHead = (ic, nm, sub, on, right = '') => `<div class="gh"><span class="gic${on ? ' on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${right}</div>`;
+
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
   defaults() {
@@ -1625,17 +2080,6 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
 }
 hgReg('nuvio-energy-card', HGEnergyCard, hgTr('Nuvio – Energia', 'Nuvio – Energy'), hgTr('Procent obciążenia mocy (suma faz / moc maks.)', 'Power load percentage (sum of phases / max power)'));
 
-/* ===================== KLIMATYZACJA ===================== */
-/* stan widoczny od razu, bez zmiany powierzchni szkła: mała pełna kropka trybu z ikoną (subtelna animacja), aktywny chip,
-   podświetlenie łuku i tekst „Chłodzi · 21°”. Wyłączona: wszystko szare i przygaszone. Dotknięcie: stan od razu (optymistycznie),
-   potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
-const HG_AC_MODE = {
-  /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
-  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } }, heat: { c: 'var(--hg-accent)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
-  dry: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:water-percent', t: 'neu', get l() { return hgTr('Osuszanie', 'Drying'); } }, fan_only: { c: 'var(--hg-ac-a3a9b1)', on: 'var(--hg-ac-1e2023)', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
-  heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
-  off: { c: 'var(--hg-ac-c4c8ce)', on: 'var(--hg-ac-5a5e64)', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
-};
 const HG_FAN_PL = { auto: 'Auto', low: 'Niski', medium: 'Średni', middle: 'Średni', mid: 'Średni', high: 'Wysoki', quiet: 'Cichy', silent: 'Cichy', turbo: 'Turbo', strong: 'Mocny', diffuse: 'Rozproszony', focus: 'Skupiony', on: 'Wł.', off: 'Wył.' };
 const HG_SWING_PL = { off: 'Stały', on: 'Ruch', horizontal: 'Poziomo', vertical: 'Pionowo', both: 'Oba', swing: 'Ruch' };
 const HG_FAN_EN = { auto: 'Auto', low: 'Low', medium: 'Medium', middle: 'Medium', mid: 'Medium', high: 'High', quiet: 'Quiet', silent: 'Silent', turbo: 'Turbo', strong: 'Strong', diffuse: 'Diffuse', focus: 'Focus', on: 'On', off: 'Off' };
@@ -2024,48 +2468,6 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
 }
 hgReg('nuvio-switch-card', HGSwitchCard, hgTr('Nuvio – Przełącznik', 'Nuvio – Switch'), hgTr('Przełącznik w stylu glass (wiersz lub kafel)', 'Glass-style switch (row or tile)'));
 
-/* ===================== statystyki (wspólne) ===================== */
-const HGStats = {
-  cache: {},
-  async daily(hass, ids, days) {
-    const key = ids.join(',') + days;
-    const now = Date.now(), c = this.cache[key];
-    if (c && now - c.t < 5 * 60 * 1000) return c.v;
-    if (this.inflight && this.inflight[key]) return this.inflight[key];
-    (this.inflight = this.inflight || {})[key] = this._fetch(hass, ids, days, key, now).finally(() => { delete this.inflight[key]; });
-    return this.inflight[key];
-  },
-  /* granice dni w strefie HA (Europe/Warsaw), niezależnie od strefy przeglądarki */
-  tz(hass) { return (hass && hass.config && hass.config.time_zone) || Intl.DateTimeFormat().resolvedOptions().timeZone; },
-  key(d, tz) { return new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); },
-  midnight(ms, tz) {   // północ w strefie tz dla dnia zawierającego ms
-    const k = this.key(new Date(ms), tz), [y, m, d] = k.split('-').map(Number);
-    let t = Date.UTC(y, m - 1, d);
-    for (let i = 0; i < 3; i++) { const off = this.offset(t, tz); t = Date.UTC(y, m - 1, d) - off; }
-    return t;
-  },
-  offset(ms, tz) { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
-    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000; },
-  async _fetch(hass, ids, days, key, now) {
-    const tz = this.tz(hass);
-    const t0 = this.midnight(Date.now(), tz);
-    const dayStarts = [...Array(days)].map((_, i) => this.midnight(t0 - (days - 1 - i) * 86400000 + 43200000, tz));
-    const start = new Date(dayStarts[0]);
-    const r = await hass.callWS({ type: 'recorder/statistics_during_period', start_time: start.toISOString(), statistic_ids: ids, period: 'day', types: ['change'], units: { energy: 'kWh' } });
-    const out = {};
-    for (const id of ids) {
-      const m = {};
-      for (const row of r[id] || []) { const d = new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)); m[this.key(d, tz)] = row.change || 0; }
-      out[id] = m;
-    }
-    // dni jako Date w południe danego dnia (getDay/getDate poprawne także poza strefą HA); klucz = data w strefie HA
-    const dd = dayStarts.map((t) => { const k = this.key(new Date(t + 43200000), tz), [y, mo, da] = k.split('-').map(Number); const d = new Date(y, mo - 1, da, 12); d.__k = k; return d; });
-    const v = { days: dd, keys: dd.map((d) => d.__k), byId: out, has: ids.some((id) => (r[id] || []).length), present: Object.fromEntries(ids.map((id) => [id, new Set((r[id] || []).map((row) => this.key(new Date(typeof row.start === 'number' ? row.start : Date.parse(row.start)), tz)))])) };
-    this.cache[key] = { t: now, v };
-    return v;
-  },
-};
-
 /* ===================== SOLAR ===================== */
 class HGSolarCard extends HGBase {
   defaults() {
@@ -2255,15 +2657,6 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
 }
 hgReg('nuvio-media-card', HGMediaCard, 'Nuvio – Media', 'Odtwarzacz w stylu glass');
 
-/* ===================== PERSON ===================== */
-const hgAvatar = (hass, e, cls = 'av') => {
-  const s = H.st(hass, e); const nm = H.name(hass, e, e);
-  const pic = s && s.attributes.entity_picture;
-  const ini = nm.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
-  const hues = [32, 200, 280, 140, 350]; const h = hues[[...nm].reduce((a, ch) => a + ch.charCodeAt(0), 0) % hues.length];
-  return pic ? `<span class="${cls}" style="background-image:url('${H.cssUrl(pic)}')"></span>`
-    : `<span class="${cls} ini" style="background:hsl(${h},55%,50%)">${H.esc(ini)}</span>`;
-};
 class HGPersonCard extends HGBase {
   defaults() { return { home_label: hgTr('W domu', 'Home'), away_label: hgTr('Poza domem', 'Away'), locale: null }; }
   css() {
@@ -2312,21 +2705,6 @@ b{ display:block; font-size:var(--fs-md); font-weight:400; } span{ display:block
   onAct() { H.action(this, this._hass, this._config.action); }
 }
 hgReg('nuvio-link-card', HGLinkCard, 'Nuvio – Link', 'Kafel nawigacji / akcji');
-
-/* ===================== MAPA + KALENDARZ ===================== */
-const HG_PAL = ['var(--hg-ac-f9c80e)', 'var(--hg-ac-f0955a)', 'var(--hg-ac-b793ec)', 'var(--hg-ac-5ac8fa)', 'var(--hg-ac-34c759)', 'var(--hg-ac-ff6b8b)', 'var(--hg-ac-8e9aaf)'];
-const hgRel = (d) => {
-  const m = Math.max(0, Math.round((Date.now() - d) / 60000));
-  if (m < 1) return hgTr('przed chwilą', 'just now'); if (m < 60) return hgTr(`${m} min temu`, `${m} min ago`);
-  const h = Math.round(m / 60); if (h < 24) return hgTr(`${h} godz. temu`, `${h} h ago`);
-  const dd = Math.round(h / 24); return dd === 1 ? hgTr('wczoraj', 'yesterday') : hgTr(`${dd} dni temu`, `${dd} days ago`);
-};
-const hgTime = (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' });
-const hgDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const hgZoneName = (hass, st) => {
-  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || hgTr('W domu', 'Home');
-  if (st === 'not_home') return hgTr('Poza strefami', 'Away'); if (st === 'unknown' || st === 'unavailable') return hgTr('Nieznana lokalizacja', 'Unknown location'); return st;
-};
 
 /* --- mapa: natywna karta HA w szklanym kontenerze --- */
 class HGMapCard extends HTMLElement {
@@ -2381,6 +2759,11 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
 }
 hgReg('nuvio-map-card', HGMapCard, 'Nuvio – Mapa', 'Natywna mapa HA w szklanej ramce');
 
+const hgZoneName = (hass, st) => {
+  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || hgTr('W domu', 'Home');
+  if (st === 'not_home') return hgTr('Poza strefami', 'Away'); if (st === 'unknown' || st === 'unavailable') return hgTr('Nieznana lokalizacja', 'Unknown location'); return st;
+};
+
 /* --- lista osób + strefy --- */
 class HGPeopleCard extends HGBase {
   defaults() { return { title: hgTr('Domownicy', 'Household'), icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
@@ -2424,31 +2807,6 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
 }
 hgReg('nuvio-people-card', HGPeopleCard, 'Nuvio – Domownicy', 'Lista osób z awatarem, strefą i czasem zmiany');
 
-/* --- kalendarze: wspólne pobieranie (REST /api/calendars, tylko odczyt) --- */
-const HGCal = {
-  cache: {},
-  parse(e, cal) {
-    const ad = !!(e.start && e.start.date && !e.start.dateTime);
-    const s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime || e.start);
-    const en = ad ? new Date((e.end && e.end.date ? e.end.date : e.start.date) + 'T00:00:00') : new Date((e.end && (e.end.dateTime || e.end)) || s);
-    return { title: e.summary || hgTr('(bez tytułu)', '(untitled)'), start: s, end: en, allDay: ad, loc: e.location || '', cal };
-  },
-  async fetch(hass, cals, start, end) {
-    const key = cals.map((c) => c.entity).join(',') + start.toISOString() + end.toISOString();
-    const hit = this.cache[key]; if (hit && Date.now() - hit.t < 300000) return hit.p;
-    const p = Promise.all(cals.map(async (c) => {
-      const s = H.st(hass, c.entity);
-      if (!s || s.state === 'unavailable') return { cal: c, err: hgTr('niedostępny', 'unavailable'), ev: [] };
-      try { const r = await hass.callApi('GET', `calendars/${c.entity}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
-        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: hgTr('błąd pobierania', 'fetch error'), ev: [] }; }
-    }));
-    this.cache[key] = { t: Date.now(), p }; return p;
-  },
-  cals(hass, list) {
-    return (list || []).map((c, i) => { const o = typeof c === 'string' ? { entity: c } : Object.assign({}, c);
-      o.color = o.color || HG_PAL[i % HG_PAL.length]; const s = H.st(hass, o.entity); o.name = o.name || (s ? s.attributes.friendly_name : o.entity); return o; });
-  },
-};
 const HG_MONTHS = () => hgTr(['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'],
   ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']);
 
@@ -2653,7 +3011,6 @@ const HGCamFS = {
   },
 };
 if (!window.HGCamFS) window.HGCamFS = HGCamFS;   // diagnostyka / testy (pierwsza załadowana kopia)
-const hgCamUn = (s) => !s || s.state === 'unavailable' || s.state === 'unknown';
 const hgAsp = {
   get(e) { try { const v = parseFloat(localStorage.getItem('nuvio:asp:' + e)); return v > 0.3 && v < 4 ? v : null; } catch (err) { return null; } },
   set(e, v) { try { localStorage.setItem('nuvio:asp:' + e, v.toFixed(4)); } catch (err) { /* prywatny tryb */ } },
@@ -3020,7 +3377,6 @@ const HG_SENS = {
   vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', 'Wibracje', 'Spokój', 'Vibration', 'Still'],
 };
 const HG_SENS_TABS = [['all', 'Wszystkie', 'All'], ['ruch', 'Ruch / obecność', 'Motion / presence'], ['otw', 'Drzwi / okna', 'Doors / windows'], ['inne', 'Inne', 'Other']];
-const hgGlob = (pat) => new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
 class HGSensorsCard extends HGBase {
   defaults() {
     return { title: hgTr('Czujniki', 'Sensors'), icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
@@ -3412,8 +3768,6 @@ const HG_MP = { PAUSE: 1, SEEK: 2, VOL_SET: 4, MUTE: 8, PREV: 16, NEXT: 32, ON: 
 const HG_MP_ST = { playing: 'Odtwarza', paused: 'Wstrzymano', idle: 'Bezczynny', on: 'Włączony', off: 'Wyłączony', standby: 'Czuwanie', buffering: 'Buforowanie…', unavailable: 'Niedostępny', unknown: 'Nieznany' };
 const HG_MP_ST_EN = { playing: 'Playing', paused: 'Paused', idle: 'Idle', on: 'On', off: 'Off', standby: 'Standby', buffering: 'Buffering…', unavailable: 'Unavailable', unknown: 'Unknown' };
 const hgMpSt = (st) => (hgCurLang() === 'en' ? HG_MP_ST_EN : HG_MP_ST)[st];
-/* aktywny = coś gra / jest wstrzymane albo urządzenie włączone z treścią (np. dekoder Enigma2 ma stan „on” z kanałem) */
-const hgMpActive = (s) => !!s && (['playing', 'paused', 'buffering'].includes(s.state) || (s.state === 'on' && !!(s.attributes.media_title || s.attributes.media_channel)));
 class HGPlayersCard extends HGBase {
   defaults() {
     return { title: 'Multimedia', icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
@@ -3621,24 +3975,6 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 }
 hgReg('nuvio-phases-card', HGPhasesCard, hgTr('Nuvio – Fazy', 'Nuvio – Phases'), hgTr('Moc, napięcie i prąd na fazach', 'Power, voltage and current per phase'));
 
-/* --- wspólne: preferencje panelu Energia HA (energy/get_prefs) --- */
-const HGEnergyPrefs = {
-  async get(hass) {
-    if (this._v && Date.now() - this._t < 10 * 60 * 1000) return this._v;
-    if (this._p) return this._p;
-    this._p = hass.callWS({ type: 'energy/get_prefs' }).then((p) => {
-      const src = p.energy_sources || [];
-      const grid = src.filter((s) => s.type === 'grid'), solar = src.filter((s) => s.type === 'solar');
-      // HA 2025+: grid ma flow_from[]; starsze wersje: stat_energy_from bezpośrednio
-      const cons = grid.flatMap((g) => (g.flow_from ? g.flow_from.map((f) => f.stat_energy_from) : [g.stat_energy_from])).filter(Boolean);
-      const prices = grid.flatMap((g) => (g.flow_from ? g.flow_from : [g])).map((f) => f.number_energy_price).filter((x) => x != null);
-      const v = { consumption: cons, production: solar.map((s) => s.stat_energy_from).filter(Boolean),
-        price: prices.length && prices.every((x) => x === prices[0]) ? prices[0] : null };
-      this._v = v; this._t = Date.now(); return v;
-    }).finally(() => { this._p = null; });
-    return this._p;
-  },
-};
 /* --- nuvio-energy-stats-card: dziś / ten tydzień / ten miesiąc (jak panel Energia HA) + wykres z przełącznikiem dzień/tydzień/miesiąc --- */
 class HGEnergyStatsCard extends HGBase {
   defaults() {
@@ -4114,178 +4450,6 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
 }
 hgReg('nuvio-robots-card', HGRobotsCard, hgTr('Nuvio: Roboty', 'Nuvio: Robots'), hgTr('Odkurzacze i kosiarki: stan, mapa, sterowanie, pokoje, eksploatacja', 'Vacuums and mowers: state, map, controls, rooms, maintenance'));
 
-/* ===================== POKOJE (obszary HA) ===================== */
-/* Model pokoi: rejestr obszarów + rejestr encji/urządzeń z hass (hass.areas / hass.entities / hass.devices, bez dodatkowych zapytań).
-   Encja należy do obszaru: CFG assign (tylko wyświetlanie, rejestr HA bez zmian) > area_id encji > area_id urządzenia; merge łączy duplikaty obszarów.
-   Pomijane: ukryte, diagnostyczne/konfiguracyjne (entity_category), wyłączone (nie ma ich w hass.entities), platformy z exclude_platforms. */
-const HG_AREA_ICONS = [[/salon|living|wypoczyn/, 'mdi:sofa-outline'], [/kuchni|kitchen/, 'mdi:countertop-outline'], [/lazienk|bath|toalet|\bwc\b/, 'mdi:shower-head'],
-  [/sypialni|bedroom/, 'mdi:bed-king-outline'], [/biur|office|gabinet/, 'mdi:desk'], [/garaz|garage/, 'mdi:garage-variant'], [/ogrod|garden/, 'mdi:flower-outline'],
-  [/taras|balkon|balcony/, 'mdi:balcony'], [/ganek|weranda|porch/, 'mdi:home-import-outline'], [/wejsc|entrance|przedpok|hall/, 'mdi:door-open'],
-  [/piwnic|basement/, 'mdi:stairs-down'], [/pralni|laundry/, 'mdi:washing-machine'], [/korytarz|schod|stairs/, 'mdi:stairs'], [/parter|ground/, 'mdi:home-floor-0'],
-  [/pietro|poddasz|floor/, 'mdi:home-floor-1'], [/eliann|dziec|kids/, 'mdi:teddy-bear'], [/siec|network/, 'mdi:lan'], [/jadal|dining/, 'mdi:silverware-fork-knife']];
-const hgNorm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
-const HG_SKIP_DOM = new Set(['event', 'notify', 'update', 'device_tracker', 'tts', 'stt', 'conversation', 'ai_task', 'assist_satellite', 'infrared', 'zone', 'person',
-  'automation', 'script', 'sun', 'weather', 'calendar', 'image', 'todo', 'wake_word', 'tag', 'input_text', 'input_datetime', 'input_number', 'input_select', 'counter',
-  'timer', 'schedule', 'remote', 'group', 'persistent_notification', 'alarm_control_panel', 'date', 'time', 'datetime']);
-const HG_CTRL_DOM = new Set(['light', 'switch', 'climate', 'cover', 'fan', 'lock', 'humidifier', 'media_player', 'vacuum', 'water_heater', 'valve', 'lawn_mower', 'siren', 'camera']);
-const HG_LIGHTISH = /(swiatl|swiatel|oswietl|lamp|\bled\b|light|wlacznik|zarowk|kinkiet|zyrandol)/;
-const HG_TEMP_BAD = /(water|woda|wody|kettle|czajnik|boiler|bojler|heater|cpu|chip|procesor|battery|bateri|inverter|falownik|motor|silnik|pralk|washer|dryer|suszark|lodowk|fridge|zamrazark|freezer|piekarnik|oven|soc\b|core)/;
-const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', 'Lights'], ['clim', 'Klimatyzacja', 'mdi:thermostat', 'Climate'], ['media', 'Media', 'mdi:speaker', 'Media'],
-  ['cover', 'Rolety', 'mdi:window-shutter', 'Covers'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', 'Switches'], ['sens', 'Czujniki', 'mdi:gauge', 'Sensors'],
-  ['mot', 'Ruch i obecność', 'mdi:motion-sensor', 'Motion & presence'], ['door', 'Drzwi i okna', 'mdi:door', 'Doors & windows'], ['cam', 'Kamery', 'mdi:cctv', 'Cameras'], ['rob', 'Roboty', 'mdi:robot-vacuum', 'Robots'],
-  ['misc', 'Inne', 'mdi:tune-variant', 'Other']];
-const HG_DC_ICON = { temperature: 'mdi:thermometer', humidity: 'mdi:water-percent', illuminance: 'mdi:brightness-5', power: 'mdi:flash-outline', energy: 'mdi:lightning-bolt-outline',
-  battery: 'mdi:battery-outline', voltage: 'mdi:sine-wave', current: 'mdi:current-ac', pm25: 'mdi:blur', pm10: 'mdi:blur', carbon_dioxide: 'mdi:molecule-co2',
-  volatile_organic_compounds: 'mdi:air-filter', pressure: 'mdi:gauge', aqi: 'mdi:air-filter', duration: 'mdi:timer-outline', timestamp: 'mdi:clock-outline',
-  signal_strength: 'mdi:wifi', moisture: 'mdi:water', water: 'mdi:water', gas: 'mdi:meter-gas-outline', problem: 'mdi:alert-circle-outline', running: 'mdi:play-circle-outline',
-  plug: 'mdi:power-plug-outline', power_factor: 'mdi:angle-acute', connectivity: 'mdi:lan-connect', heat: 'mdi:fire', lock: 'mdi:lock-outline' };
-const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', humidifier: 'mdi:air-humidifier', lock: 'mdi:lock-outline',
-  valve: 'mdi:valve', siren: 'mdi:bullhorn-outline', input_boolean: 'mdi:toggle-switch-outline', water_heater: 'mdi:water-boiler', media_player: 'mdi:speaker',
-  cover: 'mdi:window-shutter', camera: 'mdi:cctv', vacuum: 'mdi:robot-vacuum', lawn_mower: 'mdi:robot-mower', sensor: 'mdi:eye-outline', binary_sensor: 'mdi:checkbox-blank-circle-outline',
-  climate: 'mdi:thermostat', select: 'mdi:form-dropdown', number: 'mdi:numeric', button: 'mdi:gesture-tap-button', text: 'mdi:form-textbox', scene: 'mdi:palette-outline' };
-const hgPl = (n, one, few, many, en1, enN) => en1 && hgCurLang() === 'en' ? `${n} ${n === 1 ? en1 : enN || en1 + 's'}` : `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
-
-const HGAreas = {
-  _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
-  /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
-  _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
-  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
-  /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
-  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own) || (cfg && this._gs && this._gs.has(cfg))) return cfg;
-    const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
-    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
-  model(h, cfg) {
-    cfg = this.glob(cfg) || this._e;
-    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
-    const m0 = this._memo.get(cfg);
-    if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
-    const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
-    const merge = cfg.merge || {}, assign = Object.assign({}, cfg.assign || {}), names = cfg.names || {}, icons = cfg.icons || {};
-    const exP = new Set(cfg.exclude_platforms || ['browser_mod']);
-    const exc = (cfg.exclude || []).map(hgGlob), unEx = (cfg.unassigned_exclude || []).map(hgGlob);
-    const list = [], byId = {};
-    const add = (id, name, icon, virtual) => {
-      if (byId[id] || (cfg.hide || []).includes(id)) return;
-      const a = { id, name, icon: icon || (HG_AREA_ICONS.find(([re]) => re.test(hgNorm(name) + ' ' + id)) || [0, 'mdi:home-outline'])[1], virtual: !!virtual, ents: [], strip: [name] };
-      byId[id] = a; list.push(a);
-    };
-    for (const a of Object.values(areasReg)) if (!merge[a.area_id]) add(a.area_id, names[a.area_id] || a.name, icons[a.area_id] || a.icon);
-    for (const [from, to] of Object.entries(merge)) { const a = areasReg[from]; if (a && byId[to]) byId[to].strip.push(a.name); }
-    for (const v of cfg.virtual || []) add(v.id, v.name, v.icon, true);
-    for (const v of cfg.virtual || []) for (const e of v.entities || []) if (!assign[e]) assign[e] = v.id;
-    const un = [];
-    for (const e of Object.keys(h.states)) {
-      const dom = e.slice(0, e.indexOf('.')), r = reg[e];
-      const forced = assign[e];
-      if (!forced) {
-        if (!r || r.hidden || r.entity_category || exP.has(r.platform) || HG_SKIP_DOM.has(dom) || exc.some((x) => x.test(e))) continue;
-      }
-      let aid = forced || (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null;
-      if (aid && merge[aid]) aid = merge[aid];
-      if (aid && byId[aid]) byId[aid].ents.push(e);
-      else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
-    }
-    if (cfg.unassigned !== false && un.length) { add('_none', hgTr('Bez pokoju', 'No room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
-    for (const a of list) this._classify(h, a, cfg);
-    const coll = new Intl.Collator(HG_LOC());
-    const ord = cfg.order || [];
-    list.sort((a, b) => {
-      const oa = ord.indexOf(a.id), ob = ord.indexOf(b.id);
-      if (oa >= 0 || ob >= 0) return (oa < 0 ? 999 : oa) - (ob < 0 ? 999 : ob);
-      const ta = a.id === '_none' ? 3 : a.id === 'siec' ? 2 : a.ents.length ? 0 : 1, tb = b.id === '_none' ? 3 : b.id === 'siec' ? 2 : b.ents.length ? 0 : 1;
-      return ta - tb || coll.compare(a.name, b.name);
-    });
-    // stała lista pokoi z CFG (kolejność jak w CFG); bez niej – wszystkie obszary
-    const rooms = Array.isArray(cfg.rooms) ? cfg.rooms.map((id) => byId[id]).filter(Boolean) : list;
-    const inRoom = new Set(rooms.flatMap((a) => a.ents));
-    const others = (cfg.others || []).filter((e, i, arr) => h.states[e] && arr.indexOf(e) === i && !inRoom.has(e));
-    const m = { key, list, byId, rooms, others };
-    this._memo.set(cfg, m);
-    return m;
-  },
-  _classify(h, a, cfg) {
-    const reg = h.entities || {}, sec = {};
-    for (const [k] of HG_SEC) sec[k] = [];
-    const robDev = new Set(a.ents.filter((e) => /^(vacuum|lawn_mower)\./.test(e)).map((e) => reg[e] && reg[e].device_id).filter(Boolean));
-    const misc = new Map(), inA = new Set(a.ents);
-    // ta sama fizyczna lampa raz: grupa (light z atrybutem entity_id) pomijana, gdy jej członek jest w tym pokoju
-    a.ents = a.ents.filter((e) => { const m = e.startsWith('light.') && h.states[e].attributes.entity_id; return !(Array.isArray(m) && m.some((x) => x !== e && inA.has(x))); });
-    for (const e of a.ents) {
-      const s = h.states[e], dom = e.slice(0, e.indexOf('.')), r = reg[e] || {}, at = s.attributes, dc = at.device_class;
-      const nmN = hgNorm((at.friendly_name || '') + ' ' + e);
-      if (r.device_id && robDev.has(r.device_id) && dom !== 'vacuum' && dom !== 'lawn_mower') continue;     // robot: jedna pozycja zamiast kilkudziesięciu encji
-      if (cfg.room_robots === false && (dom === 'vacuum' || dom === 'lawn_mower')) continue;               // roboty tylko w widoku Roboty
-      let k = 'misc';
-      if (dom === 'light') k = 'light';
-      else if (dom === 'switch') k = HG_LIGHTISH.test(nmN) ? 'light' : 'sw';
-      else if (['fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'].includes(dom)) k = 'sw';
-      else if (dom === 'climate' || dom === 'water_heater') k = 'clim';
-      else if (dom === 'media_player') k = 'media';
-      else if (dom === 'cover') k = 'cover';
-      else if (dom === 'camera') k = 'cam';
-      else if (dom === 'vacuum' || dom === 'lawn_mower') k = 'rob';
-      else if (dom === 'binary_sensor') k = ['motion', 'occupancy', 'presence'].includes(dc) ? 'mot' : ['door', 'window', 'opening', 'garage_door'].includes(dc) ? 'door' : 'sens';
-      else if (dom === 'sensor') k = dc || at.unit_of_measurement || isFinite(parseFloat(s.state)) ? 'sens' : 'misc';
-      if (k === 'misc') {
-        const g = r.device_id || e;
-        if (!misc.has(g)) misc.set(g, { dev: r.device_id || null, ents: [] });
-        misc.get(g).ents.push(e);
-      } else sec[k].push(e);
-    }
-    sec.misc = [...misc.values()];
-    // to samo urządzenie pod kilkoma encjami o tej samej (pełnej) nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
-    for (const k of ['light', 'sw', 'media']) {
-      const best = new Map();
-      const fn = (e) => hgNorm((cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e));   // pełna nazwa: różne urządzenia o tej samej nazwie po obcięciu pokoju zostają
-      for (const e of sec[k]) { const n = fn(e), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
-      sec[k] = sec[k].filter((e) => best.get(fn(e)) === e);
-    }
-    a.sec = sec;
-    // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
-    const ov = (cfg.sensors || {})[a.id] || {};
-    const pick = (dcx) => sec.sens.filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dcx && !HG_TEMP_BAD.test(hgNorm(h.states[e].attributes.friendly_name + ' ' + e)));
-    const ts = pick('temperature'), hs = pick('humidity');
-    const cl = sec.clim.filter((e) => e.startsWith('climate.'));
-    a.temp = ov.temperature === '-' ? null : ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
-    a.hum = ov.humidity === '-' ? null : ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
-    if (a.id === '_none') { a.temp = null; a.hum = null; }
-    const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
-    a.lights = sec.light;
-    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
-  },
-  val(h, ref) {
-    if (!ref) return null;
-    const s = h.states[ref.e]; if (!H.ok(s)) return null;
-    const v = parseFloat(ref.attr ? s.attributes[ref.attr] : s.state);
-    return isFinite(v) ? v : null;
-  },
-  env(h, a) {
-    const t = this.val(h, a.temp), u = this.val(h, a.hum);
-    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
-  },
-  /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
-  name(h, e, a, cfg, fb) {
-    const n0 = (cfg && cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e);
-    let n = n0;
-    // prefiks nazwy urządzenia („Mi Air Purifier 3/3H Temperatura” -> „Temperatura”), jeśli coś zostaje
-    const r = !(cfg && cfg.entity_names && cfg.entity_names[e]) && h.entities && h.entities[e], d = r && r.device_id && h.devices && h.devices[r.device_id];
-    const dn = d && (d.name_by_user || d.name);
-    if (dn && n.toLowerCase().startsWith(dn.toLowerCase() + ' ')) { const rest = n.slice(dn.length).replace(/^[\s\-–·:*]+/, ''); if (rest) n = rest; }
-    n = n.replace(/^\*\s*/, '').replace(/\s\*\s/g, ' ');
-    for (const p of (a && a.strip) || []) {
-      const re = new RegExp('^\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\-–·:_]*', 'i');
-      n = n.replace(re, '');
-    }
-    for (const p of (a && a.strip) || []) n = n.replace(new RegExp('\\s+[-–·:]?\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$)', 'ig'), ' ');
-    n = n.replace(/\s+(zajętość|occupancy|contact|kontakt)$/i, '').replace(/\b(\p{L}+)\s+\1$/iu, '$1').replace(/^[\s\-–·:]+|[\s\-–·:]+$/g, '');
-    n = n.replace(/\s{2,}/g, ' ').trim();
-    if (!n) n = fb || n0;
-    return n.charAt(0).toUpperCase() + n.slice(1);
-  },
-  areaFromUrl() { try { return new URLSearchParams(location.search).get('area'); } catch (e) { return null; } },
-};
-window.__nuvioAreas = HGAreas;
-
 /* --- siatka pokoi --- */
 class HGAreasCard extends HGBase {
   defaults() { return { room_path: HG_P('pokoj'), areas: {} }; }
@@ -4397,6 +4561,16 @@ class HGAreasCard extends HGBase {
   getCardSize() { return 8; }
 }
 hgReg('nuvio-areas-card', HGAreasCard, 'Nuvio – Pokoje', 'Wszystkie obszary HA: temperatura, wilgotność, światła, ruch, klimatyzacja');
+
+const HG_DC_ICON = { temperature: 'mdi:thermometer', humidity: 'mdi:water-percent', illuminance: 'mdi:brightness-5', power: 'mdi:flash-outline', energy: 'mdi:lightning-bolt-outline',
+  battery: 'mdi:battery-outline', voltage: 'mdi:sine-wave', current: 'mdi:current-ac', pm25: 'mdi:blur', pm10: 'mdi:blur', carbon_dioxide: 'mdi:molecule-co2',
+  volatile_organic_compounds: 'mdi:air-filter', pressure: 'mdi:gauge', aqi: 'mdi:air-filter', duration: 'mdi:timer-outline', timestamp: 'mdi:clock-outline',
+  signal_strength: 'mdi:wifi', moisture: 'mdi:water', water: 'mdi:water', gas: 'mdi:meter-gas-outline', problem: 'mdi:alert-circle-outline', running: 'mdi:play-circle-outline',
+  plug: 'mdi:power-plug-outline', power_factor: 'mdi:angle-acute', connectivity: 'mdi:lan-connect', heat: 'mdi:fire', lock: 'mdi:lock-outline' };
+const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', humidifier: 'mdi:air-humidifier', lock: 'mdi:lock-outline',
+  valve: 'mdi:valve', siren: 'mdi:bullhorn-outline', input_boolean: 'mdi:toggle-switch-outline', water_heater: 'mdi:water-boiler', media_player: 'mdi:speaker',
+  cover: 'mdi:window-shutter', camera: 'mdi:cctv', vacuum: 'mdi:robot-vacuum', lawn_mower: 'mdi:robot-mower', sensor: 'mdi:eye-outline', binary_sensor: 'mdi:checkbox-blank-circle-outline',
+  climate: 'mdi:thermostat', select: 'mdi:form-dropdown', number: 'mdi:numeric', button: 'mdi:gesture-tap-button', text: 'mdi:form-textbox', scene: 'mdi:palette-outline' };
 
 /* --- komponenty urządzeń w widoku pokoju: jedna karta na fizyczne urządzenie (rejestr urządzeń), encje połączone wizualnie ---
    Profile (czajnik, poidełko, frytkownica, oczyszczacz) dobierane po modelu/nazwie urządzenia; pozostałe urządzenia: karta ogólna
@@ -5175,6 +5349,7 @@ ha-card.wmc{ gap:var(--s2); }
   getCardSize() { return 10; }
 }
 hgReg('nuvio-room-card', HGRoomCard, 'Nuvio – Pokój', 'Wszystkie encje pokoju pogrupowane wg rodzaju (adres ?area=<id> albo pole room)');
+
 /* --- urządzenie AGD jako osobny widżet (pralka, suszarka, czajnik, poidełko, dowolne urządzenie): ten sam widok co w pokoju --- */
 class HGApplianceCard extends HGRoomCard {
   defaults() { return { entity: '', device: '', areas: {} }; }
@@ -5190,6 +5365,7 @@ class HGApplianceCard extends HGRoomCard {
     return out || `<ha-card class="glass"><div class="empty"><b>${hgTr('Brak urządzenia', 'No device')}</b>${hgTr('Wybierz encję urządzenia w ustawieniach widżetu.', 'Pick an entity of the device in the widget settings.')}</div></ha-card>`; }
 }
 hgReg('nuvio-appliance-card', HGApplianceCard, hgTr('Nuvio – Urządzenie AGD', 'Nuvio – Appliance'), hgTr('Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp', 'Washer, dryer, kettle and other devices: state, program, time left, progress'));
+
 /* --- schody (sekwencja świateł dół / góra z czujnikami ruchu) i ciepła woda (CWU) jako osobne widżety --- */
 class HGStairsCard extends HGRoomCard {
   defaults() { return { stairs: null, areas: {} }; }
@@ -5199,6 +5375,7 @@ class HGStairsCard extends HGRoomCard {
     return S && S.bottom && S.top ? this._stairs(S) : `<ha-card class="glass"><div class="empty"><b>${hgTr('Schody', 'Stairs')}</b>${hgTr('Ustaw światła i czujniki dołu i góry.', 'Set the bottom and top lights and sensors.')}</div></ha-card>`; }
 }
 hgReg('nuvio-stairs-card', HGStairsCard, hgTr('Nuvio – Schody', 'Nuvio – Stairs'), hgTr('Sekwencja świateł schodów z czujnikami dołu i góry', 'Stair light sequence with bottom and top sensors'));
+
 class HGCwuCard extends HGRoomCard {
   defaults() { return { cwu: null, areas: {} }; }
   ents() { const C = this._config.cwu; if (!C) return []; return [C.heater, C.heating, C.keep, C.power, C.remaining, C.consumption, ...(C.switches || []).map((x) => x[0]), ...(C.up ? [C.up.tank, C.up.switch, C.up.power, ...((C.up.co || []).map((x) => x[0]))] : [])].filter(Boolean); }
@@ -5208,51 +5385,8 @@ class HGCwuCard extends HGRoomCard {
 }
 hgReg('nuvio-cwu-card', HGCwuCard, hgTr('Nuvio – Ciepła woda', 'Nuvio – Hot water'), hgTr('Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki', 'Water heater: temperature, heating, power, time, switches'));
 
-/* ===================== POGODA NA ZEWNĄTRZ ===================== */
-/* Źródło: weather.<x> (stan + atrybuty), prognoza godzinowa i dzienna przez WS weather/subscribe_forecast (jedna subskrypcja na typ,
-   współdzielona przez wszystkie instancje karty), temperatura „teraz” z fizycznego czujnika zewnętrznego (CFG temp_sensor), słońce z sun.sun.
-   Ikony: Meteocons (basmilius/weather-icons, MIT) hostowane lokalnie; animowana tylko duża ikona, w lite / reduced-motion wersja statyczna. */
-const HG_WX_COND = {
-  'clear-night': ['Bezchmurnie', 'clear-night', 'clear-night'], sunny: ['Słonecznie', 'clear-day', 'clear-night'], partlycloudy: ['Częściowe zachmurzenie', 'partly-cloudy-day', 'partly-cloudy-night'],
-  cloudy: ['Pochmurno', 'cloudy', 'cloudy'], fog: ['Mgła', 'fog-day', 'fog-night'], rainy: ['Deszcz', 'rain', 'rain'], pouring: ['Ulewa', 'extreme-rain', 'extreme-rain'],
-  snowy: ['Śnieg', 'snow', 'snow'], 'snowy-rainy': ['Deszcz ze śniegiem', 'sleet', 'sleet'], hail: ['Grad', 'hail', 'hail'], lightning: ['Burza', 'thunderstorms', 'thunderstorms'],
-  'lightning-rainy': ['Burza z deszczem', 'thunderstorms-rain', 'thunderstorms-rain'], windy: ['Wietrznie', 'wind', 'wind'], 'windy-variant': ['Wietrznie, pochmurno', 'wind', 'wind'],
-  exceptional: ['Zjawisko wyjątkowe', 'not-available', 'not-available'],
-};
-/* etykiety EN (HG_WX_COND[x][0] to PL); wybór przy użyciu: HGWx.cn() */
-const HG_WX_COND_EN = { 'clear-night': 'Clear', sunny: 'Sunny', partlycloudy: 'Partly cloudy', cloudy: 'Cloudy', fog: 'Fog', rainy: 'Rain', pouring: 'Pouring', snowy: 'Snow', 'snowy-rainy': 'Sleet', hail: 'Hail',
-  lightning: 'Thunderstorm', 'lightning-rainy': 'Thunderstorm, rain', windy: 'Windy', 'windy-variant': 'Windy, cloudy', exceptional: 'Exceptional' };
 const HG_WX_SHORT = { 'Częściowe zachmurzenie': 'Częś. zachm.', 'Deszcz ze śniegiem': 'Deszcz/śnieg', 'Burza z deszczem': 'Burza, deszcz', 'Wietrznie, pochmurno': 'Wietrznie', 'Zjawisko wyjątkowe': 'Wyjątkowe',
   'Thunderstorm, rain': 'Storm, rain', 'Windy, cloudy': 'Windy', Thunderstorm: 'Storm' };
-const HGWx = {
-  subs: new Map(),   // key entity|type -> { data, cbs:Set, unsub, pending }
-  sub(hass, entity, type, cb) {
-    const k = entity + '|' + type; let s = this.subs.get(k);
-    if (!s) {
-      s = { data: null, cbs: new Set(), unsub: null };
-      this.subs.set(k, s);
-      try {
-        s.pending = hass.connection.subscribeMessage((m) => { s.data = (m && m.forecast) || []; for (const f of s.cbs) f(s.data); }, { type: 'weather/subscribe_forecast', forecast_type: type, entity_id: entity });
-        s.pending.then((u) => { s.unsub = u; if (!s.cbs.size) { u(); this.subs.delete(k); } }, () => { this.subs.delete(k); });
-      } catch (e) { this.subs.delete(k); }
-    }
-    s.cbs.add(cb); if (s.data) cb(s.data);
-    return () => { s.cbs.delete(cb); if (!s.cbs.size && s.unsub) { s.unsub(); this.subs.delete(k); } };
-  },
-  cn: (k) => (HG_WX_COND[k] ? hgTr(HG_WX_COND[k][0], HG_WX_COND_EN[k]) : k),
-  still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
-  icon(cfg, cond, night, anim) {
-    const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
-    return `${cfg.icon_base}${anim && !this.still() ? '' : 'static-'}${f}.svg?v=${cfg.icon_v}`;
-  },
-  // kolor temperatury: zimno (niebieski) -> ciepło (pomarańcz)
-  tcol(t) {
-    const st = [[-10, [76, 130, 230]], [0, [90, 170, 235]], [10, [96, 196, 160]], [18, [245, 196, 70]], [26, [245, 130, 50]], [34, [230, 70, 60]]];
-    if (t <= st[0][0]) return `rgb(${st[0][1]})`; if (t >= st[st.length - 1][0]) return `rgb(${st[st.length - 1][1]})`;
-    for (let i = 1; i < st.length; i++) if (t <= st[i][0]) { const [a, ca] = st[i - 1], [b, cb] = st[i], k = (t - a) / (b - a); return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(',')})`; }
-  },
-  hm: (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' }),
-};
 class HGWeatherCard extends HGBase {
   defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgTr('Na zewnątrz', 'Outside'), icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1', variant: 'card' }; }
   ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun, c.forecast_sensor].filter(Boolean); }
@@ -5573,31 +5707,6 @@ hgReg('nuvio-weather-card', HGWeatherCard, hgTr('Nuvio – Pogoda', 'Nuvio – W
 
 /* ===== nuvio-net-card: widok „Sieć” (UniFi Network + Speedtest). Jedna klasa, sekcje: wan | gw | dev | wlan | cl.
    Konfiguracja jawna w build.py (CFG['net']); brakujące/niedostępne encje są pomijane. ===== */
-const HGConfirm = {
-  ask(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
-    return new Promise((res) => {
-      const x = document.createElement('div'); x.className = 'hg-confirm';
-      const sr = x.attachShadow({ mode: 'open' });
-      sr.innerHTML = `<style>${HG_BASE}${U(`
-:host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-036); animation:f .16s ease; }
-@keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
-.d{ width:min(380px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
-  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); display:flex; flex-direction:column; gap:16px; }
-.d b{ font-size:18px; font-weight:600; } .d p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); line-height:1.45; }
-.r{ display:flex; gap:8px; justify-content:flex-end; }
-.r button{ height:44px; padding:0 18px; border-radius:22px; font-size:var(--fs-sm); font-weight:600; background:var(--hg-bg-000000-006); color:var(--hg-tx-1e2023); }
-.r button.ok{ background:${danger ? 'var(--hg-ac-c62828)' : 'var(--hg-ac-1e2023)'}; color:var(--hg-tx-ffffff); }
-`)}</style><div class="d" role="alertdialog" aria-modal="true" aria-label="${H.esc(title)}"><b>${H.esc(title)}</b><p>${H.esc(text)}</p>
-        <div class="r">${info ? '' : `<button class="no" data-v="0">${hgTr('Anuluj', 'Cancel')}</button>`}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
-      const done = (v) => { document.removeEventListener('keydown', key); x.remove(); res(v); };
-      const key = (e) => { if (e.key === 'Escape') done(false); };
-      x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x) return done(false); const b = p.find((n) => n.dataset && n.dataset.v); if (b) done(b.dataset.v === '1'); });
-      document.addEventListener('keydown', key); document.body.appendChild(x);
-      setTimeout(() => { const n = sr.querySelector('.no') || sr.querySelector('.ok'); n && n.focus(); }, 30);
-    });
-  },
-};
-window.HGConfirm = window.HGConfirm || HGConfirm;
 const hgPlK = (n) => (hgCurLang() === 'en' ? (n === 1 ? 'client' : 'clients') : n === 1 ? 'klient' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'klienci' : 'klientów');
 const hgUp = (s) => { if (!s || !H.ok(s)) return null; const d = new Date(s.state); if (isNaN(d)) return null;
   const m = Math.max(0, (Date.now() - d) / 60000); if (m < 60) return `${Math.round(m)} min`; const hh = m / 60; if (hh < 48) return hgTr(`${Math.round(hh)} godz.`, `${Math.round(hh)} h`); return hgTr(`${Math.round(hh / 24)} dni`, `${Math.round(hh / 24)} days`); };
@@ -5839,49 +5948,6 @@ p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); } p b{ color:var
 }
 hgReg('nuvio-net-card', HGNetCard, hgTr('Nuvio – Sieć', 'Nuvio – Network'), hgTr('UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci', 'UniFi: internet, gateway, access points, Wi‑Fi and clients'));
 
-/* ===== komponenty ogólne: suwak, przycisk, lista encji, wybór, licznik, wskaźnik ===== */
-/* wspólne: przełącznik i przyciski w tokenach arkuszy (lime = główny, szkło = drugorzędny) */
-const HG_GEN_CSS = `
-.gsw{ all:unset; cursor:pointer; flex:none; position:relative; width:46px; height:28px; border-radius:999px; background:color-mix(in srgb, currentColor 16%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background-color 150ms; }
-.gsw .gkn{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 1px 4px var(--hg-sh-000000-030); transition:transform 150ms cubic-bezier(.2,0,0,1); }
-.gsw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; } .gsw[aria-checked=true] .gkn{ transform:translateX(18px); } .gsw:disabled{ opacity:.4; cursor:default; }
-.gb{ all:unset; cursor:pointer; box-sizing:border-box; flex:none; height:36px; padding:0 16px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:500;
-  background:color-mix(in srgb, currentColor 8%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background-color 150ms, transform 150ms, box-shadow 150ms; }
-.gb.ok, .gb[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; font-weight:600; } .gb:disabled{ opacity:.4; cursor:default; } .gb ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; }
-.gb.r{ width:44px; height:44px; padding:0; } .gb.r ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; }
-:is(.gb, .gsw, .gt, [role=slider], .gbig):focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-:is(.gb, .gbig):active:not(:disabled){ transform:scale(.96); }
-@media (prefers-reduced-motion:reduce){ .gsw .gkn, .gb, .gfl{ transition:none !important; } }
-.gic{ flex:none; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, currentColor 8%, transparent); transition:background-color 150ms, color 150ms; }
-.gic ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; } .gic.on{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
-button.gic{ all:unset; cursor:pointer; flex:none; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, currentColor 8%, transparent); }
-button.gic.on{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
-.gh{ display:flex; align-items:center; gap:12px; min-width:0; } .gn{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.gn b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.25; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; } .gn small{ font-size:12px; opacity:.66; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.gv{ font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; } .gv small{ font-size:12px; font-weight:500; opacity:.66; margin-left:2px; }
-.un{ opacity:.55; }
-`;
-const hgDom = (e) => String(e || '').split('.')[0];
-const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 'siren', 'humidifier', 'climate', 'media_player', 'water_heater', 'vacuum', 'lock', 'cover', 'valve'];
-const HG_PRESS_DOM = ['script', 'scene', 'button', 'input_button', 'automation'];
-/* model suwaka: wartość, zakres i zapis wg domeny */
-const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.attributes) || {}, on = !!s && !['off', 'unavailable', 'unknown', 'closed', 'idle', 'standby'].includes(s.state);
-  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgTr('Poziom', 'Level') };
-  if (!s) return r;
-  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgTr('Jasność', 'Brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
-    r.set = (v) => (v <= 0 ? H.call(h, 'light', 'turn_off', { entity_id: e }) : H.call(h, 'light', 'turn_on', { entity_id: e, brightness_pct: v })); }
-  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgTr('Głośność', 'Volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
-  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgTr('Prędkość', 'Speed');
-    r.set = (v) => (v <= 0 ? H.call(h, 'fan', 'turn_off', { entity_id: e }) : H.call(h, 'fan', 'set_percentage', { entity_id: e, percentage: Math.round(v) })); }
-  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgTr('Otwarcie', 'Position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
-    r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
-  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
-    r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
-  else r.ok = false;
-  return r; };
-const hgStepRound = (v, m) => { const n = Math.round((v - m.min) / m.step) * m.step + m.min, dp = (String(m.step).split('.')[1] || '').length; return +Math.max(m.min, Math.min(m.max, n)).toFixed(dp); };
-const hgFmtV = (v, m) => `${H.fmt(v, (String(m.step).split('.')[1] || '').length)}${m.unit ? `<small>${H.esc(m.unit)}</small>` : ''}`;
-
 /* --- suwak: jasność, głośność, prędkość wentylatora, pozycja rolety, input_number / number --- */
 class HGSliderCard extends HGBase {
   defaults() { return { entity: null, name: null, icon: null, mode: 'h' }; }
@@ -5925,12 +5991,6 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 }
 hgReg('nuvio-slider-card', HGSliderCard, hgTr('Nuvio – Suwak', 'Nuvio – Slider'), hgTr('Suwak dla jasności, głośności, wentylatora, rolety i input_number', 'Slider for brightness, volume, fan, cover and input_number'));
 
-/* --- przycisk: skrypt, scena, button.press, automatyzacja albo dowolna akcja (tap_action) --- */
-const hgPress = (node, h, e, act) => { if (act) return H.action(node, h, act); const d = hgDom(e);
-  if (d === 'script') return H.call(h, 'script', 'turn_on', { entity_id: e }); if (d === 'scene') return H.call(h, 'scene', 'turn_on', { entity_id: e });
-  if (d === 'button' || d === 'input_button') return H.call(h, d, 'press', { entity_id: e }); if (d === 'automation') return H.call(h, 'automation', 'trigger', { entity_id: e });
-  if (d === 'lock') { const s = H.st(h, e); return H.call(h, 'lock', s && s.state === 'locked' ? 'unlock' : 'lock', { entity_id: e }); }
-  return H.call(h, 'homeassistant', 'toggle', { entity_id: e }); };
 class HGButtonCard extends HGBase {
   defaults() { return { entity: null, name: null, icon: null, mode: 'tile', tap_action: null, subtitle: null }; }
   ents() { return this._config.entity ? [this._config.entity] : []; }
@@ -6082,36 +6142,6 @@ class HGFuelCard extends HGBase {
   onAct(a, t) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: t.dataset.e }); }
 }
 hgReg('nuvio-fuel-card', HGFuelCard, 'Nuvio – Ceny paliw', 'Ceny paliw z czujników (np. ceny maksymalne gov.pl) z trendem na jutro');
-
-/* ===== Karty ogólne 0.9: zegar, notatka, obraz / iframe, baterie, otwarcia, światło, historia, termostat, odkurzacz, mini odtwarzacz, duża wartość, słońce, aktualizacje =====
-   Każda karta: szkło, ha-card jest kontenerem (container queries), więc treść dopasowuje się do rozmiaru S / M / L kafelka. */
-const HG_G14_CSS = HG_GEN_CSS + U(`
-ha-card.glass{ container-type:inline-size; height:auto; min-height:100%; display:flex; flex-direction:column; gap:10px; padding:14px; min-width:0; }
-.ph{ display:flex; flex-direction:column; gap:4px; font-size:12.5px; opacity:.7; } .ph b{ font-size:14px; opacity:1; }
-.ls{ display:flex; flex-direction:column; gap:2px; min-width:0; overflow:auto; }
-.li{ display:flex; align-items:center; gap:10px; min-height:40px; padding:4px 2px; min-width:0; } .li + .li{ border-top:1px solid color-mix(in srgb, currentColor 8%, transparent); }
-.li > ha-icon{ width:20px; height:20px; flex:none; opacity:.85; } .li .nm{ flex:1; min-width:0; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.li .vl{ flex:none; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; } .li.al .vl, .li.al > ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); }
-.bar{ position:relative; flex:none; width:64px; height:6px; border-radius:3px; background:color-mix(in srgb, currentColor 12%, transparent); overflow:hidden; } .bar i{ position:absolute; inset:0 auto 0 0; border-radius:3px; background:var(--hg-accent); }
-.bar.lo i{ background:var(--hg-bg-ff6b57); } .bar.md i{ background:var(--hg-bg-f5b83d); }
-.big{ font-size:44px; font-weight:600; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; } .big small{ font-size:.4em; font-weight:500; opacity:.7; margin-left:3px; letter-spacing:0; }
-.row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; } .sp{ flex:1; }
-.cnt{ margin-left:auto; flex:none; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; background:color-mix(in srgb, currentColor 8%, transparent); } .cnt.al{ background:var(--hg-accent); color:var(--hg-on-accent); }
-input[type=range].rg{ -webkit-appearance:none; appearance:none; width:100%; height:44px; background:transparent; margin:0; }
-input[type=range].rg::-webkit-slider-runnable-track{ height:14px; border-radius:7px; background:linear-gradient(90deg, var(--hg-accent) var(--v, 0%), color-mix(in srgb, currentColor 12%, transparent) var(--v, 0%)); }
-input[type=range].rg::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; margin-top:-6px; border-radius:50%; background:var(--hg-bg-ffffff); box-shadow:0 2px 8px var(--hg-sh-000000-030); }
-input[type=range].rg::-moz-range-track{ height:14px; border-radius:7px; background:color-mix(in srgb, currentColor 12%, transparent); } input[type=range].rg::-moz-range-progress{ height:14px; border-radius:7px; background:var(--hg-accent); }
-input[type=range].rg::-moz-range-thumb{ width:26px; height:26px; border:0; border-radius:50%; background:var(--hg-bg-ffffff); }
-input[type=range].rg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; border-radius:8px; }
-@container (max-width: 240px){ ha-card.glass{ padding:12px; gap:8px; } .big{ font-size:34px; } .bar{ width:40px; } .hide-s{ display:none !important; } .gic{ width:34px; height:34px; } .gn b{ font-size:14px; } }
-@container (max-width: 170px){ .big{ font-size:28px; } .li .vl{ font-size:12px; } .bar{ display:none; } .hide-xs{ display:none !important; } .gb{ padding:0 10px; } }
-@container (min-width: 420px){ .big{ font-size:56px; } }
-`);
-const hgEnts = (h, dom, dc) => Object.keys(h.states).filter((e) => (!dom || dom.includes(hgDom(e))) && (!dc || dc.includes(h.states[e].attributes.device_class)) && !((h.entities || {})[e] || {}).hidden);
-const hgAgo14 = (iso) => { const t = Date.parse(iso); if (!isFinite(t)) return ''; const m = Math.round((Date.now() - t) / 60000);
-  return m < 1 ? hgTr('przed chwilą', 'just now') : m < 60 ? hgTr(`${m} min temu`, `${m} min ago`) : m < 1440 ? hgTr(`${Math.round(m / 60)} godz. temu`, `${Math.round(m / 60)} h ago`) : hgTr(`${Math.round(m / 1440)} dni temu`, `${Math.round(m / 1440)} d ago`); };
-const hgMore = (n, e) => { if (e) H.fire(n, 'hass-more-info', { entityId: e }); };
-const hgHead = (ic, nm, sub, on, right = '') => `<div class="gh"><span class="gic${on ? ' on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${right}</div>`;
 
 /* --- zegar --- */
 class HGClockCard extends HGBase {

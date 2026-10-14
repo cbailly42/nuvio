@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.11.1-a3e635?style=flat-square" alt="v0.11.1">
+  <img src="https://img.shields.io/badge/version-v0.11.2-a3e635?style=flat-square" alt="v0.11.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -237,6 +237,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Układy per urządzenie | osobny układ dla telefonu, tabletu i komputera zamiast jednego wspólnego | planowane |
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
+| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2 |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -322,15 +323,31 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu
 ```
 
+### Układ źródeł
+
+Źródła to zwykłe pliki JavaScript, które `tools/build.py` skleja w stałej kolejności w jeden bundle (jeden wspólny zakres, bez importów):
+
+| Folder | Zawartość |
+|---|---|
+| `src/parts/hg-core`, `hg-styles`, `hg-select`, `hg-oss` | klasa bazowa `HGBase`, tokeny motywu, szklany select, wspólne funkcje |
+| `src/parts/shared/` | funkcje używane przez więcej niż jedną kartę (pogoda, kalendarz, model pokoi, kontrolki ogólne…) |
+| `src/parts/cards/` | jedna karta w jednym pliku, na przykład `cards/light-card.part.js` |
+| `src/parts/hg-page`, `hg-edit`, `hg-wall`… | strona pulpitu, tryb edycji, tryb tabletu ściennego, kopia zapasowa, Assist |
+
+Nową kartę dodajesz jako `src/parts/cards/<nazwa>-card.part.js` i dopisujesz do listy `CARDS` w `tools/build.py`. Kolejność ma znaczenie: kod wykonywany przy ładowaniu bundla (na przykład `class X extends Y`) może używać tylko tego, co definiuje wcześniejszy plik.
+
 Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podbija wersję (`package.json`, README), buduje, sprawdza `dist/nuvio.js` (`node --check`) i guard, robi commit `chore: release X.Y.Z`, tworzy adnotowany tag `vX.Y.Z`, wypycha `main` i tag oraz tworzy wydanie GitHub bez załączników (HACS instaluje wtedy płaski `dist/`):
 
 ```bash
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.11.1 -m "Nuvio 0.11.1" && git push origin v0.11.1`.
+Sam tag ręcznie: `git tag -a v0.11.2 -m "Nuvio 0.11.1" && git push origin v0.11.2`.
 
 ## Lista zmian
+
+### 0.11.2
+- Zmieniono (rozwój): każda karta ma teraz własny plik źródłowy w `src/parts/cards/` (57 plików zamiast 14), a funkcje wspólne dla kilku kart są w `src/parts/shared/`. Pulpit działa dokładnie tak samo: zbudowany bundle zawiera ten sam kod. To pierwszy krok nowej biblioteki komponentów i nowego wyglądu.
 
 ### 0.11.1
 - Naprawiono: na tabletach (iPad i inne ekrany dotykowe od 768 do 1180 px, w obu ułożeniach) pulpit używa układu tabletu, w którym przewija się strona, a nie szklany panel. Widoki pokoi nie ucinają już kart u góry, kolumny nie nachodzą na siebie i nie ma przesuniętego rozmytego bloku; karty układają się w siatce z najwyżej dwiema kolumnami.

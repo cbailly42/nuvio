@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.11.1-a3e635?style=flat-square" alt="v0.11.1">
+  <img src="https://img.shields.io/badge/version-v0.11.2-a3e635?style=flat-square" alt="v0.11.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -237,6 +237,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Per-device layouts | different layout for phone, tablet and desktop instead of one shared layout | planned |
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
+| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2 |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -322,15 +323,31 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # fails if any house-specific id slipped into dist
 ```
 
+### Source layout
+
+The source is plain JavaScript files that `tools/build.py` joins, in a fixed order, into one bundle (one shared scope, no imports):
+
+| Folder | Content |
+|---|---|
+| `src/parts/hg-core`, `hg-styles`, `hg-select`, `hg-oss` | base class `HGBase`, theme tokens, glass select, shared helpers |
+| `src/parts/shared/` | helpers used by more than one card (weather, calendar, rooms model, generic controls…) |
+| `src/parts/cards/` | one card per file, for example `cards/light-card.part.js` |
+| `src/parts/hg-page`, `hg-edit`, `hg-wall`… | dashboard page, edit mode, wall tablet mode, backup, Assist |
+
+A new card goes into `src/parts/cards/<name>-card.part.js` and is added to the `CARDS` list in `tools/build.py`. Load order matters: code that runs when the bundle loads (for example `class X extends Y`) may only use what an earlier file defines.
+
 There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z` bumps the version (`package.json`, README), builds, checks `dist/nuvio.js` (`node --check`) and runs the hardcode guard, commits `chore: release X.Y.Z`, creates the annotated tag `vX.Y.Z`, pushes `main` and the tag, and creates a GitHub release without attached files (HACS then installs the full flat `dist/`):
 
 ```bash
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.11.1 -m "Nuvio 0.11.1" && git push origin v0.11.1`.
+Only tagging by hand: `git tag -a v0.11.2 -m "Nuvio 0.11.1" && git push origin v0.11.2`.
 
 ## Changelog
+
+### 0.11.2
+- Changed (development): every card now lives in its own source file in `src/parts/cards/` (57 files instead of 14), and helpers shared by several cards are in `src/parts/shared/`. The dashboard works exactly as before: the built bundle contains the same code. This is the first step of the new component library and design.
 
 ### 0.11.1
 - Fixed: on tablets (iPad and other touch screens from 768 to 1180 px, both orientations) the dashboard uses the tablet layout, where the page scrolls instead of the glass panel. Room views no longer clip cards at the top, overlap columns or show a misplaced blurred block; they use a grid of up to two columns.

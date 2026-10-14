@@ -1,0 +1,164 @@
+/* shared/areas: Model pokoi (obszary, urządzenia i encje HA) używany przez karty pokoi, stronę i edytor. */
+const hgGlob = (pat) => new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+/* ===================== POKOJE (obszary HA) ===================== */
+/* Model pokoi: rejestr obszarów + rejestr encji/urządzeń z hass (hass.areas / hass.entities / hass.devices, bez dodatkowych zapytań).
+   Encja należy do obszaru: CFG assign (tylko wyświetlanie, rejestr HA bez zmian) > area_id encji > area_id urządzenia; merge łączy duplikaty obszarów.
+   Pomijane: ukryte, diagnostyczne/konfiguracyjne (entity_category), wyłączone (nie ma ich w hass.entities), platformy z exclude_platforms. */
+const HG_AREA_ICONS = [[/salon|living|wypoczyn/, 'mdi:sofa-outline'], [/kuchni|kitchen/, 'mdi:countertop-outline'], [/lazienk|bath|toalet|\bwc\b/, 'mdi:shower-head'],
+  [/sypialni|bedroom/, 'mdi:bed-king-outline'], [/biur|office|gabinet/, 'mdi:desk'], [/garaz|garage/, 'mdi:garage-variant'], [/ogrod|garden/, 'mdi:flower-outline'],
+  [/taras|balkon|balcony/, 'mdi:balcony'], [/ganek|weranda|porch/, 'mdi:home-import-outline'], [/wejsc|entrance|przedpok|hall/, 'mdi:door-open'],
+  [/piwnic|basement/, 'mdi:stairs-down'], [/pralni|laundry/, 'mdi:washing-machine'], [/korytarz|schod|stairs/, 'mdi:stairs'], [/parter|ground/, 'mdi:home-floor-0'],
+  [/pietro|poddasz|floor/, 'mdi:home-floor-1'], [/eliann|dziec|kids/, 'mdi:teddy-bear'], [/siec|network/, 'mdi:lan'], [/jadal|dining/, 'mdi:silverware-fork-knife']];
+const hgNorm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
+const HG_SKIP_DOM = new Set(['event', 'notify', 'update', 'device_tracker', 'tts', 'stt', 'conversation', 'ai_task', 'assist_satellite', 'infrared', 'zone', 'person',
+  'automation', 'script', 'sun', 'weather', 'calendar', 'image', 'todo', 'wake_word', 'tag', 'input_text', 'input_datetime', 'input_number', 'input_select', 'counter',
+  'timer', 'schedule', 'remote', 'group', 'persistent_notification', 'alarm_control_panel', 'date', 'time', 'datetime']);
+const HG_CTRL_DOM = new Set(['light', 'switch', 'climate', 'cover', 'fan', 'lock', 'humidifier', 'media_player', 'vacuum', 'water_heater', 'valve', 'lawn_mower', 'siren', 'camera']);
+const HG_LIGHTISH = /(swiatl|swiatel|oswietl|lamp|\bled\b|light|wlacznik|zarowk|kinkiet|zyrandol)/;
+const HG_TEMP_BAD = /(water|woda|wody|kettle|czajnik|boiler|bojler|heater|cpu|chip|procesor|battery|bateri|inverter|falownik|motor|silnik|pralk|washer|dryer|suszark|lodowk|fridge|zamrazark|freezer|piekarnik|oven|soc\b|core)/;
+const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', 'Lights'], ['clim', 'Klimatyzacja', 'mdi:thermostat', 'Climate'], ['media', 'Media', 'mdi:speaker', 'Media'],
+  ['cover', 'Rolety', 'mdi:window-shutter', 'Covers'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', 'Switches'], ['sens', 'Czujniki', 'mdi:gauge', 'Sensors'],
+  ['mot', 'Ruch i obecność', 'mdi:motion-sensor', 'Motion & presence'], ['door', 'Drzwi i okna', 'mdi:door', 'Doors & windows'], ['cam', 'Kamery', 'mdi:cctv', 'Cameras'], ['rob', 'Roboty', 'mdi:robot-vacuum', 'Robots'],
+  ['misc', 'Inne', 'mdi:tune-variant', 'Other']];
+const hgPl = (n, one, few, many, en1, enN) => en1 && hgCurLang() === 'en' ? `${n} ${n === 1 ? en1 : enN || en1 + 's'}` : `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
+
+const HGAreas = {
+  _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
+  /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
+  _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
+  /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
+  /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
+  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own) || (cfg && this._gs && this._gs.has(cfg))) return cfg;
+    const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
+    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
+  model(h, cfg) {
+    cfg = this.glob(cfg) || this._e;
+    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
+    const m0 = this._memo.get(cfg);
+    if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
+    const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
+    const merge = cfg.merge || {}, assign = Object.assign({}, cfg.assign || {}), names = cfg.names || {}, icons = cfg.icons || {};
+    const exP = new Set(cfg.exclude_platforms || ['browser_mod']);
+    const exc = (cfg.exclude || []).map(hgGlob), unEx = (cfg.unassigned_exclude || []).map(hgGlob);
+    const list = [], byId = {};
+    const add = (id, name, icon, virtual) => {
+      if (byId[id] || (cfg.hide || []).includes(id)) return;
+      const a = { id, name, icon: icon || (HG_AREA_ICONS.find(([re]) => re.test(hgNorm(name) + ' ' + id)) || [0, 'mdi:home-outline'])[1], virtual: !!virtual, ents: [], strip: [name] };
+      byId[id] = a; list.push(a);
+    };
+    for (const a of Object.values(areasReg)) if (!merge[a.area_id]) add(a.area_id, names[a.area_id] || a.name, icons[a.area_id] || a.icon);
+    for (const [from, to] of Object.entries(merge)) { const a = areasReg[from]; if (a && byId[to]) byId[to].strip.push(a.name); }
+    for (const v of cfg.virtual || []) add(v.id, v.name, v.icon, true);
+    for (const v of cfg.virtual || []) for (const e of v.entities || []) if (!assign[e]) assign[e] = v.id;
+    const un = [];
+    for (const e of Object.keys(h.states)) {
+      const dom = e.slice(0, e.indexOf('.')), r = reg[e];
+      const forced = assign[e];
+      if (!forced) {
+        if (!r || r.hidden || r.entity_category || exP.has(r.platform) || HG_SKIP_DOM.has(dom) || exc.some((x) => x.test(e))) continue;
+      }
+      let aid = forced || (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null;
+      if (aid && merge[aid]) aid = merge[aid];
+      if (aid && byId[aid]) byId[aid].ents.push(e);
+      else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
+    }
+    if (cfg.unassigned !== false && un.length) { add('_none', hgTr('Bez pokoju', 'No room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
+    for (const a of list) this._classify(h, a, cfg);
+    const coll = new Intl.Collator(HG_LOC());
+    const ord = cfg.order || [];
+    list.sort((a, b) => {
+      const oa = ord.indexOf(a.id), ob = ord.indexOf(b.id);
+      if (oa >= 0 || ob >= 0) return (oa < 0 ? 999 : oa) - (ob < 0 ? 999 : ob);
+      const ta = a.id === '_none' ? 3 : a.id === 'siec' ? 2 : a.ents.length ? 0 : 1, tb = b.id === '_none' ? 3 : b.id === 'siec' ? 2 : b.ents.length ? 0 : 1;
+      return ta - tb || coll.compare(a.name, b.name);
+    });
+    // stała lista pokoi z CFG (kolejność jak w CFG); bez niej – wszystkie obszary
+    const rooms = Array.isArray(cfg.rooms) ? cfg.rooms.map((id) => byId[id]).filter(Boolean) : list;
+    const inRoom = new Set(rooms.flatMap((a) => a.ents));
+    const others = (cfg.others || []).filter((e, i, arr) => h.states[e] && arr.indexOf(e) === i && !inRoom.has(e));
+    const m = { key, list, byId, rooms, others };
+    this._memo.set(cfg, m);
+    return m;
+  },
+  _classify(h, a, cfg) {
+    const reg = h.entities || {}, sec = {};
+    for (const [k] of HG_SEC) sec[k] = [];
+    const robDev = new Set(a.ents.filter((e) => /^(vacuum|lawn_mower)\./.test(e)).map((e) => reg[e] && reg[e].device_id).filter(Boolean));
+    const misc = new Map(), inA = new Set(a.ents);
+    // ta sama fizyczna lampa raz: grupa (light z atrybutem entity_id) pomijana, gdy jej członek jest w tym pokoju
+    a.ents = a.ents.filter((e) => { const m = e.startsWith('light.') && h.states[e].attributes.entity_id; return !(Array.isArray(m) && m.some((x) => x !== e && inA.has(x))); });
+    for (const e of a.ents) {
+      const s = h.states[e], dom = e.slice(0, e.indexOf('.')), r = reg[e] || {}, at = s.attributes, dc = at.device_class;
+      const nmN = hgNorm((at.friendly_name || '') + ' ' + e);
+      if (r.device_id && robDev.has(r.device_id) && dom !== 'vacuum' && dom !== 'lawn_mower') continue;     // robot: jedna pozycja zamiast kilkudziesięciu encji
+      if (cfg.room_robots === false && (dom === 'vacuum' || dom === 'lawn_mower')) continue;               // roboty tylko w widoku Roboty
+      let k = 'misc';
+      if (dom === 'light') k = 'light';
+      else if (dom === 'switch') k = HG_LIGHTISH.test(nmN) ? 'light' : 'sw';
+      else if (['fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'].includes(dom)) k = 'sw';
+      else if (dom === 'climate' || dom === 'water_heater') k = 'clim';
+      else if (dom === 'media_player') k = 'media';
+      else if (dom === 'cover') k = 'cover';
+      else if (dom === 'camera') k = 'cam';
+      else if (dom === 'vacuum' || dom === 'lawn_mower') k = 'rob';
+      else if (dom === 'binary_sensor') k = ['motion', 'occupancy', 'presence'].includes(dc) ? 'mot' : ['door', 'window', 'opening', 'garage_door'].includes(dc) ? 'door' : 'sens';
+      else if (dom === 'sensor') k = dc || at.unit_of_measurement || isFinite(parseFloat(s.state)) ? 'sens' : 'misc';
+      if (k === 'misc') {
+        const g = r.device_id || e;
+        if (!misc.has(g)) misc.set(g, { dev: r.device_id || null, ents: [] });
+        misc.get(g).ents.push(e);
+      } else sec[k].push(e);
+    }
+    sec.misc = [...misc.values()];
+    // to samo urządzenie pod kilkoma encjami o tej samej (pełnej) nazwie (np. TV w dwóch integracjach) -> jedna pozycja, dostępna ma pierwszeństwo
+    for (const k of ['light', 'sw', 'media']) {
+      const best = new Map();
+      const fn = (e) => hgNorm((cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e));   // pełna nazwa: różne urządzenia o tej samej nazwie po obcięciu pokoju zostają
+      for (const e of sec[k]) { const n = fn(e), b = best.get(n); if (!b || (!H.ok(h.states[b]) && H.ok(h.states[e]))) best.set(n, e); }
+      sec[k] = sec[k].filter((e) => best.get(fn(e)) === e);
+    }
+    a.sec = sec;
+    // temperatura / wilgotność pokoju: nadpisanie z CFG > czujnik otoczenia > bieżąca temperatura klimatyzacji/grzejnika
+    const ov = (cfg.sensors || {})[a.id] || {};
+    const pick = (dcx) => sec.sens.filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dcx && !HG_TEMP_BAD.test(hgNorm(h.states[e].attributes.friendly_name + ' ' + e)));
+    const ts = pick('temperature'), hs = pick('humidity');
+    const cl = sec.clim.filter((e) => e.startsWith('climate.'));
+    a.temp = ov.temperature === '-' ? null : ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
+    a.hum = ov.humidity === '-' ? null : ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
+    if (a.id === '_none') { a.temp = null; a.hum = null; }
+    const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
+    a.lights = sec.light;
+    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+  },
+  val(h, ref) {
+    if (!ref) return null;
+    const s = h.states[ref.e]; if (!H.ok(s)) return null;
+    const v = parseFloat(ref.attr ? s.attributes[ref.attr] : s.state);
+    return isFinite(v) ? v : null;
+  },
+  env(h, a) {
+    const t = this.val(h, a.temp), u = this.val(h, a.hum);
+    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
+  },
+  /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
+  name(h, e, a, cfg, fb) {
+    const n0 = (cfg && cfg.entity_names && cfg.entity_names[e]) || H.name(h, e, e);
+    let n = n0;
+    // prefiks nazwy urządzenia („Mi Air Purifier 3/3H Temperatura” -> „Temperatura”), jeśli coś zostaje
+    const r = !(cfg && cfg.entity_names && cfg.entity_names[e]) && h.entities && h.entities[e], d = r && r.device_id && h.devices && h.devices[r.device_id];
+    const dn = d && (d.name_by_user || d.name);
+    if (dn && n.toLowerCase().startsWith(dn.toLowerCase() + ' ')) { const rest = n.slice(dn.length).replace(/^[\s\-–·:*]+/, ''); if (rest) n = rest; }
+    n = n.replace(/^\*\s*/, '').replace(/\s\*\s/g, ' ');
+    for (const p of (a && a.strip) || []) {
+      const re = new RegExp('^\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\-–·:_]*', 'i');
+      n = n.replace(re, '');
+    }
+    for (const p of (a && a.strip) || []) n = n.replace(new RegExp('\\s+[-–·:]?\\s*' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$)', 'ig'), ' ');
+    n = n.replace(/\s+(zajętość|occupancy|contact|kontakt)$/i, '').replace(/\b(\p{L}+)\s+\1$/iu, '$1').replace(/^[\s\-–·:]+|[\s\-–·:]+$/g, '');
+    n = n.replace(/\s{2,}/g, ' ').trim();
+    if (!n) n = fb || n0;
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  },
+  areaFromUrl() { try { return new URLSearchParams(location.search).get('area'); } catch (e) { return null; } },
+};
+window.__hgAreas = HGAreas;

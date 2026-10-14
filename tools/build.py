@@ -2,7 +2,83 @@
 """Build dist/home-glass.js from src/parts (tokenizer -> concat). No Home Assistant access, no secrets."""
 import os, sys, shutil, subprocess, hashlib, tempfile, json
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js'] + [f'hg-cards{i}.part.js' for i in range(1, 15)] + ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
+# Load order matters: one shared script scope, so a file may only use (at load time) what an earlier file defines.
+# shared/ = helpers used by more than one card; cards/ = one card per file, in this order (appliance, stairs and cwu extend room).
+CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
+SHARED = [
+    'shared/card-utils.part.js',
+    'shared/climate-modes.part.js',
+    'shared/stats.part.js',
+    'shared/avatar.part.js',
+    'shared/calendar.part.js',
+    'shared/relative-time.part.js',
+    'shared/camera.part.js',
+    'shared/areas.part.js',
+    'shared/media.part.js',
+    'shared/energy-prefs.part.js',
+    'shared/weather.part.js',
+    'shared/confirm.part.js',
+    'shared/generic-controls.part.js',
+    'shared/compact-cards.part.js',
+]
+CARDS = [
+    'cards/energy-card.part.js',
+    'cards/ac-card.part.js',
+    'cards/light-card.part.js',
+    'cards/switch-card.part.js',
+    'cards/solar-card.part.js',
+    'cards/bars-card.part.js',
+    'cards/media-card.part.js',
+    'cards/person-card.part.js',
+    'cards/link-card.part.js',
+    'cards/map-card.part.js',
+    'cards/people-card.part.js',
+    'cards/month-card.part.js',
+    'cards/agenda-card.part.js',
+    'cards/camera-card.part.js',
+    'cards/cameras-card.part.js',
+    'cards/alarm-card.part.js',
+    'cards/sensors-card.part.js',
+    'cards/scenes-card.part.js',
+    'cards/power-card.part.js',
+    'cards/script-card.part.js',
+    'cards/week-card.part.js',
+    'cards/players-card.part.js',
+    'cards/phases-card.part.js',
+    'cards/energy-stats-card.part.js',
+    'cards/pv-card.part.js',
+    'cards/robots-card.part.js',
+    'cards/areas-card.part.js',
+    'cards/room-card.part.js',
+    'cards/appliance-card.part.js',
+    'cards/stairs-card.part.js',
+    'cards/cwu-card.part.js',
+    'cards/weather-card.part.js',
+    'cards/net-card.part.js',
+    'cards/slider-card.part.js',
+    'cards/button-card.part.js',
+    'cards/entities-card.part.js',
+    'cards/select-card.part.js',
+    'cards/stepper-card.part.js',
+    'cards/gauge-card.part.js',
+    'cards/fuel-card.part.js',
+    'cards/clock-card.part.js',
+    'cards/note-card.part.js',
+    'cards/image-card.part.js',
+    'cards/battery-card.part.js',
+    'cards/openings-card.part.js',
+    'cards/lamp-card.part.js',
+    'cards/history-card.part.js',
+    'cards/thermo-card.part.js',
+    'cards/vacuum-card.part.js',
+    'cards/media-mini-card.part.js',
+    'cards/value-card.part.js',
+    'cards/sun-card.part.js',
+    'cards/updates-card.part.js',
+    'cards/assist-card.part.js',
+]
+PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
+PARTS = CORE + SHARED + CARDS + PAGE
 import re
 def brand(js):
     """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build."""

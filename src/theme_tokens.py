@@ -126,7 +126,7 @@ def convert(src, fn):
             if prop not in ('?',) and role == 'ac' and not jm: role = 'bg' if prop == '?' else role
         sel, blk = block_info(src, s)
         tag = ''
-        if sel is not None and any(re.search(k, sel) for k in KEEP) and fn in ('hg-page.part.js', 'hg-styles.part.js', 'hg-cards4.part.js'): tag = 'k'
+        if sel is not None and any(re.search(k, sel) for k in KEEP) and fn in ('hg-page.part.js', 'hg-styles.part.js', 'shared/camera.part.js', 'cards/camera-card.part.js', 'cards/cameras-card.part.js'): tag = 'k'
         elif sel in ('.tg i', '.lv', '.chip.act', '.tab.act sup', '.on .bd', '.ill .ring .in'): tag = 'k' if sel != '.ill .ring .in' else ''
         if not tag and role == 'tx' and blk:
             r, g, b, a = parse(lit); h, L, sat = hls(r, g, b)
@@ -147,8 +147,9 @@ def convert(src, fn):
 OVR = json.load(open(os.path.join(D, 'theme_overrides.json'))) if os.path.exists(os.path.join(D, 'theme_overrides.json')) else {}
 
 if __name__ == '__main__':
-    for f in sorted(glob.glob(os.path.join(D, 'theme_src', '*.part.js'))):
-        fn = os.path.basename(f)
+    for f in sorted(glob.glob(os.path.join(D, 'theme_src', '**', '*.part.js'), recursive=True)):
+        fn = os.path.relpath(f, os.path.join(D, 'theme_src')).replace(os.sep, '/')
+        os.makedirs(os.path.dirname(os.path.join(D, 'www', fn)), exist_ok=True)
         if fn == 'hg-core.part.js':
             open(os.path.join(D, 'www', fn), 'w').write(open(f).read()); continue
         open(os.path.join(D, 'www', fn), 'w').write(convert(open(f).read(), fn))
