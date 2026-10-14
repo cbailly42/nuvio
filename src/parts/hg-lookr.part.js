@@ -71,7 +71,7 @@ const HGRoomsX = window.HGRoomsX = {
     if (a === 'rx-fa') { H2.fuel.push({ label: '', entity: '' }); this.hdirty = true; return page._eLook(); }
     if (a === 'rx-fd') { H2.fuel.splice(+b.dataset.i, 1); this.hdirty = true; return page._eLook(); }
     if (a === 'rx-hsave') { const W = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {});
-      if (H2.hub === false) W.hub = false; else if (H2.hub.title || H2.hub.subtitle) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}) }; else delete W.hub;
+      if (H2.hub === false) W.hub = false; else { const P0 = W.hub && W.hub.persons; if (H2.hub.title || H2.hub.subtitle || P0) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}), ...(P0 ? { persons: P0 } : {}) }; else delete W.hub; }
       const F = H2.fuel.filter((f) => f.entity).map((f) => ({ label: f.label || H.name(h, f.entity), entity: f.entity, ...(f.change ? { change: f.change } : {}) })); if (F.length) W.fuel = F; else delete W.fuel;
       const P = H2.phone.filter(Boolean); if (P.length) W.phone = [...new Set(P)]; else delete W.phone; W.ts = Date.now(); this.hdirty = false; this.hd = null; await HGL.save(h);
       page._eToast(hgTr('Zapisano nagłówek – odświeżanie…', 'Header saved – reloading…')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }

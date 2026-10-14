@@ -35,9 +35,9 @@ const HGAreas = {
   _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
   /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
   /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
-  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own)) return cfg;
+  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own) || (cfg && this._gs && this._gs.has(cfg))) return cfg;
     const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
-    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); } return v; },
+    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
   model(h, cfg) {
     cfg = this.glob(cfg) || this._e;
     const key = [h.entities, h.devices, h.areas, this._cnt(h)];
@@ -261,7 +261,7 @@ class HGAreasCard extends HGBase {
     }
     // „Pozostałe”: kompaktowe przełączniki encji spoza 6 pokoi (każda raz)
     const oth = m.others.length ? `<div class="oth" role="group" aria-label="${hgTr('Pozostałe', 'Other')}"><b>${hgTr('Pozostałe', 'Other')}</b>${m.others.map((e) => {
-      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, c.areas);
+      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, HGAreas.glob(c.areas));
       const ic = /schod|stair/.test(e) ? 'mdi:stairs-down' : /taras|balkon|balcony|terrace/.test(e) ? 'mdi:balcony' : 'mdi:lightbulb-outline';
       return `<button class="pl ${on ? 'on' : ''}" data-act="tog" data-e="${H.esc(e)}" ${ok ? '' : 'disabled'} aria-pressed="${on}" aria-label="${H.esc(`${nm} – ${ok ? (on ? hgTr('wyłącz', 'turn off') : hgTr('włącz', 'turn on')) : hgTr('niedostępne', 'unavailable')}`)}">${H.icon(ic)}<span>${H.esc(nm)}</span></button>`;
     }).join('')}</div>` : '';
@@ -647,7 +647,7 @@ ha-card.wmc{ gap:var(--s2); }
 @media (prefers-reduced-motion: reduce){ .wmv *, .wmv{ animation:none !important; transition:none !important; } }
 `);
   }
-  _nm(e, fb) { return HGAreas.name(this._hass, e, this._a, this._config.areas, fb); }
+  _nm(e, fb) { return HGAreas.name(this._hass, e, this._a, HGAreas.glob(this._config.areas), fb); }
   _num(s) {
     const at = s.attributes, u = at.unit_of_measurement || '', v = parseFloat(s.state);
     if (!isFinite(v) || !/^-?\d+(\.\d+)?(e-?\d+)?$/i.test(String(s.state).trim())) {
@@ -906,8 +906,8 @@ ha-card.wmc{ gap:var(--s2); }
   render() {
     const h = this._hass, a = this._area(); this._a = a;
     if (!a) return `<ha-card class="glass"><div class="empty"><b>${hgTr('Nie znaleziono pokoju', 'Room not found')}</b>${hgTr('Ten pokój nie istnieje albo został usunięty.', 'This room does not exist or has been deleted.')}<button class="lnk" data-act="rooms">${H.icon('mdi:chevron-left')}${hgTr('Wszystkie pokoje', 'All rooms')}</button></div></ha-card>`;
-    const ST = (this._config.areas || {}).stairs, isSt = ST && ST.room === a.id;
-    const CW = (this._config.areas || {}).cwu, isCw = CW && CW.room === a.id;
+    const ST = (HGAreas.glob(this._config.areas) || {}).stairs, isSt = ST && ST.room === a.id;
+    const CW = (HGAreas.glob(this._config.areas) || {}).cwu, isCw = CW && CW.room === a.id;
     const SX = new Set(isSt ? [ST.group, ST.bottom.light, ST.top.light, ST.bottom.motion, ST.top.motion] : []);
     if (isCw) [CW.heater, CW.heating, CW.keep, CW.power, CW.remaining, CW.consumption, ...CW.switches.map((x) => x[0]), ...(CW.up ? [CW.up.tank, CW.up.switch, CW.up.power, ...CW.up.co.map((x) => x[0])] : [])].forEach((e) => SX.add(e));
     const RS = 'room:' + a.id, RL = HGL.get(RS), SWP = RL.conf._swap || {};
@@ -1017,8 +1017,8 @@ ha-card.wmc{ gap:var(--s2); }
     for (const slot of this.$.querySelectorAll('.camslot[data-cam]')) {
       const e = slot.dataset.cam; kc.add(e);
       let el = this._cams.get(e);
-      if (!el) { el = document.createElement('hg-camera-card'); const A = this._config.areas || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
-        el.setConfig({ entity: e, name: ((this._config.areas || {}).entity_names || {})[e] || this._nm(e, hgTr('Kamera', 'Camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
+      if (!el) { el = document.createElement('hg-camera-card'); const A = HGAreas.glob(this._config.areas) || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
+        el.setConfig({ entity: e, name: ((HGAreas.glob(this._config.areas) || {}).entity_names || {})[e] || this._nm(e, hgTr('Kamera', 'Camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
