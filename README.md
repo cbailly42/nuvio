@@ -260,6 +260,7 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ### 0.3.18
 - Fixed: the weather in the header uses the animated icon again (0.3.17 switched it to the still icon by mistake; it was not the cause of the glow band).
+- Includes the 0.3.17 changes, which were never tagged: no glow band on half-width panel views, and the tab and rail indicators no longer keep a permanent GPU layer.
 
 ### 0.3.17
 - Changed: the tab and rail indicators no longer keep a permanent GPU layer (they are promoted only while they animate).

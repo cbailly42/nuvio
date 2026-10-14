@@ -260,6 +260,7 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ### 0.3.18
 - Poprawka: pogoda w nagłówku znów ma animowaną ikonę (0.3.17 omyłkowo zmieniła ją na statyczną; nie ona powodowała poświatę).
+- Zawiera zmiany z 0.3.17, która nie dostała tagu: brak poświaty na widokach z panelem o połowie szerokości, a wskaźniki zakładek i szyny nie trzymają stałej warstwy GPU.
 
 ### 0.3.17
 - Zmiana: wskaźniki zakładek i szyny nie trzymają stałej warstwy GPU (dostają ją tylko na czas animacji).
