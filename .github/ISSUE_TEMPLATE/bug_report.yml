@@ -1,0 +1,87 @@
+name: "🐞 Błąd / Bug report"
+description: "Zgłoś problem z Nuvio. Report a problem with Nuvio."
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dzięki za zgłoszenie! Przed wysłaniem sprawdź, czy podobny problem nie został już zgłoszony.
+        Thanks for reporting! Please check existing issues first.
+  - type: input
+    id: version
+    attributes:
+      label: "Wersja Nuvio / Nuvio version"
+      description: "Np. 0.6.4 (HACS → Nuvio)."
+      placeholder: "0.6.4"
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: "Wersja Home Assistant / Home Assistant version"
+      placeholder: "2026.10.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: "Instalacja / Installation"
+      options:
+        - HACS
+        - "Ręcznie / Manual"
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: "Urządzenie / Device"
+      multiple: true
+      options:
+        - "Komputer / Desktop"
+        - "Telefon / Phone"
+        - "Tablet"
+        - "Tablet ścienny / Wall tablet"
+        - "Aplikacja Companion / Companion app"
+  - type: input
+    id: browser
+    attributes:
+      label: "Przeglądarka / Browser"
+      placeholder: "Chrome 141, Safari 18, Companion iOS..."
+  - type: textarea
+    id: what
+    attributes:
+      label: "Co się stało? / What happened?"
+      description: "Opisz problem i czego się spodziewałeś. Describe the problem and what you expected."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Kroki do odtworzenia / Steps to reproduce"
+      placeholder: |
+        1. Otwórz / Open ...
+        2. Kliknij / Click ...
+        3. Widzę / I see ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Błędy z konsoli przeglądarki lub logi HA / Browser console errors or HA logs"
+      description: "F12 → Console. Wklej tekst, nie zrzut. Paste text, not a screenshot."
+      render: shell
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Zrzuty ekranu / Screenshots"
+      description: "Przeciągnij obrazy tutaj. Drag images here."
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Sprawdzone / Checked"
+      options:
+        - label: "Odświeżyłem stronę z pominięciem cache (Ctrl/Cmd+Shift+R) lub sprawdziłem w trybie incognito. I did a hard refresh or tried incognito."
+          required: true
+        - label: "Usunąłem z logów i zrzutów prywatne dane (adresy, tokeny). I removed private data from logs and screenshots."
+          required: true

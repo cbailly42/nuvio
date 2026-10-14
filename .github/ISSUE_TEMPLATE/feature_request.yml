@@ -1,0 +1,53 @@
+name: "✨ Propozycja funkcji / Feature request"
+description: "Zaproponuj nową funkcję lub komponent. Suggest a new feature or component."
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sprawdź najpierw roadmapę w README i istniejące zgłoszenia.
+        Please check the roadmap in the README and existing issues first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Jaki problem to rozwiąże? / What problem does it solve?"
+      placeholder: "Chciałbym... / I'd like to..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proponowane rozwiązanie / Proposed solution"
+      description: "Jak to powinno działać i wyglądać? How should it work and look?"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Obszar / Area"
+      options:
+        - "Nowy komponent / New component"
+        - "Istniejący komponent / Existing component"
+        - "Wygląd i motywy / Appearance and themes"
+        - "Tryb tabletu ściennego / Wall tablet mode"
+        - "Edytor i układ / Editor and layout"
+        - "Inne / Other"
+    validations:
+      required: true
+  - type: input
+    id: entities
+    attributes:
+      label: "Encje lub integracje / Entities or integrations"
+      description: "Jakich encji HA by to używało? Which HA entities would it use?"
+      placeholder: "climate.*, sensor.* (W), calendar.*"
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatywy / Alternatives"
+      description: "Jak radzisz sobie teraz? How do you handle it today?"
+  - type: textarea
+    id: mockups
+    attributes:
+      label: "Szkice lub przykłady / Mockups or examples"
+      description: "Zrzuty, szkice, linki do inspiracji. Screenshots, sketches, inspiration links."

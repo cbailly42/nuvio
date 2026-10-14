@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 Dokumentacja / Documentation"
+    url: https://github.com/kczepiec/nuvio#readme
+    about: "Instalacja, konfiguracja i katalog komponentów. Installation, setup and component catalog."
