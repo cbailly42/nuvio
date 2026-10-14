@@ -618,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.13.0+2e8f356e';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.14.0+ee8b9027';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -943,7 +943,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-b48cff:#B48CFF;
   --hg-ac-b793ec:#B793EC;
   --hg-ac-c4c8ce:#C4C8CE;
-  --hg-ac-c62828:#C62828;
   --hg-ac-c9ccd0:#C9CCD0;
   --hg-ac-d59bff:#D59BFF;
   --hg-ac-db4437:#DB4437;
@@ -1025,7 +1024,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-0c1018-042:rgba(12,16,24,0.42);
   --hg-bg-0e1014-026-k:rgba(14,16,20,0.26);
   --hg-bg-0e1014-032:rgba(14,16,20,0.32);
-  --hg-bg-0e1014-036:rgba(14,16,20,0.36);
   --hg-bg-0e1014-042:rgba(14,16,20,0.42);
   --hg-bg-10141c-066:rgba(16,20,28,0.66);
   --hg-bg-111111:#111111;
@@ -1042,7 +1040,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-1d262d:#1D262D;
   --hg-bg-1e1e1e-055:rgba(30,30,30,0.55);
   --hg-bg-1e2023:#1E2023;
-  --hg-bg-1e2023-084:rgba(30,32,35,0.84);
   --hg-bg-1e2024-012:rgba(30,32,36,0.12);
   --hg-bg-1e2024-030:rgba(30,32,36,0.3);
   --hg-bg-1e2228-066:rgba(30,34,40,0.66);
@@ -1244,7 +1241,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-f2f5f8:#F2F5F8;
   --hg-tx-f4f6f8:#F4F6F8;
   --hg-tx-f5b83d:#F5B83D;
-  --hg-tx-f5f6f7:#F5F6F7;
   --hg-tx-ff3b30:#FF3B30;
   --hg-tx-ff6b57:#FF6B57;
   --hg-tx-ff6b6b:#FF6B6B;
@@ -1685,7 +1681,7 @@ hgUI.add(`
 @media (pointer:coarse){ .nv-ib::before{ content:''; position:absolute; inset:-6px; } }
 `);
 /* hgUI.iconBtn('mdi:magnify', 'search', 'Szukaj', { on, size: 'sm'|'lg', bare, data }) */
-hgUI.iconBtn = (icon, act, label, o = {}) => `<button class="nv-ib ${o.on ? 'on' : ''} ${o.size || ''} ${o.bare ? 'bare' : ''}" type="button" aria-label="${H.esc(label || '')}"${o.on != null ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(act, o.data)}${o.disabled ? ' disabled' : ''}>${H.icon(icon)}</button>`;
+hgUI.iconBtn = (icon, act, label, o = {}) => `<button class="nv-ib ${o.on ? 'on' : ''} ${o.size || ''} ${o.bare ? 'bare' : ''}" type="button" aria-label="${H.esc(label || '')}"${label && o.tip !== false ? ` data-nv-tip="${H.esc(label)}"` : ''}${o.on != null ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(act, o.data)}${o.disabled ? ' disabled' : ''}>${H.icon(icon)}</button>`;
 
 /* ===== ui/pill: szklana pigułka (etykieta, tryb, „Popołudnie”), opcjonalnie z ikoną; on = biała jak aktywna zakładka.
    ui/pill-tabs: rząd pigułek jako zakładki (role=tablist), aktywna biała. ===== */
@@ -1808,6 +1804,220 @@ hgUI.add(`
 /* hgUI.avatars([{ name, pic, home }], { add: 'act' }) */
 hgUI.avatars = (people, o = {}) => `<div class="nv-avs">${o.add ? hgUI.iconBtn('mdi:plus', o.add, hgTr('Dodaj', 'Add')) : ''}${(people || []).map((p) =>
   `<span class="nv-av ${p.home ? 'home' : ''}" title="${H.esc(p.name)}" data-key="av-${H.esc(p.name)}"${p.pic ? ` style="background-image:url('${H.cssUrl(p.pic)}')"` : ''}>${p.pic ? '' : H.esc(String(p.name || '?').slice(0, 1).toUpperCase())}</span>`).join('')}</div>`;
+
+/* ===== ui/toast: stos powiadomień (dół ekranu): zwinięty w talię, rozwija się po najechaniu, przesunięcie w bok zamyka, opcjonalny przycisk akcji (Cofnij).
+   API: HGToast.show(tekst, onAction?, etykietaAkcji?) albo hgOverlay.toast(tekst, { onAction, action }). ===== */
+const HGToast = window.__nuvioToast || (window.__nuvioToast = {
+  L: [], el: null,
+  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgTr('Powiadomienia', 'Notifications'));
+    const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10020; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
+.hgt .t{ position:absolute; left:0; right:0; bottom:0; box-sizing:border-box; display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 8px 8px 16px; border-radius:var(--hg-radius-in, 16px); background:rgba(30,32,35,.84); color:#F5F6F7; box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.12); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
+  transition:transform var(--hg-t-slow, 320ms) var(--hg-spring, cubic-bezier(.2,.9,.25,1)), opacity var(--hg-t-base, 200ms); transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
+.hgt .t.in{ opacity:0; transform:translateY(24px) scale(.96); } .hgt .t.out{ opacity:0; transform:translateY(16px) scale(.9) !important; }
+.hgt .t::before{ content:''; flex:none; width:8px; height:8px; border-radius:50%; background:var(--hg-accent, #63D71E); } .hgt.lt .t{ background:rgba(255,255,255,.9); color:#1E2023; box-shadow:0 12px 32px rgba(0,0,0,.14), inset 0 0 0 1px rgba(0,0,0,.08); } .hgt .t span{ flex:1; min-width:0; } .hgt .t em{ font-style:normal; font-weight:600; font-size:12px; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, currentColor 12%, transparent); }
+.hgt .t button{ all:unset; cursor:pointer; font-weight:700; font-size:13px; height:32px; padding:0 14px; display:inline-flex; align-items:center; border-radius:999px; background:var(--hg-accent, #63D71E); color:var(--hg-on-accent, #0B0F0A); font-weight:600; transition:transform 150ms; } .hgt .t button:active{ transform:scale(.96); } .hgt .t button:focus-visible{ outline:2px solid var(--hg-accent, #63D71E); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ .hgt .t{ transition:opacity .2s; } }`;
+    el.appendChild(st); document.body.appendChild(el);
+    el.addEventListener('mouseenter', () => { this.exp = true; this.pause(true); this.lay(); }); el.addEventListener('mouseleave', () => { this.exp = false; this.pause(false); this.lay(); });
+    return el; },
+  lay() { const v = this.L.filter((x) => !x.gone).slice(-6).reverse(); let y = 0;
+    v.forEach((x, i) => { const n = x.n; n.style.zIndex = 100 - i; n.style.pointerEvents = i < 3 ? 'auto' : 'none';
+      if (this.exp) { n.style.transform = `translateY(${-y}px)`; n.style.opacity = i < 3 ? 1 : 0; y += n.offsetHeight + 8; }
+      else n.style.transform = `translateY(${-i * 10}px) scale(${1 - i * 0.05})`, n.style.opacity = i < 3 ? (i ? 0.9 - i * 0.15 : 1) : 0; }); },
+  pause(p) { const now = Date.now(); for (const x of this.L) { if (p) { if (x.tm) { clearTimeout(x.tm); x.tm = 0; x.left = Math.max(800, x.end - now); } } else if (!x.tm && !x.gone) this.arm(x, x.left || 2600); } },
+  arm(x, ms) { clearTimeout(x.tm); x.end = Date.now() + ms; x.tm = setTimeout(() => this.drop(x), ms); },
+  drop(x) { if (x.gone) return; x.gone = true; clearTimeout(x.tm); x.n.classList.add('out'); setTimeout(() => { x.n.remove(); this.L = this.L.filter((y) => y !== x); this.lay(); }, 320); this.lay(); },
+  show(t, undo, ul) { const box = this.box(), ms = undo ? (ul ? 12000 : 6000) : 2600; box.classList.toggle('lt', typeof HGTheme !== 'undefined' && !HGTheme.dark); box.style.bottom = `calc(${this.off || 20}px + env(safe-area-inset-bottom, 0px))`;
+    const same = this.L.find((x) => !x.gone && x.t === t && !undo && !x.undo);
+    if (same) { same.c++; same.n.querySelector('em') ? (same.n.querySelector('em').textContent = '×' + same.c) : same.n.querySelector('span').insertAdjacentHTML('afterend', `<em>×${same.c}</em>`); this.L = this.L.filter((y) => y !== same).concat(same); this.arm(same, ms); return this.lay(); }
+    const n = document.createElement('div'); n.className = 't in'; n.setAttribute('role', 'status'); const sp = document.createElement('span'); sp.textContent = t; n.appendChild(sp);
+    const x = { t, n, c: 1, undo: !!undo };
+    if (undo) { const u = document.createElement('button'); u.textContent = ul || hgTr('Cofnij', 'Undo'); u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
+    let sx = null; n.addEventListener('pointerdown', (e) => { sx = e.clientX; }); n.addEventListener('pointermove', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 6) n.style.translate = (e.clientX - sx) + 'px 0'; });
+    n.addEventListener('pointerup', (e) => { const dx = sx == null ? 0 : e.clientX - sx; sx = null; n.style.translate = ''; if (Math.abs(dx) > 60 || (Math.abs(dx) < 6 && !e.target.closest('button') && (this.exp || window.matchMedia('(hover:none)').matches))) this.drop(x); else if (Math.abs(dx) < 6 && !this.exp) { this.exp = true; this.lay(); } });
+    box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));
+    if (!this.exp) this.arm(x, ms); else x.left = ms; },
+});
+
+/* ===== ui/overlay: jeden menedżer nakładek nad pulpitem: tooltip, popover, menu, sheet, dialog, alert dialog, toast.
+   Pilnuje kolejności (stos), fokusu (pułapka w oknach modalnych, powrót do przycisku po zamknięciu), klawisza Escape i animacji
+   wejścia/wyjścia z tokenów ruchu. Jedna warstwa rozmycia pod nakładką (scrim), sama nakładka bez rozmycia na rozmyciu.
+   prefers-reduced-motion: zamiast ruchu krótki fade. ===== */
+const hgOverlay = window.__nuvioOverlay || (() => {
+  const CSS = `
+:host{ all:initial; position:fixed; inset:0; z-index:10010; pointer-events:none; font-family:'HG DM Sans','DM Sans',-apple-system,system-ui,'Segoe UI',Roboto,sans-serif; -webkit-font-smoothing:antialiased; color:var(--hg-chrome-fg, #1C1C1E); }
+*{ box-sizing:border-box; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
+.scrim{ position:fixed; inset:0; pointer-events:auto; background:rgba(8,10,14,.32); -webkit-backdrop-filter:blur(calc(10px * var(--hg-bf, 1))); backdrop-filter:blur(calc(10px * var(--hg-bf, 1)));
+  animation: nvScrim var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out) both; }
+.scrim.out{ animation: nvScrim var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) reverse both; }
+.glass{ pointer-events:auto; background: var(--hg-glass-sheen, none), var(--hg-panel-flat, rgba(236,238,242,.9)); box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-shadow-float, 0 8px 24px rgba(0,0,0,.2));
+  -webkit-backdrop-filter: blur(calc(24px * var(--hg-bf, 1))) saturate(140%); backdrop-filter: blur(calc(24px * var(--hg-bf, 1))) saturate(140%); }
+/* dialog i alert dialog: środek ekranu, skala 0.94 -> 1 */
+.dlg{ position:fixed; left:50%; top:50%; width:min(var(--w, 400px), calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow:auto; transform:translate(-50%, -50%);
+  border-radius:var(--hg-radius, 24px); padding:24px; display:flex; flex-direction:column; gap:14px; animation: nvPop var(--hg-t-slow, 320ms) var(--hg-ease-out, ease-out) both; }
+.dlg.out{ animation: nvPopOut var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) both; }
+.dlg h2{ margin:0; font-size:var(--hg-fs-4, 18px); font-weight:600; letter-spacing:-.01em; } .dlg .tx{ margin:0; font-size:var(--hg-fs-2, 13px); opacity:.75; line-height:1.45; }
+.acts{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:4px; }
+.btn{ height:44px; padding:0 20px; border-radius:999px; font-size:var(--hg-fs-2, 13px); font-weight:600; background:var(--hg-inner-bg, rgba(0,0,0,.06)); box-shadow:var(--hg-inner-hi, none);
+  transition: transform var(--hg-t-fast, 120ms) var(--hg-ease-out, ease-out), background var(--hg-t-base, 200ms); }
+.btn:active{ transform:scale(.96); } .btn:focus-visible, .x:focus-visible, .mi:focus-visible{ outline:2px solid var(--hg-accent, #63D71E); outline-offset:2px; }
+.btn.primary{ background:var(--hg-accent, #63D71E); color:var(--hg-on-accent, #0B0F0A); box-shadow:0 0 14px var(--hg-accent-glow, transparent); }
+.btn.danger{ background:#E5484D; color:#fff; }
+.x{ position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-inner-bg, rgba(0,0,0,.06)); }
+.x ha-icon{ width:18px; height:18px; }
+/* sheet: od dołu na telefonie, z prawej na szerokim ekranie; przeciągnięcie w dół zamyka */
+.sheet{ position:fixed; display:flex; flex-direction:column; overflow:hidden; }
+.sheet .hd{ display:flex; align-items:center; gap:10px; padding:18px 20px 10px; min-height:60px; } .sheet .hd h2{ margin:0; flex:1; font-size:var(--hg-fs-4, 18px); font-weight:600; }
+.sheet .hd .x{ position:static; }
+.sheet .bd{ flex:1; overflow:auto; padding:6px 20px 20px; overscroll-behavior:contain; }
+.sheet.side{ top:12px; right:12px; bottom:12px; width:min(420px, calc(100vw - 24px)); border-radius:var(--hg-radius, 24px); animation: nvSide var(--hg-t-slow, 320ms) var(--hg-spring, ease-out) both; }
+.sheet.side.out{ animation: nvSideOut var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) both; }
+.sheet.bottom{ left:0; right:0; bottom:0; max-height:88dvh; border-radius:var(--hg-radius, 24px) var(--hg-radius, 24px) 0 0; padding-bottom:env(safe-area-inset-bottom, 0px); animation: nvUp var(--hg-t-slow, 320ms) var(--hg-spring, ease-out) both; touch-action:pan-x; }
+.sheet.bottom.out{ animation: nvDown var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) both; }
+.sheet.bottom::before{ content:''; display:block; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:currentColor; opacity:.25; }
+/* popover i menu: przy przycisku, skala od strony przycisku */
+.pop{ position:fixed; min-width:180px; max-width:min(340px, calc(100vw - 16px)); max-height:min(420px, calc(100dvh - 16px)); overflow:auto; border-radius:var(--hg-radius-in, 16px); padding:8px;
+  transform-origin: var(--ox, 50%) var(--oy, 0%); animation: nvPopS var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out) both; }
+.pop.out{ animation: nvPopSOut var(--hg-t-fast, 120ms) var(--hg-ease-in, ease-in) both; }
+.mi{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:12px; font-size:var(--hg-fs-2, 13px); text-align:left;
+  animation: nvIn var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out) both; animation-delay: calc(var(--i, 0) * 20ms); }
+.mi ha-icon{ width:18px; height:18px; opacity:.8; } .mi.danger{ color:#E5484D; } .mi[aria-checked=true]::after{ content:'✓'; margin-left:auto; color:var(--hg-accent-tx, inherit); }
+@media (hover:hover){ .mi:hover{ background:var(--hg-inner-bg-h, rgba(0,0,0,.06)); } }
+.sep{ height:1px; margin:6px 8px; background:currentColor; opacity:.1; }
+/* tooltip: biała pigułka jak dymek wartości w projekcie */
+.tip{ position:fixed; pointer-events:none; max-width:260px; padding:6px 10px; border-radius:10px; background:#fff; color:#111; font-size:12px; font-weight:500; line-height:1.3;
+  box-shadow:0 6px 18px rgba(0,0,0,.22); animation: nvTip var(--hg-t-fast, 120ms) var(--hg-ease-out, ease-out) both; }
+@keyframes nvFade{ from{ opacity:0; } }
+/* rozmycie od pierwszej klatki (bez błysku ostrego tła), animuje się tylko przyciemnienie */
+@keyframes nvScrim{ from{ background:transparent; } }
+@keyframes nvPop{ from{ opacity:0; transform:translate(-50%, -50%) scale(.94); } }
+@keyframes nvPopOut{ to{ opacity:0; transform:translate(-50%, -50%) scale(.96); } }
+@keyframes nvSide{ from{ opacity:.4; transform:translateX(105%); } }
+@keyframes nvSideOut{ to{ opacity:.4; transform:translateX(105%); } }
+@keyframes nvUp{ from{ transform:translateY(100%); } }
+@keyframes nvDown{ to{ transform:translateY(100%); } }
+@keyframes nvPopS{ from{ opacity:0; transform:scale(.96); } }
+@keyframes nvPopSOut{ to{ opacity:0; transform:scale(.97); } }
+@keyframes nvIn{ from{ opacity:0; transform:translateY(4px); } }
+@keyframes nvTip{ from{ opacity:0; transform:translateY(4px); } }
+@media (prefers-reduced-motion: reduce){ .dlg, .dlg.out, .sheet, .sheet.out, .pop, .pop.out, .mi, .tip{ animation-name: nvFade !important; } .dlg.out, .sheet.out, .pop.out{ animation-direction: reverse !important; } }`;
+  let host = null, root = null; const stack = [];
+  const R = () => {
+    if (host && host.isConnected) return root;
+    host = document.createElement('div'); host.id = 'hg-overlay'; root = host.attachShadow({ mode: 'open' });
+    const st = document.createElement('style'); st.textContent = CSS; root.appendChild(st); document.body.appendChild(host);
+    return root;
+  };
+  const esc = (s) => H.esc(s);
+  const deep = () => { let a = document.activeElement; while (a && a.shadowRoot && a.shadowRoot.activeElement) a = a.shadowRoot.activeElement; return a; };
+  const focusables = (el) => [...el.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')];
+  const leave = (el, done) => { if (!el) return done && done(); el.classList.add('out'); let fin = false; const f = () => { if (fin) return; fin = true; el.remove(); done && done(); };
+    el.addEventListener('animationend', f, { once: true }); setTimeout(f, 400); };
+  /* wspólne otwarcie: el (+ scrim dla modalnych), Escape, pułapka fokusu, powrót fokusu */
+  const open = (el, o = {}) => {
+    const r = R(), back = deep(); let scrim = null;
+    if (o.modal) { scrim = document.createElement('div'); scrim.className = 'scrim'; r.appendChild(scrim);
+      scrim.addEventListener('click', () => { if (o.dismiss !== false) close(undefined); }); }
+    r.appendChild(el);
+    const item = { el, scrim, modal: !!o.modal, close: null, dismiss: o.dismiss !== false };
+    const close = (v) => { const i = stack.indexOf(item); if (i < 0) return; stack.splice(i, 1);
+      leave(el); if (scrim) leave(scrim); if (back && back.focus && back.isConnected) try { back.focus({ preventScroll: true }); } catch (e) { /* */ }
+      o.onClose && o.onClose(v); };
+    item.close = close; stack.push(item);
+    if (o.modal) el.addEventListener('keydown', (e) => { if (e.key !== 'Tab') return; const f = focusables(el); if (!f.length) return;
+      const a = el.getRootNode().activeElement; if (e.shiftKey && a === f[0]) { e.preventDefault(); f.at(-1).focus(); } else if (!e.shiftKey && a === f.at(-1)) { e.preventDefault(); f[0].focus(); } });
+    requestAnimationFrame(() => { const f = el.querySelector('[autofocus]') || focusables(el)[0]; if (f && o.focus !== false) f.focus({ preventScroll: true }); });
+    return item;
+  };
+  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape' || !stack.length) return; const top = stack.at(-1); if (!top.dismiss) return; e.stopPropagation(); top.close(undefined); }, true);
+  /* pozycja przy elemencie (także w shadow DOM): pod spodem, a gdy brak miejsca nad; w poziomie w granicach ekranu */
+  const place = (el, anchor, gap = 8) => {
+    const a = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = innerWidth, vh = innerHeight;
+    let top = a.bottom + gap, oy = '0%'; if (top + h > vh - 8 && a.top - gap - h > 8) { top = a.top - gap - h; oy = '100%'; }
+    let left = Math.min(Math.max(8, a.left + a.width / 2 - w / 2), vw - w - 8); if (w > a.width * 1.6) left = Math.min(Math.max(8, a.right - w), vw - w - 8);
+    el.style.top = Math.max(8, top) + 'px'; el.style.left = left + 'px';
+    el.style.setProperty('--ox', (a.left + a.width / 2 - left) + 'px'); el.style.setProperty('--oy', oy);
+  };
+  const api = {
+    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width }) -> Promise(value) */
+    dialog(o = {}) { return new Promise((res) => {
+      const el = document.createElement('div'); el.className = 'glass dlg'; el.setAttribute('role', o.alert ? 'alertdialog' : 'dialog'); el.setAttribute('aria-modal', 'true');
+      if (o.width) el.style.setProperty('--w', o.width + 'px');
+      const id = 'd' + Math.random().toString(36).slice(2, 7); el.setAttribute('aria-labelledby', id + 't');
+      el.innerHTML = `${o.alert ? '' : `<button class="x" data-v="__x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button>`}${o.title ? `<h2 id="${id}t">${esc(o.title)}</h2>` : ''}${o.text ? `<p class="tx">${esc(o.text)}</p>` : ''}${o.html || ''}
+        ${(o.actions || []).length ? `<div class="acts">${o.actions.map((a, i) => `<button class="btn ${a.kind || ''}" data-i="${i}"${a.focus ? ' autofocus' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}`;
+      let it = null;
+      el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && (n.dataset.i != null || n.dataset.v)); if (!b) return;
+        it.close(b.dataset.v === '__x' ? undefined : o.actions[+b.dataset.i].value); });
+      it = open(el, { modal: true, dismiss: o.dismiss !== false && !o.alert, onClose: (v) => res(v) });
+    }); },
+    /* alert dialog: potwierdzenie; fokus na bezpiecznym przycisku, bez zamykania kliknięciem obok */
+    alert(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
+      return api.dialog({ alert: true, title, text, width: 380, actions: [...(info ? [] : [{ label: hgTr('Anuluj', 'Cancel'), value: false, focus: true }]), { label: ok, value: true, kind: danger ? 'danger' : 'primary', focus: info }] })
+        .then((v) => v === true);
+    },
+    /* sheet({ title, html, side: 'auto'|'bottom'|'side' }) -> { el, body, close } ; przeciągnięcie w dół zamyka dolny */
+    sheet(o = {}) {
+      const side = o.side && o.side !== 'auto' ? o.side : (innerWidth < 700 ? 'bottom' : 'side');
+      const el = document.createElement('div'); el.className = 'glass sheet ' + side; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', o.title || '');
+      el.innerHTML = `<div class="hd"><h2>${esc(o.title || '')}</h2><button class="x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="bd">${o.html || ''}</div>`;
+      const it = open(el, { modal: true, onClose: o.onClose });
+      el.querySelector('.x').addEventListener('click', () => it.close());
+      if (side === 'bottom') { let y0 = null, dy = 0;
+        el.addEventListener('pointerdown', (e) => { if (e.target.closest && e.target.closest('.bd') && el.querySelector('.bd').scrollTop > 0) return; y0 = e.clientY; dy = 0; el.style.transition = 'none'; });
+        el.addEventListener('pointermove', (e) => { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); el.style.transform = `translateY(${dy}px)`; });
+        const up = () => { if (y0 == null) return; y0 = null; el.style.transition = 'transform var(--hg-t-base) var(--hg-ease-out)'; if (dy > 90) it.close(); else el.style.transform = ''; };
+        el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); }
+      return { el, body: el.querySelector('.bd'), close: (v) => it.close(v) };
+    },
+    /* popover(anchor, html) -> { el, close } ; zamyka klik poza nim i Escape */
+    popover(anchor, html, o = {}) {
+      const el = document.createElement('div'); el.className = 'glass pop'; el.setAttribute('role', o.role || 'dialog'); el.innerHTML = html;
+      const it = open(el, { onClose: o.onClose, focus: o.focus }); place(el, anchor);
+      const away = (e) => { if (!e.composedPath().includes(el) && !e.composedPath().includes(anchor)) { it.close(); } };
+      setTimeout(() => document.addEventListener('pointerdown', away, true), 0);
+      const ro = () => place(el, anchor); addEventListener('resize', ro);
+      const c0 = it.close; it.close = (v) => { document.removeEventListener('pointerdown', away, true); removeEventListener('resize', ro); c0(v); };
+      return { el, close: (v) => it.close(v) };
+    },
+    /* menu(anchor, [{ label, icon, value, danger, checked } | '-']) -> Promise(value) ; strzałki, Enter, Escape */
+    menu(anchor, items, o = {}) { return new Promise((res) => {
+      const html = items.map((m, i) => m === '-' ? '<div class="sep" role="separator"></div>' : `<button class="mi ${m.danger ? 'danger' : ''}" role="${m.checked != null ? 'menuitemradio' : 'menuitem'}"${m.checked != null ? ` aria-checked="${!!m.checked}"` : ''} data-i="${i}" style="--i:${i}">${m.icon ? `<ha-icon icon="${esc(m.icon)}"></ha-icon>` : ''}<span>${esc(m.label)}</span></button>`).join('');
+      let val; const p = api.popover(anchor, html, { role: 'menu', onClose: () => res(val) });
+      p.el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && n.dataset.i != null); if (!b) return; val = items[+b.dataset.i].value; p.close(); });
+      p.el.addEventListener('keydown', (e) => { const f = [...p.el.querySelectorAll('.mi')], a = f.indexOf(p.el.getRootNode().activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); f.at((a + (e.key === 'ArrowDown' ? 1 : -1) + f.length) % f.length).focus(); } });
+    }); },
+    /* toast(text, { action, onAction }) – stos powiadomień HGToast (ui/toast) */
+    toast(text, o = {}) { return HGToast.show(text, o.onAction, o.action); },
+    /* tooltip(anchor, text) – zwykle automatycznie z atrybutu title (niżej) */
+    tip(anchor, text) { api.untip(); const el = document.createElement('div'); el.className = 'tip'; el.setAttribute('role', 'tooltip'); el.textContent = text; R().appendChild(el); place(el, anchor, 6);
+      if (parseFloat(el.style.top) < anchor.getBoundingClientRect().top) el.style.top = (anchor.getBoundingClientRect().top - el.offsetHeight - 6) + 'px'; api._tip = el; },
+    untip() { if (api._tip) { api._tip.remove(); api._tip = null; } },
+    get open() { return stack.length > 0; },
+    closeAll() { while (stack.length) stack.at(-1).close(undefined); },
+  };
+  /* podpowiedzi: atrybut title w elementach Nuvio zamienia się w szklany tooltip (natywny title na dotyku nie działa,
+     a na komputerze pojawia się z opóźnieniem i w stylu systemu). Tylko w komponentach hg-/nuvio-, nie w HA. */
+  let tt = 0, cur = null;
+  const ours = (path) => path.some((n) => n.tagName && (/^(HG|NUVIO)-/.test(n.tagName) || /^(hg|nuvio)-/.test(n.id || '')));
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType === 'touch') return; const path = e.composedPath(); if (!ours(path)) return;
+    const t = path.find((n) => n.getAttribute && (n.hasAttribute('title') || n.hasAttribute('data-nv-tip')));
+    if (!t || t === cur) return; cur = t;
+    if (t.hasAttribute('title')) { const v = t.getAttribute('title'); t.removeAttribute('title'); if (v) { t.setAttribute('data-nv-tip', v); if (!t.hasAttribute('aria-label') && !t.textContent.trim()) t.setAttribute('aria-label', v); } }
+    clearTimeout(tt); api.untip(); const v = t.getAttribute('data-nv-tip'); if (!v || t.textContent.trim() === v.trim()) return;
+    tt = setTimeout(() => { if (cur === t && t.isConnected) api.tip(t, v); }, 400);
+  }, true);
+  document.addEventListener('pointerout', (e) => { if (!cur) return; const to = e.relatedTarget; if (to && (to === cur || (cur.contains && cur.contains(to)))) return; clearTimeout(tt); cur = null; api.untip(); }, true);
+  ['pointerdown', 'scroll', 'wheel'].forEach((ev) => document.addEventListener(ev, () => { clearTimeout(tt); cur = null; api.untip(); }, { capture: true, passive: true }));
+  document.addEventListener('focusin', (e) => { const t = e.composedPath()[0]; if (!t || !t.getAttribute || !ours(e.composedPath())) return; const v = t.getAttribute('data-nv-tip') || t.getAttribute('title'); if (v && t.matches(':focus-visible')) api.tip(t, v); }, true);
+  document.addEventListener('focusout', () => api.untip(), true);
+  window.__nuvioOverlay = api;
+  return api;
+})();
 
 /* shared/card-utils: Pomocnicze funkcje kart: moc w W, głębokie scalanie konfiguracji, liczba kluczy obiektu. */
 /* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
@@ -2161,30 +2371,9 @@ const HGWx = {
   hm: (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' }),
 };
 
-/* shared/confirm: Okno potwierdzenia HGConfirm (karty i edytor). */
+/* shared/confirm: Okno potwierdzenia HGConfirm (karty i edytor) – alert dialog z ui/overlay, to samo API co dawniej. */
 const HGConfirm = {
-  ask(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
-    return new Promise((res) => {
-      const x = document.createElement('div'); x.className = 'hg-confirm';
-      const sr = x.attachShadow({ mode: 'open' });
-      sr.innerHTML = `<style>${HG_BASE}${U(`
-:host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--hg-bg-0e1014-036); animation:f .16s ease; }
-@keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
-.d{ width:min(380px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, var(--hg-bg-eceef2-094)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
-  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:var(--hg-tx-1e2023); display:flex; flex-direction:column; gap:16px; }
-.d b{ font-size:18px; font-weight:600; } .d p{ margin:0; font-size:var(--fs-sm); color:var(--hg-tx-4a4e54); line-height:1.45; }
-.r{ display:flex; gap:8px; justify-content:flex-end; }
-.r button{ height:44px; padding:0 18px; border-radius:22px; font-size:var(--fs-sm); font-weight:600; background:var(--hg-bg-000000-006); color:var(--hg-tx-1e2023); }
-.r button.ok{ background:${danger ? 'var(--hg-ac-c62828)' : 'var(--hg-ac-1e2023)'}; color:var(--hg-tx-ffffff); }
-`)}</style><div class="d" role="alertdialog" aria-modal="true" aria-label="${H.esc(title)}"><b>${H.esc(title)}</b><p>${H.esc(text)}</p>
-        <div class="r">${info ? '' : `<button class="no" data-v="0">${hgTr('Anuluj', 'Cancel')}</button>`}<button class="ok" data-v="1">${H.esc(ok)}</button></div></div>`;
-      const done = (v) => { document.removeEventListener('keydown', key); x.remove(); res(v); };
-      const key = (e) => { if (e.key === 'Escape') done(false); };
-      x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x) return done(false); const b = p.find((n) => n.dataset && n.dataset.v); if (b) done(b.dataset.v === '1'); });
-      document.addEventListener('keydown', key); document.body.appendChild(x);
-      setTimeout(() => { const n = sr.querySelector('.no') || sr.querySelector('.ok'); n && n.focus(); }, 30);
-    });
-  },
+  ask(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) { return hgOverlay.alert(title, text, ok, danger, info); },
 };
 window.HGConfirm = window.HGConfirm || HGConfirm;
 
@@ -8712,37 +8901,6 @@ const hgDedupConf = (L) => { let ch = false; for (const cf of Object.values(L.co
 const hgIsGhost = (it) => { let hgt = 0; for (const c of it.children) { if (c.classList.contains('hge') || c.tagName === 'STYLE') continue; hgt += c.offsetHeight; } return hgt < 8 && !it.querySelector('.cmslot'); };
 const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new Set(a)]; if (r.length !== a.length) ch = true; return r; };
   L.hidden = uq(L.hidden || []); L.order = uq(L.order || []); const seen = new Set(); L.added = (L.added || []).filter((x) => { if (!x || !x.e || seen.has(x.e)) { ch = true; return false; } seen.add(x.e); return true; }); return ch; };
-const HGToast = window.__nuvioToast || (window.__nuvioToast = {
-  L: [], el: null,
-  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgTr('Powiadomienia', 'Notifications'));
-    const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10000; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
-.hgt .t{ position:absolute; left:0; right:0; bottom:0; box-sizing:border-box; display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 8px 8px 16px; border-radius:20px; background:var(--hg-bg-1e2023-084); color:var(--hg-tx-f5f6f7); box-shadow:0 12px 32px var(--hg-sh-000000-028), inset 0 0 0 1px var(--hg-sh-ffffff-012); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
-  transition:transform .38s cubic-bezier(.2,.9,.25,1), opacity .3s; transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
-.hgt .t.in{ opacity:0; transform:translateY(24px) scale(.96); } .hgt .t.out{ opacity:0; transform:translateY(16px) scale(.9) !important; }
-.hgt .t::before{ content:''; flex:none; width:8px; height:8px; border-radius:50%; background:var(--hg-accent, var(--hg-bg-63d71e)); } .hgt.lt .t{ background:var(--hg-bg-ffffff-090); color:var(--hg-tx-1e2023); box-shadow:0 12px 32px var(--hg-sh-000000-014), inset 0 0 0 1px var(--hg-sh-000000-008); } .hgt .t span{ flex:1; min-width:0; } .hgt .t em{ font-style:normal; font-weight:600; font-size:12px; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, currentColor 12%, transparent); }
-.hgt .t button{ all:unset; cursor:pointer; font-weight:700; font-size:13px; height:32px; padding:0 14px; display:inline-flex; align-items:center; border-radius:999px; background:var(--hg-accent, var(--hg-bg-63d71e)); color:var(--hg-on-accent, var(--hg-tx-0b0f0a-on)); font-weight:600; transition:transform 150ms; } .hgt .t button:active{ transform:scale(.96); } .hgt .t button:focus-visible{ outline:2px solid var(--hg-accent, var(--hg-tx-63d71e)); outline-offset:2px; }
-@media (prefers-reduced-motion:reduce){ .hgt .t{ transition:opacity .2s; } }`;
-    el.appendChild(st); document.body.appendChild(el);
-    el.addEventListener('mouseenter', () => { this.exp = true; this.pause(true); this.lay(); }); el.addEventListener('mouseleave', () => { this.exp = false; this.pause(false); this.lay(); });
-    return el; },
-  lay() { const v = this.L.filter((x) => !x.gone).slice(-6).reverse(); let y = 0;
-    v.forEach((x, i) => { const n = x.n; n.style.zIndex = 100 - i; n.style.pointerEvents = i < 3 ? 'auto' : 'none';
-      if (this.exp) { n.style.transform = `translateY(${-y}px)`; n.style.opacity = i < 3 ? 1 : 0; y += n.offsetHeight + 8; }
-      else n.style.transform = `translateY(${-i * 10}px) scale(${1 - i * 0.05})`, n.style.opacity = i < 3 ? (i ? 0.9 - i * 0.15 : 1) : 0; }); },
-  pause(p) { const now = Date.now(); for (const x of this.L) { if (p) { if (x.tm) { clearTimeout(x.tm); x.tm = 0; x.left = Math.max(800, x.end - now); } } else if (!x.tm && !x.gone) this.arm(x, x.left || 2600); } },
-  arm(x, ms) { clearTimeout(x.tm); x.end = Date.now() + ms; x.tm = setTimeout(() => this.drop(x), ms); },
-  drop(x) { if (x.gone) return; x.gone = true; clearTimeout(x.tm); x.n.classList.add('out'); setTimeout(() => { x.n.remove(); this.L = this.L.filter((y) => y !== x); this.lay(); }, 320); this.lay(); },
-  show(t, undo, ul) { const box = this.box(), ms = undo ? (ul ? 12000 : 6000) : 2600; box.classList.toggle('lt', typeof HGTheme !== 'undefined' && !HGTheme.dark); box.style.bottom = `calc(${this.off || 20}px + env(safe-area-inset-bottom, 0px))`;
-    const same = this.L.find((x) => !x.gone && x.t === t && !undo && !x.undo);
-    if (same) { same.c++; same.n.querySelector('em') ? (same.n.querySelector('em').textContent = '×' + same.c) : same.n.querySelector('span').insertAdjacentHTML('afterend', `<em>×${same.c}</em>`); this.L = this.L.filter((y) => y !== same).concat(same); this.arm(same, ms); return this.lay(); }
-    const n = document.createElement('div'); n.className = 't in'; n.setAttribute('role', 'status'); const sp = document.createElement('span'); sp.textContent = t; n.appendChild(sp);
-    const x = { t, n, c: 1, undo: !!undo };
-    if (undo) { const u = document.createElement('button'); u.textContent = ul || hgTr('Cofnij', 'Undo'); u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
-    let sx = null; n.addEventListener('pointerdown', (e) => { sx = e.clientX; }); n.addEventListener('pointermove', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 6) n.style.translate = (e.clientX - sx) + 'px 0'; });
-    n.addEventListener('pointerup', (e) => { const dx = sx == null ? 0 : e.clientX - sx; sx = null; n.style.translate = ''; if (Math.abs(dx) > 60 || (Math.abs(dx) < 6 && !e.target.closest('button') && (this.exp || window.matchMedia('(hover:none)').matches))) this.drop(x); else if (Math.abs(dx) < 6 && !this.exp) { this.exp = true; this.lay(); } });
-    box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));
-    if (!this.exp) this.arm(x, ms); else x.left = ms; },
-});
 const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;

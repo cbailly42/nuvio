@@ -45,5 +45,21 @@ document.documentElement.setAttribute('data-hg-scheme', sch);
     }
   }
 }
+{
+  /* nakładki: przyciski otwierają dialog, alert, arkusz, menu, popover, toast; tooltip po najechaniu (title) */
+  const ov = window.__nuvioOverlay || window.__hgOverlay;
+  const sec = document.createElement('div'); sec.className = 'scheme'; sec.innerHTML = '<h2>Nakładki</h2>'; out.appendChild(sec);
+  const host = document.createElement('nuvio-gallery'); sec.appendChild(host); const r = host.attachShadow({ mode: 'open' });
+  r.innerHTML = `<style>${css}</style><ha-card class="glass" style="display:flex;gap:8px;flex-wrap:wrap;padding:16px">` +
+    ['dialog', 'alert', 'sheet', 'menu', 'popover', 'toast'].map((k) => ui.pill(k, { act: k })).join('') + ui.iconBtn('mdi:information-outline', 'tip', 'Podpowiedź: tooltip') + '</ha-card>';
+  const go = { dialog: () => ov.dialog({ title: 'Scena „Wieczór”', text: 'Przyciemnia salon do 30% i zasuwa rolety.', actions: [{ label: 'Anuluj', value: 0 }, { label: 'Uruchom', value: 1, kind: 'primary' }] }),
+    alert: () => ov.alert('Wyłączyć wszystko?', 'Zgasną wszystkie światła i urządzenia w domu.', 'Wyłącz'),
+    sheet: () => ov.sheet({ title: 'Salon', html: '<p style="margin:0">Treść arkusza: ustawienia pokoju, lista urządzeń.</p>' }),
+    menu: (b) => ov.menu(b, [{ label: 'Edytuj', icon: 'mdi:pencil' }, { label: 'Duplikuj', icon: 'mdi:content-copy' }, { label: 'Auto', checked: true }, '-', { label: 'Usuń', icon: 'mdi:delete', danger: true }]),
+    popover: (b) => ov.popover(b, '<div style="padding:8px 10px;font-size:13px">Zużycie dziś: <b>12,4 kWh</b></div>'),
+    toast: () => ov.toast('Zapisano układ', { onAction: () => {}, action: 'Cofnij' }) };
+  r.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && n.dataset.act); if (b && go[b.dataset.act]) go[b.dataset.act](b); });
+  window.__gal = r;
+}
 window.__ready = true;
 </script></body></html>

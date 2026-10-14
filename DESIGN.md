@@ -35,6 +35,14 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 - Handle clicks through `data-act` (`onAct`), not listeners attached in `afterRender`. Cards that still define `afterRender` get a full redraw on every change until they move to `data-act`.
 - `tests/ui-gallery.html` shows every block in every state at S, M and L sizes (`?scheme=light` or `dark`).
 
+## Overlays
+
+- Every window above the dashboard goes through `hgOverlay` (`src/parts/ui/overlay.part.js`): `dialog({ title, text, html, actions })`, `alert(title, text, ok, danger, info)` (returns true or false), `sheet({ title, html, side })`, `popover(anchor, html)`, `menu(anchor, items)`, `toast(text, { action, onAction })` and `tip(anchor, text)`. Do not build a new fixed-position layer in a card.
+- One shadow root on `document.body` (`#hg-overlay`, z-index 10010, above the first-run wizard); notifications (`ui/toast`) sit at 10020.
+- Modal overlays put one blur on the scrim; the panel itself is `--hg-panel-flat` with the glass sheen and rim. No blur on top of blur.
+- Motion: dialogs scale from 0.94 with `--hg-ease-out` over `--hg-t-slow`, sheets slide with `--hg-spring`, popovers and menus scale from the anchor over `--hg-t-base`, exits use `--hg-ease-in` and are shorter. With reduced motion everything only fades.
+- Focus: modal overlays trap Tab, focus the safe button first (Cancel in an alert), close with Escape (alerts only with their buttons) and give focus back to the element that opened them.
+- Tooltips: `hgUI.iconBtn` sets `data-nv-tip` from its label; a `title` attribute inside a Nuvio element is turned into the same tooltip. They show after 400 ms of hover or on keyboard focus, never on touch, and are skipped when they repeat the visible text.
 ## Controls
 
 - No native controls are visible anywhere. Use the shared Nuvio controls:

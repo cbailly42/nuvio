@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.13.0-a3e635?style=flat-square" alt="v0.13.0">
+  <img src="https://img.shields.io/badge/version-v0.14.0-a3e635?style=flat-square" alt="v0.14.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -237,7 +237,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Per-device layouts | different layout for phone, tablet and desktop instead of one shared layout | planned |
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
-| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0 |
+| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0 |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -342,9 +342,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.13.0 -m "Nuvio 0.11.1" && git push origin v0.13.0`.
+Only tagging by hand: `git tag -a v0.14.0 -m "Nuvio 0.14.0" && git push origin v0.14.0`.
 
 ## Changelog
+
+### 0.14.0
+- Changed: one look and one motion for every window above the dashboard. Confirmations (for example "Turn everything off?") are now glass windows that grow in softly over a blurred background, keep keyboard focus inside, return it to the button you came from, and close with Escape. They also appear above the first-run wizard, where they used to be hidden behind it.
+- Added: glass tooltips. Icon buttons and elements with a hint show a small white label after a short hover or keyboard focus, instead of the browser's grey tooltip. Hints that only repeat the visible text are skipped.
+- Changed: notifications at the bottom of the screen use the shared motion tokens and now stay above open windows.
+- Added (development): `hgOverlay` in `src/parts/ui/overlay.part.js` with `dialog`, `alert`, `sheet` (from the bottom on phones, from the side on wide screens, drag down to close), `popover`, `menu` (arrow keys, checked items), `toast` and `tip`. `HGConfirm.ask` keeps its signature and now uses `hgOverlay.alert`. The notification stack moved to `src/parts/ui/toast.part.js`. The gallery page shows every overlay.
 
 ### 0.13.0
 - Changed: cards now update live. When a device changes state, only the parts of the card that changed are updated instead of redrawing the whole card, so bars and switches glide to the new value, focus and scroll position stay, and fast sensors no longer make cards flicker. Cards with their own drag controls (light, AC, slider, lamp, room) keep the previous behaviour for now.

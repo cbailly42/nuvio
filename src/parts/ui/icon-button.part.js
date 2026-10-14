@@ -14,4 +14,4 @@ hgUI.add(`
 @media (pointer:coarse){ .nv-ib::before{ content:''; position:absolute; inset:-6px; } }
 `);
 /* hgUI.iconBtn('mdi:magnify', 'search', 'Szukaj', { on, size: 'sm'|'lg', bare, data }) */
-hgUI.iconBtn = (icon, act, label, o = {}) => `<button class="nv-ib ${o.on ? 'on' : ''} ${o.size || ''} ${o.bare ? 'bare' : ''}" type="button" aria-label="${H.esc(label || '')}"${o.on != null ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(act, o.data)}${o.disabled ? ' disabled' : ''}>${H.icon(icon)}</button>`;
+hgUI.iconBtn = (icon, act, label, o = {}) => `<button class="nv-ib ${o.on ? 'on' : ''} ${o.size || ''} ${o.bare ? 'bare' : ''}" type="button" aria-label="${H.esc(label || '')}"${label && o.tip !== false ? ` data-nv-tip="${H.esc(label)}"` : ''}${o.on != null ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(act, o.data)}${o.disabled ? ' disabled' : ''}>${H.icon(icon)}</button>`;
