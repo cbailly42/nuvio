@@ -34,8 +34,12 @@ const HGAreas = {
   /* liczba encji w stanach: liczona najwyżej co 5 s (nowy obiekt hass.states przy każdej zmianie stanu – bez Object.keys przy każdej aktualizacji) */
   _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
   /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
+  /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
+  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own)) return cfg;
+    const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
+    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); } return v; },
   model(h, cfg) {
-    cfg = cfg || this._e;
+    cfg = this.glob(cfg) || this._e;
     const key = [h.entities, h.devices, h.areas, this._cnt(h)];
     const m0 = this._memo.get(cfg);
     if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
@@ -126,8 +130,8 @@ const HGAreas = {
     const pick = (dcx) => sec.sens.filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dcx && !HG_TEMP_BAD.test(hgNorm(h.states[e].attributes.friendly_name + ' ' + e)));
     const ts = pick('temperature'), hs = pick('humidity');
     const cl = sec.clim.filter((e) => e.startsWith('climate.'));
-    a.temp = ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
-    a.hum = ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
+    a.temp = ov.temperature === '-' ? null : ov.temperature ? { e: ov.temperature } : ts.length ? { e: ts[0] } : cl.length ? { e: cl[0], attr: 'current_temperature' } : null;
+    a.hum = ov.humidity === '-' ? null : ov.humidity ? { e: ov.humidity } : hs.length ? { e: hs[0] } : cl.length ? { e: cl[0], attr: 'current_humidity' } : null;
     if (a.id === '_none') { a.temp = null; a.hum = null; }
     const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
     a.lights = sec.light;
@@ -178,7 +182,7 @@ class HGAreasCard extends HGBase {
   _m() { return HGAreas.model(this._hass, this._config.areas); }
   connectedCallback() { super.connectedCallback(); this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub); }
   disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); }
-  _extraSig() { return HGL.data.s.rooms || null; }
+  _extraSig() { return [HGL.data.s.rooms || null, (HGL.data.wiz || {}).areas || null]; }
   /* pokoje po nadpisaniach układu: kolejność, ukryte, dodane obszary HA */
   _rooms(m) { const L = HGL.get('rooms'), hid = new Set(L.hidden);
     const add = L.added.map((x) => m.byId[x.e]).filter((a) => a && !m.rooms.includes(a));
@@ -340,7 +344,7 @@ class HGRoomCard extends HGBase {
   constructor() {
     super();
     this._ac = new Map();
-    this._onLoc = () => { if (this._aid !== HGAreas.areaFromUrl()) { this._showUn = false; this.rerender(); } };
+    this._onLoc = () => { if (!this._config.room && this._aid !== HGAreas.areaFromUrl()) { this._showUn = false; this.rerender(); } };
     this.shadowRoot.addEventListener('change', (e) => {
       const t = e.target; if (t.dataset && t.dataset.act === 'vol') return H.call(this._hass, 'media_player', 'volume_set', { entity_id: t.dataset.e, volume_level: Number(t.value) / 100 });
       if (!t.dataset || t.dataset.act !== 'bri') return;
@@ -357,15 +361,16 @@ class HGRoomCard extends HGBase {
   disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
   set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; if (this._cams) for (const el of this._cams.values()) el.hass = h; }
   get hass() { return this._hass; }
-  _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = HGAreas.areaFromUrl(); return m.byId[this._aid] || null; }
+  _rid() { return (this._config && this._config.room) || HGAreas.areaFromUrl(); }
+  _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = this._rid(); return m.byId[this._aid] || null; }
   ents() {
     if (!this._hass) return [];
     const a = this._area(); if (!a) return [];
     const ad = HGL.get('room:' + a.id).added.map((x) => x.e).filter((e) => !/^(climate|camera)\./.test(e));
     return [...new Set([...a.ents.filter((e) => !e.startsWith('climate.') && !e.startsWith('camera.')), ...ad, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
   }
-  _extraSig() { const id = HGAreas.areaFromUrl(); return [id, !!this._showUn, [...(this._devOpen || [])].join(','), HGL.data.s['room:' + id] || null]; }
-  _changed() { const m = this._mm; this._mm = HGAreas.model(this._hass, this._config.areas); if (m !== this._mm || this._lastAid !== HGAreas.areaFromUrl()) { this._lastAid = HGAreas.areaFromUrl(); this._entsC = null; this._prevStates = null; } return super._changed(); }
+  _extraSig() { const id = this._rid(); return [id, !!this._showUn, (HGL.data.wiz || {}).areas || null, [...(this._devOpen || [])].join(','), HGL.data.s['room:' + id] || null]; }
+  _changed() { const m = this._mm; this._mm = HGAreas.model(this._hass, this._config.areas); if (m !== this._mm || this._lastAid !== this._rid()) { this._lastAid = this._rid(); this._entsC = null; this._prevStates = null; } return super._changed(); }
   css() {
     return U(`
 :host{ height:auto; }
@@ -1049,4 +1054,36 @@ ha-card.wmc{ gap:var(--s2); }
   }
   getCardSize() { return 10; }
 }
-hgReg('hg-room-card', HGRoomCard, 'Home Glass – Pokój', 'Wszystkie encje pokoju pogrupowane wg rodzaju (adres ?area=<id>)');
+hgReg('hg-room-card', HGRoomCard, 'Home Glass – Pokój', 'Wszystkie encje pokoju pogrupowane wg rodzaju (adres ?area=<id> albo pole room)');
+/* --- urządzenie AGD jako osobny widżet (pralka, suszarka, czajnik, poidełko, dowolne urządzenie): ten sam widok co w pokoju --- */
+class HGApplianceCard extends HGRoomCard {
+  defaults() { return { entity: '', device: '', areas: {} }; }
+  _dev() { const h = this._hass, c = this._config, r = (h.entities || {})[c.entity]; return c.device || (r && r.device_id) || ''; }
+  _devEnts() { const h = this._hass, d = this._dev(), reg = h.entities || {}; if (!d) return this._config.entity && h.states[this._config.entity] ? [this._config.entity] : [];
+    return Object.keys(h.states).filter((e) => reg[e] && reg[e].device_id === d && !reg[e].hidden && !reg[e].entity_category); }
+  ents() { return this._hass ? this._devEnts() : []; }
+  _area() { return null; }
+  _extraSig() { return [this._dev(), [...(this._devOpen || [])].join(',')]; }
+  _changed() { return HGBase.prototype._changed.call(this); }
+  render() { const h = this._hass, d = this._dev(), ents = this._devEnts(); this._a = { id: '_app', name: '', strip: [], ents };
+    const out = ents.length ? this._devCard({ d: d || ents[0], ents }, this._a) : null;
+    return out || `<ha-card class="glass"><div class="empty"><b>${hgTr('Brak urządzenia', 'No device')}</b>${hgTr('Wybierz encję urządzenia w ustawieniach widżetu.', 'Pick an entity of the device in the widget settings.')}</div></ha-card>`; }
+}
+hgReg('hg-appliance-card', HGApplianceCard, hgTr('Home Glass – Urządzenie AGD', 'Home Glass – Appliance'), hgTr('Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp', 'Washer, dryer, kettle and other devices: state, program, time left, progress'));
+/* --- schody (sekwencja świateł dół / góra z czujnikami ruchu) i ciepła woda (CWU) jako osobne widżety --- */
+class HGStairsCard extends HGRoomCard {
+  defaults() { return { stairs: null, areas: {} }; }
+  ents() { const S = this._config.stairs; return S ? [S.group, S.automation, S.bottom && S.bottom.light, S.bottom && S.bottom.motion, S.top && S.top.light, S.top && S.top.motion].filter(Boolean) : []; }
+  _area() { return null; } _extraSig() { return 0; } _changed() { return HGBase.prototype._changed.call(this); }
+  render() { this._a = { id: '_st', name: '', strip: [] }; const S = this._config.stairs;
+    return S && S.bottom && S.top ? this._stairs(S) : `<ha-card class="glass"><div class="empty"><b>${hgTr('Schody', 'Stairs')}</b>${hgTr('Ustaw światła i czujniki dołu i góry.', 'Set the bottom and top lights and sensors.')}</div></ha-card>`; }
+}
+hgReg('hg-stairs-card', HGStairsCard, hgTr('Home Glass – Schody', 'Home Glass – Stairs'), hgTr('Sekwencja świateł schodów z czujnikami dołu i góry', 'Stair light sequence with bottom and top sensors'));
+class HGCwuCard extends HGRoomCard {
+  defaults() { return { cwu: null, areas: {} }; }
+  ents() { const C = this._config.cwu; if (!C) return []; return [C.heater, C.heating, C.keep, C.power, C.remaining, C.consumption, ...(C.switches || []).map((x) => x[0]), ...(C.up ? [C.up.tank, C.up.switch, C.up.power, ...((C.up.co || []).map((x) => x[0]))] : [])].filter(Boolean); }
+  _area() { return null; } _extraSig() { return 0; } _changed() { return HGBase.prototype._changed.call(this); }
+  render() { this._a = { id: '_cw', name: '', strip: [] }; const C = this._config.cwu; if (!C || !C.heater) return `<ha-card class="glass"><div class="empty"><b>${hgTr('Ciepła woda', 'Hot water')}</b>${hgTr('Wybierz podgrzewacz wody.', 'Choose a water heater.')}</div></ha-card>`;
+    const C2 = Object.assign({ switches: [] }, C, C.up ? { up: Object.assign({ co: [] }, C.up) } : {}); return this._cwu(C2) + (C2.up ? this._cwuUp(C2.up) : ''); }
+}
+hgReg('hg-cwu-card', HGCwuCard, hgTr('Home Glass – Ciepła woda', 'Home Glass – Hot water'), hgTr('Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki', 'Water heater: temperature, heating, power, time, switches'));

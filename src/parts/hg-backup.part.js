@@ -48,7 +48,7 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
   ents(d, h) { const out = new Set(), re = /^[a-z_]+\.[a-z0-9_]+$/;
     const dom = new Set([...Object.keys(h.states).map((e) => e.split('.')[0]), 'light', 'switch', 'sensor', 'binary_sensor', 'climate', 'media_player', 'camera', 'cover', 'fan', 'lock', 'person', 'weather', 'scene', 'script', 'automation', 'input_boolean', 'input_number', 'input_select', 'button', 'number', 'select', 'vacuum', 'water_heater', 'humidifier', 'valve', 'alarm_control_panel', 'calendar', 'device_tracker', 'update', 'siren', 'event', 'todo', 'lawn_mower']);
     const walk = (x) => { if (typeof x === 'string') { for (const q of x.split('|')) if (re.test(q) && dom.has(q.split('.')[0])) out.add(q); } else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) { walk(k); walk(v); } };
-    walk(d.s || {}); walk(((d.wiz || {}).custom) || []); return [...out].sort(); },
+    walk(d.s || {}); walk(((d.wiz || {}).custom) || []); walk(((d.wiz || {}).areas) || {}); walk(((d.wiz || {}).fuel) || []); return [...out].sort(); },
   sum(o, h) { const d = o.data, w = d.wiz || {}, S = d.s || {}, E = this.ents(d, h);
     return { views: (w.views || []).length, custom: (w.custom || []).length, widgets: Object.values(S).reduce((n, x) => n + ((x.added || []).length), 0), scopes: Object.keys(S).length,
       hidden: Object.values(S).reduce((n, x) => n + ((x.hidden || []).length), 0), ents: E.length, miss: E.filter((e) => !h.states[e]), accent: d.app && /^#[0-9a-f]{6}$/i.test(d.app.accent || '') ? d.app.accent : null }; },

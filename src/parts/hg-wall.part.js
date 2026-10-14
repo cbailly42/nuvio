@@ -97,7 +97,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ---- zdjęcia ---- */
   imgs() { const c = this.get(), A = HGApp.get(), port = window.innerHeight > window.innerWidth, one = (b) => { if (!b) return null; const u = port && b.v2p ? HGApp.bgImg({ kind: 'image', v: b.v2p }) : HGApp.bgImg(b); return u; };
     if (c.src === 'url' && c.url) return [HGApp.bgImg({ kind: 'image', v: c.url })];
-    if (c.src === 'slides') { const l = (typeof HG_BGS !== 'undefined' ? HG_BGS : []).map(([u, , pu]) => one(u ? { kind: 'image', v: u, v2p: pu || '' } : window.HG_DEFAULT_BG)).filter(Boolean);
+    if (c.src === 'slides') { const l = (typeof hgBgList !== 'undefined' ? hgBgList() : []).map(([u, , pu]) => one(u ? { kind: 'image', v: u, v2p: pu || '' } : window.HG_DEFAULT_BG)).filter(Boolean);
       if (A.bg && A.bg.kind === 'image') { const x = one(A.bg); if (x && !l.includes(x)) l.unshift(x); }
       if (l.length) return [...new Set(l)]; }
     const B = A.bg || window.HG_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.HG_DEFAULT_BG_FB || {}).v || '#16202B'}, ${(window.HG_DEFAULT_BG_FB || {}).v2 || '#05070A'})`]; },
