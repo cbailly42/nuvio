@@ -247,6 +247,15 @@ strategy:
 
 Configuration (layout + appearance) can be exported/imported as JSON. Personal presets live outside the repository.
 
+## Layout backup
+
+Admins can export and import the whole Nuvio layout from **Appearance → Layout backup** (edit mode).
+
+- **Export** downloads `nuvio-uklad-YYYY-MM-DD.json`; **Copy to clipboard** copies the same JSON. Choose what to include: views and custom views; layout, widgets with their entities, titles, section widths and hidden items; appearance (accent, background, dimming); view panel widths.
+- **Import** accepts a file (picker or drag and drop) or pasted JSON. The file is validated and a summary shows the number of views, widgets, sections and entities, with entities missing on this instance highlighted. Pick the parts to import and **Replace** or **Merge**.
+- Before importing, the current layout is kept as a backup; **Restore previous** in the notification (or in the Layout backup section) undoes the import with one click.
+- The file is versioned (`format`, `schema`, `nuvio`, `exported`). Older raw layout data is converted automatically; files from a newer schema or damaged files are rejected with a clear message.
+
 ## Development
 
 ```bash
@@ -263,6 +272,9 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 Only tagging by hand: `git tag -a v0.3.24 -m "Nuvio 0.3.24" && git push origin v0.3.24`.
 
 ## Changelog
+
+### 0.4.0
+- New: layout backup in Appearance. Export the whole layout to a versioned JSON file or the clipboard, choosing what to include, and import it from a file, drag and drop or pasted text. Import validates the file, shows a summary with views, widgets and entities missing on this instance, offers Replace or Merge, keeps the current layout as a backup with one click Restore previous, converts older data and rejects bad files with a clear message. Admin only.
 
 ### 0.3.24
 - Fixed: a changed icon now shows in the live preview while editing, not only after saving. Group layouts (List, Grid, Carousel, Compact list) had no icon in the preview header at all, and section previews could change the wrong icon instead of the section header's icon.

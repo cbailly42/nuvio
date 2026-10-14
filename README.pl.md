@@ -247,6 +247,15 @@ strategy:
 
 Konfigurację (układ + wygląd) można eksportować i importować jako JSON. Osobiste presety są przechowywane poza repozytorium.
 
+## Kopia układu
+
+Administrator może wyeksportować i zaimportować cały układ Nuvio w **Wygląd → Kopia układu** (tryb edycji).
+
+- **Eksportuj** pobiera plik `nuvio-uklad-RRRR-MM-DD.json`, a **Kopiuj do schowka** kopiuje ten sam JSON. Do wyboru, co zawiera kopia: widoki i własne widoki; układ, widżety z encjami, tytuły, szerokości sekcji i ukryte elementy; wygląd (akcent, tło, przyciemnienie); szerokość paneli widoków.
+- **Importuj** przyjmuje plik (wybór lub przeciągnięcie) albo wklejony JSON. Plik jest sprawdzany, a podsumowanie pokazuje liczbę widoków, widżetów, sekcji i encji oraz wyróżnia encje, których brak na tej instancji. Wybierz części do importu oraz **Zastąp** albo **Połącz**.
+- Przed importem bieżący układ jest zapisywany jako kopia; **Przywróć poprzedni** w powiadomieniu (albo w sekcji Kopia układu) cofa import jednym kliknięciem.
+- Plik ma wersję (`format`, `schema`, `nuvio`, `exported`). Starsze surowe dane układu są konwertowane automatycznie, a pliki z nowszego schematu lub uszkodzone są odrzucane z jasnym komunikatem.
+
 ## Rozwój
 
 ```bash
@@ -263,6 +272,9 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 Sam tag ręcznie: `git tag -a v0.3.24 -m "Nuvio 0.3.24" && git push origin v0.3.24`.
 
 ## Lista zmian
+
+### 0.4.0
+- Nowość: kopia układu w ustawieniach Wygląd. Eksport całego układu do pliku JSON z wersją albo do schowka, z wyborem, co zawiera, oraz import z pliku, przez przeciągnięcie lub z wklejonego tekstu. Import sprawdza plik, pokazuje podsumowanie z widokami, widżetami i encjami, których brak na tej instancji, pozwala wybrać Zastąp albo Połącz, zachowuje bieżący układ jako kopię z przyciskiem Przywróć poprzedni, konwertuje starsze dane i odrzuca błędne pliki z jasnym komunikatem. Tylko dla administratora.
 
 ### 0.3.24
 - Poprawka: zmieniona ikona jest widoczna od razu w podglądzie na żywo podczas edycji, a nie dopiero po zapisie. Układy grupowe (Lista, Siatka, Karuzela, Kompaktowa lista) nie miały ikony w nagłówku podglądu, a w podglądzie sekcji mogła się zmieniać niewłaściwa ikona zamiast ikony nagłówka.

@@ -1,0 +1,162 @@
+/* ===== Kopia układu (admin): eksport do pliku / schowka i import z pliku, przeciągnięcia lub wklejenia.
+   Format: { format: 'nuvio-layout', schema, nuvio, exported, include, data: { wiz, s, app, pw } } (dane jak w HGL.data).
+   Przed importem bieżący układ trafia do localStorage (nuvio:layout-backup), „Przywróć poprzedni” cofa import jednym kliknięciem. */
+const HGBackup = window.__hgBackup || (window.__hgBackup = {
+  SCHEMA: 2, BK: 'nuvio:layout-backup', inc: null, st: null,
+  CATS: [['views', 'wiz', 'mdi:view-dashboard-outline', 'Widoki i własne widoki', 'Views and custom views'],
+    ['layout', 's', 'mdi:view-grid-outline', 'Układ, widżety i encje, tytuły, szerokości sekcji, ukryte', 'Layout, widgets and entities, titles, section widths, hidden items'],
+    ['look', 'app', 'mdi:palette-outline', 'Wygląd: akcent, tło, przyciemnienie', 'Appearance: accent, background, dimming'],
+    ['panel', 'pw', 'mdi:arrow-expand-horizontal', 'Szerokość paneli widoków', 'View panel widths']],
+  admin(p) { const h = p && p._hass; return !!(h && h.user && h.user.is_admin); },
+  sel() { return this.inc || (this.inc = new Set(this.CATS.map((c) => c[0]))); },
+  cl(x) { return x == null ? x : JSON.parse(JSON.stringify(x)); },
+  prev() { try { const v = JSON.parse(localStorage.getItem(this.BK) || 'null'); return v && v.data && v.data.s ? v : null; } catch (e) { return null; } },
+  when(ts) { try { return new Date(ts).toLocaleString(HG_LOC(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } },
+  /* ---- eksport ---- */
+  build(sel) { const D = HGL.data || {}, data = {};
+    for (const [id, k] of this.CATS) if (sel.has(id)) data[k] = this.cl(D[k] || {});   /* pusta część też trafia do pliku: Zastąp ją wyczyści */
+    return { format: 'nuvio-layout', schema: this.SCHEMA, nuvio: String(HG_BUILD).split('+')[0], exported: new Date().toISOString(), include: this.CATS.filter((c) => sel.has(c[0])).map((c) => c[0]), data }; },
+  text(sel) { return JSON.stringify(this.build(sel), null, 2); },
+  download(p) { const t = this.text(this.sel()), d = new Date(), z = (n) => String(n).padStart(2, '0');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'application/json' }));
+    a.download = `nuvio-uklad-${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    p._eToast(hgTr('Wyeksportowano układ do pliku', 'Layout exported to a file')); },
+  async copy(p) { try { await navigator.clipboard.writeText(this.text(this.sel())); p._eToast(hgTr('Skopiowano układ do schowka', 'Layout copied to the clipboard')); }
+    catch (e) { p._eToast(hgTr('Nie udało się skopiować (przeglądarka zablokowała schowek)', 'Could not copy (the browser blocked the clipboard)')); } },
+  /* ---- odczyt, walidacja, migracja ---- */
+  fail(pl, en) { const e = new Error(hgTr(pl, en)); e.hg = 1; throw e; },
+  migrate(o) {
+    /* schemat 1: surowy zapis HGL.data ({ v: 1, ts, s, app, wiz, pw }) z wersji bez eksportu */
+    if (o.format == null && o.s && typeof o.s === 'object') return { format: 'nuvio-layout', schema: this.SCHEMA, nuvio: null, exported: o.ts ? new Date(o.ts).toISOString() : null, migrated: 1, data: { s: o.s, app: o.app, wiz: o.wiz, pw: o.pw } };
+    if (o.format !== 'nuvio-layout' || !Number.isInteger(o.schema)) this.fail('To nie jest plik kopii układu Nuvio.', 'This is not a Nuvio layout backup file.');
+    if (o.schema > this.SCHEMA) this.fail(`Plik pochodzi z nowszej wersji Nuvio (schemat ${o.schema}). Zaktualizuj Nuvio, aby go wczytać.`, `The file comes from a newer Nuvio (schema ${o.schema}). Update Nuvio to load it.`);
+    if (o.schema === 1) return Object.assign({}, o, { schema: this.SCHEMA, migrated: 1, data: o.data || o.layout });
+    return o; },
+  parse(t) { const ob = (x) => !!x && typeof x === 'object' && !Array.isArray(x), ar = (x) => x == null || Array.isArray(x);
+    if (typeof t !== 'string' || !t.trim()) this.fail('Plik jest pusty.', 'The file is empty.');
+    if (t.length > 4e6) this.fail('Plik jest za duży (ponad 4 MB).', 'The file is too large (over 4 MB).');
+    let o; try { o = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) { this.fail('To nie jest poprawny plik JSON. Sprawdź, czy skopiowano całą zawartość.', 'This is not valid JSON. Check that the whole content was copied.'); }
+    if (!ob(o)) this.fail('Nieznany format pliku.', 'Unknown file format.');
+    o = this.migrate(o); const d = o.data;
+    if (!ob(d)) this.fail('W pliku nie ma danych układu.', 'The file has no layout data.');
+    for (const k of ['s', 'wiz', 'app', 'pw']) if (d[k] != null && !ob(d[k])) this.fail(`Uszkodzona część pliku: ${k}.`, `Damaged part of the file: ${k}.`);
+    for (const [k, v] of Object.entries(d.s || {})) if (!ob(v) || !ar(v.order) || !ar(v.hidden) || !ar(v.added) || (v.size != null && !ob(v.size)) || (v.conf != null && !ob(v.conf))) this.fail(`Uszkodzony zakres układu „${k}”.`, `Damaged layout scope “${k}”.`);
+    if (d.wiz && (!ar(d.wiz.views) || !ar(d.wiz.custom) || (d.wiz.custom || []).some((c) => !ob(c) || typeof c.p !== 'string'))) this.fail('Uszkodzona lista widoków.', 'Damaged list of views.');
+    if (!['s', 'wiz', 'app', 'pw'].some((k) => d[k] != null)) this.fail('Plik nie zawiera nic do zaimportowania.', 'The file contains nothing to import.');
+    return o; },
+  ents(d, h) { const out = new Set(), re = /^[a-z_]+\.[a-z0-9_]+$/;
+    const dom = new Set([...Object.keys(h.states).map((e) => e.split('.')[0]), 'light', 'switch', 'sensor', 'binary_sensor', 'climate', 'media_player', 'camera', 'cover', 'fan', 'lock', 'person', 'weather', 'scene', 'script', 'automation', 'input_boolean', 'input_number', 'input_select', 'button', 'number', 'select', 'vacuum', 'water_heater', 'humidifier', 'valve', 'alarm_control_panel', 'calendar', 'device_tracker', 'update', 'siren', 'event', 'todo', 'lawn_mower']);
+    const walk = (x) => { if (typeof x === 'string') { for (const q of x.split('|')) if (re.test(q) && dom.has(q.split('.')[0])) out.add(q); } else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) { walk(k); walk(v); } };
+    walk(d.s || {}); walk(((d.wiz || {}).custom) || []); return [...out].sort(); },
+  sum(o, h) { const d = o.data, w = d.wiz || {}, S = d.s || {}, E = this.ents(d, h);
+    return { views: (w.views || []).length, custom: (w.custom || []).length, widgets: Object.values(S).reduce((n, x) => n + ((x.added || []).length), 0), scopes: Object.keys(S).length,
+      hidden: Object.values(S).reduce((n, x) => n + ((x.hidden || []).length), 0), ents: E.length, miss: E.filter((e) => !h.states[e]), accent: d.app && /^#[0-9a-f]{6}$/i.test(d.app.accent || '') ? d.app.accent : null }; },
+  /* ---- zastosowanie ---- */
+  apply(p, o, mode, sel) { const D = HGL.data, d = o.data, prev = this.cl(D);
+    try { localStorage.setItem(this.BK, JSON.stringify({ ts: Date.now(), data: prev })); } catch (e) { /* pełny localStorage: kopia tylko w pamięci */ } this._mem = { ts: Date.now(), data: prev };
+    for (const [id, k] of this.CATS) { if (!sel.has(id) || d[k] == null) continue; const v = this.cl(d[k]);
+      if (mode === 'replace') D[k] = v;
+      else if (k === 'wiz') { const a = D.wiz || {}, w = Object.assign({}, a, v), cu = new Map([...(a.custom || []), ...(v.custom || [])].map((c) => [c.p, c]));
+        w.custom = [...cu.values()]; w.views = [...new Set([...(a.views || []), ...(v.views || [])])]; w.hints = Object.assign({}, a.hints, v.hints); D.wiz = w; }
+      else D[k] = Object.assign({}, D[k] || {}, v); }
+    return this.commit(p, JSON.stringify(prev.wiz || null) !== JSON.stringify(D.wiz || null), true); },
+  restore(p) { const b = this._mem || this.prev(); if (!b) return p._eToast(hgTr('Brak poprzedniego układu do przywrócenia', 'No previous layout to restore'));
+    const cur = HGL.data, nd = this.cl(b.data); nd.uid = cur.uid; HGL.data = nd; try { localStorage.removeItem(this.BK); } catch (e) { /* bez znaczenia */ } this._mem = null;
+    return this.commit(p, JSON.stringify(cur.wiz || null) !== JSON.stringify(nd.wiz || null), false); },
+  async commit(p, reload, offer) { HGL._ls(); HGApp.apply(); let w = 'local'; try { w = await HGL.save(p._hass); } catch (e) { /* zapis lokalny */ }
+    if (p._editing) p._eSnap = JSON.stringify(HGL.data);   /* Anuluj w trybie edycji nie cofa importu */
+    HGL.notify();
+    const msg = offer ? hgTr('Zaimportowano układ', 'Layout imported') : hgTr('Przywrócono poprzedni układ', 'Previous layout restored');
+    if (reload && !window.__hgDryRun) { try { sessionStorage.setItem('nuvio:bk-msg', JSON.stringify({ msg, offer })); } catch (e) { /* bez komunikatu po odświeżeniu */ } p._eToast(msg + hgTr(' (odświeżanie…)', ' (reloading…)')); setTimeout(() => location.reload(), 700); return w; }
+    if (p._eRefresh) p._eRefresh(true);
+    if (offer) p._eToast(msg, () => this.restore(p), hgTr('Przywróć poprzedni', 'Restore previous')); else p._eToast(msg);
+    return w; },
+  /* po odświeżeniu (zmiana widoków): komunikat z przyciskiem cofnięcia */
+  offer(p) { let m = null; try { m = JSON.parse(sessionStorage.getItem('nuvio:bk-msg') || 'null'); sessionStorage.removeItem('nuvio:bk-msg'); } catch (e) { return; } if (!m) return;
+    if (m.offer && this.prev()) p._eToast(m.msg, () => this.restore(p), hgTr('Przywróć poprzedni', 'Restore previous')); else p._eToast(m.msg); },
+  /* ---- UI: sekcja w arkuszu Wygląd ---- */
+  chk(on) { return `<i class="bk-cb" aria-hidden="true">${on ? H.icon('mdi:check') : ''}</i>`; },
+  html(p) { if (!this.admin(p)) return ''; const s = this.sel(), pv = this.prev(), none = !s.size;
+    return `<section class="lk-g bk" aria-labelledby="bk-h"><style>${HG_BK_CSS}</style><h4 id="bk-h">${H.icon('mdi:backup-restore')}${hgTr('Kopia układu', 'Layout backup')}</h4><small class="lk-hn">${hgTr('Zapisz układ do pliku albo przenieś go na inne urządzenie lub inną instancję Home Assistant.', 'Save the layout to a file or move it to another device or Home Assistant instance.')}</small>
+      <div class="bk-inc" role="group" aria-label="${hgTr('Co zawiera kopia', 'What the backup contains')}">${this.CATS.map(([id, , ic, pl, en]) => `<button type="button" role="checkbox" aria-checked="${s.has(id)}" data-hge="bk-inc" data-k="${id}">${this.chk(s.has(id))}${H.icon(ic)}<span>${hgTr(pl, en)}</span></button>`).join('')}</div>
+      <div class="bk-row"><button type="button" class="bk-p" data-hge="bk-exp" ${none ? 'disabled' : ''}>${H.icon('mdi:download')}<span>${hgTr('Eksportuj', 'Export')}</span></button><button type="button" class="bk-s" data-hge="bk-copy" ${none ? 'disabled' : ''}>${H.icon('mdi:content-copy')}<span>${hgTr('Kopiuj do schowka', 'Copy to clipboard')}</span></button><button type="button" class="bk-s" data-hge="bk-imp">${H.icon('mdi:upload')}<span>${hgTr('Importuj', 'Import')}</span></button></div>
+      ${pv ? `<button type="button" class="bk-u" data-hge="bk-undo">${H.icon('mdi:history')}<span>${hgTr('Przywróć poprzedni układ', 'Restore previous layout')}<small>${hgTr('sprzed importu', 'from before the import')}, ${H.esc(this.when(pv.ts))}</small></span></button>` : ''}</section>`; },
+  /* krok importu: źródło (plik / przeciągnij / wklej), potem podsumowanie i wybór trybu */
+  imp(p) { const h = p._hass, st = this.st, o = st.o, sm = o && this.sum(o, h), d = o && o.data;
+    const src = `<div class="bk-drop" tabindex="0" role="button" data-hge="bk-file" aria-describedby="bk-dh">${H.icon('mdi:file-upload-outline')}<b>${hgTr('Wybierz plik lub przeciągnij go tutaj', 'Choose a file or drop it here')}</b><small id="bk-dh">${hgTr('Plik .json z eksportu Nuvio. Możesz też wkleić zawartość (Ctrl+V).', 'A .json file exported from Nuvio. You can also paste the content (Ctrl+V).')}</small></div><input type="file" class="bk-f" accept=".json,application/json" hidden>
+      <label class="hs-fl"><span>${hgTr('Albo wklej JSON', 'Or paste JSON')}</span><textarea class="bk-ta" rows="4" spellcheck="false" placeholder='{ "format": "nuvio-layout", … }'></textarea></label><div class="bk-row r"><button type="button" class="bk-s" data-hge="bk-paste">${H.icon('mdi:clipboard-text-outline')}<span>${hgTr('Wczytaj wklejony tekst', 'Load pasted text')}</span></button></div>`;
+    const prv = o ? `<div class="bk-file">${H.icon('mdi:file-check-outline')}<span><b>${H.esc(st.name || hgTr('Wklejony tekst', 'Pasted text'))}</b><small>${o.nuvio ? 'Nuvio v' + H.esc(o.nuvio) : hgTr('starszy format', 'older format')}${o.exported ? ' · ' + H.esc(this.when(o.exported)) : ''}${o.migrated ? ' · ' + hgTr('przekonwertowano ze starszego schematu', 'converted from an older schema') : ''}</small></span><button type="button" class="bk-s sm" data-hge="bk-again">${hgTr('Inny plik', 'Other file')}</button></div>
+      <div class="bk-st" role="list">${[[sm.views, hgTr('widoków', 'views'), 'mdi:view-dashboard-outline'], [sm.custom, hgTr('własnych widoków', 'custom views'), 'mdi:view-grid-plus-outline'], [sm.widgets, hgTr('dodanych widżetów', 'added widgets'), 'mdi:widgets-outline'], [sm.scopes, hgTr('sekcji z ustawieniami', 'sections with settings'), 'mdi:view-grid-outline'], [sm.ents, hgTr('encji', 'entities'), 'mdi:devices']].map(([n, l, ic]) => `<span role="listitem">${H.icon(ic)}<b>${n}</b><small>${l}</small></span>`).join('')}</div>
+      ${sm.miss.length ? `<div class="bk-miss" role="note"><b>${H.icon('mdi:alert-outline')}${hgTr(`Brak ${sm.miss.length} z ${sm.ents} encji na tej instancji`, `${sm.miss.length} of ${sm.ents} entities are missing on this instance`)}</b><small>${hgTr('Widżety z tymi encjami pokażą „Niedostępne”, dopóki nie wybierzesz innej encji w ustawieniach karty.', 'Widgets with these entities show “Unavailable” until you choose another entity in card settings.')}</small><div class="bk-ch">${sm.miss.slice(0, 40).map((e) => `<code>${H.esc(e)}</code>`).join('')}${sm.miss.length > 40 ? `<em>+${sm.miss.length - 40}</em>` : ''}</div></div>` : sm.ents ? `<div class="bk-ok">${H.icon('mdi:check-circle-outline')}${hgTr('Wszystkie encje z pliku są na tej instancji.', 'All entities from the file exist on this instance.')}</div>` : ''}
+      <div class="hs-fl"><span>${hgTr('Co zaimportować', 'What to import')}</span><div class="bk-inc" role="group" aria-label="${hgTr('Co zaimportować', 'What to import')}">${this.CATS.filter(([, k]) => d[k] != null).map(([id, , ic, pl, en]) => `<button type="button" role="checkbox" aria-checked="${st.sel.has(id)}" data-hge="bk-isel" data-k="${id}">${this.chk(st.sel.has(id))}${H.icon(ic)}<span>${hgTr(pl, en)}</span>${id === 'look' && sm.accent ? `<i class="bk-sw" style="background:${sm.accent}" aria-hidden="true"></i>` : ''}</button>`).join('')}</div></div>
+      <div class="hs-fl"><span id="bk-mh">${hgTr('Sposób', 'Mode')}</span><div class="bk-md" role="radiogroup" aria-labelledby="bk-mh">${[['replace', hgTr('Zastąp', 'Replace'), hgTr('Wybrane części zastąpią obecny układ.', 'The chosen parts replace the current layout.'), 'mdi:swap-horizontal'], ['merge', hgTr('Połącz', 'Merge'), hgTr('Dodaje sekcje i widoki z pliku, reszta zostaje.', 'Adds sections and views from the file, the rest stays.'), 'mdi:call-merge']].map(([m, l, t, ic]) => `<button type="button" role="radio" aria-checked="${st.mode === m}" tabindex="${st.mode === m ? 0 : -1}" data-hge="bk-mode" data-k="${m}">${H.icon(ic)}<b>${l}</b><small>${t}</small></button>`).join('')}</div></div>
+      <small class="bk-nt">${H.icon('mdi:shield-check-outline')}${hgTr('Obecny układ zostanie zapisany jako kopia. Możesz go przywrócić jednym kliknięciem.', 'The current layout is kept as a backup. You can restore it with one click.')}</small>` : '';
+    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide bk-sh" role="dialog" aria-modal="true" aria-label="${hgTr('Importuj układ', 'Import layout')}"><style>${HG_BK_CSS}</style><div class="hs-h"><b>${hgTr('Importuj układ', 'Import layout')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      ${st.err ? `<div class="bk-err" role="alert">${H.icon('mdi:alert-circle-outline')}<span><b>${hgTr('Nie można zaimportować', 'Cannot import')}</b><small>${H.esc(st.err)}</small></span></div>` : ''}${o ? prv : src}</div>
+      <div class="hs-ac"><button class="hs-b2" data-hge="cback">${hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="bk-apply" ${o && st.sel.size ? '' : 'disabled'}>${H.icon('mdi:upload')}<span>${st.mode === 'replace' ? hgTr('Zastąp układ', 'Replace layout') : hgTr('Połącz układ', 'Merge layout')}</span></button></div></div>`;
+    p._eSheet('cfg'); const S = p._eSheetEl; S.innerHTML = html; this.wire(p, S); },
+  load(p, t, name) { const st = this.st; try { st.o = this.parse(t); st.err = null; st.name = name || null; st.sel = new Set(this.CATS.filter(([, k]) => st.o.data[k] != null).map((c) => c[0])); }
+    catch (e) { st.o = null; st.err = e && e.hg ? e.message : hgTr('Nie udało się odczytać pliku.', 'Could not read the file.'); }
+    this.imp(p); requestAnimationFrame(() => { const f = p._eSheetEl && p._eSheetEl.querySelector(st.err ? '.bk-err' : '.bk-file'); if (f) { f.tabIndex = -1; f.focus({ preventScroll: true }); } }); },
+  readFile(p, f) { if (!f) return; if (f.size > 4e6) { this.st.err = hgTr('Plik jest za duży (ponad 4 MB).', 'The file is too large (over 4 MB).'); this.st.o = null; return this.imp(p); }
+    f.text().then((t) => this.load(p, t, f.name), () => this.load(p, '', f.name)); },
+  wire(p, S) { const fi = S.querySelector('.bk-f'), dz = S.querySelector('.bk-drop'), ta = S.querySelector('.bk-ta');
+    if (fi) fi.addEventListener('change', () => this.readFile(p, fi.files && fi.files[0]));
+    if (dz) { dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+      ['dragenter', 'dragover'].forEach((t) => dz.addEventListener(t, (e) => { e.preventDefault(); dz.classList.add('on'); }));
+      ['dragleave', 'drop'].forEach((t) => dz.addEventListener(t, () => dz.classList.remove('on')));
+      dz.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) this.readFile(p, f); else { const t = e.dataTransfer && e.dataTransfer.getData('text'); if (t) this.load(p, t); } }); }
+    const sh = S.querySelector('.bk-sh'); if (sh && !this.st.o) sh.addEventListener('paste', (e) => { if (e.target === ta) return; const t = e.clipboardData && e.clipboardData.getData('text'); if (t) { e.preventDefault(); this.load(p, t); } });
+    const md = S.querySelector('.bk-md'); if (md) md.addEventListener('keydown', (e) => { const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!k) return; e.preventDefault(); const bs = [...md.children], i = bs.indexOf(document.activeElement === md ? null : e.target.closest('button')), n = bs[(i + k + bs.length) % bs.length]; n.click(); requestAnimationFrame(() => { const x = p._eSheetEl.querySelector(`.bk-md [data-k="${n.dataset.k}"]`); if (x) x.focus(); }); }); },
+  act(p, b, a) { if (!this.admin(p)) return;
+    if (a === 'bk-inc') { const s = this.sel(), k = b.dataset.k; s.has(k) ? s.delete(k) : s.add(k); return p._eLook(); }
+    if (a === 'bk-exp') return this.download(p);
+    if (a === 'bk-copy') return this.copy(p);
+    if (a === 'bk-undo') return this.restore(p).then(() => { if (p._eSheetEl && p._eSheetEl.querySelector('.lk')) p._eLook(); });
+    if (a === 'bk-imp') { this.st = { o: null, err: null, mode: 'merge', sel: new Set() }; return p._eGo(() => p._eLook(), () => this.imp(p)); }
+    const st = this.st; if (!st) return;
+    if (a === 'bk-file') return p._eSheetEl.querySelector('.bk-f').click();
+    if (a === 'bk-paste') { const t = p._eSheetEl.querySelector('.bk-ta').value; return this.load(p, t); }
+    if (a === 'bk-again') { st.o = null; st.err = null; return this.imp(p); }
+    if (a === 'bk-isel') { const k = b.dataset.k; st.sel.has(k) ? st.sel.delete(k) : st.sel.add(k); return this.imp(p); }
+    if (a === 'bk-mode') { st.mode = b.dataset.k; return this.imp(p); }
+    if (a === 'bk-apply' && st.o && st.sel.size) { const o = st.o, m = st.mode, s = new Set(st.sel); this.st = null; p._eSheet(false); return this.apply(p, o, m, s); } },
+});
+const HG_BK_CSS = `
+.bk ha-icon, .bk-sh ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; flex:none; }
+.bk-inc{ display:flex; flex-direction:column; gap:6px; }
+.bk-inc button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 12px; border-radius:14px; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); font-size:13.5px; line-height:1.3; transition:background .2s; }
+.bk-inc button:hover{ background:var(--hg-hover-fill, color-mix(in srgb, currentColor 8%, transparent)); } .bk-inc button:focus-visible, .bk-md button:focus-visible, .bk-row button:focus-visible, .bk-drop:focus-visible, .bk-u:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.bk-inc button > ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; opacity:.75; flex:none; } .bk-inc span{ flex:1; min-width:0; }
+.bk-cb{ flex:none; width:20px; height:20px; border-radius:6px; display:grid; place-items:center; box-shadow:inset 0 0 0 1.5px color-mix(in srgb, currentColor 45%, transparent); }
+.bk-cb ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; } [aria-checked=true] > .bk-cb{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; }
+.bk-sw{ flex:none; width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); }
+.bk-row{ display:flex; flex-wrap:wrap; gap:8px; } .bk-row.r{ justify-content:flex-end; }
+.bk-row > button, .bk-s{ all:unset; box-sizing:border-box; cursor:pointer; height:40px; padding:0 16px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; }
+.bk-row ha-icon, .bk-s ha-icon, .bk-u > ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.bk-row > .bk-p{ background:var(--hg-accent); color:var(--hg-on-accent); } .bk-row > .bk-s, .bk-file > .bk-s{ background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent)); } .bk-s.sm{ height:32px; padding:0 12px; font-size:13px; flex:none; }
+.bk-row > button:disabled{ opacity:.4; cursor:default; }
+.bk-u{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--hg-accent) 45%, transparent); color:var(--hg-accent-tx, inherit); font-size:13.5px; font-weight:600; }
+.bk-u span{ display:flex; flex-direction:column; } .bk-u small{ font-weight:400; opacity:.7; font-size:12px; color:var(--primary-text-color, inherit); }
+.bk-drop{ cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; min-height:150px; padding:20px; border-radius:20px; border:1.5px dashed color-mix(in srgb, var(--hg-accent) 70%, transparent); background:var(--hg-accent-faint, transparent); transition:background .2s, transform .2s; }
+.bk-drop.on{ background:var(--hg-accent-soft, var(--hg-accent-faint)); transform:scale(1.01); } .bk-drop > ha-icon, .bk-sh .bk-drop > ha-icon{ --mdc-icon-size:36px; width:36px; height:36px; color:var(--hg-accent-tx, var(--hg-accent)); } .bk-drop b{ font-size:15px; } .bk-drop small{ opacity:.65; font-size:12.5px; max-width:340px; }
+.bk-ta{ box-sizing:border-box; width:100%; min-height:88px; resize:vertical; padding:10px 12px; border-radius:14px; border:0; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); color:inherit; font:12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.bk-ta:focus{ outline:2px solid var(--hg-accent); outline-offset:1px; }
+.bk-err{ display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:16px; background:color-mix(in srgb, var(--error-color, #DB4437) 16%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--error-color, #DB4437) 45%, transparent); }
+.bk-err > ha-icon{ color:var(--error-color, #DB4437); flex:none; } .bk-err span, .bk-file span{ display:flex; flex-direction:column; gap:2px; min-width:0; } .bk-err small{ font-size:13px; opacity:.85; }
+.bk-file{ display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:16px; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); } .bk-file span{ flex:1; } .bk-file b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .bk-file small{ opacity:.65; font-size:12px; } .bk-file > ha-icon{ color:var(--hg-accent-tx, var(--hg-accent)); flex:none; }
+.bk-st{ display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; }
+.bk-st span{ display:flex; flex-direction:column; gap:2px; padding:12px; border-radius:16px; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); } .bk-st ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; opacity:.7; } .bk-st b{ font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; } .bk-st small{ opacity:.65; font-size:12px; }
+.bk-miss{ display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:16px; background:color-mix(in srgb, var(--warning-color, #FFA600) 14%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--warning-color, #FFA600) 45%, transparent); }
+.bk-miss b{ display:flex; align-items:center; gap:8px; font-size:14px; } .bk-miss b ha-icon{ color:var(--warning-color, #FFA600); } .bk-miss small{ opacity:.8; font-size:12.5px; }
+.bk-ch{ display:flex; flex-wrap:wrap; gap:6px; } .bk-ch code{ font:12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; padding:4px 8px; border-radius:8px; background:color-mix(in srgb, var(--warning-color, #FFA600) 18%, transparent); } .bk-ch em{ font-style:normal; font-size:12px; opacity:.7; align-self:center; }
+.bk-ok{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--hg-accent-tx, inherit); }
+.bk-md{ display:grid; grid-template-columns:1fr 1fr; gap:8px; } .bk-md button{ all:unset; box-sizing:border-box; cursor:pointer; display:grid; grid-template-columns:auto 1fr; column-gap:10px; row-gap:2px; align-items:center; padding:12px; border-radius:16px; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, none); transition:background .2s; }
+.bk-md button ha-icon, .bk-sh .bk-md button ha-icon{ grid-row:span 2; --mdc-icon-size:22px; width:22px; height:22px; } .bk-md b{ font-size:14px; } .bk-md small{ font-size:12px; opacity:.7; }
+.bk-md button[aria-checked=true]{ background:var(--hg-accent); color:var(--hg-on-accent); } .bk-md button[aria-checked=true] small{ opacity:.85; }
+.bk-nt{ display:flex; align-items:center; gap:8px; opacity:.7; font-size:12.5px; } .bk-nt ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; flex:none; }
+.bk-sh .hs-sc{ display:flex; flex-direction:column; gap:14px; }
+@media (max-width:600px){ .bk-md{ grid-template-columns:1fr; } .bk-row > button{ flex:1 1 100%; } }
+@media (prefers-reduced-motion:reduce){ .bk-drop, .bk-inc button, .bk-md button{ transition:none; } }
+`;
+window.HGBackup = HGBackup;

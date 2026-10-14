@@ -622,7 +622,7 @@ class HGPage extends HTMLElement {
         </div>
       </div>`);
     this._menuEl = this._topEl.querySelector('.user');
-    if (this._hass && !this._updT) setTimeout(() => this._updCheck(), 1500);
+    if (this._hass && !this._updT) { setTimeout(() => this._updCheck(), 1500); if (window.HGBackup) setTimeout(() => HGBackup.offer(this), 1200); }
     this._paintMenu();
     this._tabsFit();
     this._placeInd();
