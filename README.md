@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.17-a3e635?style=flat-square" alt="v0.3.17">
+  <img src="https://img.shields.io/badge/version-v0.3.18-a3e635?style=flat-square" alt="v0.3.18">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -258,8 +258,11 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.18
+- Fixed: the weather in the header uses the animated icon again (0.3.17 switched it to the still icon by mistake; it was not the cause of the glow band).
+
 ### 0.3.17
-- Fixed: a lighter vertical band ("glow") cutting through the zoom toolbar and the household bar on views with the half-width panel (Panel, large screens). The weather in the header on the photo now uses the still icon, so it no longer repaints every frame and Chrome no longer refreshes only part of the glass; the tab and rail indicators no longer keep a permanent GPU layer (they are promoted only while they animate).
+- Changed: the tab and rail indicators no longer keep a permanent GPU layer (they are promoted only while they animate).
 
 ### 0.3.16
 - Fixed: Done, Save and other primary buttons commit and close without asking. The Discard changes confirm appears only when closing a form with unsaved changes (card settings, component form) with X, Escape, the backdrop or a swipe; sheets that apply changes live (Appearance, title, Restore hidden, the gallery) never ask.
