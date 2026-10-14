@@ -618,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.12.0+c84ec429';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.13.0+2e8f356e';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -792,7 +792,7 @@ class HGBase extends HTMLElement {
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
       const st = document.createElement('style');
-      st.textContent = HG_BASE + this.css();
+      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css();
       this.shadowRoot.appendChild(st);
       this.$ = document.createElement('div');
       this.$.className = 'root';
@@ -836,8 +836,11 @@ class HGBase extends HTMLElement {
     if (this._touching) { this._pendingUpd = true; return; }
     const html = this.render();
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
-    this._html = html;
-    this.$.innerHTML = html;
+    const first = this._html == null; this._html = html;
+    /* na żywo: łatanie istniejących węzłów (ui/morph). Karty z afterRender podpinają nasłuchiwanie do nowych węzłów,
+       więc dopóki nie przejdą na delegację zdarzeń (data-act), dostają pełne przerysowanie jak dotąd. */
+    if (first || this.afterRender || this.constructor.noMorph || typeof hgMorph === 'undefined') this.$.innerHTML = html;
+    else hgMorph(this.$, html);
     if (this.afterRender) this.afterRender();
   }
   rerender() { this._prevStates = null; this._update(true); }
@@ -1579,6 +1582,232 @@ ha-card.glass.warm{
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 `) + HG_RANGE_CSS;
+
+/* ===== ui: rejestr wspólnych klocków (prymitywów) kart. Każdy klocek to osobny plik ui/<nazwa>.part.js, który dopisuje
+   swój CSS (hgUI.add) i funkcję zwracającą HTML (karty renderują szablony tekstowe). Styl każdej karty dostaje CSS wszystkich
+   klocków (HGBase.setConfig), więc zmiana klocka zmienia wszystkie karty naraz. Wartości tylko z tokenów (src/theme_head.js). ===== */
+const hgUI = {
+  _css: [],
+  add(css) { this._css.push(U(css)); this._all = null; },
+  css() { return this._all || (this._all = this._css.join('\n')); },
+  esc: (s) => H.esc(s),
+  base: () => HG_BASE,   // galeria klocków (tests/ui-gallery.html)
+  /* atrybuty akcji: data-act + reszta data-* (obsługa przez HGBase.onAct) */
+  act(act, data) { if (!act) return ''; return ` data-act="${H.esc(act)}"` + Object.entries(data || {}).map(([k, v]) => ` data-${k}="${H.esc(v)}"`).join(''); },
+  /* liczba, która przy zmianie płynnie się przelicza (ui/morph) */
+  num(v, d = 0) { if (v == null || !isFinite(v)) return '<span class="nv-num">–</span>'; const t = (+v).toFixed(d).replace('.', hgCurLang() === 'en' ? '.' : ','); return `<span class="nv-num" data-v="${+v}">${t}</span>`; },
+};
+window.__nuvioUI = hgUI;
+hgUI.add(`
+/* wejście nowego elementu i wspólne przejścia */
+.nv-in{ animation: nvIn var(--hg-t-slow, 320ms) var(--hg-ease-out, ease-out) both; }
+@keyframes nvIn{ from{ opacity:0; transform: translateY(6px) scale(.98); } }
+.nv-num{ font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce){ .nv-in{ animation:none; } }
+`);
+
+/* ===== ui/morph: aktualizacja karty na żywo. Zamiast podmieniać całe innerHTML (znika fokus, przewijanie i trwające animacje,
+   przejścia CSS nie mają od czego startować), nowy HTML jest nakładany na istniejące węzły: zmieniają się tylko atrybuty,
+   teksty i węzły, które naprawdę są inne. Dzięki temu paski, łuki i przełączniki płyną przejściami CSS do nowej wartości.
+   Klucze (id, data-key, data-e) parują elementy list, więc przestawienie kolejności nie przerysowuje całej listy.
+   Liczby z klasą .nv-num i atrybutem data-v przeliczają się płynnie od starej do nowej wartości. ===== */
+const hgMorph = (() => {
+  const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tpl = document.createElement('template');
+  const key = (n) => (n.nodeType === 1 ? n.id || n.getAttribute('data-key') || (n.getAttribute('data-e') ? n.tagName + '|' + n.getAttribute('data-e') : null) : null);
+  const same = (a, b) => a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && key(a) === key(b)));
+  /* płynna liczba: od wartości widocznej teraz do nowej, 400 ms, format (miejsca po przecinku) z nowego tekstu */
+  const tween = (el, from, to, text) => {
+    cancelAnimationFrame(el.__nvT || 0);
+    const d = (text.match(/[.,](\d+)/) || [, ''])[1].length, sep = text.includes(',') ? ',' : '.', t0 = performance.now();
+    const pre = text.slice(0, text.search(/[-\d]/)), post = text.slice(text.search(/[-\d][\d\s.,]*/) + (text.match(/[-\d][\d\s.,]*/) || [''])[0].length);
+    const step = (t) => { const k = Math.min(1, (t - t0) / 400), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
+      el.textContent = pre + v.toFixed(d).replace('.', sep) + post; if (k < 1) el.__nvT = requestAnimationFrame(step); else el.textContent = text; };
+    el.__nvT = requestAnimationFrame(step);
+  };
+  const attrs = (a, b, root) => {
+    for (const { name } of [...a.attributes]) if (!b.hasAttribute(name)) a.removeAttribute(name);
+    for (const { name, value } of b.attributes) if (a.getAttribute(name) !== value) {
+      const old = a.getAttribute(name); a.setAttribute(name, value);
+      if (name === 'data-v' && a.classList.contains('nv-num') && !reduce()) { const f = parseFloat(old), t = parseFloat(value); if (isFinite(f) && isFinite(t) && f !== t) a.__nvTo = [f, t]; }
+    }
+    /* pola formularzy: właściwość value / checked idzie za atrybutem, chyba że użytkownik właśnie w nim pisze */
+    if ((a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT') && root.activeElement !== a) {
+      if ('value' in b && a.value !== b.value && b.hasAttribute('value')) a.value = b.value;
+      if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked');
+    }
+  };
+  const kids = (a, b, root) => {
+    const old = [...a.childNodes], neu = [...b.childNodes], byKey = new Map();
+    for (const n of old) { const k = key(n); if (k) byKey.set(k, n); }
+    let i = 0;
+    for (const nb of neu) {
+      const k = key(nb); let na = k ? byKey.get(k) : null;
+      if (na) byKey.delete(k);
+      else { const c = old[i]; if (c && !key(c) && same(c, nb)) na = c; }
+      const at = a.childNodes[i];
+      if (na) { if (na !== at) a.insertBefore(na, at || null); patch(na, nb, root); }
+      else a.insertBefore(nb.cloneNode(true), at || null);
+      i++;
+    }
+    while (a.childNodes.length > neu.length) a.removeChild(a.lastChild);
+  };
+  const patch = (a, b, root) => {
+    if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+    attrs(a, b, root);
+    if (a.tagName === 'STYLE' || a.tagName === 'SCRIPT') { if (a.textContent !== b.textContent) a.textContent = b.textContent; return; }
+    if (a.__nvTo) { const [f, t] = a.__nvTo; a.__nvTo = null; tween(a, f, t, b.textContent); return; }
+    if (a.__nvT && a.getAttribute('data-v') === b.getAttribute('data-v')) return;   // trwa przeliczanie do tej samej wartości
+    kids(a, b, root);
+  };
+  /* root = kontener karty; html = nowa treść. Zwraca false, gdy nie da się łatać (pierwsze malowanie). */
+  return (el, html) => {
+    if (!el.firstChild) { el.innerHTML = html; return false; }
+    tpl.innerHTML = html; kids(el, tpl.content, el.getRootNode()); tpl.innerHTML = '';
+    return true;
+  };
+})();
+window.__nuvioMorph = hgMorph;
+
+/* ===== ui/icon-button: okrągły szklany przycisk z ikoną (lupa, plus, minus, X, rozwiń, ⋮). on = aktywny (biały). ===== */
+hgUI.add(`
+.nv-ib{ position:relative; width:var(--nv-ib, 30u); height:var(--nv-ib, 30u); flex:none; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;
+  background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); color:inherit; cursor:pointer;
+  transition: background var(--hg-t-base) var(--hg-ease-out), transform var(--hg-t-fast) var(--hg-ease-out), color var(--hg-t-base) var(--hg-ease-out); }
+.nv-ib ha-icon{ width:45%; height:45%; }
+.nv-ib.bare{ background:transparent; box-shadow:none; }
+.nv-ib.sm{ --nv-ib: 22u; } .nv-ib.lg{ --nv-ib: 36u; }
+.nv-ib.on{ background:#fff; color:#111; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+@media (hover:hover) and (pointer:fine){ .nv-ib:not(.on):hover{ background:var(--hg-inner-bg-h); } }
+.nv-ib:active{ transform: scale(.94); }
+.nv-ib:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.nv-ib[disabled]{ opacity:.45; cursor:default; }
+@media (pointer:coarse){ .nv-ib::before{ content:''; position:absolute; inset:-6px; } }
+`);
+/* hgUI.iconBtn('mdi:magnify', 'search', 'Szukaj', { on, size: 'sm'|'lg', bare, data }) */
+hgUI.iconBtn = (icon, act, label, o = {}) => `<button class="nv-ib ${o.on ? 'on' : ''} ${o.size || ''} ${o.bare ? 'bare' : ''}" type="button" aria-label="${H.esc(label || '')}"${o.on != null ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(act, o.data)}${o.disabled ? ' disabled' : ''}>${H.icon(icon)}</button>`;
+
+/* ===== ui/pill: szklana pigułka (etykieta, tryb, „Popołudnie”), opcjonalnie z ikoną; on = biała jak aktywna zakładka.
+   ui/pill-tabs: rząd pigułek jako zakładki (role=tablist), aktywna biała. ===== */
+hgUI.add(`
+.nv-pill{ display:inline-flex; align-items:center; gap:4u; height:24u; padding:0 10u; border-radius:var(--hg-radius-pill, 999px); flex:none; white-space:nowrap;
+  font-size:var(--fs-sm); font-weight:500; background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); color:inherit;
+  transition: background var(--hg-t-base) var(--hg-ease-out), color var(--hg-t-base) var(--hg-ease-out), transform var(--hg-t-fast) var(--hg-ease-out); }
+.nv-pill ha-icon{ width:12u; height:12u; }
+button.nv-pill{ cursor:pointer; } button.nv-pill:active{ transform: scale(.96); }
+.nv-pill.on{ background:#fff; color:#111; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
+.nv-pill.acc{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow: 0 0 12px var(--hg-accent-glow); }
+@media (hover:hover) and (pointer:fine){ button.nv-pill:not(.on):not(.acc):hover{ background:var(--hg-inner-bg-h); } }
+.nv-pill:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.nv-tabs{ display:flex; gap:2u; padding:3u; border-radius:var(--hg-radius-pill, 999px); background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); overflow-x:auto; scrollbar-width:none; max-width:100%; }
+.nv-tabs::-webkit-scrollbar{ display:none; }
+.nv-tabs .nv-pill{ background:transparent; box-shadow:none; }
+.nv-tabs .nv-pill.on{ background:#fff; color:#111; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
+`);
+/* hgUI.pill('Popołudnie', { icon, on, acc, act, data }) */
+hgUI.pill = (text, o = {}) => { const tag = o.act ? 'button' : 'span';
+  return `<${tag} class="nv-pill ${o.on ? 'on' : ''} ${o.acc ? 'acc' : ''}"${o.act ? ' type="button"' : ''}${o.on != null && o.act ? ` aria-pressed="${!!o.on}"` : ''}${hgUI.act(o.act, o.data)}>${o.icon ? H.icon(o.icon) : ''}${text != null ? `<span>${H.esc(text)}</span>` : ''}</${tag}>`; };
+/* hgUI.tabs([{ id, label, icon }], cur, 'tab', 'Widoki') -> data-act="tab" data-id="<id>" */
+hgUI.tabs = (items, cur, act, label) => `<div class="nv-tabs" role="tablist"${label ? ` aria-label="${H.esc(label)}"` : ''}>${items.map((it) =>
+  `<button class="nv-pill ${it.id === cur ? 'on' : ''}" type="button" role="tab" aria-selected="${it.id === cur}" data-key="tab-${H.esc(it.id)}"${hgUI.act(act, { id: it.id })}>${it.icon ? H.icon(it.icon) : ''}<span>${H.esc(it.label)}</span></button>`).join('')}</div>`;
+
+/* ===== ui/switch: przełącznik (zielony tor, biała gałka na sprężynie). Ten sam wygląd co .tg w HG_BASE, z ruchem z tokenów. ===== */
+hgUI.add(`
+.tg{ transition: background var(--hg-t-base) var(--hg-ease-out), box-shadow var(--hg-t-base) var(--hg-ease-out); }
+.tg i{ transition: transform var(--hg-t-slow) var(--hg-spring, cubic-bezier(.3,.7,.3,1)), width var(--hg-t-fast) var(--hg-ease-out); }
+.tg:active i{ width:19u; } .tg.on:active i{ transform: translateX(11u); }
+.tg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+`);
+/* hgUI.switch(on, 'tog', 'Salon', disabled, data) */
+hgUI.switch = (on, act, label, disabled, data) => `<button class="tg ${on ? 'on' : ''}" type="button" role="switch" aria-checked="${!!on}" aria-label="${H.esc(label || hgTr('przełącz', 'toggle'))}"${hgUI.act(act, data)}${disabled ? ' disabled' : ''}><i></i></button>`;
+
+/* ===== ui/card-header: nagłówek karty: tytuł (+ mały podpis), a po prawej przełącznik, rozwiń albo ⋮. ===== */
+hgUI.add(`
+.nv-hd{ display:flex; align-items:center; gap:var(--s1); min-height:24u; position:relative; z-index:2; }
+.nv-hd .nv-tt{ flex:1; min-width:0; font-size:var(--fs-md); font-weight:500; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nv-hd .nv-tt small{ font-size:var(--fs-xs); font-weight:400; opacity:.6; margin-left:4u; }
+.nv-hd > ha-icon{ width:13u; height:13u; flex:none; opacity:.85; }
+`);
+/* hgUI.header('Salon', { icon, sub, right: html }) */
+hgUI.header = (title, o = {}) => `<div class="nv-hd">${o.icon ? H.icon(o.icon) : ''}<div class="nv-tt">${H.esc(title)}${o.sub ? `<small>${H.esc(o.sub)}</small>` : ''}</div>${o.right || ''}</div>`;
+
+/* ===== ui/big-value: duża cienka liczba (23°, 62%) z jednostką i małym szarym podpisem obok lub pod spodem. ===== */
+hgUI.add(`
+.nv-big{ display:flex; align-items:baseline; gap:5u; flex-wrap:wrap; min-width:0; }
+.nv-big .nv-v{ font-size:var(--nv-big, 30u); font-weight:var(--hg-fw-num, 300); line-height:1; letter-spacing:-.03em; white-space:nowrap; }
+.nv-big .nv-v sup{ font-size:.42em; vertical-align:top; position:relative; top:.08em; margin-left:1u; }
+.nv-big .nv-c{ font-size:var(--fs-sm); opacity:.65; }
+.nv-big.col{ flex-direction:column; align-items:center; gap:4u; }
+.nv-big.xl{ --nv-big: 48u; } .nv-big.sm{ --nv-big: 20u; }
+@container (max-width: 220px){ .nv-big{ --nv-big: 22u; } .nv-big.xl{ --nv-big: 34u; } }
+`);
+/* hgUI.big(23.4, { d: 0, unit: '°', sup: true, caption: 'Średnio', size: 'xl'|'sm', col }) */
+hgUI.big = (v, o = {}) => `<div class="nv-big ${o.size || ''} ${o.col ? 'col' : ''}"><span class="nv-v">${hgUI.num(v, o.d || 0)}${o.unit ? (o.sup ? `<sup>${H.esc(o.unit)}</sup>` : `<small style="font-size:.5em;margin-left:2px">${H.esc(o.unit)}</small>`) : ''}</span>${o.caption ? `<span class="nv-c">${H.esc(o.caption)}</span>` : ''}</div>`;
+
+/* ===== ui/progress: gruby pasek z limonkowym gradientem i poświatą, reszta kreskowana; pod spodem min i max.
+   Szerokość przez --p, więc przy zmianie wartości pasek dojeżdża przejściem (ui/morph zmienia tylko styl). ===== */
+hgUI.add(`
+.nv-prog{ position:relative; height:var(--nv-ph, 22u); border-radius:9u; overflow:hidden;
+  background: repeating-linear-gradient(-55deg, color-mix(in srgb, currentColor 22%, transparent) 0 1.5u, transparent 1.5u 6u); }
+.nv-prog > i{ position:absolute; inset:0 auto 0 0; width:var(--p, 0%); min-width:var(--nv-ph, 22u); border-radius:inherit;
+  background: linear-gradient(90deg, var(--hg-accent-hi), var(--hg-accent)); box-shadow: 0 0 14u var(--hg-accent-glow), inset 0 1px 0 rgba(255,255,255,.35);
+  transition: width var(--hg-t-slow) var(--hg-ease-out), background var(--hg-t-base) var(--hg-ease-out); }
+.nv-prog.warn > i{ background: linear-gradient(90deg, #FFD36B, #FF9F43); box-shadow: 0 0 14u rgba(255,159,67,.35); }
+.nv-prog.bad > i{ background: linear-gradient(90deg, #FF8A7A, #FF5B4F); box-shadow: 0 0 14u rgba(255,91,79,.35); }
+.nv-prog-l{ display:flex; justify-content:space-between; margin-top:5u; font-size:var(--fs-xs); opacity:.65; }
+@media (prefers-reduced-motion: reduce){ .nv-prog > i{ transition:none; } }
+`);
+/* hgUI.progress(62, { min: '0', max: '100%', tone: 'warn'|'bad', label }) */
+hgUI.progress = (pct, o = {}) => { const p = Math.max(0, Math.min(100, +pct || 0));
+  return `<div class="nv-prog ${o.tone || ''}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"${o.label ? ` aria-label="${H.esc(o.label)}"` : ''} style="--p:${p.toFixed(1)}%"><i></i></div>${o.min != null || o.max != null ? `<div class="nv-prog-l"><span>${H.esc(o.min ?? '')}</span><span>${H.esc(o.max ?? '')}</span></div>` : ''}`; };
+
+/* ===== ui/arc: łuk z kreskami (jasność, prędkość wentylatora). Aktywne kreski w kolorze akcentu, kropka na końcu wartości.
+   Kolor kresek przechodzi płynnie przy zmianie (ui/morph zmienia tylko klasę). ===== */
+hgUI.add(`
+.nv-arc{ display:block; width:100%; height:auto; overflow:visible; }
+.nv-arc line{ stroke: color-mix(in srgb, currentColor 30%, transparent); stroke-width:3; stroke-linecap:round; transition: stroke var(--hg-t-base) var(--hg-ease-out); }
+.nv-arc line.on{ stroke: var(--hg-accent); filter: drop-shadow(0 0 3px var(--hg-accent-glow)); }
+.nv-arc circle{ fill: var(--hg-accent); stroke:#fff; stroke-width:2; filter: drop-shadow(0 0 6px var(--hg-accent-glow)); transition: cx var(--hg-t-slow) var(--hg-ease-out), cy var(--hg-t-slow) var(--hg-ease-out); }
+.nv-arc text{ fill: currentColor; opacity:.5; font-size:11px; }
+`);
+/* hgUI.arc(86, { ticks: 17, label }) – półokrąg od lewej do prawej */
+hgUI.arc = (pct, o = {}) => { const n = o.ticks || 17, p = Math.max(0, Math.min(100, +pct || 0)), on = Math.round((p / 100) * (n - 1));
+  const R = 80, r = 64, cx = 100, cy = 96; let s = '';
+  for (let i = 0; i < n; i++) { const a = Math.PI - (i / (n - 1)) * Math.PI, c = Math.cos(a), si = Math.sin(a);
+    s += `<line class="${i <= on && p > 0 ? 'on' : ''}" x1="${(cx + c * r).toFixed(1)}" y1="${(cy - si * r).toFixed(1)}" x2="${(cx + c * R).toFixed(1)}" y2="${(cy - si * R).toFixed(1)}"/>`; }
+  const a = Math.PI - (p / 100) * Math.PI;
+  return `<svg class="nv-arc" viewBox="0 0 200 104" role="img" aria-label="${H.esc(o.label || '')} ${Math.round(p)}%">${s}<circle cx="${(cx + Math.cos(a) * (R + 8)).toFixed(1)}" cy="${(cy - Math.sin(a) * (R + 8)).toFixed(1)}" r="5"/></svg>`; };
+
+/* ===== ui/sparkline: wykres powierzchniowy (energia słoneczna, moc) z gradientem w dół i dymkiem ostatniej wartości. ===== */
+hgUI.add(`
+.nv-spark{ position:relative; }
+.nv-spark svg{ display:block; width:100%; height:var(--nv-sh, 70u); overflow:visible; }
+.nv-spark path.a{ fill: url(#nvsg); } .nv-spark path.l{ fill:none; stroke: var(--nv-sc, var(--hg-accent)); stroke-width:2; vector-effect: non-scaling-stroke; }
+.nv-spark .tip{ position:absolute; right:0; transform: translate(0, -130%); padding:3u 8u; border-radius:var(--hg-radius-pill, 999px); background:#fff; color:#111; font-size:var(--fs-xs); font-weight:600; white-space:nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+.nv-spark .dot{ position:absolute; right:-4px; width:8px; height:8px; border-radius:50%; background:#fff; box-shadow: 0 0 0 3px var(--nv-sc, var(--hg-accent)); transform: translateY(-50%); }
+.nv-spark .ax{ display:flex; justify-content:space-between; margin-top:5u; font-size:var(--fs-xs); opacity:.6; }
+.nv-spark.solar{ --nv-sc: #F0955A; }
+`);
+/* hgUI.spark([v...], { tip: '12.4 kWh', axis: ['Pn', ..., 'Nd'], tone: 'solar' }) */
+hgUI.spark = (vals, o = {}) => { const v = (vals || []).filter((x) => isFinite(x)); if (v.length < 2) return '';
+  const mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1, W = 300, Hh = 100, X = (i) => (i / (v.length - 1)) * W, Y = (x) => Hh - 8 - ((x - mn) / rg) * (Hh - 16);
+  const line = v.map((x, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x).toFixed(1)}`).join('');
+  const last = ((Y(v.at(-1)) / Hh) * 100).toFixed(1);
+  return `<div class="nv-spark ${o.tone || ''}"><svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="nvsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--nv-sc, var(--hg-accent))" stop-opacity=".75"/><stop offset="1" stop-color="var(--nv-sc, var(--hg-accent))" stop-opacity=".05"/></linearGradient></defs><path class="a" d="${line}L${W} ${Hh}L0 ${Hh}Z"/><path class="l" d="${line}"/></svg>${o.tip ? `<span class="dot" style="top:${last}%"></span><span class="tip" style="top:${last}%">${H.esc(o.tip)}</span>` : ''}${o.axis ? `<div class="ax">${o.axis.map((a) => `<span>${H.esc(a)}</span>`).join('')}</div>` : ''}</div>`; };
+
+/* ===== ui/avatar-stack: awatary osób zachodzące na siebie (kropka: w domu), opcjonalnie przycisk +. ===== */
+hgUI.add(`
+.nv-avs{ display:flex; align-items:center; }
+.nv-avs .nv-av{ width:24u; height:24u; border-radius:50%; margin-left:-6u; flex:none; position:relative; display:inline-flex; align-items:center; justify-content:center;
+  background: var(--hg-inner-bg) center / cover no-repeat; box-shadow: 0 0 0 2px rgba(255,255,255,.55); font-size:var(--fs-xs); font-weight:600; transition: transform var(--hg-t-fast) var(--hg-ease-out); }
+.nv-avs .nv-av:first-child{ margin-left:0; }
+.nv-avs .nv-av.home::after{ content:''; position:absolute; right:-1px; bottom:-1px; width:7u; height:7u; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 0 2px rgba(0,0,0,.25); }
+.nv-avs .nv-ib{ margin-right:6u; --nv-ib: 24u; border-radius:8u; }
+@media (hover:hover) and (pointer:fine){ .nv-avs .nv-av:hover{ transform: translateY(-2px); z-index:1; } }
+`);
+/* hgUI.avatars([{ name, pic, home }], { add: 'act' }) */
+hgUI.avatars = (people, o = {}) => `<div class="nv-avs">${o.add ? hgUI.iconBtn('mdi:plus', o.add, hgTr('Dodaj', 'Add')) : ''}${(people || []).map((p) =>
+  `<span class="nv-av ${p.home ? 'home' : ''}" title="${H.esc(p.name)}" data-key="av-${H.esc(p.name)}"${p.pic ? ` style="background-image:url('${H.cssUrl(p.pic)}')"` : ''}>${p.pic ? '' : H.esc(String(p.name || '?').slice(0, 1).toUpperCase())}</span>`).join('')}</div>`;
 
 /* shared/card-utils: Pomocnicze funkcje kart: moc w W, głębokie scalanie konfiguracji, liczba kluczy obiektu. */
 /* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */

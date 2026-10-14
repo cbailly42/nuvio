@@ -27,6 +27,14 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 - Motion: `--hg-t-fast` (120 ms), `--hg-t-base` (200 ms), `--hg-t-slow` (320 ms), `--hg-t-stagger` (30 ms), `--hg-ease-out`, `--hg-ease-in` and `--hg-spring`.
 - Type: `--hg-fs-1` to `--hg-fs-7` (11 to 64 px) and `--hg-fw-num` (300) for large numbers.
 
+## Building blocks and live updates
+
+- Cards are built from the shared blocks in `src/parts/ui/` (one file per block, see the `UI` list in `tools/build.py`): `hgUI.iconBtn`, `hgUI.pill`, `hgUI.tabs`, `hgUI.switch`, `hgUI.header`, `hgUI.big`, `hgUI.progress`, `hgUI.arc`, `hgUI.spark`, `hgUI.avatars` and `hgUI.num`. Their CSS is added to every card, so a change to a block changes every card. New cards use these blocks instead of their own markup.
+- Blocks in `ui/` use only design tokens (they are not run through the colour tokenizer).
+- A card updates live: on a state change the new HTML is patched onto the existing nodes (`ui/morph`), so focus, scroll position and running transitions survive and bars, arcs and switches glide to the new value. Numbers rendered with `hgUI.num` count smoothly to the new value. Give list items a `data-key` (or `id`, `data-e`) so reordering moves nodes instead of redrawing them.
+- Handle clicks through `data-act` (`onAct`), not listeners attached in `afterRender`. Cards that still define `afterRender` get a full redraw on every change until they move to `data-act`.
+- `tests/ui-gallery.html` shows every block in every state at S, M and L sizes (`?scheme=light` or `dark`).
+
 ## Controls
 
 - No native controls are visible anywhere. Use the shared Nuvio controls:

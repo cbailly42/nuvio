@@ -150,7 +150,8 @@ if __name__ == '__main__':
     for f in sorted(glob.glob(os.path.join(D, 'theme_src', '**', '*.part.js'), recursive=True)):
         fn = os.path.relpath(f, os.path.join(D, 'theme_src')).replace(os.sep, '/')
         os.makedirs(os.path.dirname(os.path.join(D, 'www', fn)), exist_ok=True)
-        if fn == 'hg-core.part.js':
+        # hg-core i klocki ui/ bez konwersji: ui/ używa wyłącznie tokenów z theme_head.js i kilku stałych kolorów (biel aktywnej pigułki)
+        if fn == 'hg-core.part.js' or fn.startswith('ui/'):
             open(os.path.join(D, 'www', fn), 'w').write(open(f).read()); continue
         open(os.path.join(D, 'www', fn), 'w').write(convert(open(f).read(), fn))
     for k, v in OVR.items():

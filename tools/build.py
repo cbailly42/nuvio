@@ -5,6 +5,9 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Load order matters: one shared script scope, so a file may only use (at load time) what an earlier file defines.
 # shared/ = helpers used by more than one card; cards/ = one card per file, in this order (appliance, stairs and cwu extend room).
 CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
+# ui/ = shared building blocks (morph engine, primitives); loaded before cards so every card can use them
+UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
+      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js']
 SHARED = [
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
@@ -78,7 +81,7 @@ CARDS = [
     'cards/assist-card.part.js',
 ]
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
-PARTS = CORE + SHARED + CARDS + PAGE
+PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
 def brand(js):
     """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build."""

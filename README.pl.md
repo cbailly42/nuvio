@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.12.0-a3e635?style=flat-square" alt="v0.12.0">
+  <img src="https://img.shields.io/badge/version-v0.13.0-a3e635?style=flat-square" alt="v0.13.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -237,7 +237,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Układy per urządzenie | osobny układ dla telefonu, tabletu i komputera zamiast jednego wspólnego | planowane |
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
-| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0 |
+| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0 |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -342,9 +342,14 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.12.0 -m "Nuvio 0.11.1" && git push origin v0.12.0`.
+Sam tag ręcznie: `git tag -a v0.13.0 -m "Nuvio 0.11.1" && git push origin v0.13.0`.
 
 ## Lista zmian
+
+### 0.13.0
+- Zmieniono: karty aktualizują się na żywo. Gdy urządzenie zmienia stan, zmienia się tylko ta część karty, która jest inna, zamiast przerysowania całej karty. Paski i przełączniki płynnie dojeżdżają do nowej wartości, fokus i przewinięcie zostają, a szybkie czujniki nie powodują już migania kart. Karty z własnym przeciąganiem (światło, klimatyzacja, suwak, lampa, pokój) na razie działają jak dotąd.
+- Zmieniono: przełączniki poruszają się miękko jak na sprężynie i lekko się wydłużają przy wciśnięciu.
+- Dodano (rozwój): wspólne klocki w `src/parts/ui/` (przycisk ikony, pigułka, zakładki, przełącznik, nagłówek, duża wartość, pasek, łuk, wykres powierzchniowy, awatary) i strona galerii `tests/ui-gallery.html`.
 
 ### 0.12.0
 - Zmieniono: nowy wygląd szkła kart, paneli i pływających kontrolek, bliższy projektowi wzorcowemu. Szkło ma delikatny refleks światła od lewego górnego rogu, cienką jasną krawędź, mocniejszą u góry, i głębszy miękki cień. W schemacie ciemnym panel pod kartami jest ciemniejszy, więc karty mocniej się wyróżniają.

@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- Galeria klocków UI Nuvio: każdy klocek w każdym stanie, rozmiary S / M / L, motyw jasny i ciemny.
+     Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem http://localhost:8000/tests/ui-gallery.html -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio UI</title>
+<style>
+  body{ margin:0; font-family:system-ui,sans-serif; background:#0d1218 url(../dist/nuvio-bg-default-wide.webp) center/cover fixed; color:#fff; }
+  .scheme{ padding:24px; display:grid; gap:20px; }
+  h2{ margin:0; font-weight:500; font-size:18px; text-shadow:0 1px 6px rgba(0,0,0,.5); }
+  .row{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+  .box{ container-type:inline-size; }
+  .box.s{ width:180px; } .box.m{ width:300px; } .box.l{ width:460px; }
+  .lab{ font-size:12px; opacity:.8; margin:0 0 6px 4px; text-shadow:0 1px 4px rgba(0,0,0,.6); }
+</style></head><body>
+<div id="out"></div>
+<script type="module">
+const v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+window.__hgDryRun = true;
+for (const t of ['ha-card', 'ha-icon']) if (!customElements.get(t)) customElements.define(t, class extends HTMLElement {});
+await import('../dist/' + v.core);
+const ui = window.__nuvioUI || window.__hgUI;
+const css = ui.base() + ui.css();
+const demos = [
+  ['Przycisk ikony', () => ['mdi:magnify', 'mdi:plus', 'mdi:minus', 'mdi:close'].map((i, k) => ui.iconBtn(i, 'x', i, { on: k === 0 })).join(' ') + ' ' + ui.iconBtn('mdi:dots-vertical', 'x', 'menu', { bare: true, size: 'sm' })],
+  ['Pigułki i zakładki', () => ui.pill('Popołudnie', { icon: 'mdi:clock-outline' }) + ' ' + ui.pill('Auto', { act: 'm', on: true }) + ' ' + ui.pill('Grzanie', { act: 'm', acc: true }) + '<div style="height:10px"></div>' + ui.tabs([{ id: 'd', label: 'Panel' }, { id: 'r', label: 'Pokoje' }, { id: 'u', label: 'Urządzenia' }], 'd', 'tab', 'Widoki')],
+  ['Przełącznik i nagłówek', () => ui.header('Salon', { right: ui.switch(true, 't', 'Salon') + ui.iconBtn('mdi:dots-vertical', 'm', 'menu', { bare: true, size: 'sm' }) }) + ui.header('Kuchnia', { sub: 'wyłączone', right: ui.switch(false, 't', 'Kuchnia') }) + ui.header('Wi-Fi', { sub: '(RayFi_03)', right: ui.switch(true, 't', 'Wi-Fi', true) })],
+  ['Duża wartość', () => ui.big(23, { unit: '°', sup: true, size: 'xl', col: true, caption: '23 stopnie za 8 minut' }) + ui.big(62, { unit: '%', caption: 'Średnio' })],
+  ['Pasek', () => ui.big(62, { unit: '%', caption: 'Średnio', size: 'sm' }) + '<div style="height:8px"></div>' + ui.progress(62, { min: '0', max: '100%' }) + '<div style="height:12px"></div>' + ui.progress(88, { tone: 'warn' }) + '<div style="height:12px"></div>' + ui.progress(4)],
+  ['Łuk', () => ui.big(86, { unit: '%', caption: 'Wysoko', size: 'sm' }) + ui.arc(86, { label: 'Jasność' })],
+  ['Wykres', () => ui.spark([4, 6, 5, 8, 7, 9, 6, 7, 5, 8, 10, 9, 11, 12.4], { tip: '12,4 kWh', axis: ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'], tone: 'solar' })],
+  ['Awatary', () => ui.avatars([{ name: 'Anna', home: true }, { name: 'Marek' }, { name: 'Zosia', home: true }], { add: 'add' })],
+];
+const out = document.getElementById('out');
+const sch = new URLSearchParams(location.search).get('scheme') === 'light' ? 'light' : 'dark';
+document.documentElement.setAttribute('data-hg-scheme', sch);
+{
+  const sec = document.createElement('div'); sec.className = 'scheme'; sec.innerHTML = `<h2>Motyw ${sch === 'dark' ? 'ciemny' : 'jasny'} (?scheme=light / dark)</h2>`; out.appendChild(sec);
+  for (const [name, fn] of demos) {
+    const row = document.createElement('div'); row.className = 'row'; sec.appendChild(row);
+    for (const sz of ['s', 'm', 'l']) {
+      const box = document.createElement('div'); box.className = 'box ' + sz; row.appendChild(box);
+      box.innerHTML = `<div class="lab">${name} · ${sz.toUpperCase()}</div>`;
+      const host = document.createElement('div'); host.dataset.scheme = sch; box.appendChild(host);
+      const r = host.attachShadow({ mode: 'open' });
+      r.innerHTML = `<style>${css}</style><ha-card class="glass" style="display:block;height:auto">${fn()}</ha-card>`;
+    }
+  }
+}
+window.__ready = true;
+</script></body></html>

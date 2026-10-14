@@ -184,7 +184,7 @@ class HGBase extends HTMLElement {
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
       const st = document.createElement('style');
-      st.textContent = HG_BASE + this.css();
+      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css();
       this.shadowRoot.appendChild(st);
       this.$ = document.createElement('div');
       this.$.className = 'root';
@@ -228,8 +228,11 @@ class HGBase extends HTMLElement {
     if (this._touching) { this._pendingUpd = true; return; }
     const html = this.render();
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
-    this._html = html;
-    this.$.innerHTML = html;
+    const first = this._html == null; this._html = html;
+    /* na żywo: łatanie istniejących węzłów (ui/morph). Karty z afterRender podpinają nasłuchiwanie do nowych węzłów,
+       więc dopóki nie przejdą na delegację zdarzeń (data-act), dostają pełne przerysowanie jak dotąd. */
+    if (first || this.afterRender || this.constructor.noMorph || typeof hgMorph === 'undefined') this.$.innerHTML = html;
+    else hgMorph(this.$, html);
     if (this.afterRender) this.afterRender();
   }
   rerender() { this._prevStates = null; this._update(true); }
