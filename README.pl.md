@@ -44,7 +44,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 
 - **Pulpit generowany automatycznie** (strategia `custom:nuvio`): Panel, Pokoje (+ szczegóły pokoju), Multimedia, Kamery, Rodzina, Energia.
   Widok pojawia się tylko, gdy masz pasujące encje; brakujące integracje są po prostu ukrywane.
-- **Kreator pierwszego uruchomienia** (administrator): język (Polski / English), widoki, widoczne pokoje.
+- **Kreator pierwszego uruchomienia** (administrator): szklana konfiguracja krok po kroku z podglądem na żywo: język (Polski / English), widoki, widoczne pokoje, kolor akcentu i tło, a na końcu podsumowanie, z którego wrócisz do każdego kroku.
 - **Puste pokoje**: pokój bez urządzeń proponuje **Importuj z obszaru** (podgląd encji z obszaru i pasujących po nazwie, z polami wyboru; **Wybierz encje**, aby wskazać dowolne encje ręcznie; opcjonalnie przypisanie ich też do obszaru w Home Assistant) oraz **Utwórz własny układ** (tryb edycji z pustym pokojem i galerią + Dodaj). Ustawienia obszaru zostają jako link pomocniczy.
 - **Tryb edycji**: przeciąganie, ukrywanie i przywracanie, rozmiary S/M/L, dodawanie kafli z dowolnej encji, podmiana encji,
   style wyświetlania z podglądem na żywo, wygląd (kolor akcentu z automatycznym kontrastem WCAG, tło: zdjęcie / kolor / gradient, przyciemnienie).
@@ -272,6 +272,10 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 Sam tag ręcznie: `git tag -a v0.4.0 -m "Nuvio 0.3.24" && git push origin v0.4.0`.
 
 ## Lista zmian
+
+### 0.4.1
+- Nowy wygląd kreatora pierwszego uruchomienia: nowoczesny szklany panel na Twoim tle, pasek kroków po lewej z dotychczasowymi wyborami (kliknięcie ukończonego kroku wraca do niego), podgląd pulpitu na żywo na ekranie powitalnym, płynne przejścia między krokami i kafelki pojawiające się kolejno (z poszanowaniem ograniczenia ruchu). W pokojach jest Zaznacz wszystkie / Odznacz wszystkie, wiersze podsumowania otwierają swój krok, Enter przechodzi dalej, a nazwy kolorów są w wybranym języku. Na telefonie kroki zwijają się do paska postępu.
+- Poprawka: na ekranie powitalnym przy dużej szerokości (np. 1440 px) tekst pod „Witaj w Nuvio” był przykryty gradientem zdjęcia. Tekst leży teraz na szkle, obok podglądu.
 
 ### 0.4.0
 - Nowość: kopia układu w ustawieniach Wygląd. Eksport całego układu do pliku JSON z wersją albo do schowka, z wyborem, co zawiera, oraz import z pliku, przez przeciągnięcie lub z wklejonego tekstu. Import sprawdza plik, pokazuje podsumowanie z widokami, widżetami i encjami, których brak na tej instancji, pozwala wybrać Zastąp albo Połącz, zachowuje bieżący układ jako kopię z przyciskiem Przywróć poprzedni, konwertuje starsze dane i odrzuca błędne pliki z jasnym komunikatem. Tylko dla administratora.

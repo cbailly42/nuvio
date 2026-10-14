@@ -44,7 +44,7 @@ and entities from Home Assistant and generates the views. Everything can then be
 
 - **Auto-generated dashboard** (dashboard strategy `custom:nuvio`): Home, Rooms (+ room detail), Media, Cameras, Family, Energy.
   Each view appears only if you have matching entities; missing integrations are simply hidden.
-- **First-run wizard** (admins): language (Polski / English), views, visible rooms.
+- **First-run wizard** (admins): a glass, step-by-step setup with a live preview: language (Polski / English), views, visible rooms, accent colour and background, then a summary where every step can be reopened.
 - **Empty rooms**: a room with no devices offers **Import from area** (preview of the area's entities plus name matches, with checkboxes; **Pick entities** to choose any entity by hand; optionally also assign them to the area in Home Assistant) and **Create custom layout** (edit mode with an empty room and the + Add gallery). Area settings stays as a secondary link.
 - **Edit mode**: drag & drop, hide/restore, S/M/L sizes, add tiles from any entity, swap entities, display styles with live preview,
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
@@ -272,6 +272,10 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 Only tagging by hand: `git tag -a v0.4.0 -m "Nuvio 0.3.24" && git push origin v0.4.0`.
 
 ## Changelog
+
+### 0.4.1
+- New look for the first-run wizard: modern glass panel over your background, a step rail on the left with your choices so far (tap a finished step to go back), a live dashboard preview on the welcome screen, smooth step transitions and staggered tiles (reduced motion respected). Rooms get Select all / Clear all, the summary rows open their step, Enter moves to the next step, and colour names follow the chosen language. On phones the steps collapse into a progress bar.
+- Fixed: on the welcome screen at wide sizes (e.g. 1440 px) the text under "Welcome to Nuvio" was covered by the photo gradient. The text now sits on the glass, next to the preview.
 
 ### 0.4.0
 - New: layout backup in Appearance. Export the whole layout to a versioned JSON file or the clipboard, choosing what to include, and import it from a file, drag and drop or pasted text. Import validates the file, shows a summary with views, widgets and entities missing on this instance, offers Replace or Merge, keeps the current layout as a backup with one click Restore previous, converts older data and rejects bad files with a clear message. Admin only.
