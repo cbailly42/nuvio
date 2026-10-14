@@ -29,21 +29,31 @@ const HG_WALL_SS = `
 .nw-bg.on{ opacity:1; }
 @keyframes nwkb{ from{ transform:scale(1) translate3d(0,0,0); } to{ transform:scale(1.07) translate3d(-1.2%, -.8%, 0); } }
 .nw-sh{ position:absolute; inset:0; background:radial-gradient(120% 95% at 50% 45%, transparent 55%, ${K(0,0,0,.38)} 100%), ${K(4,6,10,'var(--nw-dim, .5)')}; }
-.nw-c{ position:absolute; inset:0; display:grid; place-items:center; padding:24px; }
-.nw-g{ display:flex; flex-direction:column; align-items:center; transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); text-align:center; }
-.nw-t{ font-size:clamp(72px, 24vmin, 260px); font-weight:300; line-height:.95; letter-spacing:-.03em; font-variant-numeric:tabular-nums; text-shadow:0 4px 40px ${K(0,0,0,.45)}; }
-.nw-d{ position:absolute; left:clamp(20px, 4vmin, 48px); bottom:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-bottom, 0px)); font-size:clamp(16px, 3.2vmin, 32px); font-weight:500; opacity:.92; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.5)}; } .nw-d::first-letter{ text-transform:uppercase; }
-.nw-w{ position:absolute; right:clamp(20px, 4vmin, 48px); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); display:flex; align-items:center; gap:clamp(8px, 1.6vmin, 16px); text-shadow:0 2px 14px ${K(0,0,0,.5)}; }
-.nw-w[hidden]{ display:none; } .nw-w img{ width:clamp(44px, 9vmin, 92px); height:clamp(44px, 9vmin, 92px); filter:drop-shadow(0 2px 10px ${K(0,0,0,.4)}); }
-.nw-w b{ display:block; font-size:clamp(28px, 6.4vmin, 64px); font-weight:400; line-height:1; font-variant-numeric:tabular-nums; } .nw-w small{ display:block; margin-top:4px; font-size:clamp(13px, 2.2vmin, 20px); opacity:.85; font-weight:500; }
-.nw-h{ position:absolute; left:0; right:0; bottom:calc(22px + env(safe-area-inset-bottom, 0px)); text-align:center; font-size:clamp(12px, 2vmin, 15px); opacity:.55; letter-spacing:.04em; text-shadow:0 1px 8px ${K(0,0,0,.6)}; animation:nwh 4s ease-in-out infinite; }
+.nw-c{ position:absolute; left:calc(clamp(24px, 5vmin, 64px) + env(safe-area-inset-left, 0px)); bottom:calc(clamp(40px, 7vmin, 80px) + env(safe-area-inset-bottom, 0px)); max-width:min(62vw, 900px); }
+.nw-g{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); }
+.nw-t{ font-size:clamp(84px, 22vmin, 240px); font-weight:300; line-height:.9; letter-spacing:-.035em; font-variant-numeric:tabular-nums; text-shadow:0 4px 40px ${K(0,0,0,.45)}; margin-left:-.04em; }
+.nw-d{ margin-top:clamp(6px, 1.4vmin, 14px); font-size:clamp(17px, 3.4vmin, 34px); font-weight:500; opacity:.92; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.5)}; } .nw-d::first-letter{ text-transform:uppercase; }
+.nw-r{ position:absolute; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); width:clamp(240px, 32vw, 400px); max-width:calc(100vw - 40px); display:flex; flex-direction:column; align-items:stretch; gap:clamp(10px, 1.6vmin, 16px); }
+.nw-p{ box-sizing:border-box; border-radius:clamp(18px, 2.6vmin, 26px); background:${K(16,20,28,.38)}; -webkit-backdrop-filter:blur(22px) saturate(1.3); backdrop-filter:blur(22px) saturate(1.3); box-shadow:inset 0 0 0 1px ${K(255,255,255,.12)}, 0 10px 40px ${K(0,0,0,.25)}; padding:clamp(12px, 2vmin, 20px) clamp(14px, 2.4vmin, 24px); }
+.nw-p[hidden]{ display:none; }
+@media (orientation:portrait){ .nw-r{ width:clamp(280px, 58vw, 460px); } }
+.nw-w{ display:flex; align-items:center; gap:clamp(10px, 1.8vmin, 18px); }
+.nw-w img{ flex:none; width:clamp(48px, 8vmin, 80px); height:clamp(48px, 8vmin, 80px); filter:drop-shadow(0 2px 10px ${K(0,0,0,.4)}); }
+.nw-w span{ min-width:0; } .nw-w b{ display:block; font-size:clamp(30px, 6vmin, 58px); font-weight:400; line-height:1; font-variant-numeric:tabular-nums; } .nw-w small{ display:block; margin-top:4px; font-size:clamp(13px, 2vmin, 18px); opacity:.8; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nw-e h5{ margin:0 0 clamp(6px, 1vmin, 10px); font-size:clamp(11px, 1.6vmin, 13px); font-weight:600; letter-spacing:.08em; text-transform:uppercase; opacity:.6; }
+.nw-e ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:clamp(6px, 1.1vmin, 10px); }
+.nw-e li{ display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:12px; min-width:0; font-size:clamp(14px, 2.1vmin, 19px); }
+.nw-e li > time{ font-variant-numeric:tabular-nums; font-weight:600; opacity:.95; min-width:3.2em; } .nw-e li > time.ad{ font-weight:500; opacity:.7; font-size:.85em; }
+.nw-e li > span{ min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92; }
+.nw-e li > span::before{ content:''; display:inline-block; width:.5em; height:.5em; border-radius:50%; margin-right:.5em; vertical-align:.08em; background:var(--hg-accent, ${K(120,170,255,1)}); }
+.nw-h{ position:absolute; margin:0; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px)); text-align:right; font-size:clamp(12px, 2vmin, 15px); opacity:.55; letter-spacing:.04em; text-shadow:0 1px 8px ${K(0,0,0,.6)}; animation:nwh 4s ease-in-out infinite; }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
 @media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.55; } }
 `;
 const HGWall = window.__hgWall || (window.__hgWall = {
   IDLES: [30, 60, 120, 300, 600, 1800],
   SRCS: [['bg', 'Tło dashboardu', 'Dashboard background'], ['slides', 'Pokaz slajdów', 'Slideshow'], ['url', 'Własny adres', 'Custom URL']],
-  last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null,
+  last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null, _ev: null, _evt: 0, _evk: '',
   /* ---- ustawienia ---- */
   get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
@@ -87,7 +97,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Wygaszacz ekranu', 'Screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
     el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
-      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time></div></div><div class="nw-d"></div><div class="nw-w" hidden></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
+      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
     const wk = (e) => { e.preventDefault(); e.stopPropagation(); this.wake('touch'); };
     el.addEventListener('pointerdown', wk); el.addEventListener('keydown', wk); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(el);
@@ -99,14 +109,30 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {}, d = new Date();
     el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)).format(d);
     el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
-    this.wx();
+    this.wx(); this.cal();
     this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); },
-  /* pogoda w prawym górnym rogu, tylko gdy w HA jest encja weather */
+  /* pogoda w prawym górnym rogu (szklana karta), tylko gdy w HA jest encja weather */
   wx() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-w'); if (!box) return;
     const id = Object.keys((h && h.states) || {}).find((e) => e.startsWith('weather.') && h.states[e].state !== 'unavailable' && h.states[e].state !== 'unknown'), w = id ? h.states[id] : null;
     if (!w || typeof HGWx === 'undefined') { box.hidden = true; return; }
     const t = parseFloat(w.attributes.temperature), u = w.attributes.temperature_unit || (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C', sun = h.states['sun.sun'], night = !!sun && sun.state === 'below_horizon';
     const html = `<img alt="" src="${H.esc(HGWx.icon({ icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1' }, w.state, night, true))}"><span>${isFinite(t) ? `<b>${H.esc(H.fmt(t, 0))}${H.esc(u.startsWith('°') ? '°' : ' ' + u)}</b>` : ''}<small>${H.esc(HGWx.cn(w.state))}</small></span>`;
+    if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
+  /* dzisiejsze wydarzenia ze wszystkich encji calendar.* (API kalendarza HA), odświeżane co 5 min; blok ukryty bez kalendarzy lub bez wydarzeń */
+  cal() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-e'); if (!box) return;
+    const ids = Object.keys((h && h.states) || {}).filter((e) => e.startsWith('calendar.')); if (!ids.length || !h.callApi) { box.hidden = true; return; }
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setDate(d1.getDate() + 1); const key = d0.toDateString() + ids.join();
+    if (this._ev && this._evk === key && Date.now() - this._evt < 300000) return this.evDraw(box);
+    this._evk = key; this._evt = Date.now();
+    const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;
+    Promise.all(ids.map((id) => h.callApi('GET', `calendars/${id}${q}`).catch(() => []))).then((rs) => {
+      const L = []; for (const r of rs) for (const e of (Array.isArray(r) ? r : [])) { const ad = !!(e.start && e.start.date && !e.start.dateTime), s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start && e.start.dateTime), en = ad ? new Date((e.end && e.end.date || e.start.date) + 'T00:00:00') : new Date(e.end && e.end.dateTime || s);
+        if (isNaN(s)) continue; L.push({ ad, s, en, t: String(e.summary || hgTr('Wydarzenie', 'Event')) }); }
+      this._ev = L.sort((a, b) => (b.ad - a.ad) || (a.s - b.s)); if (this.el) this.evDraw(this.el.querySelector('.nw-e')); }); },
+  evDraw(box) { if (!box) return; const now = new Date(), l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {};
+    const f = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)), E = (this._ev || []).filter((e) => e.ad || e.en > now).slice(0, 4);
+    if (!E.length) { box.hidden = true; return; }
+    const html = `<h5>${H.esc(hgTr('Dzisiaj', 'Today'))}</h5><ul>${E.map((e) => `<li><time${e.ad ? ' class="ad"' : ''}>${H.esc(e.ad ? hgTr('Cały dzień', 'All day') : f.format(e.s))}</time><span title="${H.esc(e.t)}">${H.esc(e.t)}</span></li>`).join('')}</ul>`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* dwie warstwy zdjęcia: płynne przenikanie (pokaz slajdów co 45 s) */
   photos(rm) { const L = [...this.el.querySelectorAll('.nw-bg')], im = this.imgs(); let i = Math.floor(Math.random() * im.length), f = 0;
@@ -114,7 +140,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     put();
     if (im.length > 1 && !rm) this._sl = setInterval(put, 45000); },
   /* ochrona przed wypaleniem: zegar co minutę lekko zmienia położenie */
-  drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.07; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
+  drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
   wake(why) { if (!this.active || !this.el) return; const el = this.el; this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
     clearTimeout(this._ck); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
