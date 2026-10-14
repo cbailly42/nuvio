@@ -43,13 +43,15 @@ const HG_WALL_SS = `
 const HGWall = window.__hgWall || (window.__hgWall = {
   IDLES: [30, 60, 120, 300, 600, 1800],
   SRCS: [['bg', 'Tło dashboardu', 'Dashboard background'], ['slides', 'Pokaz slajdów', 'Slideshow'], ['url', 'Własny adres', 'Custom URL']],
-  last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null,
+  last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null,
   /* ---- ustawienia ---- */
   get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '' }; },
-  set(p) { HGL.data.wall = Object.assign({}, this.get(), p); HGL._ls(); this.sync(); },
+  /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
+  set(p) { HGL.data.wall = Object.assign({}, this.get(), p); HGL._ls(); this.sync();
+    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
   tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h); },
   sync() { const c = this.get();
