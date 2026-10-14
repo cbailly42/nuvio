@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.20-a3e635?style=flat-square" alt="v0.3.20">
+  <img src="https://img.shields.io/badge/version-v0.3.21-a3e635?style=flat-square" alt="v0.3.21">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -254,9 +254,18 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # fails if any house-specific id slipped into dist
 ```
 
-Releases are built by GitHub Actions on `v*` tags.
+There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z` bumps the version (`package.json`, README), builds, checks `dist/nuvio.js` (`node --check`) and runs the hardcode guard, commits `chore: release X.Y.Z`, creates the annotated tag `vX.Y.Z`, pushes `main` and the tag, and creates a GitHub release without attached files (HACS then installs the full flat `dist/`):
+
+```bash
+./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
+```
+
+Only tagging by hand: `git tag -a v0.3.21 -m "Nuvio 0.3.21" && git push origin v0.3.21`.
 
 ## Changelog
+
+### 0.3.21
+- Changed: removed CI/CD (the GitHub Actions release workflow, including the HACS validation job). Releases and tags are built only locally with `tools/release.sh`.
 
 ### 0.3.20
 - Added: hover and keyboard focus on the tiles in the More views pop-up (brighter glass, soft shadow, slight lift; press feedback; no lift on touch screens or with reduced motion).
