@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.9.0-a3e635?style=flat-square" alt="v0.9.0">
+  <img src="https://img.shields.io/badge/version-v0.9.1-a3e635?style=flat-square" alt="v0.9.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -325,9 +325,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.9.0 -m "Nuvio 0.9.0" && git push origin v0.9.0`.
+Sam tag ręcznie: `git tag -a v0.9.1 -m "Nuvio 0.9.1" && git push origin v0.9.1`.
 
 ## Lista zmian
+
+### 0.9.1
+- Zmieniono: wygaszacz pokazuje zwykły biały tekst i ikony z miękkim cieniem, bez paneli pod spodem. Podpowiedź wybudzenia jest wyśrodkowana na dole i delikatnie pulsuje, z poszanowaniem ograniczenia ruchu.
+- Zmieniono: wszystkie suwaki mają jeden własny wygląd: cienki tor, wypełnienie w kolorze akcentu, biały uchwyt powiększany przy najechaniu i przeciąganiu, wyraźny fokus z klawiatury.
 
 ### 0.9.0
 - Dodano: 13 nowych komponentów w + Dodaj: światło z jasnością, termostat, duża wartość, wykres historii, drzwi i okna, baterie, odkurzacz, mini odtwarzacz, zegar, słońce, notatka, obraz lub strona, aktualizacje.

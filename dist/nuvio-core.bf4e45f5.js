@@ -613,7 +613,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.9.0+705c98c3';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.9.1+bf4e45f5';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -988,6 +988,8 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-000000-028:rgba(0,0,0,0.28);
   --hg-bg-000000-028-k:rgba(0,0,0,0.28);
   --hg-bg-000000-030:rgba(0,0,0,0.3);
+  --hg-bg-000000-035:rgba(0,0,0,0.35);
+  --hg-bg-000000-040:rgba(0,0,0,0.4);
   --hg-bg-000000-042:rgba(0,0,0,0.42);
   --hg-bg-000000-045:rgba(0,0,0,0.45);
   --hg-bg-000000-045-k:rgba(0,0,0,0.45);
@@ -1466,6 +1468,25 @@ HGTheme.pick();
 window.__nuvioTheme = HGTheme;
 
 /* ===== WSPÓLNE STYLE kart Nuvio (szkło, nagłówek karty, przełącznik, animacje ikon) ===== */
+const HG_RANGE_CSS = `
+/* własny suwak (wszędzie): cienki tor, wypełnienie akcentem do --v, gładki uchwyt z animacją przy najechaniu i przeciąganiu; natywny input = klawiatura i czytniki ekranu działają */
+input[type=range]{ -webkit-appearance:none !important; appearance:none !important; background:transparent !important; height:32px !important; margin:0; padding:0; cursor:pointer; touch-action:pan-y; --f:var(--hg-accent, var(--hg-ac-63d71e)); accent-color:var(--f); }
+input[type=range]::-webkit-slider-runnable-track{ height:6px !important; border-radius:999px !important; border:0 !important; box-shadow:inset 0 0 0 1px ${'rgb' + 'a(255,255,255,.10)'} !important; background:linear-gradient(90deg, var(--f) 0 var(--v, 50%), color-mix(in srgb, currentColor 16%, transparent) var(--v, 50%) 100%) !important; }
+input[type=range]::-moz-range-track{ height:6px; border-radius:999px; border:0; background:color-mix(in srgb, currentColor 16%, transparent); }
+input[type=range]::-moz-range-progress{ height:6px; border-radius:999px; background:var(--f); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none !important; appearance:none !important; width:20px !important; height:20px !important; margin-top:-7px !important; border:0 !important; border-radius:50% !important; background:${'#' + 'fff'} !important; box-shadow:0 0 0 4px color-mix(in srgb, var(--f) 0%, transparent), 0 2px 8px var(--hg-bg-000000-035) !important; transition:transform .18s cubic-bezier(.2,.8,.2,1.3), box-shadow .18s ease !important; }
+input[type=range]::-moz-range-thumb{ width:20px; height:20px; border:0; border-radius:50%; background:${'#' + 'fff'}; box-shadow:0 2px 8px var(--hg-sh-000000-035); transition:transform .18s cubic-bezier(.2,.8,.2,1.3), box-shadow .18s ease; }
+input[type=range]:hover::-webkit-slider-thumb{ transform:scale(1.12); box-shadow:0 0 0 6px color-mix(in srgb, var(--f) 22%, transparent), 0 2px 10px var(--hg-bg-000000-035) !important; }
+input[type=range]:active::-webkit-slider-thumb{ transform:scale(1.28); box-shadow:0 0 0 9px color-mix(in srgb, var(--f) 28%, transparent), 0 3px 12px var(--hg-bg-000000-040) !important; }
+input[type=range]:hover::-moz-range-thumb{ transform:scale(1.12); box-shadow:0 0 0 6px color-mix(in srgb, var(--f) 22%, transparent), 0 2px 10px var(--hg-bg-000000-035); }
+input[type=range]:active::-moz-range-thumb{ transform:scale(1.28); box-shadow:0 0 0 9px color-mix(in srgb, var(--f) 28%, transparent), 0 3px 12px var(--hg-bg-000000-040); }
+input[type=range]:focus{ outline:none; } input[type=range]:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 3px ${'#' + 'fff'}, 0 0 0 6px var(--f) !important; } input[type=range]:focus-visible::-moz-range-thumb{ box-shadow:0 0 0 3px ${'#' + 'fff'}, 0 0 0 6px var(--f); }
+input[type=range]:disabled{ opacity:.45; cursor:default; }
+@media (prefers-reduced-motion: reduce){ input[type=range]::-webkit-slider-thumb{ transition:none !important; } input[type=range]::-moz-range-thumb{ transition:none; } }
+`;
+window.NUVIO_RANGE_CSS = HG_RANGE_CSS;
+/* --v (wypełnienie) dla każdego suwaka, także w shadow DOM */
+if (!window.__nuvioRangeW) { window.__nuvioRangeW = 1; const upd = (e) => { const t = e.composedPath && e.composedPath()[0]; if (!t || t.type !== 'range') return; const mn = +t.min || 0, mx = t.max === '' ? 100 : +t.max, v = ((+t.value - mn) / ((mx - mn) || 1)) * 100; t.style.setProperty('--v', v + '%'); }; window.addEventListener('input', upd, true); }
 const HG_BASE = U(`
 :host{ --k: var(--hg-u, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); display:block; font-family:'HG DM Sans','DM Sans',-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
   -webkit-font-smoothing:antialiased; color:var(--hg-tx-1e2023); height:100%; font-weight:400; }
@@ -1524,7 +1545,7 @@ ha-card.glass.warm{
 @keyframes hgglow{ 0%,100%{ filter: drop-shadow(0 0 0 var(--hg-accent-faint)) } 50%{ filter: drop-shadow(0 0 3u var(--hg-accent)) } }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
-`);
+`) + HG_RANGE_CSS;
 
 /* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
 const hgW = (hass, e) => { const v = H.num(hass, e); if (v == null) return null; const u = String(H.st(hass, e).attributes.unit_of_measurement || '').trim(); return u === 'kW' ? v * 1000 : u === 'MW' ? v * 1e6 : v; };
@@ -9290,7 +9311,7 @@ const HGRoomsX = window.HGRoomsX = {
       <button class="lk-mini lx-ap" data-hge="rx-hsave" ${this.hdirty ? '' : 'disabled'}>${hgTr('Zapisz widoki', 'Save views')}</button></section>
       <section class="lk-g lx rx" data-tab="bg"><h4>${H.icon('mdi:image-multiple-outline')}${hgTr('Galeria teł', 'Background gallery')}</h4><small class="lk-hn">${hgTr('Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu', 'Your own images saved in the layout: they show up under Background and in the screensaver')}</small>
       ${(() => { const B = (HGApp.get() || {}).bg; if (!B || B.kind !== 'image') return ''; const [x, y] = String(B.pos || '50% 50%').split(' ').map((q) => parseFloat(q));
-        return `<div class="rx-f"><span>${hgTr('Punkt ostrości bieżącego tła', 'Focal point of the current background')} <em class="rx-pv">${x}% ${y}%</em></span><div class="rx-fu"><input type="range" min="0" max="100" data-rx="bpx" value="${x}" aria-label="X" style="flex:1"><input type="range" min="0" max="100" data-rx="bpy" value="${y}" aria-label="Y" style="flex:1"></div></div>`; })()}
+        return `<div class="rx-f"><span>${hgTr('Punkt ostrości bieżącego tła', 'Focal point of the current background')} <em class="rx-pv">${x}% ${y}%</em></span><div class="rx-fu"><input type="range" min="0" max="100" data-rx="bpx" value="${x}" aria-label="X" style="flex:1;--v:${x}%"><input type="range" min="0" max="100" data-rx="bpy" value="${y}" aria-label="Y" style="flex:1;--v:${y}%"></div></div>`; })()}
       <div class="rx-g">${gal.map((g, i) => `<div class="rx-gi" style="background-image:url('${H.esc(g.t || g.u)}')"><small>${H.esc(g.n || '')}</small><button class="lx-a" data-hge="rx-gd" data-i="${i}" aria-label="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button></div>`).join('')}</div>
       <div class="rx-add"><input data-rx="gu" placeholder="/local/… ${hgTr('lub', 'or')} https://…" autocomplete="off"><input data-rx="gn" placeholder="${hgTr('Nazwa', 'Name')}" style="max-width:120px"><button class="lx-hbtn" data-hge="rx-ga">${H.icon('mdi:plus')}${hgTr('Dodaj', 'Add')}</button></div></section>
       <style>.rx-t{ all:unset; cursor:pointer; flex:1; min-width:0; display:flex; flex-direction:column; } .rx-t b{ font-weight:600; font-size:14px; } .rx-t small{ opacity:.66; font-size:12px; }
@@ -9549,14 +9570,14 @@ const HG_WALL_SS = `
 .nw-bg.on{ opacity:1; }
 @keyframes nwkb{ from{ transform:scale(1) translate3d(0,0,0); } to{ transform:scale(1.07) translate3d(-1.2%, -.8%, 0); } }
 .nw-sh{ position:absolute; inset:0; background:radial-gradient(120% 95% at 50% 45%, transparent 55%, ${K(0,0,0,.38)} 100%), ${K(4,6,10,'var(--nw-dim, .5)')}; }
-.nw-c{ position:absolute; left:calc(clamp(24px, 5vmin, 64px) + env(safe-area-inset-left, 0px)); bottom:calc(clamp(40px, 7vmin, 80px) + env(safe-area-inset-bottom, 0px)); max-width:min(62vw, 900px); }
+.nw-c{ position:absolute; left:calc(clamp(24px, 5vmin, 64px) + env(safe-area-inset-left, 0px)); bottom:calc(clamp(64px, 9vmin, 104px) + env(safe-area-inset-bottom, 0px)); max-width:min(62vw, 900px); }
 .nw-g{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); }
 .nw-t{ font-size:clamp(84px, 22vmin, 240px); font-weight:300; line-height:.9; letter-spacing:-.035em; font-variant-numeric:tabular-nums; text-shadow:0 4px 40px ${K(0,0,0,.45)}; margin-left:-.04em; }
 .nw-d{ margin-top:clamp(6px, 1.4vmin, 14px); font-size:clamp(17px, 3.4vmin, 34px); font-weight:500; opacity:.92; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.5)}; } .nw-d::first-letter{ text-transform:uppercase; }
 .nw-r{ position:absolute; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); width:clamp(260px, 25vw, 340px); max-width:calc(100vw - 40px); display:flex; flex-direction:column; gap:clamp(10px, 1.4vmin, 14px); }
 @media (orientation:portrait){ .nw-r{ width:clamp(260px, 44vw, 360px); } }
-.nw-p{ box-sizing:border-box; border-radius:24px; padding:clamp(13px, 1.9vmin, 18px) clamp(14px, 2.1vmin, 20px); background:linear-gradient(160deg, ${K(255,255,255,.16)}, ${K(255,255,255,.06)}), ${K(14,18,26,.42)}; -webkit-backdrop-filter:blur(30px) saturate(1.6); backdrop-filter:blur(30px) saturate(1.6);
-  box-shadow:inset 0 1px 0 ${K(255,255,255,.22)}, inset 0 0 0 1px ${K(255,255,255,.08)}, 0 2px 6px ${K(0,0,0,.12)}, 0 18px 48px ${K(0,0,0,.28)}; text-shadow:0 1px 10px ${K(0,0,0,.35)}; animation:nwin .9s cubic-bezier(.2,.8,.2,1) both; }
+.nw-p{ box-sizing:border-box; padding:clamp(6px, 1vmin, 10px) 0; background:none; -webkit-backdrop-filter:none; backdrop-filter:none;
+  box-shadow:none; color:var(--hg-tx-ffffff); text-shadow:0 1px 3px ${K(0,0,0,.55)}, 0 2px 18px ${K(0,0,0,.45)}; animation:nwin .9s cubic-bezier(.2,.8,.2,1) both; }
 .nw-p + .nw-p{ animation-delay:.12s; } .nw-p[hidden]{ display:none; }
 @keyframes nwin{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
 .nw-w .nw-wm{ display:flex; align-items:center; gap:clamp(8px, 1.4vmin, 14px); }
@@ -9572,13 +9593,14 @@ const HG_WALL_SS = `
 .nw-e li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
 .nw-e li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
 .nw-e .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
-.nw-e .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:1px 7px; border-radius:999px; background:var(--c); color:${K(10,12,16,1)}; text-shadow:none; opacity:1; }
+.nw-e .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:var(--hg-tx-ffffff); text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }; text-shadow:none; opacity:1; }
 .nw-e li.nx .nw-et{ opacity:1; }
 .nw-e .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 @media (prefers-reduced-motion:reduce){ .nw-p{ animation:none; } }
-.nw-h{ position:absolute; margin:0; right:calc(clamp(20px, 4vmin, 48px) + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px)); text-align:right; font-size:clamp(12px, 2vmin, 15px); opacity:.55; letter-spacing:.04em; text-shadow:0 1px 8px ${K(0,0,0,.6)}; animation:nwh 4s ease-in-out infinite; }
+.nw-h{ position:absolute; margin:0; left:0; right:0; bottom:calc(clamp(18px, 3.5vmin, 36px) + env(safe-area-inset-bottom, 0px)); padding:0 16px; text-align:center; font-size:clamp(13px, 2vmin, 16px); font-weight:500; letter-spacing:.03em; color:var(--hg-tx-ffffff); background:none; text-shadow:0 1px 3px ${K(0,0,0,.6)}, 0 2px 16px ${K(0,0,0,.5)}; animation:nwhp 3.2s ease-in-out infinite; }
+@keyframes nwhp{ 0%, 100%{ opacity:.7; } 50%{ opacity:1; } }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
-@media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.55; } }
+@media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.95; } }
 `;
 const HGWall = window.__nuvioWall || (window.__nuvioWall = {
   IDLES: [30, 60, 120, 300, 600, 1800],

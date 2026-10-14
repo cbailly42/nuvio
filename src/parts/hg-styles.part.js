@@ -1,4 +1,23 @@
 /* ===== WSPÓLNE STYLE kart Home Glass (szkło, nagłówek karty, przełącznik, animacje ikon) ===== */
+const HG_RANGE_CSS = `
+/* własny suwak (wszędzie): cienki tor, wypełnienie akcentem do --v, gładki uchwyt z animacją przy najechaniu i przeciąganiu; natywny input = klawiatura i czytniki ekranu działają */
+input[type=range]{ -webkit-appearance:none !important; appearance:none !important; background:transparent !important; height:32px !important; margin:0; padding:0; cursor:pointer; touch-action:pan-y; --f:var(--hg-accent, #63D71E); accent-color:var(--f); }
+input[type=range]::-webkit-slider-runnable-track{ height:6px !important; border-radius:999px !important; border:0 !important; box-shadow:inset 0 0 0 1px ${'rgb' + 'a(255,255,255,.10)'} !important; background:linear-gradient(90deg, var(--f) 0 var(--v, 50%), color-mix(in srgb, currentColor 16%, transparent) var(--v, 50%) 100%) !important; }
+input[type=range]::-moz-range-track{ height:6px; border-radius:999px; border:0; background:color-mix(in srgb, currentColor 16%, transparent); }
+input[type=range]::-moz-range-progress{ height:6px; border-radius:999px; background:var(--f); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none !important; appearance:none !important; width:20px !important; height:20px !important; margin-top:-7px !important; border:0 !important; border-radius:50% !important; background:${'#' + 'fff'} !important; box-shadow:0 0 0 4px color-mix(in srgb, var(--f) 0%, transparent), 0 2px 8px rgba(0,0,0,.35) !important; transition:transform .18s cubic-bezier(.2,.8,.2,1.3), box-shadow .18s ease !important; }
+input[type=range]::-moz-range-thumb{ width:20px; height:20px; border:0; border-radius:50%; background:${'#' + 'fff'}; box-shadow:0 2px 8px rgba(0,0,0,.35); transition:transform .18s cubic-bezier(.2,.8,.2,1.3), box-shadow .18s ease; }
+input[type=range]:hover::-webkit-slider-thumb{ transform:scale(1.12); box-shadow:0 0 0 6px color-mix(in srgb, var(--f) 22%, transparent), 0 2px 10px rgba(0,0,0,.35) !important; }
+input[type=range]:active::-webkit-slider-thumb{ transform:scale(1.28); box-shadow:0 0 0 9px color-mix(in srgb, var(--f) 28%, transparent), 0 3px 12px rgba(0,0,0,.4) !important; }
+input[type=range]:hover::-moz-range-thumb{ transform:scale(1.12); box-shadow:0 0 0 6px color-mix(in srgb, var(--f) 22%, transparent), 0 2px 10px rgba(0,0,0,.35); }
+input[type=range]:active::-moz-range-thumb{ transform:scale(1.28); box-shadow:0 0 0 9px color-mix(in srgb, var(--f) 28%, transparent), 0 3px 12px rgba(0,0,0,.4); }
+input[type=range]:focus{ outline:none; } input[type=range]:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 3px ${'#' + 'fff'}, 0 0 0 6px var(--f) !important; } input[type=range]:focus-visible::-moz-range-thumb{ box-shadow:0 0 0 3px ${'#' + 'fff'}, 0 0 0 6px var(--f); }
+input[type=range]:disabled{ opacity:.45; cursor:default; }
+@media (prefers-reduced-motion: reduce){ input[type=range]::-webkit-slider-thumb{ transition:none !important; } input[type=range]::-moz-range-thumb{ transition:none; } }
+`;
+window.HG_RANGE_CSS = HG_RANGE_CSS;
+/* --v (wypełnienie) dla każdego suwaka, także w shadow DOM */
+if (!window.__hgRangeW) { window.__hgRangeW = 1; const upd = (e) => { const t = e.composedPath && e.composedPath()[0]; if (!t || t.type !== 'range') return; const mn = +t.min || 0, mx = t.max === '' ? 100 : +t.max, v = ((+t.value - mn) / ((mx - mn) || 1)) * 100; t.style.setProperty('--v', v + '%'); }; window.addEventListener('input', upd, true); }
 const HG_BASE = U(`
 :host{ --k: var(--hg-u, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); display:block; font-family:'HG DM Sans','DM Sans',-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
   -webkit-font-smoothing:antialiased; color:#1E2023; height:100%; font-weight:400; }
@@ -57,4 +76,4 @@ ha-card.glass.warm{
 @keyframes hgglow{ 0%,100%{ filter: drop-shadow(0 0 0 var(--hg-accent-faint)) } 50%{ filter: drop-shadow(0 0 3u var(--hg-accent)) } }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
-`);
+`) + HG_RANGE_CSS;
