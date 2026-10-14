@@ -26,6 +26,7 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
   - Icons: the searchable icon picker with the full MDI list, recent icons and keyboard navigation.
   - Switches: the glass switch (`role="switch"`, `aria-checked`).
 - Touch targets are at least 44 px high on touch devices.
+- Pickers and lists inside a blurred dialog open next to their button.
 
 ## Dialogs and sheets
 
@@ -54,6 +55,7 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
 - Verify every feature at **1440 px** (desktop) and **390 px** (phone), plus tablet when the layout changes.
 - Phone: sheets become bottom sheets, tabs become a scrollable chip row, tables become labelled cards.
 - Full width and narrow panel modes both have to look right; edit buttons stay next to the element they edit.
+- Tablets (touch screens from 768 to 1180 px wide, portrait and landscape) use the tablet layout: the page scrolls, never a nested panel, so nothing is clipped and the glass blur stays in place. Room views use a grid with at most two columns there, never CSS multi-column.
 
 ## Motion and accessibility
 
