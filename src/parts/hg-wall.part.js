@@ -1,5 +1,5 @@
 /* ===== Tryb tabletu ściennego: po bezczynności wygaszacz z zegarem i zdjęciem, przyciemnienie, wybudzanie dotykiem albo czujnikiem ruchu.
-   Ustawienia: HGL.data.wall = { on, idle (s), dim (0–0.9), src: 'bg' | 'slides' | 'url', url, sensor (binary_sensor) } – dane użytkownika HA jak „app”,
+   Ustawienia: HGL.data.wall = { on, idle (s), dim (0–0.9), src: 'bg' | 'slides' | 'url', url, sensor (binary_sensor), lock, pinH (skrót PIN-u, nie sam PIN), pinN (długość), lockAfter (s) } – dane użytkownika HA jak „app”,
    zapisywane razem z układem. Domyślnie wyłączone. Sekcja w arkuszu Wygląd (HGWall.html), wygaszacz to nakładka na <body> (Popover API → nad dialogami HA). */
 const HG_WALL_CSS = `
 .wl ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; flex:none; }
@@ -17,6 +17,12 @@ const HG_WALL_CSS = `
 .wl-seg [aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
 .wl-tb{ all:unset; box-sizing:border-box; cursor:pointer; align-self:flex-start; height:40px; padding:0 18px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600; background:var(--ui-sec, var(--hg-tile-bg)); box-shadow:var(--ui-rim, inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent)); }
 .wl-tb:hover{ background:var(--hg-hover-fill, color-mix(in srgb, currentColor 8%, transparent)); }
+.wl-beta{ flex:none; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700; letter-spacing:.08em; background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); vertical-align:middle; }
+.wl-sw .wl-beta{ display:inline-block; }
+.wl-pin{ display:flex; gap:8px; align-items:center; } .wl-pin .hs-s{ flex:1; min-width:0; } .wl-pin input{ letter-spacing:.3em; font-variant-numeric:tabular-nums; }
+.wl-ok{ font-size:12px; font-weight:600; color:var(--hg-accent-tx, var(--hg-accent)); display:inline-flex; align-items:center; gap:4px; } .wl-ok ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; }
+.wl-f > span em.wl-ok{ background:none; padding:0; color:var(--hg-accent-tx, var(--hg-accent)); }
+.wl-warn{ font-size:12.5px; opacity:.8; }
 @media (max-width:520px){ .wl-seg.six{ grid-template-columns:repeat(3, 1fr); } }
 @media (prefers-reduced-motion:reduce){ .wl-sw i, .wl-sw i::after, .wl-seg button{ transition:none; } }
 `;
@@ -59,6 +65,38 @@ const HG_WALL_SS = `
 .nw-h{ position:absolute; margin:0; left:0; right:0; bottom:calc(clamp(18px, 3.5vmin, 36px) + env(safe-area-inset-bottom, 0px)); padding:0 16px; text-align:center; font-size:clamp(13px, 2vmin, 16px); font-weight:500; letter-spacing:.03em; color:#fff; background:none; text-shadow:0 1px 3px ${K(0,0,0,.6)}, 0 2px 16px ${K(0,0,0,.5)}; animation:nwhp 3.2s ease-in-out infinite; }
 @keyframes nwhp{ 0%, 100%{ opacity:.7; } 50%{ opacity:1; } }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
+.nw-bg, .nw-sh, .nw-c, .nw-r, .nw-h{ transition-property:opacity, filter, transform; }
+.nw.pin .nw-bg{ filter:blur(28px) saturate(1.2); transition:filter .5s ease, opacity 2.4s ease; }
+.nw.pin .nw-sh{ background:${K(4,6,10,.5)}; }
+.nw.pin .nw-h{ visibility:hidden; animation:none; }
+.nw.pin .nw-c, .nw.pin .nw-r, .nw.pin .nw-h{ opacity:0; transition:opacity .3s ease; pointer-events:none; }
+.nw.lk .nw-h::before{ content:''; display:inline-block; width:14px; height:14px; margin:0 8px -2px 0; background:currentColor; -webkit-mask:var(--nw-lki) center/contain no-repeat; mask:var(--nw-lki) center/contain no-repeat; }
+.nw-pp{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(14px, 2.6vmin, 26px); padding:calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); cursor:default;
+  opacity:0; transform:scale(1.04); transition:opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1); pointer-events:none; }
+.nw.pin .nw-pp{ opacity:1; transform:none; pointer-events:auto; }
+.nw-pt{ display:flex; flex-direction:column; align-items:center; gap:6px; font-size:clamp(15px, 2.2vmin, 18px); font-weight:500; letter-spacing:.01em; text-shadow:0 1px 8px ${K(0,0,0,.35)}; }
+.nw-pt svg{ width:22px; height:22px; opacity:.9; } .nw-pt small{ min-height:1.3em; font-size:.82em; font-weight:500; opacity:.75; }
+.nw-pt small.err{ color:${K(255,170,160,1)}; opacity:1; }
+.nw-dots{ display:flex; gap:clamp(12px, 1.8vmin, 16px); height:16px; align-items:center; }
+.nw-dots i{ width:13px; height:13px; border-radius:50%; box-shadow:inset 0 0 0 1.5px ${K(255,255,255,.75)}; transition:background .15s ease, transform .2s cubic-bezier(.2,.8,.2,1); }
+.nw-dots i.on{ background:${K(255,255,255,1)}; transform:scale(1.08); }
+.nw-dots.bad{ animation:nwsh .42s cubic-bezier(.36,.07,.19,.97); } .nw-dots.bad i{ box-shadow:inset 0 0 0 1.5px ${K(255,170,160,1)}; }
+.nw-dots.ok i{ background:${K(190,255,170,1)}; box-shadow:none; }
+@keyframes nwsh{ 10%, 90%{ transform:translateX(-2px); } 20%, 80%{ transform:translateX(4px); } 30%, 50%, 70%{ transform:translateX(-8px); } 40%, 60%{ transform:translateX(8px); } }
+.nw-kp{ display:grid; grid-template-columns:repeat(3, var(--k)); gap:clamp(14px, 2.4vmin, 22px) clamp(20px, 3.4vmin, 30px); --k:clamp(64px, 11vmin, 84px); }
+.nw-kp button{ all:unset; box-sizing:border-box; cursor:pointer; width:var(--k); height:var(--k); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff;
+  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:blur(18px) saturate(1.3); backdrop-filter:blur(18px) saturate(1.3); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}, inset 0 1px 0 ${K(255,255,255,.18)};
+  font-size:calc(var(--k) * .42); font-weight:300; line-height:1; font-variant-numeric:tabular-nums; transition:background .25s ease, transform .18s cubic-bezier(.2,.8,.2,1); -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.nw-kp button small{ font-size:9.5px; font-weight:600; letter-spacing:.18em; opacity:.6; margin-top:2px; height:11px; }
+.nw-kp button:active, .nw-kp button.hit{ background:${K(255,255,255,.34)}; transform:scale(.94); transition-duration:0s, .08s; }
+.nw-kp button:focus-visible, .nw-lb:focus-visible{ outline:2px solid ${K(255,255,255,.9)}; outline-offset:3px; }
+.nw-kp button.fn{ background:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; } .nw-kp button.fn svg{ width:30%; height:30%; }
+.nw-kp button.fn:active{ background:${K(255,255,255,.14)}; } .nw-kp button[disabled]{ opacity:.35; pointer-events:none; } .nw-kp .gap{ visibility:hidden; pointer-events:none; }
+.nw-lb{ all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 22px; border-radius:999px; font-size:15px; font-weight:600; color:#fff;
+  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}; transition:background .2s ease, transform .15s ease; }
+.nw-lb svg{ width:18px; height:18px; } .nw-lb:active{ transform:scale(.96); background:${K(255,255,255,.26)}; }
+@media (max-height:560px){ .nw-kp{ --k:clamp(52px, 12vmin, 64px); gap:10px 22px; } .nw-pt svg{ display:none; } }
+@media (prefers-reduced-motion:reduce){ .nw-pp, .nw.pin .nw-bg{ transition:none; } .nw-dots.bad{ animation:none; } }
 @media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.95; } }
 `;
 const HGWall = window.__hgWall || (window.__hgWall = {
@@ -69,12 +107,54 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
-      sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '' }; },
+      sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
+      lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0 }; },
+  /* ---- blokada PIN-em (BETA): wygaszacz zablokowany po lockAfter s; dotknięcie pokazuje pinpad. Wygoda w kiosku, nie zabezpieczenie konta HA: zapisany jest tylko skrót PIN-u. ---- */
+  LOCKS: [0, 60, 300, 900, 1800],
+  lockOn() { const c = this.get(); return !!(c.on && c.lock && c.pinH); },
+  hash(pin) { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; const str = 'nuvio-wall:' + pin; for (let r = 0; r < 512; r++) for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i) + r;
+      h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); }
+    return ((h2 >>> 0).toString(36) + (h1 >>> 0).toString(36)); },
+  flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
+  lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
+    this.locked = true; this.flag(true); clearTimeout(this._lk); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); } },
+  pad() { const el = this.el; if (!el || el.classList.contains('pin')) return; const c = this.get();
+    let pp = el.querySelector('.nw-pp'); if (!pp) {
+      const ic = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`, LK = 'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z';
+      const BK = 'M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12';
+      const L = ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ'], key = (d) => `<button type="button" data-k="${d}" aria-label="${d}">${d}<small>${d ? L[d - 1] || '' : ''}</small></button>`;
+      pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', hgTr('Odblokuj panel', 'Unlock the dashboard'));
+      pp.innerHTML = `<div class="nw-pt">${ic(LK)}<span>${H.esc(hgTr('Wpisz PIN', 'Enter PIN'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
+        <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" aria-label="${H.esc(hgTr('Usuń', 'Delete'))}">${ic(BK)}</button></div>
+        <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(hgTr('Zablokuj', 'Lock'))}</span></button>`;
+      pp.addEventListener('pointerdown', (e) => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; e.preventDefault(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 120); this.key(b.dataset.k); });
+      el.appendChild(pp); }
+    this._pin = ''; this.dots(c.pinN); el.classList.add('pin'); this.idlePad(); },
+  dots(n, st) { const el = this.el, d = el && el.querySelector('.nw-dots'); if (!d) return; const N = Math.max(n || 4, this._pin.length);
+    d.className = 'nw-dots' + (st ? ' ' + st : ''); d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < this._pin.length ? 'on' : ''}"></i>`).join(''); d.setAttribute('aria-label', hgTr(`Wpisano ${this._pin.length} z ${N}`, `${this._pin.length} of ${N} entered`)); },
+  msg(t, err) { const s = this.el && this.el.querySelector('.nw-pt small'); if (s) { s.textContent = t || ''; s.classList.toggle('err', !!err); } },
+  /* pinpad wraca do zablokowanego wygaszacza po 20 s bez dotyku */
+  idlePad() { clearTimeout(this._pt); this._pt = setTimeout(() => this.unpad(), 20000); },
+  unpad() { clearTimeout(this._pt); this._pin = ''; const el = this.el; if (!el) return; el.classList.remove('pin'); this.msg(''); el.focus({ preventScroll: true }); },
+  key(k) { const el = this.el; if (!el) return; const c = this.get(); this.idlePad();
+    if (k === 'lock') return this.unpad();
+    const wait = (this._ban || 0) - Date.now(); if (wait > 0) return this.msg(hgTr(`Spróbuj za ${Math.ceil(wait / 1000)} s`, `Try again in ${Math.ceil(wait / 1000)} s`), true);
+    if (k === 'del') { this._pin = this._pin.slice(0, -1); this.msg(''); return this.dots(c.pinN); }
+    if (!/^[0-9]$/.test(k) || this._pin.length >= 8) return;
+    this._pin += k; this.msg(''); this.dots(c.pinN);
+    if (this._pin.length < c.pinN) return;
+    if (this.hash(this._pin) === c.pinH) { this._bad = 0; this.dots(c.pinN, 'ok'); clearTimeout(this._pt); setTimeout(() => { this.locked = false; this.flag(false); this.wake('pin'); }, 160); return; }
+    this._bad = (this._bad || 0) + 1; this._pin = ''; const d = el.querySelector('.nw-dots'); this.dots(c.pinN); d.classList.remove('bad'); void d.offsetWidth; d.classList.add('bad');
+    if (this._bad >= 5) { const s = 30 * Math.pow(2, Math.min(4, Math.floor(this._bad / 5) - 1)); this._ban = Date.now() + s * 1000; this.msg(hgTr(`Za dużo prób. Spróbuj za ${s} s`, `Too many attempts. Try again in ${s} s`), true); }
+    else this.msg(hgTr('Nieprawidłowy PIN', 'Wrong PIN'), true); },
   /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
   set(p) { HGL.data.wall = Object.assign({}, this.get(), p); HGL._ls(); this.sync();
     clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
-  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h); },
+  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h);
+    /* po przeładowaniu strony zablokowany ekran wraca od razu (przeładowanie nie omija blokady) */
+    if (!this._rs) { const t0 = this._rs0 || (this._rs0 = Date.now());   /* ustawienia z HA mogą dojść chwilę później: czekamy na nie do 20 s */
+      if (!this.flag()) this._rs = true; else if (this.lockOn()) { if (page && page.isConnected) { this._rs = true; if (!this.active) this.lockNow(); } else if (!this._rsT) this._rsT = setTimeout(() => { this._rsT = null; if (this.page && this.hass) this.tick(this.hass, this.page); }, 500); } else if (Date.now() - t0 > 20000) { this._rs = true; this.flag(false); } } },
   sync() { const c = this.get();
     if (!this._wired) { this._wired = true; const bump = () => { this.last = Date.now(); };
       for (const t of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) window.addEventListener(t, bump, { capture: true, passive: true });
@@ -93,7 +173,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     this.show(); },
   motion(h) { const c = this.get(); if (!c.on || !c.sensor) { this._ms = undefined; return; }
     const s = h && h.states ? h.states[c.sensor] : null, st = s ? s.state : null;
-    if (this._ms !== undefined && st === 'on' && this._ms !== 'on' && this.active) this.wake('motion');
+    if (this._ms !== undefined && st === 'on' && this._ms !== 'on' && this.active && !this.locked) this.wake('motion');
     this._ms = st; },
   /* ---- zdjęcia ---- */
   imgs() { const c = this.get(), A = HGApp.get(), port = window.innerHeight > window.innerWidth, one = (b) => { if (!b) return null; const u = port && b.v2p ? HGApp.bgImg({ kind: 'image', v: b.v2p }) : HGApp.bgImg(b); return u; };
@@ -109,8 +189,13 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     el.style.setProperty('--nw-dim', c.dim);
     el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
-    const wk = (e) => { e.preventDefault(); e.stopPropagation(); this.wake('touch'); };
-    el.addEventListener('pointerdown', wk); el.addEventListener('keydown', wk); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
+    if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
+    this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
+    if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
+    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) return this.pad(); this.wake('touch'); };
+    el.addEventListener('pointerdown', wk);
+    el.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); if (!this.locked) return this.wake('key');
+      if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(el);
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
     this.clock(); this.photos(rm); this.drift(rm);
@@ -169,13 +254,13 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ochrona przed wypaleniem: zegar co minutę lekko zmienia położenie */
   drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
-  wake(why) { if (!this.active || !this.el) return; const el = this.el; this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
+  wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
     clearTimeout(this._ck); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, 450);
     const f = this._foc; this._foc = null; try { if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) { /* bez znaczenia */ }
     this.arm(); },
-  hide() { if (this.active) this.wake('off'); },
+  hide() { if (this.active) { this.flag(false); this.wake('off'); } },
   /* ---- UI: sekcja w arkuszu Wygląd (tylko admin, jak edycja układu) ---- */
   admin(p) { const h = p && p._hass; return !!(h && h.user && h.user.is_admin); },
   fmt(s) { return s < 60 ? s + ' s' : Math.round(s / 60) + ' min'; },
@@ -189,11 +274,24 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgTr('Zdjęcie', 'Photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, pl, en]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${hgTr(pl, en)}</button>`).join('')}</div>
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>
       <label class="wl-f"><span>${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span><select class="hs-in" name="wl-sensor"><option value="">${hgTr('Brak, tylko dotyk', 'None, touch only')}</option>${[...cur, ...sens].map(([e, n]) => `<option value="${H.esc(e)}"${e === c.sensor ? ' selected' : ''}>${H.esc(n)}</option>`).join('')}</select></label>
+      ${this.lockHtml(c)}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgTr('Podgląd wygaszacza', 'Preview screensaver')}</span></button>`;
     return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
       <small class="lk-hn">${hgTr('Po bezczynności zegar ze zdjęciem i przyciemnieniem; dotyk lub czujnik ruchu budzi ekran. Ustawienie dotyczy konta użytkownika HA.', 'After inactivity: a clock over a dimmed photo; touch or a motion sensor wakes the screen. Applies to this Home Assistant user.')}</small>
       <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgTr('Wygaszacz', 'Screensaver')}<small>${c.on ? hgTr('Włączony', 'On') : hgTr('Wyłączony', 'Off')}</small></span><i aria-hidden="true"></i></button>${body}</section>`; },
+  lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgTr('Od razu', 'At once'));
+    const sw = `<button type="button" class="wl-sw" role="switch" data-hge="wl-lock" aria-checked="${c.lock}"><span>${hgTr('Blokada PIN-em', 'PIN lock')}<b class="wl-beta">BETA</b><small>${c.lock ? (c.pinH ? hgTr('Włączona: dotknięcie wygaszacza pokazuje pinpad', 'On: touching the screensaver shows a PIN pad') : hgTr('Ustaw PIN, aby blokada działała', 'Set a PIN to turn the lock on')) : hgTr('Wyłączona', 'Off')}</small></span><i aria-hidden="true"></i></button>`;
+    if (!c.lock) return sw;
+    return `${sw}
+      <div class="wl-f"><span>${c.pinH ? hgTr('Zmień PIN (4–8 cyfr)', 'Change PIN (4–8 digits)') : hgTr('PIN (4–8 cyfr)', 'PIN (4–8 digits)')}${c.pinH ? `<em class="wl-ok">${H.icon('mdi:check-circle')}${hgTr('PIN ustawiony', 'PIN set')}</em>` : ''}</span>
+        <div class="wl-pin"><span class="hs-s">${H.icon('mdi:dialpad')}<input class="hs-in" name="wl-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="new-password" placeholder="••••" aria-label="${hgTr('Nowy PIN', 'New PIN')}"></span><button type="button" class="wl-tb" data-hge="wl-pin">${H.icon('mdi:content-save-outline')}<span>${hgTr('Zapisz', 'Save')}</span></button></div></div>
+      <div class="wl-f" role="group" aria-labelledby="wl-la"><span id="wl-la">${hgTr('Zablokuj po starcie wygaszacza', 'Lock after the screensaver starts')}</span><div class="wl-seg" style="--n:${this.LOCKS.length}">${this.LOCKS.map((s) => `<button type="button" data-hge="wl-lockafter" data-v="${s}" aria-pressed="${c.lockAfter === s}">${L(s)}</button>`).join('')}</div></div>
+      <small class="wl-warn">${hgTr('Blokada chroni panel na tablecie przed przypadkowym użyciem; nie zastępuje hasła do Home Assistant. Zapisywany jest tylko skrót PIN-u. Zablokujesz też od razu z menu użytkownika.', 'The lock keeps the tablet dashboard from casual use; it does not replace the Home Assistant password. Only a hash of the PIN is stored. You can also lock right away from the user menu.')}</small>`; },
+  savePin(p, S) { const i = S.querySelector('[name=wl-pin]'), v = i ? i.value.trim() : '';
+    if (!/^[0-9]{4,8}$/.test(v)) return p._eToast(hgTr('PIN to od 4 do 8 cyfr', 'The PIN is 4 to 8 digits'));
+    this.set({ pinH: this.hash(v), pinN: v.length }); p._eToast(hgTr('PIN zapisany', 'PIN saved')); return p._eLook(); },
   wire(p, S) { if (!this.admin(p)) return;
+    const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
     const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = rg.value + '%'; this.set({ dim: rg.value / 100 }); });
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
@@ -203,6 +301,9 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (a === 'wl-on') { this.last = Date.now(); this.set({ on: !this.get().on }); return p._eLook(); }
     if (a === 'wl-idle') { this.last = Date.now(); this.set({ idle: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-src') { this.set({ src: b.dataset.v }); return p._eLook(); }
+    if (a === 'wl-lock') { this.set({ lock: !this.get().lock }); if (!this.get().lock) this.flag(false); return p._eLook(); }
+    if (a === 'wl-lockafter') { this.set({ lockAfter: Number(b.dataset.v) }); return p._eLook(); }
+    if (a === 'wl-pin') return this.savePin(p, b.closest('section') || p._eSheetEl);
     if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(); } },
 });
 window.HGWall = HGWall;

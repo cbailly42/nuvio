@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.2.1-a3e635?style=flat-square" alt="v1.2.1">
+  <img src="https://img.shields.io/badge/version-v1.3.0-a3e635?style=flat-square" alt="v1.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -290,7 +290,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
 | Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | done in 1.0.0: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0, 12 generic cards, stack and tabs in 0.16.0, smaller bundle and paused off-screen cards in 1.0.0 |
-| Screensaver lock (BETA) | tap the screensaver to get a round glass PIN pad over a blurred background, with PIN dots above and a Lock button below; settings for PIN, lock delay and on/off | planned |
+| Screensaver lock (BETA) | tap the screensaver to get a round glass PIN pad over a blurred background, with PIN dots above and a Lock button below; settings for PIN, lock delay and on/off | done in 1.3.0 |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -355,6 +355,7 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 - **Preview screensaver** shows it immediately; touch to close.
 - Layout: a large clock in the centre (no panel behind it), the date fixed at the bottom left and, if Home Assistant has a `weather` entity, the current weather (icon, temperature, condition) at the top right. The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
 - It only starts on the Nuvio dashboard (not in edit mode, not in a background tab) and is drawn above Home Assistant dialogs.
+- **PIN lock (BETA)**: turn on *PIN lock*, set a PIN of 4 to 8 digits and choose when the screensaver locks (at once, after 1, 5, 15 or 30 min). A locked screensaver does not wake on touch or motion: touching it blurs the photo and shows a round glass PIN pad with the PIN dots above it and a **Lock** button below it, which returns to the screensaver. After 5 wrong PINs the pad waits 30 s (longer after more attempts), and it closes by itself after 20 s without a touch. **Lock screen** in the user menu locks right away, and a reload of the page stays locked. Only a hash of the PIN is stored. The lock keeps the tablet from casual use and does not replace the Home Assistant password.
 - Settings are stored per Home Assistant user like the layout. For a dedicated tablet user, sign in as an admin once on the tablet, or move the settings with **Layout backup** (the category *Wall tablet mode*).
 
 ## Layout backup
@@ -396,9 +397,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.2.1 -m "Nuvio 1.2.1" && git push origin v1.2.1`.
+Only tagging by hand: `git tag -a v1.3.0 -m "Nuvio 1.3.0" && git push origin v1.3.0`.
 
 ## Changelog
+
+### 1.3.0
+- Added: PIN lock for the screensaver (BETA) in **Appearance → Wall tablet mode**: PIN, lock delay and on/off. A locked screensaver shows a round glass PIN pad over the blurred photo, with the PIN dots above it and a **Lock** button below it.
+- Added: *Lock screen* in the user menu when the PIN lock is on. A locked screen stays locked after a page reload.
 
 ### 1.2.1
 - Fixed: tablets in landscape (from 900 px wide and a 1.2 aspect ratio, like an iPad held sideways) use the desktop layout again instead of mixing the phone tab bar with the side rail and stretching the panels. The tablet layout stays for portrait and squarer windows, and its scale is now also limited by the window height.

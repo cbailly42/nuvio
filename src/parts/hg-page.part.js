@@ -678,6 +678,7 @@ class HGPage extends HTMLElement {
       : U.v ? `<button class="mupd" data-act="updopen">${H.icon('mdi:arrow-up-circle')}<span>${hgTr(`Dostępna aktualizacja v${H.esc(U.v)}`, `Update available v${H.esc(U.v)}`)}</span></button>` : '';
     return `<div class="mfoot" role="presentation"><span class="mver">Nuvio v${H.esc(run)}</span>${pill}</div>`; }
   /* Kiosk Mode zainstalowany: administrator wyłącza go do końca sesji tej karty i włącza z powrotem (pełne przeładowanie, bo kiosk czyta adres przy starcie) */
+  _lockItem() { return window.HGWall && HGWall.lockOn() ? `<button role="menuitem" data-act="walllock">${H.icon('mdi:lock-outline')}<span>${hgTr('Zablokuj ekran', 'Lock screen')}</span></button>` : ''; }
   _kmItem() { if (!window.KioskMode || !this._isAdmin()) return ''; const off = hgKmOff() || /[?&]disable_km\b/.test(location.search);
     return `<button role="menuitem" data-act="kmtoggle">${H.icon(off ? 'mdi:monitor-lock' : 'mdi:monitor-off')}<span>${off ? hgTr('Włącz tryb kiosku', 'Turn kiosk mode on') : hgTr('Wyłącz tryb kiosku', 'Turn kiosk mode off')}</span></button>`; }
   _kmToggle() { const off = hgKmOff() || /[?&]disable_km\b/.test(location.search), q = new URLSearchParams(location.search); hgKmOff(!off); if (off) q.delete('disable_km'); else q.set('disable_km', '');
@@ -688,7 +689,7 @@ class HGPage extends HTMLElement {
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._kmItem()}${this._updFoot()}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._lockItem()}${this._kmItem()}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -840,6 +841,7 @@ class HGPage extends HTMLElement {
       case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
       case 'updreload': { location.reload(); return; }
       case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
+      case 'walllock': this._menuOpen = false; this._paintTop(true); HGWall.page = HGWall.page || this; HGWall.hass = HGWall.hass || this._hass; return HGWall.lockNow();
       case 'kmtoggle': this._menuOpen = false; this._paintTop(true); return this._kmToggle();
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);

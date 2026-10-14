@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.2.1-a3e635?style=flat-square" alt="v1.2.1">
+  <img src="https://img.shields.io/badge/version-v1.3.0-a3e635?style=flat-square" alt="v1.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -290,7 +290,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
 | Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | gotowe w 1.0.0: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0, 12 kart ogólnych, stos i zakładki w 0.16.0, mniejsza paczka i wstrzymane karty poza ekranem w 1.0.0 |
-| Blokada wygaszacza (BETA) | po dotknięciu wygaszacza okrągły szklany pinpad na rozmytym tle, kropki PIN-u nad nim i przycisk Zablokuj pod spodem; ustawienia PIN-u, czasu blokady i włącz/wyłącz | planowane |
+| Blokada wygaszacza (BETA) | po dotknięciu wygaszacza okrągły szklany pinpad na rozmytym tle, kropki PIN-u nad nim i przycisk Zablokuj pod spodem; ustawienia PIN-u, czasu blokady i włącz/wyłącz | gotowe w 1.3.0 |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -355,6 +355,7 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - **Podgląd wygaszacza** pokazuje go od razu; dotknij, aby zamknąć.
 - Układ: duży zegar pośrodku (bez panelu pod spodem), data na stałe w lewym dolnym rogu i, jeśli Home Assistant ma encję `weather`, aktualna pogoda (ikona, temperatura, stan) w prawym górnym. Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
 - Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
+- **Blokada PIN-em (BETA)**: włącz *Blokadę PIN-em*, ustaw PIN z 4 do 8 cyfr i wybierz, kiedy wygaszacz się blokuje (od razu, po 1, 5, 15 lub 30 min). Zablokowany wygaszacz nie budzi się dotykiem ani czujnikiem ruchu: dotknięcie rozmywa zdjęcie i pokazuje okrągły szklany pinpad z kropkami PIN-u nad nim i przyciskiem **Zablokuj** pod spodem, który wraca do wygaszacza. Po 5 błędnych PIN-ach pinpad czeka 30 s (dłużej po kolejnych próbach), a po 20 s bez dotyku sam się zamyka. **Zablokuj ekran** w menu użytkownika blokuje od razu, a przeładowanie strony nie zdejmuje blokady. Zapisywany jest tylko skrót PIN-u. Blokada chroni tablet przed przypadkowym użyciem i nie zastępuje hasła do Home Assistant.
 - Ustawienia zapisują się per użytkownik HA, tak jak układ. Dla osobnego użytkownika tabletu zaloguj się raz jako administrator na tablecie albo przenieś ustawienia przez **Kopię układu** (kategoria *Tryb tabletu ściennego*).
 
 ## Kopia układu
@@ -396,9 +397,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.2.1 -m "Nuvio 1.2.1" && git push origin v1.2.1`.
+Sam tag ręcznie: `git tag -a v1.3.0 -m "Nuvio 1.3.0" && git push origin v1.3.0`.
 
 ## Lista zmian
+
+### 1.3.0
+- Dodano: blokada wygaszacza PIN-em (BETA) w **Wygląd → Tryb tabletu ściennego**: PIN, czas blokady i włącz/wyłącz. Zablokowany wygaszacz pokazuje okrągły szklany pinpad na rozmytym zdjęciu, z kropkami PIN-u nad nim i przyciskiem **Zablokuj** pod spodem.
+- Dodano: *Zablokuj ekran* w menu użytkownika, gdy blokada PIN-em jest włączona. Zablokowany ekran zostaje zablokowany po przeładowaniu strony.
 
 ### 1.2.1
 - Naprawiono: tablety w poziomie (od 900 px szerokości i proporcji 1,2, np. iPad trzymany bokiem) znowu używają układu desktopowego, zamiast łączyć pasek zakładek z telefonu z boczną szyną i rozciągać panele. Układ tabletu zostaje dla pionu i bardziej kwadratowych okien, a jego skala jest teraz ograniczona także wysokością okna.
