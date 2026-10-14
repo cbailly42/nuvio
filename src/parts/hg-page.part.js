@@ -1167,12 +1167,33 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-seg button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:58px; padding:8px 6px; border-radius:12px; font:500 13px/1.2 inherit; text-align:center; transition:background .2s, color .2s; }
 .hs-seg button:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.12)); } .hs-seg button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; } .hs-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-seg .sg{ display:flex; gap:2px; width:30px; height:12px; } .hs-seg .sg i{ flex:1; border-radius:3px; border:1.5px solid currentColor; opacity:.4; box-sizing:border-box; } .hs-seg .sg-s i:nth-child(1), .hs-seg .sg-m i:nth-child(-n+2), .hs-seg .sg-l i{ background:currentColor; opacity:1; }
-.hs-ipw{ position:relative; } .hs-ipb{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; } .hs-ipb:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.12)); } .hs-ipb:focus-visible{ outline:2px solid var(--hg-accent); }
-.hs-ipp{ position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30; box-sizing:border-box; padding:10px; border-radius:20px; background:var(--hg-pop-bg, rgba(34,36,40,.97)); color:inherit; box-shadow:0 18px 48px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.1); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); display:flex; flex-direction:column; gap:8px; }
-.hs-ipp.up{ top:auto; bottom:calc(100% + 6px); } .hs-ipp > small{ font-size:11.5px; opacity:.6; padding:0 4px; }
-.hs-ipg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(40px, 1fr)); gap:4px; max-height:216px; overflow-y:auto; scrollbar-width:thin; } .hs-ipg.rc{ max-height:none; }
-.hs-ipg button{ all:unset; cursor:pointer; aspect-ratio:1; border-radius:12px; display:grid; place-items:center; } .hs-ipg button:hover{ background:var(--hg-hover-fill, rgba(127,127,127,.14)); } .hs-ipg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:-2px; } .hs-ipg button[aria-selected=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
-.hs-ipg ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .hs-ipe{ padding:14px 6px; font-size:13px; opacity:.6; text-align:center; grid-column:1 / -1; }
+/* wybór ikony: szklany panel na tokenach motywu (bez literałów kolorów, więc generator ciemnego motywu go nie odwraca) */
+.hs-ipw{ position:relative; } .hs-ipb{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; transition:background-color var(--ui-t, .15s); } .hs-ipb:hover{ background:var(--ui-sec2, var(--hg-tile-bg)); } .hs-ipb:focus-visible{ outline:2px solid var(--hg-accent); }
+.hs-ipb ha-icon{ transition:transform .22s cubic-bezier(.2,0,0,1); } .hs-ipb[aria-expanded=true] ha-icon{ transform:rotate(180deg); } .hs-ipb[aria-expanded=true]{ background:var(--ui-sec, var(--hg-tile-bg)); }
+.hs-ipp{ position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:30; box-sizing:border-box; padding:10px; border-radius:24px; color:inherit; isolation:isolate; display:flex; flex-direction:column; gap:6px;
+  background:color-mix(in srgb, var(--hg-ov-bg) 74%, transparent); -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hg-thumb) 14%, transparent), 0 24px 56px -12px var(--hg-glass-sh-h, var(--hg-glass-sh)), 0 8px 20px -10px var(--hg-glass-sh);
+  transform-origin:50% 0; animation:hgIpIn .2s cubic-bezier(.2,.8,.2,1) both; }
+.hs-ipp.up{ top:auto; bottom:calc(100% + 8px); transform-origin:50% 100%; } .hs-ipp.out{ animation:hgIpOut .12s ease-in both; pointer-events:none; }
+@keyframes hgIpIn{ from{ opacity:0; transform:translateY(-6px) scale(.97); } } @keyframes hgIpOut{ to{ opacity:0; transform:translateY(-4px) scale(.98); } }
+.hs-ipp.up{ animation-name:hgIpInUp; } @keyframes hgIpInUp{ from{ opacity:0; transform:translateY(6px) scale(.97); } }
+.hs-ipp > .hs-s{ height:42px; background:color-mix(in srgb, currentColor 7%, transparent); box-shadow:none; }
+.hs-ipp > .hs-s::after{ display:none; } .hs-ipp > .hs-s:focus-within{ box-shadow:inset 0 0 0 1.5px var(--hg-accent); }
+.hs-ipp > small{ display:flex; align-items:center; gap:6px; margin-top:4px; padding:0 8px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; opacity:.62; }
+.hs-ipp > small em{ font-style:normal; font-weight:500; letter-spacing:0; text-transform:none; margin-left:auto; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, currentColor 8%, transparent); font-variant-numeric:tabular-nums; }
+.hs-ipg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(40px, 1fr)); gap:4px; max-height:228px; overflow-y:auto; overscroll-behavior:contain; padding:2px; margin:0 -2px; scrollbar-width:thin; scrollbar-color:color-mix(in srgb, currentColor 22%, transparent) transparent; }
+.hs-ipg.all{ -webkit-mask-image:linear-gradient(to bottom, black calc(100% - 22px), transparent); mask-image:linear-gradient(to bottom, black calc(100% - 22px), transparent); padding-bottom:14px; } .hs-ipg.rc{ max-height:none; }
+.hs-ipg::-webkit-scrollbar{ width:6px; } .hs-ipg::-webkit-scrollbar-thumb{ border-radius:3px; background:color-mix(in srgb, currentColor 22%, transparent); }
+.hs-ipg button{ all:unset; cursor:pointer; aspect-ratio:1; border-radius:14px; display:grid; place-items:center; color:inherit; transition:background-color .15s, color .15s, box-shadow .15s; }
+.hs-ipg button ha-icon{ opacity:.82; transition:transform .18s cubic-bezier(.2,.8,.2,1), opacity .15s; }
+.hs-ipg button:hover{ background:color-mix(in srgb, currentColor 10%, transparent); } .hs-ipg button:hover ha-icon{ opacity:1; transform:scale(1.14); }
+.hs-ipg button:active ha-icon{ transform:scale(.92); }
+.hs-ipg button:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px var(--hg-accent); background:color-mix(in srgb, var(--hg-accent) 12%, transparent); } .hs-ipg button:focus-visible ha-icon{ opacity:1; }
+.hs-ipg button[aria-selected=true]{ background:var(--hg-accent); color:var(--hg-on-accent); } .hs-ipg button[aria-selected=true] ha-icon{ opacity:1; }
+.hs-ipg ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .hs-ipe{ padding:18px 8px; font-size:13px; opacity:.66; text-align:center; grid-column:1 / -1; line-height:1.4; }
+.hs-ipg .hs-ipk{ aspect-ratio:1; border-radius:14px; background:color-mix(in srgb, currentColor 7%, transparent); animation:hgIpSk 1.1s ease-in-out infinite alternate; } @keyframes hgIpSk{ to{ opacity:.4; } }
+.hs-ipg.fresh button{ animation:hgIpCell .22s cubic-bezier(.2,.8,.2,1) both; } @keyframes hgIpCell{ from{ opacity:0; transform:scale(.9); } }
+@media (prefers-reduced-motion:reduce){ .hs-ipp, .hs-ipp.out, .hs-ipg.fresh button, .hs-ipg .hs-ipk{ animation:none !important; } .hs-ipg button ha-icon, .hs-ipb ha-icon{ transition:none !important; } }
 .hs-cfb{ width:min(320px, 100%); box-sizing:border-box; padding:18px; border-radius:20px; display:flex; flex-direction:column; gap:6px; color:#fff;
   background:rgba(30,34,40,.66); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid rgba(255,255,255,.16); box-shadow:0 20px 50px rgba(0,0,0,.4);
   animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }

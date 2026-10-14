@@ -505,7 +505,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.22+4fd92c6a';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.23+b67bc520';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -875,7 +875,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-1e242e-008:rgba(30,36,46,0.08);
   --hg-bg-1e242e-018:rgba(30,36,46,0.18);
   --hg-bg-1f2125:#1F2125;
-  --hg-bg-222428-097:rgba(34,36,40,0.97);
   --hg-bg-222c35:#222C35;
   --hg-bg-282828-030:rgba(40,40,40,0.3);
   --hg-bg-2a2d31:#2A2D31;
@@ -896,7 +895,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-787880-024:rgba(120,120,128,0.24);
   --hg-bg-7f7f7f-010:rgba(127,127,127,0.1);
   --hg-bg-7f7f7f-012:rgba(127,127,127,0.12);
-  --hg-bg-7f7f7f-014:rgba(127,127,127,0.14);
   --hg-bg-7f7f7f-016:rgba(127,127,127,0.16);
   --hg-bg-7f7f7f-025:rgba(127,127,127,0.25);
   --hg-bg-80868c-022:rgba(128,134,140,0.22);
@@ -1139,7 +1137,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-1e242e-008:rgba(255,255,255,0.104);
   --hg-bg-1e242e-018:rgba(255,255,255,0.16);
   --hg-bg-1f2125:#ECECEF;
-  --hg-bg-222428-097:#ECECEF;
   --hg-bg-222c35:#ECECEF;
   --hg-bg-2a2d31:#ECECEF;
   --hg-bg-2a2d33:#FFFFFF;
@@ -1154,7 +1151,6 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-787880-024:rgba(127,127,135,0.24);
   --hg-bg-7f7f7f-010:rgba(128,128,128,0.1);
   --hg-bg-7f7f7f-012:rgba(128,128,128,0.12);
-  --hg-bg-7f7f7f-014:rgba(128,128,128,0.14);
   --hg-bg-7f7f7f-016:rgba(128,128,128,0.16);
   --hg-bg-7f7f7f-025:rgba(128,128,128,0.25);
   --hg-bg-80868c-022:rgba(115,121,127,0.22);
@@ -7119,12 +7115,33 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-seg button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:58px; padding:8px 6px; border-radius:12px; font:500 13px/1.2 inherit; text-align:center; transition:background .2s, color .2s; }
 .hs-seg button:hover{ background:var(--hg-hover-fill, var(--hg-bg-7f7f7f-012)); } .hs-seg button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; } .hs-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-seg .sg{ display:flex; gap:2px; width:30px; height:12px; } .hs-seg .sg i{ flex:1; border-radius:3px; border:1.5px solid currentColor; opacity:.4; box-sizing:border-box; } .hs-seg .sg-s i:nth-child(1), .hs-seg .sg-m i:nth-child(-n+2), .hs-seg .sg-l i{ background:currentColor; opacity:1; }
-.hs-ipw{ position:relative; } .hs-ipb{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; } .hs-ipb:hover{ background:var(--hg-hover-fill, var(--hg-bg-7f7f7f-012)); } .hs-ipb:focus-visible{ outline:2px solid var(--hg-accent); }
-.hs-ipp{ position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30; box-sizing:border-box; padding:10px; border-radius:20px; background:var(--hg-pop-bg, var(--hg-bg-222428-097)); color:inherit; box-shadow:0 18px 48px var(--hg-sh-000000-035), inset 0 0 0 1px var(--hg-sh-ffffff-010); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); display:flex; flex-direction:column; gap:8px; }
-.hs-ipp.up{ top:auto; bottom:calc(100% + 6px); } .hs-ipp > small{ font-size:11.5px; opacity:.6; padding:0 4px; }
-.hs-ipg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(40px, 1fr)); gap:4px; max-height:216px; overflow-y:auto; scrollbar-width:thin; } .hs-ipg.rc{ max-height:none; }
-.hs-ipg button{ all:unset; cursor:pointer; aspect-ratio:1; border-radius:12px; display:grid; place-items:center; } .hs-ipg button:hover{ background:var(--hg-hover-fill, var(--hg-bg-7f7f7f-014)); } .hs-ipg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:-2px; } .hs-ipg button[aria-selected=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
-.hs-ipg ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .hs-ipe{ padding:14px 6px; font-size:13px; opacity:.6; text-align:center; grid-column:1 / -1; }
+/* wybór ikony: szklany panel na tokenach motywu (bez literałów kolorów, więc generator ciemnego motywu go nie odwraca) */
+.hs-ipw{ position:relative; } .hs-ipb{ all:unset; cursor:pointer; flex:none; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; transition:background-color var(--ui-t, .15s); } .hs-ipb:hover{ background:var(--ui-sec2, var(--hg-tile-bg)); } .hs-ipb:focus-visible{ outline:2px solid var(--hg-accent); }
+.hs-ipb ha-icon{ transition:transform .22s cubic-bezier(.2,0,0,1); } .hs-ipb[aria-expanded=true] ha-icon{ transform:rotate(180deg); } .hs-ipb[aria-expanded=true]{ background:var(--ui-sec, var(--hg-tile-bg)); }
+.hs-ipp{ position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:30; box-sizing:border-box; padding:10px; border-radius:24px; color:inherit; isolation:isolate; display:flex; flex-direction:column; gap:6px;
+  background:color-mix(in srgb, var(--hg-ov-bg) 74%, transparent); -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hg-thumb) 14%, transparent), 0 24px 56px -12px var(--hg-glass-sh-h, var(--hg-glass-sh)), 0 8px 20px -10px var(--hg-glass-sh);
+  transform-origin:50% 0; animation:hgIpIn .2s cubic-bezier(.2,.8,.2,1) both; }
+.hs-ipp.up{ top:auto; bottom:calc(100% + 8px); transform-origin:50% 100%; } .hs-ipp.out{ animation:hgIpOut .12s ease-in both; pointer-events:none; }
+@keyframes hgIpIn{ from{ opacity:0; transform:translateY(-6px) scale(.97); } } @keyframes hgIpOut{ to{ opacity:0; transform:translateY(-4px) scale(.98); } }
+.hs-ipp.up{ animation-name:hgIpInUp; } @keyframes hgIpInUp{ from{ opacity:0; transform:translateY(6px) scale(.97); } }
+.hs-ipp > .hs-s{ height:42px; background:color-mix(in srgb, currentColor 7%, transparent); box-shadow:none; }
+.hs-ipp > .hs-s::after{ display:none; } .hs-ipp > .hs-s:focus-within{ box-shadow:inset 0 0 0 1.5px var(--hg-accent); }
+.hs-ipp > small{ display:flex; align-items:center; gap:6px; margin-top:4px; padding:0 8px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; opacity:.62; }
+.hs-ipp > small em{ font-style:normal; font-weight:500; letter-spacing:0; text-transform:none; margin-left:auto; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, currentColor 8%, transparent); font-variant-numeric:tabular-nums; }
+.hs-ipg{ display:grid; grid-template-columns:repeat(auto-fill, minmax(40px, 1fr)); gap:4px; max-height:228px; overflow-y:auto; overscroll-behavior:contain; padding:2px; margin:0 -2px; scrollbar-width:thin; scrollbar-color:color-mix(in srgb, currentColor 22%, transparent) transparent; }
+.hs-ipg.all{ -webkit-mask-image:linear-gradient(to bottom, black calc(100% - 22px), transparent); mask-image:linear-gradient(to bottom, black calc(100% - 22px), transparent); padding-bottom:14px; } .hs-ipg.rc{ max-height:none; }
+.hs-ipg::-webkit-scrollbar{ width:6px; } .hs-ipg::-webkit-scrollbar-thumb{ border-radius:3px; background:color-mix(in srgb, currentColor 22%, transparent); }
+.hs-ipg button{ all:unset; cursor:pointer; aspect-ratio:1; border-radius:14px; display:grid; place-items:center; color:inherit; transition:background-color .15s, color .15s, box-shadow .15s; }
+.hs-ipg button ha-icon{ opacity:.82; transition:transform .18s cubic-bezier(.2,.8,.2,1), opacity .15s; }
+.hs-ipg button:hover{ background:color-mix(in srgb, currentColor 10%, transparent); } .hs-ipg button:hover ha-icon{ opacity:1; transform:scale(1.14); }
+.hs-ipg button:active ha-icon{ transform:scale(.92); }
+.hs-ipg button:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px var(--hg-accent); background:color-mix(in srgb, var(--hg-accent) 12%, transparent); } .hs-ipg button:focus-visible ha-icon{ opacity:1; }
+.hs-ipg button[aria-selected=true]{ background:var(--hg-accent); color:var(--hg-on-accent); } .hs-ipg button[aria-selected=true] ha-icon{ opacity:1; }
+.hs-ipg ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .hs-ipe{ padding:18px 8px; font-size:13px; opacity:.66; text-align:center; grid-column:1 / -1; line-height:1.4; }
+.hs-ipg .hs-ipk{ aspect-ratio:1; border-radius:14px; background:color-mix(in srgb, currentColor 7%, transparent); animation:hgIpSk 1.1s ease-in-out infinite alternate; } @keyframes hgIpSk{ to{ opacity:.4; } }
+.hs-ipg.fresh button{ animation:hgIpCell .22s cubic-bezier(.2,.8,.2,1) both; } @keyframes hgIpCell{ from{ opacity:0; transform:scale(.9); } }
+@media (prefers-reduced-motion:reduce){ .hs-ipp, .hs-ipp.out, .hs-ipg.fresh button, .hs-ipg .hs-ipk{ animation:none !important; } .hs-ipg button ha-icon, .hs-ipb ha-icon{ transition:none !important; } }
 .hs-cfb{ width:min(320px, 100%); box-sizing:border-box; padding:18px; border-radius:20px; display:flex; flex-direction:column; gap:6px; color:var(--hg-tx-ffffff);
   background:var(--hg-bg-1e2228-066); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); border:1px solid var(--hg-bd-ffffff-016); box-shadow:0 20px 50px var(--hg-sh-000000-040);
   animation:hgCfIn .22s cubic-bezier(.2,.8,.2,1) both; }
@@ -7471,13 +7488,15 @@ const hgIcWire = (S) => { const inp = S && S.querySelector('.hge-sheet input[nam
   const pick = (ic) => { inp.value = ic; inp.dispatchEvent(new Event('input', { bubbles: true })); if (pv && /^mdi:[a-z0-9-]+$/.test(ic)) pv.setAttribute('icon', ic);
     try { localStorage.setItem('nuvio:icons', JSON.stringify([ic, ...hgIcRecent().filter((x) => x !== ic)].slice(0, 12))); } catch (e) { /* tryb prywatny */ } close(); inp.focus(); };
   const btns = (L) => L.map((n) => `<button type="button" role="option" data-ic="${H.esc(n)}" aria-selected="${n === cur()}" title="${H.esc(n)}" aria-label="${H.esc(n.replace('mdi:', ''))}">${H.icon(n)}</button>`).join('');
-  const close = () => { if (!pop) return; pop.remove(); pop = null; if (tok) { hgsOpen.delete(tok); tok = null; } ob.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', out, true); };
+  const close = () => { if (!pop) return; const p0 = pop; pop = null; p0.classList.add('out'); const rm = () => p0.remove(); p0.addEventListener('animationend', rm, { once: true }); setTimeout(rm, 180); if (tok) { hgsOpen.delete(tok); tok = null; } ob.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', out, true); };
   const out = (e) => { if (pop && !e.composedPath().includes(fl)) close(); };
-  const fill = async (q) => { const g = pop && pop.querySelector('.hs-ipg.all'); if (!g) return; const L = await hgIcLoad(); if (!pop) return; q = q.toLowerCase().replace(/^mdi:/, '').trim();
-    const R = []; for (const x of L) { if (!q || x.name.includes(q) || (x.keywords || []).some((k) => k.includes(q))) { R.push('mdi:' + x.name); if (R.length >= 160) break; } } g.innerHTML = R.length ? btns([...new Set(R)]) : `<div class="hs-ipe">${hgTr('Brak ikon. Możesz wpisać nazwę mdi:… w polu.', 'No icons. You can type an mdi:… name in the field.')}</div>`; };
+  const fill = async (q) => { const g = pop && pop.querySelector('.hs-ipg.all'); if (!g) return; const L = await hgIcLoad(); if (!pop || !g.isConnected) return; q = q.toLowerCase().replace(/^mdi:/, '').trim();
+    let n = 0; const R = []; for (const x of L) { if (!q || x.name.includes(q) || (x.keywords || []).some((k) => k.includes(q))) { n++; if (R.length < 160) R.push('mdi:' + x.name); } }
+    const lb = pop.querySelector('.hs-ipl'); if (lb) lb.innerHTML = `${q ? hgTr('Wyniki', 'Results') : hgTr('Wszystkie ikony', 'All icons')}<em>${n > R.length ? R.length + ' / ' + n : n}</em>`;
+    g.classList.remove('fresh'); g.removeAttribute('aria-busy'); g.innerHTML = R.length ? btns([...new Set(R)]) : `<div class="hs-ipe">${hgTr('Brak ikon. Możesz wpisać nazwę mdi:… w polu.', 'No icons. You can type an mdi:… name in the field.')}</div>`; g.scrollTop = 0; void g.offsetWidth; g.classList.add('fresh'); };
   const open = () => { if (pop) return close(); pop = document.createElement('div'); pop.className = 'hs-ipp'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', hgTr('Wybierz ikonę', 'Choose icon'));
     const rc = hgIcRecent();
-    pop.innerHTML = `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${hgTr('Szukaj ikony (np. sofa, lampa)', 'Search icons (e.g. sofa, lamp)')}" aria-label="${hgTr('Szukaj ikony', 'Search icons')}" autocomplete="off"></label>${rc.length ? `<small>${hgTr('Ostatnie', 'Recent')}</small><div class="hs-ipg rc" role="listbox">${btns(rc)}</div>` : ''}<small>${hgTr('Wszystkie ikony', 'All icons')}</small><div class="hs-ipg all" role="listbox"><div class="hs-ipe">${hgTr('Wczytywanie…', 'Loading…')}</div></div>`;
+    pop.innerHTML = `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${hgTr('Szukaj ikony (np. sofa, lampa)', 'Search icons (e.g. sofa, lamp)')}" aria-label="${hgTr('Szukaj ikony', 'Search icons')}" autocomplete="off"></label>${rc.length ? `<small>${hgTr('Ostatnie', 'Recent')}</small><div class="hs-ipg rc" role="listbox">${btns(rc)}</div>` : ''}<small class="hs-ipl">${hgTr('Wszystkie ikony', 'All icons')}</small><div class="hs-ipg all" role="listbox" aria-busy="true">${'<i class="hs-ipk"></i>'.repeat(24)}</div>`;
     fl.appendChild(pop); const r = pop.getBoundingClientRect(), sc = fl.closest('.hs-sc'), sr = sc && sc.getBoundingClientRect(); if (sr && r.bottom > sr.bottom && r.top - sr.top > r.height + 60) pop.classList.add('up'); else if (sc && r.bottom > sr.bottom) sc.scrollTop += r.bottom - sr.bottom + 8;
     tok = {}; hgsOpen.add(tok); ob.setAttribute('aria-expanded', 'true'); document.addEventListener('pointerdown', out, true);
     const q = pop.querySelector('input'); q.addEventListener('input', () => fill(q.value)); q.focus({ preventScroll: true }); fill(/^mdi:/.test(cur()) ? '' : cur());
