@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.1-a3e635?style=flat-square" alt="v0.6.1">
+  <img src="https://img.shields.io/badge/version-v0.6.2-a3e635?style=flat-square" alt="v0.6.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -292,7 +292,7 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.6.1 -m "Nuvio 0.6.0" && git push origin v0.6.1`.
+Only tagging by hand: `git tag -a v0.6.2 -m "Nuvio 0.6.0" && git push origin v0.6.2`.
 
 ## Changelog
 
