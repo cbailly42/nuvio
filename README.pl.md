@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.3-a3e635?style=flat-square" alt="v0.6.3">
+  <img src="https://img.shields.io/badge/version-v0.6.4-a3e635?style=flat-square" alt="v0.6.4">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -67,7 +67,7 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/weather.png" alt="Pogoda" width="100%"><br><b>Pogoda</b> <code>custom:nuvio-weather-card</code><br>Bieżąca pogoda, prognoza godzinowa, wschód i zachód słońca; po dotknięciu szczegóły dni. <code>weather.*</code>, opcjonalny czujnik temperatury, <code>sun.sun</code>.</td>
-<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Klimatyzacja" width="100%"><br><b>Klimatyzacja</b> <code>custom:nuvio-ac-card</code><br>Szklane pokrętło z gradientem temperatury: przeciągnij łuk, przytrzymaj środek po szczegóły, −/+ powtarzają się przy przytrzymaniu, tryby HVAC, nawiew i lamele. <code>climate.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Klimatyzacja" width="100%"><br><b>Klimatyzacja</b> <code>custom:nuvio-ac-card</code><br>Duża temperatura docelowa z suwakiem, tryby HVAC, nawiew i lamele. Przesuń suwak w bok, przytrzymaj temperaturę po szczegóły. <code>climate.*</code>.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/light.png" alt="Oświetlenie" width="100%"><br><b>Oświetlenie</b> <code>custom:nuvio-light-card</code><br>Suwak jasności jednego światła. <code>light.*</code>.</td>
@@ -292,9 +292,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.6.3 -m "Nuvio 0.6.0" && git push origin v0.6.3`.
+Sam tag ręcznie: `git tag -a v0.6.4 -m "Nuvio 0.6.4" && git push origin v0.6.4`.
 
 ## Lista zmian
+
+### 0.6.4
+- Zmienione: karta **Klimatyzacja** wraca do wyglądu z 0.5.0 (duża temperatura ze strzałkami, suwak z kreskami i przyciski trybów); okrągłe pokrętło z 0.6.0 zostało usunięte. Obsługa dotyku zostaje: przesuń suwak w bok, aby ustawić temperaturę (ruch w górę lub w dół przewija stronę, dotknięcie skacze do miejsca), przytrzymaj temperaturę, aby otworzyć szczegóły encji, dotknij jej, aby włączyć wyłączone urządzenie, przytrzymaj strzałki, aby zmieniać dalej, lekka wibracja przy każdym kroku (aplikacja Home Assistant albo telefon, który to obsługuje), a na klawiaturze Page Up/Down, Home/End.
 
 ### 0.6.1
 - Tryb tabletu ściennego: zegar nie leży już na szklanym panelu. Data jest na stałe w lewym dolnym rogu, a gdy Home Assistant ma encję pogody, w prawym górnym rogu widać aktualną pogodę (ikona, temperatura, stan).

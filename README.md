@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.3-a3e635?style=flat-square" alt="v0.6.3">
+  <img src="https://img.shields.io/badge/version-v0.6.4-a3e635?style=flat-square" alt="v0.6.4">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -67,7 +67,7 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/weather.png" alt="Weather" width="100%"><br><b>Weather</b> <code>custom:nuvio-weather-card</code><br>Current conditions, hourly forecast and sunrise/sunset; tap for daily details. <code>weather.*</code>, optional temperature sensor, <code>sun.sun</code>.</td>
-<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Glass thermostat dial with a temperature gradient: drag the arc, hold the centre for details, −/+ repeat while held, HVAC modes, fan and swing. <code>climate.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Large target temperature with a slider, HVAC modes, fan and swing. Swipe the slider sideways, hold the temperature for details. <code>climate.*</code>.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/light.png" alt="Light" width="100%"><br><b>Light</b> <code>custom:nuvio-light-card</code><br>Brightness slider for one light. <code>light.*</code>.</td>
@@ -292,9 +292,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.6.3 -m "Nuvio 0.6.0" && git push origin v0.6.3`.
+Only tagging by hand: `git tag -a v0.6.4 -m "Nuvio 0.6.4" && git push origin v0.6.4`.
 
 ## Changelog
+
+### 0.6.4
+- Changed: the **Climate** card is back to the look from 0.5.0 (large temperature with arrows, the tick slider and the mode buttons); the round dial from 0.6.0 is gone. The touch handling stays: swipe the slider sideways to set the temperature (swiping up or down scrolls the page, a tap jumps to that spot), hold the temperature to open the entity details, tap it to turn a switched-off unit on, hold the arrows to repeat, a light vibration on every step (Home Assistant app or supporting phones), and Page Up/Down, Home/End on the keyboard.
 
 ### 0.6.1
 - Wall tablet mode: the clock no longer sits on a glass panel. The date is now fixed at the bottom left and, when Home Assistant has a weather entity, the current weather (icon, temperature, condition) appears at the top right.
