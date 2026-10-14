@@ -78,7 +78,7 @@ PROPROLE = [(r'^(color|-webkit-text-fill-color|caret-color|outline|text-decorati
 # selektory, w których kolor ma zostać jak jest w obu schematach
 KEEP = [r'^\.fb', r'^\.nb$', r'^\.tab\.act \.nb$', r'^\.tg i$', r'^\.ind, \.rind$', r'^\.tab\.act$', r'^\.ri\.act$', r'^\.tab sup$', r'^\.logo$', r'^\.ndot$', r'^button:focus-visible$',
         r'hg-camfs', r'^\.head ', r'^\.shade$', r'^\.bg$', r'^\.brand', r'^\.uin$', r'^\.uav$', r'^\.chev$', r'^\.tabs$', r'^\.tab$', r'^\.tab:hover$',
-        r'^\.rail$', r'^\.ri$', r'^\.ri:hover$', r'^\.sheet-l \.scrim$']
+        r'^\.rail$', r'^\.ri$', r'^\.ri:hover$', r'^\.sheet-l \.scrim$', r'^\.sheet-l\.popm \.scrim$']
 
 def role_of(prop, ctx_js):
     for rx, ro in PROPROLE:

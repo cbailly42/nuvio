@@ -683,7 +683,7 @@ class HGPage extends HTMLElement {
     if (!open) {
       if (!this._sheetOpen) return;
       this._sheetOpen = false;   // stan logiczny od razu (warstwa znika dopiero po animacji, ale pasek ma już wrócić do aktywnej pozycji)
-      L.classList.remove('in'); document.removeEventListener('keydown', this._sheetKey, true);
+      L.classList.remove('in', 'done'); document.removeEventListener('keydown', this._sheetKey, true);
       this._sheetT = setTimeout(() => { L.removeAttribute('open'); L.innerHTML = ''; }, hgReduced() ? 0 : 220);
       this._paintRail(true); return;
     }
@@ -695,7 +695,8 @@ class HGPage extends HTMLElement {
     const pst = mr ? `style="--hg-pc:${pc}; left:${Math.round(Math.max(12, Math.min(mr.right + 14, innerWidth - pw - 12)))}px; top:${Math.round(Math.max(12, Math.min(mr.top - 12, innerHeight - 24 - Math.ceil(more.length / 3) * 88)))}px"` : '';
     L.innerHTML = `<div class="scrim" data-act="sheetclose"></div><div class="sheet ${pop ? 'pop' : ''}" ${pst} role="dialog" aria-modal="true" aria-label="${hgTr('Więcej', 'More')}"><i class="grab" aria-hidden="true"></i>
       <div class="sg">${more.map((m, i) => `<button class="st ${m.match && hgMatch(m.match, path) ? 'act' : ''}" data-act="sheetnav" data-i="${i}">${H.icon(m.icon)}<span>${H.esc(m.label)}</span></button>`).join('')}</div></div>`;
-    requestAnimationFrame(() => requestAnimationFrame(() => L.classList.add('in')));
+    L.classList.remove('done');
+    requestAnimationFrame(() => requestAnimationFrame(() => { L.classList.add('in'); this._sheetT = setTimeout(() => this._sheetOpen && L.classList.add('done'), hgReduced() ? 0 : 220); }));
     this._sheetKey = this._sheetKey || ((e) => { if (e.key === 'Escape' && !hgsOpen.size) { e.preventDefault(); this._openSheet(false); } });
     document.addEventListener('keydown', this._sheetKey, true);
     const sh = L.querySelector('.sheet'); let y0 = null;
@@ -934,10 +935,11 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .sheet-l .sheet{ position:absolute; left:8px; right:8px; bottom:0; padding:8px 14px calc(18px + env(safe-area-inset-bottom)); border-radius:var(--r-lg) var(--r-lg) 0 0; color:#1F2125; transform:translateY(105%); transition:transform .26s cubic-bezier(.2,.8,.2,1); touch-action:none; }
 .sheet-l.in .scrim{ opacity:1; } .sheet-l.in .sheet{ transform:none; }
 /* „Więcej” z szyny (desktop/tablet): wyskakujące okienko obok szyny */
-.sheet-l.popm .scrim{ background:transparent; }
+.sheet-l.popm .scrim{ background:rgba(8,12,18,.22); }   /* lekkie przyciemnienie: okienko „Więcej” wyraźnie nad paskiem narzędzi i panelem domowników */
+.sheet-l .sheet.pop::after{ background:rgba(240,243,247,.84); -webkit-backdrop-filter:blur(calc(26px * var(--hg-bf, 1))) saturate(140%); backdrop-filter:blur(calc(26px * var(--hg-bf, 1))) saturate(140%); }
 .sheet-l .sheet.pop{ right:auto; bottom:auto; width:max-content; max-width:calc(100vw - 24px); padding:10px; border-radius:28px; box-sizing:border-box; transform:translateX(-8px); opacity:1; clip-path:inset(0 100% 0 0 round 28px); transition:transform .2s ease, clip-path .2s ease;   /* bez animacji opacity: Chrome pomija backdrop-filter, gdy rodzic ma opacity < 1 (szkło pojawiało się dopiero po animacji) */ touch-action:auto; }
 .sheet.pop .sg{ grid-template-columns:repeat(var(--hg-pc,3), 88px); grid-auto-rows:1fr; align-items:stretch; gap:10px; } .sheet.pop .st{ height:100%; box-sizing:border-box; }
-.sheet-l.in .sheet.pop{ transform:none; opacity:1; clip-path:inset(0 0 0 0 round 28px); } .sheet.pop .grab{ display:none; }
+.sheet-l.in .sheet.pop{ transform:none; opacity:1; clip-path:inset(0 0 0 0 round 28px); } .sheet-l.in.done .sheet.pop{ clip-path:none; }   /* po animacji bez clip-path: clip-path na rodzicu potrafi wyłączyć rozmycie szkła (WebKit), treść pod spodem przebijała */ .sheet.pop .grab{ display:none; }
 .sheet .grab{ display:block; width:40px; height:5px; border-radius:3px; background:rgba(0,0,0,.18); margin:2px auto 12px; }
 .sg{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
 .st{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:78px; padding:8px 4px; border-radius:18px; background:rgba(255,255,255,.75);
