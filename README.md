@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.2.0-a3e635?style=flat-square" alt="v1.2.0">
+  <img src="https://img.shields.io/badge/version-v1.2.1-a3e635?style=flat-square" alt="v1.2.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -396,9 +396,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.2.0 -m "Nuvio 1.2.0" && git push origin v1.2.0`.
+Only tagging by hand: `git tag -a v1.2.1 -m "Nuvio 1.2.1" && git push origin v1.2.1`.
 
 ## Changelog
+
+### 1.2.1
+- Fixed: tablets in landscape (from 900 px wide and a 1.2 aspect ratio, like an iPad held sideways) use the desktop layout again instead of mixing the phone tab bar with the side rail and stretching the panels. The tablet layout stays for portrait and squarer windows, and its scale is now also limited by the window height.
 
 ### 1.2.0
 - Added: seven cards: conditional (`custom:nuvio-conditional-card`), glance, statistics, humidifier, timer, logbook and web page, each in **+ Add** with a live preview. HA `conditional` cards become the Nuvio conditional card.

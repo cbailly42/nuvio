@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.2.0-a3e635?style=flat-square" alt="v1.2.0">
+  <img src="https://img.shields.io/badge/version-v1.2.1-a3e635?style=flat-square" alt="v1.2.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -396,9 +396,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.2.0 -m "Nuvio 1.2.0" && git push origin v1.2.0`.
+Sam tag ręcznie: `git tag -a v1.2.1 -m "Nuvio 1.2.1" && git push origin v1.2.1`.
 
 ## Lista zmian
+
+### 1.2.1
+- Naprawiono: tablety w poziomie (od 900 px szerokości i proporcji 1,2, np. iPad trzymany bokiem) znowu używają układu desktopowego, zamiast łączyć pasek zakładek z telefonu z boczną szyną i rozciągać panele. Układ tabletu zostaje dla pionu i bardziej kwadratowych okien, a jego skala jest teraz ograniczona także wysokością okna.
 
 ### 1.2.0
 - Dodano: siedem kart: warunkowa (`custom:nuvio-conditional-card`), rzut oka, statystyka, nawilżacz, minutnik, dziennik i strona WWW, każda w **+ Dodaj** z podglądem na żywo. Karty `conditional` z HA stają się kartą warunkową Nuvio.

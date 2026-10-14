@@ -35,7 +35,6 @@ function hgBmPassThrough(on) {
    Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
 const HG_NO_AREAS = {};   /* stały pusty obiekt: HGAreas.model zapamiętuje model po referencji konfiguracji */
 const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
-const hgTouchTab = () => !!((navigator.maxTouchPoints > 1 || 'ontouchstart' in window) && window.matchMedia && matchMedia('(pointer: coarse)').matches || /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
 const hgTouch = () => !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -290,9 +289,10 @@ class HGPage extends HTMLElement {
     const W = this.getBoundingClientRect().width || window.innerWidth, Hh = window.innerHeight;
     let mode, u;
     if (W < 600) { mode = 'phone'; u = Math.max(0.92, Math.min(1.15, W / 375)); }
-    /* tablet dotykowy (iPad 768–1180, oba ułożenia): układ tabletu z przewijaniem strony, bez zagnieżdżonego przewijanego panelu (Safari źle składa wtedy rozmycie i kolumny) */
-    else if (W >= 900 && W / Hh >= 1.2 && !(W <= 1180 && hgTouchTab())) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
-    else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620)); }
+    /* poziomo (od 900 px i proporcji 1,2) zawsze układ szeroki, także na tablecie dotykowym; pionowo układ tabletu */
+    else if (W >= 900 && W / Hh >= 1.2) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
+    /* skala tabletu ograniczona też wysokością, żeby niskie okno nie rozciągało paneli */
+    else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620, Hh / 640)); }
     const z = this._zoom();
     if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
     this.style.setProperty('--hg-u0', u.toFixed(4) + 'px');
