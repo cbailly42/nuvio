@@ -55,12 +55,12 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .upd{ display:flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:#4A4E54; } .upd ha-icon{ width:16px; height:16px; } .upd.av{ color:var(--hg-accent-tx); font-weight:600; }
 .act{ display:flex; gap:var(--s1); flex-wrap:wrap; }
 .pts{ display:flex; gap:6px; flex-wrap:wrap; }
-.pt{ position:relative; display:inline-flex; align-items:center; gap:5px; height:32px; min-height:var(--hg-tgt, 0px); padding:0 10px 0 8px; border-radius:16px; background:rgba(0,0,0,.05); color:#4A4E54; font-size:var(--fs-xs); max-width:100%; }
+.pt{ position:relative; display:inline-flex; align-items:center; gap:5px; height:32px; min-height:var(--hg-tgt, 0px); padding:0 10px 0 8px; border-radius:var(--r-md); background:rgba(0,0,0,.05); color:#4A4E54; font-size:var(--fs-xs); max-width:100%; }
 .pt b{ font-weight:600; color:#1E2023; font-variant-numeric:tabular-nums; } .pt small{ font-size:var(--fs-xs); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:9em; }
 .pt i{ width:8px; height:8px; border-radius:50%; background:#9AA0A6; flex:none; } .pt.on i{ background:var(--hg-accent); }
 .pt ha-icon{ width:14px; height:14px; --mdc-icon-size:14px; color:var(--hg-accent-tx); flex:none; } .pt.lk{ cursor:not-allowed; background:rgba(0,0,0,.035); }
 .pt:not(.on):not(.lk){ background:rgba(229,57,53,.10); } .pt:not(.on) b{ color:#B3261E; }
-.btn{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px 0 12px; border-radius:20px; background:rgba(0,0,0,.05); color:#1E2023; font-size:var(--fs-sm); font-weight:600; }
+.btn{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px 0 12px; border-radius:var(--r-md); background:rgba(0,0,0,.05); color:#1E2023; font-size:var(--fs-sm); font-weight:600; }
 .btn ha-icon{ width:18px; height:18px; } .btn:hover{ background:rgba(0,0,0,.08); }
 .devs{ display:grid; gap:var(--s2); grid-template-columns:repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
 .dv{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:rgba(255,255,255,.5); min-width:0; }
@@ -77,7 +77,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .lr .tx span{ display:block; font-size:var(--fs-xs); color:#4A4E54; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
 .tot{ display:flex; align-items:baseline; gap:6px; } .tot b{ font-size:28px; font-weight:600; font-variant-numeric:tabular-nums; } .tot span{ font-size:var(--fs-sm); color:#4A4E54; }
 .flt{ display:flex; gap:var(--s1); flex-wrap:wrap; align-items:center; }
-.flt button{ height:32px; padding:0 12px; border-radius:16px; background:rgba(0,0,0,.05); font-size:var(--fs-xs); font-weight:600; color:#3A3D42; }
+.flt button{ height:32px; padding:0 12px; border-radius:var(--r-md); background:rgba(0,0,0,.05); font-size:var(--fs-xs); font-weight:600; color:#3A3D42; }
 .flt button.on{ background:#1E2023; color:#fff; } .flt .sp{ flex:1; }
 .cls{ display:flex; flex-direction:column; }
 .cr{ display:grid; grid-template-columns:10px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .9fr) auto; align-items:center; gap:var(--s2); min-height:44px; font-size:var(--fs-xs); color:#4A4E54; }
@@ -213,7 +213,7 @@ ha-card.glass{ container-type:inline-size; }
   border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:#1E2023; display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
 .hd{ display:flex; align-items:center; gap:8px; align-self:stretch; } .hd ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); } .hd b{ flex:1; text-align:left; font-size:18px; font-weight:600; }
 .x{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.06); } .x ha-icon{ color:#1E2023; width:20px; height:20px; }
-.q{ width:100%; aspect-ratio:1; max-width:300px; background:#fff; border-radius:16px; padding:16px; box-sizing:border-box; display:flex; } .q img{ width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+.q{ width:100%; aspect-ratio:1; max-width:300px; background:#fff; border-radius:var(--r-md); padding:16px; box-sizing:border-box; display:flex; } .q img{ width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
 p{ margin:0; font-size:var(--fs-sm); color:#4A4E54; } p b{ color:#1E2023; }
 `)}</style><div class="d" role="dialog" aria-modal="true" aria-label="${hgTr('Kod QR sieci', 'QR code for network')} ${H.esc(ssid)}"><div class="hd">${H.icon('mdi:wifi')}<b>${H.esc(ssid)}</b><button class="x" data-v="x" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       <div class="q"><img alt="${hgTr('Kod QR sieci', 'QR code for network')} ${H.esc(ssid)}" src="${H.esc(st.attributes.entity_picture)}"></div><p>${hgTr('Zeskanuj aparatem telefonu, aby połączyć się z siecią', 'Scan with your phone camera to join')} <b>${H.esc(ssid)}</b>.</p></div>`;

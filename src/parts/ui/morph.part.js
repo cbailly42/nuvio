@@ -6,7 +6,11 @@
 const hgMorph = (() => {
   const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const tpl = document.createElement('template');
-  const key = (n) => (n.nodeType === 1 ? n.id || n.getAttribute('data-key') || (n.getAttribute('data-e') ? n.tagName + '|' + n.getAttribute('data-e') : null) : null);
+  const KA = ['data-e', 'data-hgk', 'data-ac', 'data-cam', 'data-cm'];
+  const key = (n) => { if (n.nodeType !== 1) return null; if (n.id || n.hasAttribute('data-key')) return n.id || n.getAttribute('data-key');
+    for (const k of KA) if (n.hasAttribute(k)) return n.tagName + '|' + k + '|' + n.getAttribute(k); return null; };
+  /* gniazda, do których kod wstawia całe karty (klimatyzacja, kamera, karta własna): morph zmienia tylko ich atrybuty, dzieci zostają */
+  const own = (n) => n.hasAttribute('data-own') || /(^|\s)(acslot|camslot|cmslot)(\s|$)/.test(n.className || '');
   const same = (a, b) => a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && key(a) === key(b)));
   /* płynna liczba: od wartości widocznej teraz do nowej, 400 ms, format (miejsca po przecinku) z nowego tekstu */
   const tween = (el, from, to, text) => {
@@ -50,6 +54,7 @@ const hgMorph = (() => {
     if (a.tagName === 'STYLE' || a.tagName === 'SCRIPT') { if (a.textContent !== b.textContent) a.textContent = b.textContent; return; }
     if (a.__nvTo) { const [f, t] = a.__nvTo; a.__nvTo = null; tween(a, f, t, b.textContent); return; }
     if (a.__nvT && a.getAttribute('data-v') === b.getAttribute('data-v')) return;   // trwa przeliczanie do tej samej wartości
+    if (own(a) && !b.firstChild) return;
     kids(a, b, root);
   };
   /* root = kontener karty; html = nowa treść. Zwraca false, gdy nie da się łatać (pierwsze malowanie). */

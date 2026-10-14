@@ -37,7 +37,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
         <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : p + '%'}</span></div></ha-card>`;
   }
   afterRender() {
-    const t = this.$.querySelector('.trk'); if (!t || t.getAttribute('aria-disabled')) return;
+    const t = this.$.querySelector('.trk'); if (!t || !this._once(t)) return;
     const calc = (ev) => { const r = t.getBoundingClientRect(); return Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * 100); };
     const send = (v) => {
       const id = { entity_id: this._config.entity }; this._pending = v;
@@ -45,12 +45,12 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       if (v <= 0) H.call(this._hass, 'light', 'turn_off', id); else H.call(this._hass, 'light', 'turn_on', { ...id, brightness_pct: v });
       this.rerender();
     };
-    t.addEventListener('pointerdown', (ev) => { t.setPointerCapture(ev.pointerId); this._drag = calc(ev); t.classList.add('drag'); this._paint(t); this._busy = true; });
+    t.addEventListener('pointerdown', (ev) => { if (t.getAttribute('aria-disabled')) return; t.setPointerCapture(ev.pointerId); this._drag = calc(ev); t.classList.add('drag'); this._paint(t); this._busy = true; });
     t.addEventListener('pointermove', (ev) => { if (this._drag == null) return; this._drag = calc(ev); this._paint(t); });
-    const end = () => { if (this._drag == null) return; const v = this._drag; this._drag = null; this._busy = false; send(v); };
+    const end = () => { if (this._drag == null) return; const v = this._drag; this._drag = null; this._busy = false; t.classList.remove('drag'); send(v); };
     t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end);
     t.addEventListener('keydown', (ev) => {
-      if (!['ArrowLeft', 'ArrowRight'].includes(ev.key)) return;
+      if (!['ArrowLeft', 'ArrowRight'].includes(ev.key) || t.getAttribute('aria-disabled')) return;
       ev.preventDefault(); send(Math.max(0, Math.min(100, this.pct() + (ev.key === 'ArrowRight' ? 10 : -10))));
     });
   }

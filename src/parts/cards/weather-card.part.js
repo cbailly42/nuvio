@@ -59,7 +59,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   text-shadow:0 2px 24px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.2); font-variant-numeric:tabular-nums; -webkit-tap-highlight-color:transparent; outline:none; isolation:isolate; }
 /* bardzo miękkie przyciemnienie za blokiem (bez widocznej krawędzi) – czytelność na jasnym niebie */
 .hero::before{ content:''; position:absolute; z-index:-1; inset:-28% -22% -30% -18%; background:radial-gradient(closest-side, rgba(0,0,0,.20), rgba(0,0,0,.08) 60%, rgba(0,0,0,0)); pointer-events:none; }
-.hero:focus-visible{ outline:1px solid rgba(255,255,255,.7); outline-offset:10px; border-radius:16px; }
+.hero:focus-visible{ outline:1px solid rgba(255,255,255,.7); outline-offset:10px; border-radius:var(--r-md); }
 .hero.anim{ animation:hgwxin .7s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes hgwxin{ from{ opacity:0; transform:translateY(6px); } }
 @media (prefers-reduced-motion: reduce){ .hero.anim{ animation:none; } }

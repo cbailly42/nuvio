@@ -5,7 +5,7 @@ class HGButtonCard extends HGBase {
   css() { return HG_GEN_CSS + U(`
 ha-card.glass{ padding:0; }
 .gbig{ all:unset; cursor:pointer; box-sizing:border-box; width:100%; height:100%; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px; transition:transform 150ms; }
-.gbig:disabled{ cursor:default; } .gbig .gic{ width:48px; height:48px; border-radius:14px; } .gbig .gic ha-icon{ width:26px; height:26px; --mdc-icon-size:26px; }
+.gbig:disabled{ cursor:default; } .gbig .gic{ width:48px; height:48px; border-radius:var(--r-md); } .gbig .gic ha-icon{ width:26px; height:26px; --mdc-icon-size:26px; }
 .pill .gbig{ flex-direction:row; align-items:center; justify-content:flex-start; padding:12px 16px; } .pill .gbig .gic{ width:40px; height:40px; border-radius:12px; }
 .ok .gic{ background:var(--hg-accent); color:var(--hg-on-accent); } .ok .gic ha-icon{ animation:gpop .4s cubic-bezier(.2,.8,.2,1.3); } @keyframes gpop{ from{ transform:scale(.4); opacity:0 } }
 .ok .gn small{ color:var(--hg-accent-tx, var(--hg-accent)); opacity:1; } .pill .chev{ margin-left:auto; opacity:.5; width:20px; height:20px; }

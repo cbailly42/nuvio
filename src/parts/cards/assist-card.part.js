@@ -5,15 +5,15 @@ class HGAssistCard extends HGBase {
   defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
   ents() { return []; }
   css() { if (!this._config.embedded) return HG_G14_CSS + U(`ha-card.glass{ padding:10px; min-height:0; justify-content:center; }
-.lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:14px; transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
+.lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:var(--r-md); transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
 .lg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lg .gn{ flex:1; min-width:0; } .lg .gic{ flex:none; }`);
     return HG_G14_CSS + U(`:host{ display:block; height:100%; } ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:10px; background:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-radius:0; }
 .hd2 .x{ flex:none; } .hd2 .ps{ flex:0 1 250px; }
 ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, rgba(12,16,24,.42)), var(--hg-assist-veil, rgba(12,16,24,.42))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
-.hd2 .gn small{ opacity:.78; } .cv{ background:rgba(0,0,0,.14); border-radius:14px; padding:8px !important; }
+.hd2 .gn small{ opacity:.78; } .cv{ background:rgba(0,0,0,.14); border-radius:var(--r-md); padding:8px !important; }
 .hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
 .cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
-.b{ max-width:84%; padding:9px 13px; border-radius:18px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; animation:bin .28s cubic-bezier(.2,.8,.2,1) both; }
+.b{ max-width:84%; padding:9px 13px; border-radius:var(--r-md); font-size:14px; line-height:1.4; overflow-wrap:anywhere; animation:bin .28s cubic-bezier(.2,.8,.2,1) both; }
 .b.u{ align-self:flex-end; background:var(--hg-accent); color:var(--hg-on-accent, #000); box-shadow:0 2px 8px rgba(0,0,0,.18); border-bottom-right-radius:6px; font-weight:500; }
 .b.a{ align-self:flex-start; background:rgba(28,34,46,.86); color:#F2F5F8; box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 2px 8px rgba(0,0,0,.18); border-bottom-left-radius:6px; }
 .b.e{ color:#FF8A7A; } .b .pl{ all:unset; cursor:pointer; margin-left:6px; vertical-align:-3px; opacity:.75; } .b .pl ha-icon{ width:16px; height:16px; } .b .pl:focus-visible{ outline:2px solid var(--hg-accent); border-radius:6px; }
@@ -48,9 +48,9 @@ ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolat
         ${c.mic !== false && SR ? `<button type="button" class="gb r mic${this._rec ? ' on' : ''}" data-act="mic" aria-pressed="${!!this._rec}" aria-label="${hgTr('Mów', 'Speak')}">${H.icon('mdi:microphone')}</button>` : ''}
         <button type="submit" class="gb r ok" data-act="send" aria-label="${hgTr('Wyślij', 'Send')}"${this._busy2 ? ' disabled' : ''}>${H.icon('mdi:send')}</button></form></ha-card>`; }
   afterRender() { const q = this.$.querySelector('[data-k=q]'), f = this.$.querySelector('[data-k=f]'), s = this.$.querySelector('[data-k=pipe]'), cv = this.$.querySelector('.cv');
-    if (q) { q.addEventListener('input', () => { this._draft = q.value; }); if (this._focusQ) { this._focusQ = false; q.focus({ preventScroll: true }); } }
-    if (f) f.addEventListener('submit', (e) => { e.preventDefault(); this._send(q.value); });
-    if (s) s.addEventListener('change', () => { this._pipe = s.value; this._cid = null; });
+    if (q) { if (this._once(q)) q.addEventListener('input', () => { this._draft = q.value; }); if (this._focusQ) { this._focusQ = false; q.focus({ preventScroll: true }); } }
+    if (f && this._once(f)) f.addEventListener('submit', (e) => { e.preventDefault(); const qq = this.$.querySelector('[data-k=q]'); this._send(qq ? qq.value : ''); });
+    if (s && this._once(s)) s.addEventListener('change', () => { this._pipe = s.value; this._cid = null; });
     if (cv) cv.scrollTop = cv.scrollHeight; }
   onAct(a, t, e) { if (a === 'open' || a === 'close') { if (window.HGAssistUI) HGAssistUI[a === 'open' ? 'open' : 'close'](null, t); return; }
     if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }

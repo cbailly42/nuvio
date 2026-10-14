@@ -229,13 +229,15 @@ class HGBase extends HTMLElement {
     const html = this.render();
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
     const first = this._html == null; this._html = html;
-    /* na żywo: łatanie istniejących węzłów (ui/morph). Karty z afterRender podpinają nasłuchiwanie do nowych węzłów,
-       więc dopóki nie przejdą na delegację zdarzeń (data-act), dostają pełne przerysowanie jak dotąd. */
-    if (first || this.afterRender || this.constructor.noMorph || typeof hgMorph === 'undefined') this.$.innerHTML = html;
+    /* na żywo: łatanie istniejących węzłów (ui/morph). Węzły przeżywają aktualizację, więc afterRender musi być idempotentne:
+       nasłuchiwanie podpina się raz na węzeł przez this._once(el), a resztę (wartości, obserwatory) może powtarzać bez szkody. */
+    if (first || this.constructor.noMorph || typeof hgMorph === 'undefined') this.$.innerHTML = html;
     else hgMorph(this.$, html);
     if (this.afterRender) this.afterRender();
   }
   rerender() { this._prevStates = null; this._update(true); }
+  /* true tylko za pierwszym razem dla danego węzła i klucza: podpinanie nasłuchiwania w afterRender bez dublowania po łataniu */
+  _once(el, k = 'b') { if (!el) return false; const s = el.__hgOnce || (el.__hgOnce = new Set()); if (s.has(k)) return false; s.add(k); return true; }
   onAct() {}
   css() { return ''; }
   render() { return ''; }
