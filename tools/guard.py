@@ -2,7 +2,10 @@
 """Fail the build if the shipped JS contains house-specific entity ids, areas or private URLs."""
 import re, sys, os
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-js = open(os.path.join(R, 'dist', 'nuvio.js')).read()
+import glob
+_c = glob.glob(os.path.join(R, 'dist', 'nuvio-core.*.js'))
+if len(_c) != 1: print('expected exactly one dist/nuvio-core.<hash>.js, found', len(_c)); sys.exit(1)
+js = open(_c[0]).read() + open(os.path.join(R, 'dist', 'nuvio.js')).read()
 bad = []
 for pat in [r"home-glass", r"\bhg-(?:page|[a-z]+-card)\b", r"/local/images/", r"\b(?:sensor|light|switch|climate|person|media_player|camera|binary_sensor|weather|script|scene)\.[a-z0-9]+_[a-z0-9_]+\b"]:
     for m in re.finditer(pat, js):
@@ -16,7 +19,7 @@ dd = os.path.join(R, 'dist')
 for f in os.listdir(dd):
     if os.path.isdir(os.path.join(dd, f)): bad.append(f'subfolder in dist/ (HACS skips it): {f}')
 if 'assets/' in js: bad.append('old assets/ path in dist/nuvio.js')
-for need in ('nuvio-font-dmsans-latin.woff2', 'nuvio-font-dmsans-latin-ext.woff2', 'nuvio-bg-default-wide.webp', 'nuvio-bg-default-portrait.webp', 'nuvio-meteo-static-sunrise.svg', 'CREDITS.md'):
+for need in ('nuvio-version.json', 'nuvio-font-dmsans-latin.woff2', 'nuvio-font-dmsans-latin-ext.woff2', 'nuvio-bg-default-wide.webp', 'nuvio-bg-default-portrait.webp', 'nuvio-meteo-static-sunrise.svg', 'CREDITS.md'):
     if not os.path.exists(os.path.join(dd, need)): bad.append(f'missing dist/{need}')
 # every bundled background listed in dist/CREDITS.md and within size budget
 cr = open(os.path.join(dd, 'CREDITS.md')).read() if os.path.exists(os.path.join(dd, 'CREDITS.md')) else ''
