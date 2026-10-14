@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.7.0-a3e635?style=flat-square" alt="v0.7.0">
+  <img src="https://img.shields.io/badge/version-v0.7.1-a3e635?style=flat-square" alt="v0.7.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -319,9 +319,14 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.7.0 -m "Nuvio 0.7.0" && git push origin v0.7.0`.
+Sam tag ręcznie: `git tag -a v0.7.1 -m "Nuvio 0.7.1" && git push origin v0.7.1`.
 
 ## Lista zmian
+
+### 0.7.1
+- Naprawiono: widoki pokoi używają ciepłej wody, schodów, nazw encji i ustawień kamer z Wygląd, Pokoje (wcześniej działały tylko nazwy, ikony, kolejność i czujniki).
+- Naprawiono: nagłówek widoku pokoju pokazuje nazwę pokoju, temperaturę, wilgotność i przycisk powrotu zamiast ogólnego tytułu.
+- Naprawiono: zapis Wygląd, Nagłówek i nawigacja nie usuwa już listy domowników.
 
 ### 0.7.0
 - Dodano: komponenty dla wszystkiego, co pokazuje Home Glass, każdy w + Dodaj z podglądem i pełnym formularzem: Pokoje, Pokój, Urządzenie AGD (pralka, suszarka, zmywarka ze stanem, programem, czasem do końca i postępem), Ciepła woda, Schody, Ceny paliw, karta Klimatyzacji, Energia tydzień, Fazy, Fotowoltaika, Sieć, Czujniki domu, Skrót i Osoba.

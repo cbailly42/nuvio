@@ -205,7 +205,7 @@ const hint = (k) => ({ type: 'custom:nuvio-hint-card', hint: k });
   views.push(view('dashboard', t('panel'), base('dashboard', t('hello'), t('hello_sub'), dash, scroll, { ...(weather ? { weather } : {}), ...(wiz && Array.isArray(wiz.fuel) && wiz.fuel.length ? { fuel: wiz.fuel.filter((f) => f && f.entity) } : {}) })));
   if (V.some((v) => v[0] === 'rooms')) {
     views.push(view('rooms', t('rooms'), base('rooms', t('rooms'), t('rooms_sub'), [{ type: 'custom:nuvio-areas-card', area: 'grid', min_h: 200, room_path: HG_P('pokoj'), areas: areasCfg }], one('grid'))));
-    views.push(view('pokoj', t('room'), base('pokoj', t('room'), '', [{ type: 'custom:nuvio-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms') }), true));
+    views.push(view('pokoj', t('room'), base('pokoj', t('room'), '', [{ type: 'custom:nuvio-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms'), room_head: true }), true));
   }
   if (V.some((v) => v[0] === 'multimedia')) views.push(view('multimedia', t('media'), base('multimedia', t('media'), t('media_sub'), [M.media.length ? { type: 'custom:nuvio-players-card', area: 'm', entities: M.media } : { ...hint('media'), area: 'm' }], one('m'))));
   if (V.some((v) => v[0] === 'kamery')) views.push(view('kamery', t('cams'), base('kamery', t('cams'), t('cams_sub'), [M.cams.length ? { type: 'custom:nuvio-cameras-card', area: 'c', entities: M.cams } : { ...hint('cams'), area: 'c' }], one('c'))));
@@ -604,7 +604,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.7.0+9431b280';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.7.1+37b99a6c';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -4088,9 +4088,9 @@ const HGAreas = {
   _cnt(h) { const c = this._sc; if (c.s !== h.states && Date.now() - c.t > 5000) { c.s = h.states; c.n = Object.keys(h.states).length; c.t = Date.now(); } return c.n; },
   /* model liczony tylko gdy zmieni się rejestr (obiekty hass.entities / devices / areas), konfiguracja albo liczba encji */
   /* pokoje z układu (Wygląd → Pokoje, HGL.data.wiz.areas); karta z własnym „areas” ma pierwszeństwo, pola z układu uzupełniają */
-  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own)) return cfg;
+  glob(cfg) { const w = (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.areas) || null; if (!w || (cfg && cfg._own) || (cfg && this._gs && this._gs.has(cfg))) return cfg;
     const k = JSON.stringify(w) + '|' + JSON.stringify(cfg || {}), G = this._gm || (this._gm = new Map()); let v = G.get(k);
-    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); } return v; },
+    if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
   model(h, cfg) {
     cfg = this.glob(cfg) || this._e;
     const key = [h.entities, h.devices, h.areas, this._cnt(h)];
@@ -4314,7 +4314,7 @@ class HGAreasCard extends HGBase {
     }
     // „Pozostałe”: kompaktowe przełączniki encji spoza 6 pokoi (każda raz)
     const oth = m.others.length ? `<div class="oth" role="group" aria-label="${hgTr('Pozostałe', 'Other')}"><b>${hgTr('Pozostałe', 'Other')}</b>${m.others.map((e) => {
-      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, c.areas);
+      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, HGAreas.glob(c.areas));
       const ic = /schod|stair/.test(e) ? 'mdi:stairs-down' : /taras|balkon|balcony|terrace/.test(e) ? 'mdi:balcony' : 'mdi:lightbulb-outline';
       return `<button class="pl ${on ? 'on' : ''}" data-act="tog" data-e="${H.esc(e)}" ${ok ? '' : 'disabled'} aria-pressed="${on}" aria-label="${H.esc(`${nm} – ${ok ? (on ? hgTr('wyłącz', 'turn off') : hgTr('włącz', 'turn on')) : hgTr('niedostępne', 'unavailable')}`)}">${H.icon(ic)}<span>${H.esc(nm)}</span></button>`;
     }).join('')}</div>` : '';
@@ -4700,7 +4700,7 @@ ha-card.wmc{ gap:var(--s2); }
 @media (prefers-reduced-motion: reduce){ .wmv *, .wmv{ animation:none !important; transition:none !important; } }
 `);
   }
-  _nm(e, fb) { return HGAreas.name(this._hass, e, this._a, this._config.areas, fb); }
+  _nm(e, fb) { return HGAreas.name(this._hass, e, this._a, HGAreas.glob(this._config.areas), fb); }
   _num(s) {
     const at = s.attributes, u = at.unit_of_measurement || '', v = parseFloat(s.state);
     if (!isFinite(v) || !/^-?\d+(\.\d+)?(e-?\d+)?$/i.test(String(s.state).trim())) {
@@ -4959,8 +4959,8 @@ ha-card.wmc{ gap:var(--s2); }
   render() {
     const h = this._hass, a = this._area(); this._a = a;
     if (!a) return `<ha-card class="glass"><div class="empty"><b>${hgTr('Nie znaleziono pokoju', 'Room not found')}</b>${hgTr('Ten pokój nie istnieje albo został usunięty.', 'This room does not exist or has been deleted.')}<button class="lnk" data-act="rooms">${H.icon('mdi:chevron-left')}${hgTr('Wszystkie pokoje', 'All rooms')}</button></div></ha-card>`;
-    const ST = (this._config.areas || {}).stairs, isSt = ST && ST.room === a.id;
-    const CW = (this._config.areas || {}).cwu, isCw = CW && CW.room === a.id;
+    const ST = (HGAreas.glob(this._config.areas) || {}).stairs, isSt = ST && ST.room === a.id;
+    const CW = (HGAreas.glob(this._config.areas) || {}).cwu, isCw = CW && CW.room === a.id;
     const SX = new Set(isSt ? [ST.group, ST.bottom.light, ST.top.light, ST.bottom.motion, ST.top.motion] : []);
     if (isCw) [CW.heater, CW.heating, CW.keep, CW.power, CW.remaining, CW.consumption, ...CW.switches.map((x) => x[0]), ...(CW.up ? [CW.up.tank, CW.up.switch, CW.up.power, ...CW.up.co.map((x) => x[0])] : [])].forEach((e) => SX.add(e));
     const RS = 'room:' + a.id, RL = HGL.get(RS), SWP = RL.conf._swap || {};
@@ -5070,8 +5070,8 @@ ha-card.wmc{ gap:var(--s2); }
     for (const slot of this.$.querySelectorAll('.camslot[data-cam]')) {
       const e = slot.dataset.cam; kc.add(e);
       let el = this._cams.get(e);
-      if (!el) { el = document.createElement('nuvio-camera-card'); const A = this._config.areas || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
-        el.setConfig({ entity: e, name: ((this._config.areas || {}).entity_names || {})[e] || this._nm(e, hgTr('Kamera', 'Camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
+      if (!el) { el = document.createElement('nuvio-camera-card'); const A = HGAreas.glob(this._config.areas) || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
+        el.setConfig({ entity: e, name: ((HGAreas.glob(this._config.areas) || {}).entity_names || {})[e] || this._nm(e, hgTr('Kamera', 'Camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
@@ -8979,7 +8979,7 @@ const HGRoomsX = window.HGRoomsX = {
     if (a === 'rx-fa') { H2.fuel.push({ label: '', entity: '' }); this.hdirty = true; return page._eLook(); }
     if (a === 'rx-fd') { H2.fuel.splice(+b.dataset.i, 1); this.hdirty = true; return page._eLook(); }
     if (a === 'rx-hsave') { const W = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {});
-      if (H2.hub === false) W.hub = false; else if (H2.hub.title || H2.hub.subtitle) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}) }; else delete W.hub;
+      if (H2.hub === false) W.hub = false; else { const P0 = W.hub && W.hub.persons; if (H2.hub.title || H2.hub.subtitle || P0) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}), ...(P0 ? { persons: P0 } : {}) }; else delete W.hub; }
       const F = H2.fuel.filter((f) => f.entity).map((f) => ({ label: f.label || H.name(h, f.entity), entity: f.entity, ...(f.change ? { change: f.change } : {}) })); if (F.length) W.fuel = F; else delete W.fuel;
       const P = H2.phone.filter(Boolean); if (P.length) W.phone = [...new Set(P)]; else delete W.phone; W.ts = Date.now(); this.hdirty = false; this.hd = null; await HGL.save(h);
       page._eToast(hgTr('Zapisano nagłówek – odświeżanie…', 'Header saved – reloading…')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }

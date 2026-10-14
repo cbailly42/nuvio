@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.7.0-a3e635?style=flat-square" alt="v0.7.0">
+  <img src="https://img.shields.io/badge/version-v0.7.1-a3e635?style=flat-square" alt="v0.7.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -319,9 +319,14 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.7.0 -m "Nuvio 0.7.0" && git push origin v0.7.0`.
+Only tagging by hand: `git tag -a v0.7.1 -m "Nuvio 0.7.1" && git push origin v0.7.1`.
 
 ## Changelog
+
+### 0.7.1
+- Fixed: room views now use hot water, stairs, entity names and camera settings from Appearance, Rooms (before, only names, icons, order and sensors were applied).
+- Fixed: the room view header shows the room name, temperature, humidity and a back button instead of the generic title.
+- Fixed: saving Appearance, Header and navigation no longer drops the household people list.
 
 ### 0.7.0
 - Added: components for everything Home Glass shows, each in + Add with a preview and a full settings form: Rooms, Room, Appliance (washer, dryer, dishwasher with state, program, time left and progress), Hot water, Stairs, Fuel prices, Air conditioning card, Energy week, Phases, Solar, Network, Home sensors, Shortcut and Person.
