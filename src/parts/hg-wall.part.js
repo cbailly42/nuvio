@@ -136,7 +136,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const n = (row.match(/<div>/g) || []).length;
     const html = `<div class="nw-wm"><img alt="" src="${ic(w.state, night)}">${isFinite(t) ? `<b>${deg(t)}</b>` : ''}<div class="nw-wx"><span>${H.esc(HGWx.cn(w.state))}</span>${isFinite(hi) ? `<small>${H.esc(hgTr('Maks.', 'H'))} ${deg(hi)}${isFinite(lo) ? ` · ${H.esc(hgTr('Min.', 'L'))} ${deg(lo)}` : ''}</small>` : ''}</div></div>${row ? `<div class="nw-fc" style="--n:${n}">${row}</div>` : ''}`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
-  /* prognoza (weather.get_forecasts, godzinowa i dzienna), co 30 min; brak usługi lub danych = karta bez prognozy */
+  /* prognoza (usługa get_forecasts, godzinowa i dzienna), co 30 min; brak usługi lub danych = karta bez prognozy */
   fc(h, id) { if (!h.callWS || (this._fc && this._fc.id === id && Date.now() - this._fc.t < 1800000) || this._fcb) return;
     this._fcb = true; const one = (type) => h.callWS({ type: 'call_service', domain: 'weather', service: 'get_forecasts', service_data: { entity_id: id, type }, return_response: true })
       .then((r) => { const f = r && r.response && r.response[id] && r.response[id].forecast; return Array.isArray(f) ? f : null; }, () => null);

@@ -599,7 +599,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.6.4+28e3d822';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.6.4+67efa6a4';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -9070,7 +9070,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const n = (row.match(/<div>/g) || []).length;
     const html = `<div class="nw-wm"><img alt="" src="${ic(w.state, night)}">${isFinite(t) ? `<b>${deg(t)}</b>` : ''}<div class="nw-wx"><span>${H.esc(HGWx.cn(w.state))}</span>${isFinite(hi) ? `<small>${H.esc(hgTr('Maks.', 'H'))} ${deg(hi)}${isFinite(lo) ? ` · ${H.esc(hgTr('Min.', 'L'))} ${deg(lo)}` : ''}</small>` : ''}</div></div>${row ? `<div class="nw-fc" style="--n:${n}">${row}</div>` : ''}`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
-  /* prognoza (weather.get_forecasts, godzinowa i dzienna), co 30 min; brak usługi lub danych = karta bez prognozy */
+  /* prognoza (usługa get_forecasts, godzinowa i dzienna), co 30 min; brak usługi lub danych = karta bez prognozy */
   fc(h, id) { if (!h.callWS || (this._fc && this._fc.id === id && Date.now() - this._fc.t < 1800000) || this._fcb) return;
     this._fcb = true; const one = (type) => h.callWS({ type: 'call_service', domain: 'weather', service: 'get_forecasts', service_data: { entity_id: id, type }, return_response: true })
       .then((r) => { const f = r && r.response && r.response[id] && r.response[id].forecast; return Array.isArray(f) ? f : null; }, () => null);
