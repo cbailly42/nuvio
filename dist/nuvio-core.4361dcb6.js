@@ -613,7 +613,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.10.0+69b320b2';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.10.1+4361dcb6';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -6325,7 +6325,7 @@ class HGAssistCard extends HGBase {
   defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
   ents() { return []; }
   css() { return HG_G14_CSS + U(`ha-card.glass{ gap:10px; min-height:var(--hg-min-h, 320px); }
-.hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1; } .hd2 select{ max-width:180px; }
+.hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
 .cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
 .b{ max-width:84%; padding:9px 13px; border-radius:18px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; animation:bin .28s cubic-bezier(.2,.8,.2,1) both; }
 .b.u{ align-self:flex-end; background:var(--hg-accent); color:var(--hg-on-accent); border-bottom-right-radius:6px; font-weight:500; }
@@ -6343,7 +6343,7 @@ class HGAssistCard extends HGBase {
 .in .gb.r{ width:38px; height:38px; } .in .gb.r.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .mic.on{ background:var(--hg-bg-ff6b57) !important; color:var(--hg-tx-ffffff) !important; animation:pul 1.2s ease-in-out infinite; }
 @keyframes pul{ 0%, 100%{ box-shadow:0 0 0 0 var(--hg-sh-ff6b57-050); } 50%{ box-shadow:0 0 0 7px var(--hg-sh-ff6b57-000); } }
 @media (prefers-reduced-motion: reduce){ .b, .ty i, .mic.on{ animation:none !important; } .cv{ scroll-behavior:auto; } }
-@container (max-width: 300px){ .hd2 select, .hd2 .hgs-t{ display:none; } .b{ max-width:92%; font-size:13px; } }`); }
+@container (max-width: 300px){ .hd2 .ps{ display:none; } .b{ max-width:92%; font-size:13px; } }`); }
   setConfig(c) { super.setConfig(c); this._msgs = this._msgs || []; }
   _sugg() { const s = this._config.suggestions; return Array.isArray(s) && s.length ? s : typeof s === 'string' && s.trim() ? s.split(',').map((x) => x.trim()).filter(Boolean)
     : [hgTr('Jaka jest temperatura w salonie?', 'What is the temperature in the living room?'), hgTr('Które światła są włączone?', 'Which lights are on?'), hgTr('Jaka będzie pogoda jutro?', 'What will the weather be tomorrow?'), hgTr('Która godzina?', 'What time is it?')]; }
@@ -6352,7 +6352,7 @@ class HGAssistCard extends HGBase {
   render() { const c = this._config, h = this._hass, M = this._msgs || [];
     if (!this._pl) setTimeout(() => this._pipes(), 0);
     const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select>` : '';
+    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps"><select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
     const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
     return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}</div>
       <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em">${H.icon('mdi:chat-processing-outline')}<b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</div>`}</div>

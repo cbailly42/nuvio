@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.10.0-a3e635?style=flat-square" alt="v0.10.0">
+  <img src="https://img.shields.io/badge/version-v0.10.1-a3e635?style=flat-square" alt="v0.10.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -328,9 +328,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.10.0 -m "Nuvio 0.10.0" && git push origin v0.10.0`.
+Only tagging by hand: `git tag -a v0.10.1 -m "Nuvio 0.10.1" && git push origin v0.10.1`.
 
 ## Changelog
+
+### 0.10.1
+- Fixed: the Assist card title stays visible next to the assistant picker.
 
 ### 0.10.0
 - Added: Assist card. Talk to Home Assistant Assist from a glass card: text field, microphone (browser speech recognition), assistant picker, replies in chat bubbles, conversation continues across questions, optional spoken replies, suggestion chips. Full form configuration, JSON field and export and import.

@@ -258,7 +258,7 @@ class HGAssistCard extends HGBase {
   defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
   ents() { return []; }
   css() { return HG_G14_CSS + U(`ha-card.glass{ gap:10px; min-height:var(--hg-min-h, 320px); }
-.hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1; } .hd2 select{ max-width:180px; }
+.hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
 .cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
 .b{ max-width:84%; padding:9px 13px; border-radius:18px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; animation:bin .28s cubic-bezier(.2,.8,.2,1) both; }
 .b.u{ align-self:flex-end; background:var(--hg-accent); color:var(--hg-on-accent); border-bottom-right-radius:6px; font-weight:500; }
@@ -276,7 +276,7 @@ class HGAssistCard extends HGBase {
 .in .gb.r{ width:38px; height:38px; } .in .gb.r.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .mic.on{ background:#FF6B57 !important; color:#fff !important; animation:pul 1.2s ease-in-out infinite; }
 @keyframes pul{ 0%, 100%{ box-shadow:0 0 0 0 rgba(255,107,87,.5); } 50%{ box-shadow:0 0 0 7px rgba(255,107,87,0); } }
 @media (prefers-reduced-motion: reduce){ .b, .ty i, .mic.on{ animation:none !important; } .cv{ scroll-behavior:auto; } }
-@container (max-width: 300px){ .hd2 select, .hd2 .hgs-t{ display:none; } .b{ max-width:92%; font-size:13px; } }`); }
+@container (max-width: 300px){ .hd2 .ps{ display:none; } .b{ max-width:92%; font-size:13px; } }`); }
   setConfig(c) { super.setConfig(c); this._msgs = this._msgs || []; }
   _sugg() { const s = this._config.suggestions; return Array.isArray(s) && s.length ? s : typeof s === 'string' && s.trim() ? s.split(',').map((x) => x.trim()).filter(Boolean)
     : [hgTr('Jaka jest temperatura w salonie?', 'What is the temperature in the living room?'), hgTr('Które światła są włączone?', 'Which lights are on?'), hgTr('Jaka będzie pogoda jutro?', 'What will the weather be tomorrow?'), hgTr('Która godzina?', 'What time is it?')]; }
@@ -285,7 +285,7 @@ class HGAssistCard extends HGBase {
   render() { const c = this._config, h = this._hass, M = this._msgs || [];
     if (!this._pl) setTimeout(() => this._pipes(), 0);
     const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select>` : '';
+    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps"><select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
     const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
     return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}</div>
       <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em">${H.icon('mdi:chat-processing-outline')}<b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</div>`}</div>

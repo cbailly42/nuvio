@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.10.0-a3e635?style=flat-square" alt="v0.10.0">
+  <img src="https://img.shields.io/badge/version-v0.10.1-a3e635?style=flat-square" alt="v0.10.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -328,9 +328,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.10.0 -m "Nuvio 0.10.0" && git push origin v0.10.0`.
+Sam tag ręcznie: `git tag -a v0.10.1 -m "Nuvio 0.10.1" && git push origin v0.10.1`.
 
 ## Lista zmian
+
+### 0.10.1
+- Naprawiono: tytuł karty Assist jest widoczny obok wyboru asystenta.
 
 ### 0.10.0
 - Dodano: karta Assist. Rozmowa z Home Assistant Assist w szklanej karcie: pole tekstowe, mikrofon (rozpoznawanie mowy w przeglądarce), wybór asystenta, odpowiedzi w dymkach, rozmowa ciągnie się między pytaniami, opcjonalne odpowiedzi na głos, podpowiedzi. Pełna konfiguracja w formularzu, pole JSON oraz eksport i import.
