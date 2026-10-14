@@ -22,7 +22,7 @@ git push -q origin main "v$V"
 # Bez załączników: HACS pobiera zasoby wydania zamiast dist/, więc wydanie nie ma plików i HACS
 # instaluje pliki leżące bezpośrednio w dist/ (bez podfolderów, stąd płaskie nuvio-font-*, nuvio-bg-*, nuvio-meteo-*).
 # Instalacja ręczna: dist/ z archiwum źródeł tagu.
-if ! gh release view "v$V" >/dev/null 2>&1; then gh release create "v$V" --title "Nuvio $V" --generate-notes --verify-tag; fi
+if ! gh release view "v$V" >/dev/null 2>&1; then gh release create "v$V" --title "Nuvio $V" --generate-notes --verify-tag ${PRE:+--prerelease}; fi
 # weryfikacja: dist/nuvio.js w tagu ma nową wersję, wydanie nie ma załączników
 T=$(mktemp -d); sleep 3
 git show "v$V:dist/nuvio.js" > "$T/t.js"
