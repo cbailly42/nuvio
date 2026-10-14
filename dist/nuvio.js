@@ -599,7 +599,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.6.0+80f57b79';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.6.1+a314b517';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -9030,11 +9030,12 @@ const HG_WALL_SS = `
 @keyframes nwkb{ from{ transform:scale(1) translate3d(0,0,0); } to{ transform:scale(1.07) translate3d(-1.2%, -.8%, 0); } }
 .nw-sh{ position:absolute; inset:0; background:radial-gradient(120% 95% at 50% 45%, transparent 55%, ${K(0,0,0,.38)} 100%), ${K(4,6,10,'var(--nw-dim, .5)')}; }
 .nw-c{ position:absolute; inset:0; display:grid; place-items:center; padding:24px; }
-.nw-g{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:clamp(22px, 4.2vmin, 48px) clamp(34px, 8vmin, 96px); border-radius:clamp(28px, 5vmin, 52px);
-  background:linear-gradient(145deg, ${K(255,255,255,.16)}, ${K(255,255,255,.05)}); border:1px solid ${K(255,255,255,.22)}; box-shadow:0 24px 70px ${K(0,0,0,.45)}, inset 0 1px 0 ${K(255,255,255,.28)};
-  -webkit-backdrop-filter:blur(26px) saturate(1.5); backdrop-filter:blur(26px) saturate(1.5); transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); text-align:center; }
-.nw-t{ font-size:clamp(64px, 20vmin, 220px); font-weight:300; line-height:.95; letter-spacing:-.03em; font-variant-numeric:tabular-nums; text-shadow:0 4px 30px ${K(0,0,0,.35)}; }
-.nw-d{ font-size:clamp(16px, 3.4vmin, 34px); font-weight:500; opacity:.9; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.4)}; } .nw-d::first-letter{ text-transform:uppercase; }
+.nw-g{ display:flex; flex-direction:column; align-items:center; transition:transform 5s cubic-bezier(.4,0,.2,1); transform:translate(var(--nw-x, 0), var(--nw-y, 0)); text-align:center; }
+.nw-t{ font-size:clamp(72px, 24vmin, 260px); font-weight:300; line-height:.95; letter-spacing:-.03em; font-variant-numeric:tabular-nums; text-shadow:0 4px 40px ${K(0,0,0,.45)}; }
+.nw-d{ position:absolute; left:clamp(20px, 4vmin, 48px); bottom:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-bottom, 0px)); font-size:clamp(16px, 3.2vmin, 32px); font-weight:500; opacity:.92; letter-spacing:.01em; text-shadow:0 2px 14px ${K(0,0,0,.5)}; } .nw-d::first-letter{ text-transform:uppercase; }
+.nw-w{ position:absolute; right:clamp(20px, 4vmin, 48px); top:calc(clamp(18px, 4vmin, 44px) + env(safe-area-inset-top, 0px)); display:flex; align-items:center; gap:clamp(8px, 1.6vmin, 16px); text-shadow:0 2px 14px ${K(0,0,0,.5)}; }
+.nw-w[hidden]{ display:none; } .nw-w img{ width:clamp(44px, 9vmin, 92px); height:clamp(44px, 9vmin, 92px); filter:drop-shadow(0 2px 10px ${K(0,0,0,.4)}); }
+.nw-w b{ display:block; font-size:clamp(28px, 6.4vmin, 64px); font-weight:400; line-height:1; font-variant-numeric:tabular-nums; } .nw-w small{ display:block; margin-top:4px; font-size:clamp(13px, 2.2vmin, 20px); opacity:.85; font-weight:500; }
 .nw-h{ position:absolute; left:0; right:0; bottom:calc(22px + env(safe-area-inset-bottom, 0px)); text-align:center; font-size:clamp(12px, 2vmin, 15px); opacity:.55; letter-spacing:.04em; text-shadow:0 1px 8px ${K(0,0,0,.6)}; animation:nwh 4s ease-in-out infinite; }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
 @media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.55; } }
@@ -9057,7 +9058,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) this.el.style.setProperty('--nw-dim', c.dim); },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); this.wx(); } },
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -9084,7 +9085,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Wygaszacz ekranu', 'Screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
     el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
-      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
+      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time></div></div><div class="nw-d"></div><div class="nw-w" hidden></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
     const wk = (e) => { e.preventDefault(); e.stopPropagation(); this.wake('touch'); };
     el.addEventListener('pointerdown', wk); el.addEventListener('keydown', wk); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(el);
@@ -9096,7 +9097,15 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {}, d = new Date();
     el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)).format(d);
     el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+    this.wx();
     this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); },
+  /* pogoda w prawym górnym rogu, tylko gdy w HA jest encja weather */
+  wx() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-w'); if (!box) return;
+    const id = Object.keys((h && h.states) || {}).find((e) => e.startsWith('weather.') && h.states[e].state !== 'unavailable' && h.states[e].state !== 'unknown'), w = id ? h.states[id] : null;
+    if (!w || typeof HGWx === 'undefined') { box.hidden = true; return; }
+    const t = parseFloat(w.attributes.temperature), u = w.attributes.temperature_unit || (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C', sun = h.states['sun.sun'], night = !!sun && sun.state === 'below_horizon';
+    const html = `<img alt="" src="${H.esc(HGWx.icon({ icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1' }, w.state, night, true))}"><span>${isFinite(t) ? `<b>${H.esc(H.fmt(t, 0))}${H.esc(u.startsWith('°') ? '°' : ' ' + u)}</b>` : ''}<small>${H.esc(HGWx.cn(w.state))}</small></span>`;
+    if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* dwie warstwy zdjęcia: płynne przenikanie (pokaz slajdów co 45 s) */
   photos(rm) { const L = [...this.el.querySelectorAll('.nw-bg')], im = this.imgs(); let i = Math.floor(Math.random() * im.length), f = 0;
     const put = () => { const t = L[f]; t.style.backgroundImage = im[i % im.length]; t.classList.add('on'); L[1 - f].classList.remove('on'); f = 1 - f; i++; };
