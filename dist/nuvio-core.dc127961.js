@@ -92,27 +92,27 @@ function hgSelWatch(root) {
   const scan = () => root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp);
   new MutationObserver((m) => { hgsOpen.forEach((f) => f()); if (m.some((r) => r.addedNodes.length)) scan(); }).observe(root, { childList: true, subtree: true }); scan();
 }
-window.hgSelWatch = hgSelWatch;
+window.nuvioSelWatch = hgSelWatch;
 
 /* ===== nuvio (wersja dystrybucyjna): baza zasobów, ścieżki, i18n, strategia pulpitu, kreator pierwszego uruchomienia ===== */
 const HG_ASSET = (() => { try { const u = import.meta.url; if (u) return u.replace(/[^/]*([?#].*)?$/, ''); } catch (e) { /* brak */ }
   try { const s = document.currentScript && document.currentScript.src; if (s) return s.replace(/[^/]*(\?.*)?$/, ''); } catch (e) { /* brak */ }
   const r = [...document.querySelectorAll('script[src*="nuvio"]')].map((x) => x.src)[0]; return r ? r.replace(/[^/]*(\?.*)?$/, '') : '/hacsfiles/nuvio/'; })();
 /* zapas z CDN (jsDelivr, przypięty do tagu działającej wersji): gdy plik obok paczki się nie wczyta; lokalny pierwszy (offline) */
-const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string' || !u.startsWith(HG_ASSET)) return '';
+const hgCdn = window.nuvioCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string' || !u.startsWith(HG_ASSET)) return '';
   return 'https://cdn.jsdelivr.net/gh/kczepiec/nuvio@v' + v + '/dist/' + u.slice(HG_ASSET.length).replace(/[?#].*$/, ''); } catch (e) { return ''; } };
-window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
+window.__nuvioNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'nuvio');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (dist/nuvio-bg-default-*.webp, CREDITS.md); gdy się nie wczyta – gradient */
-const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
+const HG_DEFAULT_BG_FB = window.NUVIO_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
 /* 10 teł do wyboru (CC0, dist/CREDITS.md); pierwsze = domyślne. Miniatury ~5 KB, pełne zdjęcia wczytywane dopiero po wyborze */
 /* nazwa tła rozwiązywana przy użyciu (String(l) / szablon) – hgTr powstaje dopiero w hg-core */
 const hgTrLazy = (pl, en) => ({ toString: () => (typeof hgTr === 'function' ? hgTr(pl, en) : pl) });
-const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', 'Dom w lesie', 'House in the woods'], ['domek-nad-woda', 'Domek nad wodą', 'Lakeside cabin'], ['gwiazdzista-noc', 'Gwiaździsta noc', 'Starry night'], ['zachod-slonca', 'Zachód słońca', 'Sunset'], ['las-o-zmierzchu', 'Las o zmierzchu', 'Forest at dusk'],
+const HG_BG_SET = window.NUVIO_BG_SET = window.NUVIO_BG_SET || [['dom-w-lesie', 'Dom w lesie', 'House in the woods'], ['domek-nad-woda', 'Domek nad wodą', 'Lakeside cabin'], ['gwiazdzista-noc', 'Gwiaździsta noc', 'Starry night'], ['zachod-slonca', 'Zachód słońca', 'Sunset'], ['las-o-zmierzchu', 'Las o zmierzchu', 'Forest at dusk'],
   ['jasny-salon', 'Jasny salon', 'Bright living room'], ['drewniane-wnetrze', 'Drewniane wnętrze', 'Wooden interior'], ['kuchnia', 'Kuchnia', 'Kitchen'], ['mglisty-las', 'Mglisty las', 'Misty forest'], ['nad-mgla', 'Nad mgłą', 'Above the fog']]
   .map(([id, pl, en], i) => { const l = hgTrLazy(pl, en), b = HG_ASSET + 'nuvio-bg-' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
-const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'nuvio-bg-default-wide.webp', v2p: HG_ASSET + 'nuvio-bg-default-portrait.webp' };
+const HG_DEFAULT_BG = window.NUVIO_DEFAULT_BG = window.NUVIO_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'nuvio-bg-default-wide.webp', v2p: HG_ASSET + 'nuvio-bg-default-portrait.webp' };
 
 const HG_I18N = {
   pl: { map: 'Mapa', map_sub: 'Gdzie są domownicy', calendar: 'Kalendarz', cal_sub: 'Wydarzenia z Twoich kalendarzy', panel: 'Panel', rooms: 'Pokoje', room: 'Pokój', media: 'Multimedia', cams: 'Kamery', family: 'Rodzina', energy: 'Energia', settings: 'Ustawienia', profile: 'Profil',
@@ -261,7 +261,7 @@ class HGHintCard extends HTMLElement {
 queueMicrotask(() => hgReg('nuvio-hint-card', HGHintCard, hgTr('Nuvio – Podpowiedź', 'Nuvio – Hint'), hgTr('Pusty stan z instrukcją, co dodać', 'Empty state explaining what to add')));
 class HGStrategy extends HTMLElement { static async generate(config, hass) { return hgGenerate(hass, config || {}); } }
 if (!customElements.get('ll-strategy-dashboard-nuvio')) customElements.define('ll-strategy-dashboard-nuvio', HGStrategy);
-window.hgGenerate = hgGenerate;
+window.nuvioGenerate = hgGenerate;
 
 /* --- kreator pierwszego uruchomienia (widoczny, gdy pulpit z strategii i brak zapisanych wyborów) --- */
 const HG_WZ_T = {
@@ -461,7 +461,7 @@ const hgViewHas = (M) => ({ dashboard: true, rooms: Object.keys(M.areas || {}).l
 const hgHasHacs = (h) => !!(h && h.panels && h.panels.hacs);
 const hgHacsOpen = (h, rid, repo) => { if (hgHasHacs(h) && rid) { history.pushState(null, '', '/hacs/repository/' + rid); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); return true; }
   window.open('https://github.com/' + repo, '_blank', 'noopener'); return false; };
-window.hgHacsOpen = hgHacsOpen;
+window.nuvioHacsOpen = hgHacsOpen;
 const HG_PKGS = [
   { id: 'kiosk', name: 'Kiosk Mode', repo: 'NemesisRE/kiosk-mode', rid: 497319128, re: /kiosk-mode/i, live: () => !!window.KioskMode, icon: 'mdi:monitor-shimmer', hint: hgTrLazy('Ukrywa nagłówek i pasek boczny HA. Zainstaluj „Kiosk Mode” z HACS → Frontend.', 'Hides the HA header and sidebar. Install “Kiosk Mode” from HACS → Frontend.') },
   { id: 'sidebar', name: 'Custom Sidebar', repo: 'elchininet/custom-sidebar', rid: 737780218, re: /custom-sidebar/i, live: () => !!window.CustomSidebar, icon: 'mdi:dock-left', hint: hgTrLazy('Własna kolejność i ukrywanie pozycji panelu bocznego. Zainstaluj „Custom Sidebar” z HACS → Frontend.', 'Custom order and hiding of sidebar items. Install “Custom Sidebar” from HACS → Frontend.') },
@@ -580,12 +580,12 @@ window.HGLookX = HGLookX;
 
 /* kiosk: drawer fix */
 /* Kiosk Mode chowa <ha-sidebar>, ale nowy ha-drawer HA dalej rezerwuje --mdc-drawer-width (256px) -> ciemny pas. Zerujemy szerokość, gdy panel jest ukryty. */
-(() => { if (window.__hgKfix) return; window.__hgKfix = 1;
+(() => { if (window.__nuvioKfix) return; window.__nuvioKfix = 1;
   const tick = () => { if (document.hidden) return; try { const m = document.querySelector('home-assistant')?.shadowRoot?.querySelector('home-assistant-main'); if (!m) return; const sb = m.shadowRoot?.querySelector('ha-sidebar');
     const hid = !!sb && getComputedStyle(sb).display === 'none'; const on = m.dataset.hgKfix === '1';
     if (hid && !on) { m.style.setProperty('--mdc-drawer-width', '0px'); m.dataset.hgKfix = '1'; } else if (!hid && on) { m.style.removeProperty('--mdc-drawer-width'); delete m.dataset.hgKfix; } } catch (e) { /* brak HA */ } };
   setInterval(tick, 1200); tick(); })();
-queueMicrotask(() => { if (typeof HGL !== 'undefined') window.__hgL = HGL; });
+queueMicrotask(() => { if (typeof HGL !== 'undefined') window.__nuvioL = HGL; });
 
 /* Nuvio – glassmorphism dashboard components for Home Assistant
  * Plik: /local/nuvio/nuvio.js   (generowany z www/*.part.js przez build.py)
@@ -599,13 +599,13 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.6.4+67efa6a4';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.6.4+dc127961';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
-const HGVer = window.__hgVer || {
+const HGVer = window.__nuvioVer || {
   t: 0, shown: false,
   async check(hass, force) {
-    if (!hass || !hass.callWS || this.shown || window.__hgNoVer || HG_BUILD.startsWith('__') || (window.__hgLocal && !window.__hgVerTest)) return;   // testy lokalne: kod celowo nowszy niż zasób
+    if (!hass || !hass.callWS || this.shown || window.__nuvioNoVer || HG_BUILD.startsWith('__') || (window.__hgLocal && !window.__hgVerTest)) return;   // testy lokalne: kod celowo nowszy niż zasób
     if (!force && Date.now() - this.t < 300000) return;
     this.t = Date.now();
     try {
@@ -631,7 +631,7 @@ const HGVer = window.__hgVer || {
     console.info('nuvio: wczytany', HG_BUILD, 'zasób', v);
   },
 };
-window.__hgVer = HGVer;
+window.__nuvioVer = HGVer;
 (function hgFonts() {
   if (document.getElementById('hg-fonts')) return;
   const s = document.createElement('style');
@@ -669,7 +669,7 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
 
 /* język interfejsu kart (pl / en): wybór z kreatora (dane użytkownika), inaczej język profilu HA.
    hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, (w && w.lang) || window.__hgLang); };
+const hgCurLang = () => { const w = window.__nuvioL && window.__nuvioL.data && window.__nuvioL.data.wiz; return hgLang(window.__nuvioHass, (w && w.lang) || window.__nuvioLang); };
 const hgTr = (pl, en) => (hgCurLang() === 'en' ? en : pl);
 const HG_LOC = () => (hgCurLang() === 'en' ? 'en-GB' : 'pl-PL');
 const H = {
@@ -728,7 +728,7 @@ const H = {
     if (!so) return en ? 'unavailable' : 'niedostępne';
     const raw = attr ? so.attributes[attr] : so.state;
     if (raw == null) return '';
-    let r = String(raw); h = h || window.__hgHass;
+    let r = String(raw); h = h || window.__nuvioHass;
     try { r = attr ? (h && h.formatEntityAttributeValue ? h.formatEntityAttributeValue(so, attr) : r) : (h && h.formatEntityState ? h.formatEntityState(so) : r); } catch (e) { /* starsze HA */ }
     if (en) return (r === String(raw) ? r.replace(/_/g, ' ') : r).replace(/^[A-Z][a-z]+$/, (x) => x.toLowerCase());   // EN: tłumaczenie HA, bez słownika PL
     if (!attr && so.entity_id && so.entity_id.startsWith('binary_sensor.') && (raw === 'on' || raw === 'off')) {
@@ -743,10 +743,10 @@ const H = {
   T: (h, so, attr) => { const r = H.t(h, so, attr); return r && r !== 'wł.' && r !== 'wył.' ? r.charAt(0).toUpperCase() + r.slice(1) : r === 'wł.' ? 'Włączone' : r === 'wył.' ? 'Wyłączone' : r; },
   dayKey: (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
 };
-window.__hg = H;
+window.__nuvio = H;
 
 /* zamrożenie przerysowań na czas animacji panelu (ukryj/pokaż) – po zwolnieniu zaległe karty odświeżają się raz */
-const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q: new Set(),
+const HG_FREEZE = window.__nuvioFreezeObj || (window.__nuvioFreezeObj = { on: false, q: new Set(),
   release() { this.on = false; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) c._doUpdate(false); } });
 class HGBase extends HTMLElement {
   constructor() {
@@ -783,7 +783,7 @@ class HGBase extends HTMLElement {
     }
     if (this._hass) this._update();
   }
-  set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
+  set hass(h) { this._hass = h; window.__nuvioHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
   get hass() { return this._hass; }
   ents() { return [this._config.entity].filter(Boolean); }
   /* szybka ścieżka: HA podmienia obiekt stanu tylko dla zmienionej encji -> porównanie referencji, bez JSON */
@@ -1401,7 +1401,7 @@ const hgReg = (tag, cls, name, desc) => {
   try { document.documentElement.removeAttribute('data-hg-lens'); const o = document.getElementById('hg-liquid-svg'); if (o) o.remove(); } catch (e) {}
 })();
 /* jedna instancja na stronę (moduł może zostać wczytany dwa razy, np. podgląd + zasób) */
-const HGTheme = window.__hgTheme || {
+const HGTheme = window.__nuvioTheme || {
   dark: null, _h: null,
   mq: window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null,
   apply(d) {
@@ -1431,7 +1431,7 @@ if (HGTheme.mq && !HGTheme._bound) {
   HGTheme.mq.addEventListener ? HGTheme.mq.addEventListener('change', f) : HGTheme.mq.addListener(f);
 }
 HGTheme.pick();
-window.__hgTheme = HGTheme;
+window.__nuvioTheme = HGTheme;
 
 /* ===== WSPÓLNE STYLE kart Nuvio (szkło, nagłówek karty, przełącznik, animacje ikon) ===== */
 const HG_BASE = U(`
@@ -3791,7 +3791,7 @@ const hgRobotState = (s) => {
   if (st === 'error') return [hgTr('Błąd', 'Error'), 'err'];
   if (st === 'docked') return a.charging ? [hgTr('Ładuje', 'Charging'), 'chg'] : [hgTr('W stacji', 'Docked'), 'dock'];
   if (st === 'idle') return [hgTr('Bezczynny', 'Idle'), 'idle'];
-  return [H.T(window.__hgHass, s), 'idle'];
+  return [H.T(window.__nuvioHass, s), 'idle'];
 };
 const hgAgo = (iso) => {
   const t = Date.parse(iso); if (!isFinite(t)) return '';
@@ -4206,7 +4206,7 @@ const HGAreas = {
   },
   areaFromUrl() { try { return new URLSearchParams(location.search).get('area'); } catch (e) { return null; } },
 };
-window.__hgAreas = HGAreas;
+window.__nuvioAreas = HGAreas;
 
 /* --- siatka pokoi --- */
 class HGAreasCard extends HGBase {
@@ -5506,7 +5506,7 @@ class HGNetCard extends HGBase {
     return [];
   }
   _extraSig() { return [this._config.section === 'wan' ? (this._hist || []).length : 0, this._flt, this._srt, Math.floor(Date.now() / 60000)]; }
-  set hass(h) { const first = !this._hass; this._hass = h; window.__hgHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
+  set hass(h) { const first = !this._hass; this._hass = h; window.__nuvioHass = h; if (first && this._config.section === 'wan') this._ldHist(); this._update(); }
   get hass() { return this._hass; }
   connectedCallback() { super.connectedCallback(); if (this._hass && this._config && this._config.section === 'wan' && !this._hT) this._ldHist(); }
   disconnectedCallback() { clearTimeout(this._hT); this._hT = 0; }
@@ -6137,7 +6137,7 @@ const HG_LOGO = `<span class="logo" aria-hidden="true"><ha-icon icon="mdi:home-a
    inne widoki dashboardu tworzymy sami (dopiero przy pierwszej wizycie = leniwie: mapa, kamery, roboty itd.) jako rodzeństwo roota
    i tylko podmieniamy. Adres: pushState bez location-changed (HA nie przebudowuje). Wstecz/Dalej i głęboki link: obsługuje HA
    (router HA i tak ustawia widok z adresu przy przejściu w historii), nowy root przejmuje stan. Gdy HA mimo to zmieni widok (inne źródło nawigacji), nowy root przejmuje stan. */
-const HGShell = window.__hgShell || {
+const HGShell = window.__nuvioShell || {
   // wyłączone: w pomiarze A/B (CPU x4) nie poprawiło p95 (tło stanu HA dominuje), a Wstecz i okna szczegółów i tak przebudowują widok w HA
   enabled: false,
   root: null, cur: null, pages: new Map(),
@@ -6170,7 +6170,7 @@ const HGShell = window.__hgShell || {
   },
   _ok() { return !!(this.enabled && this.root && this.root.isConnected && this.root.parentNode && this.root._hass && this.root._built); },
   go(path) {
-    if (!this._ok() || window.__hgNoShell) return false;
+    if (!this._ok() || window.__nuvioNoShell) return false;
     const r = this._resolve(path); if (!r || r[0] === this.cur) return false;
     history.pushState(null, '', path);
     this._show(r[0], r[1]);
@@ -6178,7 +6178,7 @@ const HGShell = window.__hgShell || {
   },
   /* pokazujemy widok inny niż root HA, a adres wskazuje dokładnie ten widok */
   held() {
-    if (!this._ok() || window.__hgNoShell || this.cur === this.root._config.view) return false;
+    if (!this._ok() || window.__nuvioNoShell || this.cur === this.root._config.view) return false;
     const r = this._resolve(location.pathname); return !!(r && r[0] === this.cur);
   },
   _show(view, cfg) {
@@ -6196,8 +6196,8 @@ const HGShell = window.__hgShell || {
   /* stan HA dociera tylko do roota: przekaż widocznej stronie */
   fwd(h) { const p = this.pages.get(this.cur); if (p && p !== this.root && p.isConnected) p.hass = h; },
 };
-if (!window.__hgShell) {
-  window.__hgShell = HGShell;
+if (!window.__nuvioShell) {
+  window.__nuvioShell = HGShell;
   // inne skrypty (np. kiosk-mode) po popstate wysyłają location-changed; adres = widok pokazany przez nas -> HA nie przebudowuje
   window.addEventListener('location-changed', (e) => { if (HGShell.held()) e.stopImmediatePropagation(); }, true);
 }
@@ -6233,14 +6233,14 @@ class HGPage extends HTMLElement {
       notifications_action: { notifications: true }, mail_action: { notifications: true },
       menu: [], storage_key: 'nuvio', zoom: { min: 0.8, max: 1.3, step: 0.1 },
     }, c);
-    if (this._config._hgLang) window.__hgLang = this._config._hgLang;   /* język wybrany w strategii (kreator / opcja language) */
+    if (this._config._hgLang) window.__nuvioLang = this._config._hgLang;   /* język wybrany w strategii (kreator / opcja language) */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
     this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
     if (this._hass) this._build();
   }
   set hass(h) {
-    window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
+    window.__nuvioHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
     if (window.HGWall) HGWall.tick(h, this);   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
@@ -6414,7 +6414,7 @@ class HGPage extends HTMLElement {
       else { let best = Infinity; for (let c = 0; c + s <= n; c++) { const t = Math.max(...H.slice(c, c + s)); if (t < best) { best = t; col = c; } } }
       const top = Math.max(...H.slice(col, col + s)); for (let c = col; c < col + s; c++) H[c] = top + k;
       w.style.gridColumn = `${col + 1} / span ${s}`; w.style.gridRow = `${top + 1} / span ${k}`; }); }
-  _pwSet() { const L = window.__hgL, m = (L && L.data && L.data.pw) || {}; return m[this._config.view] || null; }
+  _pwSet() { const L = window.__nuvioL, m = (L && L.data && L.data.pw) || {}; return m[this._config.view] || null; }
   _pwCur() { return this._pwSet() || (this._config.panel && this._config.panel.wide ? 'wide' : 'narrow'); }
   _panelGrid(mode) {
     const p = this._config.panel, el = this._panelEl;
@@ -6889,7 +6889,7 @@ class HGPage extends HTMLElement {
       case 'profile': return go(c.user.action || { navigate: '/profile' });
       case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
       case 'updreload': { location.reload(); return; }
-      case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
+      case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.nuvioHacsOpen) window.nuvioHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);
       case 'search': return go(c.search_action || { quickbar: 'e' });
@@ -7427,7 +7427,7 @@ console.info(`%c HOME-GLASS %c ${HG_VER} `, 'background:var(--hg-accent);color:v
    Układ: nadpisania na bazie CFG z build.py, per zakres (widok / „rooms” / „room:<id>” / „<widok>:tiles”).
    Zapis: dane użytkownika HA (websocket frontend/set_user_data, klucz nuvio_layout – synchronizacja między urządzeniami),
    kopia w localStorage (nuvio:layout) jako zapas / natychmiastowy odczyt. */
-const HGL = window.__hgL || (window.__hgL = {
+const HGL = window.__nuvioL || (window.__nuvioL = {
   KEY: 'nuvio_layout', LS: 'nuvio:layout',
   /* kopia lokalna per użytkownik HA (wspólny tablet): klucz nuvio:layout:<user_id>; „:last” = ostatni użytkownik do natychmiastowego odczytu przed load() */
   _lsKey(uid) { return this.LS + ':' + (uid || 'anon'); },
@@ -7484,8 +7484,8 @@ const HGL = window.__hgL || (window.__hgL = {
 });
 /* ===== Wygląd: akcent (tinty i tekst na akcencie liczone wg WCAG) + tło (zdjęcie / URL / przesłane / kolor / gradient) + przyciemnienie ===== */
 const HG_ACCENTS = [[('#' + '63D71E'), 'Limonka', 'Lime'], [('#' + '3DDC97'), 'Mięta', 'Mint'], [('#' + '2EC4D6'), 'Turkus', 'Teal'], [('#' + '4C9BFF'), 'Błękit', 'Sky blue'], [('#' + 'A78BFA'), 'Fiolet', 'Violet'], [('#' + 'FF6FAE'), 'Róż', 'Pink'], [('#' + 'FF9F43'), 'Pomarańcz', 'Orange'], [('#' + 'F5C542'), 'Złoto', 'Gold']];   /* [kolor, nazwa PL, nazwa EN] – nazwa wybierana przy użyciu */
-const HG_BGS = [...(window.HG_BG_SET || [['', hgTrLazy('Domyślne', 'Default')]]), ...(window.HG_USER_BGS || [])];   /* [url, nazwa, url pionowy, miniatura]; pierwszy = domyślny (bg = null) */   /* własne zdjęcia: URL / przesłanie; gradienty w sekcji „Kolor lub gradient” */
-const HGApp = window.__hgApp || (window.__hgApp = {
+const HG_BGS = [...(window.NUVIO_BG_SET || [['', hgTrLazy('Domyślne', 'Default')]]), ...(window.NUVIO_USER_BGS || [])];   /* [url, nazwa, url pionowy, miniatura]; pierwszy = domyślny (bg = null) */   /* własne zdjęcia: URL / przesłanie; gradienty w sekcji „Kolor lub gradient” */
+const HGApp = window.__nuvioApp || (window.__nuvioApp = {
   toRgb(hx) { const m = /^#?([0-9a-f]{6})$/i.exec(hx || ''); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; },
   hex(c) { return '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('').toUpperCase(); },
   lum(c) { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); },
@@ -7517,13 +7517,13 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const a = this.get(); let st = document.getElementById('hg-app-style');
     if (!st) { st = document.createElement('style'); st.id = 'hg-app-style'; document.head.appendChild(st); }
     const T = a.accent && a.accent.toUpperCase() !== ('#' + '63D71E') ? this.tokens(a.accent) : null;
-    let B = a.bg || window.HG_DEFAULT_BG;
+    let B = a.bg || window.NUVIO_DEFAULT_BG;
     if (!a.bg && B && B.kind === 'image') { /* domyślne zdjęcie: sprawdź raz, czy się wczytuje; błąd -> gradient zapasowy */
-      if (B._st === 'bad') B = window.HG_DEFAULT_BG_FB;
+      if (B._st === 'bad') B = window.NUVIO_DEFAULT_BG_FB;
       else if (!B._st) { B._st = 'wait'; const im = new Image(); im.onload = () => { B._st = 'ok'; };
         im.onerror = () => { const c = !B._cdn && typeof hgCdn === 'function' && hgCdn(B.v); if (c) { console.warn('Nuvio: local background failed, using CDN', B.v); B._cdn = 1; B.v2p = hgCdn(B.v2p) || B.v2p; B.v = c; B._st = ''; } else B._st = 'bad'; this.apply(); }; im.src = B.v; } }
     /* wybrane tło z pliku obok paczki: sprawdź raz, przy błędzie podstaw kopię z CDN (tylko w pamięci, bez zmiany zapisu) */
-    if (a.bg && a.bg.kind === 'image' && typeof hgCdn === 'function' && hgCdn(a.bg.v)) { const M = (window.__hgBgAlt = window.__hgBgAlt || {}), v0 = a.bg.v;
+    if (a.bg && a.bg.kind === 'image' && typeof hgCdn === 'function' && hgCdn(a.bg.v)) { const M = (window.__nuvioBgAlt = window.__nuvioBgAlt || {}), v0 = a.bg.v;
       if (M[v0] === undefined) { M[v0] = null; const im = new Image(); im.onload = () => { M[v0] = ''; }; im.onerror = () => { console.warn('Nuvio: local background failed, using CDN', v0); M[v0] = hgCdn(v0); this.apply(); }; im.src = v0; }
       if (M[v0]) B = Object.assign({}, a.bg, { v: M[v0], v2p: hgCdn(a.bg.v2p) || M[v0] }); }
     const img = this.bgImg(B), img2 = B && B.v2p ? this.bgImg({ kind: 'image', v: B.v2p }) : img;
@@ -7550,7 +7550,7 @@ const hgTypesFor = (h, e) => { const d = e.split('.')[0], s = h.states[e], k = H
   return num || d === 'sensor' ? ['val', 'chart', 'compact', 'minimal'] : ['val', 'compact', 'minimal']; };
 const hgTypeOpts = (h, e) => hgTypesFor(h, e).map((t, i) => [t, i ? HG_TYPES[t] : hgTr('Normalny', 'Default')]);
 /* historia (24 h) do wykresów – pamięć 5 min, odświeżenie kart po pobraniu */
-const HG_HIST = window.__hgHist || (window.__hgHist = { m: new Map(), get(h, e, cb) { const c = this.m.get(e); if (c && Date.now() - c.t < 300000) return c.d; if (c && c.p) return c.d;
+const HG_HIST = window.__nuvioHist || (window.__nuvioHist = { m: new Map(), get(h, e, cb) { const c = this.m.get(e); if (c && Date.now() - c.t < 300000) return c.d; if (c && c.p) return c.d;
   const o = { t: Date.now(), d: c ? c.d : null, p: true }; this.m.set(e, o);
   if (h && h.callWS) h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 864e5).toISOString(), entity_ids: [e], minimal_response: true, no_attributes: true, significant_changes_only: false })
     .then((r) => { const a = (r && r[e]) || []; o.d = a.map((x) => [x.lu * 1000 || Date.parse(x.last_updated || x.last_changed), Number(x.s != null ? x.s : x.state)]).filter((x) => isFinite(x[1])); o.p = false; o.t = Date.now(); cb && cb(); }, () => { o.p = false; o.d = []; });
@@ -7747,11 +7747,11 @@ const HG_PW_CSS = `.hg-pw{ display:grid; grid-template-columns:repeat(2, minmax(
 .hg-pwn{ font-size:11.5px; opacity:.6; margin:6px 0 0; }`;
 const hgPwPick = (cur, hge, extra = '') => `<div class="hg-pw" role="radiogroup" aria-label="${hgTr('Szerokość panelu', 'Panel width')}">${[['narrow', hgTr('Panel wąski', 'Narrow panel'), hgTr('Kolumna po prawej, lewa strona wolna na tytuł i tło', 'Right column, left side free for title and background')], ['wide', hgTr('Panel na całą szerokość', 'Full width panel'), hgTr('Jak w widoku Pokoje', 'Like the Rooms view')]].map(([k, l, d]) => `<button type="button" role="radio" data-hge="${hge}" data-w="${k}"${extra} aria-checked="${cur === k}"><span class="hg-pwv ${k}" aria-hidden="true"><i></i><em></em><u></u></span><span><b>${l}</b><small>${d}</small></span></button>`).join('')}</div><p class="hg-pwn">${hgTr('Na telefonie panel zawsze zajmuje całą szerokość.', 'On phones the panel is always full width.')}</p>`;
 const hgPwMark = (b) => { for (const x of b.parentElement.querySelectorAll('[role=radio]')) x.setAttribute('aria-checked', String(x === b)); };
-window.hgPwPick = hgPwPick; window.hgPwMark = hgPwMark; window.HG_PW_CSS = HG_PW_CSS;
+window.nuvioPwPick = hgPwPick; window.nuvioPwMark = hgPwMark; window.NUVIO_PW_CSS = HG_PW_CSS;
 const HG_COMP_BASIC = ['slider', 'button', 'entities', 'select', 'stepper', 'gauge'];
 const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
 const hgCompCard = (C, v) => (C.cards && v && C.cards[v.mode]) || C.card;
-const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
+const HG_CM = window.__nuvioCm || (window.__nuvioCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
 const hgCmHtml = (x, sz) => { HG_CM.set(x.e, { c: x.c, cfg: Object.assign({}, x.cfg, x.n ? { title: x.n, name: x.n } : {}, x.i ? { icon: x.i } : {}) });
   return `<div class="hgtl k-card ${HGL.szc(sz)}" data-hgk="${H.esc(x.e)}"><div class="cmslot" data-cm="${H.esc(x.e)}"></div></div>`; };
 const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new Map();
@@ -7854,7 +7854,7 @@ const hgDedupConf = (L) => { let ch = false; for (const cf of Object.values(L.co
 const hgIsGhost = (it) => { let hgt = 0; for (const c of it.children) { if (c.classList.contains('hge') || c.tagName === 'STYLE') continue; hgt += c.offsetHeight; } return hgt < 8 && !it.querySelector('.cmslot'); };
 const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new Set(a)]; if (r.length !== a.length) ch = true; return r; };
   L.hidden = uq(L.hidden || []); L.order = uq(L.order || []); const seen = new Set(); L.added = (L.added || []).filter((x) => { if (!x || !x.e || seen.has(x.e)) { ch = true; return false; } seen.add(x.e); return true; }); return ch; };
-const HGToast = window.__hgToast || (window.__hgToast = {
+const HGToast = window.__nuvioToast || (window.__nuvioToast = {
   L: [], el: null,
   box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgTr('Powiadomienia', 'Notifications'));
     const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10000; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
@@ -8224,7 +8224,7 @@ const HG_EDIT = {
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
     /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
-    if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
+    if (!window.__nuvioVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__nuvioVerChk = 1;
       fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
         if (m && m[1] !== HG_BUILD) this._eToast(hgTr(`Załadowana wersja ${HG_BUILD.split('+')[0]} jest starsza niż na serwerze (${m[1].split('+')[0]}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).`, `Loaded version ${HG_BUILD.split('+')[0]} differs from the server (${m[1].split('+')[0]}). Reload without cache (Ctrl+Shift+R).`)); }).catch(() => {}); }
     if (this._editing || !this._isAdmin()) return;
@@ -8628,7 +8628,7 @@ const HG_EDIT = {
       <section class="lk-g"><h4>${H.icon('mdi:image-outline')}${hgTr('Tło', 'Background')}</h4>
         <div class="lk-bgs">${HG_BGS.map(([u, l, pu, th], i) => { const on = i ? !!bg && bg.kind !== 'color' && bg.kind !== 'gradient' && bg.v === u : !bg;
           const src = th || u || (HG_DEFAULT_BG.kind === 'image' ? HG_DEFAULT_BG.v : '');
-          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="var c=!this.dataset.cdn&&window.hgCdn&&window.hgCdn(this.src);if(c){console.warn('Nuvio: local background failed, using CDN', this.src);this.dataset.cdn='1';this.src=c;}else{this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove();}">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
+          return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgTr('Nie wczytano zdjęcia', 'Image not loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="var c=!this.dataset.cdn&&window.nuvioCdn&&window.nuvioCdn(this.src);if(c){console.warn('Nuvio: local background failed, using CDN', this.src);this.dataset.cdn='1';this.src=c;}else{this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove();}">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgTr('Domyślne', 'Default')))}</small></button>`; }).join('')}</div>
         <div class="lk-row"><span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="bgurl" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(bg && bg.kind === 'url' ? bg.v : '')}" autocomplete="off"><button class="lk-mini" data-hge="bgurl">${hgTr('Ustaw', 'Set')}</button></span>
           <button class="lk-up" data-hge="bgup" title="${hgTr('Prześlij zdjęcie do Home Assistant', 'Upload an image to Home Assistant')}">${H.icon('mdi:upload')}<span>${hgTr('Prześlij', 'Upload')}</span></button><input type="file" accept="image/*" hidden></div>
         <div class="lk-grd"><div class="lk-gp" style="background:linear-gradient(135deg,${c1},${c2})"></div>
@@ -8771,7 +8771,7 @@ Object.assign(HGPage.prototype, HG_EDIT, HG_COMP_EDIT);
 /* ===== Kopia układu (admin): eksport do pliku / schowka i import z pliku, przeciągnięcia lub wklejenia.
    Format: { format: 'nuvio-layout', schema, nuvio, exported, include, data: { wiz, s, app, pw, wall } } (dane jak w HGL.data).
    Przed importem bieżący układ trafia do localStorage (nuvio:layout-backup), „Przywróć poprzedni” cofa import jednym kliknięciem. */
-const HGBackup = window.__hgBackup || (window.__hgBackup = {
+const HGBackup = window.__nuvioBackup || (window.__nuvioBackup = {
   SCHEMA: 2, BK: 'nuvio:layout-backup', inc: null, st: null,
   CATS: [['views', 'wiz', 'mdi:view-dashboard-outline', 'Widoki i własne widoki', 'Views and custom views'],
     ['layout', 's', 'mdi:view-grid-outline', 'Układ, widżety i encje, tytuły, szerokości sekcji, ukryte', 'Layout, widgets and entities, titles, section widths, hidden items'],
@@ -8994,18 +8994,18 @@ const HG_WALL_SS = `
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
 @media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.55; } }
 `;
-const HGWall = window.__hgWall || (window.__hgWall = {
+const HGWall = window.__nuvioWall || (window.__nuvioWall = {
   IDLES: [30, 60, 120, 300, 600, 1800],
   SRCS: [['bg', 'Tło dashboardu', 'Dashboard background'], ['slides', 'Pokaz slajdów', 'Slideshow'], ['url', 'Własny adres', 'Custom URL']],
   last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null, _ev: null, _evt: 0, _evk: '', _fc: null, _fcb: false,
   /* ---- ustawienia ---- */
-  get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
+  get() { const w = (window.__nuvioL && window.__nuvioL.data && window.__nuvioL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '' }; },
   /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
   set(p) { HGL.data.wall = Object.assign({}, this.get(), p); HGL._ls(); this.sync();
-    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
+    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__nuvioHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
   tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h); },
   sync() { const c = this.get();
@@ -9018,7 +9018,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
-  canShow() { const p = this.page; return !!(p && p.isConnected && !p._hgHidden && !p._editing && !(window.__hgL && window.__hgL.editing) && !document.hidden); },
+  canShow() { const p = this.page; return !!(p && p.isConnected && !p._hgHidden && !p._editing && !(window.__nuvioL && window.__nuvioL.editing) && !document.hidden); },
   check() { this._t = null; const c = this.get(); if (!c.on || this.active) return;
     const left = c.idle * 1000 - (Date.now() - this.last);
     if (left > 500) return this.arm(left);
@@ -9031,10 +9031,10 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ---- zdjęcia ---- */
   imgs() { const c = this.get(), A = HGApp.get(), port = window.innerHeight > window.innerWidth, one = (b) => { if (!b) return null; const u = port && b.v2p ? HGApp.bgImg({ kind: 'image', v: b.v2p }) : HGApp.bgImg(b); return u; };
     if (c.src === 'url' && c.url) return [HGApp.bgImg({ kind: 'image', v: c.url })];
-    if (c.src === 'slides') { const l = (typeof HG_BGS !== 'undefined' ? HG_BGS : []).map(([u, , pu]) => one(u ? { kind: 'image', v: u, v2p: pu || '' } : window.HG_DEFAULT_BG)).filter(Boolean);
+    if (c.src === 'slides') { const l = (typeof HG_BGS !== 'undefined' ? HG_BGS : []).map(([u, , pu]) => one(u ? { kind: 'image', v: u, v2p: pu || '' } : window.NUVIO_DEFAULT_BG)).filter(Boolean);
       if (A.bg && A.bg.kind === 'image') { const x = one(A.bg); if (x && !l.includes(x)) l.unshift(x); }
       if (l.length) return [...new Set(l)]; }
-    const B = A.bg || window.HG_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.HG_DEFAULT_BG_FB || {}).v || 'var(--hg-ac-16202b)'}, ${(window.HG_DEFAULT_BG_FB || {}).v2 || 'var(--hg-ac-05070a)'})`]; },
+    const B = A.bg || window.NUVIO_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.NUVIO_DEFAULT_BG_FB || {}).v || 'var(--hg-ac-16202b)'}, ${(window.NUVIO_DEFAULT_BG_FB || {}).v2 || 'var(--hg-ac-05070a)'})`]; },
   /* ---- nakładka ---- */
   show() { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;

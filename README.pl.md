@@ -296,6 +296,9 @@ Sam tag ręcznie: `git tag -a v0.6.4 -m "Nuvio 0.6.4" && git push origin v0.6.4`
 
 ## Lista zmian
 
+### 0.6.5
+- Poprawione: ustawienia trybu tabletu ściennego (wygaszacza) nie zapisywały się, gdy w tym samym Home Assistant był zainstalowany jako zasób Lovelace inny pulpit oparty na Home Glass. Obie paczki dzieliły jeden magazyn układu w pamięci, więc Nuvio zapisywało do klucza drugiego pulpitu, który nie ma sekcji wygaszacza. Nuvio ma teraz własne zmienne globalne, a każda kompilacja dostaje nową nazwę pliku z hashem treści.
+
 ### 0.6.4
 - Zmienione: karta **Klimatyzacja** wraca do wyglądu z 0.5.0 (duża temperatura ze strzałkami, suwak z kreskami i przyciski trybów); okrągłe pokrętło z 0.6.0 zostało usunięte. Obsługa dotyku zostaje: przesuń suwak w bok, aby ustawić temperaturę (ruch w górę lub w dół przewija stronę, dotknięcie skacze do miejsca), przytrzymaj temperaturę, aby otworzyć szczegóły encji, dotknij jej, aby włączyć wyłączone urządzenie, przytrzymaj strzałki, aby zmieniać dalej, lekka wibracja przy każdym kroku (aplikacja Home Assistant albo telefon, który to obsługuje), a na klawiaturze Page Up/Down, Home/End.
 

@@ -296,6 +296,9 @@ Only tagging by hand: `git tag -a v0.6.4 -m "Nuvio 0.6.4" && git push origin v0.
 
 ## Changelog
 
+### 0.6.5
+- Fixed: wall tablet (screensaver) settings were not saved when another Home Glass based dashboard was installed as a Lovelace resource on the same Home Assistant. Both bundles shared one in-memory layout store, so Nuvio wrote to the other dashboard's key, which has no screensaver section. Nuvio now keeps its own globals, and every build gets a new content-hashed file name.
+
 ### 0.6.4
 - Changed: the **Climate** card is back to the look from 0.5.0 (large temperature with arrows, the tick slider and the mode buttons); the round dial from 0.6.0 is gone. The touch handling stays: swipe the slider sideways to set the temperature (swiping up or down scrolls the page, a tap jumps to that spot), hold the temperature to open the entity details, tap it to turn a switched-off unit on, hold the arrows to repeat, a light vibration on every step (Home Assistant app or supporting phones), and Page Up/Down, Home/End on the keyboard.
 
