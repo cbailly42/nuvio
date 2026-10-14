@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.7.1-a3e635?style=flat-square" alt="v0.7.1">
+  <img src="https://img.shields.io/badge/version-v0.8.0-a3e635?style=flat-square" alt="v0.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -217,6 +217,8 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 
 **Appearance, Background gallery**: add your own images by `/local/` or `https://` address; they show up in Background and in the wall tablet slideshow.
 
+**Appearance, Header and navigation** (0.8.0) also has: the weather entity for the header and an optional sensor with a `forecast` attribute for the hourly strip, the household strip position (left or next to the panel), and a per view table with the icon, a short label for the phone bar, desktop and tablet column count (built in views too), whether the view is in the sidebar and its order there. **Background gallery** has a focal point for the current background.
+
 ### Planned
 
 Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md).
@@ -319,9 +321,18 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.7.1 -m "Nuvio 0.7.1" && git push origin v0.7.1`.
+Only tagging by hand: `git tag -a v0.8.0 -m "Nuvio 0.8.0" && git push origin v0.8.0`.
 
 ## Changelog
+
+### 0.8.0
+- Added: column count for every view on desktop and tablet, including the built in views such as Energy.
+- Added: per view icon, short phone bar label and sidebar visibility and order. Long phone bar labels shrink instead of being cut off.
+- Added: weather entity choice for the header, automatic choice prefers an entity with a forecast, and an optional forecast sensor (any entity with a `forecast` attribute, for example from MQTT) for the hourly strip.
+- Added: household strip position, left or next to the panel.
+- Added: background focal point, saved in the layout.
+- Fixed: a full width panel (and other per view or appearance settings) could be lost when the dashboard was open in another browser tab, because layout sections were saved as a whole. They are now merged key by key.
+- Fixed: in Rooms, an entity under Other that belongs to a custom room shows that room name.
 
 ### 0.7.1
 - Fixed: room views now use hot water, stairs, entity names and camera settings from Appearance, Rooms (before, only names, icons, order and sensors were applied).

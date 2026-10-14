@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.7.1-a3e635?style=flat-square" alt="v0.7.1">
+  <img src="https://img.shields.io/badge/version-v0.8.0-a3e635?style=flat-square" alt="v0.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -217,6 +217,8 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 
 **Wygląd, Galeria teł**: własne zdjęcia z adresu `/local/` albo `https://`; pojawiają się w sekcji Tło i w pokazie slajdów tabletu ściennego.
 
+**Wygląd, Nagłówek i nawigacja** (0.8.0) ma też: encję pogody w nagłówku i opcjonalny czujnik z atrybutem `forecast` dla paska prognozy godzinowej, położenie paska domowników (po lewej albo przy panelu), oraz tabelę widoków z ikoną, krótką etykietą na pasek telefonu, liczbą kolumn na komputerze i tablecie (także w widokach wbudowanych), obecnością w pasku bocznym i kolejnością w nim. **Galeria teł** ma punkt ostrości bieżącego tła.
+
 ### Planowane
 
 Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
@@ -319,9 +321,18 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.7.1 -m "Nuvio 0.7.1" && git push origin v0.7.1`.
+Sam tag ręcznie: `git tag -a v0.8.0 -m "Nuvio 0.8.0" && git push origin v0.8.0`.
 
 ## Lista zmian
+
+### 0.8.0
+- Dodano: liczba kolumn każdego widoku na komputerze i tablecie, także w widokach wbudowanych, np. Energia.
+- Dodano: ikona, krótka etykieta na pasek telefonu oraz obecność i kolejność w pasku bocznym dla każdego widoku. Długie etykiety na pasku telefonu są zmniejszane zamiast obcinane.
+- Dodano: wybór encji pogody w nagłówku, wybór automatyczny preferuje encję z prognozą, oraz opcjonalny czujnik prognozy (dowolna encja z atrybutem `forecast`, np. z MQTT) dla paska godzinowego.
+- Dodano: położenie paska domowników, po lewej albo przy panelu.
+- Dodano: punkt ostrości tła zapisany w układzie.
+- Naprawiono: panel na całą szerokość (i inne ustawienia widoków lub wyglądu) mógł zniknąć, gdy pulpit był otwarty w innej karcie przeglądarki, bo sekcje układu zapisywały się w całości. Teraz są scalane klucz po kluczu.
+- Naprawiono: w Pokojach encja w Pozostałych, która należy do pokoju własnego, pokazuje nazwę tego pokoju.
 
 ### 0.7.1
 - Naprawiono: widoki pokoi używają ciepłej wody, schodów, nazw encji i ustawień kamer z Wygląd, Pokoje (wcześniej działały tylko nazwy, ikony, kolejność i czujniki).
