@@ -135,9 +135,17 @@ const hgSpark = (pts) => { if (!pts || pts.length < 2) return '<svg class="sp" v
   const P = pts.map((p) => `${((p[0] - t0) / (t1 - t0 || 1) * 100).toFixed(2)},${(28 - (p[1] - lo) / rg * 26).toFixed(2)}`).join(' ');
   return `<svg class="sp" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${P} 100,30" fill="var(--hg-accent-soft)"/><polyline points="${P}" fill="none" stroke="var(--hg-accent)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`; };
 /* podgląd karty w „Ustawieniach karty”: zawartość wyższa niż ramka zostaje proporcjonalnie zmniejszona (bez wylewania na listę encji) */
-function hgPvFit(box, el) { let n = 0; const fit = () => { if (!box.isConnected) return; el.style.transform = ''; el.style.width = '';
-    const H0 = box.clientHeight, h1 = el.scrollHeight; if (H0 && h1 > H0 + 2) { const s = Math.max(0.3, H0 / h1); el.style.transform = `scale(${s.toFixed(3)})`; el.style.width = `${(100 / s).toFixed(2)}%`; }
-    if (++n < 6) setTimeout(fit, n * 350); }; requestAnimationFrame(fit); }
+function hgPvFit(box, el, w, h) { let n = 0;
+  /* podgląd w rozmiarze, jaki karta ma (albo dostanie) na stronie: szerokość w, wysokość h albo naturalna; potem całość skalowana do ramki (bez rozciągania na pełną szerokość arkusza i bez pustego miejsca) */
+  const fit = () => { if (!box.isConnected) return;
+    const aw = box.clientWidth, mh = parseFloat(getComputedStyle(box).maxHeight) || 360; if (!aw) { if (++n < 8) setTimeout(fit, 120); return; }
+    const W = Math.max(160, Math.round(w || Math.min(aw, 420)));
+    el.style.transform = ''; el.style.width = W + 'px'; el.style.height = h ? h + 'px' : '';
+    let H0 = h || el.scrollHeight || el.getBoundingClientRect().height; if (!h && H0 < 72) { H0 = 220; el.style.height = H0 + 'px'; }
+    const sc = Math.min(1, aw / W, mh / H0), dx = Math.max(0, (aw - W * sc) / 2);
+    el.style.transform = `translateX(${dx.toFixed(1)}px) scale(${sc.toFixed(3)})`; box.style.height = Math.ceil(H0 * sc) + 'px';
+    if (++n < 6) setTimeout(fit, n * 350); };
+  requestAnimationFrame(fit); }
 const HG_KIND_LBL = hgTrO({}, { tog: ['Przełącznik', 'Switch'], clim: ['Klimat', 'Climate'], media: ['Multimedia', 'Media'], cam: ['Kamera', 'Camera'], cover: ['Roleta', 'Cover'], run: ['Akcja', 'Action'], val: ['Odczyt', 'Reading'] });
 const HG_DOM_ICON2 = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', input_boolean: 'mdi:toggle-switch-outline', automation: 'mdi:robot-outline',
   lock: 'mdi:lock-outline', climate: 'mdi:thermostat', media_player: 'mdi:speaker', camera: 'mdi:cctv', cover: 'mdi:window-shutter', sensor: 'mdi:gauge', binary_sensor: 'mdi:checkbox-blank-circle-outline',
@@ -538,8 +546,8 @@ const HG_COMP_EDIT = {
     const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
     if (C.tile) { pv.className = 'hs-pvb tg2'; pv.innerHTML = R.v.e ? hgTileHtml(h, R.v.e, R.z === 's' ? 's' : R.z, { t: R.t || C.tile, n, i }) : `<p class="hs-e">${hgTr('Wybierz encję', 'Choose an entity')}</p>`; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
     const ok = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k])); if (!ok) { pv.className = 'hs-pvb'; pv.innerHTML = `<p class="hs-e">${hgTr('Wybierz encje', 'Choose entities')}</p>`; return; }
-    pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.style.height = '300px'; const cc = hgCompCard(C, R.v), el = document.createElement(cc);
-    try { el.setConfig(Object.assign({ type: 'custom:' + cc }, C.cfg(R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {})); } catch (e) { /* pusta */ } el._hgPv = true; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvFit(box, el); },
+    pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; const cc = hgCompCard(C, R.v), el = document.createElement(cc);
+    try { el.setConfig(Object.assign({ type: 'custom:' + cc }, C.cfg(R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {})); } catch (e) { /* pusta */ } el._hgPv = true; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvFit(box, el, Math.min(440, (this._panelEl && this._panelEl.clientWidth) || 420)); },
   _eCompDrag() { const S = this._eSheetEl; if (!S) return;
     for (const hd of S.querySelectorAll('[data-hgdrag]')) hd.addEventListener('pointerdown', (ev) => { const row = hd.closest('.hs-er'), key = row.dataset.ak, box = row.parentElement; ev.preventDefault(); ev.stopPropagation(); hd.setPointerCapture(ev.pointerId); row.classList.add('drag');
       const rows = () => [...box.querySelectorAll(`.hs-er[data-ak="${CSS.escape(key)}"]`)];
@@ -1110,8 +1118,8 @@ const HG_EDIT = {
     if (S0.kind === 'card') { const src = [...it.querySelectorAll('*')].find((x) => x.tagName.includes('-') && x.setConfig); if (src) {
       const cf = (HGL.get(R.sc).conf[R.k] || {}), cfg = Object.assign({}, S0.cc, cf.set || {}); if (V.n) { cfg.title = V.n; cfg.name = V.n; } if (V.i) cfg.icon = V.i;
       const el = document.createElement(src.tagName.toLowerCase()); el._hgPv = true; try { el.setConfig(cfg); } catch (e) { /* zła konfiguracja – pokaż pusty */ }
-      const hh = Math.min(360, Math.max(120, it.getBoundingClientRect().height || 220));
-      pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.style.cssText = `height:${hh}px;`; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvLive(pv); hgPvFit(box, el); return; } }
+      const ir = it.getBoundingClientRect();
+      pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvLive(pv); hgPvFit(box, el, ir.width || 0, ir.height > 40 ? Math.round(ir.height) : 0); return; } }
     const cl = it.cloneNode(true); for (const x of cl.querySelectorAll('.hge, .hge-cf')) x.remove();
     cl.classList.remove('hgm-compact', 'hgm-minimal'); if (V.t) cl.classList.add('hgm-' + V.t); cl.style.cssText = 'animation:none;outline:none;width:100%;transform:none;';
     const nmEl = cl.querySelector('.nm, .sh'); if (nmEl && V.n) { const ic0 = nmEl.querySelector('ha-icon'); nmEl.textContent = V.n; if (ic0) nmEl.prepend(ic0); }

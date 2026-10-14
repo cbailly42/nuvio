@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.21-a3e635?style=flat-square" alt="v0.3.21">
+  <img src="https://img.shields.io/badge/version-v0.3.22-a3e635?style=flat-square" alt="v0.3.22">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -260,9 +260,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.3.21 -m "Nuvio 0.3.21" && git push origin v0.3.21`.
+Sam tag ręcznie: `git tag -a v0.3.22 -m "Nuvio 0.3.21" && git push origin v0.3.22`.
 
 ## Lista zmian
+
+### 0.3.22
+- Poprawka: podglądy na żywo w arkuszach komponentu i ustawień karty nie są już za duże ani rozjechane. Nowy komponent ma podgląd w naturalnej wysokości i szerokości panelu, istniejąca karta w dokładnie takim rozmiarze jak na stronie; oba są zmniejszane do ramki i wyśrodkowane, bez pustego miejsca. Kafle i grupy mają szerokość panelu zamiast całego arkusza.
 
 ### 0.3.21
 - Zmiana: usunięto CI/CD (workflow GitHub Actions z wydaniem i walidacją HACS). Wydania i tagi powstają tylko lokalnie przez `tools/release.sh`.

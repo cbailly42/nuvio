@@ -1240,7 +1240,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hs-add{ box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--hg-accent) 55%, transparent); background:transparent; } .hs-add .hs-i{ background:var(--hg-accent); color:var(--hg-on-accent); } .hs-fl > span:not(.hs-s){ font-size:12px; opacity:.72; padding-left:18px; }
 .hs-ac{ display:flex; justify-content:flex-end; gap:8px; padding-top:4px; } .hs-ac .hs-b{ height:42px; padding:0 20px; font-size:14px; }
 .hs-b2{ height:42px; padding:0 18px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; }
-.hs-pv{ display:flex; flex-direction:column; gap:6px; flex:none; } .hs-pv:empty{ display:none; } .hs-pv > small{ font-size:12px; opacity:.72; padding-left:4px; } .hs-pv .tg2{ grid-template-columns:1fr; pointer-events:none; }
+.hs-pv{ display:flex; flex-direction:column; gap:6px; flex:none; } .hs-pv:empty{ display:none; } .hs-pv > small{ font-size:12px; opacity:.72; padding-left:4px; } .hs-pv .tg2{ grid-template-columns:1fr; pointer-events:none; } .hs-pvb.tg2 > *, .hs-pvb > .hgg{ width:100%; max-width:440px; justify-self:center; margin-inline:auto; box-sizing:border-box; }   /* kafel i grupa w podglądzie: szerokość jak w panelu, nie cały arkusz */
 .hs-more{ display:block; height:1px; flex:none; } .hs-cnt{ padding:0 6px; opacity:.6; font-size:12px; }
 .hs-e{ margin:12px 4px; opacity:.72; font-size:14px; }
 /* tło panelu obejmuje treść (bez rozciągania do dołu ekranu) */
