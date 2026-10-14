@@ -32,8 +32,7 @@ class HGNetCard extends HGBase {
   async _ldHist() {
     const h = this._hass, w = this._n().wan || {}, e = (w.latency || [])[0]; if (!h || !e || this._hl) return; this._hl = true; clearTimeout(this._hT); this._hT = 0;
     try {
-      const r = await h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 24 * 3600e3).toISOString(), entity_ids: [e.entity], minimal_response: true, no_attributes: true });
-      this._hist = ((r && r[e.entity]) || []).map((x) => parseFloat(x.s)).filter((v) => isFinite(v)); this.rerender();
+      this._hist = (await hgHistory(h, e.entity, 24)).map((x) => x.v); this.rerender();
     } catch (err) { this._hist = []; }
     this._hl = false; if (this.isConnected) this._hT = setTimeout(() => { this._hT = 0; if (this.isConnected) this._ldHist(); }, 10 * 60000);
   }

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.16.0-a3e635?style=flat-square" alt="v0.16.0">
+  <img src="https://img.shields.io/badge/version-v1.0.0-a3e635?style=flat-square" alt="v1.0.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -262,7 +262,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Per-device layouts | different layout for phone, tablet and desktop instead of one shared layout | planned |
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
-| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0, 12 generic cards, stack and tabs in 0.16.0 |
+| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | done in 1.0.0: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0, 12 generic cards, stack and tabs in 0.16.0, smaller bundle and paused off-screen cards in 1.0.0 |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -344,6 +344,7 @@ See [DESIGN.md](DESIGN.md) for the UI rules every new feature must meet.
 
 
 ```bash
+npm install              # once: esbuild, used to minify the bundle
 python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # fails if any house-specific id slipped into dist
 ```
@@ -367,9 +368,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.16.0 -m "Nuvio 0.16.0" && git push origin v0.16.0`.
+Only tagging by hand: `git tag -a v1.0.0 -m "Nuvio 1.0.0" && git push origin v1.0.0`.
 
 ## Changelog
+
+### 1.0.0
+The new design is complete: every card is built from the shared glass blocks, updates live and adapts to small, medium and large sizes. This release finishes the work with speed improvements.
+- Changed: the bundle is minified, 1253 KB down to 1033 KB (307 KB instead of 366 KB when the server compresses it). Saved layouts and settings are not affected.
+- Changed: cards outside the visible part of the page no longer redraw on every state change. They catch up once, just before they scroll into view. On a phone with the sample dashboard a full round of sensor changes now costs about 3.3 ms instead of 4.2 ms.
+- Changed: the history, network and editor charts use the shared history store, so the same sensor is fetched from Home Assistant once for all of them.
+- Changed (development): `tools/build.py` minifies with esbuild when it is installed (`npm install`); without it the build still works and writes an unminified bundle.
 
 ### 0.16.0
 - Added: twelve generic cards built from the shared glass blocks: greeting, toggle tile, progress bar, arc, chart, compact room, quick actions, family, cover, lock, fan and to-do list. Each works with any entity of the right domain and adapts to small, medium and large widths. See *Generic cards and containers* above.

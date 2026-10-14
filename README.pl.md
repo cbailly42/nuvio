@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.16.0-a3e635?style=flat-square" alt="v0.16.0">
+  <img src="https://img.shields.io/badge/version-v1.0.0-a3e635?style=flat-square" alt="v1.0.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -262,7 +262,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Układy per urządzenie | osobny układ dla telefonu, tabletu i komputera zamiast jednego wspólnego | planowane |
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
-| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0, 12 kart ogólnych, stos i zakładki w 0.16.0 |
+| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | gotowe w 1.0.0: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0, 12 kart ogólnych, stos i zakładki w 0.16.0, mniejsza paczka i wstrzymane karty poza ekranem w 1.0.0 |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -344,6 +344,7 @@ Zasady interfejsu, które musi spełniać każda nowa funkcja, opisuje [DESIGN.m
 
 
 ```bash
+npm install              # raz: esbuild do minifikacji paczki
 python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu
 ```
@@ -367,9 +368,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.16.0 -m "Nuvio 0.16.0" && git push origin v0.16.0`.
+Sam tag ręcznie: `git tag -a v1.0.0 -m "Nuvio 1.0.0" && git push origin v1.0.0`.
 
 ## Lista zmian
+
+### 1.0.0
+Nowy wygląd jest gotowy: każda karta jest zbudowana ze wspólnych szklanych klocków, aktualizuje się na żywo i dopasowuje do małego, średniego i dużego rozmiaru. To wydanie kończy prace poprawkami szybkości.
+- Zmieniono: paczka jest zminifikowana, z 1253 KB do 1033 KB (307 KB zamiast 366 KB, gdy serwer ją kompresuje). Zapisane układy i ustawienia się nie zmieniają.
+- Zmieniono: karty poza widoczną częścią strony nie przerysowują się przy każdej zmianie stanu. Nadrabiają raz, tuż przed wjechaniem w widok. Na telefonie z przykładowym pulpitem pełna runda zmian czujników kosztuje teraz około 3,3 ms zamiast 4,2 ms.
+- Zmieniono: wykresy w kartach historii, sieci i w edytorze korzystają ze wspólnej pamięci historii, więc ten sam czujnik jest pobierany z Home Assistant raz dla wszystkich.
+- Zmieniono (rozwój): `tools/build.py` minifikuje przez esbuild, gdy jest zainstalowany (`npm install`); bez niego build dalej działa i zapisuje paczkę bez minifikacji.
 
 ### 0.16.0
 - Dodano: dwanaście kart ogólnych ze wspólnych szklanych klocków: powitanie, kafelek przełącznika, pasek postępu, łuk, wykres, pokój kompakt, szybkie akcje, domownicy, roleta, zamek, wentylator i lista zadań. Każda działa z dowolną encją pasującej domeny i dopasowuje się do małej, średniej i dużej szerokości. Opis w sekcji *Karty ogólne i kontenery* wyżej.

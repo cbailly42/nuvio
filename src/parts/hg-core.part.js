@@ -159,6 +159,11 @@ window.__hg = H;
 /* zamrożenie przerysowań na czas animacji panelu (ukryj/pokaż) – po zwolnieniu zaległe karty odświeżają się raz */
 const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q: new Set(),
   release() { this.on = false; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) c._doUpdate(false); } });
+/* karty poza ekranem nie przerysowują się: zmiana stanu tylko oznacza kartę jako zaległą, a odświeżenie przychodzi, gdy karta wjedzie
+   w widok (z zapasem 300 px, więc przy przewijaniu jest już gotowa). Pierwsze malowanie i zmiana konfiguracji zawsze od razu. */
+const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => {
+  for (const e of es) { const c = e.target; c._off = !e.isIntersecting; if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
+}, { rootMargin: '300px' }));
 class HGBase extends HTMLElement {
   constructor() {
     super();
@@ -219,10 +224,12 @@ class HGBase extends HTMLElement {
     }
     this._doUpdate(force);
   }
-  connectedCallback() { if (this._stale) { this._stale = false; this._update(true); } }
+  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); if (this._stale) { this._stale = false; this._update(true); } }
+  disconnectedCallback() { if (HG_VIS) HG_VIS.unobserve(this); }
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;
-    if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); return; }           // panel w trakcie animacji: przerysuj po jej końcu
+    if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); return; }
+    if (this._off && this._html != null && !window.__hgNoPause) { this._offDirty = true; return; }   // poza ekranem: nadrobi po pokazaniu           // panel w trakcie animacji: przerysuj po jej końcu
     if (!force && !this._changed()) return;
     // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
     if (this._touching) { this._pendingUpd = true; return; }
@@ -249,6 +256,11 @@ class HGBase extends HTMLElement {
 }
 window.customCards = window.customCards || [];
 const hgReg = (tag, cls, name, desc) => {
+  /* karty z własnym disconnectedCallback (bez super) też przestają być obserwowane po odłączeniu */
+  const dc = cls.prototype.disconnectedCallback;
+  if (cls.prototype instanceof HGBase && dc && dc !== HGBase.prototype.disconnectedCallback && !dc.__hgVis) {
+    const w = function () { if (HG_VIS) HG_VIS.unobserve(this); return dc.call(this); }; w.__hgVis = true; cls.prototype.disconnectedCallback = w;
+  }
   if (!customElements.get(tag)) customElements.define(tag, cls);
   if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, name, description: desc, preview: false });
 };

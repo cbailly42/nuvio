@@ -1,1 +1,1 @@
-{"name": "nuvio", "version": "0.16.0", "private": true}
+{"name": "nuvio", "version": "1.0.0", "private": true, "devDependencies": {"esbuild": "0.28.2"}}

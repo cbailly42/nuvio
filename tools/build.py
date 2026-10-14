@@ -132,6 +132,15 @@ const HG_BUILD = '__V__';
   }).catch((e) => console.error('Nuvio: could not load the bundle', e));
 })();
 """
+def minify(js):
+    """esbuild (npm install, devDependency): spaces, comments and local names out of the code; strings (CSS, HTML) stay as written.
+    Without esbuild the build still works, unminified. The file name hash is taken before this step, from the source."""
+    eb = os.path.join(R, 'node_modules', '.bin', 'esbuild')
+    if not os.path.exists(eb): eb = shutil.which('esbuild')
+    if not eb: return js, False
+    r = subprocess.run([eb, '--minify', '--format=esm', '--charset=utf8', '--legal-comments=none', '--log-level=error', '--target=es2020'],
+                       input=js.encode(), capture_output=True, check=True)
+    return r.stdout.decode(), True
 def main():
     w = tempfile.mkdtemp(prefix='hgb-')
     try:
@@ -154,10 +163,11 @@ def main():
         for f in os.listdir(dd):
             if re.fullmatch(r'nuvio-core\.[0-9a-f]+\.js', f): os.remove(os.path.join(dd, f))
         core = 'nuvio-core.%s.js' % h
+        js, mini = minify(js)
         open(os.path.join(dd, core), 'w').write(js)
         json.dump({'build': v, 'core': core}, open(os.path.join(dd, 'nuvio-version.json'), 'w'))
         open(os.path.join(dd, 'nuvio.js'), 'w').write(LOADER.replace('__V__', v).replace('__CORE__', core))
-        print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB')
+        print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB', '(minified)' if mini else '(NOT minified: run npm install for esbuild)')
     finally:
         shutil.rmtree(w, ignore_errors=True)
 if __name__ == '__main__': main()

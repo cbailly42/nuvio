@@ -34,6 +34,7 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 - Every card is patched in place on a state change. `afterRender` therefore runs on nodes that may already be wired: attach listeners with `if (this._once(el)) el.addEventListener(...)` and keep everything else idempotent. Slots that code fills with whole cards (`.acslot`, `.camslot`, `.cmslot`, or any element with `data-own`) keep their children; `data-hgk`, `data-ac`, `data-cam` and `data-cm` work as keys like `data-key`.
 - New generic cards start from `HG_NV_CSS` (`src/parts/shared/nv-card.part.js`): `.nv-row`, `.nv-name`, `.nv-ic`, `.nv-mid`, `.hide-s` (hidden up to 220 px) and `.show-l` (shown from 420 px). Draggable values use `hgDragVal(card, el, { move, end, key, arc })`, history uses `hgHistory(hass, entity, hours)` and `hgBuckets`, and every card has a `getStubConfig` that picks a matching entity.
 - Outside the Nuvio page a card blurs (`--hg-card-bf`) and tints (`--hg-card-under`) the background itself; the Nuvio page sets both to none because its panel already does it once.
+- Cards outside the visible part of the page (plus 300 px) skip redraws and catch up when they come into view (`HG_VIS` in `hg-core`). The first render and config changes always run at once. Tests can turn this off with `window.__nuvioNoPause = true`.
 - Inside cards use `var(--r-lg)` (24 px), `var(--r-md)` (16 px) and `var(--r-sm)` (12 px) for corners, never a pixel value.
 - A card updates live: on a state change the new HTML is patched onto the existing nodes (`ui/morph`), so focus, scroll position and running transitions survive and bars, arcs and switches glide to the new value. Numbers rendered with `hgUI.num` count smoothly to the new value. Give list items a `data-key` (or `id`, `data-e`) so reordering moves nodes instead of redrawing them.
 - Handle clicks through `data-act` (`onAct`), not listeners attached in `afterRender`. Cards that still define `afterRender` get a full redraw on every change until they move to `data-act`.
@@ -102,5 +103,6 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 
 - All assets are flat in `dist/` with `nuvio-*` file names (backgrounds, fonts, weather icons). No sub folders.
 - The source is unbranded (`hg-*`); `tools/build.py` maps it to `nuvio-*`. `tools/guard.py` must pass (no house specific ids).
+- `npm install` once, so the build minifies the bundle with esbuild (the file name hash is taken from the source before minifying).
 - Before release: `python3 tools/build.py`, `python3 tools/guard.py` and `node --check` on `.mjs` copies of the loader and the core.
 - Semantic versioning: features raise the minor version, fixes the patch version.

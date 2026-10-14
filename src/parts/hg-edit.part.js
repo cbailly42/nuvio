@@ -136,10 +136,9 @@ const hgTypesFor = (h, e) => { const d = e.split('.')[0], s = h.states[e], k = H
   return num || d === 'sensor' ? ['val', 'chart', 'compact', 'minimal'] : ['val', 'compact', 'minimal']; };
 const hgTypeOpts = (h, e) => hgTypesFor(h, e).map((t, i) => [t, i ? HG_TYPES[t] : hgTr('Normalny', 'Default')]);
 /* historia (24 h) do wykresów – pamięć 5 min, odświeżenie kart po pobraniu */
-const HG_HIST = window.__hgHist || (window.__hgHist = { m: new Map(), get(h, e, cb) { const c = this.m.get(e); if (c && Date.now() - c.t < 300000) return c.d; if (c && c.p) return c.d;
+const HG_HIST = window.__hgHist || (window.__hgHist = { m: new Map(), get(h, e, cb) { const c = this.m.get(e); if (c && (c.p || Date.now() - c.t < 300000)) return c.d;
   const o = { t: Date.now(), d: c ? c.d : null, p: true }; this.m.set(e, o);
-  if (h && h.callWS) h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - 864e5).toISOString(), entity_ids: [e], minimal_response: true, no_attributes: true, significant_changes_only: false })
-    .then((r) => { const a = (r && r[e]) || []; o.d = a.map((x) => [x.lu * 1000 || Date.parse(x.last_updated || x.last_changed), Number(x.s != null ? x.s : x.state)]).filter((x) => isFinite(x[1])); o.p = false; o.t = Date.now(); cb && cb(); }, () => { o.p = false; o.d = []; });
+  hgHistory(h, e, 24).then((a) => { o.d = a.map((x) => [x.t, x.v]); o.p = false; o.t = Date.now(); cb && cb(); });   // wspólna pamięć ui/history
   return o.d; } });
 const hgSpark = (pts) => { if (!pts || pts.length < 2) return '<svg class="sp" viewBox="0 0 100 30" preserveAspectRatio="none"></svg>';
   const t0 = pts[0][0], t1 = pts[pts.length - 1][0] || t0 + 1, v = pts.map((p) => p[1]), lo = Math.min(...v), hi = Math.max(...v), rg = hi - lo || 1;
