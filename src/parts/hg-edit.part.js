@@ -222,7 +222,7 @@ const hgIcWire = (S) => { const inp = S && S.querySelector('.hge-sheet input[nam
   inp.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); open(); } }); };
 const hgSzSeg = (act, cur) => `<div class="hs-seg" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', 'Mały', 'Small'], ['m', 'Średni', 'Medium'], ['l', 'Cała szerokość', 'Full width']].map(([v, pl, en]) => `<button type="button" data-hge="${act}" data-z="${v}" aria-pressed="${cur === v}"><span class="sg sg-${v}" aria-hidden="true"><i></i><i></i><i></i></span><span>${hgTr(pl, en)}</span></button>`).join('')}</div>`;
 const HG_TILE_CSS = `
-.tg2{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap:12px; }
+.tg2{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 210px), 1fr)); } .tg2[data-hgl]:not(.one){ grid-template-columns:var(--hg-vcols-tpl, repeat(auto-fill, minmax(min(100%, 210px), 1fr))); gap:12px; }
 .hgtl{ position:relative; display:flex; align-items:center; gap:10px; min-width:0; min-height:76px; padding:12px 14px; border-radius:18px; background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:var(--hg-card-sh, none); color:inherit; }
 .hgtl.hgsz-m{ grid-column:span 2; } .hgtl.hgsz-l{ grid-column:1 / -1; }
 @container (max-width: 460px){ .hgtl.hgsz-m{ grid-column:1 / -1; } }

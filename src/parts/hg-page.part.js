@@ -376,6 +376,7 @@ class HGPage extends HTMLElement {
     /* szerokość panelu wybrana dla widoku (wąski / cała szerokość); wąski panel mieści najwyżej 2 kolumny */
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
+    { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); }
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
     el.style.alignItems = p.align === 'start' || p.masonry || p.flow === 'cols' ? 'start' : p.flow === 'grid' ? 'stretch' : '';
