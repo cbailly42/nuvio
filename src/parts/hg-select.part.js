@@ -92,9 +92,33 @@ function hgSelUp(sel) {
   new MutationObserver(paint).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
   paint();
 }
+/* podpowiedzi zamiast natywnej <datalist>: input[list] dostaje szklaną listę (filtrowanie po wartości i etykiecie, strzałki, Enter, Escape) */
+function hgSugUp(inp) {
+  const lid = inp.getAttribute('list'), root = inp.getRootNode(); if (!lid || !root || !root.appendChild || inp.dataset.hgs) return;
+  if (!root.querySelector('style[data-hgs]')) { const st = document.createElement('style'); st.dataset.hgs = '1'; st.textContent = HGS_CSS; (root.head || root).appendChild(st); }
+  const id = 'hgs' + (++hgsN); inp.dataset.hgs = id; inp.removeAttribute('list'); inp.setAttribute('role', 'combobox'); inp.setAttribute('aria-autocomplete', 'list'); inp.setAttribute('aria-expanded', 'false');
+  const items = () => { const dl = root.getElementById ? root.getElementById(lid) : root.querySelector('#' + CSS.escape(lid)); return dl ? [...dl.options].map((o) => [o.value, o.textContent || o.label || '']) : []; };
+  let L = null, act = -1, cur = [];
+  const close = () => { if (!L) return; const l = L; L = null; hgsOpen.delete(gone); inp.setAttribute('aria-expanded', 'false'); l.classList.remove('in'); l.style.pointerEvents = 'none'; setTimeout(() => l.remove(), 240); removeEventListener('scroll', place, true); removeEventListener('resize', place); };
+  const gone = () => { if (!inp.isConnected) close(); };
+  function place() { if (!L) return; const r = inp.getBoundingClientRect(), w = Math.max(r.width, 240); L.style.width = w + 'px'; L.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'; L.style.top = (r.bottom + 6) + 'px'; L.style.maxHeight = Math.max(120, Math.min(300, innerHeight - r.bottom - 14)) + 'px';
+    const b = L.getBoundingClientRect(), dx = b.left - parseFloat(L.style.left), dy = b.top - (r.bottom + 6); if (Math.abs(dx) > .5) L.style.left = (parseFloat(L.style.left) - dx) + 'px'; if (Math.abs(dy) > .5) L.style.top = (parseFloat(L.style.top) - dy) + 'px'; }
+  const mark = (i) => { act = i; if (!L) return; L.querySelectorAll('.hgs-o').forEach((n, k) => n.classList.toggle('on', k === i)); const n = L.children[i]; if (n) { inp.setAttribute('aria-activedescendant', n.id); n.scrollIntoView({ block: 'nearest' }); } };
+  const pick = (i) => { const x = cur[i]; if (!x) return; inp.value = x[0]; close(); inp.dispatchEvent(new Event('input', { bubbles: true, composed: true })); inp.dispatchEvent(new Event('change', { bubbles: true, composed: true })); };
+  const show = () => { const q = inp.value.trim().toLowerCase(); cur = items().filter(([v, l]) => !q || v.toLowerCase().includes(q) || l.toLowerCase().includes(q)).slice(0, 60);
+    if (!cur.length || (cur.length === 1 && cur[0][0] === inp.value)) return close();
+    if (!L) { L = document.createElement('ul'); L.className = 'hgs-l'; L.id = id + 'l'; L.setAttribute('role', 'listbox'); inp.setAttribute('aria-controls', L.id); root.appendChild(L); hgsOpen.add(gone); inp.setAttribute('aria-expanded', 'true');
+      L.addEventListener('pointerdown', (e) => e.preventDefault()); L.addEventListener('click', (e) => { const li = e.target.closest('.hgs-o'); if (li) pick([...L.children].indexOf(li)); });
+      addEventListener('scroll', place, true); addEventListener('resize', place); requestAnimationFrame(() => L && L.classList.add('in')); }
+    L.innerHTML = cur.map(([v, l], i) => `<li class="hgs-o" role="option" id="${id}o${i}" style="opacity:1;transform:none"><span>${hgsEsc(l || v)}${l && l !== v ? `<small style="display:block;opacity:.6;font-size:12px">${hgsEsc(v)}</small>` : ''}</span></li>`).join(''); act = -1; place(); };
+  inp.addEventListener('input', (e) => { if (e.isTrusted) show(); }); inp.addEventListener('focus', show); inp.addEventListener('blur', () => setTimeout(close, 120));
+  inp.addEventListener('keydown', (e) => { if (!L) { if (e.key === 'ArrowDown') { e.preventDefault(); show(); } return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); mark(Math.min(cur.length - 1, act + 1)); } else if (e.key === 'ArrowUp') { e.preventDefault(); mark(Math.max(0, act - 1)); }
+    else if (e.key === 'Enter' && act >= 0) { e.preventDefault(); pick(act); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } });
+}
 function hgSelWatch(root) {
   if (!root || root.__hgs) return; root.__hgs = 1;
-  const scan = () => root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp);
+  const scan = () => { root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp); root.querySelectorAll('input[list]:not([data-hgs])').forEach(hgSugUp); };
   new MutationObserver((m) => { hgsOpen.forEach((f) => f()); if (m.some((r) => r.addedNodes.length)) scan(); }).observe(root, { childList: true, subtree: true }); scan();
 }
 window.hgSelWatch = hgSelWatch;

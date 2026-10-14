@@ -83,6 +83,9 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
 const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, (w && w.lang) || window.__hgLang); };
 const hgTr = (pl, en) => (hgCurLang() === 'en' ? en : pl);
 const HG_LOC = () => (hgCurLang() === 'en' ? 'en-GB' : 'pl-PL');
+/* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
+const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };
+const hgKmPath = (p) => { if (!hgKmOff() || typeof p !== 'string' || !p.startsWith('/') || /[?&]disable_km\b/.test(p)) return p; const [a, hs] = p.split('#'); return a + (a.includes('?') ? '&' : '?') + 'disable_km' + (hs !== undefined ? '#' + hs : ''); };
 const H = {
   st: (hass, e) => (hass && e ? hass.states[e] : undefined),
   ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
@@ -92,7 +95,7 @@ const H = {
   cssUrl: (u) => H.esc(String(u ?? '').replace(/['"()\\\s]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))),
   fire: (node, type, detail) => node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true })),
   navigate: (path) => {
-    const nav = () => { history.pushState(null, '', path); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); };
+    const nav = () => { history.pushState(null, '', hgKmPath(path)); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); };
     return typeof HGNav !== 'undefined' ? HGNav.go(path, nav) : nav();
   },
   /* jedyne miejsce wywołań usług; window.__hgDryRun=true -> tylko zapis (testy bez przełączania urządzeń) */

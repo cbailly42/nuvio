@@ -15,6 +15,36 @@ input[type=range]:focus{ outline:none; } input[type=range]:focus-visible::-webki
 input[type=range]:disabled{ opacity:.45; cursor:default; }
 @media (prefers-reduced-motion: reduce){ input[type=range]::-webkit-slider-thumb{ transition:none !important; } input[type=range]::-moz-range-thumb{ transition:none; } }
 `;
+/* biblioteka pól formularza (ui/form): wiersz z przełącznikiem, pole wielowierszowe, sekcja rozwijana, kolor, liczby bez strzałek przeglądarki.
+   Klasy nf-* działają w każdym cieniu, który ładuje HG_BASE (karty, strona, arkusze edytora). */
+const HG_FORM_CSS = `
+.nf-row{ position:relative; display:flex; align-items:center; gap:12px; min-height:52px; padding:6px 8px 6px 18px; border-radius:999px; box-sizing:border-box; cursor:pointer; isolation:isolate;
+  background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 16px rgba(0,0,0,.10); transition:box-shadow .2s, background .2s; -webkit-tap-highlight-color:transparent; }
+.nf-row > span{ flex:1; min-width:0; font-size:15px; line-height:1.25; } .nf-row > span small{ display:block; font-size:12px; opacity:.65; margin-top:2px; }
+.nf-row:focus-within{ box-shadow:inset 0 0 0 1px transparent, 0 0 0 2px var(--hg-accent), 0 4px 16px rgba(0,0,0,.10); }
+.nf-row > ha-icon{ flex:none; width:20px; height:20px; opacity:.8; }
+.nf-area{ display:block; width:100%; box-sizing:border-box; min-height:104px; padding:12px 18px; border:0; outline:0; border-radius:22px; resize:vertical; color:inherit; font:inherit; font-size:15px; line-height:1.45;
+  background:var(--hg-glass-lite, var(--hg-glass-bg)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 16px rgba(0,0,0,.10); transition:box-shadow .2s; }
+.nf-area::placeholder{ color:inherit; opacity:.6; } .nf-area:focus{ box-shadow:inset 0 0 0 1px transparent, 0 0 0 2px var(--hg-accent), 0 4px 16px rgba(0,0,0,.10); }
+.nf-area.code{ font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; tab-size:2; white-space:pre; overflow:auto; }
+.nf-area.bad{ box-shadow:inset 0 0 0 1px transparent, 0 0 0 2px var(--hg-warn, #E5484D); }
+.nf-err{ font-size:12px; color:var(--hg-warn, #ff7a6b); padding-left:18px; } .nf-err[hidden]{ display:none; }
+.nf-hint{ display:block; font-size:12px; opacity:.65; padding:0 18px; line-height:1.4; }
+.nf-more{ display:flex; flex-direction:column; gap:10px; border-radius:22px; }
+.nf-more > summary{ list-style:none; display:flex; align-items:center; gap:10px; min-height:48px; padding:0 18px 0 12px; border-radius:999px; cursor:pointer; user-select:none; font-size:15px; font-weight:500;
+  background:var(--hg-tile-bg); transition:background .2s; -webkit-tap-highlight-color:transparent; }
+.nf-more > summary::-webkit-details-marker{ display:none; } .nf-more > summary::marker{ content:''; }
+.nf-more > summary:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.nf-more > summary > ha-icon{ flex:none; width:22px; height:22px; transition:transform var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out); }
+.nf-more[open] > summary > ha-icon{ transform:rotate(90deg); }
+.nf-more > summary small{ margin-left:auto; font-size:12px; font-weight:400; opacity:.6; }
+.nf-more[open] > .nf-mb{ animation:nfIn var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out) both; } .nf-mb{ display:flex; flex-direction:column; gap:10px; }
+@keyframes nfIn{ from{ opacity:0; transform:translateY(-4px); } }
+.nf-color{ -webkit-appearance:none; appearance:none; flex:none; width:36px; height:36px; padding:0; border:0; border-radius:50%; background:none; cursor:pointer; box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+.nf-color::-webkit-color-swatch-wrapper{ padding:0; } .nf-color::-webkit-color-swatch{ border:0; border-radius:50%; } .nf-color::-moz-color-swatch{ border:0; border-radius:50%; }
+input[type=number]{ -moz-appearance:textfield; appearance:textfield; } input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+@media (prefers-reduced-motion: reduce){ .nf-more[open] > .nf-mb{ animation:none; } }
+`;
 window.HG_RANGE_CSS = HG_RANGE_CSS;
 /* --v (wypełnienie) dla każdego suwaka, także w shadow DOM */
 if (!window.__hgRangeW) { window.__hgRangeW = 1; const upd = (e) => { const t = e.composedPath && e.composedPath()[0]; if (!t || t.type !== 'range') return; const mn = +t.min || 0, mx = t.max === '' ? 100 : +t.max, v = ((+t.value - mn) / ((mx - mn) || 1)) * 100; t.style.setProperty('--v', v + '%'); }; window.addEventListener('input', upd, true); }
@@ -78,4 +108,4 @@ ha-card.glass.warm{
 @keyframes hgglow{ 0%,100%{ filter: drop-shadow(0 0 0 var(--hg-accent-faint)) } 50%{ filter: drop-shadow(0 0 3u var(--hg-accent)) } }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
-`) + HG_RANGE_CSS;
+`) + HG_RANGE_CSS + HG_FORM_CSS;

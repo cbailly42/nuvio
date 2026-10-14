@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.1.0-a3e635?style=flat-square" alt="v1.1.0">
+  <img src="https://img.shields.io/badge/version-v1.2.0-a3e635?style=flat-square" alt="v1.2.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,22 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
   - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
+### More cards and the form library (1.2.0)
+
+Seven new cards in **+ Add**, each with a live preview and a form. They follow the Home Assistant cards of the same name, in Nuvio glass.
+
+| Card | What it does | Options |
+|---|---|---|
+| `custom:nuvio-conditional-card` | Shows its cards only when the conditions are met (in edit mode they are always shown) | `cards`, `conditions` (`state`, `state_not`, `numeric_state` with `above` / `below`, `screen` with `media_query`, `user` with `users`, `and`, `or`) |
+| `custom:nuvio-glance-card` | Several entities in a row: icon, name and state; tap opens more info | `entities`, `title`, `columns`, `show_name`, `show_state` |
+| `custom:nuvio-stat-card` | Minimum, average, maximum and change of a sensor with a sparkline, for 24 hours, 7 or 30 days | `entity`, `name`, `icon`, `hours`, `decimals` |
+| `custom:nuvio-humidifier-card` | Target humidity on an arc, current humidity and mode pills | `entity`, `name` |
+| `custom:nuvio-timer-card` | Remaining time of a `timer` on an arc, with start, pause and cancel | `entity`, `name`, `icon` |
+| `custom:nuvio-logbook-card` | Recent changes of chosen entities with relative times | `entities`, `title`, `hours`, `max` |
+| `custom:nuvio-webpage-card` | Any `https://`, `http://` or `/local/` address in a frame | `url`, `title`, `aspect_ratio` or `height` |
+
+The component forms now use one form library (`hgForm`): text fields, number fields, text areas (code style for YAML and JSON), glass switches, glass selects and a collapsible *Advanced* section, so no browser checkbox, datalist or disclosure triangle is left.
+
 ### Layout containers (1.1.0)
 
 Grid, vertical stack and horizontal stack work like in Home Assistant, but in Nuvio glass. They are the first group in **+ Add**, under *Layout*. The form of a container lists its cards: add any component, tile or card from HA, edit a card in its own form, drag to reorder, duplicate, remove, and in a grid set how many columns a card spans. Containers can be nested up to three levels. A card on the panel can be moved into a container from its form, and a card inside a container can be moved back out to the panel.
@@ -274,6 +290,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
 | Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | done in 1.0.0: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0, 12 generic cards, stack and tabs in 0.16.0, smaller bundle and paused off-screen cards in 1.0.0 |
+| Screensaver lock (BETA) | tap the screensaver to get a round glass PIN pad over a blurred background, with PIN dots above and a Lock button below; settings for PIN, lock delay and on/off | planned |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -379,9 +396,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.1.0 -m "Nuvio 1.1.0" && git push origin v1.1.0`.
+Only tagging by hand: `git tag -a v1.2.0 -m "Nuvio 1.2.0" && git push origin v1.2.0`.
 
 ## Changelog
+
+### 1.2.0
+- Added: seven cards: conditional (`custom:nuvio-conditional-card`), glance, statistics, humidifier, timer, logbook and web page, each in **+ Add** with a live preview. HA `conditional` cards become the Nuvio conditional card.
+- Added: *Turn kiosk mode off* in the user menu when Kiosk Mode is installed (admins only). It reloads with `?disable_km` and keeps it while you move between views in this tab; the same item turns it back on.
+- Added: a form library (`hgForm`, `nuvio-check` switch) used by the component forms and the backup editor; browser datalists are replaced by the glass suggestion list.
+- Changed: cards, tiles and inner panels in light mode are less transparent.
+- Changed: the slider card also controls a humidifier's target humidity.
 
 ### 1.1.0
 - Added: layout containers like in Home Assistant: grid (`custom:nuvio-grid-card`), vertical stack and horizontal stack, in a new *Layout* group of **+ Add** with live previews.

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.1.0-a3e635?style=flat-square" alt="v1.1.0">
+  <img src="https://img.shields.io/badge/version-v1.2.0-a3e635?style=flat-square" alt="v1.2.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,22 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
   - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
+### Więcej kart i biblioteka formularzy (1.2.0)
+
+Siedem nowych kart w **+ Dodaj**, każda z podglądem na żywo i formularzem. Odpowiadają kartom Home Assistant o tej samej nazwie, w szkle Nuvio.
+
+| Karta | Co robi | Opcje |
+|---|---|---|
+| `custom:nuvio-conditional-card` | Pokazuje swoje karty tylko przy spełnionych warunkach (w trybie edycji zawsze widoczne) | `cards`, `conditions` (`state`, `state_not`, `numeric_state` z `above` / `below`, `screen` z `media_query`, `user` z `users`, `and`, `or`) |
+| `custom:nuvio-glance-card` | Kilka encji w rzędzie: ikona, nazwa i stan; dotknięcie otwiera szczegóły | `entities`, `title`, `columns`, `show_name`, `show_state` |
+| `custom:nuvio-stat-card` | Minimum, średnia, maksimum i zmiana czujnika z wykresem, za 24 godziny, 7 lub 30 dni | `entity`, `name`, `icon`, `hours`, `decimals` |
+| `custom:nuvio-humidifier-card` | Docelowa wilgotność na łuku, bieżąca wilgotność i pigułki trybów | `entity`, `name` |
+| `custom:nuvio-timer-card` | Pozostały czas `timer` na łuku, ze startem, pauzą i anulowaniem | `entity`, `name`, `icon` |
+| `custom:nuvio-logbook-card` | Ostatnie zmiany wybranych encji z czasem względnym | `entities`, `title`, `hours`, `max` |
+| `custom:nuvio-webpage-card` | Dowolny adres `https://`, `http://` albo `/local/` w ramce | `url`, `title`, `aspect_ratio` albo `height` |
+
+Formularze komponentów korzystają teraz z jednej biblioteki formularzy (`hgForm`): pola tekstowe, liczbowe, obszary tekstu (styl kodu dla YAML i JSON), szklane przełączniki, szklane listy wyboru i zwijana sekcja *Zaawansowane*, więc nie zostaje żaden przeglądarkowy checkbox, lista podpowiedzi ani trójkącik rozwijania.
+
 ### Kontenery układu (1.1.0)
 
 Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle Nuvio. Są pierwszą grupą w **+ Dodaj**, w sekcji *Układ*. Formularz kontenera pokazuje jego karty: dodasz dowolny komponent, kafelek albo kartę z HA, edytujesz kartę w jej własnym formularzu, zmienisz kolejność przeciągając, zduplikujesz, usuniesz, a w siatce ustawisz, ile kolumn zajmuje karta. Kontenery można zagnieżdżać do trzech poziomów. Kartę z panelu przeniesiesz do kontenera z jej formularza, a kartę z kontenera wyjmiesz z powrotem na panel.
@@ -274,6 +290,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
 | Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | gotowe w 1.0.0: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0, 12 kart ogólnych, stos i zakładki w 0.16.0, mniejsza paczka i wstrzymane karty poza ekranem w 1.0.0 |
+| Blokada wygaszacza (BETA) | po dotknięciu wygaszacza okrągły szklany pinpad na rozmytym tle, kropki PIN-u nad nim i przycisk Zablokuj pod spodem; ustawienia PIN-u, czasu blokady i włącz/wyłącz | planowane |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -379,9 +396,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.1.0 -m "Nuvio 1.1.0" && git push origin v1.1.0`.
+Sam tag ręcznie: `git tag -a v1.2.0 -m "Nuvio 1.2.0" && git push origin v1.2.0`.
 
 ## Lista zmian
+
+### 1.2.0
+- Dodano: siedem kart: warunkowa (`custom:nuvio-conditional-card`), rzut oka, statystyka, nawilżacz, minutnik, dziennik i strona WWW, każda w **+ Dodaj** z podglądem na żywo. Karty `conditional` z HA stają się kartą warunkową Nuvio.
+- Dodano: *Wyłącz tryb kiosku* w menu użytkownika, gdy zainstalowany jest Kiosk Mode (tylko administratorzy). Przeładowuje stronę z `?disable_km` i zachowuje to przy przechodzeniu między widokami w tej karcie; ta sama pozycja włącza go z powrotem.
+- Dodano: biblioteka formularzy (`hgForm`, przełącznik `nuvio-check`) w formularzach komponentów i edytorze kopii; przeglądarkowe listy podpowiedzi zastąpiła szklana lista.
+- Zmieniono: karty, kafelki i wewnętrzne panele w trybie jasnym są mniej przezroczyste.
+- Zmieniono: karta suwaka steruje też docelową wilgotnością nawilżacza.
 
 ### 1.1.0
 - Dodano: kontenery układu jak w Home Assistant: siatka (`custom:nuvio-grid-card`), stos pionowy i stos poziomy, w nowej grupie *Układ* w **+ Dodaj**, z podglądem na żywo.

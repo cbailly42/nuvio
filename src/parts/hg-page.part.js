@@ -101,7 +101,7 @@ const HGShell = window.__hgShell || {
   go(path) {
     if (!this._ok() || window.__hgNoShell) return false;
     const r = this._resolve(path); if (!r || r[0] === this.cur) return false;
-    history.pushState(null, '', path);
+    history.pushState(null, '', hgKmPath(path));
     this._show(r[0], r[1]);
     return true;
   },
@@ -677,13 +677,18 @@ class HGPage extends HTMLElement {
     const pill = U.stale ? `<button class="mupd" data-act="updreload">${H.icon('mdi:refresh')}<span>${hgTr(`Odśwież, aby wczytać v${H.esc(U.stale)}`, `Reload to load v${H.esc(U.stale)}`)}</span></button>`
       : U.v ? `<button class="mupd" data-act="updopen">${H.icon('mdi:arrow-up-circle')}<span>${hgTr(`Dostępna aktualizacja v${H.esc(U.v)}`, `Update available v${H.esc(U.v)}`)}</span></button>` : '';
     return `<div class="mfoot" role="presentation"><span class="mver">Nuvio v${H.esc(run)}</span>${pill}</div>`; }
+  /* Kiosk Mode zainstalowany: administrator wyłącza go do końca sesji tej karty i włącza z powrotem (pełne przeładowanie, bo kiosk czyta adres przy starcie) */
+  _kmItem() { if (!window.KioskMode || !this._isAdmin()) return ''; const off = hgKmOff() || /[?&]disable_km\b/.test(location.search);
+    return `<button role="menuitem" data-act="kmtoggle">${H.icon(off ? 'mdi:monitor-lock' : 'mdi:monitor-off')}<span>${off ? hgTr('Włącz tryb kiosku', 'Turn kiosk mode on') : hgTr('Wyłącz tryb kiosku', 'Turn kiosk mode off')}</span></button>`; }
+  _kmToggle() { const off = hgKmOff() || /[?&]disable_km\b/.test(location.search), q = new URLSearchParams(location.search); hgKmOff(!off); if (off) q.delete('disable_km'); else q.set('disable_km', '');
+    const s = q.toString().replace(/disable_km=(&|$)/, 'disable_km$1'); if (window.__hgDryRun) { window.__hgKmNav = location.pathname + (s ? '?' + s : ''); return; } location.href = location.pathname + (s ? '?' + s : '') + location.hash; }
   /* menu użytkownika w osobnej warstwie (poza .page z kontekstami stosu backdrop-filter / contain), position:fixed nad panelem */
   _paintMenu() {
     const L = this._menuL; if (!L) return;
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._updFoot()}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._kmItem()}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -835,6 +840,7 @@ class HGPage extends HTMLElement {
       case 'menu': this._menuOpen = !this._menuOpen; return this._paintTop(true);
       case 'updreload': { location.reload(); return; }
       case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
+      case 'kmtoggle': this._menuOpen = false; this._paintTop(true); return this._kmToggle();
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);
       case 'search': return go(c.search_action || { quickbar: 'e' });

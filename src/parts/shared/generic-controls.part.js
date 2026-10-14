@@ -39,6 +39,8 @@ const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.att
     r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
   else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
     r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
+  else if (d === 'humidifier') { r.min = +a.min_humidity || 0; r.max = +a.max_humidity || 100; r.v = a.humidity != null ? +a.humidity : r.min; r.label = hgTr('Wilgotność docelowa', 'Target humidity');
+    r.set = (v) => H.call(h, 'humidifier', 'set_humidity', { entity_id: e, humidity: Math.round(v) }); }
   else r.ok = false;
   return r; };
 const hgStepRound = (v, m) => { const n = Math.round((v - m.min) / m.step) * m.step + m.min, dp = (String(m.step).split('.')[1] || '').length; return +Math.max(m.min, Math.min(m.max, n)).toFixed(dp); };

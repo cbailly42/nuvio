@@ -54,7 +54,9 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
   - Selects: the glass select (`hg-select`, applied automatically by `hgSelWatch` on every shadow root).
   - Sliders: the custom slider style (`HG_RANGE_CSS`: slim track, accent fill through `--v`, white thumb that grows on hover and drag).
   - Icons: the searchable icon picker with the full MDI list, recent icons and keyboard navigation.
-  - Switches: the glass switch (`role="switch"`, `aria-checked`).
+  - Switches: the glass switch (`role="switch"`, `aria-checked`); in forms the `nuvio-check` element (form-associated, keyboard, `checked`, `change` event) instead of `<input type=checkbox>`.
+  - Forms: build fields with `hgForm` (`src/parts/ui/form.part.js`): `field`, `text`, `num`, `area` (with a code style for YAML and JSON), `toggle`, `select`, `color` and `more` (a disclosure with a rotating chevron instead of a native `<details>` marker). Styles are the `nf-*` classes in `HG_FORM_CSS`; number spinners are hidden.
+  - Suggestions: an `<input list>` is upgraded by `hgSelWatch` to the glass suggestion list, so the browser datalist never shows.
 - Touch targets are at least 44 px high on touch devices.
 - Pickers and lists inside a blurred dialog open next to their button.
 

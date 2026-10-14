@@ -6,12 +6,13 @@ const hgMakeCard = (cfg, done) => { cfg = hgCardClean(hgFromHA(cfg)); const t = 
   if (window.loadCardHelpers) window.loadCardHelpers().then((hl) => done(hl.createCardElement(cfg))).catch(() => {});
   else customElements.whenDefined('hui-' + t + '-card').then(() => done(mk('hui-' + t + '-card'))); };
 /* kontenery z HA (grid, vertical-stack, horizontal-stack) -> kontenery Nuvio z tymi samymi dziećmi; keep_ha: true zostawia kartę HA */
-const HG_CONT = ['custom:hg-stack-card', 'custom:hg-grid-card', 'custom:hg-tabs-card'];
-const hgIsCont = (c) => !!c && (HG_CONT.includes(c.type) || ['grid', 'vertical-stack', 'horizontal-stack'].includes(c.type));
+const HG_CONT = ['custom:hg-stack-card', 'custom:hg-grid-card', 'custom:hg-tabs-card', 'custom:hg-conditional-card'];
+const hgIsCont = (c) => !!c && (HG_CONT.includes(c.type) || ['grid', 'vertical-stack', 'horizontal-stack', 'conditional'].includes(c.type));
 const hgFromHA = (c) => { if (!c || typeof c !== 'object' || c.keep_ha) return c;
   const kids = Array.isArray(c.cards) ? c.cards.map(hgFromHA) : c.cards, base = Object.assign({}, c.title ? { title: c.title } : {}, { cards: kids });
   if (c.type === 'grid') return Object.assign({ type: 'custom:hg-grid-card', columns: c.columns || 3 }, c.square ? { square: true } : {}, base);
   if (c.type === 'vertical-stack') return Object.assign({ type: 'custom:hg-stack-card', direction: 'vertical' }, base);
+  if (c.type === 'conditional' && c.card) return Object.assign({ type: 'custom:hg-conditional-card', conditions: c.conditions || [], cards: [hgFromHA(c.card)] });
   if (c.type === 'horizontal-stack') return Object.assign({ type: 'custom:hg-stack-card', direction: 'horizontal' }, base);
   return kids !== c.cards ? Object.assign({}, c, { cards: kids }) : c; };
 /* pola edytora (nv_*), rozpiętość w siatce (span) i keep_ha nie trafiają do samej karty */

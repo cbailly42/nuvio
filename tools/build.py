@@ -7,7 +7,7 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
 # ui/ = shared building blocks (morph engine, primitives); loaded before cards so every card can use them
 UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
-      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js']
+      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js','ui/form.part.js']
 SHARED = [
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
@@ -95,6 +95,13 @@ CARDS = [
     'cards/stack-card.part.js',
     'cards/tabs-card.part.js',
     'cards/grid-card.part.js',
+    'cards/conditional-card.part.js',
+    'cards/glance-card.part.js',
+    'cards/stat-card.part.js',
+    'cards/humidifier-card.part.js',
+    'cards/timer-card.part.js',
+    'cards/logbook-card.part.js',
+    'cards/webpage-card.part.js',
 ]
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE
@@ -141,7 +148,7 @@ def minify(js):
     if not eb: return js, False
     r = subprocess.run([eb, '--minify', '--format=esm', '--charset=utf8', '--legal-comments=none', '--log-level=error', '--target=es2020'],
                        input=js.encode(), capture_output=True)
-    if r.returncode: sys.exit('esbuild failed (syntax error in a part?):\n' + r.stderr.decode()[:3000])
+    if r.returncode: sys.exit('esbuild failed (syntax error in a part?):\n' + r.stderr.decode('utf-8', 'replace')[:3000])
     return r.stdout.decode(), True
 def main():
     w = tempfile.mkdtemp(prefix='hgb-')
