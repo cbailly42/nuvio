@@ -61,7 +61,7 @@ class HGRobotsCard extends HGBase {
     return U(`
 ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); }
 .list{ display:flex; flex-direction:column; gap:var(--s2); }
-.rb{ container-type:inline-size; border-radius:var(--r-md); background:rgba(255,255,255,.58); border:1px solid rgba(255,255,255,.85); padding:var(--s2); }
+.rb{ container-type:inline-size; border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); padding:var(--s2); }
 .g{ display:grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap:var(--s2); align-items:start; }
 .g.nomap{ grid-template-columns: minmax(0,1fr); }
 /* ilustracja stanu dla robota bez mapy (widoczna tylko w układzie dwóch kolumn, wyrównuje wysokość z kartą z mapą) */

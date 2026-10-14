@@ -100,6 +100,12 @@ const H = {
     if (window.__hgDryRun) { (window.__hgCalls = window.__hgCalls || []).push([domain, service, data]); return Promise.resolve(); }
     return hass.callService(domain, service, data);
   },
+  /* wibracja: aplikacja HA (zdarzenie „haptic” na window, jak forwardHaptic we frontendzie HA), w przeglądarce navigator.vibrate */
+  haptic: (t = 'selection') => {
+    try { window.dispatchEvent(new CustomEvent('haptic', { detail: t })); } catch (e) { /* */ }
+    const app = window.externalApp || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus);
+    if (!app && navigator.vibrate && matchMedia('(pointer: coarse)').matches) try { navigator.vibrate(t === 'selection' ? 6 : t === 'heavy' ? 30 : 14); } catch (e) { /* */ }
+  },
   icon: (i, cls = '') => `<ha-icon class="${cls}" icon="${H.esc(i)}"></ha-icon>`,
   name: (hass, e, fb) => { const s = H.st(hass, e); return (s && s.attributes.friendly_name) || fb || e; },
   action(node, hass, a) {

@@ -57,7 +57,7 @@ class HGPlayersCard extends HGBase {
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
 .hd .cnt{ font-size:var(--fs-xs); color:#5A5E64; font-weight:400; }
 .big{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 250)), 1fr)); gap:var(--s2); }
-.pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:rgba(255,255,255,.62); border:1px solid rgba(255,255,255,.85); overflow:hidden; min-width:0; contain:layout paint; }
+.pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); overflow:hidden; min-width:0; contain:layout paint; }
 .pl .art{ position:relative; display:flex; gap:var(--s2); align-items:center; min-width:0; }
 .cov{ width:64u; height:64u; border-radius:var(--r-sm); flex:none; background:#E9ECEF center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:#8A8E94; box-shadow:var(--hg-sh); }
 .cov ha-icon{ width:28u; height:28u; }
@@ -90,7 +90,7 @@ input[type=range]::-moz-range-thumb{ width:14u; height:14u; border:0; border-rad
 select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var(--k) * 26), var(--hg-tgt, 0px)); max-width:100%; min-width:0; flex:0 1 calc(var(--k) * 150); padding:0 var(--s4) 0 var(--s1); border-radius:var(--r-sm); border:1px solid rgba(0,0,0,.08);
   background:rgba(255,255,255,.75) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%235A5E64' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 5px center/16px; -webkit-appearance:none; appearance:none; }
 .sm{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 190)), 1fr)); gap:var(--s1); }
-.ci{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s1); border-radius:var(--r-md); background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.75); min-width:0; }
+.ci{ display:flex; align-items:center; gap:var(--s1); padding:var(--s1) var(--s1) var(--s1) var(--s1); border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); min-width:0; }
 .ci .cov{ width:34u; height:34u; border-radius:var(--r-sm); box-shadow:none; } .ci .cov ha-icon{ width:17u; height:17u; }
 .ci .meta .ttl{ font-size:var(--fs-sm); -webkit-line-clamp:1; } .ci .meta .sub{ font-size:var(--fs-xs); }
 .un{ display:flex; flex-wrap:wrap; gap:5u; align-items:center; font-size:var(--fs-xs); color:#5A5E64; }

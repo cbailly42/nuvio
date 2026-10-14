@@ -285,10 +285,10 @@ ha-card.wrap{ container-type:inline-size; }
 .empty ha-icon{ width:20u; height:20u; }
 .chips{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); padding:0 2u; }
 .chips:empty{ display:none; }
-.lbl{ display:inline-flex; align-items:center; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s1); border-radius:var(--r-sm); background:rgba(255,255,255,.62); font-size:var(--fs-sm); color:#3A3E44; font-weight:400; margin-right:2u; }
+.lbl{ display:inline-flex; align-items:center; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s1); border-radius:var(--r-sm); background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); font-size:var(--fs-sm); color:#3A3E44; font-weight:400; margin-right:2u; }
 .chip{ position:relative; display:inline-flex; align-items:center; gap:5u; height:max(calc(var(--k) * 24), var(--hg-tgt, 0px)); padding:0 var(--s2); border-radius:var(--r-sm); font-size:var(--fs-sm); color:#4A4E54;
-  background:rgba(255,255,255,.62); border:1px solid rgba(255,255,255,.75); box-shadow:var(--hg-sh); transition:background .2s; }
-.chip:hover{ background:rgba(255,255,255,.8); }
+  background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); transition:background .2s; }
+.chip:hover{ background:var(--hg-inner-bg-h); }
 .chip ha-icon{ width:12u; height:12u; color:#8A8E94; }
 `);
   }

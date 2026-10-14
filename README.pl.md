@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.5.0-a3e635?style=flat-square" alt="v0.5.0">
+  <img src="https://img.shields.io/badge/version-v0.6.0-a3e635?style=flat-square" alt="v0.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -67,7 +67,7 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/weather.png" alt="Pogoda" width="100%"><br><b>Pogoda</b> <code>custom:nuvio-weather-card</code><br>Bieżąca pogoda, prognoza godzinowa, wschód i zachód słońca; po dotknięciu szczegóły dni. <code>weather.*</code>, opcjonalny czujnik temperatury, <code>sun.sun</code>.</td>
-<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Klimatyzacja" width="100%"><br><b>Klimatyzacja</b> <code>custom:nuvio-ac-card</code><br>Duża temperatura docelowa z suwakiem, tryby HVAC, nawiew i lamele. <code>climate.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Klimatyzacja" width="100%"><br><b>Klimatyzacja</b> <code>custom:nuvio-ac-card</code><br>Szklane pokrętło z gradientem temperatury: przeciągnij łuk, przytrzymaj środek po szczegóły, −/+ powtarzają się przy przytrzymaniu, tryby HVAC, nawiew i lamele. <code>climate.*</code>.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/light.png" alt="Oświetlenie" width="100%"><br><b>Oświetlenie</b> <code>custom:nuvio-light-card</code><br>Suwak jasności jednego światła. <code>light.*</code>.</td>
@@ -292,9 +292,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.5.0 -m "Nuvio 0.3.24" && git push origin v0.5.0`.
+Sam tag ręcznie: `git tag -a v0.6.0 -m "Nuvio 0.6.0" && git push origin v0.6.0`.
 
 ## Lista zmian
+
+### 0.6.0
+- Nowy wygląd karty **Klimatyzacja**: szklane pokrętło (łuk 270°) z gradientem temperatury od zimnej do ciepłej, gałka do przeciągania, kropka z temperaturą wnętrza i miękka poświata w kolorze trybu (pomarańcz grzanie, błękit chłodzenie, morski osuszanie), która „oddycha”, gdy urządzenie faktycznie pracuje. Przyciski trybów mają te same kolory.
+- Dotyk na karcie Klimatyzacja: przeciągnij po łuku, aby ustawić temperaturę (przesunięcie palcem przez środek pokrętła dalej przewija stronę), przytrzymaj środek, aby otworzyć szczegóły encji, dotknij środka, aby włączyć wyłączone urządzenie, przytrzymaj −/+, aby zmieniać dalej. Każdy krok daje lekką wibrację (aplikacja Home Assistant albo telefon, który to obsługuje). Klawiatura: strzałki, Page Up/Down, Home/End.
+- Klimatyzacja kompaktowa (strony pokoi): pasek z kreskami zastąpił szklany suwak z gradientem temperatury. Przesuń w bok, aby ustawić, dotknij, aby przeskoczyć, przesuń w górę lub w dół, aby przewinąć stronę.
+- Przegląd spójności komponentów: kafle wewnątrz kart Multimedia, Roboty, Czujniki, Alarm i Kamery mają jedną wspólną powierzchnię szkła (to samo wypełnienie i jasna górna krawędź) w trybie jasnym i ciemnym zamiast czterech różnych białych wypełnień z ramkami.
+- Poprawione: w widoku Pokoje nazwa pokoju była ucinana przez temperaturę przy niektórych szerokościach (np. 1440 px); kafle pokoi rosną teraz do treści. Kropki stanu klimatyzacji w pokojach mają kolory trybów.
 
 ### 0.5.0
 - Nowość: **Tryb tabletu ściennego** (domyślnie wyłączony). Po bezczynności pojawia się szklany wygaszacz z dużym zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk, klawisz albo czujnik ruchu (dowolny `binary_sensor` wybrany w ustawieniach). W **Wygląd → Tryb tabletu ściennego** ustawisz czas bezczynności, poziom przyciemnienia, źródło zdjęcia (tło dashboardu, pokaz slajdów albo własny adres) i czujnik, a także obejrzysz podgląd. Zegar lekko zmienia położenie (ochrona paneli OLED), ekran nie gaśnie w czasie wygaszacza, ograniczenie ruchu jest szanowane, a nakładka pojawia się nad oknami Home Assistanta. Ustawienia wchodzą w skład Kopii układu.

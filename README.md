@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.5.0-a3e635?style=flat-square" alt="v0.5.0">
+  <img src="https://img.shields.io/badge/version-v0.6.0-a3e635?style=flat-square" alt="v0.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -67,7 +67,7 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/weather.png" alt="Weather" width="100%"><br><b>Weather</b> <code>custom:nuvio-weather-card</code><br>Current conditions, hourly forecast and sunrise/sunset; tap for daily details. <code>weather.*</code>, optional temperature sensor, <code>sun.sun</code>.</td>
-<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Large target temperature with a slider, HVAC modes, fan and swing. <code>climate.*</code>.</td>
+<td width="50%" valign="top"><img src="docs/components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Glass thermostat dial with a temperature gradient: drag the arc, hold the centre for details, −/+ repeat while held, HVAC modes, fan and swing. <code>climate.*</code>.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/components/light.png" alt="Light" width="100%"><br><b>Light</b> <code>custom:nuvio-light-card</code><br>Brightness slider for one light. <code>light.*</code>.</td>
@@ -292,9 +292,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.5.0 -m "Nuvio 0.3.24" && git push origin v0.5.0`.
+Only tagging by hand: `git tag -a v0.6.0 -m "Nuvio 0.6.0" && git push origin v0.6.0`.
 
 ## Changelog
+
+### 0.6.0
+- New look for the **Climate** card: a glass thermostat dial (270° arc) with a cold-to-warm temperature gradient, a draggable knob, a dot for the indoor temperature and a soft glow in the mode colour (orange heating, blue cooling, teal drying) that breathes while the unit is actually working. Mode buttons use the same colours.
+- Touch on the Climate card: drag along the arc to set the temperature (the page still scrolls when you swipe through the middle of the dial), hold the centre to open the entity details, tap the centre to turn a switched-off unit on, hold −/+ to repeat. Every step gives a light vibration (Home Assistant app or phones that support it). Keyboard: arrows, Page Up/Down, Home/End.
+- Compact climate (room pages): the tick strip is now a glass slider with the temperature gradient. Swipe sideways to set it, tap to jump, swipe up or down to scroll the page.
+- Consistency pass across components: inner tiles in Media, Robots, Sensors, Alarm and Cameras use one shared glass surface (same fill and a light top edge) in light and dark mode instead of four slightly different white fills with borders.
+- Fixed: on the Rooms view the room name was cut off by the temperature at some widths (e.g. 1440 px); room tiles now grow to fit. Room status dots now use the climate mode colours.
 
 ### 0.5.0
 - New: **Wall tablet mode** (off by default). After inactivity a glass screensaver with a large clock, the date and a photo fades in and dims the screen; touch, a key press or a motion sensor (any `binary_sensor`, chosen in settings) wakes it. In **Appearance → Wall tablet mode** you set the idle time, dimming level, photo source (dashboard background, slideshow or your own URL) and the sensor, and you can preview it. The clock drifts slightly to protect OLED panels, the screen is kept awake while it shows, reduced motion is respected, and it appears above Home Assistant dialogs. The settings are part of Layout backup.
