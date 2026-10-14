@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.9.1-a3e635?style=flat-square" alt="v0.9.1">
+  <img src="https://img.shields.io/badge/version-v0.10.0-a3e635?style=flat-square" alt="v0.10.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -229,7 +229,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 
 | Feature | Description | Status |
 |---|---|---|
-| Assist / voice card | talk to Home Assistant Assist from a glass card, with the reply shown inline | planned |
+| Assist / voice card | talk to Home Assistant Assist from a glass card, with the reply shown inline | done in 0.10.0 |
 | Notifications center | persistent notifications, low batteries, open doors and unavailable devices in one panel | planned |
 | Energy dashboard integration | read sources and devices from the HA Energy settings instead of manual sensors | planned |
 | Energy and bars card fix | render `nuvio-energy-card` and `nuvio-bars-card` correctly outside a fixed-height grid | planned |
@@ -314,6 +314,9 @@ Admins can export and import the whole Nuvio layout from **Appearance → Layout
 
 ## Development
 
+See [DESIGN.md](DESIGN.md) for the UI rules every new feature must meet.
+
+
 ```bash
 python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # fails if any house-specific id slipped into dist
@@ -325,9 +328,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.9.1 -m "Nuvio 0.9.1" && git push origin v0.9.1`.
+Only tagging by hand: `git tag -a v0.10.0 -m "Nuvio 0.10.0" && git push origin v0.10.0`.
 
 ## Changelog
+
+### 0.10.0
+- Added: Assist card. Talk to Home Assistant Assist from a glass card: text field, microphone (browser speech recognition), assistant picker, replies in chat bubbles, conversation continues across questions, optional spoken replies, suggestion chips. Full form configuration, JSON field and export and import.
+- Added: DESIGN.md with the UI rules every new feature must meet.
 
 ### 0.9.1
 - Changed: the screensaver shows plain white text and icons with a soft shadow, without panels behind them. The wake hint is centered at the bottom with a gentle pulse that respects reduced motion.

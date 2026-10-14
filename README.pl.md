@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.9.1-a3e635?style=flat-square" alt="v0.9.1">
+  <img src="https://img.shields.io/badge/version-v0.10.0-a3e635?style=flat-square" alt="v0.10.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -229,7 +229,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 
 | Funkcja | Opis | Status |
 |---|---|---|
-| Karta Assist / głosowa | rozmowa z Home Assistant Assist w szklanej karcie, z odpowiedzią wyświetlaną na miejscu | planowane |
+| Karta Assist / głosowa | rozmowa z Home Assistant Assist w szklanej karcie, z odpowiedzią wyświetlaną na miejscu | gotowe w 0.10.0 |
 | Centrum powiadomień | trwałe powiadomienia, słabe baterie, otwarte drzwi i niedostępne urządzenia w jednym panelu | planowane |
 | Integracja z panelem Energia | źródła i urządzenia z ustawień Energii w HA zamiast ręcznie wskazanych czujników | planowane |
 | Poprawka kart energy i bars | poprawne renderowanie `nuvio-energy-card` i `nuvio-bars-card` poza siatką o stałej wysokości | planowane |
@@ -314,6 +314,9 @@ Administrator może wyeksportować i zaimportować cały układ Nuvio w **Wyglą
 
 ## Rozwój
 
+Zasady interfejsu, które musi spełniać każda nowa funkcja, opisuje [DESIGN.md](DESIGN.md).
+
+
 ```bash
 python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu
@@ -325,9 +328,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.9.1 -m "Nuvio 0.9.1" && git push origin v0.9.1`.
+Sam tag ręcznie: `git tag -a v0.10.0 -m "Nuvio 0.10.0" && git push origin v0.10.0`.
 
 ## Lista zmian
+
+### 0.10.0
+- Dodano: karta Assist. Rozmowa z Home Assistant Assist w szklanej karcie: pole tekstowe, mikrofon (rozpoznawanie mowy w przeglądarce), wybór asystenta, odpowiedzi w dymkach, rozmowa ciągnie się między pytaniami, opcjonalne odpowiedzi na głos, podpowiedzi. Pełna konfiguracja w formularzu, pole JSON oraz eksport i import.
+- Dodano: DESIGN.md z zasadami interfejsu, które musi spełniać każda nowa funkcja.
 
 ### 0.9.1
 - Zmieniono: wygaszacz pokazuje zwykły biały tekst i ikony z miękkim cieniem, bez paneli pod spodem. Podpowiedź wybudzenia jest wyśrodkowana na dole i delikatnie pulsuje, z poszanowaniem ograniczenia ruchu.
