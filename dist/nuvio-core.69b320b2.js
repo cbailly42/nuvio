@@ -613,7 +613,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.9.1+bf4e45f5';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.10.0+69b320b2';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -1164,6 +1164,8 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-96a0a6-090-k:rgba(150,160,166,0.9);
   --hg-sh-a3e635:#A3E635;
   --hg-sh-eceef2:#ECEEF2;
+  --hg-sh-ff6b57-000:rgba(255,107,87,0);
+  --hg-sh-ff6b57-050:rgba(255,107,87,0.5);
   --hg-sh-ffffff-008:rgba(255,255,255,0.08);
   --hg-sh-ffffff-010:rgba(255,255,255,0.1);
   --hg-sh-ffffff-012:rgba(255,255,255,0.12);
@@ -1218,6 +1220,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-ff6b57:#FF6B57;
   --hg-tx-ff6b6b:#FF6B6B;
   --hg-tx-ff7a6b:#FF7A6B;
+  --hg-tx-ff8a7a:#FF8A7A;
   --hg-tx-ffa600:#FFA600;
   --hg-tx-ffffff:#FFFFFF;
   --hg-tx-ffffff-055-k:rgba(255,255,255,0.55);
@@ -6315,6 +6318,90 @@ class HGUpdatesCard extends HGBase {
 }
 hgReg('nuvio-updates-card', HGUpdatesCard, hgTr('Nuvio – Aktualizacje', 'Nuvio – Updates'), hgTr('Dostępne aktualizacje w HA', 'Available updates in HA'));
 
+/* --- Assist: rozmowa z Home Assistant Assist w szklanej karcie, odpowiedź w dymkach na miejscu ---
+   tekst -> assist_pipeline/run (intent, opcjonalnie tts) albo conversation/process; conversation_id ciągnie rozmowę;
+   mikrofon: rozpoznawanie mowy przeglądarki (Web Speech API), gdy jest dostępne. window.__hgDryRun: odpowiedź próbna, bez wysyłania. */
+class HGAssistCard extends HGBase {
+  defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
+  ents() { return []; }
+  css() { return HG_G14_CSS + U(`ha-card.glass{ gap:10px; min-height:var(--hg-min-h, 320px); }
+.hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1; } .hd2 select{ max-width:180px; }
+.cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
+.b{ max-width:84%; padding:9px 13px; border-radius:18px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; animation:bin .28s cubic-bezier(.2,.8,.2,1) both; }
+.b.u{ align-self:flex-end; background:var(--hg-accent); color:var(--hg-on-accent); border-bottom-right-radius:6px; font-weight:500; }
+.b.a{ align-self:flex-start; background:color-mix(in srgb, currentColor 9%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); border-bottom-left-radius:6px; }
+.b.e{ color:var(--hg-tx-ff8a7a); } .b .pl{ all:unset; cursor:pointer; margin-left:6px; vertical-align:-3px; opacity:.75; } .b .pl ha-icon{ width:16px; height:16px; } .b .pl:focus-visible{ outline:2px solid var(--hg-accent); border-radius:6px; }
+.ty{ display:inline-flex; gap:4px; } .ty i{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; animation:dot 1s ease-in-out infinite; } .ty i:nth-child(2){ animation-delay:.15s; } .ty i:nth-child(3){ animation-delay:.3s; }
+@keyframes dot{ 0%, 100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(-3px); opacity:.9; } } @keyframes bin{ from{ opacity:0; transform:translateY(6px) scale(.98); } }
+.em{ margin:auto; text-align:center; font-size:13px; opacity:.7; display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px; } .em ha-icon{ width:30px; height:30px; color:var(--hg-accent-tx, var(--hg-accent)); opacity:1; }
+.sg{ display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:1px; } .sg::-webkit-scrollbar{ display:none; }
+.sg button{ all:unset; cursor:pointer; flex:none; font-size:12.5px; padding:6px 12px; border-radius:999px; background:color-mix(in srgb, currentColor 8%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:background .15s; white-space:nowrap; }
+.sg button:hover{ background:color-mix(in srgb, var(--hg-accent) 20%, transparent); } .sg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.in{ display:flex; align-items:center; gap:6px; padding:4px; border-radius:999px; background:color-mix(in srgb, currentColor 7%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent); transition:box-shadow .15s; }
+.in:focus-within{ box-shadow:inset 0 0 0 1px var(--hg-accent), 0 0 0 3px color-mix(in srgb, var(--hg-accent) 25%, transparent); }
+.in input{ all:unset; flex:1; min-width:0; font-size:14px; padding:0 10px; height:38px; } .in input::placeholder{ opacity:.55; }
+.in .gb.r{ width:38px; height:38px; } .in .gb.r.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .mic.on{ background:var(--hg-bg-ff6b57) !important; color:var(--hg-tx-ffffff) !important; animation:pul 1.2s ease-in-out infinite; }
+@keyframes pul{ 0%, 100%{ box-shadow:0 0 0 0 var(--hg-sh-ff6b57-050); } 50%{ box-shadow:0 0 0 7px var(--hg-sh-ff6b57-000); } }
+@media (prefers-reduced-motion: reduce){ .b, .ty i, .mic.on{ animation:none !important; } .cv{ scroll-behavior:auto; } }
+@container (max-width: 300px){ .hd2 select, .hd2 .hgs-t{ display:none; } .b{ max-width:92%; font-size:13px; } }`); }
+  setConfig(c) { super.setConfig(c); this._msgs = this._msgs || []; }
+  _sugg() { const s = this._config.suggestions; return Array.isArray(s) && s.length ? s : typeof s === 'string' && s.trim() ? s.split(',').map((x) => x.trim()).filter(Boolean)
+    : [hgTr('Jaka jest temperatura w salonie?', 'What is the temperature in the living room?'), hgTr('Które światła są włączone?', 'Which lights are on?'), hgTr('Jaka będzie pogoda jutro?', 'What will the weather be tomorrow?'), hgTr('Która godzina?', 'What time is it?')]; }
+  async _pipes() { const h = this._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
+    try { const r = await h.callWS({ type: 'assist_pipeline/pipeline/list' }); this._pl = r.pipelines || []; this._pref = r.preferred_pipeline; } catch (e) { this._pl = []; } this._plL = false; this.rerender(); }
+  render() { const c = this._config, h = this._hass, M = this._msgs || [];
+    if (!this._pl) setTimeout(() => this._pipes(), 0);
+    const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select>` : '';
+    const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
+    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}</div>
+      <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em">${H.icon('mdi:chat-processing-outline')}<b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</div>`}</div>
+      <div class="sg" role="list">${this._sugg().map((s) => `<button role="listitem" data-act="sug" data-t="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
+      <form class="in" data-k="f"><input data-k="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="${H.esc(c.placeholder || hgTr('Napisz do asystenta…', 'Message the assistant…'))}" aria-label="${hgTr('Wiadomość', 'Message')}" value="${H.esc(this._draft || '')}">
+        ${c.mic !== false && SR ? `<button type="button" class="gb r mic${this._rec ? ' on' : ''}" data-act="mic" aria-pressed="${!!this._rec}" aria-label="${hgTr('Mów', 'Speak')}">${H.icon('mdi:microphone')}</button>` : ''}
+        <button type="submit" class="gb r ok" data-act="send" aria-label="${hgTr('Wyślij', 'Send')}"${this._busy2 ? ' disabled' : ''}>${H.icon('mdi:send')}</button></form></ha-card>`; }
+  afterRender() { const q = this.$.querySelector('[data-k=q]'), f = this.$.querySelector('[data-k=f]'), s = this.$.querySelector('[data-k=pipe]'), cv = this.$.querySelector('.cv');
+    if (q) { q.addEventListener('input', () => { this._draft = q.value; }); if (this._focusQ) { this._focusQ = false; q.focus({ preventScroll: true }); } }
+    if (f) f.addEventListener('submit', (e) => { e.preventDefault(); this._send(q.value); });
+    if (s) s.addEventListener('change', () => { this._pipe = s.value; this._cid = null; });
+    if (cv) cv.scrollTop = cv.scrollHeight; }
+  onAct(a, t, e) { if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }
+    if (a === 'sug') return this._send(t.dataset.t);
+    if (a === 'clr') { this._msgs = []; this._cid = null; return this.rerender(); }
+    if (a === 'play') { const m = this._msgs[+t.dataset.i]; if (m && m.tts) this._play(m.tts); }
+    if (a === 'mic') return this._mic(); }
+  _play(u) { try { if (this._au) this._au.pause(); this._au = new Audio(u); this._au.play().catch(() => {}); } catch (e) {} }
+  _mic() { const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return;
+    if (this._rec) { try { this._rec.stop(); } catch (e) {} return; }
+    const r = new SR(); r.lang = (this._hass && this._hass.language) || HG_LOC(); r.interimResults = true; r.maxAlternatives = 1; this._rec = r; this.rerender();
+    let fin = ''; r.onresult = (ev) => { let t = ''; for (const x of ev.results) { t += x[0].transcript; if (x.isFinal) fin = t; } const q = this.$.querySelector('[data-k=q]'); if (q) q.value = t; this._draft = t; };
+    r.onerror = () => {}; r.onend = () => { this._rec = null; this.rerender(); if (fin.trim()) this._send(fin); }; try { r.start(); } catch (e) { this._rec = null; this.rerender(); } }
+  async _send(txt) { txt = String(txt || '').trim(); const h = this._hass, c = this._config; if (!txt || this._busy2 || !h) return;
+    this._draft = ''; this._busy2 = true; this._msgs = [...this._msgs, { r: 'u', t: txt }, { r: 'a', wait: true }]; this._focusQ = true; this.rerender();
+    const done = (t, o = {}) => { this._msgs = [...this._msgs.slice(0, -1), Object.assign({ r: 'a', t }, o)]; this._busy2 = false; this.rerender(); };
+    if (window.__hgDryRun && !window.__nuvioAssistLive) { setTimeout(() => done(hgTr('(podgląd) Tak odpowie Assist z Home Assistant.', '(preview) Home Assistant Assist replies here.')), 500); return; }
+    const pipe = this._pipe || c.pipeline || undefined, lang = h.language;
+    try {
+      if (h.connection && h.connection.subscribeMessage) {
+        let reply = null, url = null, err = null, unsub = null; const tts = !!c.tts;
+        await new Promise((res) => { const to = setTimeout(res, 30000);
+          h.connection.subscribeMessage((ev) => { const d = ev.data || {};
+            if (ev.type === 'intent-end') { const o = d.intent_output || {}; reply = (((o.response || {}).speech || {}).plain || {}).speech || ''; if (o.conversation_id) this._cid = o.conversation_id; if (!tts) { clearTimeout(to); res(); } }
+            if (ev.type === 'tts-end') { url = (d.tts_output || {}).url || null; }
+            if (ev.type === 'error') { err = d.message || d.code || 'error'; clearTimeout(to); res(); }
+            if (ev.type === 'run-end') { clearTimeout(to); res(); } },
+            Object.assign({ type: 'assist_pipeline/run', start_stage: 'intent', end_stage: tts ? 'tts' : 'intent', input: { text: txt }, conversation_id: this._cid || null }, pipe ? { pipeline: pipe } : {})).then((u) => { unsub = u; }).catch((e) => { err = e && (e.message || e.code) || 'error'; clearTimeout(to); res(); }); });
+        if (unsub) try { unsub(); } catch (e) {}
+        if (err && reply == null) throw new Error(err);
+        if (url && !/^https?:/.test(url)) url = h.hassUrl ? h.hassUrl(url) : url;
+        done(reply || hgTr('Brak odpowiedzi', 'No reply'), url ? { tts: url } : {}); if (url) this._play(url); return; }
+      const r = await h.callWS(Object.assign({ type: 'conversation/process', text: txt, conversation_id: this._cid || null, language: lang }, c.agent_id ? { agent_id: c.agent_id } : {}));
+      if (r.conversation_id) this._cid = r.conversation_id; done(((((r.response || {}).speech || {}).plain || {}).speech) || hgTr('Brak odpowiedzi', 'No reply'));
+    } catch (e) { done(hgTr('Nie udało się połączyć z Assist: ', 'Could not reach Assist: ') + (e && e.message ? e.message : e), { err: true }); } }
+  getGridOptions() { return { columns: 12, rows: 5 }; }
+}
+hgReg('nuvio-assist-card', HGAssistCard, hgTr('Nuvio – Assist', 'Nuvio – Assist'), hgTr('Rozmowa z Assist z odpowiedzią na miejscu', 'Talk to Assist with the reply inline'));
+
 /* ===== pusty pokój: „Importuj z obszaru” (podgląd z polami wyboru + „Wybierz encje”) i „Utwórz własny układ” ===== */
 const HG_RX_PRI = ['light', 'switch', 'fan', 'climate', 'cover', 'media_player', 'camera', 'lock', 'vacuum', 'humidifier', 'valve', 'water_heater', 'input_boolean', 'select', 'input_select', 'number', 'input_number', 'counter', 'scene', 'script', 'button', 'input_button', 'sensor', 'binary_sensor'];
 const HG_RX_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', climate: 'mdi:thermostat', cover: 'mdi:window-shutter', media_player: 'mdi:speaker', camera: 'mdi:cctv', lock: 'mdi:lock-outline', vacuum: 'mdi:robot-vacuum',
@@ -8158,10 +8245,11 @@ const HG_COMP = [
   hgTrO({ id: 'sun', i: 'mdi:weather-sunset', card: 'nuvio-sun-card', slots: [], cfg: () => ({ entity: 'sun.sun' }) }, { n: ['Słońce', 'Sun'], d: ['Wschód, zachód i pozycja słońca', 'Sunrise, sunset and sun position'] }),
   hgTrO({ id: 'note', i: 'mdi:note-text-outline', card: 'nuvio-note-card', slots: [], opts: [{ k: 'text', t: 'txt', l: ['Treść (**pogrubienie**, *kursywa*, listy "- ")', 'Text (**bold**, *italic*, "- " lists)'] }], cfg: () => ({}) }, { n: ['Notatka', 'Note'], d: ['Tekst z prostym formatowaniem', 'Text with simple formatting'] }),
   hgTrO({ id: 'image', i: 'mdi:image-outline', card: 'nuvio-image-card', modes: [['image', 'Obraz', 'Image', 'mdi:image-outline'], ['iframe', 'Strona', 'Page', 'mdi:web']], slots: [], opts: [{ k: 'url', l: ['Adres (https://… lub /local/…)', 'Address (https://… or /local/…)'], ph: 'https://' }, { k: 'ratio', l: ['Proporcje', 'Aspect ratio'], ph: '16/9' }, { k: 'refresh', t: 'num', l: ['Odświeżanie obrazu (s)', 'Image refresh (s)'] }], cfg: (v) => ({ mode: v.mode || 'image' }) }, { n: ['Obraz lub strona', 'Image or page'], d: ['Zdjęcie z adresu albo strona w ramce', 'Picture from a URL or a page in a frame'] }),
+  hgTrO({ id: 'assist', i: 'mdi:microphone-message', card: 'nuvio-assist-card', slots: [], opts: [{ k: 'pipeline', l: ['Asystent (id potoku, puste = domyślny)', 'Assistant (pipeline id, empty = default)'] }, { k: 'tts', t: 'bool', l: ['Czytaj odpowiedzi na głos', 'Read replies aloud'] }, { k: 'mic', t: 'bool', l: ['Mikrofon', 'Microphone'] }, { k: 'show_pipeline', t: 'bool', l: ['Wybór asystenta w karcie', 'Assistant picker in the card'] }, { k: 'suggestions', t: 'list', l: ['Podpowiedzi (po przecinku)', 'Suggestions (comma separated)'] }, { k: 'placeholder', l: ['Tekst w polu', 'Input placeholder'] }], cfg: () => ({ mic: true, show_pipeline: true }) }, { n: ['Assist', 'Assist'], d: ['Rozmowa z Home Assistant Assist, odpowiedź w dymkach', 'Talk to Home Assistant Assist, replies in bubbles'] }),
   hgTrO({ id: 'updates', i: 'mdi:package-up', card: 'nuvio-updates-card', slots: [], cfg: () => ({}) }, { n: ['Aktualizacje', 'Updates'], d: ['Dostępne aktualizacje Home Assistant', 'Available Home Assistant updates'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
+const HG_COMP_Z = { assist: 'm', history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
