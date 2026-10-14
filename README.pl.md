@@ -51,6 +51,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 - **Galeria komponentów (+ Dodaj)**: najpierw grupa **Podstawowe** (Suwak, Przycisk, Lista encji, Wybór, Licznik, Wskaźnik, z miniaturami na żywo, dostępne też w pokojach), potem **Karty** dla konkretnych rodzajów urządzeń. Formularz komponentu nie ma wyboru trybu wyświetlania; prawdziwe warianty (suwak poziomy lub pionowy, przycisk jako kafel lub wiersz, wybór jako przyciski lub lista) są w **Opcjach komponentu**.
   <br><img src="docs/components/gallery-basic.png" alt="Galeria komponentów z grupą Podstawowe" width="420">
 - **Kopia układu** (administrator): eksport i import całego układu jako JSON z wersją w **Wygląd → Kopia układu**, z opcją Zastąp albo Połącz i przywracaniem jednym kliknięciem. Zobacz [Kopia układu](#kopia-układu).
+- **Tryb tabletu ściennego** (domyślnie wyłączony): po bezczynności pojawia się szklany wygaszacz z zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk lub czujnik ruchu. Czas bezczynności, przyciemnienie, źródło zdjęcia i czujnik ustawisz w **Wygląd → Tryb tabletu ściennego**. Zobacz [Tryb tabletu ściennego](#tryb-tabletu-ściennego).
 - **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
 - **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
@@ -195,7 +196,6 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 
 | Funkcja | Opis | Status |
 |---|---|---|
-| Tryb tabletu ściennego | wygaszacz z zegarem i zdjęciem po bezczynności, przyciemnienie, wybudzanie dotykiem lub czujnikiem ruchu | planowane |
 | Karta Assist / głosowa | rozmowa z Home Assistant Assist w szklanej karcie, z odpowiedzią wyświetlaną na miejscu | planowane |
 | Centrum powiadomień | trwałe powiadomienia, słabe baterie, otwarte drzwi i niedostępne urządzenia w jednym panelu | planowane |
 | Integracja z panelem Energia | źródła i urządzenia z ustawień Energii w HA zamiast ręcznie wskazanych czujników | planowane |
@@ -206,7 +206,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
-Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel.
+Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
 
 ## Instalacja
 
@@ -256,6 +256,20 @@ strategy:
 
 Konfigurację (układ + wygląd) można eksportować i importować jako JSON. Osobiste presety są przechowywane poza repozytorium.
 
+## Tryb tabletu ściennego
+
+Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrator włącza go w **Wygląd → Tryb tabletu ściennego** (tryb edycji) i zapisuje przyciskiem **Gotowe**.
+
+- **Włącz po bezczynności**: 30 s, 1, 2, 5, 10 lub 30 min bez dotyku, myszy i klawiatury (domyślnie 2 min).
+- **Przyciemnienie**: od 0 do 90 %, jak ciemny jest ekran pod zegarem (domyślnie 50 %).
+- **Zdjęcie**: tło Twojego dashboardu, pokaz slajdów wbudowanych teł (płynne przejście co 45 s) albo własny adres obrazu (`https://…` lub `/local/…`).
+- **Czujnik ruchu**: dowolny `binary_sensor`; czujniki ruchu, obecności i zajętości są na początku listy. Gdy przejdzie w stan `on` w czasie wygaszacza, ekran się wybudza. Bez czujnika budzi tylko dotyk.
+- **Wybudzanie**: dotyk, klawisz lub przewinięcie. Pierwszy dotyk tylko budzi ekran i nie naciska kafla pod spodem.
+- **Podgląd wygaszacza** pokazuje go od razu; dotknij, aby zamknąć.
+- Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
+- Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
+- Ustawienia zapisują się per użytkownik HA, tak jak układ. Dla osobnego użytkownika tabletu zaloguj się raz jako administrator na tablecie albo przenieś ustawienia przez **Kopię układu** (kategoria *Tryb tabletu ściennego*).
+
 ## Kopia układu
 
 Administrator może wyeksportować i zaimportować cały układ Nuvio w **Wygląd → Kopia układu** (tryb edycji).
@@ -281,6 +295,9 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 Sam tag ręcznie: `git tag -a v0.4.1 -m "Nuvio 0.3.24" && git push origin v0.4.1`.
 
 ## Lista zmian
+
+### 0.5.0
+- Nowość: **Tryb tabletu ściennego** (domyślnie wyłączony). Po bezczynności pojawia się szklany wygaszacz z dużym zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk, klawisz albo czujnik ruchu (dowolny `binary_sensor` wybrany w ustawieniach). W **Wygląd → Tryb tabletu ściennego** ustawisz czas bezczynności, poziom przyciemnienia, źródło zdjęcia (tło dashboardu, pokaz slajdów albo własny adres) i czujnik, a także obejrzysz podgląd. Zegar lekko zmienia położenie (ochrona paneli OLED), ekran nie gaśnie w czasie wygaszacza, ograniczenie ruchu jest szanowane, a nakładka pojawia się nad oknami Home Assistanta. Ustawienia wchodzą w skład Kopii układu.
 
 ### 0.4.1
 - Nowy wygląd kreatora pierwszego uruchomienia: nowoczesny szklany panel na Twoim tle, pasek kroków po lewej z dotychczasowymi wyborami (kliknięcie ukończonego kroku wraca do niego), podgląd pulpitu na żywo na ekranie powitalnym, płynne przejścia między krokami i kafelki pojawiające się kolejno (z poszanowaniem ograniczenia ruchu). W pokojach jest Zaznacz wszystkie / Odznacz wszystkie, wiersze podsumowania otwierają swój krok, Enter przechodzi dalej, a nazwy kolorów są w wybranym języku. Na telefonie kroki zwijają się do paska postępu.

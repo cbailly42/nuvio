@@ -14,7 +14,7 @@ const HGL = window.__hgL || (window.__hgL = {
     for (const k of Object.keys(o.conf)) if (!o.conf[k] || !Object.keys(o.conf[k]).length) delete o.conf[k];
     if (!o.order.length && !o.hidden.length && !Object.keys(o.size).length && !o.added.length && !Object.keys(o.names).length && !Object.keys(o.conf).length) delete this.data.s[sc]; else this.data.s[sc] = o; },
   /* zrzut stanu serwera (po load/save) – przy zapisie wysyłamy tylko to, co zmieniło się względem niego */
-  _snap(v) { const x = v || { s: {} }; return { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])), app: JSON.stringify(x.app || null), wiz: JSON.stringify(x.wiz || null), pw: JSON.stringify(x.pw || null) }; },
+  _snap(v) { const x = v || { s: {} }; return { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])), app: JSON.stringify(x.app || null), wiz: JSON.stringify(x.wiz || null), pw: JSON.stringify(x.pw || null), wall: JSON.stringify(x.wall || null) }; },
   _fetch(h) { return h.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { const v = r && r.value; return v && v.s ? v : null; }); },
   load(h) {
     if (this._p) return this._p;
@@ -44,7 +44,7 @@ const HGL = window.__hgL || (window.__hgL = {
         if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
         if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
       }
-      for (const k of ['app', 'wiz', 'pw']) if (JSON.stringify(this.data[k] || null) !== base[k]) { if (this.data[k]) out[k] = this.data[k]; else delete out[k]; }
+      for (const k of ['app', 'wiz', 'pw', 'wall']) if (JSON.stringify(this.data[k] || null) !== base[k]) { if (this.data[k]) out[k] = this.data[k]; else delete out[k]; }
       out.ts = this.data.ts; delete out.uid;
       await h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: out });
       this.data = out; this._base = this._snap(out); this._ls(); this.failed = false; this.notify();
@@ -919,6 +919,7 @@ const HG_EDIT = {
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
     if (a === 'hdok' || a === 'hdreset' || a === 'hdvar') return this._eHeadAct(a, b);
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
+    if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
@@ -1212,6 +1213,7 @@ const HG_EDIT = {
       <section class="lk-g"><h4>${H.icon('mdi:brightness-6')}${hgTr('Przyciemnienie', 'Dimming')}<em class="dv">${dv}%</em></h4><small class="lk-hn">${hgTr('Dotyczy tła w trybie ciemnym', 'Applies to the background in dark mode')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${window.HGLookX ? HGLookX.html(this) : ''}
+      ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
       </div><div class="lk-ft"><button class="lk-gh" data-hge="lookreset">${H.icon('mdi:restore')}${hgTr('Przywróć domyślne', 'Reset to default')}</button><button class="lk-ok" data-hge="sheetclose">${hgTr('Gotowe', 'Done')}</button></div></div>`;
     /* otwarty arkusz: aktualizacja na miejscu (bez ponownej animacji otwarcia), przewijany kontener zostaje, więc pozycja przewinięcia też */
@@ -1224,6 +1226,7 @@ const HG_EDIT = {
     S.querySelector('[name=acc]').addEventListener('change', (e) => { this._eApp((A2) => { A2.accent = e.target.value.toUpperCase(); }); this._eLook(); });
     const rg = S.querySelector('[name=dim]'); rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value + '%'); S.querySelector('.dv').textContent = rg.value + '%'; this._eApp((A2) => { A2.dim = rg.value / 100; }); });
     S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
+    if (window.HGWall) HGWall.wire(this, S);
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */

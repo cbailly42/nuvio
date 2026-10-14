@@ -2,7 +2,7 @@
 """Build dist/home-glass.js from src/parts (tokenizer -> concat). No Home Assistant access, no secrets."""
 import os, sys, shutil, subprocess, hashlib, tempfile, json
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js'] + [f'hg-cards{i}.part.js' for i in range(1, 13)] + ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-backup.part.js']
+PARTS = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js'] + [f'hg-cards{i}.part.js' for i in range(1, 13)] + ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-backup.part.js', 'hg-wall.part.js']
 import re
 def brand(js):
     """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build."""

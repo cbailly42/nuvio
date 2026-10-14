@@ -1,12 +1,12 @@
-# Nuvio status (2026-10-13)
+# Nuvio status (2026-10-14)
 Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard strategy `custom:nuvio` + first-run wizard (PL/EN), registry via hass.areas/entities with WS fallback;
 (c) edit mode covers tiles/sections/appearance and whole views (Appearance → Views); (d) HACS layout (dist/nuvio.js + dist/assets in nuvio.zip, hacs.json zip_release, README PL/EN, MIT, release workflow);
 (e) views only for present domains; (f) Polish / English UI for cards, page and edit mode (hgTr); empty-state hints.
 (g) config export/import UI: Appearance → Layout backup in edit mode (src/parts/hg-backup.part.js), versioned JSON, Replace / Merge, restore previous.
+(h) wall tablet mode (src/parts/hg-wall.part.js, 0.5.0): Appearance → Wall tablet mode, off by default; idle screensaver with clock + photo, dimming, wake on touch or binary_sensor; settings in HGL.data.wall, part of Layout backup.
 
 ## Planned (source of truth for README roadmap)
 
-- Wall tablet mode: screensaver with clock and photo after idle, dimming, wake on touch or motion sensor (planned)
 - Assist / voice card: talk to Home Assistant Assist from a glass card, with the reply shown inline (planned)
 - Notifications center: persistent notifications, low batteries, open doors and unavailable devices in one panel (planned)
 - Energy dashboard integration: read sources and devices from the HA Energy settings instead of manual sensors (planned)

@@ -51,6 +51,7 @@ and entities from Home Assistant and generates the views. Everything can then be
 - **Component gallery (+ Add)**: a **Basic** group first (Slider, Button, Entity list, Select, Stepper, Gauge, with live thumbnails, also available in rooms), then **Cards** for specific device types. The component form has no display mode picker; real variants (slider horizontal or vertical, button tile or row, select chips or list) are listed as **Component options**.
   <br><img src="docs/components/gallery-basic.png" alt="Component gallery with the Basic group" width="420">
 - **Layout backup** (admins): export / import the whole layout as versioned JSON in **Appearance → Layout backup**, with Replace or Merge and one click restore. See [Layout backup](#layout-backup).
+- **Wall tablet mode** (off by default): after inactivity a glass screensaver with a clock, the date and a photo fades in and dims the screen; touch or a motion sensor wakes it. Idle time, dimming, photo source and sensor are set in **Appearance → Wall tablet mode**. See [Wall tablet mode](#wall-tablet-mode).
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
 - **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
 - **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
@@ -195,7 +196,6 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 
 | Feature | Description | Status |
 |---|---|---|
-| Wall tablet mode | screensaver with clock and photo after idle, dimming, wake on touch or motion sensor | planned |
 | Assist / voice card | talk to Home Assistant Assist from a glass card, with the reply shown inline | planned |
 | Notifications center | persistent notifications, low batteries, open doors and unavailable devices in one panel | planned |
 | Energy dashboard integration | read sources and devices from the HA Energy settings instead of manual sensors | planned |
@@ -206,7 +206,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
-Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home.
+Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
 
 ## Installation
 
@@ -256,11 +256,25 @@ strategy:
 
 Configuration (layout + appearance) can be exported/imported as JSON. Personal presets live outside the repository.
 
+## Wall tablet mode
+
+A screensaver for a tablet on the wall. It is **off by default**; admins turn it on in **Appearance → Wall tablet mode** (edit mode) and press **Done** to save.
+
+- **Start after inactivity**: 30 s, 1, 2, 5, 10 or 30 min without touch, mouse or keyboard input (default 2 min).
+- **Dimming**: 0 to 90 %, how dark the screen gets under the clock (default 50 %).
+- **Photo**: your dashboard background, a slideshow of the bundled backgrounds (crossfade every 45 s) or your own image URL (`https://…` or `/local/…`).
+- **Motion sensor**: pick any `binary_sensor`; motion, occupancy and presence sensors are listed first. When it turns `on` while the screensaver is showing, the screen wakes. Without a sensor, only touch wakes it.
+- **Wake**: touch, key press or scroll. The first touch only wakes the screen and does not press the tile underneath.
+- **Preview screensaver** shows it immediately; touch to close.
+- The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
+- It only starts on the Nuvio dashboard (not in edit mode, not in a background tab) and is drawn above Home Assistant dialogs.
+- Settings are stored per Home Assistant user like the layout. For a dedicated tablet user, sign in as an admin once on the tablet, or move the settings with **Layout backup** (the category *Wall tablet mode*).
+
 ## Layout backup
 
 Admins can export and import the whole Nuvio layout from **Appearance → Layout backup** (edit mode).
 
-- **Export** downloads `nuvio-uklad-YYYY-MM-DD.json`; **Copy to clipboard** copies the same JSON. Choose what to include: views and custom views; layout, widgets with their entities, titles, section widths and hidden items; appearance (accent, background, dimming); view panel widths.
+- **Export** downloads `nuvio-uklad-YYYY-MM-DD.json`; **Copy to clipboard** copies the same JSON. Choose what to include: views and custom views; layout, widgets with their entities, titles, section widths and hidden items; appearance (accent, background, dimming); view panel widths; wall tablet mode settings.
 - **Import** accepts a file (picker or drag and drop) or pasted JSON. The file is validated and a summary shows the number of views, widgets, sections and entities, with entities missing on this instance highlighted. Pick the parts to import and **Replace** or **Merge**.
 - Before importing, the current layout is kept as a backup; **Restore previous** in the notification (or in the Layout backup section) undoes the import with one click.
 - The file is versioned (`format`, `schema`, `nuvio`, `exported`). Older raw layout data is converted automatically; files from a newer schema or damaged files are rejected with a clear message.
@@ -281,6 +295,9 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 Only tagging by hand: `git tag -a v0.4.1 -m "Nuvio 0.3.24" && git push origin v0.4.1`.
 
 ## Changelog
+
+### 0.5.0
+- New: **Wall tablet mode** (off by default). After inactivity a glass screensaver with a large clock, the date and a photo fades in and dims the screen; touch, a key press or a motion sensor (any `binary_sensor`, chosen in settings) wakes it. In **Appearance → Wall tablet mode** you set the idle time, dimming level, photo source (dashboard background, slideshow or your own URL) and the sensor, and you can preview it. The clock drifts slightly to protect OLED panels, the screen is kept awake while it shows, reduced motion is respected, and it appears above Home Assistant dialogs. The settings are part of Layout backup.
 
 ### 0.4.1
 - New look for the first-run wizard: modern glass panel over your background, a step rail on the left with your choices so far (tap a finished step to go back), a live dashboard preview on the welcome screen, smooth step transitions and staggered tiles (reduced motion respected). Rooms get Select all / Clear all, the summary rows open their step, Enter moves to the next step, and colour names follow the chosen language. On phones the steps collapse into a progress bar.

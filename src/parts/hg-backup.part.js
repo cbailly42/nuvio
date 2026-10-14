@@ -1,12 +1,13 @@
 /* ===== Kopia układu (admin): eksport do pliku / schowka i import z pliku, przeciągnięcia lub wklejenia.
-   Format: { format: 'nuvio-layout', schema, nuvio, exported, include, data: { wiz, s, app, pw } } (dane jak w HGL.data).
+   Format: { format: 'nuvio-layout', schema, nuvio, exported, include, data: { wiz, s, app, pw, wall } } (dane jak w HGL.data).
    Przed importem bieżący układ trafia do localStorage (nuvio:layout-backup), „Przywróć poprzedni” cofa import jednym kliknięciem. */
 const HGBackup = window.__hgBackup || (window.__hgBackup = {
   SCHEMA: 2, BK: 'nuvio:layout-backup', inc: null, st: null,
   CATS: [['views', 'wiz', 'mdi:view-dashboard-outline', 'Widoki i własne widoki', 'Views and custom views'],
     ['layout', 's', 'mdi:view-grid-outline', 'Układ, widżety i encje, tytuły, szerokości sekcji, ukryte', 'Layout, widgets and entities, titles, section widths, hidden items'],
     ['look', 'app', 'mdi:palette-outline', 'Wygląd: akcent, tło, przyciemnienie', 'Appearance: accent, background, dimming'],
-    ['panel', 'pw', 'mdi:arrow-expand-horizontal', 'Szerokość paneli widoków', 'View panel widths']],
+    ['panel', 'pw', 'mdi:arrow-expand-horizontal', 'Szerokość paneli widoków', 'View panel widths'],
+    ['wall', 'wall', 'mdi:tablet-dashboard', 'Tryb tabletu ściennego', 'Wall tablet mode']],
   admin(p) { const h = p && p._hass; return !!(h && h.user && h.user.is_admin); },
   sel() { return this.inc || (this.inc = new Set(this.CATS.map((c) => c[0]))); },
   cl(x) { return x == null ? x : JSON.parse(JSON.stringify(x)); },
@@ -27,7 +28,7 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
   fail(pl, en) { const e = new Error(hgTr(pl, en)); e.hg = 1; throw e; },
   migrate(o) {
     /* schemat 1: surowy zapis HGL.data ({ v: 1, ts, s, app, wiz, pw }) z wersji bez eksportu */
-    if (o.format == null && o.s && typeof o.s === 'object') return { format: 'nuvio-layout', schema: this.SCHEMA, nuvio: null, exported: o.ts ? new Date(o.ts).toISOString() : null, migrated: 1, data: { s: o.s, app: o.app, wiz: o.wiz, pw: o.pw } };
+    if (o.format == null && o.s && typeof o.s === 'object') return { format: 'nuvio-layout', schema: this.SCHEMA, nuvio: null, exported: o.ts ? new Date(o.ts).toISOString() : null, migrated: 1, data: { s: o.s, app: o.app, wiz: o.wiz, pw: o.pw, wall: o.wall } };
     if (o.format !== 'nuvio-layout' || !Number.isInteger(o.schema)) this.fail('To nie jest plik kopii układu Nuvio.', 'This is not a Nuvio layout backup file.');
     if (o.schema > this.SCHEMA) this.fail(`Plik pochodzi z nowszej wersji Nuvio (schemat ${o.schema}). Zaktualizuj Nuvio, aby go wczytać.`, `The file comes from a newer Nuvio (schema ${o.schema}). Update Nuvio to load it.`);
     if (o.schema === 1) return Object.assign({}, o, { schema: this.SCHEMA, migrated: 1, data: o.data || o.layout });
@@ -39,10 +40,10 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
     if (!ob(o)) this.fail('Nieznany format pliku.', 'Unknown file format.');
     o = this.migrate(o); const d = o.data;
     if (!ob(d)) this.fail('W pliku nie ma danych układu.', 'The file has no layout data.');
-    for (const k of ['s', 'wiz', 'app', 'pw']) if (d[k] != null && !ob(d[k])) this.fail(`Uszkodzona część pliku: ${k}.`, `Damaged part of the file: ${k}.`);
+    for (const k of ['s', 'wiz', 'app', 'pw', 'wall']) if (d[k] != null && !ob(d[k])) this.fail(`Uszkodzona część pliku: ${k}.`, `Damaged part of the file: ${k}.`);
     for (const [k, v] of Object.entries(d.s || {})) if (!ob(v) || !ar(v.order) || !ar(v.hidden) || !ar(v.added) || (v.size != null && !ob(v.size)) || (v.conf != null && !ob(v.conf))) this.fail(`Uszkodzony zakres układu „${k}”.`, `Damaged layout scope “${k}”.`);
     if (d.wiz && (!ar(d.wiz.views) || !ar(d.wiz.custom) || (d.wiz.custom || []).some((c) => !ob(c) || typeof c.p !== 'string'))) this.fail('Uszkodzona lista widoków.', 'Damaged list of views.');
-    if (!['s', 'wiz', 'app', 'pw'].some((k) => d[k] != null)) this.fail('Plik nie zawiera nic do zaimportowania.', 'The file contains nothing to import.');
+    if (!['s', 'wiz', 'app', 'pw', 'wall'].some((k) => d[k] != null)) this.fail('Plik nie zawiera nic do zaimportowania.', 'The file contains nothing to import.');
     return o; },
   ents(d, h) { const out = new Set(), re = /^[a-z_]+\.[a-z0-9_]+$/;
     const dom = new Set([...Object.keys(h.states).map((e) => e.split('.')[0]), 'light', 'switch', 'sensor', 'binary_sensor', 'climate', 'media_player', 'camera', 'cover', 'fan', 'lock', 'person', 'weather', 'scene', 'script', 'automation', 'input_boolean', 'input_number', 'input_select', 'button', 'number', 'select', 'vacuum', 'water_heater', 'humidifier', 'valve', 'alarm_control_panel', 'calendar', 'device_tracker', 'update', 'siren', 'event', 'todo', 'lawn_mower']);

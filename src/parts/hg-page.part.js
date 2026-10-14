@@ -169,6 +169,7 @@ class HGPage extends HTMLElement {
   }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
+    if (window.HGWall) HGWall.tick(h, this);   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
