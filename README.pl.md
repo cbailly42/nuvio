@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.0.1-a3e635?style=flat-square" alt="v1.0.1">
+  <img src="https://img.shields.io/badge/version-v1.1.0-a3e635?style=flat-square" alt="v1.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,17 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
   - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
+### Kontenery układu (1.1.0)
+
+Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle Nuvio. Są pierwszą grupą w **+ Dodaj**, w sekcji *Układ*. Formularz kontenera pokazuje jego karty: dodasz dowolny komponent, kafelek albo kartę z HA, edytujesz kartę w jej własnym formularzu, zmienisz kolejność przeciągając, zduplikujesz, usuniesz, a w siatce ustawisz, ile kolumn zajmuje karta. Kontenery można zagnieżdżać do trzech poziomów. Kartę z panelu przeniesiesz do kontenera z jej formularza, a kartę z kontenera wyjmiesz z powrotem na panel.
+
+**Karta z HA (YAML)** przyjmuje YAML (albo JSON), który edytor kart Home Assistant pokazuje po wybraniu *Pokaż edytor kodu*. `grid`, `vertical-stack` i `horizontal-stack` stają się kontenerami Nuvio z tymi samymi kartami, każda inna karta jest pokazana bez zmian. Ta sama zamiana działa dla tych typów w konfiguracji strony Nuvio; `keep_ha: true` zostawia oryginalną kartę Home Assistant. Przykład jest w [docs/examples/containers.yaml](docs/examples/containers.yaml).
+
+| Karta | Co robi | Opcje |
+|---|---|---|
+| `custom:nuvio-grid-card` | Karty w kolumnach; na wąskim ekranie mniej kolumn | `cards`, `columns` (1 do 6, 0 = automatycznie), `min_width`, `square`, `gap`, `glass`, `title`; dla karty `span` |
+| `custom:nuvio-stack-card` | Karty jedna pod drugą albo obok siebie w jednym szkle; obok siebie przechodzą w pion poniżej `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (np. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
+
 ### Karty ogólne i kontenery (0.16.0)
 
 Dwanaście kart zbudowanych wyłącznie ze wspólnych szklanych klocków, więc wyglądają jak projekt wzorcowy i działają z dowolną encją pasującej domeny. Każda dopasowuje się do szerokości: mała (do 220 px) chowa teksty pomocnicze, duża (od 420 px) pokazuje więcej szczegółów. Działają też w zwykłym widoku Home Assistant, gdzie same rozmywają tło. Gotowy pulpit złożony tylko z nich jest w [docs/examples/inspiration-dashboard.yaml](docs/examples/inspiration-dashboard.yaml) (działa z integracją demo HA).
@@ -368,9 +379,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.0.1 -m "Nuvio 1.0.1" && git push origin v1.0.1`.
+Sam tag ręcznie: `git tag -a v1.1.0 -m "Nuvio 1.1.0" && git push origin v1.1.0`.
 
 ## Lista zmian
+
+### 1.1.0
+- Dodano: kontenery układu jak w Home Assistant: siatka (`custom:nuvio-grid-card`), stos pionowy i stos poziomy, w nowej grupie *Układ* w **+ Dodaj**, z podglądem na żywo.
+- Dodano: formularz kontenera pokazuje jego karty. Dodasz dowolny komponent, kafelek albo kartę HA, edytujesz każdą w jej formularzu, zmienisz kolejność przeciągając, zduplikujesz, usuniesz i ustawisz szerokość w kolumnach siatki. Kontenery zagnieżdżają się do trzech poziomów.
+- Dodano: przeniesienie karty z panelu do kontenera z jej formularza i wyjęcie karty z kontenera z powrotem na panel.
+- Dodano: *Karta z HA (YAML)* wkleja kartę z edytora kodu Home Assistant. `grid`, `vertical-stack` i `horizontal-stack` z HA stają się tam i w konfiguracji strony kontenerami Nuvio (`keep_ha: true` zostawia kartę HA).
+- Zmieniono: karta stosu ma odstęp, proporcje szerokości kart obok siebie, szerokość, poniżej której przechodzi w pion, i linie między kartami, które można wyłączyć.
 
 ### 1.0.1
 - Zmieniono: okno Assist ma to samo szkło, kolor akcentu i animacje co inne okna Nuvio, w jasnym i ciemnym schemacie. Twoje wiadomości, kropki pisania, mikrofon i aktywne pole idą za kolorem akcentu.

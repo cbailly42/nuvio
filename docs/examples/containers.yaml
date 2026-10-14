@@ -1,0 +1,51 @@
+# Nuvio – layout containers (1.1.0): grid, vertical stack and horizontal stack.
+# Entity ids come from the Home Assistant demo integration (`demo:` in configuration.yaml); replace them with yours.
+# Raw configuration editor of a new dashboard: paste everything below.
+title: Nuvio containers
+views:
+  - title: Containers
+    path: containers
+    type: panel
+    background: center / cover no-repeat fixed url('/local/nuvio/nuvio-bg-default-wide.webp')
+    cards:
+      - type: custom:nuvio-stack-card
+        title: Living room
+        cards:
+          # a grid inside the stack, the arc spans two columns
+          - type: custom:nuvio-grid-card
+            columns: 3
+            cards:
+              - type: custom:nuvio-toggle-card
+                entity: light.ceiling_lights
+              - type: custom:nuvio-arc-card
+                entity: light.living_room_rgbww_lights
+                span: 2
+              - type: custom:nuvio-progress-card
+                entity: sensor.outside_humidity
+          # side by side, 2 : 1, vertical below 500 px
+          - type: custom:nuvio-stack-card
+            direction: horizontal
+            ratio: [2, 1]
+            wrap_below: 500
+            glass: false
+            cards:
+              - type: custom:nuvio-chart-card
+                entity: sensor.outside_temperature
+              - type: custom:nuvio-lock-card
+                entity: lock.front_door
+          # a Home Assistant grid is turned into a Nuvio grid with the same cards
+          - type: grid
+            columns: 2
+            cards:
+              - type: tile
+                entity: switch.decorative_lights
+              - type: tile
+                entity: switch.ac
+          # keep_ha: true keeps the Home Assistant card as it is
+          - type: horizontal-stack
+            keep_ha: true
+            cards:
+              - type: button
+                entity: switch.decorative_lights
+              - type: button
+                entity: switch.ac

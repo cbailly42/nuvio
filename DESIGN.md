@@ -76,6 +76,7 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 - Every component also has the **advanced JSON** field; its values override the form.
 - Everything a component stores is part of the layout, so it is included in **export and import** (layout backup) without extra code.
 - Sizes **S, M and L** are real grid spans with dense packing. Card content adapts with **container queries** (no overflow, no clipping, less detail at S).
+- Containers (grid, stacks, tabs) mount their children through `hgMakeCard`, which also turns HA `grid`, `vertical-stack` and `horizontal-stack` into Nuvio containers (`hgFromHA`, unless `keep_ha`). Editor data on a child (`nv_*`) and the grid `span` never reach the child card. Nesting stops at three levels with a short message. In the editor every component can be a child: the container form edits its children with the same component forms.
 - Every card has an **empty state**: a short title and one line telling the user what to pick, never a blank or broken card.
 - Unavailable entities are shown as such (dimmed, "niedostępne"), never as an error.
 - Service calls respect `window.__hgDryRun` so screenshots and tests never change the home.

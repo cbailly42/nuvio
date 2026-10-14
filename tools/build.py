@@ -94,6 +94,7 @@ CARDS = [
     'cards/todo-card.part.js',
     'cards/stack-card.part.js',
     'cards/tabs-card.part.js',
+    'cards/grid-card.part.js',
 ]
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE

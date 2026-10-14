@@ -449,7 +449,8 @@ class HGPage extends HTMLElement {
       const w = document.createElement('div'); w.className = 'cw'; w.dataset.hgk = cc._k;
       if (cc._hid) { w.hidden = true; w.style.display = 'none'; }
       let el;
-      const conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid;
+      let conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid;
+      conf = hgFromHA(conf);   // grid / vertical-stack / horizontal-stack z HA -> kontenery Nuvio (keep_ha: true zostawia kartę HA)
       try {
         if (helpers) el = helpers.createCardElement(conf);
         else { el = document.createElement(conf.type.replace('custom:', '')); el.setConfig(conf); }

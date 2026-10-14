@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.0.1-a3e635?style=flat-square" alt="v1.0.1">
+  <img src="https://img.shields.io/badge/version-v1.1.0-a3e635?style=flat-square" alt="v1.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,17 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
   - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
+### Layout containers (1.1.0)
+
+Grid, vertical stack and horizontal stack work like in Home Assistant, but in Nuvio glass. They are the first group in **+ Add**, under *Layout*. The form of a container lists its cards: add any component, tile or card from HA, edit a card in its own form, drag to reorder, duplicate, remove, and in a grid set how many columns a card spans. Containers can be nested up to three levels. A card on the panel can be moved into a container from its form, and a card inside a container can be moved back out to the panel.
+
+**Card from HA (YAML)** takes the YAML (or JSON) that the Home Assistant card editor shows under *Show code editor*. A `grid`, `vertical-stack` or `horizontal-stack` becomes the matching Nuvio container with the same cards, any other card is shown as it is. The same conversion happens for these types in the Nuvio page config; add `keep_ha: true` to keep the original Home Assistant card. An example is in [docs/examples/containers.yaml](docs/examples/containers.yaml).
+
+| Card | What it does | Options |
+|---|---|---|
+| `custom:nuvio-grid-card` | Cards in columns; fewer columns on narrow screens | `cards`, `columns` (1 to 6, 0 = automatic), `min_width`, `square`, `gap`, `glass`, `title`; per card `span` |
+| `custom:nuvio-stack-card` | Cards one below another or side by side in one glass; side by side turns vertical below `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (e.g. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
+
 ### Generic cards and containers (0.16.0)
 
 Twelve cards built only from the shared glass blocks, so they look like the reference design and work with any entity of the right domain. Each one adapts to its width: small (up to 220 px) hides secondary text, large (from 420 px) shows extra detail. They also work in a regular Home Assistant view, where they blur the background themselves. A ready dashboard built only from them is in [docs/examples/inspiration-dashboard.yaml](docs/examples/inspiration-dashboard.yaml) (works with the HA demo integration).
@@ -368,9 +379,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.0.1 -m "Nuvio 1.0.1" && git push origin v1.0.1`.
+Only tagging by hand: `git tag -a v1.1.0 -m "Nuvio 1.1.0" && git push origin v1.1.0`.
 
 ## Changelog
+
+### 1.1.0
+- Added: layout containers like in Home Assistant: grid (`custom:nuvio-grid-card`), vertical stack and horizontal stack, in a new *Layout* group of **+ Add** with live previews.
+- Added: a container's form lists its cards. Add any component, tile or HA card, edit each card in its own form, drag to reorder, duplicate, remove and set the column span in a grid. Containers nest up to three levels.
+- Added: move a card from the panel into a container from its form, and move a card from a container back out to the panel.
+- Added: *Card from HA (YAML)* pastes a card from the Home Assistant code editor. HA `grid`, `vertical-stack` and `horizontal-stack` become Nuvio containers there and in the page config (`keep_ha: true` keeps the HA card).
+- Changed: the stack card has a gap, width ratio for side by side cards, a width below which it turns vertical, and dividers that can be turned off.
 
 ### 1.0.1
 - Changed: the Assist window uses the same glass, accent colour and motion as the other Nuvio windows, in the light and the dark scheme. Your messages, the typing dots, the microphone and the focused field all follow the accent colour.

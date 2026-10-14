@@ -375,9 +375,25 @@ const HG_COMP = [
   hgTrO({ id: 'lock', i: 'mdi:lock-outline', card: 'hg-lock-card', slots: [hgTrO({ k: 'e', dom: ['lock'], req: 1 }, { l: ['Zamek', 'Lock'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Zamek', 'Lock'], d: ['Odblokowanie z potwierdzeniem', 'Unlock with confirmation'] }),
   hgTrO({ id: 'fan', i: 'mdi:fan', card: 'hg-fan-card', slots: [hgTrO({ k: 'e', dom: ['fan'], req: 1 }, { l: ['Wentylator', 'Fan'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Wentylator', 'Fan'], d: ['Prędkość na łuku i tryby', 'Speed on an arc and modes'] }),
   hgTrO({ id: 'todo', i: 'mdi:checkbox-marked-circle-outline', card: 'hg-todo-card', slots: [hgTrO({ k: 'e', dom: ['todo'], req: 1 }, { l: ['Lista zadań', 'To-do list'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Lista zadań', 'To-do list'], d: ['Dodawanie i odhaczanie', 'Add and tick off'] }),
+  /* ----- Układ: kontenery jak w HA (siatka, stos pionowy, stos poziomy); dzieci w polu „Karty w kontenerze” ----- */
+  hgTrO({ id: 'grid', cat: 'layout', kids: 1, i: 'mdi:view-grid-outline', card: 'hg-grid-card', slots: [], cfg: (v) => ({ cards: v.cards || [] }),
+    opts: [{ k: 'title', l: ['Tytuł', 'Title'] }, { k: 'columns', t: 'num', l: ['Kolumny (1–6, puste = 3)', 'Columns (1–6, empty = 3)'], ph: '3' }, { k: 'gap', t: 'num', l: ['Odstęp (px)', 'Gap (px)'], ph: '12' },
+      { k: 'square', t: 'bool', l: ['Kwadratowe komórki', 'Square cells'] }, { k: 'glass', t: 'bool', l: ['Jedno szkło na całą siatkę', 'One glass for the whole grid'] }] },
+    { n: ['Siatka', 'Grid'], d: ['Karty w kolumnach, jak siatka w HA', 'Cards in columns, like the HA grid'] }),
+  hgTrO({ id: 'vstack', cat: 'layout', kids: 1, i: 'mdi:view-agenda-outline', card: 'hg-stack-card', slots: [], cfg: (v) => Object.assign({ direction: 'vertical', cards: v.cards || [] }, (v.o || {}).flat ? { glass: false } : {}, (v.o || {}).nodiv ? { divider: false } : {}),
+    opts: [{ k: 'title', l: ['Tytuł', 'Title'] }, { k: 'gap', t: 'num', l: ['Odstęp (px)', 'Gap (px)'], ph: '0' }, { k: 'flat', t: 'bool', l: ['Każda karta we własnym szkle', 'Each card in its own glass'] }, { k: 'nodiv', t: 'bool', l: ['Bez linii między kartami', 'No lines between cards'] }] },
+    { n: ['Stos pionowy', 'Vertical stack'], d: ['Karty jedna pod drugą w jednym szkle', 'Cards one below another in one glass'] }),
+  hgTrO({ id: 'hstack', cat: 'layout', kids: 1, i: 'mdi:view-column-outline', card: 'hg-stack-card', slots: [], cfg: (v) => Object.assign({ direction: 'horizontal', cards: v.cards || [] }, (v.o || {}).flat ? { glass: false } : {}, (v.o || {}).nodiv ? { divider: false } : {}),
+    opts: [{ k: 'title', l: ['Tytuł', 'Title'] }, { k: 'gap', t: 'num', l: ['Odstęp (px)', 'Gap (px)'], ph: '0' }, { k: 'ratio', t: 'list', l: ['Proporcje szerokości (np. 2, 1)', 'Width ratio (e.g. 2, 1)'], ph: '1, 1' },
+      { k: 'wrap_below', t: 'num', l: ['Układaj pionowo poniżej (px)', 'Stack vertically below (px)'], ph: '420' }, { k: 'flat', t: 'bool', l: ['Każda karta we własnym szkle', 'Each card in its own glass'] }, { k: 'nodiv', t: 'bool', l: ['Bez linii między kartami', 'No lines between cards'] }] },
+    { n: ['Stos poziomy', 'Horizontal stack'], d: ['Karty obok siebie, na wąskim ekranie pionowo', 'Cards side by side, stacked on narrow screens'] }),
+  hgTrO({ id: 'hacard', cat: 'layout', i: 'mdi:code-braces', card: 'hg-stack-card', slots: [], cardOf: (v) => hgHaTag(hgHaCard(v)) || 'hg-stack-card',
+    cfg: (v) => { const c = hgHaCard(v); if (!c) return { cards: [] }; if (hgHaTag(c)) { const o = Object.assign({}, c); delete o.type; return o; } return { direction: 'vertical', glass: false, divider: false, cards: [c] }; },
+    opts: [{ k: 'src', t: 'txt', l: ['YAML albo JSON karty z Home Assistant', 'YAML or JSON of a Home Assistant card'], ph: 'type: grid\ncolumns: 2\ncards:\n  - type: tile\n    entity: …' }] },
+    { n: ['Karta z HA (YAML)', 'Card from HA (YAML)'], d: ['Wklej kartę albo siatkę i stosy z HA', 'Paste a card, or a grid and stacks from HA'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
+const HG_COMP_Z = { grid: 'l', vstack: 'm', hstack: 'l', hacard: 'm', history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
@@ -405,7 +421,52 @@ const hgCompCfg = (C, v, h) => { v = v || {}; const b = C.cfg ? C.cfg(v, h) : {}
   return Object.assign(b, v.x && typeof v.x === 'object' ? v.x : {}); };
 const HG_COMP_BASIC = ['slider', 'button', 'entities', 'select', 'stepper', 'gauge'];
 const hgCompOk = (C) => !C.card || !!customElements.get(C.card);
-const hgCompCard = (C, v) => (C.cards && v && C.cards[v.mode]) || C.card;
+const hgCompCard = (C, v) => (C.cardOf && v && C.cardOf(v)) || (C.cards && v && C.cards[v.mode]) || C.card;
+/* mały parser YAML dla kart HA (mapy, listy, skalary, [a, b], {a: 1}, bloki |); JSON też przechodzi */
+const hgYaml = (src) => { const t = String(src || '').replace(/\t/g, '  ').trim(); if (!t) return null; if (/^[{[]/.test(t)) return JSON.parse(t);
+  const cut = (l) => { let q = ''; for (let i = 0; i < l.length; i++) { const ch = l[i]; if (q) { if (ch === q) q = ''; } else if (ch === '"' || ch === "'") q = ch; else if (ch === '#' && (i === 0 || /\s/.test(l[i - 1]))) return l.slice(0, i); } return l; };
+  const L = []; let bk = -1;   /* linie bloku | i > zostają dosłownie (także # i puste) */
+  for (const raw of t.split('\n')) { const ri = raw.length - raw.trimStart().length; if (bk >= 0 && (!raw.trim() || ri > bk)) { L.push({ raw, ind: bk + 1, txt: raw.trim(), blk: 1 }); continue; } bk = -1;
+    const c = cut(raw).replace(/\s+$/, ''), x = { raw, ind: c.length - c.trimStart().length, txt: c.trim() }; if (!x.txt || x.txt === '---') continue; L.push(x); if (/:\s+[|>][-+]?$/.test(x.txt)) bk = x.ind; }
+  let i = 0;
+  const sc = (v) => { v = String(v).trim(); if (v === '' || /^(null|~)$/.test(v)) return null; if (/^".*"$/.test(v)) return JSON.parse(v); if (/^'.*'$/.test(v)) return v.slice(1, -1).replace(/''/g, "'");
+    if (/^(true|false)$/i.test(v)) return v.toLowerCase() === 'true'; if (/^-?\d+(\.\d+)?$/.test(v)) return +v;
+    if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(',').map((x) => x.trim()).filter((x) => x !== '').map(sc);
+    if (/^\{.*\}$/.test(v)) { const o = {}; for (const p of v.slice(1, -1).split(',')) { const m = p.match(/^\s*([^:]+):\s*(.*)$/); if (m) o[sc(m[1])] = sc(m[2]); } return o; } return v; };
+  const isSeq = (x) => x.txt === '-' || x.txt.startsWith('- ');
+  const block = (ind) => {
+    if (isSeq(L[i])) { const a = []; while (i < L.length && L[i].ind === ind && isSeq(L[i])) { const rest = L[i].txt.slice(1).trimStart();
+        if (!rest) { i++; a.push(i < L.length && L[i].ind > ind ? block(L[i].ind) : null); }
+        else if (/^[^"'[{][^:]*:(\s|$)/.test(rest)) { L[i] = { raw: L[i].raw, ind: ind + L[i].txt.length - rest.length, txt: rest }; a.push(block(L[i].ind)); }
+        else { a.push(sc(rest)); i++; } } return a; }
+    const o = {}; while (i < L.length && L[i].ind === ind && !isSeq(L[i])) { const m = L[i].txt.match(/^("[^"]*"|'[^']*'|[^:]+?):(?:\s+(.*))?$/); if (!m) throw new Error('YAML: ' + L[i].txt);
+      const k = sc(m[1]), v = (m[2] || '').trim(); i++;
+      if (/^[|>][-+]?$/.test(v)) { const P = []; let bi = -1; while (i < L.length && L[i].blk) { const r = L[i].raw; if (bi < 0 && r.trim()) bi = r.length - r.trimStart().length; P.push(r.slice(Math.max(0, bi))); i++; } while (P.length && !P[P.length - 1].trim()) P.pop(); o[k] = P.join(v[0] === '|' ? '\n' : ' '); }
+      else if (v) o[k] = sc(v);
+      else if (i < L.length && (L[i].ind > ind || (L[i].ind === ind && isSeq(L[i])))) o[k] = block(L[i].ind);
+      else o[k] = null; }
+    return o; };
+  const r = block(L[0].ind); if (i < L.length) throw new Error('YAML: ' + L[i].txt); return r; };
+/* karta z YAML/JSON HA: kontener HA -> kontener Nuvio, inna karta HA -> owinięta w stos bez szkła (panel montuje karty Nuvio) */
+const hgHaCard = (v) => { let c = null; try { c = hgYaml((v.o || {}).src); } catch (e) { c = null; } return c && typeof c === 'object' && !Array.isArray(c) && c.type ? hgFromHA(c) : null; };
+const hgHaTag = (c) => (c && /^custom:/.test(c.type) && /-(stack|grid|tabs)-card$/.test(c.type) ? c.type.slice(7) : null);
+/* dziecko kontenera z formularza komponentu (nv_* = dane do ponownej edycji, karta ich nie widzi) */
+const hgKidCfg = (C, R, h) => { const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '', meta = { nv_comp: C.id, nv_v: JSON.parse(JSON.stringify(R.v || {})), ...(n ? { nv_n: n } : {}), ...(i ? { nv_i: i } : {}) };
+  if (C.id === 'hacard') { const c = hgHaCard(R.v); return c ? Object.assign({}, c, meta) : null; }
+  if (C.tile) return Object.assign({ type: 'custom:hg-tiles-card', single: Object.assign({ e: R.v.e }, R.t && R.t !== C.tile ? { t: R.t } : {}, n ? { n } : {}, i ? { i } : {}) }, meta, R.t ? { nv_t: R.t } : {});
+  return Object.assign({ type: 'custom:' + hgCompCard(C, R.v) }, hgCompCfg(C, R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {}, meta); };
+/* pozycja panelu (L.added) -> dziecko kontenera i z powrotem */
+const hgAddedToKid = (x) => { const meta = { nv_comp: x.comp, nv_v: x.v ? JSON.parse(JSON.stringify(x.v)) : { e: x.e }, ...(x.n ? { nv_n: x.n } : {}), ...(x.i ? { nv_i: x.i } : {}), ...(x.t ? { nv_t: x.t } : {}) };
+  if (!x.c) return Object.assign({ type: 'custom:hg-tiles-card', single: Object.assign({ e: x.e }, x.t ? { t: x.t } : {}, x.n ? { n: x.n } : {}, x.i ? { i: x.i } : {}) }, meta);
+  return Object.assign({ type: 'custom:' + x.c }, x.cfg, x.n ? { title: x.n, name: x.n } : {}, x.i ? { icon: x.i } : {}, meta); };
+const hgKidToAdded = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp), clean = (o) => { const r = {}; for (const q in o) if (!/^nv_/.test(q) && q !== 'type' && q !== 'span') r[q] = o[q]; return r; };
+  if (C && C.tile && k.single) return Object.assign({ e: k.single.e, comp: C.id }, k.single.t ? { t: k.single.t } : {}, k.nv_n ? { n: k.nv_n } : {}, k.nv_i ? { i: k.nv_i } : {});
+  const key = 'c:' + (C ? C.id : 'vstack') + ':' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  if (C && C.id !== 'hacard' && /^custom:/.test(k.type)) return Object.assign({ e: key, c: k.type.slice(7), comp: C.id, cfg: clean(k), v: k.nv_v || {} }, k.nv_n ? { n: k.nv_n } : {}, k.nv_i ? { i: k.nv_i } : {});
+  const kid = Object.assign({}, k); delete kid.span; const cfg = { direction: 'vertical', glass: false, divider: false, cards: [kid] };   // karta HA: w stosie bez szkła
+  return { e: key, c: 'hg-stack-card', comp: 'vstack', cfg, v: { cards: [kid], o: { flat: true, nodiv: true } } }; };
+const hgKidName = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_n || k.title || k.name || (C && C.n) || String(k.type || '').replace(/^custom:/, ''); };
+const hgKidIcon = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_i || k.icon || (C && C.i) || 'mdi:card-outline'; };
 const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
 const hgCmHtml = (x, sz) => { HG_CM.set(x.e, { c: x.c, cfg: Object.assign({}, x.cfg, x.n ? { title: x.n, name: x.n } : {}, x.i ? { icon: x.i } : {}) });
   return `<div class="hgtl k-card ${HGL.szc(sz)}" data-hgk="${H.esc(x.e)}"><div class="cmslot" data-cm="${H.esc(x.e)}"></div></div>`; };
@@ -449,6 +510,10 @@ const HG_MOCK_CSS = `
 const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-tag">${hgTr('Podgląd', 'Preview')}</span>`;
   const spark = (pts, fill) => `<svg viewBox="0 0 100 34" preserveAspectRatio="none" style="width:100%;height:36px">${fill ? `<path d="M0 34 L${pts} L100 34Z" class="accf" opacity=".18"/>` : ''}<polyline points="${pts}" fill="none" class="acc mk-dash" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
   const M = {
+    hacard: `<div style="font:10px ui-monospace,monospace;line-height:1.5;opacity:.85"><div>type: grid</div><div>cards:</div><div>&nbsp;&nbsp;- type: tile</div></div>`,
+    grid: `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;flex:1">${'<i style="border-radius:6px;background:currentColor;opacity:.14;min-height:18px"></i>'.repeat(5)}<i style="border-radius:6px;background:var(--hg-accent);opacity:.7"></i></div>`,
+    vstack: `<div style="display:flex;flex-direction:column;gap:0;flex:1;border-radius:8px;background:color-mix(in srgb, currentColor 8%, transparent)">${[0, 1, 2].map((i) => `<div class="mk-r" style="padding:4px 6px;${i ? 'border-top:1px solid color-mix(in srgb, currentColor 10%, transparent)' : ''}"><span class="mk-cir${i ? '' : ' on'}" style="width:10px;height:10px"></span><span style="flex:1;height:5px;border-radius:3px;background:currentColor;opacity:.2"></span></div>`).join('')}</div>`,
+    hstack: `<div style="display:flex;gap:0;flex:1;border-radius:8px;background:color-mix(in srgb, currentColor 8%, transparent)">${[0, 1, 2].map((i) => `<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;${i ? 'border-left:1px solid color-mix(in srgb, currentColor 10%, transparent)' : ''}"><span class="mk-cir${i === 1 ? ' on' : ''}" style="width:12px;height:12px"></span><span style="width:60%;height:5px;border-radius:3px;background:currentColor;opacity:.2"></span></div>`).join('')}</div>`,
     hero: `<div style="font-size:15px;font-weight:600;line-height:1.1">${hgTr('Hej, Anna!', 'Hey, Anna!')}</div><div style="font-size:11px;opacity:.75">${hgTr('Cały dom w jednym miejscu', 'Your whole home in one place')}</div>`,
     toggle: `<div class="mk-r"><span class="mk-cir on" style="width:24px;height:24px">${I('mdi:lightbulb')}</span><span>${hgTr('Kuchnia', 'Kitchen')}</span><span class="mk-sw on"></span></div>`,
     progress: `<div class="mk-r"><b style="font-size:18px;font-weight:300">62%</b><span style="opacity:.6">${hgTr('Średnie', 'Medium')}</span></div><div class="mk-tr" style="height:12px"><i style="--w:62%"></i></div>`,
@@ -573,14 +638,16 @@ const HG_COMP_EDIT = {
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
-    this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null;   /* galeria to poziom główny, bez szkicu */
+    const kN = (this._eKidStk || []).length, kid = kN > 0; if (!kid) { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; }   /* galeria to poziom główny, bez szkicu; w kontenerze to krok formularza */
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
-    const room = sc.startsWith('room:'), list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id)), list = [...bas, ...rest];
+    const room = sc.startsWith('room:') && !kid, list0 = HG_COMP.filter(hgCompOk).filter((C) => !room || C.tile || HG_COMP_BASIC.includes(C.id)),
+      lay = room || kN >= HG_CONT_MAX ? [] : list0.filter((C) => C.cat === 'layout'), bas = list0.filter((C) => HG_COMP_BASIC.includes(C.id)), rest = list0.filter((C) => !HG_COMP_BASIC.includes(C.id) && C.cat !== 'layout'), list = [...lay, ...bas, ...rest];
     const card = (C) => { const req = C.slots.filter((x) => x.req), miss = req.find((sl) => !hgSlotCands(h, sl).length);
       const dom = miss ? `${miss.l.toLowerCase()}: ${miss.dom.join(', ')}${miss.dc ? ' · ' + miss.dc.join(', ') : ''}` : '';
       return `<button class="${miss ? 'na' : ''}" role="listitem" data-hge="cgo" data-c="${C.id}"${miss ? ` title="${H.esc(hgTr('Wymaga', 'Needs') + ' ' + dom)}"` : ''}><div class="th" data-th="${C.id}">${hgMockHtml(C.id)}</div><b>${H.icon(C.i)}<span>${H.esc(C.n)}</span></b><small class="cd">${H.esc(C.d)}</small>${miss ? `<small class="cna">${H.icon('mdi:link-variant-off')}<span>${hgTr('Brak pasującej encji', 'No matching entity')}</span></small><small class="cdom">${H.esc(dom)}</small>` : ''}</button>`; };
-    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Dodaj komponent', 'Add component')}"><style>${HG_STY_CSS}${HG_COMP_CSS}${HG_MOCK_CSS}</style><div class="hs-h"><b>${hgTr('Dodaj komponent', 'Add component')}<small style="margin-left:8px;font-weight:500;opacity:.55;font-size:12px" title="${hgTr('Wersja załadowanej paczki', 'Loaded bundle version')}">v${H.esc(String(HG_BUILD).split('+')[0])}</small></b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
-      <div class="cq"><button class="hs-r" data-hge="cgent" style="min-height:48px">${H.icon('mdi:magnify')}<span class="hs-t"><b>${hgTr('Szukaj encji', 'Search entities')}</b><small>${hgTr('Szybkie dodanie pojedynczej encji jako kafelka', 'Quickly add a single entity as a tile')}</small></span></button></div>
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${kid ? hgTr('Dodaj do kontenera', 'Add to container') : hgTr('Dodaj komponent', 'Add component')}"><style>${HG_STY_CSS}${HG_COMP_CSS}${HG_MOCK_CSS}</style><div class="hs-h"><b>${kid ? hgTr('Dodaj do kontenera', 'Add to container') : hgTr('Dodaj komponent', 'Add component')}<small style="margin-left:8px;font-weight:500;opacity:.55;font-size:12px" title="${hgTr('Wersja załadowanej paczki', 'Loaded bundle version')}">v${H.esc(String(HG_BUILD).split('+')[0])}</small></b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      ${kid ? '' : `<div class="cq"><button class="hs-r" data-hge="cgent" style="min-height:48px">${H.icon('mdi:magnify')}<span class="hs-t"><b>${hgTr('Szukaj encji', 'Search entities')}</b><small>${hgTr('Szybkie dodanie pojedynczej encji jako kafelka', 'Quickly add a single entity as a tile')}</small></span></button></div>`}
+      ${lay.length ? `<h4 class="cgh">${hgTr('Układ', 'Layout')}<small>${hgTr('Kontenery jak w HA: siatka, stos pionowy i poziomy', 'Containers like in HA: grid, vertical and horizontal stack')}</small></h4><div class="cg" role="list">${lay.map(card).join('')}</div>` : ''}
       ${bas.length ? `<h4 class="cgh">${hgTr('Podstawowe', 'Basic')}<small>${hgTr('Uniwersalne elementy dla dowolnych encji', 'General controls for any entity')}</small></h4><div class="cg" role="list">${bas.map(card).join('')}</div>` : ''}
       ${rest.length ? `<h4 class="cgh">${hgTr('Karty', 'Cards')}<small>${hgTr('Gotowe karty dla konkretnych rodzajów urządzeń', 'Ready made cards for specific device types')}</small></h4><div class="cg" role="list">${rest.map(card).join('')}</div>` : ''}</div></div>`;
     /* miniatury na żywo: kafel z pierwszą pasującą encją albo pomniejszona karta */
@@ -598,8 +665,8 @@ const HG_COMP_EDIT = {
   _eComp(cid, st) {
     const h = this._hass, C = HG_COMP.find((x) => x.id === cid); if (!C) return; this._eSheet('cfg'); const S = this._eSheetEl;
     if (!st && !this._eBacking && !(this._eStk || []).length) this._eSnapTake();
-    const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: HG_COMP_Z[C.id] || 's' };
-    const ed = !!R.edit, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
+    const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: HG_COMP_Z[C.id] || 's', ...((this._eKidStk || []).length ? { kid: 1 } : {}) };
+    const ed = !!R.edit && !R.kid, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
     const slot = (sl) => { const v = R.v[sl.k];
       if (!sl.multi) return `<div class="hs-fl"><span>${H.esc(sl.l)}${sl.req ? '' : ''}</span><div class="hs-r hs-er"><button class="hs-eb" data-hge="cslot" data-k="${sl.k}"><span class="hs-i">${H.icon(v ? ico(v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(v ? H.name(h, v) : hgTr('Wybierz encję', 'Choose entity'))}</b><small>${H.esc(v || sl.dom.join(', '))}</small></span><span class="hs-p" title="${hgTr('Zmień', 'Change')}">${H.icon(v ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>${v && !sl.req ? `<button class="hs-del" data-hge="cdel" data-k="${sl.k}" aria-label="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button>` : ''}</div></div>`;
       const A = v || [];
@@ -607,9 +674,16 @@ const HG_COMP_EDIT = {
         <button class="hs-r hs-add" data-hge="cslot" data-k="${sl.k}" data-i="${A.length}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(sl.dom.join(', '))}${sl.dc ? ' · ' + H.esc(sl.dc.join(', ')) : ''}</small></span></button></div>`; };
     const main = C.tile ? R.v.e : null, T = main ? hgTypeOpts(h, main).filter(([t]) => t !== C.tile).length ? hgTypeOpts(h, main) : [[C.tile, hgTr('Normalny', 'Default')]] : null;
     const okReq = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k]));
+    /* dzieci kontenera: kolejność (uchwyt), edycja, kopia, usunięcie, w siatce szerokość */
+    const kids = () => { const A = R.v.cards || [], cols = C.id === 'grid' ? Math.max(1, +((R.v.o || {}).columns) || 3) : 0;
+      return `<div class="hs-fl hs-ents"><span>${hgTr('Karty w kontenerze', 'Cards in the container')}</span>${A.length ? '' : `<p class="hs-e" style="margin:2px 0 4px;opacity:.7">${hgTr('Pusty kontener. Dodaj pierwszą kartę.', 'Empty container. Add the first card.')}</p>`}${A.map((k, i) => { const K = HG_COMP.find((c) => c.id === k.nv_comp), sp = Math.max(1, +k.span || 1);
+        return `<div class="hs-r hs-er" data-ak="cards" data-ai="${i}"><span class="hs-dg" data-hgdrag role="button" tabindex="0" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}">${H.icon('mdi:drag-vertical')}</span><button class="hs-eb" data-hge="kedit" data-i="${i}"><span class="hs-i">${H.icon(hgKidIcon(k))}</span><span class="hs-t"><b><em class="hs-ix">${i + 1}</em>${H.esc(hgKidName(k))}</b><small>${H.esc(K ? K.n : String(k.type || '').replace(/^custom:/, ''))}${hgIsCont(k) ? ' · ' + (k.cards || []).length + ' ' + hgTr('kart', 'cards') : ''}</small></span><span class="hs-p" title="${hgTr('Edytuj', 'Edit')}">${H.icon('mdi:pencil-outline')}</span></button>${cols > 1 ? `<button class="hs-del" data-hge="kspan" data-i="${i}" title="${hgTr('Szerokość w kolumnach', 'Width in columns')}" aria-label="${hgTr('Szerokość', 'Width')}: ${sp}" style="font:600 12px/1 inherit;width:auto;min-width:36px;padding:0 8px">${sp}×</button>` : ''}${ed ? `<button class="hs-del" data-hge="kout" data-i="${i}" title="${hgTr('Wyjmij na panel', 'Move out to the panel')}" aria-label="${hgTr('Wyjmij na panel', 'Move out to the panel')}">${H.icon('mdi:arrow-top-left-bold-box-outline')}</button>` : ''}<button class="hs-del" data-hge="kdup" data-i="${i}" title="${hgTr('Duplikuj', 'Duplicate')}" aria-label="${hgTr('Duplikuj', 'Duplicate')}">${H.icon('mdi:content-copy')}</button><button class="hs-del" data-hge="kdel" data-i="${i}" title="${hgTr('Usuń', 'Remove')}" aria-label="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button></div>`; }).join('')}
+        <button class="hs-r hs-add" data-hge="kadd"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj kartę', 'Add card')}</b><small>${hgTr('Dowolny komponent, kafelek albo karta z HA', 'Any component, tile or card from HA')}</small></span></button></div>`; };
+    const tgts = ed ? (HGL.get(R.sc || this._eGalSc).added || []).filter((x) => x.e !== R.edit && x.v && HG_COMP.some((c) => c.id === x.comp && c.kids)) : [];
+    const mv = tgts.length ? `<div class="hs-fl"><span>${hgTr('Przenieś do kontenera', 'Move into a container')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Przenieś do kontenera', 'Move into a container')}">${tgts.map((x) => { const K = HG_COMP.find((c) => c.id === x.comp); return `<button data-hge="kmove" data-t="${H.esc(x.e)}">${H.icon(x.i || K.i)}${H.esc(x.n || K.n)}</button>`; }).join('')}</div></div>` : '';
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${H.esc(C.n)}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${H.icon(C.i)} ${H.esc(C.n)}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
-      ${C.slots.map(slot).join('')}
+      ${C.slots.map(slot).join('')}${C.kids ? kids() : ''}
       ${C.modes ? `<div class="hs-fl"><span>${hgTr('Opcje komponentu', 'Component options')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Opcje komponentu', 'Component options')}">${C.modes.map(([m, pl, en, ic]) => `<button data-hge="cmod" data-m="${m}" aria-pressed="${(R.v.mode || C.modes[0][0]) === m}">${H.icon(ic)}${H.esc(hgTr(pl, en))}</button>`).join('')}</div></div>` : ''}
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(R.n)}" placeholder="${H.esc(main ? H.name(h, main) : C.n)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
@@ -619,8 +693,8 @@ const HG_COMP_EDIT = {
         if (o.t === 'bool') return `<label class="hs-fl"><span>${L}</span><span class="hs-s"><input type="checkbox" data-o="${o.k}"${val ? ' checked' : ''}></span></label>`;
         return `<label class="hs-fl"><span>${L}</span><span class="hs-s"><input class="hs-in" data-o="${o.k}" ${o.t === 'num' ? 'inputmode="decimal"' : ''} value="${H.esc(val)}" placeholder="${H.esc(o.ph || '')}" autocomplete="off"></span></label>`; }).join('')}
       ${C.tile ? '' : `<details class="hs-fl hs-adv"${R.v.x ? ' open' : ''}><summary>${hgTr('Zaawansowana konfiguracja (JSON)', 'Advanced configuration (JSON)')}</summary><small style="display:block;opacity:.65;margin:4px 0">${hgTr('Dowolne pola karty, np. etykiety, kolory, progi, akcje. Nadpisują ustawienia powyżej.', 'Any card fields, e.g. labels, colors, thresholds, actions. They override the settings above.')}</small><textarea class="hs-in hs-js" data-x="1" rows="6" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px ui-monospace,monospace;min-height:110px" placeholder="{ }">${H.esc(R.v.x ? JSON.stringify(R.v.x, null, 2) : '')}</textarea><small class="hs-jse" style="color:#ff7a6b" hidden>${hgTr('Niepoprawny JSON', 'Invalid JSON')}</small></details>`}
-      ${R.sc && R.sc.startsWith('room:') ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span>${hgSzSeg('cz', R.z)}</div>`}
-      </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? hgTr('Anuluj', 'Cancel') : hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed ? 'mdi:check' : 'mdi:plus')}<span>${ed ? hgTr('Zapisz', 'Save') : hgTr('Dodaj', 'Add')}</span></button></div></div>`;
+      ${R.kid || (R.sc && R.sc.startsWith('room:')) ? '' : `<div class="hs-fl"><span>${hgTr('Rozmiar', 'Size')}</span>${hgSzSeg('cz', R.z)}</div>`}${mv}
+      </div><div class="hs-ac"><button class="hs-b2" data-hge="${ed ? 'sheetclose' : 'cback'}">${ed ? hgTr('Anuluj', 'Cancel') : hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="cok" ${okReq ? '' : 'disabled'}>${H.icon(ed || (R.kid && R.edit) ? 'mdi:check' : 'mdi:plus')}<span>${ed || (R.kid && R.edit) ? hgTr('Zapisz', 'Save') : R.kid ? hgTr('Dodaj do kontenera', 'Add to container') : hgTr('Dodaj', 'Add')}</span></button></div></div>`;
     for (const n of S.querySelectorAll('input[name]')) n.addEventListener('input', () => { R[n.name] = n.value.trim(); if (n.name === 'i') { const ic = n.parentElement.querySelector('ha-icon'); if (ic && /^mdi:[a-z0-9-]+$/.test(R.i)) ic.setAttribute('icon', R.i); } this._eCompPv(); });
     for (const n of S.querySelectorAll('[data-o]')) n.addEventListener(n.tagName === 'SELECT' || n.type === 'checkbox' ? 'change' : 'input', () => { R.v = Object.assign({}, R.v, { o: Object.assign({}, R.v.o || {}, { [n.dataset.o]: n.type === 'checkbox' ? n.checked : n.value.trim() }) }); this._eCompPv(); });
     for (const n of S.querySelectorAll('textarea[data-x]')) n.addEventListener('input', () => { const t = n.value.trim(), er = S.querySelector('.hs-jse'), ok = S.querySelector('[data-hge="cok"]'); let x = null, bad = false;
@@ -633,6 +707,7 @@ const HG_COMP_EDIT = {
   _eCompPv() { const R = this._eCompR, C = HG_COMP.find((x) => x.id === R.cid), h = this._hass, pv = this._eSheetEl && this._eSheetEl.querySelector('.hs-pvb'); if (!pv || !C) return;
     const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
     if (C.tile) { pv.className = 'hs-pvb tg2'; pv.innerHTML = R.v.e ? hgTileHtml(h, R.v.e, R.z === 's' ? 's' : R.z, { t: R.t || C.tile, n, i }) : `<p class="hs-e">${hgTr('Wybierz encję', 'Choose an entity')}</p>`; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); return; }
+    if (C.id === 'hacard' && !hgHaCard(R.v)) { pv.className = 'hs-pvb'; pv.innerHTML = `<p class="hs-e">${(R.v.o || {}).src ? hgTr('Nie rozumiem tego YAML. Sprawdź wcięcia i pole type.', 'Cannot read this YAML. Check indentation and the type field.') : hgTr('Wklej YAML karty z edytora HA (Edytuj kartę, Pokaż edytor kodu).', 'Paste the card YAML from the HA editor (Edit card, Show code editor).')}</p>`; return; }
     const ok = C.slots.every((sl) => !sl.req || (sl.multi ? (R.v[sl.k] || []).length : R.v[sl.k])); if (!ok) { pv.className = 'hs-pvb'; pv.innerHTML = `<p class="hs-e">${hgTr('Wybierz encje', 'Choose entities')}</p>`; return; }
     pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; const cc = hgCompCard(C, R.v), el = document.createElement(cc);
     try { el.setConfig(Object.assign({ type: 'custom:' + cc }, hgCompCfg(C, R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {})); } catch (e) { /* pusta */ } el._hgPv = true; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvFit(box, el, Math.min(440, (this._panelEl && this._panelEl.clientWidth) || 420)); },
@@ -649,6 +724,7 @@ const HG_COMP_EDIT = {
       const row = hd.closest('.hs-er'), key = row.dataset.ak, i = +row.dataset.ai, j = i + (ev.key === 'ArrowUp' ? -1 : 1), R = this._eCompR, A = (R.v[key] || []).slice(); if (j < 0 || j >= A.length) return;
       [A[i], A[j]] = [A[j], A[i]]; R.v[key] = A; this._eComp(R.cid, R); const nh = this._eSheetEl && this._eSheetEl.querySelector(`.hs-er[data-ak="${CSS.escape(key)}"][data-ai="${j}"] [data-hgdrag]`); if (nh) nh.focus(); }); },
   _eCompAct(a, b) { const R = this._eCompR, h = this._hass;
+    if (a[0] === 'k') return this._eKidAct(a, b);
     if (a === 'cgent') { const ct = this._eGalCt, sc = this._eGalSc; return this._eGo(() => this._eGallery(ct, sc), () => this._eSheet('add', ct, sc)); }
     if (a === 'cgo') { const ct = this._eGalCt, sc = this._eGalSc; this._eCompR = null; return this._eGo(() => this._eGallery(ct, sc), () => this._eComp(b.dataset.c)); }
     if (a === 'cback') return this._eBack();
@@ -662,6 +738,11 @@ const HG_COMP_EDIT = {
       this._eRepl = { comp: { k: sl.k, i: b.dataset.i != null ? +b.dataset.i : null }, doms: sl.dom, flt: (e) => cset.has(e), excl: cur.filter((_, i) => i !== +b.dataset.i) };
       const back = () => { this._eRepl = null; this._eComp(R.cid, this._eCompR || R); };
       return this._eGo(back, () => this._eSheet('add', null, this._eGalSc || R.sc)); }
+    if (a === 'cok' && C.id === 'hacard' && !hgHaCard(R.v)) return this._eToast(hgTr('Najpierw wklej poprawny YAML karty', 'Paste a valid card YAML first'));
+    if (a === 'cok' && R.kid) { if (R._xBad) return; const F = (this._eKidStk || []).pop(), kc = F && hgKidCfg(C, R, h); if (!kc) return;
+      const P = F.R, A = (P.v.cards || []).slice(); if (F.i != null) { if (A[F.i] && A[F.i].span) kc.span = A[F.i].span; A[F.i] = kc; } else A.push(kc);
+      P.v = Object.assign({}, P.v, { cards: A }); this._eStk.length = Math.min(this._eStk.length, F.d0); this._eRepl = null; this._eNav('b'); this._eComp(P.cid, P);
+      return this._eToast((F.i != null ? hgTr('Zapisano: ', 'Saved: ') : hgTr('Dodano do kontenera: ', 'Added to container: ')) + hgKidName(kc)); }
     if (a === 'cok') { if (R._xBad) return; const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
       this._eSet(sc, (L) => { let key;
         if (C.tile) { const e = R.v.e; key = e; const x0 = R.edit ? L.added.find((y) => y.e === R.edit) : null, x = { e, ...(R.t && R.t !== C.tile ? { t: R.t } : R.t === C.tile && hgTypesFor(h, e)[0] !== C.tile ? { t: C.tile } : {}), ...(n ? { n } : {}), ...(i ? { i } : {}), comp: C.id };
@@ -671,6 +752,29 @@ const HG_COMP_EDIT = {
         if (R.z && R.z !== 's') L.size[key] = R.z; else delete L.size[key]; });
       this._eSheet(false); this._eToast((R.edit ? hgTr('Zapisano: ', 'Saved: ') : hgTr('Dodano: ', 'Added: ')) + (n || C.n)); this._eCompR = null;
       return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'HG-TILES-CARD')); }
+  },
+  /* dzieci kontenera: dodaj (galeria jako krok), edytuj (formularz komponentu albo YAML), kopia, usuń, szerokość w siatce */
+  _eKidAct(a, b) { const R = this._eCompR, A = (R.v.cards || []).slice(), i = +b.dataset.i, C = HG_COMP.find((x) => x.id === R.cid);
+    const set = (X) => { R.v = Object.assign({}, R.v, { cards: X }); this._eComp(R.cid, R); };
+    if (a === 'kdel') { A.splice(i, 1); return set(A); }
+    const sc0 = R.sc || this._eGalSc, nm = (o) => (/^mdi:[a-z0-9-]+$/.test(o.i || '') ? { i: o.i } : {});
+    /* zapis kontenera z formularza (jak Zapisz) */
+    const save = (L) => { const j = L.added.findIndex((y) => y.e === R.edit); if (j < 0) return; L.added[j] = Object.assign({ e: R.edit, c: hgCompCard(C, R.v), comp: C.id, cfg: hgCompCfg(C, R.v, this._hass), v: R.v }, R.n ? { n: R.n } : {}, nm(R)); };
+    if (a === 'kout') { const k = A[i]; if (!k || !R.edit) return; A.splice(i, 1); R.v = Object.assign({}, R.v, { cards: A }); const x = hgKidToAdded(k);
+      this._eSet(sc0, (L) => { save(L); if (!L.added.some((y) => y.e === x.e)) L.added.push(x); L.hidden = L.hidden.filter((y) => y !== x.e); });
+      this._eToast(hgTr('Wyjęto na panel: ', 'Moved out to the panel: ') + hgKidName(k)); this._eComp(R.cid, R); return this._eRefresh(true); }
+    if (a === 'kmove') { const kc = hgKidCfg(C, R, this._hass), te = b.dataset.t; if (!kc || !R.edit) return; let tn = '';
+      this._eSet(sc0, (L) => { const T = L.added.find((y) => y.e === te), TC = T && HG_COMP.find((c) => c.id === T.comp); if (!TC) return; tn = T.n || TC.n;
+        T.v = Object.assign({}, T.v, { cards: [...(T.v.cards || []), kc] }); T.cfg = hgCompCfg(TC, T.v, this._hass); L.added = L.added.filter((y) => y.e !== R.edit); delete L.size[R.edit]; });
+      this._eSheet(false); this._eCompR = null; this._eToast(hgTr('Przeniesiono do: ', 'Moved into: ') + tn); return this._eRefresh(true); }
+    if (a === 'kdup') { A.splice(i + 1, 0, JSON.parse(JSON.stringify(A[i]))); return set(A); }
+    if (a === 'kspan') { const n = Math.max(1, +((R.v.o || {}).columns) || 3), k = Object.assign({}, A[i]), s0 = Math.max(1, +k.span || 1); if (s0 >= n) delete k.span; else k.span = s0 + 1; A[i] = k; return set(A); }
+    const ct = this._eGalCt, sc = R.sc || this._eGalSc, back = () => { (this._eKidStk || []).pop(); this._eCompR = R; this._eComp(R.cid, R); };
+    if (a === 'kadd') { if (!C || !C.kids) return; const d0 = this._eStk.length; (this._eKidStk = this._eKidStk || []).push({ R, i: null, d0 }); return this._eGo(back, () => this._eGallery(ct, sc)); }
+    if (a === 'kedit') { const k = A[i]; if (!k) return; const K = HG_COMP.find((c) => c.id === k.nv_comp && c.id !== 'hacard');
+      const st = K ? { cid: K.id, sc, v: JSON.parse(JSON.stringify(k.nv_v || {})), t: k.nv_t || K.tile || '', n: k.nv_n || '', i: k.nv_i || '', z: 's', kid: 1, edit: 1 }
+        : { cid: 'hacard', sc, v: k.nv_comp === 'hacard' && k.nv_v ? JSON.parse(JSON.stringify(k.nv_v)) : { o: { src: JSON.stringify((() => { const o = {}; for (const q in k) if (!/^nv_/.test(q) && q !== 'span') o[q] = k[q]; return o; })(), null, 2) } }, t: '', n: k.nv_n || '', i: k.nv_i || '', z: 's', kid: 1, edit: 1 };
+      const d0 = this._eStk.length; (this._eKidStk = this._eKidStk || []).push({ R, i, d0 }); return this._eGo(back, () => this._eComp(st.cid, st)); }
   },
   /* powrót z wyboru encji do formularza */
   _eCompPick(nv) { const R = this._eCompR, P = this._eRepl.comp, C = HG_COMP.find((x) => x.id === R.cid), sl = C.slots.find((x) => x.k === P.k), h = this._hass;
@@ -1032,7 +1136,7 @@ const HG_EDIT = {
     if (a === 'lktab') { this._lkTab = b.dataset.k; const sh = this._eSheetEl && this._eSheetEl.querySelector('.hge-sheet.lk'); if (!sh) return; sh.dataset.at = b.dataset.k; for (const x of sh.querySelectorAll('.lk-tabs [role=tab]')) x.setAttribute('aria-selected', String(x === b)); const sc = sh.querySelector('.hs-sc'); if (sc) { sc.scrollTop = 0; sc.classList.remove('sw'); void sc.offsetWidth; sc.classList.add('sw'); } return; }
     if (a === 'lookreset') { HGL.data.app = {}; HGApp.apply(); this._eToast(hgTr('Przywrócono domyślny wygląd', 'Appearance reset to default')); return this._eLook(); }
     if (a === 'add') { const ct0 = b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct); return ct0 && ct0.scope === 'rooms' ? this._eSheet('add', ct0) : this._eGallery(ct0); }
-    if (/^c(go|gent|back|typ|mod|z|del|slot|ok)$/.test(a)) return this._eCompAct(a, b);
+    if (/^(c(go|gent|back|typ|mod|z|del|slot|ok)|k(add|edit|dup|del|span|move|out))$/.test(a)) return this._eCompAct(a, b);
     if (a === 'restore') { this._eSet(b.dataset.sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.k); }); this._eSheet(false); return this._eRefresh(b.dataset.sc === this._pageScope()); }
     if (a === 'sback') return this._eBack();
     if (a === 'cfstay') { const c = b.closest('.hs-cf'); if (c) c.remove(); return; }
@@ -1189,7 +1293,7 @@ const HG_EDIT = {
     const hd = it && it.querySelector('.sh');
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
-  _eCfg(ct, k) { this._eStk = []; if (!this._eBacking) this._eSnapTake();
+  _eCfg(ct, k) { this._eStk = []; this._eKidStk = []; if (!this._eBacking) this._eSnapTake();
     { const L0 = HGL.get(ct.scope); if (hgDedupConf(JSON.parse(JSON.stringify(L0)))) this._eSet(ct.scope, (L) => { hgDedupConf(L); }); }
     { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
       this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
@@ -1379,7 +1483,7 @@ const HG_EDIT = {
       const u = `/api/image/serve/${j.id}/original`; this._eApp((A) => { A.bg = { kind: 'url', v: u }; }); this._eToast(hgTr('Ustawiono przesłane zdjęcie', 'Uploaded image set')); this._eLook(); }, (e) => this._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')'));
   },
   _eSheet(mode, ct, scOver) {
-    if (!mode) { this._eRepl = null; this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
+    if (!mode) { this._eRepl = null; this._eStk = []; this._eKidStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; this._eSheetOpen = false; if (this._eSheetEl) { this._eSheetEl.remove(); this._eSheetEl = null; } return; }
     this._eSheetOpen = mode; this._eSheetCt = ct; if (!this._eBacking) { this._eF = 'all'; this._eQ = ''; }
     let L = this._eSheetEl; if (L && !L.isConnected) this.shadowRoot.appendChild(L); if (!L) { L = this._eSheetEl = document.createElement('div'); L.className = 'hge-sheet-l'; this.shadowRoot.appendChild(L); this._eStk = [];
       setTimeout(() => L.classList.add('opened'), 320); new MutationObserver(() => this._eDeco()).observe(L, { childList: true });
