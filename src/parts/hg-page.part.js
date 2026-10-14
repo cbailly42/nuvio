@@ -35,6 +35,7 @@ function hgBmPassThrough(on) {
    Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
 const HG_NO_AREAS = {};   /* stały pusty obiekt: HGAreas.model zapamiętuje model po referencji konfiguracji */
 const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
+const hgTouchTab = () => !!((navigator.maxTouchPoints > 1 || 'ontouchstart' in window) && window.matchMedia && matchMedia('(pointer: coarse)').matches || /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
 const hgTouch = () => !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -289,7 +290,8 @@ class HGPage extends HTMLElement {
     const W = this.getBoundingClientRect().width || window.innerWidth, Hh = window.innerHeight;
     let mode, u;
     if (W < 600) { mode = 'phone'; u = Math.max(0.92, Math.min(1.15, W / 375)); }
-    else if (W >= 900 && W / Hh >= 1.2) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
+    /* tablet dotykowy (iPad 768–1180, oba ułożenia): układ tabletu z przewijaniem strony, bez zagnieżdżonego przewijanego panelu (Safari źle składa wtedy rozmycie i kolumny) */
+    else if (W >= 900 && W / Hh >= 1.2 && !(W <= 1180 && hgTouchTab())) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620)); }
     const z = this._zoom();
     if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
@@ -1163,6 +1165,8 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([scroll]) .panel{ overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.35) transparent; }
 :host([scroll]) .panel::-webkit-scrollbar{ width:6px; } :host([scroll]) .panel::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.35); border-radius:3px; } :host([scroll]) .panel::-webkit-scrollbar-track{ background:transparent; }
 :host([mode=phone]) .panel{ overflow-y:visible !important; }
+/* tablet: przewija się strona, nie panel (Safari źle składa rozmycie i kolumny w przewijanym panelu) */
+:host([mode=tablet]) .panel{ overflow:visible !important; max-height:none !important; height:auto !important; }
 .hge-bar .hgt{ display:inline-flex; align-items:center; gap:6px; padding:0 10px 0 8px; white-space:nowrap; font-size:14px; } .hge-bar .hgt ha-icon{ width:18px; height:18px; color:var(--hg-accent-tx); }
 .hge-bar button{ flex:none; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; white-space:nowrap; transition:transform .15s, background .2s; }
 .hge-bar button:active{ transform:scale(.96); } .hge-bar button:disabled{ opacity:.45; cursor:default; }

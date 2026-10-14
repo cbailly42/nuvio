@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.11.0-a3e635?style=flat-square" alt="v0.11.0">
+  <img src="https://img.shields.io/badge/version-v0.11.1-a3e635?style=flat-square" alt="v0.11.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -328,9 +328,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.11.0 -m "Nuvio 0.11.0" && git push origin v0.11.0`.
+Sam tag ręcznie: `git tag -a v0.11.1 -m "Nuvio 0.11.1" && git push origin v0.11.1`.
 
 ## Lista zmian
+
+### 0.11.1
+- Naprawiono: na tabletach (iPad i inne ekrany dotykowe od 768 do 1180 px, w obu ułożeniach) pulpit używa układu tabletu, w którym przewija się strona, a nie szklany panel. Widoki pokoi nie ucinają już kart u góry, kolumny nie nachodzą na siebie i nie ma przesuniętego rozmytego bloku; karty układają się w siatce z najwyżej dwiema kolumnami.
+- Naprawiono: lista wyboru asystenta w oknie Assist otwiera się tuż pod przyciskiem, a nie w innym miejscu ekranu; okno jest wyśrodkowane i ma więcej miejsca na nazwę asystenta.
 
 ### 0.11.0
 - Zmieniono: Assist to teraz szklane okno zamiast karty. Otwierasz je przyciskiem mikrofonu w nagłówku albo klawiszem A; na telefonie wysuwa się od dołu. Rozmowa, wybór asystenta, mikrofon, podpowiedzi i czytanie odpowiedzi zostają, a rozmowa trwa przez całą sesję. Zamykasz X, klawiszem Escape albo dotykiem obok okna.

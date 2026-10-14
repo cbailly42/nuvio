@@ -261,7 +261,7 @@ class HGAssistCard extends HGBase {
 .lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:14px; transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
 .lg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lg .gn{ flex:1; min-width:0; } .lg .gic{ flex:none; }`);
     return HG_G14_CSS + U(`:host{ display:block; height:100%; } ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:10px; background:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-radius:0; }
-.hd2 .x{ flex:none; }
+.hd2 .x{ flex:none; } .hd2 .ps{ flex:0 1 250px; }
 ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, rgba(12,16,24,.42)), var(--hg-assist-veil, rgba(12,16,24,.42))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
 .hd2 .gn small{ opacity:.78; } .cv{ background:rgba(0,0,0,.14); border-radius:14px; padding:8px !important; }
 .hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }

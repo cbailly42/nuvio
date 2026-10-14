@@ -7,14 +7,15 @@ const HG_ASSIST_CSS = `
 .as-l .as-scrim{ position:absolute; inset:0; background:rgba(6,10,18,.46); opacity:0; transition:opacity .22s ease; }
 .as-l.in .as-scrim{ opacity:1; }
 /* rozmycie na samym oknie od pierwszej klatki: animowany jest tylko transform, nie przezroczystość */
-.as-l .as-d{ position:absolute; left:50%; top:50%; width:min(580px, calc(100vw - 32px)); height:min(640px, calc(100vh - 64px)); display:flex; flex-direction:column; overflow:hidden;
+.as-l .as-d{ position:absolute; inset:0; margin:auto; width:min(600px, calc(100vw - 32px)); height:min(640px, calc(100vh - 48px), calc(100dvh - 48px)); display:flex; flex-direction:column; overflow:hidden;
   border-radius:26px; color:#F4F6F8; background:rgba(16,20,28,.66); -webkit-backdrop-filter:blur(30px) saturate(150%); backdrop-filter:blur(30px) saturate(150%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 24px 70px rgba(0,0,0,.45); transform:translate(-50%, calc(-50% + 18px)) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
-.as-l.in .as-d{ transform:translate(-50%, -50%); }
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 24px 70px rgba(0,0,0,.45); transform:translateY(18px) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+/* bez transformu po otwarciu: lista wyboru (position:fixed) liczy się wtedy od okna przeglądarki, nie od okna dialogu */
+.as-l.in .as-d{ transform:none; }
 .as-l .as-d > *{ flex:1; min-height:0; }
 .as-l .grab{ display:none; }
 @media (max-width: 600px){
-  .as-l .as-d{ left:0; right:0; top:auto; bottom:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
+  .as-l .as-d{ inset:auto 0 0 0; margin:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
   .as-l.in .as-d{ transform:none; }
   .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:rgba(255,255,255,.35); }
 }

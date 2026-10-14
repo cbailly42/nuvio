@@ -55,7 +55,12 @@ function hgSelUp(sel) {
     const w = Math.max(r.width, Math.min(220, vw - 16)); L.style.width = w + 'px'; L.style.left = Math.max(8, Math.min(r.left, vw - w - 8)) + 'px';
     L.style.maxHeight = Math.max(120, Math.min(320, up ? above : below)) + 'px';
     if (up) { L.style.top = ''; L.style.bottom = (vh - r.top + gap) + 'px'; } else { L.style.bottom = ''; L.style.top = (r.bottom + gap) + 'px'; }
-    L.classList.toggle('up', up); };
+    L.classList.toggle('up', up);
+    /* przodek z backdrop-filter/transform (np. okno Assist) staje się blokiem zawierającym dla position:fixed: przesuń listę o różnicę, żeby stała przy przycisku */
+    const lx = parseFloat(L.style.left), b = L.getBoundingClientRect(), dx = b.left - lx;
+    if (Math.abs(dx) > 0.5) L.style.left = (lx - dx) + 'px';
+    if (up) { const dy = b.bottom - (r.top - gap); if (Math.abs(dy) > 0.5) L.style.bottom = (parseFloat(L.style.bottom) + dy) + 'px'; }
+    else { const dy = b.top - (r.bottom + gap); if (Math.abs(dy) > 0.5) L.style.top = (parseFloat(L.style.top) - dy) + 'px'; } };
   const out = (e) => { if (!L) return; const p = e.composedPath(); if (!p.includes(L) && !p.includes(t)) close(false); };
   const rep = () => place();
   const gone = () => { if (!t.isConnected) close(false); };
@@ -613,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.11.0+781ff925';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.11.1+a43c1b78';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -4450,6 +4455,7 @@ const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
 const HG_WM_MS_EN = { run: 'Running', pause: 'Paused', stop: 'Stopped' };
 const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
 /* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
+const hgWebKit = () => /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Android/.test(navigator.userAgent);
 class HGRoomCard extends HGBase {
   defaults() { return { areas: {}, robots_path: HG_P('roboty') }; }
   constructor() {
@@ -4488,6 +4494,7 @@ class HGRoomCard extends HGBase {
 .wrap{ column-width: max(280px, calc(var(--k) * 250)); column-gap:11u; }
 .blk{ break-inside:avoid; -webkit-column-break-inside:avoid; display:block; margin:0 0 11u; }
 .wrap.gsz{ columns:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, max(280px, calc(var(--k) * 250))), 1fr)); gap:11u; align-items:start; }
+@container (max-width: 1180px){ .wrap.gsz{ grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); } }
 .wrap.gsz > .blk{ margin:0; min-width:0; } .wrap.gsz > .blk.hgsz-m{ grid-column:span 2; } .wrap.gsz > .blk.hgsz-l{ grid-column:1 / -1; }
 @container (max-width: 600px){ .wrap.gsz > .blk.hgsz-m{ grid-column:1 / -1; } }
 ${HG_TILE_CSS}
@@ -5105,7 +5112,9 @@ ha-card.wmc{ gap:var(--s2); }
     const hidR = new Set(RL.hidden);
     blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
     if (!blocks.length) return HGL.editing ? `<div class="wrap" data-hgl="${H.esc(RS)}" data-hgsz="1"></div>` : HGRoomX.emptyHtml(h, a, RS);
-    return `<div class="wrap ${Object.keys(RL.size).length ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
+    /* siatka zamiast kolumn CSS przy rozmiarach S/M/L, na tabletach i w WebKit (Safari źle składa kolumny z kamerami, odtwarzaczami i rozmyciem) */
+    const grid = Object.keys(RL.size).length || window.innerWidth <= 1180 || hgWebKit();
+    return `<div class="wrap ${grid ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
     clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0;
@@ -6337,7 +6346,7 @@ class HGAssistCard extends HGBase {
 .lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:14px; transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
 .lg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lg .gn{ flex:1; min-width:0; } .lg .gic{ flex:none; }`);
     return HG_G14_CSS + U(`:host{ display:block; height:100%; } ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:10px; background:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-radius:0; }
-.hd2 .x{ flex:none; }
+.hd2 .x{ flex:none; } .hd2 .ps{ flex:0 1 250px; }
 ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, var(--hg-bg-0c1018-042)), var(--hg-assist-veil, var(--hg-bg-0c1018-042))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-008), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
 .hd2 .gn small{ opacity:.78; } .cv{ background:var(--hg-bg-000000-014); border-radius:14px; padding:8px !important; }
 .hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
@@ -6583,6 +6592,7 @@ function hgBmPassThrough(on) {
    Bez View Transitions API i bez kaskady kart: tylko przesunięcie wskaźników i 150 ms przenikanie treści (na dotyku bez animacji treści). */
 const HG_NO_AREAS = {};   /* stały pusty obiekt: HGAreas.model zapamiętuje model po referencji konfiguracji */
 const HG_EASE = 'cubic-bezier(.2,.8,.2,1)';
+const hgTouchTab = () => !!((navigator.maxTouchPoints > 1 || 'ontouchstart' in window) && window.matchMedia && matchMedia('(pointer: coarse)').matches || /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 const hgReduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* bez View Transitions API (na iPadzie/telefonie zacinało): zwykła nawigacja; wejście widoku = 150 ms przenikania samej treści (bez dotyku) */
 const hgTouch = () => !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -6837,7 +6847,8 @@ class HGPage extends HTMLElement {
     const W = this.getBoundingClientRect().width || window.innerWidth, Hh = window.innerHeight;
     let mode, u;
     if (W < 600) { mode = 'phone'; u = Math.max(0.92, Math.min(1.15, W / 375)); }
-    else if (W >= 900 && W / Hh >= 1.2) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
+    /* tablet dotykowy (iPad 768–1180, oba ułożenia): układ tabletu z przewijaniem strony, bez zagnieżdżonego przewijanego panelu (Safari źle składa wtedy rozmycie i kolumny) */
+    else if (W >= 900 && W / Hh >= 1.2 && !(W <= 1180 && hgTouchTab())) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620)); }
     const z = this._zoom();
     if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
@@ -7711,6 +7722,8 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([scroll]) .panel{ overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color: var(--hg-ac-ffffff-035) transparent; }
 :host([scroll]) .panel::-webkit-scrollbar{ width:6px; } :host([scroll]) .panel::-webkit-scrollbar-thumb{ background:var(--hg-bg-ffffff-035); border-radius:3px; } :host([scroll]) .panel::-webkit-scrollbar-track{ background:transparent; }
 :host([mode=phone]) .panel{ overflow-y:visible !important; }
+/* tablet: przewija się strona, nie panel (Safari źle składa rozmycie i kolumny w przewijanym panelu) */
+:host([mode=tablet]) .panel{ overflow:visible !important; max-height:none !important; height:auto !important; }
 .hge-bar .hgt{ display:inline-flex; align-items:center; gap:6px; padding:0 10px 0 8px; white-space:nowrap; font-size:14px; } .hge-bar .hgt ha-icon{ width:18px; height:18px; color:var(--hg-accent-tx); }
 .hge-bar button{ flex:none; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px; border:0; border-radius:999px; background:var(--hg-tile-bg); color:inherit; font:500 14px/1 inherit; cursor:pointer; white-space:nowrap; transition:transform .15s, background .2s; }
 .hge-bar button:active{ transform:scale(.96); } .hge-bar button:disabled{ opacity:.45; cursor:default; }
@@ -9877,14 +9890,15 @@ const HG_ASSIST_CSS = `
 .as-l .as-scrim{ position:absolute; inset:0; background:var(--hg-bg-060a12-046); opacity:0; transition:opacity .22s ease; }
 .as-l.in .as-scrim{ opacity:1; }
 /* rozmycie na samym oknie od pierwszej klatki: animowany jest tylko transform, nie przezroczystość */
-.as-l .as-d{ position:absolute; left:50%; top:50%; width:min(580px, calc(100vw - 32px)); height:min(640px, calc(100vh - 64px)); display:flex; flex-direction:column; overflow:hidden;
+.as-l .as-d{ position:absolute; inset:0; margin:auto; width:min(600px, calc(100vw - 32px)); height:min(640px, calc(100vh - 48px), calc(100dvh - 48px)); display:flex; flex-direction:column; overflow:hidden;
   border-radius:26px; color:var(--hg-tx-f4f6f8); background:var(--hg-bg-10141c-066); -webkit-backdrop-filter:blur(30px) saturate(150%); backdrop-filter:blur(30px) saturate(150%);
-  box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-010), 0 24px 70px var(--hg-ac-000000-045); transform:translate(-50%, calc(-50% + 18px)) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
-.as-l.in .as-d{ transform:translate(-50%, -50%); }
+  box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-010), 0 24px 70px var(--hg-ac-000000-045); transform:translateY(18px) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+/* bez transformu po otwarciu: lista wyboru (position:fixed) liczy się wtedy od okna przeglądarki, nie od okna dialogu */
+.as-l.in .as-d{ transform:none; }
 .as-l .as-d > *{ flex:1; min-height:0; }
 .as-l .grab{ display:none; }
 @media (max-width: 600px){
-  .as-l .as-d{ left:0; right:0; top:auto; bottom:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
+  .as-l .as-d{ inset:auto 0 0 0; margin:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
   .as-l.in .as-d{ transform:none; }
   .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:var(--hg-bg-ffffff-035); }
 }

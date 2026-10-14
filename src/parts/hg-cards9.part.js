@@ -339,6 +339,7 @@ const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
 const HG_WM_MS_EN = { run: 'Running', pause: 'Paused', stop: 'Stopped' };
 const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
 /* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
+const hgWebKit = () => /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Android/.test(navigator.userAgent);
 class HGRoomCard extends HGBase {
   defaults() { return { areas: {}, robots_path: HG_P('roboty') }; }
   constructor() {
@@ -377,6 +378,7 @@ class HGRoomCard extends HGBase {
 .wrap{ column-width: max(280px, calc(var(--k) * 250)); column-gap:11u; }
 .blk{ break-inside:avoid; -webkit-column-break-inside:avoid; display:block; margin:0 0 11u; }
 .wrap.gsz{ columns:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, max(280px, calc(var(--k) * 250))), 1fr)); gap:11u; align-items:start; }
+@container (max-width: 1180px){ .wrap.gsz{ grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); } }
 .wrap.gsz > .blk{ margin:0; min-width:0; } .wrap.gsz > .blk.hgsz-m{ grid-column:span 2; } .wrap.gsz > .blk.hgsz-l{ grid-column:1 / -1; }
 @container (max-width: 600px){ .wrap.gsz > .blk.hgsz-m{ grid-column:1 / -1; } }
 ${HG_TILE_CSS}
@@ -994,7 +996,9 @@ ha-card.wmc{ gap:var(--s2); }
     const hidR = new Set(RL.hidden);
     blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
     if (!blocks.length) return HGL.editing ? `<div class="wrap" data-hgl="${H.esc(RS)}" data-hgsz="1"></div>` : HGRoomX.emptyHtml(h, a, RS);
-    return `<div class="wrap ${Object.keys(RL.size).length ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
+    /* siatka zamiast kolumn CSS przy rozmiarach S/M/L, na tabletach i w WebKit (Safari źle składa kolumny z kamerami, odtwarzaczami i rozmyciem) */
+    const grid = Object.keys(RL.size).length || window.innerWidth <= 1180 || hgWebKit();
+    return `<div class="wrap ${grid ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
     clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0;

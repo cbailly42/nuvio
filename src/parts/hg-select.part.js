@@ -55,7 +55,12 @@ function hgSelUp(sel) {
     const w = Math.max(r.width, Math.min(220, vw - 16)); L.style.width = w + 'px'; L.style.left = Math.max(8, Math.min(r.left, vw - w - 8)) + 'px';
     L.style.maxHeight = Math.max(120, Math.min(320, up ? above : below)) + 'px';
     if (up) { L.style.top = ''; L.style.bottom = (vh - r.top + gap) + 'px'; } else { L.style.bottom = ''; L.style.top = (r.bottom + gap) + 'px'; }
-    L.classList.toggle('up', up); };
+    L.classList.toggle('up', up);
+    /* przodek z backdrop-filter/transform (np. okno Assist) staje się blokiem zawierającym dla position:fixed: przesuń listę o różnicę, żeby stała przy przycisku */
+    const lx = parseFloat(L.style.left), b = L.getBoundingClientRect(), dx = b.left - lx;
+    if (Math.abs(dx) > 0.5) L.style.left = (lx - dx) + 'px';
+    if (up) { const dy = b.bottom - (r.top - gap); if (Math.abs(dy) > 0.5) L.style.bottom = (parseFloat(L.style.bottom) + dy) + 'px'; }
+    else { const dy = b.top - (r.bottom + gap); if (Math.abs(dy) > 0.5) L.style.top = (parseFloat(L.style.top) - dy) + 'px'; } };
   const out = (e) => { if (!L) return; const p = e.composedPath(); if (!p.includes(L) && !p.includes(t)) close(false); };
   const rep = () => place();
   const gone = () => { if (!t.isConnected) close(false); };
