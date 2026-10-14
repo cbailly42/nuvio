@@ -139,7 +139,8 @@ def minify(js):
     if not os.path.exists(eb): eb = shutil.which('esbuild')
     if not eb: return js, False
     r = subprocess.run([eb, '--minify', '--format=esm', '--charset=utf8', '--legal-comments=none', '--log-level=error', '--target=es2020'],
-                       input=js.encode(), capture_output=True, check=True)
+                       input=js.encode(), capture_output=True)
+    if r.returncode: sys.exit('esbuild failed (syntax error in a part?):\n' + r.stderr.decode()[:3000])
     return r.stdout.decode(), True
 def main():
     w = tempfile.mkdtemp(prefix='hgb-')

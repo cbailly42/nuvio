@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.0.0-a3e635?style=flat-square" alt="v1.0.0">
+  <img src="https://img.shields.io/badge/version-v1.0.1-a3e635?style=flat-square" alt="v1.0.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -368,9 +368,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.0.0 -m "Nuvio 1.0.0" && git push origin v1.0.0`.
+Only tagging by hand: `git tag -a v1.0.1 -m "Nuvio 1.0.1" && git push origin v1.0.1`.
 
 ## Changelog
+
+### 1.0.1
+- Changed: the Assist window uses the same glass, accent colour and motion as the other Nuvio windows, in the light and the dark scheme. Your messages, the typing dots, the microphone and the focused field all follow the accent colour.
+- Changed: the assistant (model) picker sits inside the message field on the right, with the name shortened when it is too long. The chosen assistant is remembered and also becomes the default in the settings.
+- Fixed: in the light scheme the settings and editor windows were too transparent over a busy background.
+- Changed: weather details open in the shared Nuvio window, with the same blur and opening and closing animation as other dialogs.
 
 ### 1.0.0
 The new design is complete: every card is built from the shared glass blocks, updates live and adapts to small, medium and large sizes. This release finishes the work with speed improvements.

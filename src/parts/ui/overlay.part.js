@@ -18,6 +18,7 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
   border-radius:var(--hg-radius, 24px); padding:24px; display:flex; flex-direction:column; gap:14px; animation: nvPop var(--hg-t-slow, 320ms) var(--hg-ease-out, ease-out) both; }
 .dlg.out{ animation: nvPopOut var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) both; }
 .dlg h2{ margin:0; font-size:var(--hg-fs-4, 18px); font-weight:600; letter-spacing:-.01em; } .dlg .tx{ margin:0; font-size:var(--hg-fs-2, 13px); opacity:.75; line-height:1.45; }
+.dlg.bare{ padding:0; gap:0; overflow:hidden; }
 .acts{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:4px; }
 .btn{ height:44px; padding:0 20px; border-radius:999px; font-size:var(--hg-fs-2, 13px); font-weight:600; background:var(--hg-inner-bg, rgba(0,0,0,.06)); box-shadow:var(--hg-inner-hi, none);
   transition: transform var(--hg-t-fast, 120ms) var(--hg-ease-out, ease-out), background var(--hg-t-base, 200ms); }
@@ -100,13 +101,14 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
     el.style.setProperty('--ox', (a.left + a.width / 2 - left) + 'px'); el.style.setProperty('--oy', oy);
   };
   const api = {
-    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width, collect }) -> Promise(value)
+    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width, collect, bare, mount }) -> Promise(value)
+       bare: bez paddingu i przycisku X (treść ma własny nagłówek); mount(el, close): wstawienie własnego elementu (np. z shadow root karty)
        collect: true -> Promise({ value, data: { name: wartość pól } }) dla pól z atrybutem name w html */
     dialog(o = {}) { return new Promise((res) => {
       const el = document.createElement('div'); el.className = 'glass dlg'; el.setAttribute('role', o.alert ? 'alertdialog' : 'dialog'); el.setAttribute('aria-modal', 'true');
-      if (o.width) el.style.setProperty('--w', o.width + 'px');
+      if (o.width) el.style.setProperty('--w', o.width + 'px'); if (o.bare) el.classList.add('bare');
       const id = 'd' + Math.random().toString(36).slice(2, 7); el.setAttribute('aria-labelledby', id + 't');
-      el.innerHTML = `${o.alert ? '' : `<button class="x" data-v="__x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button>`}${o.title ? `<h2 id="${id}t">${esc(o.title)}</h2>` : ''}${o.text ? `<p class="tx">${esc(o.text)}</p>` : ''}${o.html || ''}
+      el.innerHTML = `${o.alert || o.bare ? '' : `<button class="x" data-v="__x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button>`}${o.title ? `<h2 id="${id}t">${esc(o.title)}</h2>` : ''}${o.text ? `<p class="tx">${esc(o.text)}</p>` : ''}${o.html || ''}
         ${(o.actions || []).length ? `<div class="acts">${o.actions.map((a, i) => `<button class="btn ${a.kind || ''}" data-i="${i}"${a.focus ? ' autofocus' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}`;
       let it = null;
       el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && (n.dataset.i != null || n.dataset.v)); if (!b) return;
@@ -114,7 +116,8 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
         it.close(o.collect ? { value: v, data: Object.fromEntries([...el.querySelectorAll('input[name], select[name], textarea[name]')].map((f) => [f.name, f.value])) } : v); });
       /* Enter w polu tekstowym = główny przycisk */
       el.addEventListener('keydown', (e) => { if (e.key !== 'Enter' || !e.composedPath()[0].matches || !e.composedPath()[0].matches('input')) return; const p = el.querySelector('.btn.primary, .btn.danger'); if (p) { e.preventDefault(); p.click(); } });
-      it = open(el, { modal: true, dismiss: o.dismiss !== false && !o.alert, onClose: (v) => res(v) });
+      it = open(el, { modal: true, focus: !o.mount, dismiss: o.dismiss !== false && !o.alert, onClose: (v) => res(v) });
+      if (o.mount) o.mount(el, (v) => it.close(v));
     }); },
     /* alert dialog: potwierdzenie; fokus na bezpiecznym przycisku, bez zamykania kliknięciem obok */
     alert(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {

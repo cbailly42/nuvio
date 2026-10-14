@@ -1176,7 +1176,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet-l{ position:fixed; inset:0; z-index:70; }
 .hge-scrim{ position:absolute; inset:0; background:rgba(8,12,18,.36); animation:hgeFade .2s ease both; } @keyframes hgeFade{ from{ opacity:0 } }
 .hge-sheet{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(560px, calc(100vw - 24px)); max-height:min(78vh, 720px); display:flex; flex-direction:column; gap:10px; padding:16px; border-radius:26px;
-  background:var(--hg-panel-bg, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(26px) saturate(120%); backdrop-filter:blur(26px) saturate(120%); box-shadow:0 24px 60px rgba(0,0,0,.4); color:var(--hg-chrome-fg, inherit); animation:hgeIn .28s cubic-bezier(.2,0,0,1) both; }
+  background:var(--hg-glass-sheen, none), var(--hg-sheet-bg, var(--hg-panel-bg, var(--hg-glass-bg))); -webkit-backdrop-filter:blur(26px) saturate(120%); backdrop-filter:blur(26px) saturate(120%); box-shadow:var(--hg-edge, 0 0 0 transparent), 0 24px 60px rgba(0,0,0,.4); color:var(--hg-chrome-fg, inherit); animation:hgeIn .28s cubic-bezier(.2,0,0,1) both; }
 @keyframes hgeIn{ from{ opacity:0; transform:translate(-50%,-46%) scale(.98); } }
 .hge-sheet-l.opened .hge-scrim, .hge-sheet-l.opened .hge-sheet{ animation:none !important; }   /* arkusz już otwarty: kolejne kroki bez ponownej animacji otwarcia */
 .hge-sheet-l.nav-f .hge-sheet > :not(.hs-h):not(style){ animation:hgNavF .26s cubic-bezier(.2,.8,.2,1) both; } .hge-sheet-l.nav-b .hge-sheet > :not(.hs-h):not(style){ animation:hgNavB .26s cubic-bezier(.2,.8,.2,1) both; }

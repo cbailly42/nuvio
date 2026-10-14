@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.0.0-a3e635?style=flat-square" alt="v1.0.0">
+  <img src="https://img.shields.io/badge/version-v1.0.1-a3e635?style=flat-square" alt="v1.0.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -368,9 +368,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.0.0 -m "Nuvio 1.0.0" && git push origin v1.0.0`.
+Sam tag ręcznie: `git tag -a v1.0.1 -m "Nuvio 1.0.1" && git push origin v1.0.1`.
 
 ## Lista zmian
+
+### 1.0.1
+- Zmieniono: okno Assist ma to samo szkło, kolor akcentu i animacje co inne okna Nuvio, w jasnym i ciemnym schemacie. Twoje wiadomości, kropki pisania, mikrofon i aktywne pole idą za kolorem akcentu.
+- Zmieniono: wybór asystenta (modelu) jest w polu wiadomości po prawej, a zbyt długa nazwa jest skracana. Wybrany asystent jest zapamiętywany i staje się też domyślnym w ustawieniach.
+- Naprawiono: w jasnym schemacie okna ustawień i edytora były zbyt przezroczyste na wyrazistym tle.
+- Zmieniono: szczegóły pogody otwierają się we wspólnym oknie Nuvio, z tym samym rozmyciem i animacją otwarcia i zamknięcia co inne okna.
 
 ### 1.0.0
 Nowy wygląd jest gotowy: każda karta jest zbudowana ze wspólnych szklanych klocków, aktualizuje się na żywo i dopasowuje do małego, średniego i dużego rozmiaru. To wydanie kończy prace poprawkami szybkości.

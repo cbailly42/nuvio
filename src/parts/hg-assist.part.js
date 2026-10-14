@@ -4,22 +4,27 @@
 const HG_ASSIST_CSS = `
 .as-l{ position:fixed; inset:0; z-index:1002; visibility:hidden; pointer-events:none; }
 .as-l.open{ visibility:visible; pointer-events:auto; }
-.as-l .as-scrim{ position:absolute; inset:0; background:rgba(6,10,18,.46); opacity:0; transition:opacity .22s ease; }
-.as-l.in .as-scrim{ opacity:1; }
-/* rozmycie na samym oknie od pierwszej klatki: animowany jest tylko transform, nie przezroczystość */
+.as-l .as-scrim{ position:absolute; inset:0; background:rgba(8,10,14,.32); opacity:0; transition:opacity var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in); }
+.as-l.in .as-scrim{ opacity:1; transition-timing-function:var(--hg-ease-out, ease-out); }
+/* ten sam przepis szkła co okna hgOverlay (ui/overlay): połysk + --hg-panel-flat, krawędź, cień; jedno rozmycie na samym oknie, od pierwszej klatki
+   (animowany jest tylko transform, nie przezroczystość). Kolor tekstu i akcent z motywu, więc działa w jasnym i ciemnym schemacie. */
 .as-l .as-d{ position:absolute; inset:0; margin:auto; width:min(600px, calc(100vw - 32px)); height:min(640px, calc(100vh - 48px), calc(100dvh - 48px)); display:flex; flex-direction:column; overflow:hidden;
-  border-radius:26px; color:#F4F6F8; background:rgba(16,20,28,.66); -webkit-backdrop-filter:blur(30px) saturate(150%); backdrop-filter:blur(30px) saturate(150%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 24px 70px rgba(0,0,0,.45); transform:translateY(18px) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+  border-radius:var(--hg-radius, 24px); color:var(--hg-chrome-fg, #1C1C1E); isolation:isolate;
+  box-shadow:var(--hg-edge, 0 0 0 transparent), var(--hg-shadow-float, 0 24px 70px rgba(0,0,0,.45));
+  transform:translateY(12px) scale(.94); transition:transform var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in); }
 /* bez transformu po otwarciu: lista wyboru (position:fixed) liczy się wtedy od okna przeglądarki, nie od okna dialogu */
-.as-l.in .as-d{ transform:none; }
+.as-l.in .as-d{ transform:none; transition:transform var(--hg-t-slow, 320ms) var(--hg-ease-out, cubic-bezier(.2,.8,.2,1)); }
+/* szkło na warstwie ::before: samo okno bez backdrop-filter, więc lista wyboru modelu (position:fixed) nie jest przycinana przez okno */
+.as-l .as-d::before{ content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none; background:var(--hg-glass-sheen, none), var(--hg-panel-flat, rgba(236,238,242,.9));
+  -webkit-backdrop-filter:blur(calc(28px * var(--hg-bf, 1))) saturate(150%); backdrop-filter:blur(calc(28px * var(--hg-bf, 1))) saturate(150%); }
 .as-l .as-d > *{ flex:1; min-height:0; }
 .as-l .grab{ display:none; }
 @media (max-width: 600px){
-  .as-l .as-d{ inset:auto 0 0 0; margin:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
-  .as-l.in .as-d{ transform:none; }
-  .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:rgba(255,255,255,.35); }
+  .as-l .as-d{ inset:auto 0 0 0; margin:0; width:auto; height:min(80vh, 680px); border-radius:var(--hg-radius, 24px) var(--hg-radius, 24px) 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
+  .as-l.in .as-d{ transform:none; transition:transform var(--hg-t-slow, 320ms) var(--hg-spring, cubic-bezier(.2,.8,.2,1)); }
+  .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:currentColor; opacity:.25; }
 }
-@media (prefers-reduced-motion: reduce){ .as-l .as-scrim, .as-l .as-d{ transition:none; } }
+@media (prefers-reduced-motion: reduce){ .as-l .as-scrim, .as-l .as-d{ transition:none !important; } }
 .cir.as.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; }
 `;
 const HGAssistUI = window.__hgAssistUI || (window.__hgAssistUI = {

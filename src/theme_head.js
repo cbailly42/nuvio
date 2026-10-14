@@ -29,7 +29,7 @@
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.30);
   --hg-lens: saturate(100%);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(210,218,226,.30); --hg-panel-flat: rgba(236,238,242,.82); --hg-warn: #931F18; --hg-trend-up: #7A1A14; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(30,32,35,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #3C4045; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(210,218,226,.30); --hg-panel-flat: rgba(236,238,242,.82); --hg-sheet-bg: rgba(238,240,244,.80); --hg-warn: #931F18; --hg-trend-up: #7A1A14; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(30,32,35,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #3C4045; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
   /* klimatyzacja: kolory trybów (łuk, gałka, poświata) */
   --hg-ac-heat: #FF8A3D; --hg-ac-cool: #2E9BF0; --hg-ac-dry: #22B8A8; --hg-ac-fan: #8C9BAD;
   --hg-ac-heat-g: rgba(255,138,61,.42); --hg-ac-cool-g: rgba(46,155,240,.40); --hg-ac-dry-g: rgba(34,184,168,.38); --hg-ac-fan-g: rgba(140,155,173,.32);
@@ -62,7 +62,7 @@
   --hg-glass-bd: transparent; --hg-glass-hi: transparent; --hg-glass-sh: rgba(0,0,0,.18);
   --hg-glass-rim: 0 0 0 transparent; --hg-glass-rim-lite: 0 0 0 transparent; --hg-tile-bg: rgba(255,255,255,.12); --hg-glass-sh-h: rgba(0,0,0,.40); --hg-hover-fill: rgba(255,255,255,.035);
   --hg-warm-bg: var(--hg-glass-bg);
-  --hg-panel-bg: rgba(16,22,30,.34); --hg-panel-flat: rgba(30,31,35,.86); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
+  --hg-panel-bg: rgba(16,22,30,.34); --hg-panel-flat: rgba(30,31,35,.86); --hg-sheet-bg: var(--hg-panel-bg); --hg-warn: #FFE0DC; --hg-trend-up: #FF6B63; --hg-alert-bg: var(--hg-accent-faint); --hg-alert-ic: var(--hg-accent-tx); --hg-alert-fg: rgba(255,255,255,.82); --hg-alert-tx: var(--hg-accent-tx); --hg-ac-heat-tx: var(--hg-accent-tx); --hg-ac-cool-tx: var(--hg-accent-tx); --hg-ac-dry-tx: var(--hg-accent-tx); --hg-ac-neu-tx: #C9CDD2; --hg-ac-auto-tx: var(--hg-accent-tx); --hg-panel-bd: transparent;
   --hg-glass-lite-c: rgba(120,128,136,.42); --hg-warm-lite-c: var(--hg-glass-lite-c);
   --hg-inner-bg: rgba(255,255,255,.08); --hg-inner-bg-h: rgba(255,255,255,.13); --hg-inner-hi: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05);
   --hg-glass-sheen: linear-gradient(150deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,0) 75%);

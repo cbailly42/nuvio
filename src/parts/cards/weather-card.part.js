@@ -192,13 +192,11 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const x = this._x = document.createElement('div'); x.className = 'hg-wx-x';
     const sr = x.attachShadow({ mode: 'open' });
     sr.innerHTML = `<style>${HG_BASE}${U(`
-:host{ position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(14,16,20,.32); animation:f .18s ease; }
-@keyframes f{ from{ opacity:0; } }
-@media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
-.root{ width:min(680px, 100%); min-width:0; height:auto !important; }
-.dlg{ box-sizing:border-box; width:100%; max-height:min(90vh, 820px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:24px; padding:24px;
-  border-radius:var(--r-lg); background:var(--hg-panel-flat, rgba(236,238,242,.94)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
-  border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:#1E2023; font-variant-numeric:tabular-nums; }
+:host{ display:block; min-width:0; }
+.root{ width:100%; min-width:0; height:auto !important; }
+/* szkło, rozmycie, cień i animacja z hgOverlay.dialog (ui/overlay); tu tylko treść */
+.dlg{ box-sizing:border-box; width:100%; max-height:calc(100dvh - 48px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:24px; padding:24px;
+  color:#1E2023; font-variant-numeric:tabular-nums; }
 .top{ display:flex; align-items:center; gap:12px; min-width:0; }
 .top img{ width:56px; height:56px; margin:-8px -4px; flex:none; }
 .top .tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -236,9 +234,11 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 @media (max-width: 520px){ .dlg{ padding:20px 16px; gap:20px; } .det{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .dy{ grid-template-columns:minmax(56px, 1fr) 30px 30px minmax(56px, 1.6fr) 30px; } .dy .p{ display:none; } .dy img{ width:30px; height:30px; } }
 `)}</style><div class="root"></div>`;
-    x.addEventListener('click', (e) => { const p = e.composedPath(); if (p[0] === x || p.some((n) => n.dataset && n.dataset.act === 'xclose')) this._closeX(); });
-    this._xKey = (e) => { if (e.key === 'Escape') this._closeX(); }; document.addEventListener('keydown', this._xKey);
-    document.body.appendChild(x); this._xUpd(); this._sunToday();
+    x.addEventListener('click', (e) => { if (e.composedPath().some((n) => n.dataset && n.dataset.act === 'xclose')) this._closeX(); });
+    /* okno z hgOverlay: wspólne szkło, scrim, animacja wejścia i wyjścia, Escape, kliknięcie obok, powrót fokusu */
+    hgOverlay.dialog({ bare: true, width: 680, mount: (el, close) => { this._xC = close; el.setAttribute('aria-label', hgTr('Pogoda – szczegóły', 'Weather – details')); el.appendChild(x); } })
+      .then(() => { if (this._x === x) { this._x = null; this._xC = null; this._xFocused = false; } });
+    this._xUpd(); this._sunToday();
   }
   /* dzisiejszy wschód/zachód: z historii sun.sun (przejścia below/above_horizon od północy), reszta z next_rising/next_setting */
   async _sunToday() {
@@ -305,7 +305,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     // słońce
     const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static-${n}.svg?v=${c.icon_v}`;
     const se = (o, lab, icn) => o ? `<div class="e"><img src="${ic(icn)}" alt=""><b>${HGWx.hm(new Date(o.t))}</b><span>${lab}${o.tm ? hgTr(' jutro', ' tomorrow') : ''}</span></div>` : '<div></div>';
-    this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="${hgTr('Pogoda – szczegóły', 'Weather – details')}">
+    this._x.shadowRoot.querySelector('.root').innerHTML = `<div class="dlg">
       <div class="top"><img src="${HGWx.icon(c, w.state, night, true)}" alt=""><div class="tx"><small>${H.esc(c.title)}</small><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''} <span>· ${H.esc(cond)}</span></b></div><button class="cls" data-act="xclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       ${det ? `<div class="det">${det}</div>` : ''}
       ${hrs ? `<div class="sec"><div class="sh">${hgTr(`Najbliższe ${hr.length} h`, `Next ${hr.length} h`)}</div><div class="hs" tabindex="0" aria-label="${hgTr('Prognoza godzinowa', 'Hourly forecast')}"><div class="hr">${hrs}</div></div></div>` : ''}
@@ -313,7 +313,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       ${st && (st.rise || st.set) ? `<div class="sec"><div class="sh">${hgTr('Słońce', 'Sun')}</div><div class="sun">${se(st.rise, hgTr('wschód', 'sunrise'), 'sunrise')}${svg || '<div></div>'}${se(st.set, hgTr('zachód', 'sunset'), 'sunset')}</div></div>` : ''}</div>`;
     const cl = this._x.shadowRoot.querySelector('.cls'); if (cl && !this._xFocused) { this._xFocused = true; cl.focus(); }
   }
-  _closeX() { if (!this._x) return; this._x.remove(); this._x = null; this._xFocused = false; document.removeEventListener('keydown', this._xKey); }
+  _closeX() { if (!this._x) return; const c = this._xC; this._x = null; this._xC = null; this._xFocused = false; if (c) c(); }
   getCardSize() { return 5; }
 }
 hgReg('hg-weather-card', HGWeatherCard, hgTr('Home Glass – Pogoda', 'Home Glass – Weather'), hgTr('Na zewnątrz: teraz, prognoza godzinowa, słońce; szczegóły z dniami', 'Outside: now, hourly forecast, sun; details with daily forecast'));
