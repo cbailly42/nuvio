@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.23-a3e635?style=flat-square" alt="v0.3.23">
+  <img src="https://img.shields.io/badge/version-v0.3.24-a3e635?style=flat-square" alt="v0.3.24">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -260,9 +260,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.3.23 -m "Nuvio 0.3.23" && git push origin v0.3.23`.
+Only tagging by hand: `git tag -a v0.3.24 -m "Nuvio 0.3.24" && git push origin v0.3.24`.
 
 ## Changelog
+
+### 0.3.24
+- Fixed: a changed icon now shows in the live preview while editing, not only after saving. Group layouts (List, Grid, Carousel, Compact list) had no icon in the preview header at all, and section previews could change the wrong icon instead of the section header's icon.
 
 ### 0.3.23
 - Fixed: the icon picker (Icon field) now follows the light and dark theme. In dark mode the list was light with white, barely visible icons; now it is frosted glass in the theme's own colours with clear icons and labels in both modes. It opens and closes with a short animation, the arrow turns while it is open, the list header shows how many icons match the search, a placeholder grid shows while icons load, and the list fades out at the bottom edge. Reduced motion is respected.

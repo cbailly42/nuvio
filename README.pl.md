@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.23-a3e635?style=flat-square" alt="v0.3.23">
+  <img src="https://img.shields.io/badge/version-v0.3.24-a3e635?style=flat-square" alt="v0.3.24">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -260,9 +260,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.3.23 -m "Nuvio 0.3.23" && git push origin v0.3.23`.
+Sam tag ręcznie: `git tag -a v0.3.24 -m "Nuvio 0.3.24" && git push origin v0.3.24`.
 
 ## Lista zmian
+
+### 0.3.24
+- Poprawka: zmieniona ikona jest widoczna od razu w podglądzie na żywo podczas edycji, a nie dopiero po zapisie. Układy grupowe (Lista, Siatka, Karuzela, Kompaktowa lista) nie miały ikony w nagłówku podglądu, a w podglądzie sekcji mogła się zmieniać niewłaściwa ikona zamiast ikony nagłówka.
 
 ### 0.3.23
 - Poprawka: wybór ikony (pole Ikona) dopasowuje się do jasnego i ciemnego motywu. W ciemnym motywie lista była jasna z białymi, prawie niewidocznymi ikonami; teraz to matowe szkło w kolorach motywu z czytelnymi ikonami i etykietami w obu trybach. Otwiera się i zamyka z krótką animacją, strzałka obraca się przy otwarciu, nagłówek listy pokazuje liczbę ikon pasujących do wyszukiwania, podczas wczytywania widać szkielet siatki, a lista zanika przy dolnej krawędzi. Szanuje ograniczenie ruchu.
