@@ -95,8 +95,28 @@ const HG_WALL_SS = `
 .nw-lb{ all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 22px; border-radius:999px; font-size:15px; font-weight:600; color:#fff;
   background:${K(255,255,255,.13)}; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}; transition:background .2s ease, transform .15s ease; }
 .nw-lb svg{ width:18px; height:18px; } .nw-lb:active{ transform:scale(.96); background:${K(255,255,255,.26)}; }
-@media (max-height:560px){ .nw-kp{ --k:clamp(52px, 12vmin, 64px); gap:10px 22px; } .nw-pt svg{ display:none; } }
-@media (prefers-reduced-motion:reduce){ .nw-pp, .nw.pin .nw-bg{ transition:none; } .nw-dots.bad{ animation:none; } }
+@media (max-height:560px){ .nw-kp{ --k:clamp(52px, 12vmin, 64px); gap:10px 22px; } .nw-pt .nw-li{ display:none; } }
+/* odblokowanie: kłódka się otwiera, kropki pulsują na zielono, cyfry rozchodzą się od środka, fala światła i rozmycie znikają, nakładka odsłania panel */
+.nw-pt .nw-li{ position:relative; width:22px; height:22px; } .nw-pt .nw-li svg{ position:absolute; inset:0; transition:opacity .2s ease, transform .45s cubic-bezier(.34,1.56,.64,1); }
+.nw-pt .nw-li .op{ opacity:0; transform:translateY(2px) scale(.8); }
+.nw.unl .nw-li .cl{ opacity:0; transform:scale(.8); } .nw.unl .nw-li .op{ opacity:1; transform:translateY(-2px) scale(1.18); }
+.nw.unl .nw-li{ animation:nwlk .5s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes nwlk{ 0%{ transform:none; } 35%{ transform:rotate(-10deg) scale(1.15); } 70%{ transform:rotate(6deg) scale(1.1); } 100%{ transform:scale(1.12); } }
+.nw.unl .nw-dots i{ background:${K(190,255,170,1)}; box-shadow:0 0 14px ${K(160,255,140,.8)}; animation:nwdt .5s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i) * 45ms); }
+@keyframes nwdt{ 0%{ transform:scale(1); } 45%{ transform:scale(1.55); } 100%{ transform:scale(.2); opacity:0; } }
+.nw.unl .nw-pt span, .nw.unl .nw-pt small{ transition:opacity .35s ease .2s; opacity:0; }
+.nw.unl .nw-kp > *{ animation:nwko .55s cubic-bezier(.4,0,.2,1) both; animation-delay:calc(120ms + var(--d, 0) * 70ms); }
+@keyframes nwko{ to{ opacity:0; transform:translate(calc(var(--x, 0) * 26px), calc(var(--y, 0) * 26px)) scale(.55); filter:blur(6px); } }
+.nw.unl .nw-lb{ transition:opacity .3s ease .1s, transform .4s ease .1s; opacity:0; transform:translateY(14px) scale(.9); }
+.nw-rip{ position:absolute; left:var(--rx, 50%); top:var(--ry, 30%); width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; pointer-events:none; opacity:0;
+  background:radial-gradient(circle, ${K(255,255,255,.28)} 0%, ${K(255,255,255,.1)} 45%, transparent 70%); }
+.nw.unl .nw-rip{ animation:nwrp .9s cubic-bezier(.2,.8,.2,1) .15s both; }
+@keyframes nwrp{ 0%{ opacity:0; transform:scale(1); } 25%{ opacity:1; } 100%{ opacity:0; transform:scale(260); } }
+.nw.unl .nw-sh{ background:${K(4,6,10,.3)}; transition:background .6s ease .2s; }
+/* rozmyta warstwa odpływa: lekko rośnie i znika, a panel pod nią wyostrza się (bez podwójnego, ostrego zdjęcia) */
+.nw.unl.out{ opacity:0; transform:scale(1.06); transition:opacity .55s cubic-bezier(.4,0,.2,1), transform .65s cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion:reduce){ .nw-pp, .nw.pin .nw-bg{ transition:none; } .nw-dots.bad{ animation:none; }
+  .nw.unl .nw-li, .nw.unl .nw-dots i, .nw.unl .nw-kp > *, .nw.unl .nw-rip{ animation:none; } .nw.unl .nw-kp, .nw.unl .nw-lb{ opacity:0; transition:opacity .2s; } }
 @media (prefers-reduced-motion:reduce){ .nw, .nw.out{ transition-duration:.2s; } .nw-bg{ animation:none; transition-duration:.2s; } .nw-g{ transition:none; } .nw-h{ animation:none; opacity:.95; } }
 `;
 const HGWall = window.__hgWall || (window.__hgWall = {
@@ -122,28 +142,33 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     let pp = el.querySelector('.nw-pp'); if (!pp) {
       const ic = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`, LK = 'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z';
       const BK = 'M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12';
-      const L = ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ'], key = (d) => `<button type="button" data-k="${d}" aria-label="${d}">${d}<small>${d ? L[d - 1] || '' : ''}</small></button>`;
+      const L = ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ'], pos = (r, q) => { const x = q - 1, y = r - 1.5; return `--x:${x};--y:${y.toFixed(1)};--d:${Math.hypot(x, y * .9).toFixed(2)}`; }, key = (d) => `<button type="button" data-k="${d}" aria-label="${d}" style="${d ? pos(Math.floor((d - 1) / 3), (d - 1) % 3) : pos(3, 1)}">${d}<small>${d ? L[d - 1] || '' : ''}</small></button>`;
       pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', hgTr('Odblokuj panel', 'Unlock the dashboard'));
-      pp.innerHTML = `<div class="nw-pt">${ic(LK)}<span>${H.esc(hgTr('Wpisz PIN', 'Enter PIN'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
-        <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" aria-label="${H.esc(hgTr('Usuń', 'Delete'))}">${ic(BK)}</button></div>
+      const LO = 'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10A2,2 0 0,1 6,8H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6H7A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17Z';
+      pp.innerHTML = `<i class="nw-rip" aria-hidden="true"></i><div class="nw-pt"><span class="nw-li">${ic(LK).replace('<svg ', '<svg class="cl" ')}${ic(LO).replace('<svg ', '<svg class="op" ')}</span><span>${H.esc(hgTr('Wpisz PIN', 'Enter PIN'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
+        <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" style="${pos(3, 2)}" aria-label="${H.esc(hgTr('Usuń', 'Delete'))}">${ic(BK)}</button></div>
         <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(hgTr('Zablokuj', 'Lock'))}</span></button>`;
       pp.addEventListener('pointerdown', (e) => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; e.preventDefault(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 120); this.key(b.dataset.k); });
       el.appendChild(pp); }
     this._pin = ''; this.dots(c.pinN); el.classList.add('pin'); this.idlePad(); },
   dots(n, st) { const el = this.el, d = el && el.querySelector('.nw-dots'); if (!d) return; const N = Math.max(n || 4, this._pin.length);
-    d.className = 'nw-dots' + (st ? ' ' + st : ''); d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < this._pin.length ? 'on' : ''}"></i>`).join(''); d.setAttribute('aria-label', hgTr(`Wpisano ${this._pin.length} z ${N}`, `${this._pin.length} of ${N} entered`)); },
+    d.className = 'nw-dots' + (st ? ' ' + st : ''); d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < this._pin.length ? 'on' : ''}" style="--i:${i}"></i>`).join(''); d.setAttribute('aria-label', hgTr(`Wpisano ${this._pin.length} z ${N}`, `${this._pin.length} of ${N} entered`)); },
   msg(t, err) { const s = this.el && this.el.querySelector('.nw-pt small'); if (s) { s.textContent = t || ''; s.classList.toggle('err', !!err); } },
+  unlock() { const el = this.el; if (!el || el.classList.contains('unl')) return; const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const li = el.querySelector('.nw-li'), r = li && li.getBoundingClientRect(); if (r) { el.style.setProperty('--rx', r.left + r.width / 2 + 'px'); el.style.setProperty('--ry', r.top + r.height / 2 + 'px'); }
+    el.classList.add('unl'); try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* bez wibracji */ }
+    setTimeout(() => { this.locked = false; this.flag(false); this.wake('pin'); }, rm ? 150 : 620); },
   /* pinpad wraca do zablokowanego wygaszacza po 20 s bez dotyku */
   idlePad() { clearTimeout(this._pt); this._pt = setTimeout(() => this.unpad(), 20000); },
   unpad() { clearTimeout(this._pt); this._pin = ''; const el = this.el; if (!el) return; el.classList.remove('pin'); this.msg(''); el.focus({ preventScroll: true }); },
-  key(k) { const el = this.el; if (!el) return; const c = this.get(); this.idlePad();
+  key(k) { const el = this.el; if (!el || el.classList.contains('unl')) return; const c = this.get(); this.idlePad();
     if (k === 'lock') return this.unpad();
     const wait = (this._ban || 0) - Date.now(); if (wait > 0) return this.msg(hgTr(`Spróbuj za ${Math.ceil(wait / 1000)} s`, `Try again in ${Math.ceil(wait / 1000)} s`), true);
     if (k === 'del') { this._pin = this._pin.slice(0, -1); this.msg(''); return this.dots(c.pinN); }
     if (!/^[0-9]$/.test(k) || this._pin.length >= 8) return;
     this._pin += k; this.msg(''); this.dots(c.pinN);
     if (this._pin.length < c.pinN) return;
-    if (this.hash(this._pin) === c.pinH) { this._bad = 0; this.dots(c.pinN, 'ok'); clearTimeout(this._pt); setTimeout(() => { this.locked = false; this.flag(false); this.wake('pin'); }, 160); return; }
+    if (this.hash(this._pin) === c.pinH) { this._bad = 0; clearTimeout(this._pt); this.dots(c.pinN, 'ok'); this.unlock(); return; }
     this._bad = (this._bad || 0) + 1; this._pin = ''; const d = el.querySelector('.nw-dots'); this.dots(c.pinN); d.classList.remove('bad'); void d.offsetWidth; d.classList.add('bad');
     if (this._bad >= 5) { const s = 30 * Math.pow(2, Math.min(4, Math.floor(this._bad / 5) - 1)); this._ban = Date.now() + s * 1000; this.msg(hgTr(`Za dużo prób. Spróbuj za ${s} s`, `Too many attempts. Try again in ${s} s`), true); }
     else this.msg(hgTr('Nieprawidłowy PIN', 'Wrong PIN'), true); },
@@ -257,7 +282,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
     clearTimeout(this._ck); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
-    setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, 450);
+    setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
     const f = this._foc; this._foc = null; try { if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) { /* bez znaczenia */ }
     this.arm(); },
   hide() { if (this.active) { this.flag(false); this.wake('off'); } },
