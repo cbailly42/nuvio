@@ -34,6 +34,8 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
 - In nested steps, **X** goes back one step instead of closing everything.
 - Changing a field never remounts the sheet: update in place, keep scroll position and focus.
 - The blur behind a sheet is present from the very first frame (no flash of a sharp background).
+- Touch gestures that start inside a dialog, sheet, slider, picker or horizontally scrolling row never switch the dashboard view. Any other element can opt out with `data-no-swipe`. While a dialog is open, view swipe is off.
+- Assist is a dialog opened from the header (or the A key), not a card in views.
 - Settings live in the tabbed settings panel (Wygląd, Widoki, Pokoje, Nagłówek i nawigacja, Tła, Wygaszacz, Kopia zapasowa). New settings go into the matching tab, with proper column labels.
 
 ## Components and cards
