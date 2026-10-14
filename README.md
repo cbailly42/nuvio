@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.5-a3e635?style=flat-square" alt="v0.6.5">
+  <img src="https://img.shields.io/badge/version-v0.7.0-a3e635?style=flat-square" alt="v0.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,33 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
   - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
+### Rooms, appliances and Home Glass parity (0.7.0)
+
+All of these are in **+ Add** in edit mode, with a preview, a full settings form and an **Advanced configuration (JSON)** field for any other card option (labels, colours, thresholds, actions). Everything is stored in the layout, so Layout backup export and import carry it.
+
+| Component | Card | Settings in the form |
+|---|---|---|
+| Rooms | `custom:nuvio-areas-card` | room view path; names, icons, order, temperature and humidity sensors and custom rooms come from Appearance, Rooms |
+| Room | `custom:nuvio-room-card` | the room to show (or the room from the address) |
+| Appliance | `custom:nuvio-appliance-card` | any entity of the device; washer, dryer and dishwasher show state, program, time left and progress |
+| Hot water | `custom:nuvio-cwu-card` | water heater, heating state, power, time to heat, consumption, keep temperature, switches |
+| Stairs | `custom:nuvio-stairs-card` | bottom and top light and motion sensor, light group, sequence automation |
+| Fuel prices | `custom:nuvio-fuel-card` | price sensors with labels and an optional tomorrow change sensor |
+| Air conditioning (card) | `custom:nuvio-ac-card` | climate entity, title |
+| Energy week | `custom:nuvio-week-card` | consumption and production sensors, days, tap target |
+| Phases | `custom:nuvio-phases-card` | power, voltage and current per phase, maximum total and per phase power |
+| Solar | `custom:nuvio-pv-card` | power, today, inverter state and temperature, strings |
+| Network | `custom:nuvio-net-card` | section (internet, gateway, Wi-Fi, devices, clients), title |
+| Home sensors | `custom:nuvio-sensors-card` | device classes, extra and skipped sensors |
+| Shortcut | `custom:nuvio-link-card` | title, subtitle, entity, path or URL to open |
+| Person | `custom:nuvio-person-card` | person, home and away labels |
+
+**Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms.
+
+**Appearance, Header and navigation**: household title and subtitle (or no household strip), fuel prices in the dashboard header, and the four views on the phone bar.
+
+**Appearance, Background gallery**: add your own images by `/local/` or `https://` address; they show up in Background and in the wall tablet slideshow.
+
 ### Planned
 
 Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md).
@@ -292,9 +319,17 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.6.5 -m "Nuvio 0.6.4" && git push origin v0.6.5`.
+Only tagging by hand: `git tag -a v0.7.0 -m "Nuvio 0.7.0" && git push origin v0.7.0`.
 
 ## Changelog
+
+### 0.7.0
+- Added: components for everything Home Glass shows, each in + Add with a preview and a full settings form: Rooms, Room, Appliance (washer, dryer, dishwasher with state, program, time left and progress), Hot water, Stairs, Fuel prices, Air conditioning card, Energy week, Phases, Solar, Network, Home sensors, Shortcut and Person.
+- Added: every card component has an Advanced configuration (JSON) field, so any card option (labels, colours, thresholds, actions) can be edited in the form.
+- Added: Appearance, Rooms: room names, icons, order and visibility, temperature and humidity sensor per room tile (automatic, picked or none), custom rooms with any entities independent of Home Assistant areas, and manual entity assignment.
+- Added: Appearance, Header and navigation: household title or no household strip, fuel prices in the dashboard header, and the four views on the phone bar.
+- Added: Appearance, Background gallery: your own images saved in the layout, also used by the wall tablet slideshow.
+- Changed: Layout backup export and import carry all of the above, and the missing entity check includes room and fuel sensors.
 
 ### 0.6.5
 - Fixed: wall tablet (screensaver) settings were not saved when another Home Glass based dashboard was installed as a Lovelace resource on the same Home Assistant. Both bundles shared one in-memory layout store, so Nuvio wrote to the other dashboard's key, which has no screensaver section. Nuvio now keeps its own globals, and every build gets a new content-hashed file name.

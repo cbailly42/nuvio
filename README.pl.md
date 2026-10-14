@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.5-a3e635?style=flat-square" alt="v0.6.5">
+  <img src="https://img.shields.io/badge/version-v0.7.0-a3e635?style=flat-square" alt="v0.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,33 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
   - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
+### Pokoje, AGD i zgodność z Home Glass (0.7.0)
+
+Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem ustawień i polem **Zaawansowana konfiguracja (JSON)** na każdą inną opcję karty (etykiety, kolory, progi, akcje). Wszystko zapisuje się w układzie, więc eksport i import w Kopii układu to przenoszą.
+
+| Komponent | Karta | Ustawienia w formularzu |
+|---|---|---|
+| Pokoje | `custom:nuvio-areas-card` | ścieżka widoku pokoju; nazwy, ikony, kolejność, czujniki temperatury i wilgotności oraz pokoje własne w Wygląd, Pokoje |
+| Pokój | `custom:nuvio-room-card` | pokój do pokazania (albo pokój z adresu) |
+| Urządzenie AGD | `custom:nuvio-appliance-card` | dowolna encja urządzenia; pralka, suszarka i zmywarka pokazują stan, program, czas do końca i postęp |
+| Ciepła woda | `custom:nuvio-cwu-card` | podgrzewacz, stan grzania, moc, czas nagrzewania, zużycie, utrzymanie temperatury, przełączniki |
+| Schody | `custom:nuvio-stairs-card` | światło i czujnik ruchu na dole i na górze, grupa świateł, automatyzacja sekwencji |
+| Ceny paliw | `custom:nuvio-fuel-card` | czujniki cen z etykietami i opcjonalny czujnik zmiany na jutro |
+| Klimatyzacja (karta) | `custom:nuvio-ac-card` | encja climate, tytuł |
+| Energia, tydzień | `custom:nuvio-week-card` | czujniki zużycia i produkcji, liczba dni, cel po dotknięciu |
+| Fazy | `custom:nuvio-phases-card` | moc, napięcie i prąd każdej fazy, maksymalna moc łączna i fazy |
+| Fotowoltaika | `custom:nuvio-pv-card` | moc, produkcja dziś, stan i temperatura falownika, stringi |
+| Sieć | `custom:nuvio-net-card` | sekcja (internet, brama, Wi-Fi, urządzenia, klienci), tytuł |
+| Czujniki domu | `custom:nuvio-sensors-card` | rodzaje czujników, dodatkowe i pominięte czujniki |
+| Skrót | `custom:nuvio-link-card` | tytuł, podtytuł, encja, ścieżka lub adres do otwarcia |
+| Osoba | `custom:nuvio-person-card` | osoba, etykiety w domu i poza domem |
+
+**Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi.
+
+**Wygląd, Nagłówek i nawigacja**: tytuł i podtytuł domowników (albo bez paska domowników), ceny paliw w nagłówku pulpitu i cztery widoki na pasku telefonu.
+
+**Wygląd, Galeria teł**: własne zdjęcia z adresu `/local/` albo `https://`; pojawiają się w sekcji Tło i w pokazie slajdów tabletu ściennego.
+
 ### Planowane
 
 Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
@@ -292,9 +319,17 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.6.5 -m "Nuvio 0.6.4" && git push origin v0.6.5`.
+Sam tag ręcznie: `git tag -a v0.7.0 -m "Nuvio 0.7.0" && git push origin v0.7.0`.
 
 ## Lista zmian
+
+### 0.7.0
+- Dodano: komponenty dla wszystkiego, co pokazuje Home Glass, każdy w + Dodaj z podglądem i pełnym formularzem: Pokoje, Pokój, Urządzenie AGD (pralka, suszarka, zmywarka ze stanem, programem, czasem do końca i postępem), Ciepła woda, Schody, Ceny paliw, karta Klimatyzacji, Energia tydzień, Fazy, Fotowoltaika, Sieć, Czujniki domu, Skrót i Osoba.
+- Dodano: każdy komponent kartowy ma pole Zaawansowana konfiguracja (JSON), więc każdą opcję karty (etykiety, kolory, progi, akcje) można edytować w formularzu.
+- Dodano: Wygląd, Pokoje: nazwy, ikony, kolejność i widoczność pokoi, czujnik temperatury i wilgotności na kaflu pokoju (automatycznie, wybrany albo brak), pokoje własne z dowolnymi encjami niezależne od obszarów Home Assistant oraz ręczne przypisywanie encji.
+- Dodano: Wygląd, Nagłówek i nawigacja: tytuł domowników albo brak paska domowników, ceny paliw w nagłówku pulpitu i cztery widoki na pasku telefonu.
+- Dodano: Wygląd, Galeria teł: własne zdjęcia zapisane w układzie, używane też w pokazie slajdów tabletu ściennego.
+- Zmieniono: eksport i import Kopii układu przenoszą wszystko powyżej, a sprawdzanie brakujących encji obejmuje czujniki pokoi i paliw.
 
 ### 0.6.5
 - Poprawione: ustawienia trybu tabletu ściennego (wygaszacza) nie zapisywały się, gdy w tym samym Home Assistant był zainstalowany jako zasób Lovelace inny pulpit oparty na Home Glass. Obie paczki dzieliły jeden magazyn układu w pamięci, więc Nuvio zapisywało do klucza drugiego pulpitu, który nie ma sekcji wygaszacza. Nuvio ma teraz własne zmienne globalne, a każda kompilacja dostaje nową nazwę pliku z hashem treści.
