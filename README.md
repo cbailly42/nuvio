@@ -258,6 +258,9 @@ Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
 
+### 0.3.17
+- Fixed: a lighter vertical band ("glow") cutting through the zoom toolbar and the household bar on views with the half-width panel (Panel, large screens). The weather in the header on the photo now uses the still icon, so it no longer repaints every frame and Chrome no longer refreshes only part of the glass; the tab and rail indicators no longer keep a permanent GPU layer (they are promoted only while they animate).
+
 ### 0.3.16
 - Fixed: Done, Save and other primary buttons commit and close without asking. The Discard changes confirm appears only when closing a form with unsaved changes (card settings, component form) with X, Escape, the backdrop or a swipe; sheets that apply changes live (Appearance, title, Restore hidden, the gallery) never ask.
 - Fixed: cancelling edit mode restores the layout correctly again (the unsaved changes check from 0.3.13 overwrote the edit mode snapshot).

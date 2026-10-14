@@ -258,6 +258,9 @@ Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
 
+### 0.3.17
+- Poprawka: jaśniejszy pionowy pas („poświata”) przecinający pasek powiększania i pasek domowników na widokach z panelem do połowy (Panel, duże ekrany). Pogoda w nagłówku na zdjęciu używa ikony statycznej, więc nie przerysowuje się w każdej klatce i Chrome nie odświeża już tylko części szkła; wskaźniki zakładek i szyny nie trzymają stałej warstwy GPU (dostają ją tylko na czas animacji).
+
 ### 0.3.16
 - Poprawka: Gotowe, Zapisz i inne główne przyciski zatwierdzają i zamykają bez pytania. Pytanie o odrzucenie zmian pojawia się tylko przy zamykaniu formularza z niezapisanymi zmianami (ustawienia karty, formularz komponentu) przez X, Escape, tło lub przeciągnięcie; arkusze stosujące zmiany na żywo (Wygląd, tytuł, Przywróć ukryte, galeria) nigdy nie pytają.
 - Poprawka: anulowanie trybu edycji znów poprawnie przywraca układ (sprawdzanie niezapisanych zmian z 0.3.13 nadpisywało migawkę trybu edycji).

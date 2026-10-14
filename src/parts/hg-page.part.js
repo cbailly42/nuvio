@@ -893,7 +893,8 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .tab{ z-index:1; }
 .tab.act{ color:#1F2125; padding:0 var(--s3); text-shadow:none; }
 .tab.act:hover{ background:none; }
-.ind, .rind{ position:absolute; left:0; top:0; z-index:0; pointer-events:none; background:#fff; will-change:transform; transform-origin:0 50%; }
+/* bez stałego will-change: osobna warstwa GPU wskaźnika dzieliła tło szkła; WAAPI i tak promuje element na czas animacji */
+.ind, .rind{ position:absolute; left:0; top:0; z-index:0; pointer-events:none; background:#fff; transform-origin:0 50%; }
 .ind{ border-radius:999px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 .rind{ border-radius:50%; box-shadow: var(--hg-sh); }
 :host([mode=phone]) .ind{ border-radius:22px; }
