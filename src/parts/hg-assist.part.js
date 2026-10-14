@@ -1,0 +1,91 @@
+/* Assist jako okno dialogowe (0.11.0): szklane okno na komputerze, arkusz od dołu na telefonie.
+   Jedna instancja na stronę, nigdy nie montowana ponownie: rozmowa (i conversation_id) trwa przez całą sesję.
+   Ustawienia w panelu Ustawienia, karta „Nagłówek i nawigacja”; zapis w danych użytkownika (HGL.data.assist). */
+const HG_ASSIST_CSS = `
+.as-l{ position:fixed; inset:0; z-index:1002; visibility:hidden; pointer-events:none; }
+.as-l.open{ visibility:visible; pointer-events:auto; }
+.as-l .as-scrim{ position:absolute; inset:0; background:rgba(6,10,18,.46); opacity:0; transition:opacity .22s ease; }
+.as-l.in .as-scrim{ opacity:1; }
+/* rozmycie na samym oknie od pierwszej klatki: animowany jest tylko transform, nie przezroczystość */
+.as-l .as-d{ position:absolute; left:50%; top:50%; width:min(580px, calc(100vw - 32px)); height:min(640px, calc(100vh - 64px)); display:flex; flex-direction:column; overflow:hidden;
+  border-radius:26px; color:#F4F6F8; background:rgba(16,20,28,.66); -webkit-backdrop-filter:blur(30px) saturate(150%); backdrop-filter:blur(30px) saturate(150%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 24px 70px rgba(0,0,0,.45); transform:translate(-50%, calc(-50% + 18px)) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+.as-l.in .as-d{ transform:translate(-50%, -50%); }
+.as-l .as-d > *{ flex:1; min-height:0; }
+.as-l .grab{ display:none; }
+@media (max-width: 600px){
+  .as-l .as-d{ left:0; right:0; top:auto; bottom:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
+  .as-l.in .as-d{ transform:none; }
+  .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:rgba(255,255,255,.35); }
+}
+@media (prefers-reduced-motion: reduce){ .as-l .as-scrim, .as-l .as-d{ transition:none; } }
+.cir.as.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; }
+`;
+const HGAssistUI = window.__hgAssistUI || (window.__hgAssistUI = {
+  page: null, hass: null, L: null, card: null, opener: null, isOpen: false, _t: null, _pl: null, _plL: false, _sv: null, _key: null,
+  get() { const a = (window.__hgL && window.__hgL.data && window.__hgL.data.assist) || {};
+    const sg = Array.isArray(a.suggestions) ? a.suggestions.filter((x) => typeof x === 'string' && x.trim()).slice(0, 12) : null;
+    return { button: a.button !== false, key: a.key !== false, pipeline: typeof a.pipeline === 'string' ? a.pipeline : '', tts: a.tts === true, mic: a.mic !== false, suggestions: sg && sg.length ? sg : null }; },
+  set(p) { HGL.data.assist = Object.assign({}, this.get(), p); HGL._ls(); this.apply();
+    if (this.page && this.page._paintTop) { this.page._sigTop = null; this.page._paintTop(); }
+    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
+  cfg() { const c = this.get(); return { type: 'custom:hg-assist-card', embedded: true, title: 'Assist', pipeline: c.pipeline || null, tts: c.tts, mic: c.mic, show_pipeline: true, suggestions: c.suggestions }; },
+  apply() { if (this.card) { const m = this.card._msgs, id = this.card._cid; this.card.setConfig(this.cfg()); this.card._msgs = m; this.card._cid = id; } },
+  bind(h, page) { this.hass = h; if (this.page !== page) { this.page = page; if (this.L && page.shadowRoot && this.L.getRootNode() !== page.shadowRoot) page.shadowRoot.appendChild(this.L); }
+    if (this.card) this.card.hass = h;
+    if (!this._key) { this._key = (e) => this.onKey(e); window.addEventListener('keydown', this._key, true); } },
+  /* klawisz A otwiera (gdy fokus nie jest w polu tekstowym); Escape zamyka */
+  onKey(e) { const p = this.page; if (!p || !p.isConnected || !p.getBoundingClientRect().width) return;
+    if (this.isOpen) { if (e.key === 'Escape' && !(typeof hgsOpen !== 'undefined' && hgsOpen.size)) { e.preventDefault(); e.stopPropagation(); this.close(); } else if (e.key === 'Tab') this.trap(e); return; }
+    if (e.key !== 'a' && e.key !== 'A') return; if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || !this.get().key) return;
+    const fe = e.composedPath()[0]; if (fe && (fe.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(fe.tagName))) return;
+    if (p._eSheetOpen || p._sheetOpen || p._menuOpen || (window.HGWall && HGWall.active)) return;
+    e.preventDefault(); e.stopPropagation(); this.open(p); },
+  trap(e) { const r = this.card && this.card.shadowRoot; if (!r) return; const f = [...r.querySelectorAll('button:not([disabled]), input, select, [tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null || x.getClientRects().length);
+    if (!f.length) return; const a = r.activeElement, i = f.indexOf(a);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); } },
+  mount() { const p = this.page; if (!p || !p.shadowRoot) return false; if (this.L) { if (this.L.getRootNode() !== p.shadowRoot) p.shadowRoot.appendChild(this.L); return true; }
+    const L = document.createElement('div'); L.className = 'as-l';
+    L.innerHTML = `<style>${HG_ASSIST_CSS}</style><div class="as-scrim" data-asx="1"></div><div class="as-d" role="dialog" aria-modal="true" aria-label="Assist"><i class="grab" aria-hidden="true"></i></div>`;
+    const c = document.createElement('hg-assist-card'); c.setConfig(this.cfg()); if (this.hass) c.hass = this.hass; L.querySelector('.as-d').appendChild(c);
+    L.querySelector('.as-scrim').addEventListener('click', () => this.close());
+    /* telefon: przeciągnięcie uchwytu w dół zamyka */
+    const d = L.querySelector('.as-d'), g = L.querySelector('.grab'); let y0 = null;
+    g.addEventListener('pointerdown', (e) => { y0 = e.clientY; g.setPointerCapture(e.pointerId); });
+    g.addEventListener('pointermove', (e) => { if (y0 == null) return; const dy = e.clientY - y0; if (dy > 0) d.style.transform = `translateY(${dy}px)`; });
+    const end = (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; d.style.transform = ''; if (dy > 80) this.close(); };
+    g.addEventListener('pointerup', end); g.addEventListener('pointercancel', () => { y0 = null; d.style.transform = ''; });
+    p.shadowRoot.appendChild(L); this.L = L; this.card = c; return true; },
+  open(p, from) { if (p) this.page = p; if (!this.mount()) return; if (this.isOpen) return this.focus();
+    this.opener = from || (this.page.shadowRoot && this.page.shadowRoot.activeElement) || null; this.isOpen = true; clearTimeout(this._t);
+    const L = this.L; L.classList.add('open'); this.btn(true);
+    if (typeof hgReduced !== 'undefined' && hgReduced()) L.classList.add('in'); else requestAnimationFrame(() => requestAnimationFrame(() => this.isOpen && L.classList.add('in')));
+    let n = 0; const tf = () => { if (!this.isOpen) return; this.focus(); const r = this.card && this.card.shadowRoot; if (++n < 12 && (!r || !r.activeElement || n < 6)) setTimeout(tf, 80); }; setTimeout(tf, 30); },
+  focus() { if (this.card) this.card._focusQ = true; const q = this.card && this.card.shadowRoot && this.card.shadowRoot.querySelector('[data-k=q]'); if (q) q.focus({ preventScroll: true }); },
+  close() { if (!this.isOpen || !this.L) return; this.isOpen = false; const L = this.L; L.classList.remove('in'); this.btn(false);
+    if (this.card && this.card._rec) try { this.card._rec.stop(); } catch (e) {}
+    this._t = setTimeout(() => { if (!this.isOpen) L.classList.remove('open'); }, typeof hgReduced !== 'undefined' && hgReduced() ? 0 : 280);
+    const o = this.opener; this.opener = null; if (o && o.isConnected && o.focus) o.focus({ preventScroll: true }); },
+  btn(on) { const b = this.page && this.page.shadowRoot && this.page.shadowRoot.querySelector('.cir.as'); if (b) { b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); } },
+  /* ---- ustawienia (karta „Nagłówek i nawigacja”) ---- */
+  pipes(p) { const h = p._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
+    h.callWS({ type: 'assist_pipeline/pipeline/list' }).then((r) => { this._pl = (r && r.pipelines) || []; this._pref = r && r.preferred_pipeline; }).catch(() => { this._pl = []; })
+      .then(() => { this._plL = false; const S = p._eSheetEl; if (S && S.querySelector('.hge-sheet.lk [data-tab=head]')) p._eLook(); }); },
+  sw(k, l, d, on) { return `<button type="button" class="wl-sw" role="switch" data-hge="as-tg" data-k="${k}" aria-checked="${on}"><span>${l}<small>${d}</small></span><i aria-hidden="true"></i></button>`; },
+  html(p) { const c = this.get(); this.pipes(p); const pl = this._pl || [], pref = pl.find((x) => x.id === this._pref);
+    const cur = c.pipeline && !pl.some((x) => x.id === c.pipeline) ? [{ id: c.pipeline, name: c.pipeline }] : [];
+    return `<section class="lk-g wl as-s" data-tab="head" aria-labelledby="as-h"><style>${typeof HG_WALL_CSS !== 'undefined' ? HG_WALL_CSS : ''}</style><h4 id="as-h">${H.icon('mdi:microphone-message')}${hgTr('Assist', 'Assist')}</h4>
+      <small class="lk-hn">${hgTr('Rozmowa z asystentem Home Assistant w oknie: przycisk w nagłówku albo klawisz A. Ustawienie dotyczy konta użytkownika HA.', 'Talk to the Home Assistant assistant in a dialog: the header button or the A key. Applies to this Home Assistant user.')}</small>
+      ${this.sw('button', hgTr('Przycisk w nagłówku', 'Header button'), hgTr('Ikona mikrofonu obok wiadomości', 'Microphone icon next to messages'), c.button)}
+      ${this.sw('key', hgTr('Skrót klawiszowy A', 'Keyboard shortcut A'), hgTr('Otwiera okno, gdy nie piszesz w polu', 'Opens the dialog when you are not typing in a field'), c.key)}
+      <label class="wl-f"><span>${hgTr('Domyślny asystent', 'Default assistant')}</span><select class="hs-in" name="as-pipe"><option value="">${H.esc(hgTr('Preferowany w Home Assistant', 'Preferred in Home Assistant') + (pref ? ` (${pref.name})` : ''))}</option>${[...cur, ...pl].map((x) => `<option value="${H.esc(x.id)}"${x.id === c.pipeline ? ' selected' : ''}>${H.esc(x.name)}</option>`).join('')}</select></label>
+      ${this.sw('tts', hgTr('Czytaj odpowiedzi na głos', 'Read replies aloud'), hgTr('Głos wybrany w asystencie', 'The voice set in the assistant'), c.tts)}
+      ${this.sw('mic', hgTr('Mikrofon', 'Microphone'), hgTr('Dyktowanie w przeglądarce', 'Dictation in the browser'), c.mic)}
+      <label class="wl-f"><span>${hgTr('Podpowiedzi (oddzielone przecinkami)', 'Suggestions (comma separated)')}</span><span class="hs-s lk-url">${H.icon('mdi:lightbulb-on-outline')}<input class="hs-in" name="as-sug" placeholder="${hgTr('Puste = podpowiedzi domyślne', 'Empty = default suggestions')}" value="${H.esc((c.suggestions || []).join(', '))}" autocomplete="off" aria-label="${hgTr('Podpowiedzi', 'Suggestions')}"></span></label>
+      <button type="button" class="wl-tb" data-hge="as-open">${H.icon('mdi:microphone-message')}<span>${hgTr('Otwórz Assist', 'Open Assist')}</span></button></section>`; },
+  wire(p, S) { const s = S.querySelector('[name=as-pipe]'); if (s) s.addEventListener('change', () => this.set({ pipeline: s.value }));
+    const u = S.querySelector('[name=as-sug]'); if (u) u.addEventListener('change', () => this.set({ suggestions: u.value.split(',').map((x) => x.trim()).filter(Boolean) })); },
+  act(p, b, a) { if (a === 'as-tg') { const k = b.dataset.k; this.set({ [k]: !this.get()[k] }); return p._eLook(); }
+    if (a === 'as-open') { if (p._eSheetClose) p._eSheetClose(); else { const x = p._eSheetEl && p._eSheetEl.querySelector('[data-hge=sheetclose]'); if (x) x.click(); } setTimeout(() => this.open(p), 260); } },
+});
+window.HGAssistUI = HGAssistUI;

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.10.2-a3e635?style=flat-square" alt="v0.10.2">
+  <img src="https://img.shields.io/badge/version-v0.11.0-a3e635?style=flat-square" alt="v0.11.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -328,9 +328,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.10.2 -m "Nuvio 0.10.2" && git push origin v0.10.2`.
+Sam tag ręcznie: `git tag -a v0.11.0 -m "Nuvio 0.11.0" && git push origin v0.11.0`.
 
 ## Lista zmian
+
+### 0.11.0
+- Zmieniono: Assist to teraz szklane okno zamiast karty. Otwierasz je przyciskiem mikrofonu w nagłówku albo klawiszem A; na telefonie wysuwa się od dołu. Rozmowa, wybór asystenta, mikrofon, podpowiedzi i czytanie odpowiedzi zostają, a rozmowa trwa przez całą sesję. Zamykasz X, klawiszem Escape albo dotykiem obok okna.
+- Dodano: ustawienia Assist w Ustawieniach, karta Nagłówek i nawigacja: przycisk w nagłówku, skrót A, domyślny asystent, czytanie odpowiedzi, mikrofon i własne podpowiedzi.
+- Zmieniono: Assist nie jest już dostępny w + Dodaj. Istniejące karty Assist pokazują mały przycisk, który otwiera okno.
+- Naprawiono: przesunięcie palcem po kartach ustawień, suwaku, liście wyboru albo przewijanym w poziomie rzędzie nie przełącza już widoku, a przy otwartym oknie gest zmiany widoku jest wyłączony.
 
 ### 0.10.2
 - Naprawiono: karta Assist ma własną rozmytą, szklaną powierzchnię, więc treść pod nią już nie prześwituje. Dymki, podpowiedzi i pole wpisywania mają mocniejszy kontrast.

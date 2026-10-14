@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.10.2-a3e635?style=flat-square" alt="v0.10.2">
+  <img src="https://img.shields.io/badge/version-v0.11.0-a3e635?style=flat-square" alt="v0.11.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -328,9 +328,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.10.2 -m "Nuvio 0.10.2" && git push origin v0.10.2`.
+Only tagging by hand: `git tag -a v0.11.0 -m "Nuvio 0.11.0" && git push origin v0.11.0`.
 
 ## Changelog
+
+### 0.11.0
+- Changed: Assist is now a glass dialog instead of a card. Open it with the microphone button in the header or the A key; on a phone it slides up as a bottom sheet. The conversation, assistant picker, microphone, suggestions and spoken replies stay, and the conversation continues for the whole session. Close with X, Escape or a tap outside.
+- Added: Assist settings in Ustawienia, tab Nagłówek i nawigacja: header button, A shortcut, default assistant, spoken replies, microphone and your own suggestions.
+- Changed: Assist is no longer offered in + Dodaj. Existing Assist cards show a small button that opens the dialog.
+- Fixed: swiping the settings tabs, a slider, a picker or a horizontally scrolling row no longer switches the dashboard view, and view swipe is off while a dialog is open.
 
 ### 0.10.2
 - Fixed: the Assist card has its own blurred glass surface, so content behind it no longer shows through. Bubbles, suggestion chips and the input field have stronger contrast.

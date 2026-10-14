@@ -7,7 +7,7 @@ Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard stra
 
 ## Planned (source of truth for README roadmap)
 
-- Assist / voice card: talk to Home Assistant Assist from a glass card, with the reply shown inline (done in 0.10.0)
+- Assist: talk to Home Assistant Assist with the reply shown inline (card in 0.10.0, dialog from the header in 0.11.0)
 - Notifications center: persistent notifications, low batteries, open doors and unavailable devices in one panel (planned)
 - Energy dashboard integration: read sources and devices from the HA Energy settings instead of manual sensors (planned)
 - Energy and bars card fix: render `nuvio-energy-card` and `nuvio-bars-card` correctly outside a fixed-height grid (planned)

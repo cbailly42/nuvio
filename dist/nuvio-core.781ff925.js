@@ -613,7 +613,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.10.2+21e23939';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.11.0+781ff925';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -893,6 +893,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-ac-000000-012:rgba(0,0,0,0.12);
   --hg-ac-000000-016:rgba(0,0,0,0.16);
   --hg-ac-000000-028:rgba(0,0,0,0.28);
+  --hg-ac-000000-045:rgba(0,0,0,0.45);
   --hg-ac-000000-050:rgba(0,0,0,0.5);
   --hg-ac-05070a:#05070A;
   --hg-ac-06090c-072:rgba(6,9,12,0.72);
@@ -995,6 +996,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-000000-045-k:rgba(0,0,0,0.45);
   --hg-bg-000000-k:#000000;
   --hg-bg-06090c-028:rgba(6,9,12,0.28);
+  --hg-bg-060a12-046:rgba(6,10,18,0.46);
   --hg-bg-080c12-022-k:rgba(8,12,18,0.22);
   --hg-bg-080c12-035:rgba(8,12,18,0.35);
   --hg-bg-080c12-036:rgba(8,12,18,0.36);
@@ -1005,6 +1007,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-0e1014-032:rgba(14,16,20,0.32);
   --hg-bg-0e1014-036:rgba(14,16,20,0.36);
   --hg-bg-0e1014-042:rgba(14,16,20,0.42);
+  --hg-bg-10141c-066:rgba(16,20,28,0.66);
   --hg-bg-111111:#111111;
   --hg-bg-141923-080:rgba(20,25,35,0.8);
   --hg-bg-141a21-006:rgba(20,26,33,0.06);
@@ -1219,6 +1222,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-db4437:#DB4437;
   --hg-tx-e5484d:#E5484D;
   --hg-tx-f2f5f8:#F2F5F8;
+  --hg-tx-f4f6f8:#F4F6F8;
   --hg-tx-f5b83d:#F5B83D;
   --hg-tx-f5f6f7:#F5F6F7;
   --hg-tx-ff3b30:#FF3B30;
@@ -6329,7 +6333,12 @@ hgReg('nuvio-updates-card', HGUpdatesCard, hgTr('Nuvio – Aktualizacje', 'Nuvio
 class HGAssistCard extends HGBase {
   defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
   ents() { return []; }
-  css() { return HG_G14_CSS + U(`ha-card.glass{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, var(--hg-bg-0c1018-042)), var(--hg-assist-veil, var(--hg-bg-0c1018-042))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-008), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
+  css() { if (!this._config.embedded) return HG_G14_CSS + U(`ha-card.glass{ padding:10px; min-height:0; justify-content:center; }
+.lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:14px; transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
+.lg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lg .gn{ flex:1; min-width:0; } .lg .gic{ flex:none; }`);
+    return HG_G14_CSS + U(`:host{ display:block; height:100%; } ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:10px; background:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-radius:0; }
+.hd2 .x{ flex:none; }
+ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, var(--hg-bg-0c1018-042)), var(--hg-assist-veil, var(--hg-bg-0c1018-042))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-008), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
 .hd2 .gn small{ opacity:.78; } .cv{ background:var(--hg-bg-000000-014); border-radius:14px; padding:8px !important; }
 .hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
 .cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
@@ -6356,11 +6365,12 @@ class HGAssistCard extends HGBase {
   async _pipes() { const h = this._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
     try { const r = await h.callWS({ type: 'assist_pipeline/pipeline/list' }); this._pl = r.pipelines || []; this._pref = r.preferred_pipeline; } catch (e) { this._pl = []; } this._plL = false; this.rerender(); }
   render() { const c = this._config, h = this._hass, M = this._msgs || [];
+    if (!c.embedded) return `<ha-card class="glass"><button class="lg" data-act="open" aria-haspopup="dialog" aria-label="${hgTr('Otwórz Assist', 'Open Assist')}"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b id="as-t">${H.esc(c.title || c.name || 'Assist')}</b><small>${hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${H.icon('mdi:chevron-right')}</button></ha-card>`;
     if (!this._pl) setTimeout(() => this._pipes(), 0);
     const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps"><select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
     const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
-    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}</div>
+    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}" title="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}<button class="gb r x" data-act="close" aria-label="${hgTr('Zamknij', 'Close')}" title="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em">${H.icon('mdi:chat-processing-outline')}<b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</div>`}</div>
       <div class="sg" role="list">${this._sugg().map((s) => `<button role="listitem" data-act="sug" data-t="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
       <form class="in" data-k="f"><input data-k="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="${H.esc(c.placeholder || hgTr('Napisz do asystenta…', 'Message the assistant…'))}" aria-label="${hgTr('Wiadomość', 'Message')}" value="${H.esc(this._draft || '')}">
@@ -6371,7 +6381,8 @@ class HGAssistCard extends HGBase {
     if (f) f.addEventListener('submit', (e) => { e.preventDefault(); this._send(q.value); });
     if (s) s.addEventListener('change', () => { this._pipe = s.value; this._cid = null; });
     if (cv) cv.scrollTop = cv.scrollHeight; }
-  onAct(a, t, e) { if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }
+  onAct(a, t, e) { if (a === 'open' || a === 'close') { if (window.HGAssistUI) HGAssistUI[a === 'open' ? 'open' : 'close'](null, t); return; }
+    if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }
     if (a === 'sug') return this._send(t.dataset.t);
     if (a === 'clr') { this._msgs = []; this._cid = null; return this.rerender(); }
     if (a === 'play') { const m = this._msgs[+t.dataset.i]; if (m && m.tts) this._play(m.tts); }
@@ -6404,7 +6415,7 @@ class HGAssistCard extends HGBase {
       const r = await h.callWS(Object.assign({ type: 'conversation/process', text: txt, conversation_id: this._cid || null, language: lang }, c.agent_id ? { agent_id: c.agent_id } : {}));
       if (r.conversation_id) this._cid = r.conversation_id; done(((((r.response || {}).speech || {}).plain || {}).speech) || hgTr('Brak odpowiedzi', 'No reply'));
     } catch (e) { done(hgTr('Nie udało się połączyć z Assist: ', 'Could not reach Assist: ') + (e && e.message ? e.message : e), { err: true }); } }
-  getGridOptions() { return { columns: 12, rows: 5 }; }
+  getGridOptions() { return this._config && this._config.embedded ? { columns: 12, rows: 5 } : { columns: 6, rows: 1 }; }
 }
 hgReg('nuvio-assist-card', HGAssistCard, hgTr('Nuvio – Assist', 'Nuvio – Assist'), hgTr('Rozmowa z Assist z odpowiedzią na miejscu', 'Talk to Assist with the reply inline'));
 
@@ -6675,6 +6686,10 @@ class HGPage extends HTMLElement {
     this._notif = {};
     this._cards = [];
     this.shadowRoot.addEventListener('click', (e) => this._click(e));
+    /* gest zmiany widoku (np. swipe-navigation na ha-app-layout) nie może startować z okien, arkuszy, suwaków, list przewijanych w poziomie ani wyborów:
+       zatrzymujemy cały gest dotyku na granicy strony; przy otwartym oknie lub arkuszu blokujemy każdy gest */
+    const sw = (e) => { if (e.type === 'touchstart') this._noSwipe = e.touches.length > 1 || this._swBlock(e); if (this._noSwipe) e.stopPropagation(); if (e.type === 'touchend' && !e.touches.length) setTimeout(() => { this._noSwipe = false; }, 0); };
+    for (const ty of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) this.shadowRoot.addEventListener(ty, sw, { passive: true });
     const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingPaint) { this._pendingPaint = false; this._sigTop = this._sigHub = null; this._paintTop(); this._paintHub(); } }, 60); };
     this.shadowRoot.addEventListener('pointerdown', (e) => { if (e.composedPath().some((n) => n.classList && (n.classList.contains('top') || n.classList.contains('hub')))) { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); } }, { passive: true });
     this.shadowRoot.addEventListener('pointerup', up, { passive: true });
@@ -6706,7 +6721,8 @@ class HGPage extends HTMLElement {
   }
   set hass(h) {
     window.__nuvioHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
-    if (window.HGWall) HGWall.tick(h, this);   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
+    if (window.HGWall) HGWall.tick(h, this);
+    if (window.HGAssistUI) HGAssistUI.bind(h, this);   /* okno Assist: hass dla rozmowy i skrót klawiszowy */   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
@@ -7144,7 +7160,7 @@ class HGPage extends HTMLElement {
       return 0;
     };
     const tabs = c.tabs.map((t) => ({ ...t, act: path === t.path || (t.match && hgMatch(t.match, path)), b: badgeOf(t) }));
-    const sig = JSON.stringify([!!this._editing, this._isAdmin(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '']);
+    const sig = JSON.stringify([!!this._editing, this._isAdmin(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '', !!(window.HGAssistUI && HGAssistUI.get().button)]);
     if (!force && sig === this._sigTop) return; this._sigTop = sig;
     const ps = ui.person && H.st(this._hass, ui.person);
     const av = ps && ps.attributes.entity_picture ? hgAvatar(this._hass, ui.person, 'uav') : `<span class="uav ini">${H.esc(ui.first[0] || '?')}</span>`;
@@ -7153,6 +7169,7 @@ class HGPage extends HTMLElement {
       <div class="tabs" role="tablist">${tabs.map((t, i) => `<button role="tab" aria-selected="${!!t.act}" class="tab ${t.act ? 'act' : ''}" data-act="nav" data-i="${i}" title="${H.esc(t.label)}" aria-label="${H.esc(t.label)}">${t.icon ? H.icon(t.icon) : ''}<span class="tl">${H.esc(t.label)}</span>${t.b ? `<sup class="nb" aria-label="${hgTr(`${t.b} aktywne`, `${t.b} active`)}">${t.b > 9 ? '9+' : t.b}</sup>` : ''}</button>`).join('')}<i class="ind" aria-hidden="true"></i></div>
       <div class="right">
         ${this._isAdmin() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? hgTr('Zakończ edycję układu', 'Finish editing layout') : hgTr('Edytuj układ', 'Edit layout')}" title="${this._editing ? hgTr('Gotowe', 'Done') : hgTr('Edytuj układ', 'Edit layout')}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
+        ${window.HGAssistUI && HGAssistUI.get().button ? `<button class="cir as" data-act="assist" aria-haspopup="dialog" aria-keyshortcuts="A" aria-label="${hgTr('Assist, asystent głosowy (A)', 'Assist voice assistant (A)')}" title="${hgTr('Assist (A)', 'Assist (A)')}">${H.icon('mdi:microphone-message')}</button>` : ''}
         <button class="cir" data-act="mail" aria-label="${hgTr('Wiadomości', 'Messages')}" title="${hgTr('Wiadomości i powiadomienia', 'Messages and notifications')}">${H.icon('mdi:email')}</button>
         <button class="cir" data-act="bell" aria-label="${hgTr('Powiadomienia', 'Notifications')} (${nCount})" title="${hgTr('Powiadomienia', 'Notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
@@ -7333,6 +7350,12 @@ class HGPage extends HTMLElement {
       <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || hgTr('Rodzina', 'Family'))}">${H.icon('mdi:plus')}</button>
       <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.esc(H.name(this._hass, p))}: ${H.esc(s ? H.t(this._hass, s) : '')}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
   }
+  _dlgOpen() { return !!(this._sheetOpen || this._menuOpen || (window.HGAssistUI && HGAssistUI.isOpen) || this._eSheetOpen || (window.HGWall && HGWall.active)); }
+  _swBlock(e) { if (this._dlgOpen()) return true;
+    for (const n of e.composedPath()) { if (n === this || !(n instanceof Element)) break;
+      if (n.matches('.layer, .as-l, .hge-sheet, .hge-scrim, [role=dialog], [role=slider], [role=listbox], [role=tablist], input[type=range], select, [data-hgs], [data-no-swipe], .lk-tabs')) return true;
+      if (n.scrollWidth > n.clientWidth + 2) { const ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return true; } }
+    return false; }
   _click(e) {
     const t = e.composedPath().find((n) => n.dataset && n.dataset.act && this.shadowRoot.contains(n));
     if (!t) return;
@@ -7349,6 +7372,7 @@ class HGPage extends HTMLElement {
       case 'sheetnav': { const m = (this._sheetItems || c.phone_nav.more)[i]; this._openSheet(false); return go(m.action); }
       case 'railmore': return this._openSheet(this._sheetOpen ? false : 'rail');
       case 'edit': return this._editing ? this._editExit(true) : this._editEnter();
+      case 'assist': return window.HGAssistUI && HGAssistUI.open(this, t);
       case 'mail': return go(c.mail_action);
       case 'bell': return go(c.notifications_action);
       case 'pmore': { const el = this._panelEl; return el && el.scrollBy({ top: Math.round(el.clientHeight * 0.8), behavior: 'smooth' }); }
@@ -8251,11 +8275,10 @@ const HG_COMP = [
   hgTrO({ id: 'sun', i: 'mdi:weather-sunset', card: 'nuvio-sun-card', slots: [], cfg: () => ({ entity: 'sun.sun' }) }, { n: ['Słońce', 'Sun'], d: ['Wschód, zachód i pozycja słońca', 'Sunrise, sunset and sun position'] }),
   hgTrO({ id: 'note', i: 'mdi:note-text-outline', card: 'nuvio-note-card', slots: [], opts: [{ k: 'text', t: 'txt', l: ['Treść (**pogrubienie**, *kursywa*, listy "- ")', 'Text (**bold**, *italic*, "- " lists)'] }], cfg: () => ({}) }, { n: ['Notatka', 'Note'], d: ['Tekst z prostym formatowaniem', 'Text with simple formatting'] }),
   hgTrO({ id: 'image', i: 'mdi:image-outline', card: 'nuvio-image-card', modes: [['image', 'Obraz', 'Image', 'mdi:image-outline'], ['iframe', 'Strona', 'Page', 'mdi:web']], slots: [], opts: [{ k: 'url', l: ['Adres (https://… lub /local/…)', 'Address (https://… or /local/…)'], ph: 'https://' }, { k: 'ratio', l: ['Proporcje', 'Aspect ratio'], ph: '16/9' }, { k: 'refresh', t: 'num', l: ['Odświeżanie obrazu (s)', 'Image refresh (s)'] }], cfg: (v) => ({ mode: v.mode || 'image' }) }, { n: ['Obraz lub strona', 'Image or page'], d: ['Zdjęcie z adresu albo strona w ramce', 'Picture from a URL or a page in a frame'] }),
-  hgTrO({ id: 'assist', i: 'mdi:microphone-message', card: 'nuvio-assist-card', slots: [], opts: [{ k: 'pipeline', l: ['Asystent (id potoku, puste = domyślny)', 'Assistant (pipeline id, empty = default)'] }, { k: 'tts', t: 'bool', l: ['Czytaj odpowiedzi na głos', 'Read replies aloud'] }, { k: 'mic', t: 'bool', l: ['Mikrofon', 'Microphone'] }, { k: 'show_pipeline', t: 'bool', l: ['Wybór asystenta w karcie', 'Assistant picker in the card'] }, { k: 'suggestions', t: 'list', l: ['Podpowiedzi (po przecinku)', 'Suggestions (comma separated)'] }, { k: 'placeholder', l: ['Tekst w polu', 'Input placeholder'] }], cfg: () => ({ mic: true, show_pipeline: true }) }, { n: ['Assist', 'Assist'], d: ['Rozmowa z Home Assistant Assist, odpowiedź w dymkach', 'Talk to Home Assistant Assist, replies in bubbles'] }),
   hgTrO({ id: 'updates', i: 'mdi:package-up', card: 'nuvio-updates-card', slots: [], cfg: () => ({}) }, { n: ['Aktualizacje', 'Updates'], d: ['Dostępne aktualizacje Home Assistant', 'Available Home Assistant updates'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { assist: 'm', history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
+const HG_COMP_Z = { history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
@@ -8920,6 +8943,7 @@ const HG_EDIT = {
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
+    if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
     if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address')); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
@@ -9216,6 +9240,7 @@ const HG_EDIT = {
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
+      ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
       ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
       </div>`;
@@ -9234,6 +9259,7 @@ const HG_EDIT = {
     S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
     if (window.HGWall) HGWall.wire(this, S);
     if (window.HGRoomsX) HGRoomsX.wire(this, S);
+    if (window.HGAssistUI) HGAssistUI.wire(this, S);
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */
@@ -9841,3 +9867,95 @@ const HGWall = window.__nuvioWall || (window.__nuvioWall = {
     if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(); } },
 });
 window.HGWall = HGWall;
+
+/* Assist jako okno dialogowe (0.11.0): szklane okno na komputerze, arkusz od dołu na telefonie.
+   Jedna instancja na stronę, nigdy nie montowana ponownie: rozmowa (i conversation_id) trwa przez całą sesję.
+   Ustawienia w panelu Ustawienia, karta „Nagłówek i nawigacja”; zapis w danych użytkownika (HGL.data.assist). */
+const HG_ASSIST_CSS = `
+.as-l{ position:fixed; inset:0; z-index:1002; visibility:hidden; pointer-events:none; }
+.as-l.open{ visibility:visible; pointer-events:auto; }
+.as-l .as-scrim{ position:absolute; inset:0; background:var(--hg-bg-060a12-046); opacity:0; transition:opacity .22s ease; }
+.as-l.in .as-scrim{ opacity:1; }
+/* rozmycie na samym oknie od pierwszej klatki: animowany jest tylko transform, nie przezroczystość */
+.as-l .as-d{ position:absolute; left:50%; top:50%; width:min(580px, calc(100vw - 32px)); height:min(640px, calc(100vh - 64px)); display:flex; flex-direction:column; overflow:hidden;
+  border-radius:26px; color:var(--hg-tx-f4f6f8); background:var(--hg-bg-10141c-066); -webkit-backdrop-filter:blur(30px) saturate(150%); backdrop-filter:blur(30px) saturate(150%);
+  box-shadow:inset 0 0 0 1px var(--hg-sh-ffffff-010), 0 24px 70px var(--hg-ac-000000-045); transform:translate(-50%, calc(-50% + 18px)) scale(.97); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+.as-l.in .as-d{ transform:translate(-50%, -50%); }
+.as-l .as-d > *{ flex:1; min-height:0; }
+.as-l .grab{ display:none; }
+@media (max-width: 600px){
+  .as-l .as-d{ left:0; right:0; top:auto; bottom:0; width:auto; height:min(80vh, 680px); border-radius:26px 26px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); }
+  .as-l.in .as-d{ transform:none; }
+  .as-l .grab{ display:block; flex:none; width:40px; height:5px; border-radius:3px; margin:8px auto 0; background:var(--hg-bg-ffffff-035); }
+}
+@media (prefers-reduced-motion: reduce){ .as-l .as-scrim, .as-l .as-d{ transition:none; } }
+.cir.as.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; }
+`;
+const HGAssistUI = window.__nuvioAssistUI || (window.__nuvioAssistUI = {
+  page: null, hass: null, L: null, card: null, opener: null, isOpen: false, _t: null, _pl: null, _plL: false, _sv: null, _key: null,
+  get() { const a = (window.__nuvioL && window.__nuvioL.data && window.__nuvioL.data.assist) || {};
+    const sg = Array.isArray(a.suggestions) ? a.suggestions.filter((x) => typeof x === 'string' && x.trim()).slice(0, 12) : null;
+    return { button: a.button !== false, key: a.key !== false, pipeline: typeof a.pipeline === 'string' ? a.pipeline : '', tts: a.tts === true, mic: a.mic !== false, suggestions: sg && sg.length ? sg : null }; },
+  set(p) { HGL.data.assist = Object.assign({}, this.get(), p); HGL._ls(); this.apply();
+    if (this.page && this.page._paintTop) { this.page._sigTop = null; this.page._paintTop(); }
+    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__nuvioHass).catch(() => {}); }, 400); },
+  cfg() { const c = this.get(); return { type: 'custom:nuvio-assist-card', embedded: true, title: 'Assist', pipeline: c.pipeline || null, tts: c.tts, mic: c.mic, show_pipeline: true, suggestions: c.suggestions }; },
+  apply() { if (this.card) { const m = this.card._msgs, id = this.card._cid; this.card.setConfig(this.cfg()); this.card._msgs = m; this.card._cid = id; } },
+  bind(h, page) { this.hass = h; if (this.page !== page) { this.page = page; if (this.L && page.shadowRoot && this.L.getRootNode() !== page.shadowRoot) page.shadowRoot.appendChild(this.L); }
+    if (this.card) this.card.hass = h;
+    if (!this._key) { this._key = (e) => this.onKey(e); window.addEventListener('keydown', this._key, true); } },
+  /* klawisz A otwiera (gdy fokus nie jest w polu tekstowym); Escape zamyka */
+  onKey(e) { const p = this.page; if (!p || !p.isConnected || !p.getBoundingClientRect().width) return;
+    if (this.isOpen) { if (e.key === 'Escape' && !(typeof hgsOpen !== 'undefined' && hgsOpen.size)) { e.preventDefault(); e.stopPropagation(); this.close(); } else if (e.key === 'Tab') this.trap(e); return; }
+    if (e.key !== 'a' && e.key !== 'A') return; if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || !this.get().key) return;
+    const fe = e.composedPath()[0]; if (fe && (fe.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(fe.tagName))) return;
+    if (p._eSheetOpen || p._sheetOpen || p._menuOpen || (window.HGWall && HGWall.active)) return;
+    e.preventDefault(); e.stopPropagation(); this.open(p); },
+  trap(e) { const r = this.card && this.card.shadowRoot; if (!r) return; const f = [...r.querySelectorAll('button:not([disabled]), input, select, [tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null || x.getClientRects().length);
+    if (!f.length) return; const a = r.activeElement, i = f.indexOf(a);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); } },
+  mount() { const p = this.page; if (!p || !p.shadowRoot) return false; if (this.L) { if (this.L.getRootNode() !== p.shadowRoot) p.shadowRoot.appendChild(this.L); return true; }
+    const L = document.createElement('div'); L.className = 'as-l';
+    L.innerHTML = `<style>${HG_ASSIST_CSS}</style><div class="as-scrim" data-asx="1"></div><div class="as-d" role="dialog" aria-modal="true" aria-label="Assist"><i class="grab" aria-hidden="true"></i></div>`;
+    const c = document.createElement('nuvio-assist-card'); c.setConfig(this.cfg()); if (this.hass) c.hass = this.hass; L.querySelector('.as-d').appendChild(c);
+    L.querySelector('.as-scrim').addEventListener('click', () => this.close());
+    /* telefon: przeciągnięcie uchwytu w dół zamyka */
+    const d = L.querySelector('.as-d'), g = L.querySelector('.grab'); let y0 = null;
+    g.addEventListener('pointerdown', (e) => { y0 = e.clientY; g.setPointerCapture(e.pointerId); });
+    g.addEventListener('pointermove', (e) => { if (y0 == null) return; const dy = e.clientY - y0; if (dy > 0) d.style.transform = `translateY(${dy}px)`; });
+    const end = (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; d.style.transform = ''; if (dy > 80) this.close(); };
+    g.addEventListener('pointerup', end); g.addEventListener('pointercancel', () => { y0 = null; d.style.transform = ''; });
+    p.shadowRoot.appendChild(L); this.L = L; this.card = c; return true; },
+  open(p, from) { if (p) this.page = p; if (!this.mount()) return; if (this.isOpen) return this.focus();
+    this.opener = from || (this.page.shadowRoot && this.page.shadowRoot.activeElement) || null; this.isOpen = true; clearTimeout(this._t);
+    const L = this.L; L.classList.add('open'); this.btn(true);
+    if (typeof hgReduced !== 'undefined' && hgReduced()) L.classList.add('in'); else requestAnimationFrame(() => requestAnimationFrame(() => this.isOpen && L.classList.add('in')));
+    let n = 0; const tf = () => { if (!this.isOpen) return; this.focus(); const r = this.card && this.card.shadowRoot; if (++n < 12 && (!r || !r.activeElement || n < 6)) setTimeout(tf, 80); }; setTimeout(tf, 30); },
+  focus() { if (this.card) this.card._focusQ = true; const q = this.card && this.card.shadowRoot && this.card.shadowRoot.querySelector('[data-k=q]'); if (q) q.focus({ preventScroll: true }); },
+  close() { if (!this.isOpen || !this.L) return; this.isOpen = false; const L = this.L; L.classList.remove('in'); this.btn(false);
+    if (this.card && this.card._rec) try { this.card._rec.stop(); } catch (e) {}
+    this._t = setTimeout(() => { if (!this.isOpen) L.classList.remove('open'); }, typeof hgReduced !== 'undefined' && hgReduced() ? 0 : 280);
+    const o = this.opener; this.opener = null; if (o && o.isConnected && o.focus) o.focus({ preventScroll: true }); },
+  btn(on) { const b = this.page && this.page.shadowRoot && this.page.shadowRoot.querySelector('.cir.as'); if (b) { b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); } },
+  /* ---- ustawienia (karta „Nagłówek i nawigacja”) ---- */
+  pipes(p) { const h = p._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
+    h.callWS({ type: 'assist_pipeline/pipeline/list' }).then((r) => { this._pl = (r && r.pipelines) || []; this._pref = r && r.preferred_pipeline; }).catch(() => { this._pl = []; })
+      .then(() => { this._plL = false; const S = p._eSheetEl; if (S && S.querySelector('.hge-sheet.lk [data-tab=head]')) p._eLook(); }); },
+  sw(k, l, d, on) { return `<button type="button" class="wl-sw" role="switch" data-hge="as-tg" data-k="${k}" aria-checked="${on}"><span>${l}<small>${d}</small></span><i aria-hidden="true"></i></button>`; },
+  html(p) { const c = this.get(); this.pipes(p); const pl = this._pl || [], pref = pl.find((x) => x.id === this._pref);
+    const cur = c.pipeline && !pl.some((x) => x.id === c.pipeline) ? [{ id: c.pipeline, name: c.pipeline }] : [];
+    return `<section class="lk-g wl as-s" data-tab="head" aria-labelledby="as-h"><style>${typeof HG_WALL_CSS !== 'undefined' ? HG_WALL_CSS : ''}</style><h4 id="as-h">${H.icon('mdi:microphone-message')}${hgTr('Assist', 'Assist')}</h4>
+      <small class="lk-hn">${hgTr('Rozmowa z asystentem Home Assistant w oknie: przycisk w nagłówku albo klawisz A. Ustawienie dotyczy konta użytkownika HA.', 'Talk to the Home Assistant assistant in a dialog: the header button or the A key. Applies to this Home Assistant user.')}</small>
+      ${this.sw('button', hgTr('Przycisk w nagłówku', 'Header button'), hgTr('Ikona mikrofonu obok wiadomości', 'Microphone icon next to messages'), c.button)}
+      ${this.sw('key', hgTr('Skrót klawiszowy A', 'Keyboard shortcut A'), hgTr('Otwiera okno, gdy nie piszesz w polu', 'Opens the dialog when you are not typing in a field'), c.key)}
+      <label class="wl-f"><span>${hgTr('Domyślny asystent', 'Default assistant')}</span><select class="hs-in" name="as-pipe"><option value="">${H.esc(hgTr('Preferowany w Home Assistant', 'Preferred in Home Assistant') + (pref ? ` (${pref.name})` : ''))}</option>${[...cur, ...pl].map((x) => `<option value="${H.esc(x.id)}"${x.id === c.pipeline ? ' selected' : ''}>${H.esc(x.name)}</option>`).join('')}</select></label>
+      ${this.sw('tts', hgTr('Czytaj odpowiedzi na głos', 'Read replies aloud'), hgTr('Głos wybrany w asystencie', 'The voice set in the assistant'), c.tts)}
+      ${this.sw('mic', hgTr('Mikrofon', 'Microphone'), hgTr('Dyktowanie w przeglądarce', 'Dictation in the browser'), c.mic)}
+      <label class="wl-f"><span>${hgTr('Podpowiedzi (oddzielone przecinkami)', 'Suggestions (comma separated)')}</span><span class="hs-s lk-url">${H.icon('mdi:lightbulb-on-outline')}<input class="hs-in" name="as-sug" placeholder="${hgTr('Puste = podpowiedzi domyślne', 'Empty = default suggestions')}" value="${H.esc((c.suggestions || []).join(', '))}" autocomplete="off" aria-label="${hgTr('Podpowiedzi', 'Suggestions')}"></span></label>
+      <button type="button" class="wl-tb" data-hge="as-open">${H.icon('mdi:microphone-message')}<span>${hgTr('Otwórz Assist', 'Open Assist')}</span></button></section>`; },
+  wire(p, S) { const s = S.querySelector('[name=as-pipe]'); if (s) s.addEventListener('change', () => this.set({ pipeline: s.value }));
+    const u = S.querySelector('[name=as-sug]'); if (u) u.addEventListener('change', () => this.set({ suggestions: u.value.split(',').map((x) => x.trim()).filter(Boolean) })); },
+  act(p, b, a) { if (a === 'as-tg') { const k = b.dataset.k; this.set({ [k]: !this.get()[k] }); return p._eLook(); }
+    if (a === 'as-open') { if (p._eSheetClose) p._eSheetClose(); else { const x = p._eSheetEl && p._eSheetEl.querySelector('[data-hge=sheetclose]'); if (x) x.click(); } setTimeout(() => this.open(p), 260); } },
+});
+window.HGAssistUI = HGAssistUI;

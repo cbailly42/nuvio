@@ -257,7 +257,12 @@ hgReg('hg-updates-card', HGUpdatesCard, hgTr('Home Glass – Aktualizacje', 'Hom
 class HGAssistCard extends HGBase {
   defaults() { return { title: null, pipeline: null, tts: false, mic: true, show_pipeline: true, suggestions: null, placeholder: null, min_h: 320 }; }
   ents() { return []; }
-  css() { return HG_G14_CSS + U(`ha-card.glass{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, rgba(12,16,24,.42)), var(--hg-assist-veil, rgba(12,16,24,.42))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
+  css() { if (!this._config.embedded) return HG_G14_CSS + U(`ha-card.glass{ padding:10px; min-height:0; justify-content:center; }
+.lg{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border-radius:14px; transition:background .15s; } .lg:hover{ background:color-mix(in srgb, currentColor 7%, transparent); }
+.lg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lg .gn{ flex:1; min-width:0; } .lg .gic{ flex:none; }`);
+    return HG_G14_CSS + U(`:host{ display:block; height:100%; } ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:10px; background:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-radius:0; }
+.hd2 .x{ flex:none; }
+ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolation:isolate; background:linear-gradient(var(--hg-assist-veil, rgba(12,16,24,.42)), var(--hg-assist-veil, rgba(12,16,24,.42))), var(--hg-glass-lite, var(--hg-glass-bg)); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), var(--hg-card-sh, 0 6px 20px var(--hg-glass-sh)); }
 .hd2 .gn small{ opacity:.78; } .cv{ background:rgba(0,0,0,.14); border-radius:14px; padding:8px !important; }
 .hd2{ display:flex; align-items:center; gap:10px; min-width:0; } .hd2 .gn{ flex:1 1 auto; min-width:70px; } .hd2 .ps{ flex:0 1 210px; min-width:0; }
 .cv{ flex:1; min-height:120px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px; scroll-behavior:smooth; overscroll-behavior:contain; }
@@ -284,11 +289,12 @@ class HGAssistCard extends HGBase {
   async _pipes() { const h = this._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
     try { const r = await h.callWS({ type: 'assist_pipeline/pipeline/list' }); this._pl = r.pipelines || []; this._pref = r.preferred_pipeline; } catch (e) { this._pl = []; } this._plL = false; this.rerender(); }
   render() { const c = this._config, h = this._hass, M = this._msgs || [];
+    if (!c.embedded) return `<ha-card class="glass"><button class="lg" data-act="open" aria-haspopup="dialog" aria-label="${hgTr('Otwórz Assist', 'Open Assist')}"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b id="as-t">${H.esc(c.title || c.name || 'Assist')}</b><small>${hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${H.icon('mdi:chevron-right')}</button></ha-card>`;
     if (!this._pl) setTimeout(() => this._pipes(), 0);
     const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps"><select data-k="pipe" aria-label="${hgTr('Asystent', 'Assistant')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
     const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
-    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}</div>
+    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${sel}${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}" title="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}<button class="gb r x" data-act="close" aria-label="${hgTr('Zamknij', 'Close')}" title="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em">${H.icon('mdi:chat-processing-outline')}<b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</div>`}</div>
       <div class="sg" role="list">${this._sugg().map((s) => `<button role="listitem" data-act="sug" data-t="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
       <form class="in" data-k="f"><input data-k="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="${H.esc(c.placeholder || hgTr('Napisz do asystenta…', 'Message the assistant…'))}" aria-label="${hgTr('Wiadomość', 'Message')}" value="${H.esc(this._draft || '')}">
@@ -299,7 +305,8 @@ class HGAssistCard extends HGBase {
     if (f) f.addEventListener('submit', (e) => { e.preventDefault(); this._send(q.value); });
     if (s) s.addEventListener('change', () => { this._pipe = s.value; this._cid = null; });
     if (cv) cv.scrollTop = cv.scrollHeight; }
-  onAct(a, t, e) { if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }
+  onAct(a, t, e) { if (a === 'open' || a === 'close') { if (window.HGAssistUI) HGAssistUI[a === 'open' ? 'open' : 'close'](null, t); return; }
+    if (a === 'send') { e.preventDefault(); const q = this.$.querySelector('[data-k=q]'); return this._send(q && q.value); }
     if (a === 'sug') return this._send(t.dataset.t);
     if (a === 'clr') { this._msgs = []; this._cid = null; return this.rerender(); }
     if (a === 'play') { const m = this._msgs[+t.dataset.i]; if (m && m.tts) this._play(m.tts); }
@@ -332,6 +339,6 @@ class HGAssistCard extends HGBase {
       const r = await h.callWS(Object.assign({ type: 'conversation/process', text: txt, conversation_id: this._cid || null, language: lang }, c.agent_id ? { agent_id: c.agent_id } : {}));
       if (r.conversation_id) this._cid = r.conversation_id; done(((((r.response || {}).speech || {}).plain || {}).speech) || hgTr('Brak odpowiedzi', 'No reply'));
     } catch (e) { done(hgTr('Nie udało się połączyć z Assist: ', 'Could not reach Assist: ') + (e && e.message ? e.message : e), { err: true }); } }
-  getGridOptions() { return { columns: 12, rows: 5 }; }
+  getGridOptions() { return this._config && this._config.embedded ? { columns: 12, rows: 5 } : { columns: 6, rows: 1 }; }
 }
 hgReg('hg-assist-card', HGAssistCard, hgTr('Home Glass – Assist', 'Home Glass – Assist'), hgTr('Rozmowa z Assist z odpowiedzią na miejscu', 'Talk to Assist with the reply inline'));

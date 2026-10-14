@@ -357,11 +357,10 @@ const HG_COMP = [
   hgTrO({ id: 'sun', i: 'mdi:weather-sunset', card: 'hg-sun-card', slots: [], cfg: () => ({ entity: 'sun.sun' }) }, { n: ['Słońce', 'Sun'], d: ['Wschód, zachód i pozycja słońca', 'Sunrise, sunset and sun position'] }),
   hgTrO({ id: 'note', i: 'mdi:note-text-outline', card: 'hg-note-card', slots: [], opts: [{ k: 'text', t: 'txt', l: ['Treść (**pogrubienie**, *kursywa*, listy "- ")', 'Text (**bold**, *italic*, "- " lists)'] }], cfg: () => ({}) }, { n: ['Notatka', 'Note'], d: ['Tekst z prostym formatowaniem', 'Text with simple formatting'] }),
   hgTrO({ id: 'image', i: 'mdi:image-outline', card: 'hg-image-card', modes: [['image', 'Obraz', 'Image', 'mdi:image-outline'], ['iframe', 'Strona', 'Page', 'mdi:web']], slots: [], opts: [{ k: 'url', l: ['Adres (https://… lub /local/…)', 'Address (https://… or /local/…)'], ph: 'https://' }, { k: 'ratio', l: ['Proporcje', 'Aspect ratio'], ph: '16/9' }, { k: 'refresh', t: 'num', l: ['Odświeżanie obrazu (s)', 'Image refresh (s)'] }], cfg: (v) => ({ mode: v.mode || 'image' }) }, { n: ['Obraz lub strona', 'Image or page'], d: ['Zdjęcie z adresu albo strona w ramce', 'Picture from a URL or a page in a frame'] }),
-  hgTrO({ id: 'assist', i: 'mdi:microphone-message', card: 'hg-assist-card', slots: [], opts: [{ k: 'pipeline', l: ['Asystent (id potoku, puste = domyślny)', 'Assistant (pipeline id, empty = default)'] }, { k: 'tts', t: 'bool', l: ['Czytaj odpowiedzi na głos', 'Read replies aloud'] }, { k: 'mic', t: 'bool', l: ['Mikrofon', 'Microphone'] }, { k: 'show_pipeline', t: 'bool', l: ['Wybór asystenta w karcie', 'Assistant picker in the card'] }, { k: 'suggestions', t: 'list', l: ['Podpowiedzi (po przecinku)', 'Suggestions (comma separated)'] }, { k: 'placeholder', l: ['Tekst w polu', 'Input placeholder'] }], cfg: () => ({ mic: true, show_pipeline: true }) }, { n: ['Assist', 'Assist'], d: ['Rozmowa z Home Assistant Assist, odpowiedź w dymkach', 'Talk to Home Assistant Assist, replies in bubbles'] }),
   hgTrO({ id: 'updates', i: 'mdi:package-up', card: 'hg-updates-card', slots: [], cfg: () => ({}) }, { n: ['Aktualizacje', 'Updates'], d: ['Dostępne aktualizacje Home Assistant', 'Available Home Assistant updates'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { assist: 'm', history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
+const HG_COMP_Z = { history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 const hgSlotCands = (h, sl) => Object.keys(h.states).filter((e) => { const d = e.split('.')[0], s = h.states[e], r = (h.entities || {})[e];
   if (!sl.dom.includes(d) || (r && (r.hidden || r.entity_category))) return false; if (sl.dc && !sl.dc.includes(s.attributes.device_class)) return false; if (sl.num && !hgIsNum(h, e)) return false; if (sl.loc && s.attributes.latitude == null) return false; return true; })
@@ -1026,6 +1025,7 @@ const HG_EDIT = {
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
+    if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
     if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address')); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
@@ -1322,6 +1322,7 @@ const HG_EDIT = {
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
+      ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
       ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
       </div>`;
@@ -1340,6 +1341,7 @@ const HG_EDIT = {
     S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
     if (window.HGWall) HGWall.wire(this, S);
     if (window.HGRoomsX) HGRoomsX.wire(this, S);
+    if (window.HGAssistUI) HGAssistUI.wire(this, S);
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */
