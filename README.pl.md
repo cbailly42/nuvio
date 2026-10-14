@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.0-a3e635?style=flat-square" alt="v0.6.0">
+  <img src="https://img.shields.io/badge/version-v0.6.1-a3e635?style=flat-square" alt="v0.6.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -266,7 +266,7 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - **Czujnik ruchu**: dowolny `binary_sensor`; czujniki ruchu, obecności i zajętości są na początku listy. Gdy przejdzie w stan `on` w czasie wygaszacza, ekran się wybudza. Bez czujnika budzi tylko dotyk.
 - **Wybudzanie**: dotyk, klawisz lub przewinięcie. Pierwszy dotyk tylko budzi ekran i nie naciska kafla pod spodem.
 - **Podgląd wygaszacza** pokazuje go od razu; dotknij, aby zamknąć.
-- Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
+- Układ: duży zegar pośrodku (bez panelu pod spodem), data na stałe w lewym dolnym rogu i, jeśli Home Assistant ma encję `weather`, aktualna pogoda (ikona, temperatura, stan) w prawym górnym. Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
 - Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
 - Ustawienia zapisują się per użytkownik HA, tak jak układ. Dla osobnego użytkownika tabletu zaloguj się raz jako administrator na tablecie albo przenieś ustawienia przez **Kopię układu** (kategoria *Tryb tabletu ściennego*).
 
@@ -292,9 +292,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.6.0 -m "Nuvio 0.6.0" && git push origin v0.6.0`.
+Sam tag ręcznie: `git tag -a v0.6.1 -m "Nuvio 0.6.0" && git push origin v0.6.1`.
 
 ## Lista zmian
+
+### 0.6.1
+- Tryb tabletu ściennego: zegar nie leży już na szklanym panelu. Data jest na stałe w lewym dolnym rogu, a gdy Home Assistant ma encję pogody, w prawym górnym rogu widać aktualną pogodę (ikona, temperatura, stan).
 
 ### 0.6.0
 - Nowy wygląd karty **Klimatyzacja**: szklane pokrętło (łuk 270°) z gradientem temperatury od zimnej do ciepłej, gałka do przeciągania, kropka z temperaturą wnętrza i miękka poświata w kolorze trybu (pomarańcz grzanie, błękit chłodzenie, morski osuszanie), która „oddycha”, gdy urządzenie faktycznie pracuje. Przyciski trybów mają te same kolory.

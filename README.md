@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.6.0-a3e635?style=flat-square" alt="v0.6.0">
+  <img src="https://img.shields.io/badge/version-v0.6.1-a3e635?style=flat-square" alt="v0.6.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -266,7 +266,7 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 - **Motion sensor**: pick any `binary_sensor`; motion, occupancy and presence sensors are listed first. When it turns `on` while the screensaver is showing, the screen wakes. Without a sensor, only touch wakes it.
 - **Wake**: touch, key press or scroll. The first touch only wakes the screen and does not press the tile underneath.
 - **Preview screensaver** shows it immediately; touch to close.
-- The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
+- Layout: a large clock in the centre (no panel behind it), the date fixed at the bottom left and, if Home Assistant has a `weather` entity, the current weather (icon, temperature, condition) at the top right. The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
 - It only starts on the Nuvio dashboard (not in edit mode, not in a background tab) and is drawn above Home Assistant dialogs.
 - Settings are stored per Home Assistant user like the layout. For a dedicated tablet user, sign in as an admin once on the tablet, or move the settings with **Layout backup** (the category *Wall tablet mode*).
 
@@ -292,9 +292,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.6.0 -m "Nuvio 0.6.0" && git push origin v0.6.0`.
+Only tagging by hand: `git tag -a v0.6.1 -m "Nuvio 0.6.0" && git push origin v0.6.1`.
 
 ## Changelog
+
+### 0.6.1
+- Wall tablet mode: the clock no longer sits on a glass panel. The date is now fixed at the bottom left and, when Home Assistant has a weather entity, the current weather (icon, temperature, condition) appears at the top right.
 
 ### 0.6.0
 - New look for the **Climate** card: a glass thermostat dial (270° arc) with a cold-to-warm temperature gradient, a draggable knob, a dot for the indoor temperature and a soft glow in the mode colour (orange heating, blue cooling, teal drying) that breathes while the unit is actually working. Mode buttons use the same colours.
