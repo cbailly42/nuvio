@@ -45,7 +45,9 @@ const HGWx = {
 };
 class HGWeatherCard extends HGBase {
   defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgTr('Na zewnątrz', 'Outside'), icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1', variant: 'card' }; }
-  ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun].filter(Boolean); }
+  ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun, c.forecast_sensor].filter(Boolean); }
+  /* prognoza godzinowa: z weather/subscribe_forecast, a gdy encja jej nie daje – z atrybutu forecast czujnika (np. MQTT / template) */
+  _hsrc() { if ((this._hourly || []).length) return this._hourly; const s = this._config.forecast_sensor && this._hass && this._hass.states[this._config.forecast_sensor], f = s && s.attributes.forecast; return Array.isArray(f) ? f.filter((x) => x && x.datetime) : []; }
   _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
   setConfig(c) { const o = this._config; if (o && this._u && ((c && c.entity) || '') !== o.entity) { for (const u of this._u) u(); this._u = null; this._hourly = this._daily = this._hf = this._df = null; }
     super.setConfig(c); if (this._hass && !this._u) this._subscribe(); }
@@ -148,7 +150,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   _hrs() {
     const now = Date.now();
-    return (this._hourly || []).filter((f) => Date.parse(f.datetime) > now - 3600000).slice(0, this._config.hours);
+    return this._hsrc().filter((f) => Date.parse(f.datetime) > now - 3600000).slice(0, this._config.hours);
   }
   _hourCells(hr, wide) {
     const c = this._config, pu = this._pu();
@@ -190,7 +192,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   _minmax() {
     const d0 = (this._daily || [])[0];
     if (d0 && new Date(d0.datetime).toDateString() === new Date().toDateString() && d0.temperature != null) return [d0.temperature, d0.templow];
-    const today = new Date().toDateString(), hs = (this._hourly || []).filter((f) => new Date(f.datetime).toDateString() === today).map((f) => f.temperature).filter((t) => t != null);
+    const today = new Date().toDateString(), hs = this._hsrc().filter((f) => new Date(f.datetime).toDateString() === today).map((f) => f.temperature).filter((t) => t != null);
     return hs.length ? [Math.max(...hs), Math.min(...hs)] : null;
   }
   render() {

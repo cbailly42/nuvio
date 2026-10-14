@@ -51,7 +51,7 @@ const HGModel = {
       .sort((a, b) => Math.abs(Number(hass.states[b].state)) - Math.abs(Number(hass.states[a].state)));
     const areaOf = (e) => { const r = ents[e]; return r && (r.area_id || (r.device_id && devices[r.device_id] && devices[r.device_id].area_id)) || null; };
     const roomCount = {}; for (const e of all) { const a = areaOf(e); if (a) roomCount[a] = (roomCount[a] || 0) + 1; }
-    return { areas, devices, ents, all, roomCount, weather: dom('weather')[0] || null, climate: dom('climate'), media: dom('media_player'), cams: dom('camera'), persons: dom('person'), trackers: dom('device_tracker'), zones: dom('zone'), calendars: dom('calendar'),
+    return { areas, devices, ents, all, roomCount, weather: dom('weather').slice().sort((a, b) => ((+(hass.states[b].attributes.supported_features) & 3) ? 1 : 0) - ((+(hass.states[a].attributes.supported_features) & 3) ? 1 : 0))[0] || null, climate: dom('climate'), media: dom('media_player'), cams: dom('camera'), persons: dom('person'), trackers: dom('device_tracker'), zones: dom('zone'), calendars: dom('calendar'),
       scenes: [...dom('scene'), ...dom('script')].slice(0, 6), power, vacuums: dom('vacuum'), alarm: dom('alarm_control_panel')[0] || null, sun: hass.states['sun.sun'] ? 'sun.sun' : null };
   },
 };
@@ -77,17 +77,21 @@ async function hgGenerate(hass, opt) {
     ...((wiz && wiz.custom) || []).map((c) => [c.p, c.n, c.i || 'mdi:view-grid-outline', true])]
     /* jawna lista z kreatora / Wyglądu: kolejność wg listy, widok włączony nawet bez encji; bez listy – tylko dostępne */
     .filter((x) => (wiz && wiz.views ? x[0] === 'dashboard' || wiz.views.includes(x[0]) : x[3])).sort((a, b) => (wiz && wiz.views ? (a[0] === 'dashboard' ? -1 : b[0] === 'dashboard' ? 1 : wiz.views.indexOf(a[0]) - wiz.views.indexOf(b[0])) : 0));
-  const nav = (v) => ({ icon: v[2], label: v[1], action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
+  /* wiz.vx[path] = { i: ikona, sl: krótka etykieta (pasek telefonu), cd/ct: kolumny komputer/tablet, rail: false = bez paska bocznego, ro: kolejność w pasku } */
+  const VX = (wiz && wiz.vx) || {}; for (const v of V) { const o = VX[v[0]]; if (o && /^mdi:[a-z0-9-]+$/.test(o.i || '')) v[2] = o.i; }
+  const nav = (v) => ({ icon: v[2], label: v[1], ...(VX[v[0]] && VX[v[0]].sl ? { short: VX[v[0]].sl } : {}), action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
   const tabs = V.slice(0, 5).map((v) => ({ label: v[1], icon: v[2], path: HG_P(v[0]), ...(v[0] === 'rooms' ? { match: [HG_P('rooms'), HG_P('pokoj')] } : {}) }));
   const set = { icon: 'mdi:cog-outline', label: t('settings'), action: { navigate: '/config' }, match: '/config' };
   /* pasek telefonu: wiz.phone = do 4 ścieżek wybranych w Wygląd → Widoki; reszta trafia do „Więcej” */
   const PH = wiz && Array.isArray(wiz.phone) && wiz.phone.length ? wiz.phone.map((p) => V.find((v) => v[0] === p)).filter(Boolean).slice(0, 4) : V.slice(0, 4);
-  const rail = [...V.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
+  const RV = V.filter((v) => !VX[v[0]] || VX[v[0]].rail !== false).map((v, i) => [v, VX[v[0]] && isFinite(+VX[v[0]].ro) && VX[v[0]].ro !== '' && VX[v[0]].ro != null ? +VX[v[0]].ro : 100 + i]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+  const rail = [...RV.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
   /* pokoje: wiz.areas (Wygląd → Pokoje) = nazwy, ikony, kolejność, czujniki temp./wilg., pokoje własne z listą encji, CWU, schody */
   /* karty pokoi czytają wiz.areas na żywo (HGAreas.glob), więc zmiana w Wyglądzie działa bez przebudowy widoków */
   const areasCfg = { hide: (wiz && wiz.hiddenRooms) || [] };
   const HUB = wiz && wiz.hub;
-  const weather = M.weather ? { entity: M.weather, sun: M.sun, hours: 24, variant: 'hero', title: t('outside') } : null;
+  const WZ = (wiz && wiz.weather) || {}, wxE = (WZ.entity && hass.states[WZ.entity]) ? WZ.entity : M.weather;
+  const weather = wxE ? { entity: wxE, ...(WZ.forecast_sensor ? { forecast_sensor: WZ.forecast_sensor } : {}),  sun: M.sun, hours: 24, variant: 'hero', title: t('outside') } : null;
   const brand = (hass.config && hass.config.location_name) || t('home');
   const base = (view, title, sub, cards, panel, extra) => ({ type: 'custom:hg-page', view, brand, title, subtitle: sub, user: {}, tabs, rail, phone_nav: phone, rail_overflow: V.slice(5).map((v) => v[1]),
     menu: [{ label: t('profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: t('settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
@@ -121,6 +125,11 @@ const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
     ? [{ type: 'custom:hg-month-card', calendars: M.calendars.slice(0, 6), min_h: 380 }, { type: 'custom:hg-agenda-card', calendars: M.calendars.slice(0, 6), days: 14, min_h: 380 }] : [hint('calendar')]), scroll)));
   for (const c of (wiz && wiz.custom) || []) if (V.some((v) => v[0] === c.p)) views.push(view(c.p, c.n, base(c.p, c.n, c.s || '', [{ ...hint('custom'), hint_sc: c.p + ':tiles', min_h: 150, span: 'full' }], hgViewLay(c, one), c.lay === 'panel' && weather ? { weather } : {})));
   views.sort((a, b) => (a.subview ? 1 : 0) - (b.subview ? 1 : 0) || V.findIndex((v) => v[0] === a.path) - V.findIndex((v) => v[0] === b.path));
+  /* kolumny widoku z Wyglądu (wiz.vx[path].cd / ct) – także dla widoków wbudowanych; widoki z jednym obszarem (areas) zostają bez zmian */
+  const rp = (n) => `repeat(${Math.max(1, Math.min(6, n))}, minmax(0, 1fr))`;
+  for (const v of views) { const o = VX[v.path], pg = v.cards && v.cards[0], P = pg && pg.panel; if (!o || !P || P.areas) continue;
+    if (+o.cd) P.columns = rp(+o.cd); if (+o.ct) P.tablet = Object.assign({}, P.tablet, { columns: rp(+o.ct) }); }
+  if (wiz && (wiz.hubPos === 'right' || wiz.hubPos === 'left')) for (const v of views) { const pg = v.cards && v.cards[0]; if (pg && pg.hub) pg.hub = Object.assign({}, pg.hub, { pos: wiz.hubPos }); }
   return { title: brand, views, _hgWizard: !wiz, ...(opt.kiosk_mode ? { kiosk_mode: opt.kiosk_mode } : {}) };
 }
 

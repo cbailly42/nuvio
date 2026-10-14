@@ -261,7 +261,7 @@ class HGAreasCard extends HGBase {
     }
     // „Pozostałe”: kompaktowe przełączniki encji spoza 6 pokoi (każda raz)
     const oth = m.others.length ? `<div class="oth" role="group" aria-label="${hgTr('Pozostałe', 'Other')}"><b>${hgTr('Pozostałe', 'Other')}</b>${m.others.map((e) => {
-      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', nm = HGAreas.name(h, e, null, HGAreas.glob(c.areas));
+      const s = h.states[e], ok = H.ok(s), on = s.state === 'on', G0 = HGAreas.glob(c.areas) || {}, own = !(G0.entity_names && G0.entity_names[e]) && m.list.find((r) => r.virtual && r.id !== '_none' && r.ents.includes(e)), nm = own ? own.name : HGAreas.name(h, e, null, G0);
       const ic = /schod|stair/.test(e) ? 'mdi:stairs-down' : /taras|balkon|balcony|terrace/.test(e) ? 'mdi:balcony' : 'mdi:lightbulb-outline';
       return `<button class="pl ${on ? 'on' : ''}" data-act="tog" data-e="${H.esc(e)}" ${ok ? '' : 'disabled'} aria-pressed="${on}" aria-label="${H.esc(`${nm} – ${ok ? (on ? hgTr('wyłącz', 'turn off') : hgTr('włącz', 'turn on')) : hgTr('niedostępne', 'unavailable')}`)}">${H.icon(ic)}<span>${H.esc(nm)}</span></button>`;
     }).join('')}</div>` : '';

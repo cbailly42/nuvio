@@ -740,7 +740,7 @@ class HGPage extends HTMLElement {
         this._placeInd(); return;
       }
       this._railEl.dataset.pn = '1';
-      this._railEl.innerHTML = m.map((r, i) => `<button class="ri pn ${r.act ? 'act' : ''}" data-act="pnav" data-i="${i}" aria-label="${H.esc(r.label)}">${H.icon(r.icon)}<span>${H.esc(r.label)}</span></button>`).join('')
+      this._railEl.innerHTML = m.map((r, i) => `<button class="ri pn ${r.act ? 'act' : ''}" data-act="pnav" data-i="${i}" aria-label="${H.esc(r.label)}">${H.icon(r.icon)}<span${String(r.short || r.label).length > 9 ? ' class="lg"' : ''}>${H.esc(r.short || r.label)}</span></button>`).join('')
         + `<button class="ri pn ${moreAct || open ? 'act' : ''}" data-act="more" aria-haspopup="dialog" aria-expanded="${!!open}" aria-label="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-horizontal')}<span>${hgTr('Więcej', 'More')}</span></button><i class="rind" aria-hidden="true"></i>`;
       this._placeInd(); return;
     }
@@ -788,7 +788,7 @@ class HGPage extends HTMLElement {
   }
   _paintHub(force) {
     if (!this._built || !this._hass) return;
-    const hb = this._config.hub; if (!hb) { this._hubEl.style.display = 'none'; return; }
+    const hb = this._config.hub; this.toggleAttribute('hub-right', !!(hb && hb.pos === 'right')); if (!hb) { this._hubEl.style.display = 'none'; return; }
     const sig = JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
     if (!force && sig === this._sigHub) return; this._sigHub = sig;
     this._setHTML(this._hubEl, `<div class="ht"><b>${H.esc(hb.title)}</b><span>${H.esc(hb.subtitle)}</span></div>
@@ -1081,6 +1081,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @keyframes hgmore{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(3px); } }
 :host([mode=wide]) .tools{ position:absolute; left:151u; bottom:80u; }
 :host([mode=wide]) .hub{ position:absolute; left:96u; bottom:20u; }
+:host([mode=wide][hub-right]) .hub{ left:auto; right:476u; }
 :host([mode=wide]) .back{ position:absolute; left:16u; bottom:22u; }
 
 /* ================= TABLET (portret / wąskie okna) ================= */
@@ -1270,9 +1271,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .rail{ position:fixed; z-index:10; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom)); width:auto; height:64px;
   flex-direction:row; justify-content:space-around; border-radius:32px; padding:6px 8px; background: rgba(24,30,40,.74); }
 :host([mode=phone]) .ri{ width:48px; height:48px; } :host([mode=phone]) .ri ha-icon, :host([mode=phone]) .ri svg{ width:22px; height:22px; }
-:host([mode=phone]) .ri.pn{ flex:1 1 0; min-width:0; max-width:76px; height:54px; border-radius:22px; flex-direction:column; gap:2px; }
+:host([mode=phone]) .ri.pn{ flex:1 1 0; min-width:0; max-width:84px; height:54px; border-radius:22px; flex-direction:column; gap:2px; }
 :host([mode=phone]) .ri.pn ha-icon{ width:21px; height:21px; }
-:host([mode=phone]) .ri.pn span{ font-size:11.5px; line-height:1.1; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
+:host([mode=phone]) .ri.pn span{ font-size:11.5px; line-height:1.1; max-width:100%; white-space:nowrap; overflow:visible; }
+:host([mode=phone]) .ri.pn span.lg{ font-size:9.5px; letter-spacing:-.2px; }
 :host([mode=phone]) .rail:has(.pn){ height:68px; padding:6px; gap:2px; justify-content:space-between; border-radius:34px; }
 :host([mode=phone]) .rind{ border-radius:22px; }
 :host([mode=phone]) .tabs{ display:none !important; }

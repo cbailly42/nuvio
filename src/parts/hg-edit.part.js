@@ -44,7 +44,14 @@ const HGL = window.__hgL || (window.__hgL = {
         if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
         if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
       }
-      for (const k of ['app', 'wiz', 'pw', 'wall']) if (JSON.stringify(this.data[k] || null) !== base[k]) { if (this.data[k]) out[k] = this.data[k]; else delete out[k]; }
+      /* sekcje app / wiz / pw / wall: scalanie per klucz – druga karta przeglądarki z innym ustawieniem nie nadpisuje pozostałych kluczy (np. szerokości panelu innego widoku) */
+      for (const k of ['app', 'wiz', 'pw', 'wall']) { const mine = this.data[k] || null; if (JSON.stringify(mine) === base[k]) continue;
+        let b0 = null; try { b0 = JSON.parse(base[k] || 'null'); } catch (e) { b0 = null; }
+        if (!mine) { delete out[k]; continue; }
+        if (!b0 || typeof b0 !== 'object' || typeof mine !== 'object' || Array.isArray(mine)) { out[k] = mine; continue; }
+        const res = Object.assign({}, out[k] && typeof out[k] === 'object' ? out[k] : {});
+        for (const sk of new Set([...Object.keys(mine), ...Object.keys(b0)])) { if (JSON.stringify(mine[sk]) === JSON.stringify(b0[sk])) continue; if (sk in mine) res[sk] = mine[sk]; else delete res[sk]; }
+        out[k] = res; }
       out.ts = this.data.ts; delete out.uid;
       await h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: out });
       this.data = out; this._base = this._snap(out); this._ls(); this.failed = false; this.notify();
@@ -107,6 +114,8 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const dim = a.dim != null ? Math.max(0, Math.min(1, a.dim)) : null;
     let css = '';
     const L = Object.assign({}, T ? T.light : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {});
+    /* punkt ostrości tła (app.bg.pos = "x% y%") */
+    if (a.bg && typeof a.bg.pos === 'string' && /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(a.bg.pos)) L['--hg-bg-pos'] = a.bg.pos;
     const D = Object.assign({}, T ? T.dark : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {}, dim != null ? { '--hg-night': 'rgb' + `a(6,8,12,${(1 - (1 - dim * 0.65) * (1 - dim * 0.45)).toFixed(3)})` } : {});   /* przyciemnienie tylko nakładką: filter na pełnoekranowym zdjęciu dzielił tło na kafle GPU i dawał szwy pod szkłem */
     if (Object.keys(L).length) css += `:root:root, hg-page:not([x]){ ${this.css(L)} }\n`;
     if (Object.keys(D).length) css += `:root:root[data-hg-scheme=dark], :root[data-hg-scheme=dark] hg-page:not([x]){ ${this.css(D)} }\n`;
