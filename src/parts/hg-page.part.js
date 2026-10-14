@@ -138,6 +138,10 @@ class HGPage extends HTMLElement {
     this._notif = {};
     this._cards = [];
     this.shadowRoot.addEventListener('click', (e) => this._click(e));
+    /* gest zmiany widoku (np. swipe-navigation na ha-app-layout) nie może startować z okien, arkuszy, suwaków, list przewijanych w poziomie ani wyborów:
+       zatrzymujemy cały gest dotyku na granicy strony; przy otwartym oknie lub arkuszu blokujemy każdy gest */
+    const sw = (e) => { if (e.type === 'touchstart') this._noSwipe = e.touches.length > 1 || this._swBlock(e); if (this._noSwipe) e.stopPropagation(); if (e.type === 'touchend' && !e.touches.length) setTimeout(() => { this._noSwipe = false; }, 0); };
+    for (const ty of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) this.shadowRoot.addEventListener(ty, sw, { passive: true });
     const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingPaint) { this._pendingPaint = false; this._sigTop = this._sigHub = null; this._paintTop(); this._paintHub(); } }, 60); };
     this.shadowRoot.addEventListener('pointerdown', (e) => { if (e.composedPath().some((n) => n.classList && (n.classList.contains('top') || n.classList.contains('hub')))) { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); } }, { passive: true });
     this.shadowRoot.addEventListener('pointerup', up, { passive: true });
@@ -169,7 +173,8 @@ class HGPage extends HTMLElement {
   }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
-    if (window.HGWall) HGWall.tick(h, this);   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
+    if (window.HGWall) HGWall.tick(h, this);
+    if (window.HGAssistUI) HGAssistUI.bind(h, this);   /* okno Assist: hass dla rozmowy i skrót klawiszowy */   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
@@ -607,7 +612,7 @@ class HGPage extends HTMLElement {
       return 0;
     };
     const tabs = c.tabs.map((t) => ({ ...t, act: path === t.path || (t.match && hgMatch(t.match, path)), b: badgeOf(t) }));
-    const sig = JSON.stringify([!!this._editing, this._isAdmin(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '']);
+    const sig = JSON.stringify([!!this._editing, this._isAdmin(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '', !!(window.HGAssistUI && HGAssistUI.get().button)]);
     if (!force && sig === this._sigTop) return; this._sigTop = sig;
     const ps = ui.person && H.st(this._hass, ui.person);
     const av = ps && ps.attributes.entity_picture ? hgAvatar(this._hass, ui.person, 'uav') : `<span class="uav ini">${H.esc(ui.first[0] || '?')}</span>`;
@@ -616,6 +621,7 @@ class HGPage extends HTMLElement {
       <div class="tabs" role="tablist">${tabs.map((t, i) => `<button role="tab" aria-selected="${!!t.act}" class="tab ${t.act ? 'act' : ''}" data-act="nav" data-i="${i}" title="${H.esc(t.label)}" aria-label="${H.esc(t.label)}">${t.icon ? H.icon(t.icon) : ''}<span class="tl">${H.esc(t.label)}</span>${t.b ? `<sup class="nb" aria-label="${hgTr(`${t.b} aktywne`, `${t.b} active`)}">${t.b > 9 ? '9+' : t.b}</sup>` : ''}</button>`).join('')}<i class="ind" aria-hidden="true"></i></div>
       <div class="right">
         ${this._isAdmin() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? hgTr('Zakończ edycję układu', 'Finish editing layout') : hgTr('Edytuj układ', 'Edit layout')}" title="${this._editing ? hgTr('Gotowe', 'Done') : hgTr('Edytuj układ', 'Edit layout')}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
+        ${window.HGAssistUI && HGAssistUI.get().button ? `<button class="cir as" data-act="assist" aria-haspopup="dialog" aria-keyshortcuts="A" aria-label="${hgTr('Assist, asystent głosowy (A)', 'Assist voice assistant (A)')}" title="${hgTr('Assist (A)', 'Assist (A)')}">${H.icon('mdi:microphone-message')}</button>` : ''}
         <button class="cir" data-act="mail" aria-label="${hgTr('Wiadomości', 'Messages')}" title="${hgTr('Wiadomości i powiadomienia', 'Messages and notifications')}">${H.icon('mdi:email')}</button>
         <button class="cir" data-act="bell" aria-label="${hgTr('Powiadomienia', 'Notifications')} (${nCount})" title="${hgTr('Powiadomienia', 'Notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
@@ -796,6 +802,12 @@ class HGPage extends HTMLElement {
       <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || hgTr('Rodzina', 'Family'))}">${H.icon('mdi:plus')}</button>
       <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.esc(H.name(this._hass, p))}: ${H.esc(s ? H.t(this._hass, s) : '')}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
   }
+  _dlgOpen() { return !!(this._sheetOpen || this._menuOpen || (window.HGAssistUI && HGAssistUI.isOpen) || this._eSheetOpen || (window.HGWall && HGWall.active)); }
+  _swBlock(e) { if (this._dlgOpen()) return true;
+    for (const n of e.composedPath()) { if (n === this || !(n instanceof Element)) break;
+      if (n.matches('.layer, .as-l, .hge-sheet, .hge-scrim, [role=dialog], [role=slider], [role=listbox], [role=tablist], input[type=range], select, [data-hgs], [data-no-swipe], .lk-tabs')) return true;
+      if (n.scrollWidth > n.clientWidth + 2) { const ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return true; } }
+    return false; }
   _click(e) {
     const t = e.composedPath().find((n) => n.dataset && n.dataset.act && this.shadowRoot.contains(n));
     if (!t) return;
@@ -812,6 +824,7 @@ class HGPage extends HTMLElement {
       case 'sheetnav': { const m = (this._sheetItems || c.phone_nav.more)[i]; this._openSheet(false); return go(m.action); }
       case 'railmore': return this._openSheet(this._sheetOpen ? false : 'rail');
       case 'edit': return this._editing ? this._editExit(true) : this._editEnter();
+      case 'assist': return window.HGAssistUI && HGAssistUI.open(this, t);
       case 'mail': return go(c.mail_action);
       case 'bell': return go(c.notifications_action);
       case 'pmore': { const el = this._panelEl; return el && el.scrollBy({ top: Math.round(el.clientHeight * 0.8), behavior: 'smooth' }); }
