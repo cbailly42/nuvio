@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.19-a3e635?style=flat-square" alt="v0.3.19">
+  <img src="https://img.shields.io/badge/version-v0.3.20-a3e635?style=flat-square" alt="v0.3.20">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -257,6 +257,9 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 Wydania budują GitHub Actions na tagach `v*`.
 
 ## Lista zmian
+
+### 0.3.20
+- Dodane: hover i fokus klawiatury na kafelkach w okienku „Więcej” (jaśniejsze szkło, miękki cień, lekkie uniesienie; reakcja na wciśnięcie; bez uniesienia na ekranach dotykowych i przy ograniczonym ruchu).
 
 ### 0.3.19
 - Poprawka: okienko „Więcej” z widokami przy szynie jest wyraźnie nad paskiem powiększania i panelem domowników: gęstsze szkło z mocniejszym rozmyciem, lekkie przyciemnienie tła, a przycięcie z animacji otwierania znika po jej zakończeniu (w części przeglądarek wyłączało rozmycie szkła i treść przebijała). Kliknięcie obok lub Escape zamyka okienko.

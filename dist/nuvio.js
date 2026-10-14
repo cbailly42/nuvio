@@ -505,7 +505,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.3.19+cc549a61';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.3.20+fad891d1';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__hgVer || {
@@ -879,6 +879,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-222c35:#222C35;
   --hg-bg-282828-030:rgba(40,40,40,0.3);
   --hg-bg-2a2d31:#2A2D31;
+  --hg-bg-2a2d33:#2A2D33;
   --hg-bg-2a3428:#2A3428;
   --hg-bg-2a6cff:#2A6CFF;
   --hg-bg-2b3038:#2B3038;
@@ -969,6 +970,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-060:rgba(255,255,255,0.12);
   --hg-bg-ffffff-060-k:rgba(255,255,255,0.6);
   --hg-bg-ffffff-062:rgba(255,255,255,0.12);
+  --hg-bg-ffffff-064:rgba(255,255,255,0.64);
   --hg-bg-ffffff-065:rgba(255,255,255,0.12);
   --hg-bg-ffffff-070:rgba(255,255,255,0.12);
   --hg-bg-ffffff-072:rgba(255,255,255,0.12);
@@ -1140,6 +1142,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-222428-097:#ECECEF;
   --hg-bg-222c35:#ECECEF;
   --hg-bg-2a2d31:#ECECEF;
+  --hg-bg-2a2d33:#FFFFFF;
   --hg-bg-2a3428:#ECECEF;
   --hg-bg-2b3038:#1F2328;
   --hg-bg-2c2f33:#ECECEF;
@@ -1209,6 +1212,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ffffff-058:rgba(255,255,255,0.078);
   --hg-bg-ffffff-060:rgba(255,255,255,0.08);
   --hg-bg-ffffff-062:rgba(255,255,255,0.082);
+  --hg-bg-ffffff-064:rgba(255,255,255,0.20);
   --hg-bg-ffffff-065:rgba(255,255,255,0.085);
   --hg-bg-ffffff-070:rgba(255,255,255,0.09);
   --hg-bg-ffffff-072:rgba(255,255,255,0.092);
@@ -6894,7 +6898,13 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
   border:1px solid var(--hg-bd-000000-005); font-size:13px; font-weight:400; color:var(--hg-tx-1f2125); text-align:center; }
 .st ha-icon{ width:24px; height:24px; } .st span{ max-width:100%; overflow-wrap:anywhere; line-height:1.15; }
 .st.act{ background:var(--hg-bg-1f2125); color:var(--hg-tx-ffffff-inv); }
-@media (prefers-reduced-motion: reduce){ .sheet-l .sheet, .sheet-l .scrim{ transition:none; } }
+.st{ cursor:pointer; transition:background-color .16s ease, box-shadow .16s ease, transform .16s cubic-bezier(.2,.8,.2,1); }
+.st:hover{ background:var(--hg-bg-ffffff-064); box-shadow:0 6px 18px var(--hg-sh-000000-014); transform:translateY(-1px); }
+.st:active{ transform:scale(.97); transition-duration:.08s; }
+.st:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.st.act:hover{ background:var(--hg-bg-2a2d33); }
+@media (hover:none){ .st:hover{ transform:none; box-shadow:none; } }
+@media (prefers-reduced-motion: reduce){ .sheet-l .sheet, .sheet-l .scrim, .st{ transition:none; } .st:hover, .st:active{ transform:none; } }
 /* ----- nagłówek ----- */
 .rback{ position:relative; display:inline-flex; align-items:center; gap:2u; height:max(calc(var(--k) * 30), 40px); padding:0 var(--s2) 0 var(--s1); margin:0 0 10u; border-radius:var(--r-md);
   color: var(--hg-chrome-fg); font-size:var(--fs-sm); font-weight:600; }

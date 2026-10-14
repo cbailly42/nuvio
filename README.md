@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.3.19-a3e635?style=flat-square" alt="v0.3.19">
+  <img src="https://img.shields.io/badge/version-v0.3.20-a3e635?style=flat-square" alt="v0.3.20">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -257,6 +257,9 @@ python3 tools/guard.py   # fails if any house-specific id slipped into dist
 Releases are built by GitHub Actions on `v*` tags.
 
 ## Changelog
+
+### 0.3.20
+- Added: hover and keyboard focus on the tiles in the More views pop-up (brighter glass, soft shadow, slight lift; press feedback; no lift on touch screens or with reduced motion).
 
 ### 0.3.19
 - Fixed: the More views pop-up next to the rail now sits clearly above the zoom toolbar and the household panel: denser glass with a stronger blur, a light dim behind it, and the clip used for the opening animation is dropped once it finishes (it switched off the glass blur in some browsers, so content showed through). Clicking outside or pressing Escape closes it.
