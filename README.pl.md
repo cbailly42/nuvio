@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.15.0-a3e635?style=flat-square" alt="v0.15.0">
+  <img src="https://img.shields.io/badge/version-v0.16.0-a3e635?style=flat-square" alt="v0.16.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,31 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
   - `custom:nuvio-gauge-card`: wartość czujnika liczbowego na łuku.
 - `custom:nuvio-page`: sam pełnoekranowy układ (pasek, szyna, nagłówek, panel kart); używają go wszystkie zrzuty powyżej.
 
+### Karty ogólne i kontenery (0.16.0)
+
+Dwanaście kart zbudowanych wyłącznie ze wspólnych szklanych klocków, więc wyglądają jak projekt wzorcowy i działają z dowolną encją pasującej domeny. Każda dopasowuje się do szerokości: mała (do 220 px) chowa teksty pomocnicze, duża (od 420 px) pokazuje więcej szczegółów. Działają też w zwykłym widoku Home Assistant, gdzie same rozmywają tło. Gotowy pulpit złożony tylko z nich jest w [docs/examples/inspiration-dashboard.yaml](docs/examples/inspiration-dashboard.yaml) (działa z integracją demo HA).
+
+<img src="docs/components/generic-dashboard.webp" alt="Przykładowy pulpit z kart ogólnych" width="100%">
+
+| Karta | Co pokazuje | Główne opcje |
+|---|---|---|
+| `custom:nuvio-hero-card` | Duże powitanie z imieniem zalogowanej osoby i hasłem, opcjonalnie zdjęcie i jeden stan | `title` (`{name}`), `subtitle`, `image`, `entity` |
+| `custom:nuvio-toggle-card` | Jedno urządzenie w wierszu: ikona, nazwa i stan, przełącznik, menu ⋮ | `entity`, `name`, `icon` |
+| `custom:nuvio-progress-card` | Wartość na grubym limonkowym pasku, pomarańczowym albo czerwonym powyżej progów | `entity`, `min`, `max`, `warn`, `bad`, `unit` |
+| `custom:nuvio-arc-card` | Jasność, prędkość, pozycja, głośność albo liczba na przeciąganym łuku | `entity` (światło, wentylator, roleta, odtwarzacz, liczba) |
+| `custom:nuvio-chart-card` | Obszar, linia albo słupki z historii dowolnego czujnika, z ostatnią wartością | `entity`, `hours`, `style: area / line / bars`, `tone: solar` |
+| `custom:nuvio-room-compact-card` | Temperatura, wilgotność, przełącznik i linijka jasności | `name`, `temperature`, `humidity`, `entity` |
+| `custom:nuvio-actions-card` | Szklana pigułka z okrągłymi przyciskami: sceny, skrypty, usługi, przejścia | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
+| `custom:nuvio-family-card` | Awatary, kto jest w domu, przycisk dodania osoby | `persons` (puste = wszyscy) |
+| `custom:nuvio-cover-card` | Pozycja rolety lub bramy na przeciąganym pasku, otwórz, zatrzymaj, zamknij | `entity` |
+| `custom:nuvio-lock-card` | Stan zamka; odblokowanie pyta o potwierdzenie albo o kod, gdy zamek go wymaga | `entity`, `confirm` |
+| `custom:nuvio-fan-card` | Prędkość wentylatora na łuku i tryby jako pigułki | `entity` |
+| `custom:nuvio-todo-card` | Lista zadań: dodawanie i odhaczanie | `entity`, `show_done` |
+| `custom:nuvio-stack-card` | Kilka kart w jednym szkle, pionowo albo poziomo (karty Nuvio i zwykłe karty HA) | `cards`, `direction`, `glass`, `title` |
+| `custom:nuvio-tabs-card` | Pigułki (Panel / Pokoje / Urządzenia) przełączające zestawy kart | `tabs: [{ label, icon, cards }]` |
+
+Wszystkie są też w galerii *Dodaj komponent* w edytorze Nuvio.
+
 ### Pokoje, AGD i zgodność z Home Glass (0.7.0)
 
 Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem ustawień i polem **Zaawansowana konfiguracja (JSON)** na każdą inną opcję karty (etykiety, kolory, progi, akcje). Wszystko zapisuje się w układzie, więc eksport i import w Kopii układu to przenoszą.
@@ -237,7 +262,7 @@ Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 | Układy per urządzenie | osobny układ dla telefonu, tabletu i komputera zamiast jednego wspólnego | planowane |
 | Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
 | Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
-| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0 |
+| Biblioteka komponentów i nowy wygląd | wspólne klocki (szkło, przyciski, przełączniki, pigułki, nakładki), nowe karty ogólne, płynne animacje, aktualizacja na żywo bez przerysowania karty, rozmiary S, M i L dla szerokiego i wąskiego panelu, szybsze ładowanie | w toku: karty w osobnych plikach w 0.11.2, nowe szkło i tokeny projektu w 0.12.0, klocki i aktualizacja na żywo w 0.13.0, nakładki w 0.14.0, wszystkie karty na wspólnym wyglądzie i aktualizacji na żywo w 0.15.0, 12 kart ogólnych, stos i zakładki w 0.16.0 |
 | Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
 
 Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel, tryb tabletu ściennego (Wygląd → Tryb tabletu ściennego).
@@ -342,9 +367,18 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v0.15.0 -m "Nuvio 0.15.0" && git push origin v0.15.0`.
+Sam tag ręcznie: `git tag -a v0.16.0 -m "Nuvio 0.16.0" && git push origin v0.16.0`.
 
 ## Lista zmian
+
+### 0.16.0
+- Dodano: dwanaście kart ogólnych ze wspólnych szklanych klocków: powitanie, kafelek przełącznika, pasek postępu, łuk, wykres, pokój kompakt, szybkie akcje, domownicy, roleta, zamek, wentylator i lista zadań. Każda działa z dowolną encją pasującej domeny i dopasowuje się do małej, średniej i dużej szerokości. Opis w sekcji *Karty ogólne i kontenery* wyżej.
+- Dodano: dwa kontenery do układania pulpitów: stos (kilka kart w jednym szkle, pionowo albo poziomo) i zakładki (pigułki przełączające zestawy kart). Oba przyjmują karty Nuvio i zwykłe karty Home Assistant.
+- Dodano: przykładowy pulpit złożony tylko z nowych kart, `docs/examples/inspiration-dashboard.yaml`, wzorowany na projekcie wzorcowym.
+- Dodano: nowe karty w galerii *Dodaj komponent* w edytorze, z podglądami.
+- Zmieniono: karty Nuvio w zwykłym widoku Home Assistant same rozmywają i przyciemniają tło, więc wyglądają jak szkło, a nie jak blada folia. Na stronie Nuvio nic się nie zmienia (panel dalej rozmywa raz dla wszystkich kart).
+- Dodano: okna dialogowe mogą zwrócić to, co wpisano w ich pola (`hgOverlay.dialog({ collect: true })`), a Enter w polu naciska główny przycisk. Karta zamka korzysta z tego przy kodach.
+- Dodano (rozwój): jedna wspólna pamięć historii (`src/parts/ui/history.part.js`), więc kilka kart z tym samym czujnikiem i okresem pyta Home Assistant raz.
 
 ### 0.15.0
 - Zmieniono: każda karta aktualizuje się teraz na żywo, także światło, lampa, suwak, klimatyzacja, alarm, asystent, roboty i karta pokoju. Zmiana stanu nie przebudowuje już tych kart, więc otwarty odtwarzacz albo kamera w karcie pokoju dalej grają, a pole kodu w karcie alarmu zachowuje wpisane cyfry.

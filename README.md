@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v0.15.0-a3e635?style=flat-square" alt="v0.15.0">
+  <img src="https://img.shields.io/badge/version-v0.16.0-a3e635?style=flat-square" alt="v0.16.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -190,6 +190,31 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
   - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
 - `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
 
+### Generic cards and containers (0.16.0)
+
+Twelve cards built only from the shared glass blocks, so they look like the reference design and work with any entity of the right domain. Each one adapts to its width: small (up to 220 px) hides secondary text, large (from 420 px) shows extra detail. They also work in a regular Home Assistant view, where they blur the background themselves. A ready dashboard built only from them is in [docs/examples/inspiration-dashboard.yaml](docs/examples/inspiration-dashboard.yaml) (works with the HA demo integration).
+
+<img src="docs/components/generic-dashboard.webp" alt="Sample dashboard built from the generic cards" width="100%">
+
+| Card | What it shows | Main options |
+|---|---|---|
+| `custom:nuvio-hero-card` | Large greeting with the signed-in person's first name and a tagline, optional photo and one state | `title` (`{name}`), `subtitle`, `image`, `entity` |
+| `custom:nuvio-toggle-card` | One device in a row: icon, name and state, switch, ⋮ menu | `entity`, `name`, `icon` |
+| `custom:nuvio-progress-card` | A value on a thick lime bar, orange or red above thresholds | `entity`, `min`, `max`, `warn`, `bad`, `unit` |
+| `custom:nuvio-arc-card` | Brightness, speed, position, volume or a number on a draggable arc | `entity` (light, fan, cover, media player, number) |
+| `custom:nuvio-chart-card` | Area, line or bars from any numeric sensor's history, with the latest value | `entity`, `hours`, `style: area / line / bars`, `tone: solar` |
+| `custom:nuvio-room-compact-card` | Temperature, humidity, a switch and a brightness ruler | `name`, `temperature`, `humidity`, `entity` |
+| `custom:nuvio-actions-card` | A glass pill of round buttons for scenes, scripts, services or links | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
+| `custom:nuvio-family-card` | Avatars, who is home, a button to add a person | `persons` (empty = everyone) |
+| `custom:nuvio-cover-card` | Cover or gate position on a draggable bar, open, stop, close | `entity` |
+| `custom:nuvio-lock-card` | Lock state; unlocking asks for confirmation, or for the code when the lock needs one | `entity`, `confirm` |
+| `custom:nuvio-fan-card` | Fan speed on the arc and preset modes as pills | `entity` |
+| `custom:nuvio-todo-card` | A to-do list: add a task, tick it off | `entity`, `show_done` |
+| `custom:nuvio-stack-card` | Several cards in one glass, vertical or horizontal (Nuvio and regular HA cards) | `cards`, `direction`, `glass`, `title` |
+| `custom:nuvio-tabs-card` | Pills (Dashboard / Rooms / Devices) that switch between sets of cards | `tabs: [{ label, icon, cards }]` |
+
+All of them are also in the *Add component* gallery of the Nuvio editor.
+
 ### Rooms, appliances and Home Glass parity (0.7.0)
 
 All of these are in **+ Add** in edit mode, with a preview, a full settings form and an **Advanced configuration (JSON)** field for any other card option (labels, colours, thresholds, actions). Everything is stored in the layout, so Layout backup export and import carry it.
@@ -237,7 +262,7 @@ Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md
 | Per-device layouts | different layout for phone, tablet and desktop instead of one shared layout | planned |
 | Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
 | Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
-| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0 |
+| Component library and new design | shared building blocks (glass, buttons, switches, pills, overlays), new generic cards, smooth animations, live updates without redrawing a card, S, M and L sizes for wide and narrow panels, faster loading | in progress: cards split into files in 0.11.2, new glass and design tokens in 0.12.0, building blocks and live updates in 0.13.0, overlays in 0.14.0, every card on the shared look and live updates in 0.15.0, 12 generic cards, stack and tabs in 0.16.0 |
 | Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
 
 Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home, wall tablet mode (Appearance → Wall tablet mode).
@@ -342,9 +367,18 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v0.15.0 -m "Nuvio 0.15.0" && git push origin v0.15.0`.
+Only tagging by hand: `git tag -a v0.16.0 -m "Nuvio 0.16.0" && git push origin v0.16.0`.
 
 ## Changelog
+
+### 0.16.0
+- Added: twelve generic cards built from the shared glass blocks: greeting, toggle tile, progress bar, arc, chart, compact room, quick actions, family, cover, lock, fan and to-do list. Each works with any entity of the right domain and adapts to small, medium and large widths. See *Generic cards and containers* above.
+- Added: two containers for building dashboards: a stack (several cards in one glass, vertical or horizontal) and tabs (pills that switch between sets of cards). Both accept Nuvio cards and regular Home Assistant cards.
+- Added: a sample dashboard made only from the new cards, `docs/examples/inspiration-dashboard.yaml`, modelled on the reference design.
+- Added: the new cards in the *Add component* gallery of the editor, with previews.
+- Changed: Nuvio cards placed in a regular Home Assistant view blur and tint the background themselves, so they look like glass instead of a faint film. Inside the Nuvio page nothing changes (the panel still blurs once for all cards).
+- Added: dialogs can return what was typed into their fields (`hgOverlay.dialog({ collect: true })`), and Enter in a field presses the main button. The lock card uses it for lock codes.
+- Added (development): one shared history store (`src/parts/ui/history.part.js`), so several cards with the same sensor and period ask Home Assistant once.
 
 ### 0.15.0
 - Changed: every card now updates live, including the light, lamp, slider, air conditioning, alarm, assistant, robot and room cards. A state change no longer rebuilds these cards, so an open media player or camera inside a room card keeps playing, and the code field in the alarm card keeps what you typed.

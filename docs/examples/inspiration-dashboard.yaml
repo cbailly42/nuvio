@@ -1,0 +1,68 @@
+# Nuvio – sample dashboard built only from the generic cards (0.16.0), modelled on the reference design.
+# Entity ids come from the Home Assistant demo integration (`demo:` in configuration.yaml); replace them with yours.
+# Raw configuration editor of a new dashboard: paste everything below.
+title: Nuvio
+views:
+  - title: Home
+    path: home
+    type: sections
+    max_columns: 3
+    background: center / cover no-repeat fixed url('/local/nuvio/nuvio-bg-default-wide.webp')
+    sections:
+      - type: grid
+        cards:
+          - type: custom:nuvio-hero-card
+            entity: sensor.outside_temperature
+            grid_options: { columns: 12, rows: 3 }
+          - type: custom:nuvio-actions-card
+            actions:
+              - { icon: mdi:magnify, name: Search, navigate: /config/entities }
+              - { icon: mdi:lightbulb-group, name: Lights, service: light.turn_on, data: { entity_id: all } }
+              - { icon: mdi:lightbulb-group-off, name: All off, service: light.turn_off, data: { entity_id: all } }
+              - { icon: mdi:lock, name: Lock, service: lock.lock, data: { entity_id: all } }
+            grid_options: { columns: 12, rows: 1 }
+          - type: custom:nuvio-family-card
+            grid_options: { columns: 12, rows: 2 }
+          - type: custom:nuvio-room-compact-card
+            name: Living room
+            temperature: sensor.outside_temperature
+            humidity: sensor.outside_humidity
+            entity: light.living_room_rgbww_lights
+            grid_options: { columns: 12, rows: 3 }
+      - type: grid
+        cards:
+          - type: custom:nuvio-tabs-card
+            grid_options: { columns: 12, rows: auto }
+            tabs:
+              - label: Dashboard
+                cards:
+                  - type: custom:nuvio-stack-card
+                    cards:
+                      - { type: custom:nuvio-toggle-card, entity: light.kitchen_lights, name: Kitchen }
+                      - { type: custom:nuvio-toggle-card, entity: switch.decorative_lights, name: Wi-Fi lights }
+                  - { type: custom:nuvio-progress-card, entity: sensor.outside_temperature_battery, name: Energy usage, warn: 80, bad: 95 }
+              - label: Rooms
+                cards:
+                  - { type: custom:nuvio-room-compact-card, name: Kitchen, entity: light.kitchen_lights, temperature: sensor.outside_temperature }
+              - label: Devices
+                cards:
+                  - { type: custom:nuvio-cover-card, entity: cover.living_room_window }
+                  - { type: custom:nuvio-lock-card, entity: lock.front_door }
+          - type: custom:nuvio-arc-card
+            entity: light.ceiling_lights
+            name: Lighting brightness
+            grid_options: { columns: 12, rows: 4 }
+      - type: grid
+        cards:
+          - type: custom:nuvio-chart-card
+            entity: sensor.power_consumption
+            name: Power
+            tone: solar
+            hours: 24
+            grid_options: { columns: 12, rows: 3 }
+          - type: custom:nuvio-fan-card
+            entity: fan.living_room_fan
+            grid_options: { columns: 12, rows: 5 }
+          - type: custom:nuvio-todo-card
+            entity: todo.shopping_list
+            grid_options: { columns: 12, rows: 4 }

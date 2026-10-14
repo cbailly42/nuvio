@@ -618,7 +618,7 @@ const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowan
   power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
   sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
-const HG_BUILD = '0.15.0+d2f710f3';   /* build.py wstawia hash paczki = ?v= zasobu */
+const HG_BUILD = '0.16.0+aea5f17b';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
    -> mały toast „Nowa wersja – odśwież”. Sprawdzane przy starcie i po powrocie do karty (najwyżej co 5 min). */
 const HGVer = window.__nuvioVer || {
@@ -873,6 +873,9 @@ const hgReg = (tag, cls, name, desc) => {
   let s = document.getElementById(id);
   if (!s) { s = document.createElement('style'); s.id = id; document.head.appendChild(s); }
   s.textContent = `:root{
+  /* karty Nuvio w zwykłym widoku HA (bez szklanego panelu Nuvio pod spodem) rozmywają tło same; panel Nuvio zeruje to (jedno rozmycie) */
+  --hg-card-under: linear-gradient(var(--hg-panel-bg), var(--hg-panel-bg));
+  --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%));
   --r-lg:31px; --r-md:21px; --r-sm:16px; --s1:10px; --s2:16px; --s3:21px; --s4:31px; --fs-xs:11px; --fs-sm:13px; --fs-md:15.5px;
   --hg-sh: 0 10px 30px var(--hg-glass-sh, rgba(0,0,0,.18)); --hg-sh-sm: 0 1px 3px rgba(0,0,0,.08); --hg-sh-hover: 0 10px 28px var(--hg-glass-sh-h, rgba(20,35,60,.16)); --hg-hover-fill: rgba(255,255,255,.06);
   --hg-accent: #63D71E; --hg-accent-hi: #9BF24A; --hg-accent-lo: #3E9A10; --hg-accent-soft: rgba(99,215,30,.22); --hg-accent-faint: rgba(99,215,30,.10); --hg-accent-glow: rgba(125,246,48,.30); --hg-accent-tx: #1A4607; --hg-on-accent: #0B0F0A; --hg-thumb: #FFFFFF; --hg-thumb-sh: 0 1px 3px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18);
@@ -1015,6 +1018,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-000000-042:rgba(0,0,0,0.42);
   --hg-bg-000000-045:rgba(0,0,0,0.45);
   --hg-bg-000000-045-k:rgba(0,0,0,0.45);
+  --hg-bg-000000-055:rgba(0,0,0,0.55);
   --hg-bg-000000-k:#000000;
   --hg-bg-06090c-028:rgba(6,9,12,0.28);
   --hg-bg-060a12-046:rgba(6,10,18,0.46);
@@ -1111,8 +1115,10 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-bg-ff3b30:#FF3B30;
   --hg-bg-ff5a52-016:rgba(255,90,82,0.16);
   --hg-bg-ff5a5a:#FF5A5A;
+  --hg-bg-ff5b4f:#FF5B4F;
   --hg-bg-ff6b57:#FF6B57;
   --hg-bg-ff6b5b:#FF6B5B;
+  --hg-bg-ff9f43:#FF9F43;
   --hg-bg-ffa600:#FFA600;
   --hg-bg-ffe3de:#FFE3DE;
   --hg-bg-ffe3df:#FFE3DF;
@@ -1192,6 +1198,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-sh-eceef2:#ECEEF2;
   --hg-sh-ff6b57-000:rgba(255,107,87,0);
   --hg-sh-ff6b57-050:rgba(255,107,87,0.5);
+  --hg-sh-ff9f43-045:rgba(255,159,67,0.45);
   --hg-sh-ffffff-008:rgba(255,255,255,0.08);
   --hg-sh-ffffff-010:rgba(255,255,255,0.1);
   --hg-sh-ffffff-012:rgba(255,255,255,0.12);
@@ -1208,6 +1215,7 @@ const hgReg = (tag, cls, name, desc) => {
   --hg-tx-0b0f0a:#111111;
   --hg-tx-0b0f0a-on:#111111;
   --hg-tx-111111:#111111;
+  --hg-tx-111111-on:#111111;
   --hg-tx-111214-k:#111111;
   --hg-tx-16181b:#111111;
   --hg-tx-1e2023:#111111;
@@ -1534,7 +1542,7 @@ ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }
 /* szkło: domyślnie jasnoszare, .warm = kremowo-beżowe jak Energy/AC w projekcie */
 ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, var(--hg-radius, 18u));
   /* szkło: przezroczyste wypełnienie + delikatny refleks (135°, biel -> przezroczystość 40%), bez kolorowych gradientów */
-  background: var(--hg-glass-sheen, none), var(--hg-glass-lite, var(--hg-glass-bg));
+  background: var(--hg-glass-sheen, none), var(--hg-card-under, linear-gradient(transparent, transparent)), var(--hg-glass-lite, var(--hg-glass-bg));
   /* bez własnego backdrop-filter: karta leży na szklanym panelu, który już rozmywa tło (jedno rozmycie zamiast zagnieżdżonych) */
   border:0;
   /* własne rozmycie tylko gdy panel nie ma tła (panel_backdrop: false) */
@@ -1949,7 +1957,8 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
     el.style.setProperty('--ox', (a.left + a.width / 2 - left) + 'px'); el.style.setProperty('--oy', oy);
   };
   const api = {
-    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width }) -> Promise(value) */
+    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width, collect }) -> Promise(value)
+       collect: true -> Promise({ value, data: { name: wartość pól } }) dla pól z atrybutem name w html */
     dialog(o = {}) { return new Promise((res) => {
       const el = document.createElement('div'); el.className = 'glass dlg'; el.setAttribute('role', o.alert ? 'alertdialog' : 'dialog'); el.setAttribute('aria-modal', 'true');
       if (o.width) el.style.setProperty('--w', o.width + 'px');
@@ -1958,7 +1967,10 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
         ${(o.actions || []).length ? `<div class="acts">${o.actions.map((a, i) => `<button class="btn ${a.kind || ''}" data-i="${i}"${a.focus ? ' autofocus' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}`;
       let it = null;
       el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && (n.dataset.i != null || n.dataset.v)); if (!b) return;
-        it.close(b.dataset.v === '__x' ? undefined : o.actions[+b.dataset.i].value); });
+        const v = b.dataset.v === '__x' ? undefined : o.actions[+b.dataset.i].value;
+        it.close(o.collect ? { value: v, data: Object.fromEntries([...el.querySelectorAll('input[name], select[name], textarea[name]')].map((f) => [f.name, f.value])) } : v); });
+      /* Enter w polu tekstowym = główny przycisk */
+      el.addEventListener('keydown', (e) => { if (e.key !== 'Enter' || !e.composedPath()[0].matches || !e.composedPath()[0].matches('input')) return; const p = el.querySelector('.btn.primary, .btn.danger'); if (p) { e.preventDefault(); p.click(); } });
       it = open(el, { modal: true, dismiss: o.dismiss !== false && !o.alert, onClose: (v) => res(v) });
     }); },
     /* alert dialog: potwierdzenie; fokus na bezpiecznym przycisku, bez zamykania kliknięciem obok */
@@ -2026,6 +2038,24 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
   window.__nuvioOverlay = api;
   return api;
 })();
+
+/* ===== ui/history: wspólna pamięć historii czujników. Kilka kart z tym samym czujnikiem i okresem pyta HA raz;
+   wynik żyje 5 minut, równoległe pytania czekają na to samo zapytanie. hgHistory(hass, 'sensor.x', 24) -> Promise([{ t, v }]) ===== */
+const hgHistory = (() => {
+  const C = window.__nuvioHistC || (window.__nuvioHistC = new Map()), TTL = 5 * 60e3;
+  return (h, e, hours = 24) => {
+    if (!h || !h.callWS || !e) return Promise.resolve([]);
+    const k = e + '|' + hours, c = C.get(k); if (c && Date.now() - c.at < TTL) return c.p;
+    const p = h.callWS({ type: 'history/history_during_period', start_time: new Date(Date.now() - hours * 3600e3).toISOString(), entity_ids: [e], minimal_response: true, no_attributes: true, significant_changes_only: false })
+      .then((r) => ((r && r[e]) || []).map((x) => ({ t: (x.lu || x.lc || 0) * 1000 || Date.parse(x.last_changed || x.last_updated), v: parseFloat(x.s ?? x.state) })).filter((x) => isFinite(x.v)))
+      .catch(() => { C.delete(k); return []; });
+    C.set(k, { at: Date.now(), p }); return p;
+  };
+})();
+/* równe przedziały czasu (średnia), żeby wykres miał stałą liczbę punktów niezależnie od częstości zmian czujnika */
+const hgBuckets = (pts, hours, n = 48) => { const t1 = Date.now(), t0 = t1 - hours * 3600e3, w = (t1 - t0) / n, out = new Array(n).fill(null), sum = new Array(n).fill(0), cnt = new Array(n).fill(0);
+  let last = null; for (const p of pts) { if (p.t < t0) { last = p.v; continue; } const i = Math.min(n - 1, Math.floor((p.t - t0) / w)); sum[i] += p.v; cnt[i]++; }
+  for (let i = 0; i < n; i++) { if (cnt[i]) last = sum[i] / cnt[i]; out[i] = last; } return out.map((v) => (v == null ? NaN : v)); };
 
 /* shared/card-utils: Pomocnicze funkcje kart: moc w W, głębokie scalanie konfiguracji, liczba kluczy obiektu. */
 /* moc w W wg unit_of_measurement (W / kW / MW) – wspólne dla kart mocy */
@@ -2468,6 +2498,46 @@ const hgAgo14 = (iso) => { const t = Date.parse(iso); if (!isFinite(t)) return '
   return m < 1 ? hgTr('przed chwilą', 'just now') : m < 60 ? hgTr(`${m} min temu`, `${m} min ago`) : m < 1440 ? hgTr(`${Math.round(m / 60)} godz. temu`, `${Math.round(m / 60)} h ago`) : hgTr(`${Math.round(m / 1440)} dni temu`, `${Math.round(m / 1440)} d ago`); };
 const hgMore = (n, e) => { if (e) H.fire(n, 'hass-more-info', { entityId: e }); };
 const hgHead = (ic, nm, sub, on, right = '') => `<div class="gh"><span class="gic${on ? ' on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${right}</div>`;
+
+/* shared/nv-card: wspólny układ nowych kart ogólnych (etap 6): szkło z klocków ui/, odstępy z tokenów, rozmiary S/M/L z zapytań kontenera.
+   S (do 220 px): mniej odstępów, chowa .hide-s; L (od 420 px): pokazuje .show-l. */
+const HG_NV_CSS = U(`
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); box-sizing:border-box; }
+.nv-row{ display:flex; align-items:center; gap:var(--s1); min-width:0; } .nv-sp{ flex:1; min-width:0; }
+.nv-name{ display:flex; flex-direction:column; min-width:0; flex:1; } .nv-name b{ font-size:var(--fs-md); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nv-name small{ font-size:var(--fs-xs); opacity:.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nv-ic{ width:30u; height:30u; border-radius:50%; display:grid; place-items:center; flex:none; background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi);
+  transition: background var(--hg-t-base) var(--hg-ease-out), color var(--hg-t-base) var(--hg-ease-out), box-shadow var(--hg-t-base) var(--hg-ease-out); }
+.nv-ic ha-icon{ width:15u; height:15u; } .nv-ic.on{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:0 0 14px var(--hg-accent-glow); }
+button.nv-ic{ cursor:pointer; } button.nv-ic:active{ transform:scale(.94); }
+.nv-mid{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:var(--s1); min-height:0; } .nv-mid > *{ flex-shrink:0; }
+.nv-empty{ font-size:var(--fs-sm); opacity:.6; }
+.un{ opacity:.55; }
+.show-l{ display:none; }
+@container (max-width: 220px){ ha-card.glass{ padding:var(--s2); gap:var(--s1); } .hide-s{ display:none !important; } }
+@container (min-width: 420px){ .show-l{ display:revert; } }
+`);
+/* pierwsze imię zalogowanej osoby (powitanie) */
+const hgFirstName = (h) => String((h && h.user && h.user.name) || '').trim().split(/\s+/)[0] || '';
+/* menu ⋮ karty: szczegóły encji i ewentualne dodatkowe pozycje -> hgOverlay.menu */
+const hgMoreMenu = (card, anchor, e, extra = []) => hgOverlay.menu(anchor, [...extra, { label: hgTr('Szczegóły', 'Details'), icon: 'mdi:information-outline', value: '__more' }])
+  .then((v) => { if (v === '__more') H.fire(card, 'hass-more-info', { entityId: e }); return v; });
+/* przeciąganie wartości 0..1 po elemencie (poziomo, albo po łuku dla svg.nv-arc); raz na węzeł, z klawiaturą */
+const hgDragVal = (card, el, o) => {
+  if (!card._once(el, 'drag')) return;
+  const frac = (ev) => { const r = el.getBoundingClientRect();
+    if (o.arc) { const x = ((ev.clientX - r.left) / r.width) * 200 - 100, y = 96 - ((ev.clientY - r.top) / r.height) * 104; const a = Math.atan2(Math.max(y, 0), x); return Math.max(0, Math.min(1, 1 - a / Math.PI)); }
+    return Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)); };
+  let on = false;
+  el.addEventListener('pointerdown', (ev) => { if (o.off && o.off()) return; on = true; try { el.setPointerCapture(ev.pointerId); } catch (x) { /* */ } card._busy = true; o.move(frac(ev)); ev.preventDefault(); });
+  el.addEventListener('pointermove', (ev) => { if (on) o.move(frac(ev)); });
+  const end = (ev) => { if (!on) return; on = false; card._busy = false; o.end(ev.type === 'pointercancel' ? null : frac(ev)); };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  el.addEventListener('keydown', (ev) => { const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[ev.key]; if (!d || (o.off && o.off())) return; ev.preventDefault(); o.key(d); });
+};
+/* przykładowa konfiguracja dla wyboru kart HA (getStubConfig): pierwsza encja pasującej domeny */
+const hgStub = (h, doms, f) => Object.keys((h && h.states) || {}).find((e) => doms.includes(hgDom(e)) && (!f || f(h.states[e])));
+const hgNum = (s) => isFinite(parseFloat(s.state)) && !!s.attributes.unit_of_measurement;
 
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
@@ -6902,6 +6972,385 @@ ha-card.glass.legacy-unused{ gap:10px; min-height:var(--hg-min-h, 320px); isolat
 }
 hgReg('nuvio-assist-card', HGAssistCard, hgTr('Nuvio – Assist', 'Nuvio – Assist'), hgTr('Rozmowa z Assist z odpowiedzią na miejscu', 'Talk to Assist with the reply inline'));
 
+/* ===================== POWITANIE (hero): „Hej, Krzysztof!” + hasło, opcjonalnie zdjęcie i stan encji ===================== */
+class HGHeroCard extends HGBase {
+  static getStubConfig() { return {}; }
+  defaults() { return { title: null, subtitle: null, image: null, entity: null, glass: false }; }
+  css() { return HG_NV_CSS + U(`
+ha-card.hero{ background:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; justify-content:flex-end; gap:4u; padding:var(--s3) var(--s2); color:white; text-shadow:0 1px 10px color-mix(in srgb, black 35%, transparent); }
+/* napis leży na zdjęciu tła, więc zawsze biały z cieniem (jak powitanie na stronie Nuvio), także w schemacie jasnym */
+ha-card.hero.img{ background: linear-gradient(180deg, var(--hg-bg-000000-000) 30%, var(--hg-bg-000000-055)) , var(--img) center / cover no-repeat; color:var(--hg-tx-ffffff); text-shadow:0 1px 8px var(--hg-sh-000000-035); box-shadow:var(--hg-edge), var(--hg-shadow-lg); }
+.t{ font-size:var(--hg-fs-6, 40px); font-weight:600; letter-spacing:-.03em; line-height:1.05; margin:0; }
+.s{ font-size:var(--hg-fs-5, 24px); font-weight:var(--hg-fw-num, 300); letter-spacing:-.02em; line-height:1.15; margin:0; opacity:.92; }
+.st{ margin-top:6u; } .st .nv-pill{ background:color-mix(in srgb, black 28%, transparent); color:white; box-shadow:none; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+@container (max-width: 300px){ .t{ font-size:var(--hg-fs-5, 24px); } .s{ font-size:var(--hg-fs-3, 15px); } }
+@container (min-width: 560px){ .t{ font-size:56px; } .s{ font-size:32px; } }
+`); }
+  render() { const c = this._config, h = this._hass, nm = hgFirstName(h), s = c.entity ? H.st(h, c.entity) : null;
+    const T = c.title ?? hgTr('Hej, {name}!', 'Hey, {name}!'), Sb = c.subtitle ?? hgTr('Cały dom w jednym miejscu', 'Your whole home in one place');
+    const fill = (x) => String(x || '').replace(/\{name\}/g, nm).replace(/,\s*!/, '!').replace(/\s+!/, '!');
+    const st = s ? `<div class="st">${hgUI.pill(`${H.name(h, c.entity)}: ${H.t(h, s)}`, { icon: s.attributes.icon || 'mdi:information-outline', act: 'more' })}</div>` : '';
+    return `<ha-card class="${c.glass ? 'glass' : 'glass hero'}${c.image ? ' img' : ''}"${c.image ? ` style="--img:url('${H.cssUrl(c.image)}')"` : ''}><h1 class="t">${H.esc(fill(T))}</h1>${Sb ? `<p class="s">${H.esc(fill(Sb))}</p>` : ''}${st}</ha-card>`; }
+  onAct(a) { if (a === 'more' && this._config.entity) H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
+  getGridOptions() { return { columns: 12, rows: 2 }; }
+}
+hgReg('nuvio-hero-card', HGHeroCard, hgTr('Nuvio – Powitanie', 'Nuvio – Greeting'), hgTr('Duże powitanie z imieniem i hasłem', 'Large greeting with your name and a tagline'));
+
+/* ===================== KAFELEK PRZEŁĄCZNIKA: jedna encja w wierszu (ikona, nazwa i stan, przełącznik, ⋮) ===================== */
+class HGToggleCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['light', 'switch', 'fan', 'input_boolean']) || null }; }
+  defaults() { return { entity: null, name: null, icon: null }; }
+  css() { return HG_NV_CSS + U(`ha-card.glass{ flex-direction:row; align-items:center; padding:var(--s2) var(--s2) var(--s2) var(--s3); }`); }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz urządzenie', 'Choose a device')}</span></ha-card>`;
+    const on = !['off', 'closed', 'locked', 'idle', 'standby', 'unavailable', 'unknown'].includes(s.state), ok = H.ok(s), nm = c.name || H.name(h, c.entity);
+    const ic = c.icon || s.attributes.icon || ({ light: 'mdi:lightbulb', switch: 'mdi:power-plug', fan: 'mdi:fan', input_boolean: 'mdi:toggle-switch', media_player: 'mdi:speaker', climate: 'mdi:thermostat' }[hgDom(c.entity)] || 'mdi:power');
+    return `<ha-card class="glass ${ok ? '' : 'un'}"><button class="nv-ic ${on ? 'on' : ''}" data-act="more" aria-label="${H.esc(nm)}">${H.icon(ic)}</button>
+      <div class="nv-name"><b>${H.esc(nm)}</b><small>${H.esc(H.T(h, s))}</small></div>${hgUI.switch(on, 'tog', nm, !ok)}<span class="hide-s">${hgUI.iconBtn('mdi:dots-vertical', 'menu', hgTr('Więcej', 'More'), { bare: true, size: 'sm' })}</span></ha-card>`; }
+  onAct(a, t) { const e = this._config.entity;
+    if (a === 'tog') { H.haptic(); return H.call(this._hass, 'homeassistant', 'toggle', { entity_id: e }); }
+    if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
+    if (a === 'menu') return hgMoreMenu(this, t, e); }
+  getGridOptions() { return { columns: 6, rows: 1 }; }
+}
+hgReg('nuvio-toggle-card', HGToggleCard, hgTr('Nuvio – Kafelek przełącznika', 'Nuvio – Toggle tile'), hgTr('Nazwa, stan i przełącznik w jednym wierszu', 'Name, state and switch in one row'));
+
+/* ===================== PASEK POSTĘPU: dowolna wartość 0–100 albo min–max, z progami ostrzeżenia ===================== */
+class HGProgressCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['sensor'], (s) => s.attributes.unit_of_measurement === '%') || hgStub(h, ['sensor'], hgNum) || null }; }
+  defaults() { return { entity: null, name: null, icon: null, min: 0, max: null, warn: null, bad: null, unit: null, decimals: 0 }; }
+  css() { return HG_NV_CSS; }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz czujnik', 'Choose a sensor')}</span></ha-card>`;
+    const a = s.attributes, v = parseFloat(s.state), mn = +c.min || 0, mx = c.max != null ? +c.max : (a.unit_of_measurement === '%' || a.max == null ? 100 : +a.max), u = c.unit ?? a.unit_of_measurement ?? '';
+    const p = isFinite(v) ? ((v - mn) / (mx - mn || 1)) * 100 : 0, tone = c.bad != null && v >= c.bad ? 'bad' : c.warn != null && v >= c.warn ? 'warn' : '';
+    const lvl = p < 34 ? hgTr('Niskie', 'Low') : p < 67 ? hgTr('Średnie', 'Medium') : hgTr('Wysokie', 'High');
+    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || a.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgTr('Szczegóły', 'Details'), { bare: true, size: 'sm' }) })}
+      <div class="nv-mid">${hgUI.big(isFinite(v) ? v : '–', { d: +c.decimals || 0, unit: u === '%' ? '%' : u, caption: H.ok(s) ? lvl : H.t(h, s) })}${hgUI.progress(p, { tone, min: H.fmt(mn, 0), max: H.fmt(mx, 0) + (u ? ' ' + u : ''), label: c.name || H.name(h, c.entity) })}</div></ha-card>`; }
+  onAct(a) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-progress-card', HGProgressCard, hgTr('Nuvio – Pasek postępu', 'Nuvio – Progress bar'), hgTr('Wartość na grubym pasku z progami', 'A value on a thick bar with thresholds'));
+
+/* ===================== ŁUK: wartość na łuku z kreskami, przeciągana palcem (jasność, wentylator, roleta, głośność, liczba) ===================== */
+class HGArcCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['light'], (s) => (s.attributes.supported_color_modes || []).some((m) => m !== 'onoff')) || hgStub(h, ['fan', 'input_number', 'number']) || null }; }
+  defaults() { return { entity: null, name: null, icon: null }; }
+  css() { return HG_NV_CSS + U(`
+.aw{ position:relative; max-width:260u; width:100%; margin:0 auto; touch-action:none; cursor:pointer; border-radius:var(--r-md); }
+.aw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:4px; }
+.aw .nv-big{ position:absolute; left:0; right:0; bottom:0; }
+.un .aw{ cursor:default; }
+`); }
+  model() { return hgSlider(this._hass, this._config.entity); }
+  _extraSig() { return [this._drag, this._pend]; }
+  val(M) { return this._drag ?? this._pend ?? M.v; }
+  extra() { return ''; }
+  /* miejsca po przecinku: procenty całe, inne jednostki wg kroku (najwyżej 2) */
+  dp(M) { return M.unit === '%' ? 0 : Math.min(2, (String(M.step).split('.')[1] || '').length); }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz światło, wentylator albo liczbę', 'Choose a light, fan or number')}</span></ha-card>`;
+    const M = this.model(), v = this.val(M), p = ((v - M.min) / (M.max - M.min || 1)) * 100, nm = c.name || H.name(h, c.entity), tog = HG_TOGGLE_DOM.includes(M.d) && M.d !== 'cover';
+    return `<ha-card class="glass ${M.ok ? '' : 'un'}">${hgUI.header(nm, { icon: c.icon || s.attributes.icon, right: tog ? hgUI.switch(M.on, 'tog', nm, !H.ok(s)) : '' })}
+      <div class="nv-mid"><div class="aw" role="slider" tabindex="${M.ok ? 0 : -1}" aria-label="${H.esc(M.label)} ${H.esc(nm)}" aria-valuemin="${M.min}" aria-valuemax="${M.max}" aria-valuenow="${v}"${M.ok ? '' : ' aria-disabled="true"'}>
+        ${hgUI.arc(p, { label: M.label })}${hgUI.big(v, { d: this.dp(M), unit: M.unit, col: true, caption: M.label })}</div>${this.extra(s, M)}</div></ha-card>`; }
+  afterRender() { const el = this.$.querySelector('.aw'); if (!el) return;
+    const M = () => this.model(), set = (f) => { const m = M(); return hgStepRound(m.min + f * (m.max - m.min), m); };
+    hgDragVal(this, el, { arc: true, off: () => !M().ok, move: (f) => { this._drag = set(f); this._paint(); },
+      end: (f) => { const v = f == null ? null : set(f); this._drag = null; if (v != null) this._send(v); else this.rerender(); },
+      key: (d) => { const m = M(); this._send(hgStepRound(this.val(m) + d * (m.unit === '%' && m.step < 5 ? 5 : m.step), m)); } }); }
+  /* w trakcie przeciągania karta jest wstrzymana (_busy): przemalowanie łuku i liczby bez aktualizacji stanu */
+  _paint() { const m = this.model(), p = ((this._drag - m.min) / (m.max - m.min || 1)) * 100, a = this.$.querySelector('.aw'); if (!a) return;
+    const t = document.createElement('template'); t.innerHTML = hgUI.arc(p, { label: m.label }); const svg = a.querySelector('svg'); if (svg) svg.replaceWith(t.content.firstChild);
+    const n = a.querySelector('.nv-num'); if (n) { cancelAnimationFrame(n.__nvT || 0); n.textContent = (+this._drag).toFixed(this.dp(m)).replace('.', hgCurLang() === 'en' ? '.' : ','); } a.setAttribute('aria-valuenow', this._drag); }
+  _send(v) { const m = this.model(); if (!m.set) return; this._pend = v; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 4000); H.haptic(); m.set(v); this.rerender(); }
+  set hass(h) { const o = this._hass; this._hass = h; if (this._pend != null && o && this._config) { const a = H.st(h, this._config.entity), b = H.st(o, this._config.entity); if (a && b && a.last_updated !== b.last_updated) this._pend = null; } this._update(); }
+  get hass() { return this._hass; }
+  onAct(a) { const e = this._config.entity; if (a === 'tog') { H.haptic(); H.call(this._hass, 'homeassistant', 'toggle', { entity_id: e }); } if (a === 'more') H.fire(this, 'hass-more-info', { entityId: e }); }
+  getGridOptions() { return { columns: 6, rows: 3 }; }
+}
+hgReg('nuvio-arc-card', HGArcCard, hgTr('Nuvio – Łuk', 'Nuvio – Arc'), hgTr('Jasność, prędkość albo poziom na przeciąganym łuku', 'Brightness, speed or level on a draggable arc'));
+
+/* ===================== WENTYLATOR: prędkość na łuku, tryby jako pigułki ===================== */
+class HGFanCard extends HGArcCard {
+  static getStubConfig(h) { return { entity: hgStub(h, ['fan']) || null }; }
+  defaults() { return { entity: null, name: null, icon: 'mdi:fan' }; }
+  css() { return super.css() + U(`.pm{ display:flex; gap:4u; flex-wrap:wrap; justify-content:center; } .on-spin ha-icon{ animation: nvSpin 1.6s linear infinite; } @keyframes nvSpin{ to{ transform:rotate(360deg); } } @media (prefers-reduced-motion: reduce){ .on-spin ha-icon{ animation:none; } }`); }
+  extra(s) { const pm = s.attributes.preset_modes || []; if (!pm.length) return '';
+    return `<div class="pm hide-s">${pm.map((m) => hgUI.pill(m.replace(/_/g, ' '), { act: 'pm', on: s.attributes.preset_mode === m, data: { m } })).join('')}</div>`; }
+  onAct(a, t) { if (a === 'pm') return H.call(this._hass, 'fan', 'set_preset_mode', { entity_id: this._config.entity, preset_mode: t.dataset.m }); return super.onAct(a, t); }
+}
+hgReg('nuvio-fan-card', HGFanCard, hgTr('Nuvio – Wentylator', 'Nuvio – Fan'), hgTr('Prędkość na łuku i tryby', 'Speed on an arc and preset modes'));
+
+/* ===================== WYKRES: linia, obszar albo słupki z historii dowolnego czujnika, dymek z ostatnią wartością ===================== */
+class HGChartCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['sensor'], hgNum) || null }; }
+  defaults() { return { entity: null, name: null, icon: null, hours: 24, style: 'area', tone: null, points: 48, decimals: 1 }; }
+  css() { return HG_NV_CSS + U(`
+.nv-spark.line path.a{ display:none; }
+.bars{ display:flex; align-items:flex-end; gap:2u; height:var(--nv-sh, 70u); }
+.bars i{ flex:1; min-width:2px; border-radius:3u 3u 1u 1u; height:var(--h); background:color-mix(in srgb, currentColor 22%, transparent); transition: height var(--hg-t-slow) var(--hg-ease-out); }
+.bars i:last-child{ background:linear-gradient(180deg, var(--hg-accent-hi), var(--hg-accent)); box-shadow:0 0 10u var(--hg-accent-glow); }
+.ax{ display:flex; justify-content:space-between; font-size:var(--fs-xs); opacity:.6; }
+@container (max-width: 220px){ .nv-spark, .bars{ --nv-sh: 46u; } }
+@container (min-width: 420px){ .nv-spark, .bars{ --nv-sh: 110u; } }
+`); }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz czujnik liczbowy', 'Choose a numeric sensor')}</span></ha-card>`;
+    this._load(); const u = s.attributes.unit_of_measurement || '', v = parseFloat(s.state), d = +c.decimals;
+    const pts = (this._pts || []).slice(); if (pts.length && isFinite(v)) pts[pts.length - 1] = v;
+    const tip = isFinite(v) ? `${H.fmt(v, d)}${u ? ' ' + u : ''}` : H.t(h, s), ax = [`-${c.hours} h`, hgTr('teraz', 'now')];
+    let g = ''; if (pts.filter(isFinite).length >= 2) {
+      if (c.style === 'bars') { const ok = pts.filter(isFinite), mn = Math.min(0, ...ok), mx = Math.max(...ok) || 1; g = `<div class="bars" aria-hidden="true">${pts.map((x) => `<i style="--h:${isFinite(x) ? Math.max(2, ((x - mn) / (mx - mn || 1)) * 100).toFixed(1) : 0}%"></i>`).join('')}</div><div class="ax"><span>${ax[0]}</span><span>${ax[1]}</span></div>`; }
+      else g = hgUI.spark(pts, { tip, axis: ax, tone: c.tone || '' }).replace('class="nv-spark', `class="nv-spark ${c.style === 'line' ? 'line' : ''}`);
+    } else g = `<div class="nv-empty">${this._pts ? hgTr('Za mało danych w historii', 'Not enough history yet') : hgTr('Wczytywanie…', 'Loading…')}</div>`;
+    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || s.attributes.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgTr('Szczegóły', 'Details'), { bare: true, size: 'sm' }) })}
+      ${hgUI.big(isFinite(v) ? v : null, { d, unit: u, caption: H.ok(s) ? '' : H.t(h, s) })}<div class="nv-mid">${g}</div></ha-card>`; }
+  /* historia ze wspólnej pamięci (ui/history), odświeżana co 5 minut */
+  _load() { const c = this._config; if (this._ld && Date.now() - this._ld < 5 * 60e3 && this._le === c.entity) return; this._ld = Date.now(); this._le = c.entity;
+    hgHistory(this._hass, c.entity, +c.hours || 24).then((r) => { this._pts = hgBuckets(r, +c.hours || 24, Math.max(8, +c.points || 48)); this.rerender(); }); }
+  onAct(a) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
+  getGridOptions() { return { columns: 6, rows: 3 }; }
+}
+hgReg('nuvio-chart-card', HGChartCard, hgTr('Nuvio – Wykres', 'Nuvio – Chart'), hgTr('Linia, obszar albo słupki z historii czujnika', 'Line, area or bars from sensor history'));
+
+/* ===================== POKÓJ KOMPAKT: temperatura, przełącznik i suwak-linijka jasności ===================== */
+class HGRoomCompactCard extends HGBase {
+  static getStubConfig(h) { return { name: hgTr('Salon', 'Living room'), temperature: hgStub(h, ['sensor'], (s) => s.attributes.device_class === 'temperature'), entity: hgStub(h, ['light']) }; }
+  defaults() { return { name: null, icon: 'mdi:sofa-outline', temperature: null, humidity: null, entity: null }; }
+  ents() { const c = this._config; return [c.temperature, c.humidity, c.entity].filter(Boolean); }
+  css() { return HG_NV_CSS + U(`
+.rul{ position:relative; height:28u; touch-action:none; cursor:pointer; border-radius:var(--r-sm); }
+.rul:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; }
+.rul .tk{ position:absolute; inset:6u 0; display:flex; justify-content:space-between; align-items:center; }
+.rul .tk i{ width:1.5px; height:60%; border-radius:1px; background:currentColor; opacity:.28; transition: background var(--hg-t-base), opacity var(--hg-t-base), height var(--hg-t-base); }
+.rul .tk i:nth-child(5n+1){ height:100%; } .rul .tk i.on{ background:var(--hg-accent); opacity:1; box-shadow:0 0 6px var(--hg-accent-glow); }
+.rul .kn{ position:absolute; top:50%; left:var(--p); width:6u; height:28u; border-radius:3u; background:var(--hg-thumb, var(--hg-bg-ffffff)); box-shadow:var(--hg-thumb-sh, 0 2px 8px var(--hg-sh-000000-030)); transform:translate(-50%, -50%); transition:left var(--hg-t-slow) var(--hg-ease-out); }
+.drag .kn{ transition:none; }
+.un .rul{ cursor:default; }
+.meta{ display:flex; gap:var(--s1); font-size:var(--fs-xs); opacity:.65; }
+`); }
+  _extraSig() { return [this._drag, this._pend]; }
+  render() { const c = this._config, h = this._hass, t = H.num(h, c.temperature), hu = H.num(h, c.humidity), s = c.entity ? H.st(h, c.entity) : null;
+    const M = s ? hgSlider(h, c.entity) : null, v = M ? (this._drag ?? this._pend ?? M.v) : 0, p = M ? ((v - M.min) / (M.max - M.min || 1)) * 100 : 0, n = 31, on = Math.round((p / 100) * (n - 1));
+    const nm = c.name || (s ? H.name(h, c.entity) : hgTr('Pokój', 'Room'));
+    const ticks = Array.from({ length: n }, (_, i) => `<i class="${p > 0 && i <= on ? 'on' : ''}"></i>`).join('');
+    return `<ha-card class="glass">${hgUI.header(nm, { icon: c.icon, right: s ? hgUI.switch(M.on, 'tog', nm, !H.ok(s)) : '' })}
+      <div class="nv-mid">${t != null ? hgUI.big(t, { d: 1, unit: '°', sup: true, caption: hu != null ? `${H.fmt(hu, 0)}% ${hgTr('wilg.', 'hum.')}` : '' }) : ''}
+      ${M && M.ok ? `<div class="rul ${this._drag != null ? 'drag' : ''}" role="slider" tabindex="0" aria-label="${H.esc(M.label)} ${H.esc(nm)}" aria-valuemin="${M.min}" aria-valuemax="${M.max}" aria-valuenow="${v}" style="--p:${p.toFixed(1)}%"><div class="tk">${ticks}</div><span class="kn"></span></div>
+        <div class="meta"><span>${H.esc(M.label)}</span><span class="nv-sp"></span><span>${H.fmt(v, 0)}${H.esc(M.unit)}</span></div>` : ''}</div></ha-card>`; }
+  afterRender() { const el = this.$.querySelector('.rul'); if (!el) return; const M = () => hgSlider(this._hass, this._config.entity), set = (f) => { const m = M(); return hgStepRound(m.min + f * (m.max - m.min), m); };
+    hgDragVal(this, el, { off: () => !M().ok, move: (f) => { this._drag = set(f); this._paint(el); }, end: (f) => { const v = f == null ? null : set(f); this._drag = null; el.classList.remove('drag'); if (v != null) this._send(v); else this.rerender(); },
+      key: (d) => { const m = M(); this._send(hgStepRound((this._pend ?? m.v) + d * (m.unit === '%' ? 5 : m.step), m)); } }); }
+  _paint(el) { const m = hgSlider(this._hass, this._config.entity), p = ((this._drag - m.min) / (m.max - m.min || 1)) * 100, ts = el.querySelectorAll('.tk i'), on = Math.round((p / 100) * (ts.length - 1));
+    el.classList.add('drag'); el.style.setProperty('--p', p + '%'); ts.forEach((t, i) => t.classList.toggle('on', p > 0 && i <= on)); el.setAttribute('aria-valuenow', this._drag);
+    const mv = this.$.querySelector('.meta span:last-child'); if (mv) mv.textContent = H.fmt(this._drag, 0) + m.unit; }
+  _send(v) { const m = hgSlider(this._hass, this._config.entity); if (!m.set) return; this._pend = v; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 4000); H.haptic(); m.set(v); this.rerender(); }
+  set hass(h) { const o = this._hass; this._hass = h; if (this._pend != null && o && this._config && this._config.entity) { const a = H.st(h, this._config.entity), b = H.st(o, this._config.entity); if (a && b && a.last_updated !== b.last_updated) this._pend = null; } this._update(); }
+  get hass() { return this._hass; }
+  onAct(a) { if (a === 'tog') { H.haptic(); H.call(this._hass, 'homeassistant', 'toggle', { entity_id: this._config.entity }); } }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-room-compact-card', HGRoomCompactCard, hgTr('Nuvio – Pokój kompakt', 'Nuvio – Compact room'), hgTr('Temperatura, przełącznik i linijka jasności', 'Temperature, switch and a brightness ruler'));
+
+/* ===================== SZYBKIE AKCJE: rząd okrągłych przycisków (sceny, skrypty, usługi, przejścia) w jednej szklanej pigułce ===================== */
+class HGActionsCard extends HGBase {
+  static getStubConfig(h) { const L = Object.keys((h && h.states) || {}).filter((e) => ['scene', 'script', 'light'].includes(hgDom(e))).slice(0, 4); return { actions: L.map((e) => ({ entity: e })) }; }
+  defaults() { return { title: null, actions: [] }; }
+  ents() { return (this._config.actions || []).map((a) => a.entity).filter(Boolean); }
+  css() { return HG_NV_CSS + U(`
+ha-card.glass{ flex-direction:row; align-items:center; justify-content:center; gap:var(--s1); padding:var(--s1) var(--s2); border-radius:var(--hg-radius-pill, 999px); flex-wrap:wrap; }
+ha-card.glass.tt{ border-radius:var(--r-lg); flex-direction:column; align-items:stretch; padding:var(--s3); }
+.row{ display:flex; gap:var(--s1); justify-content:center; flex-wrap:wrap; }
+.it{ display:flex; flex-direction:column; align-items:center; gap:3u; } .it small{ font-size:var(--fs-xs); opacity:.7; max-width:60u; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@container (max-width: 220px){ .it small{ display:none; } .nv-ib.lg{ --nv-ib: 26u; } }
+`); }
+  render() { const c = this._config, h = this._hass, A = c.actions || [];
+    if (!A.length) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Dodaj akcje w ustawieniach karty', 'Add actions in the card settings')}</span></ha-card>`;
+    const lab = A.some((a) => a.name);
+    const btns = A.map((a, i) => { const s = a.entity ? H.st(h, a.entity) : null, on = s && ['on', 'playing', 'open', 'home'].includes(s.state), nm = a.name || (a.entity ? H.name(h, a.entity) : a.service || '');
+      const ic = a.icon || (s && s.attributes.icon) || ({ scene: 'mdi:palette-outline', script: 'mdi:play', light: 'mdi:lightbulb', switch: 'mdi:power' }[hgDom(a.entity)] || 'mdi:gesture-tap');
+      const b = hgUI.iconBtn(ic, 'go', nm, { size: 'lg', on: !!on, data: { i } }); return lab ? `<div class="it">${b}<small>${H.esc(nm)}</small></div>` : b; }).join('');
+    return c.title ? `<ha-card class="glass tt">${hgUI.header(c.title)}<div class="row">${btns}</div></ha-card>` : `<ha-card class="glass">${btns}</ha-card>`; }
+  onAct(a, t) { if (a !== 'go') return; const x = (this._config.actions || [])[+t.dataset.i]; if (!x) return; H.haptic();
+    if (x.service || x.navigate || x.url || x.more_info) return H.action(this, this._hass, x);
+    if (x.entity) return hgPress(this, this._hass, x.entity, x.tap_action); }
+  getGridOptions() { return { columns: 6, rows: 1 }; }
+}
+hgReg('nuvio-actions-card', HGActionsCard, hgTr('Nuvio – Szybkie akcje', 'Nuvio – Quick actions'), hgTr('Rząd okrągłych przycisków: sceny, skrypty, usługi', 'A row of round buttons: scenes, scripts, services'));
+
+/* ===================== DOMOWNICY: awatary osób, kto jest w domu, przycisk dodania ===================== */
+class HGFamilyCard extends HGBase {
+  static getStubConfig() { return {}; }
+  defaults() { return { title: hgTr('Domownicy', 'Family'), persons: null, add: true }; }
+  list() { const c = this._config, h = this._hass; return c.persons && c.persons.length ? c.persons : Object.keys((h && h.states) || {}).filter((e) => e.startsWith('person.')).sort(); }
+  ents() { return this.list(); }
+  _changed() { this._entsC = null; return super._changed(); }
+  css() { return HG_NV_CSS + U(`
+.ls{ display:flex; flex-direction:column; gap:var(--s1); } .ls .nv-row{ font-size:var(--fs-sm); } .ls .nv-row small{ opacity:.6; margin-left:auto; }
+.dot{ width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.3; flex:none; } .dot.home{ background:var(--hg-accent); opacity:1; box-shadow:0 0 8px var(--hg-accent-glow); }
+`); }
+  render() { const c = this._config, h = this._hass, L = this.list().map((e) => ({ e, s: H.st(h, e) })).filter((x) => x.s);
+    const home = L.filter((x) => x.s.state === 'home');
+    const sub = L.length ? hgTr(`${home.length} z ${L.length} w domu`, `${home.length} of ${L.length} at home`) : hgTr('Brak osób w Home Assistant', 'No people in Home Assistant');
+    const ppl = L.map((x) => ({ name: x.s.attributes.friendly_name || x.e, pic: x.s.attributes.entity_picture, home: x.s.state === 'home' }));
+    return `<ha-card class="glass">${hgUI.header(c.title, { sub: '', right: '' })}<div class="nv-row"><div class="nv-name"><small>${H.esc(sub)}</small></div>${hgUI.avatars(ppl, { add: c.add ? 'add' : null })}</div>
+      <div class="ls show-l">${L.map((x) => `<div class="nv-row" data-key="p-${H.esc(x.e)}"><span class="dot ${x.s.state === 'home' ? 'home' : ''}"></span><span>${H.esc(x.s.attributes.friendly_name || x.e)}</span><small>${H.esc(H.T(h, x.s))}</small></div>`).join('')}</div></ha-card>`; }
+  onAct(a) { if (a === 'add') H.navigate('/config/person'); }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-family-card', HGFamilyCard, hgTr('Nuvio – Domownicy', 'Nuvio – Family'), hgTr('Awatary i kto jest teraz w domu', 'Avatars and who is home right now'));
+
+/* ===================== ROLETY I BRAMY: pozycja na pasku (przeciągana), otwórz, stop, zamknij ===================== */
+class HGCoverCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['cover']) || null }; }
+  defaults() { return { entity: null, name: null, icon: null }; }
+  css() { return HG_NV_CSS + U(`.pw{ touch-action:none; cursor:pointer; border-radius:9u; } .pw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; } .drag .nv-prog > i{ transition:none; }
+.bt{ display:flex; gap:var(--s1); justify-content:flex-end; }`); }
+  _extraSig() { return [this._drag, this._pend]; }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz roletę albo bramę', 'Choose a cover or gate')}</span></ha-card>`;
+    const a = s.attributes, ok = H.ok(s), hasPos = a.current_position != null, pos = this._drag ?? this._pend ?? (hasPos ? a.current_position : s.state === 'open' ? 100 : 0), nm = c.name || H.name(h, c.entity);
+    const f = a.supported_features || 0, can = (b) => !f || (f & b);   // 1 otwórz, 2 zamknij, 4 pozycja, 8 stop
+    const mv = s.state === 'opening' || s.state === 'closing';
+    return `<ha-card class="glass ${ok ? '' : 'un'}">${hgUI.header(nm, { icon: c.icon || a.icon || (s.state === 'open' ? 'mdi:window-shutter-open' : 'mdi:window-shutter'), sub: H.t(h, s) })}
+      <div class="nv-mid">${hgUI.big(pos, { unit: '%', caption: hgTr('otwarcie', 'open') })}
+      <div class="pw ${this._drag != null ? 'drag' : ''}" role="slider" tabindex="${ok && hasPos && can(4) ? 0 : -1}" aria-label="${hgTr('Pozycja', 'Position')} ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pos}">${hgUI.progress(pos, {})}</div></div>
+      <div class="bt">${can(1) ? hgUI.iconBtn('mdi:arrow-up', 'open', hgTr('Otwórz', 'Open'), { disabled: !ok }) : ''}${can(8) ? hgUI.iconBtn('mdi:stop', 'stop', hgTr('Zatrzymaj', 'Stop'), { disabled: !ok, on: mv }) : ''}${can(2) ? hgUI.iconBtn('mdi:arrow-down', 'close', hgTr('Zamknij', 'Close'), { disabled: !ok }) : ''}</div></ha-card>`; }
+  afterRender() { const el = this.$.querySelector('.pw'); if (!el) return; const s = () => H.st(this._hass, this._config.entity);
+    const off = () => { const x = s(); return !x || !H.ok(x) || x.attributes.current_position == null || (x.attributes.supported_features && !(x.attributes.supported_features & 4)); };
+    hgDragVal(this, el, { off, move: (f) => { this._drag = Math.round(f * 100); el.classList.add('drag'); const p = el.querySelector('.nv-prog'); if (p) p.style.setProperty('--p', this._drag + '%'); const n = this.$.querySelector('.nv-num'); if (n) n.textContent = this._drag; },
+      end: (f) => { this._drag = null; el.classList.remove('drag'); if (f != null) this._send(Math.round(f * 100)); else this.rerender(); },
+      key: (d) => this._send(Math.max(0, Math.min(100, (this._pend ?? s().attributes.current_position) + d * 10))) }); }
+  _send(v) { this._pend = v; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 6000); H.haptic(); H.call(this._hass, 'cover', 'set_cover_position', { entity_id: this._config.entity, position: v }); this.rerender(); }
+  set hass(h) { const o = this._hass; this._hass = h; if (this._pend != null && o && this._config) { const a = H.st(h, this._config.entity), b = H.st(o, this._config.entity); if (a && b && a.attributes.current_position !== b.attributes.current_position && a.state !== 'opening' && a.state !== 'closing') this._pend = null; } this._update(); }
+  get hass() { return this._hass; }
+  onAct(a) { const e = { entity_id: this._config.entity }; this._pend = null; H.haptic();
+    if (a === 'open') H.call(this._hass, 'cover', 'open_cover', e); if (a === 'close') H.call(this._hass, 'cover', 'close_cover', e); if (a === 'stop') H.call(this._hass, 'cover', 'stop_cover', e); }
+  getGridOptions() { return { columns: 6, rows: 3 }; }
+}
+hgReg('nuvio-cover-card', HGCoverCard, hgTr('Nuvio – Roleta / brama', 'Nuvio – Cover / gate'), hgTr('Pozycja, otwórz, zatrzymaj, zamknij', 'Position, open, stop, close'));
+
+/* ===================== ZAMEK: stan i odblokowanie z potwierdzeniem (alert dialog), kod gdy zamek go wymaga ===================== */
+class HGLockCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['lock']) || null }; }
+  defaults() { return { entity: null, name: null, confirm: true }; }
+  css() { return HG_NV_CSS + U(`.nv-mid.big{ flex-direction:row; align-items:center; justify-content:flex-start; gap:var(--s2); } .big .nv-ic{ width:44u; height:44u; } .big .nv-ic ha-icon{ width:22u; height:22u; }
+.big .nv-ic.open{ background:var(--hg-bg-ff9f43); color:var(--hg-tx-111111-on); box-shadow:0 0 14px var(--hg-sh-ff9f43-045); } .st{ font-size:var(--hg-fs-4, 18px); font-weight:500; }
+.jam .nv-ic{ background:var(--hg-bg-ff5b4f); color:var(--hg-tx-ffffff); }`); }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz zamek', 'Choose a lock')}</span></ha-card>`;
+    const st = s.state, locked = st === 'locked', busy = ['locking', 'unlocking', 'opening'].includes(st), nm = c.name || H.name(h, c.entity), ok = H.ok(s);
+    const ic = st === 'jammed' ? 'mdi:lock-alert' : locked ? 'mdi:lock' : busy ? 'mdi:lock-clock' : 'mdi:lock-open-variant';
+    return `<ha-card class="glass ${ok ? '' : 'un'} ${st === 'jammed' ? 'jam' : ''}">${hgUI.header(nm, { right: hgUI.iconBtn('mdi:dots-vertical', 'menu', hgTr('Więcej', 'More'), { bare: true, size: 'sm' }) })}
+      <div class="nv-mid big"><span class="nv-ic ${locked ? 'on' : 'open'}">${H.icon(ic)}</span><span class="st">${H.esc(H.T(h, s))}</span></div>
+      <div>${hgUI.pill(locked ? hgTr('Odblokuj', 'Unlock') : hgTr('Zablokuj', 'Lock'), { icon: locked ? 'mdi:lock-open-variant-outline' : 'mdi:lock-outline', act: ok && !busy ? 'go' : null, acc: !locked })}</div></ha-card>`; }
+  async onAct(a, t) { const c = this._config, h = this._hass, s = H.st(h, c.entity); if (!s) return;
+    if (a === 'menu') return hgMoreMenu(this, t, c.entity);
+    if (a !== 'go') return; const locked = s.state === 'locked', nm = c.name || H.name(h, c.entity), data = { entity_id: c.entity };
+    if (s.attributes.code_format) {
+      const r = await hgOverlay.dialog({ title: nm, text: hgTr('Podaj kod zamka.', 'Enter the lock code.'), width: 340, collect: true,
+        html: `<input name="code" type="password" inputmode="numeric" autocomplete="one-time-code" aria-label="${hgTr('Kod', 'Code')}" autofocus style="height:44px;border-radius:12px;border:0;padding:0 14px;font:inherit;font-size:16px;background:var(--hg-inner-bg);color:inherit;box-shadow:var(--hg-inner-hi)">`,
+        actions: [{ label: hgTr('Anuluj', 'Cancel'), value: false }, { label: locked ? hgTr('Odblokuj', 'Unlock') : hgTr('Zablokuj', 'Lock'), value: true, kind: 'primary' }] });
+      if (!r || !r.value) return; data.code = r.data.code; }
+    else if (locked && c.confirm !== false && !(await hgOverlay.alert(hgTr(`Odblokować: ${nm}?`, `Unlock ${nm}?`), hgTr('Drzwi będzie można otworzyć bez klucza.', 'The door can be opened without a key.'), hgTr('Odblokuj', 'Unlock')))) return;
+    H.haptic('medium'); H.call(h, 'lock', locked ? 'unlock' : 'lock', data); }
+  getGridOptions() { return { columns: 6, rows: 2 }; }
+}
+hgReg('nuvio-lock-card', HGLockCard, hgTr('Nuvio – Zamek', 'Nuvio – Lock'), hgTr('Stan zamka i odblokowanie z potwierdzeniem', 'Lock state and unlock with confirmation'));
+
+/* ===================== LISTA ZADAŃ: pozycje z encji todo, dodawanie i odhaczanie ===================== */
+class HGTodoCard extends HGBase {
+  static getStubConfig(h) { return { entity: hgStub(h, ['todo']) || null }; }
+  defaults() { return { entity: null, name: null, show_done: 3 }; }
+  css() { return HG_NV_CSS + U(`
+.add{ display:flex; gap:var(--s1); } .add input{ flex:1; min-width:0; height:36u; border:0; border-radius:var(--hg-radius-pill, 999px); padding:0 14u; font:inherit; font-size:var(--fs-sm); color:inherit; background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); outline:none; }
+.add input:focus-visible{ box-shadow:0 0 0 2px var(--hg-accent); } .add input::placeholder{ color:inherit; opacity:.5; }
+.ls{ display:flex; flex-direction:column; overflow:auto; min-height:0; flex:1; margin:0 calc(var(--s1) * -1); }
+.it{ display:flex; align-items:center; gap:var(--s1); min-height:40u; padding:0 var(--s1); border-radius:var(--r-sm); text-align:left; font-size:var(--fs-sm); animation: nvTd var(--hg-t-base) var(--hg-ease-out) both; }
+@media (hover:hover){ .it:hover{ background:var(--hg-inner-bg); } }
+.ck{ width:20px; height:20px; border-radius:50%; flex:none; box-shadow: inset 0 0 0 1.5px currentColor; opacity:.5; display:grid; place-items:center; transition: background var(--hg-t-base), opacity var(--hg-t-base), box-shadow var(--hg-t-base); }
+.ck ha-icon{ width:14px; height:14px; opacity:0; transition: opacity var(--hg-t-fast); }
+.done .ck{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:none; opacity:1; } .done .ck ha-icon{ opacity:1; } .done span{ text-decoration:line-through; opacity:.5; }
+.sec{ font-size:var(--fs-xs); opacity:.5; padding:6u var(--s1) 2u; }
+@keyframes nvTd{ from{ opacity:0; transform: translateY(4px); } } @media (prefers-reduced-motion: reduce){ .it{ animation:none; } }
+`); }
+  render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz listę zadań', 'Choose a to-do list')}</span></ha-card>`;
+    this._load(); const L = this._items || [], open = L.filter((x) => x.status !== 'completed'), done = L.filter((x) => x.status === 'completed').slice(0, +c.show_done || 0);
+    const row = (x) => `<button class="it ${x.status === 'completed' ? 'done' : ''}" data-act="tick" data-uid="${H.esc(x.uid)}" data-key="td-${H.esc(x.uid)}" role="checkbox" aria-checked="${x.status === 'completed'}"><span class="ck">${H.icon('mdi:check')}</span><span>${H.esc(x.summary)}</span></button>`;
+    return `<ha-card class="glass">${hgUI.header(c.name || H.name(h, c.entity), { sub: this._items ? String(open.length) : '' })}
+      <form class="add"><input name="t" placeholder="${hgTr('Dodaj zadanie', 'Add a task')}" aria-label="${hgTr('Nowe zadanie', 'New task')}" autocomplete="off" enterkeyhint="done">${hgUI.iconBtn('mdi:plus', 'add', hgTr('Dodaj', 'Add'))}</form>
+      <div class="ls">${!this._items ? `<span class="nv-empty">${hgTr('Wczytywanie…', 'Loading…')}</span>` : !L.length ? `<span class="nv-empty">${hgTr('Brak zadań', 'Nothing to do')}</span>` : open.map(row).join('') + (done.length ? `<div class="sec">${hgTr('Zrobione', 'Done')}</div>` + done.map(row).join('') : '')}</div></ha-card>`; }
+  /* lista z WebSocket todo/item/list; ponownie po każdej zmianie stanu encji (stan = liczba otwartych) */
+  _load() { const c = this._config, s = H.st(this._hass, c.entity), k = s ? s.last_updated + c.entity : ''; if (this._lk === k) return; this._lk = k;
+    if (!this._hass.callWS) return; this._hass.callWS({ type: 'todo/item/list', entity_id: c.entity }).then((r) => { this._items = (r && r.items) || []; this.rerender(); }).catch(() => { this._items = []; this.rerender(); }); }
+  afterRender() { const f = this.$.querySelector('form.add'); if (f && this._once(f)) f.addEventListener('submit', (e) => { e.preventDefault(); this._add(); }); }
+  _add() { const i = this.$.querySelector('form.add input'), t = i && i.value.trim(); if (!t) return; i.value = '';
+    (this._items = this._items || []).unshift({ uid: 'tmp' + Date.now(), summary: t, status: 'needs_action' }); this.rerender(); H.call(this._hass, 'todo', 'add_item', { entity_id: this._config.entity, item: t }); }
+  onAct(a, t) { if (a === 'add') return this._add(); if (a !== 'tick') return; const x = (this._items || []).find((y) => y.uid === t.dataset.uid); if (!x || x.uid.startsWith('tmp')) return;
+    x.status = x.status === 'completed' ? 'needs_action' : 'completed'; H.haptic(); this.rerender(); H.call(this._hass, 'todo', 'update_item', { entity_id: this._config.entity, item: x.uid, status: x.status }); }
+  getGridOptions() { return { columns: 6, rows: 4 }; }
+}
+hgReg('nuvio-todo-card', HGTodoCard, hgTr('Nuvio – Lista zadań', 'Nuvio – To-do list'), hgTr('Dodawanie i odhaczanie zadań', 'Add and tick off tasks'));
+
+/* ===================== STOS: kilka kart w jednym szkle, pionowo albo poziomo (karty Nuvio i zwykłe karty HA) ===================== */
+/* tworzenie karty potomnej: custom:<tag> od razu, gdy element jest już zarejestrowany; karty HA przez loadCardHelpers */
+const hgMakeCard = (cfg, done) => { const t = String((cfg && cfg.type) || '');
+  const mk = (tag) => { const el = document.createElement(tag); try { el.setConfig(cfg); } catch (e) { el.textContent = String(e.message || e); } return el; };
+  if (t.startsWith('custom:')) { const tag = t.slice(7); if (customElements.get(tag)) return done(mk(tag)); customElements.whenDefined(tag).then(() => done(mk(tag))); return; }
+  if (window.loadCardHelpers) window.loadCardHelpers().then((hl) => done(hl.createCardElement(cfg))).catch(() => {});
+  else customElements.whenDefined('hui-' + t + '-card').then(() => done(mk('hui-' + t + '-card'))); };
+class HGStackCard extends HGBase {
+  static getStubConfig(h) { return { cards: [{ type: 'custom:nuvio-toggle-card', ...HGToggleCard.getStubConfig(h) }, { type: 'custom:nuvio-progress-card', ...HGProgressCard.getStubConfig(h) }] }; }
+  defaults() { return { cards: [], direction: 'vertical', glass: true, title: null }; }
+  css() { return HG_NV_CSS + U(`
+ha-card.glass{ gap:0; padding:var(--s1) 0; }
+ha-card.flat{ background:none; box-shadow:none; padding:0; gap:var(--s2); }
+.nv-hd{ padding:var(--s1) var(--s3) 0; }
+.bd{ display:flex; flex-direction:column; flex:1; min-height:0; } .h .bd{ flex-direction:row; }
+.sl{ min-width:0; flex:1 1 0; position:relative; }
+.glass:not(.flat) .sl{ --hg-glass-sheen:none; --hg-glass-lite:transparent; --hg-glass-bg:transparent; --hg-edge:0 0 0 transparent; --hg-card-sh:none; --hg-card-bf:none; --hg-card-under:none;
+  --ha-card-background:transparent; --ha-card-box-shadow:none; --ha-card-border-width:0; }
+.glass:not(.flat) .sl + .sl::before{ content:''; position:absolute; left:var(--s3); right:var(--s3); top:0; height:1px; background:currentColor; opacity:.08; }
+.h.glass:not(.flat) .sl + .sl::before{ left:0; right:auto; top:var(--s2); bottom:var(--s2); width:1px; height:auto; }
+.flat .bd{ gap:var(--s2); }
+.bd.nv-in > .sl{ animation: nvStk var(--hg-t-slow) var(--hg-ease-out) both; } .bd.nv-in > .sl:nth-child(2){ animation-delay: var(--hg-t-stagger, 30ms); } .bd.nv-in > .sl:nth-child(3){ animation-delay: calc(var(--hg-t-stagger, 30ms) * 2); }
+@keyframes nvStk{ from{ opacity:0; transform: translateY(6px); } } @media (prefers-reduced-motion: reduce){ .bd.nv-in > .sl{ animation:none; } }
+@container (max-width: 420px){ .h .bd{ flex-direction:column; } .h.glass:not(.flat) .sl + .sl::before{ left:var(--s3); right:var(--s3); top:0; bottom:auto; width:auto; height:1px; } }
+`); }
+  cards() { return this._config.cards || []; }
+  key() { return 's'; }
+  head() { return this._config.title ? hgUI.header(this._config.title) : ''; }
+  render() { const c = this._config, L = this.cards();
+    return `<ha-card class="glass ${c.glass === false ? 'flat' : ''} ${c.direction === 'horizontal' ? 'h' : ''}">${this.head()}<div class="bd ${this._anim ? 'nv-in' : ''}" data-key="bd-${this.key()}">${L.map((x, i) => `<div class="sl" data-own data-key="${this.key()}-${i}"></div>`).join('')}${L.length ? '' : `<span class="nv-empty" style="padding:var(--s3)">${hgTr('Dodaj karty do stosu', 'Add cards to the stack')}</span>`}</div></ha-card>`; }
+  /* karty potomne żyją między aktualizacjami (morph zostawia gniazda data-own), tworzone raz na konfigurację */
+  afterRender() { this._kids = this._kids || new Map(); const L = this.cards(), h = this._hass;
+    this.$.querySelectorAll('.sl[data-own]').forEach((slot, i) => { const cfg = L[i]; if (!cfg) return; const sig = this.key() + i + JSON.stringify(cfg); let el = this._kids.get(sig);
+      const put = (x) => { if (x.parentElement !== slot) { slot.textContent = ''; slot.appendChild(x); } x.hass = this._hass; };
+      if (el) return put(el); this._kids.set(sig, null); hgMakeCard(cfg, (x) => { this._kids.set(sig, x); if (this.$.contains(slot)) put(x); }); });
+    for (const el of this._kids.values()) if (el && el.parentElement) el.hass = h; }
+  set hass(h) { this._hass = h; window.__nuvioHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); if (this._kids) for (const el of this._kids.values()) if (el && el.parentElement) el.hass = h; }
+  get hass() { return this._hass; }
+  getCardSize() { return this.cards().length * 2 || 1; }
+  getGridOptions() { return { columns: 6, rows: 'auto' }; }
+}
+hgReg('nuvio-stack-card', HGStackCard, hgTr('Nuvio – Stos', 'Nuvio – Stack'), hgTr('Kilka kart w jednym szkle, pionowo albo poziomo', 'Several cards in one glass, vertical or horizontal'));
+
+/* ===================== ZAKŁADKI: pigułki (Panel / Pokoje / Urządzenia) przełączające zestaw kart ===================== */
+class HGTabsCard extends HGStackCard {
+  static getStubConfig(h) { return { tabs: [{ label: hgTr('Panel', 'Dashboard'), cards: [{ type: 'custom:nuvio-toggle-card', ...HGToggleCard.getStubConfig(h) }] }, { label: hgTr('Wykres', 'Chart'), cards: [{ type: 'custom:nuvio-chart-card', ...HGChartCard.getStubConfig(h) }] }] }; }
+  defaults() { return { tabs: [], glass: true, title: null }; }
+  _extraSig() { return [this._tab]; }
+  cards() { const T = this._config.tabs || []; return (T[this._tab || 0] || {}).cards || []; }
+  key() { return 't' + (this._tab || 0); }
+  head() { const c = this._config, T = c.tabs || [], tabs = hgUI.tabs(T.map((t, i) => ({ id: String(i), label: t.label || t.title || hgTr('Zakładka', 'Tab') + ' ' + (i + 1), icon: t.icon })), String(this._tab || 0), 'tab', c.title || hgTr('Zakładki', 'Tabs'));
+    return `<div class="tb">${c.title ? hgUI.header(c.title) : ''}${tabs}</div>`; }
+  css() { return super.css() + U(`.tb{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s1) var(--s2) var(--s2); } .flat .tb{ padding:0; } .tb .nv-hd{ padding:0 var(--s1); }`); }
+  onAct(a, t) { if (a !== 'tab') return; const i = +t.dataset.id; if (i === (this._tab || 0)) return; this._tab = i; this._anim = true; H.haptic(); this.rerender(); }
+}
+hgReg('nuvio-tabs-card', HGTabsCard, hgTr('Nuvio – Zakładki', 'Nuvio – Tabs'), hgTr('Pigułki przełączające zestawy kart', 'Pills that switch between sets of cards'));
+
 /* ===== pusty pokój: „Importuj z obszaru” (podgląd z polami wyboru + „Wybierz encje”) i „Utwórz własny układ” ===== */
 const HG_RX_PRI = ['light', 'switch', 'fan', 'climate', 'cover', 'media_player', 'camera', 'lock', 'vacuum', 'humidifier', 'valve', 'water_heater', 'input_boolean', 'select', 'input_select', 'number', 'input_number', 'counter', 'scene', 'script', 'button', 'input_button', 'sensor', 'binary_sensor'];
 const HG_RX_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch-outline', fan: 'mdi:fan', climate: 'mdi:thermostat', cover: 'mdi:window-shutter', media_player: 'mdi:speaker', camera: 'mdi:cctv', lock: 'mdi:lock-outline', vacuum: 'mdi:robot-vacuum',
@@ -7880,7 +8329,7 @@ class HGPage extends HTMLElement {
   getCardSize() { return 12; }
   _css() {
     return U(`
-:host{ display:block; color:var(--hg-tx-ffffff); position:relative; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
+:host{ display:block; color:var(--hg-tx-ffffff); position:relative; --hg-card-bf: none; --hg-card-under: none; --k: var(--hg-u0, 1.3px); --r-lg:24u; --r-md:16u; --r-sm:12u; --s1:8u; --s2:12u; --s3:16u; --s4:24u; --fs-xs:var(--hg-fs-xs, 8.5u); --fs-sm:var(--hg-fs-sm, 10u); --fs-md:var(--hg-fs-md, 12u); }
 .bg{ position:fixed; inset:0; pointer-events:none; z-index:0; background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat;  }
 @media (max-aspect-ratio: 1/1){ .bg{ background-image: var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
 @media (pointer:coarse){ :host{ --hg-bf:.6; } }
@@ -8763,6 +9212,24 @@ const HG_COMP = [
   hgTrO({ id: 'note', i: 'mdi:note-text-outline', card: 'nuvio-note-card', slots: [], opts: [{ k: 'text', t: 'txt', l: ['Treść (**pogrubienie**, *kursywa*, listy "- ")', 'Text (**bold**, *italic*, "- " lists)'] }], cfg: () => ({}) }, { n: ['Notatka', 'Note'], d: ['Tekst z prostym formatowaniem', 'Text with simple formatting'] }),
   hgTrO({ id: 'image', i: 'mdi:image-outline', card: 'nuvio-image-card', modes: [['image', 'Obraz', 'Image', 'mdi:image-outline'], ['iframe', 'Strona', 'Page', 'mdi:web']], slots: [], opts: [{ k: 'url', l: ['Adres (https://… lub /local/…)', 'Address (https://… or /local/…)'], ph: 'https://' }, { k: 'ratio', l: ['Proporcje', 'Aspect ratio'], ph: '16/9' }, { k: 'refresh', t: 'num', l: ['Odświeżanie obrazu (s)', 'Image refresh (s)'] }], cfg: (v) => ({ mode: v.mode || 'image' }) }, { n: ['Obraz lub strona', 'Image or page'], d: ['Zdjęcie z adresu albo strona w ramce', 'Picture from a URL or a page in a frame'] }),
   hgTrO({ id: 'updates', i: 'mdi:package-up', card: 'nuvio-updates-card', slots: [], cfg: () => ({}) }, { n: ['Aktualizacje', 'Updates'], d: ['Dostępne aktualizacje Home Assistant', 'Available Home Assistant updates'] }),
+  /* nowe karty ogólne (0.16.0): klocki ui/, rozmiary S/M/L */
+  hgTrO({ id: 'hero', i: 'mdi:hand-wave-outline', card: 'nuvio-hero-card', slots: [hgTrO({ k: 'e', dom: ['weather', 'sensor', 'alarm_control_panel'] }, { l: ['Stan pod hasłem (opcjonalnie)', 'State under the tagline (optional)'] })],
+    opts: [{ k: 'title', l: ['Tytuł ({name} = imię)', 'Title ({name} = first name)'] }, { k: 'subtitle', l: ['Hasło', 'Tagline'] }, { k: 'image', l: ['Zdjęcie (https://… lub /local/…)', 'Photo (https://… or /local/…)'] }], cfg: (v) => (v.e ? { entity: v.e } : {}) }, { n: ['Powitanie', 'Greeting'], d: ['Duże powitanie z imieniem', 'Large greeting with your name'] }),
+  hgTrO({ id: 'toggle', i: 'mdi:toggle-switch-outline', card: 'nuvio-toggle-card', slots: [hgTrO({ k: 'e', dom: HG_TOGGLE_DOM, req: 1 }, { l: ['Urządzenie', 'Device'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Kafelek przełącznika', 'Toggle tile'], d: ['Nazwa, stan i przełącznik w wierszu', 'Name, state and switch in a row'] }),
+  hgTrO({ id: 'progress', i: 'mdi:progress-helper', card: 'nuvio-progress-card', slots: [hgTrO({ k: 'e', dom: ['sensor', 'input_number', 'number'], num: 1, req: 1 }, { l: ['Czujnik liczbowy', 'Numeric sensor'] })],
+    opts: [{ k: 'max', t: 'num', l: ['Maksimum', 'Maximum'] }, { k: 'warn', t: 'num', l: ['Próg ostrzeżenia', 'Warning threshold'] }, { k: 'bad', t: 'num', l: ['Próg alarmu', 'Alert threshold'] }], cfg: (v) => ({ entity: v.e }) }, { n: ['Pasek postępu', 'Progress bar'], d: ['Wartość na grubym pasku z progami', 'A value on a thick bar with thresholds'] }),
+  hgTrO({ id: 'arc', i: 'mdi:gauge-low', card: 'nuvio-arc-card', slots: [hgTrO({ k: 'e', dom: ['light', 'fan', 'cover', 'media_player', 'input_number', 'number'], req: 1 }, { l: ['Encja', 'Entity'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Łuk', 'Arc'], d: ['Jasność albo poziom na przeciąganym łuku', 'Brightness or level on a draggable arc'] }),
+  hgTrO({ id: 'chart2', i: 'mdi:chart-bell-curve-cumulative', card: 'nuvio-chart-card', modes: [['area', 'Obszar', 'Area', 'mdi:chart-areaspline'], ['line', 'Linia', 'Line', 'mdi:chart-line'], ['bars', 'Słupki', 'Bars', 'mdi:chart-bar']],
+    slots: [hgTrO({ k: 'e', dom: ['sensor'], num: 1, req: 1 }, { l: ['Czujnik liczbowy', 'Numeric sensor'] })], opts: [{ k: 'hours', t: 'num', l: ['Godziny wstecz', 'Hours back'] }], cfg: (v) => ({ entity: v.e, style: v.mode || 'area' }) }, { n: ['Wykres', 'Chart'], d: ['Linia, obszar albo słupki z historii', 'Line, area or bars from history'] }),
+  hgTrO({ id: 'roomc', i: 'mdi:sofa-outline', card: 'nuvio-room-compact-card', slots: [hgTrO({ k: 'temperature', dom: ['sensor'], dc: ['temperature'] }, { l: ['Temperatura', 'Temperature'] }), hgTrO({ k: 'entity', dom: ['light', 'fan', 'cover', 'switch'] }, { l: ['Światło lub urządzenie', 'Light or device'] })],
+    opts: [{ k: 'name', l: ['Nazwa pokoju', 'Room name'] }], cfg: (v) => ({ ...(v.temperature ? { temperature: v.temperature } : {}), ...(v.entity ? { entity: v.entity } : {}) }) }, { n: ['Pokój kompakt', 'Compact room'], d: ['Temperatura, przełącznik i linijka jasności', 'Temperature, switch and brightness ruler'] }),
+  hgTrO({ id: 'actions', i: 'mdi:gesture-tap', card: 'nuvio-actions-card', slots: [hgTrO({ k: 'entities', dom: ['scene', 'script', 'button', 'input_button', 'light', 'switch', 'automation'], multi: 1, req: 1 }, { l: ['Sceny, skrypty, urządzenia', 'Scenes, scripts, devices'] })],
+    cfg: (v) => ({ actions: (v.entities || []).map((e) => ({ entity: e })) }) }, { n: ['Szybkie akcje', 'Quick actions'], d: ['Rząd okrągłych przycisków', 'A row of round buttons'] }),
+  hgTrO({ id: 'family', i: 'mdi:account-heart-outline', card: 'nuvio-family-card', slots: [hgTrO({ k: 'persons', dom: ['person'], multi: 1 }, { l: ['Osoby (puste = wszystkie)', 'People (empty = all)'] })], cfg: (v) => (v.persons && v.persons.length ? { persons: v.persons } : {}) }, { n: ['Domownicy (awatary)', 'Family (avatars)'], d: ['Awatary i kto jest w domu', 'Avatars and who is home'] }),
+  hgTrO({ id: 'cover2', i: 'mdi:window-shutter-settings', card: 'nuvio-cover-card', slots: [hgTrO({ k: 'e', dom: ['cover'], req: 1 }, { l: ['Roleta lub brama', 'Cover or gate'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Roleta z pozycją', 'Cover with position'], d: ['Przeciągany pasek i przyciski', 'Draggable bar and buttons'] }),
+  hgTrO({ id: 'lock', i: 'mdi:lock-outline', card: 'nuvio-lock-card', slots: [hgTrO({ k: 'e', dom: ['lock'], req: 1 }, { l: ['Zamek', 'Lock'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Zamek', 'Lock'], d: ['Odblokowanie z potwierdzeniem', 'Unlock with confirmation'] }),
+  hgTrO({ id: 'fan', i: 'mdi:fan', card: 'nuvio-fan-card', slots: [hgTrO({ k: 'e', dom: ['fan'], req: 1 }, { l: ['Wentylator', 'Fan'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Wentylator', 'Fan'], d: ['Prędkość na łuku i tryby', 'Speed on an arc and modes'] }),
+  hgTrO({ id: 'todo', i: 'mdi:checkbox-marked-circle-outline', card: 'nuvio-todo-card', slots: [hgTrO({ k: 'e', dom: ['todo'], req: 1 }, { l: ['Lista zadań', 'To-do list'] })], cfg: (v) => ({ entity: v.e }) }, { n: ['Lista zadań', 'To-do list'], d: ['Dodawanie i odhaczanie', 'Add and tick off'] }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
 const HG_COMP_Z = { history: 'm', image: 'm', ac: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
@@ -8837,6 +9304,18 @@ const HG_MOCK_CSS = `
 const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-tag">${hgTr('Podgląd', 'Preview')}</span>`;
   const spark = (pts, fill) => `<svg viewBox="0 0 100 34" preserveAspectRatio="none" style="width:100%;height:36px">${fill ? `<path d="M0 34 L${pts} L100 34Z" class="accf" opacity=".18"/>` : ''}<polyline points="${pts}" fill="none" class="acc mk-dash" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
   const M = {
+    hero: `<div style="font-size:15px;font-weight:600;line-height:1.1">${hgTr('Hej, Anna!', 'Hey, Anna!')}</div><div style="font-size:11px;opacity:.75">${hgTr('Cały dom w jednym miejscu', 'Your whole home in one place')}</div>`,
+    toggle: `<div class="mk-r"><span class="mk-cir on" style="width:24px;height:24px">${I('mdi:lightbulb')}</span><span>${hgTr('Kuchnia', 'Kitchen')}</span><span class="mk-sw on"></span></div>`,
+    progress: `<div class="mk-r"><b style="font-size:18px;font-weight:300">62%</b><span style="opacity:.6">${hgTr('Średnie', 'Medium')}</span></div><div class="mk-tr" style="height:12px"><i style="--w:62%"></i></div>`,
+    arc: `<svg viewBox="0 0 100 52" style="width:80%;margin:0 auto;display:block"><path d="M8 48 A42 42 0 0 1 92 48" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="6" stroke-dasharray="1.5 4"/><path d="M8 48 A42 42 0 0 1 80 18" fill="none" class="acc" stroke-width="6" stroke-dasharray="1.5 4"/></svg>`,
+    chart2: spark('0,26 12,22 24,24 36,15 48,18 60,10 72,14 84,6 100,4', 1),
+    roomc: `<div class="mk-r"><b style="font-size:18px;font-weight:300">22,5°</b><span></span><span class="mk-sw on"></span></div><div class="mk-tr" style="height:6px"><i style="--w:55%"></i></div>`,
+    actions: `<div style="display:flex;gap:6px;justify-content:center">${['mdi:magnify', 'mdi:plus', 'mdi:minus', 'mdi:close'].map((i, n) => `<span class="mk-cir ${n ? '' : 'on'}" style="width:24px;height:24px">${I(i)}</span>`).join('')}</div>`,
+    family: `<div class="mk-r"><span>${hgTr('2 z 3 w domu', '2 of 3 at home')}</span>${['A', 'M', 'Z'].map((x) => `<span class="mk-cir" style="width:22px;height:22px;margin-left:-6px">${x}</span>`).join('')}</div>`,
+    cover2: `<div class="mk-r"><b style="font-size:18px;font-weight:300">40%</b></div><div class="mk-tr" style="height:10px"><i style="--w:40%"></i></div>`,
+    lock: `<div class="mk-r"><span class="mk-cir on" style="width:28px;height:28px">${I('mdi:lock')}</span><span>${hgTr('Zamknięte', 'Locked')}</span></div>`,
+    fan: `<div class="mk-r"><span class="mk-cir on" style="width:28px;height:28px">${I('mdi:fan')}</span><b>66%</b></div>`,
+    todo: `<div class="mk-r"><span class="mk-cir on" style="width:14px;height:14px"></span><span>${hgTr('Kupić mleko', 'Buy milk')}</span></div><div class="mk-r"><span class="mk-cir" style="width:14px;height:14px"></span><span>${hgTr('Podlać kwiaty', 'Water plants')}</span></div>`,
     slider: `<div class="mk-r"><span>${hgTr('Salon · jasność', 'Living room · brightness')}</span><b>72%</b></div><div class="mk-tr" style="height:14px"><i style="--w:72%"></i></div>`,
     button: `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="mk-cir on" style="width:38px;height:38px">${I('mdi:power')}</span><span>${hgTr('Uruchom', 'Run')}</span></div>`,
     entities: [['mdi:lightbulb', hgTr('Lampa', 'Lamp'), 1], ['mdi:fan', hgTr('Wentylator', 'Fan'), 0], ['mdi:television', 'TV', 1]].map(([i, n, on]) => `<div class="mk-r${on ? ' mk-on' : ''}"><span class="mk-ic">${I(i)}</span><span>${n}</span><span class="mk-sw${on ? ' on' : ''}"></span></div>`).join(''),

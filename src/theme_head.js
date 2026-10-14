@@ -10,6 +10,9 @@
   let s = document.getElementById(id);
   if (!s) { s = document.createElement('style'); s.id = id; document.head.appendChild(s); }
   s.textContent = `:root{
+  /* karty Nuvio w zwykłym widoku HA (bez szklanego panelu Nuvio pod spodem) rozmywają tło same; panel Nuvio zeruje to (jedno rozmycie) */
+  --hg-card-under: linear-gradient(var(--hg-panel-bg), var(--hg-panel-bg));
+  --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%));
   --r-lg:31px; --r-md:21px; --r-sm:16px; --s1:10px; --s2:16px; --s3:21px; --s4:31px; --fs-xs:11px; --fs-sm:13px; --fs-md:15.5px;
   --hg-sh: 0 10px 30px var(--hg-glass-sh, rgba(0,0,0,.18)); --hg-sh-sm: 0 1px 3px rgba(0,0,0,.08); --hg-sh-hover: 0 10px 28px var(--hg-glass-sh-h, rgba(20,35,60,.16)); --hg-hover-fill: rgba(255,255,255,.06);
   --hg-accent: #63D71E; --hg-accent-hi: #9BF24A; --hg-accent-lo: #3E9A10; --hg-accent-soft: rgba(99,215,30,.22); --hg-accent-faint: rgba(99,215,30,.10); --hg-accent-glow: rgba(125,246,48,.30); --hg-accent-tx: #1A4607; --hg-on-accent: #0B0F0A; --hg-thumb: #FFFFFF; --hg-thumb-sh: 0 1px 3px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18);

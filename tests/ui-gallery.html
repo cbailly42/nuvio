@@ -61,5 +61,30 @@ document.documentElement.setAttribute('data-hg-scheme', sch);
   r.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && n.dataset.act); if (b && go[b.dataset.act]) go[b.dataset.act](b); });
   window.__gal = r;
 }
+{
+  /* nowe karty ogólne z przykładowymi danymi: każda w rozmiarach S, M i L */
+  const now = Date.now(), st = (e, state, a) => [e, { entity_id: e, state: String(state), attributes: a || {}, last_changed: new Date(now).toISOString(), last_updated: new Date(now).toISOString() }];
+  const S = Object.fromEntries([st('light.salon', 'on', { friendly_name: 'Salon', brightness: 219, supported_color_modes: ['brightness'] }), st('switch.kuchnia', 'off', { friendly_name: 'Kuchnia' }),
+    st('fan.sypialnia', 'on', { friendly_name: 'Wentylator', percentage: 66, percentage_step: 1, preset_modes: ['auto', 'sleep', 'turbo'], preset_mode: 'auto' }),
+    st('sensor.energia', '62', { friendly_name: 'Zużycie energii', unit_of_measurement: '%' }), st('sensor.solar', '12.4', { friendly_name: 'Energia słoneczna', unit_of_measurement: 'kWh' }),
+    st('sensor.temp', '22.5', { friendly_name: 'Temperatura', unit_of_measurement: '°C', device_class: 'temperature' }), st('sensor.wilg', '48', { unit_of_measurement: '%' }),
+    st('cover.roleta', 'open', { friendly_name: 'Roleta salon', current_position: 40, supported_features: 15 }), st('lock.drzwi', 'locked', { friendly_name: 'Drzwi wejściowe' }),
+    st('todo.zakupy', '2', { friendly_name: 'Zakupy' }), st('scene.wieczor', 'scening', { friendly_name: 'Wieczór', icon: 'mdi:weather-night' }), st('script.film', 'off', { friendly_name: 'Film', icon: 'mdi:movie-open' }),
+    st('person.anna', 'home', { friendly_name: 'Anna' }), st('person.marek', 'not_home', { friendly_name: 'Marek' }), st('person.zosia', 'home', { friendly_name: 'Zosia' })]);
+  const hass = { states: S, user: { name: 'Krzysztof Czepiec' }, language: 'pl', locale: { language: 'pl' }, themes: { darkMode: sch === 'dark' }, callService: async () => {},
+    callWS: async (m) => m.type === 'todo/item/list' ? { items: [{ uid: '1', summary: 'Kupić mleko', status: 'needs_action' }, { uid: '2', summary: 'Podlać kwiaty', status: 'needs_action' }, { uid: '3', summary: 'Wynieść śmieci', status: 'completed' }] }
+      : m.type === 'history/history_during_period' ? { [m.entity_ids[0]]: Array.from({ length: 60 }, (_, i) => ({ s: String(6 + Math.sin(i / 6) * 3 + i / 10), lu: (now - (60 - i) * 24 * 60e3) / 1000 })) } : {} };
+  const cards = [['hero', {}], ['toggle', { entity: 'light.salon' }], ['progress', { entity: 'sensor.energia', warn: 80 }], ['arc', { entity: 'light.salon' }], ['chart', { entity: 'sensor.solar', tone: 'solar' }],
+    ['chart', { entity: 'sensor.solar', style: 'bars' }], ['room-compact', { name: 'Salon', temperature: 'sensor.temp', humidity: 'sensor.wilg', entity: 'light.salon' }],
+    ['actions', { actions: [{ icon: 'mdi:magnify', name: 'Szukaj' }, { entity: 'scene.wieczor' }, { entity: 'script.film' }, { icon: 'mdi:close', name: 'Wyłącz' }] }],
+    ['family', {}], ['cover', { entity: 'cover.roleta' }], ['lock', { entity: 'lock.drzwi' }], ['fan', { entity: 'fan.sypialnia' }], ['todo', { entity: 'todo.zakupy' }],
+    ['stack', { cards: [{ type: 'custom:nuvio-toggle-card', entity: 'light.salon' }, { type: 'custom:nuvio-toggle-card', entity: 'switch.kuchnia' }] }],
+    ['tabs', { tabs: [{ label: 'Panel', cards: [{ type: 'custom:nuvio-progress-card', entity: 'sensor.energia' }] }, { label: 'Pokoje', cards: [{ type: 'custom:nuvio-toggle-card', entity: 'switch.kuchnia' }] }] }]];
+  const sec = document.createElement('div'); sec.className = 'scheme'; sec.innerHTML = '<h2>Karty</h2>'; out.appendChild(sec);
+  const H0 = { hero: 150, toggle: 70, actions: 80, stack: 160, tabs: 240, family: 200, lock: 170, progress: 170, todo: 300, 'room-compact': 190 };
+  for (const [n, cfg] of cards) { const row = document.createElement('div'); row.className = 'row'; sec.appendChild(row);
+    for (const sz of ['s', 'm', 'l']) { const box = document.createElement('div'); box.className = 'box ' + sz; row.appendChild(box); box.innerHTML = `<div class="lab">${n} · ${sz.toUpperCase()}</div>`;
+      const el = document.createElement('nuvio-' + n + '-card'); el.setConfig({ type: 'custom:nuvio-' + n + '-card', ...cfg }); el.style.cssText = `display:block;height:${H0[n] || 240}px`; box.appendChild(el); el.hass = hass; } }
+}
 window.__ready = true;
 </script></body></html>

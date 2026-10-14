@@ -7,7 +7,7 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
 # ui/ = shared building blocks (morph engine, primitives); loaded before cards so every card can use them
 UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
-      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js']
+      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js']
 SHARED = [
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
@@ -23,6 +23,7 @@ SHARED = [
     'shared/confirm.part.js',
     'shared/generic-controls.part.js',
     'shared/compact-cards.part.js',
+    'shared/nv-card.part.js',
 ]
 CARDS = [
     'cards/energy-card.part.js',
@@ -79,6 +80,20 @@ CARDS = [
     'cards/sun-card.part.js',
     'cards/updates-card.part.js',
     'cards/assist-card.part.js',
+    'cards/hero-card.part.js',
+    'cards/toggle-card.part.js',
+    'cards/progress-card.part.js',
+    'cards/arc-card.part.js',
+    'cards/fan-card.part.js',
+    'cards/chart-card.part.js',
+    'cards/room-compact-card.part.js',
+    'cards/actions-card.part.js',
+    'cards/family-card.part.js',
+    'cards/cover-card.part.js',
+    'cards/lock-card.part.js',
+    'cards/todo-card.part.js',
+    'cards/stack-card.part.js',
+    'cards/tabs-card.part.js',
 ]
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE

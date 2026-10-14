@@ -100,7 +100,8 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
     el.style.setProperty('--ox', (a.left + a.width / 2 - left) + 'px'); el.style.setProperty('--oy', oy);
   };
   const api = {
-    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width }) -> Promise(value) */
+    /* dialog({ title, text, html, actions: [{ label, value, kind: 'primary'|'danger' }], dismiss, width, collect }) -> Promise(value)
+       collect: true -> Promise({ value, data: { name: wartość pól } }) dla pól z atrybutem name w html */
     dialog(o = {}) { return new Promise((res) => {
       const el = document.createElement('div'); el.className = 'glass dlg'; el.setAttribute('role', o.alert ? 'alertdialog' : 'dialog'); el.setAttribute('aria-modal', 'true');
       if (o.width) el.style.setProperty('--w', o.width + 'px');
@@ -109,7 +110,10 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
         ${(o.actions || []).length ? `<div class="acts">${o.actions.map((a, i) => `<button class="btn ${a.kind || ''}" data-i="${i}"${a.focus ? ' autofocus' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}`;
       let it = null;
       el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && (n.dataset.i != null || n.dataset.v)); if (!b) return;
-        it.close(b.dataset.v === '__x' ? undefined : o.actions[+b.dataset.i].value); });
+        const v = b.dataset.v === '__x' ? undefined : o.actions[+b.dataset.i].value;
+        it.close(o.collect ? { value: v, data: Object.fromEntries([...el.querySelectorAll('input[name], select[name], textarea[name]')].map((f) => [f.name, f.value])) } : v); });
+      /* Enter w polu tekstowym = główny przycisk */
+      el.addEventListener('keydown', (e) => { if (e.key !== 'Enter' || !e.composedPath()[0].matches || !e.composedPath()[0].matches('input')) return; const p = el.querySelector('.btn.primary, .btn.danger'); if (p) { e.preventDefault(); p.click(); } });
       it = open(el, { modal: true, dismiss: o.dismiss !== false && !o.alert, onClose: (v) => res(v) });
     }); },
     /* alert dialog: potwierdzenie; fokus na bezpiecznym przycisku, bez zamykania kliknięciem obok */
