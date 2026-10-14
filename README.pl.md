@@ -50,6 +50,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
   style wyświetlania z podglądem na żywo, wygląd (kolor akcentu z automatycznym kontrastem WCAG, tło: zdjęcie / kolor / gradient, przyciemnienie).
 - **Galeria komponentów (+ Dodaj)**: najpierw grupa **Podstawowe** (Suwak, Przycisk, Lista encji, Wybór, Licznik, Wskaźnik, z miniaturami na żywo, dostępne też w pokojach), potem **Karty** dla konkretnych rodzajów urządzeń. Formularz komponentu nie ma wyboru trybu wyświetlania; prawdziwe warianty (suwak poziomy lub pionowy, przycisk jako kafel lub wiersz, wybór jako przyciski lub lista) są w **Opcjach komponentu**.
   <br><img src="docs/components/gallery-basic.png" alt="Galeria komponentów z grupą Podstawowe" width="420">
+- **Kopia układu** (administrator): eksport i import całego układu jako JSON z wersją w **Wygląd → Kopia układu**, z opcją Zastąp albo Połącz i przywracaniem jednym kliknięciem. Zobacz [Kopia układu](#kopia-układu).
 - **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
 - **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
@@ -190,14 +191,22 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 
 ### Planowane
 
-Na podstawie [docs/STATUS.md](docs/STATUS.md). W kodzie nie ma innych planowanych komponentów (brak TODO i pozycji „wkrótce”).
+Plan kolejnych funkcji; źródłem prawdy jest [docs/STATUS.md](docs/STATUS.md).
 
-| Pozycja | Status |
-|---|---|
-| Edytor widoków: dodawanie, zmiana nazw i kolejności całych widoków | gotowe (Wygląd → Widoki) |
-| Pełne tłumaczenie kart i trybu edycji | gotowe (polski / angielski) |
-| Eksport i import konfiguracji w interfejsie | nie rozpoczęte |
-| Podpowiedzi dla pustego widoku Panel | gotowe |
+| Funkcja | Opis | Status |
+|---|---|---|
+| Tryb tabletu ściennego | wygaszacz z zegarem i zdjęciem po bezczynności, przyciemnienie, wybudzanie dotykiem lub czujnikiem ruchu | planowane |
+| Karta Assist / głosowa | rozmowa z Home Assistant Assist w szklanej karcie, z odpowiedzią wyświetlaną na miejscu | planowane |
+| Centrum powiadomień | trwałe powiadomienia, słabe baterie, otwarte drzwi i niedostępne urządzenia w jednym panelu | planowane |
+| Integracja z panelem Energia | źródła i urządzenia z ustawień Energii w HA zamiast ręcznie wskazanych czujników | planowane |
+| Poprawka kart energy i bars | poprawne renderowanie `nuvio-energy-card` i `nuvio-bars-card` poza siatką o stałej wysokości | planowane |
+| Konfiguracja karty mapy | jasna podpowiedź i zapasowy widok, gdy kafelki mapy są niedostępne, oraz zrzut w README | planowane |
+| Układy per urządzenie | osobny układ dla telefonu, tabletu i komputera zamiast jednego wspólnego | planowane |
+| Edytor motywu | własne rozmycie szkła, zaokrąglenia, czcionki i palety kolorów poza kolorem akcentu | planowane |
+| Udostępnianie presetów | udostępnianie układu i wyglądu jako presetów, z galerią presetów społeczności do importu | planowane |
+| Przegląd dostępności | etykiety dla czytników ekranu, kolejność fokusu i audyt kontrastu we wszystkich kartach i trybie edycji | planowane |
+
+Gotowe z poprzedniego planu: edytor widoków (Wygląd → Widoki), pełne tłumaczenie polskie / angielskie, eksport i import konfiguracji (Wygląd → Kopia układu), podpowiedzi dla pustego widoku Panel.
 
 ## Instalacja
 

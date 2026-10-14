@@ -50,6 +50,7 @@ and entities from Home Assistant and generates the views. Everything can then be
   appearance (accent colour with automatic WCAG contrast, background photo / colour / gradient, dimming).
 - **Component gallery (+ Add)**: a **Basic** group first (Slider, Button, Entity list, Select, Stepper, Gauge, with live thumbnails, also available in rooms), then **Cards** for specific device types. The component form has no display mode picker; real variants (slider horizontal or vertical, button tile or row, select chips or list) are listed as **Component options**.
   <br><img src="docs/components/gallery-basic.png" alt="Component gallery with the Basic group" width="420">
+- **Layout backup** (admins): export / import the whole layout as versioned JSON in **Appearance → Layout backup**, with Replace or Merge and one click restore. See [Layout backup](#layout-backup).
 - **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
 - **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
 - **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
@@ -190,14 +191,22 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 
 ### Planned
 
-From [docs/STATUS.md](docs/STATUS.md). There are no other planned components in the code (no TODOs or "coming soon" entries).
+Roadmap of next features; the source of truth is [docs/STATUS.md](docs/STATUS.md).
 
-| Item | Status |
-|---|---|
-| View editor: add, rename and reorder whole views | done (Appearance → Views) |
-| Full i18n of cards and edit mode | done (Polish / English) |
-| Config export / import UI | not started |
-| Empty-state hints on an empty Home view | done |
+| Feature | Description | Status |
+|---|---|---|
+| Wall tablet mode | screensaver with clock and photo after idle, dimming, wake on touch or motion sensor | planned |
+| Assist / voice card | talk to Home Assistant Assist from a glass card, with the reply shown inline | planned |
+| Notifications center | persistent notifications, low batteries, open doors and unavailable devices in one panel | planned |
+| Energy dashboard integration | read sources and devices from the HA Energy settings instead of manual sensors | planned |
+| Energy and bars card fix | render `nuvio-energy-card` and `nuvio-bars-card` correctly outside a fixed-height grid | planned |
+| Map card setup | clear hint and fallback when map tiles are unavailable, plus a README screenshot | planned |
+| Per-device layouts | different layout for phone, tablet and desktop instead of one shared layout | planned |
+| Theme editor | custom glass blur, radius, fonts and colour palettes beyond the accent colour | planned |
+| Preset sharing | share layouts and appearance as presets, with an import gallery of community presets | planned |
+| Accessibility pass | screen reader labels, focus order and contrast audit for all cards and edit mode | planned |
+
+Already done from the previous roadmap: view editor (Appearance → Views), full Polish / English i18n, config export / import (Appearance → Layout backup), empty-state hints on Home.
 
 ## Installation
 
