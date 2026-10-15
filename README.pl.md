@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.6.0-a3e635?style=flat-square" alt="v2.6.0">
+  <img src="https://img.shields.io/badge/version-v2.6.1-a3e635?style=flat-square" alt="v2.6.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -419,9 +419,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.6.0 origin/main -m "Nuvio 2.6.0" && git push origin v2.6.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.6.1 origin/main -m "Nuvio 2.6.1" && git push origin v2.6.1`.
 
 ## Lista zmian
+
+### 2.6.1
+- Karta oczyszczacza: czujnik PM2.5 jest brany z tego samego urządzenia co oczyszczacz (także czujniki z pm2_5 w nazwie bez device_class i starszy atrybut aqi z xiaomi_miio), więc karta nie pokazuje już innego czujnika w domu. Odczyt łapie też czujnik, który pojawi się dopiero po starcie Home Assistant.
 
 ### 2.6.0
 - Nowość: karta oczyszczacza powietrza (`custom:nuvio-purifier-card`, **+ Dodaj → Oczyszczacz powietrza**). Duży odczyt PM2.5 odliczany krok po kroku do nowej wartości, etykieta i kolor z jakości powietrza (czyste, dobre, umiarkowane, złe, bardzo złe), fale powietrza rozchodzące się od liczby w tempie zależnym od trybu, włącznik i tryby z przesuwanym podświetleniem. Czujnik PM2.5 dobiera się sam albo wybierasz go w formularzu.

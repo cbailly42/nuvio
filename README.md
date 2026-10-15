@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.6.0-a3e635?style=flat-square" alt="v2.6.0">
+  <img src="https://img.shields.io/badge/version-v2.6.1-a3e635?style=flat-square" alt="v2.6.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -419,9 +419,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.6.0 origin/main -m "Nuvio 2.6.0" && git push origin v2.6.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.6.1 origin/main -m "Nuvio 2.6.1" && git push origin v2.6.1`.
 
 ## Changelog
+
+### 2.6.1
+- Air purifier card: the PM2.5 sensor is taken from the same device as the purifier (also sensors named pm2_5 without a device class, and the older xiaomi_miio aqi attribute), so the card no longer shows another sensor in the house. The reading also follows a sensor that appears after Home Assistant starts.
 
 ### 2.6.0
 - New: air purifier card (`custom:nuvio-purifier-card`, **+ Add → Air purifier**). Large PM2.5 reading that counts step by step to a new value, label and color from air quality (clean, good, moderate, poor, very poor), air waves spreading from the number at a speed that follows the mode, power switch and preset modes with a sliding highlight. The PM2.5 sensor is found automatically or chosen in the form.

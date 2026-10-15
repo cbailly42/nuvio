@@ -6,11 +6,17 @@ const HG_AQ_IC = [[/auto|smart/, 'mdi:weather-windy'], [/sleep|night|silent|quie
 const HG_AQ_PL = { auto: 'Auto', smart: 'Smart', sleep: 'Sen', night: 'Noc', silent: 'Cichy', quiet: 'Cichy', turbo: 'Turbo', boost: 'Turbo', max: 'Maks.', favorite: 'Ulubiony', manual: 'Ręczny', low: 'Niski', medium: 'Średni', high: 'Wysoki', on: 'Wł.', pet: 'Zwierzęta', allergy: 'Alergia' };
 class HGPurifierCard extends HGBase {
   static getStubConfig(h) { return { entity: hgStub(h, ['fan'], (s) => (s.attributes.preset_modes || []).length > 0) || hgStub(h, ['fan']) || null, pm: HGPurifierCard.pmFor(h, null) }; }
-  /* czujnik PM2.5: ten sam początek nazwy co oczyszczacz, inaczej pierwszy z device_class pm25, inaczej encja air_quality */
-  static pmFor(h, fan) { const S = (h && h.states) || {}, L = Object.keys(S).filter((e) => (e.startsWith('sensor.') && S[e].attributes.device_class === 'pm25') || e.startsWith('air_quality.'));
-    const base = fan ? fan.split('.')[1].replace(/_(fan|purifier|air_purifier)$/, '') : ''; return (base && L.find((e) => e.split('.')[1].startsWith(base))) || L.find((e) => e.startsWith('sensor.')) || L[0] || null; }
+  /* czujnik PM2.5: z tego samego urządzenia co oczyszczacz (rejestr HA), potem ten sam początek nazwy, na końcu pierwszy w domu.
+     Czujnik bez device_class też się liczy, gdy w nazwie ma pm2_5 / pm25 */
+  static pmFor(h, fan) { const S = (h && h.states) || {}, R = (h && h.entities) || {}, pm = (e) => /pm_?2_?5/.test(e);
+    const L = Object.keys(S).filter((e) => (e.startsWith('sensor.') && (S[e].attributes.device_class === 'pm25' || pm(e))) || e.startsWith('air_quality.'));
+    const dev = fan && R[fan] && R[fan].device_id, same = dev ? L.filter((e) => R[e] && R[e].device_id === dev) : [];
+    if (same.length) return same.find((e) => S[e].attributes.device_class === 'pm25') || same[0];
+    const base = fan ? fan.split('.')[1].replace(/_(fan|purifier|air_purifier)$/, '') : ''; return (base && L.find((e) => e.split('.')[1].startsWith(base))) || L.find((e) => e.startsWith('sensor.') && S[e].attributes.device_class === 'pm25') || L[0] || null; }
   defaults() { return { entity: null, pm: null, name: null, title: hgTr('Jakość powietrza', 'Air quality'), modes: null }; }
+  /* bez stałej pamięci listy encji: czujnik dobrany automatycznie może się pojawić dopiero po starcie HA */
   ents() { const c = this._config; return [c.entity, c.pm || HGPurifierCard.pmFor(this._hass, c.entity)].filter(Boolean); }
+  _changed() { this._entsC = null; return super._changed(); }
   _extraSig() { return this._opt ? JSON.stringify(this._opt) : ''; }
   css() { return HG_NV_CSS + U(`
 ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:column; gap:0; padding:18u 18u 12u; min-height:300u; container-type:inline-size; isolation:isolate; }
@@ -43,7 +49,8 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
 @container (max-width:240px){ .pw span{ display:none; } .nm{ font-size:54u; height:56u; } .md button span{ display:none; } .md button{ min-height:48u; } }
 @media (prefers-reduced-motion:reduce){ .rg i{ animation:none; opacity:0; } .nm > span.in, .nm > span.out{ animation:none; } .nm > span.out{ display:none; } .md .hl{ transition:none; } }
 `); }
-  _pm() { const c = this._config, h = this._hass, id = c.pm || HGPurifierCard.pmFor(h, c.entity), s = id && h.states[id]; if (!s) return null;
+  _pm() { const c = this._config, h = this._hass, id = c.pm || HGPurifierCard.pmFor(h, c.entity), s = id && h.states[id];
+    if (!s) { const f = h.states[c.entity], a = f && f.attributes, x = a && (a.pm25 != null ? a.pm25 : a.pm2_5 != null ? a.pm2_5 : a.aqi); return x != null && isFinite(Number(x)) ? Number(x) : null; }   /* starszy xiaomi_miio: PM2.5 jako atrybut aqi encji fan */
     const v = Number(id.startsWith('air_quality.') && s.attributes.particulate_matter_2_5 != null ? s.attributes.particulate_matter_2_5 : s.state); return isFinite(v) && s.state !== '' ? v : null; }
   _modes(s) { const c = this._config, a = s.attributes, P = Array.isArray(c.modes) && c.modes.length ? c.modes : (a.preset_modes || []);
     if (P.length) return P.slice(0, 4).map((m) => { const k = String(m).toLowerCase(), ic = (HG_AQ_IC.find(([r]) => r.test(k)) || [0, 'mdi:fan'])[1];
