@@ -23,13 +23,17 @@ const HG_GL_DEFIMG = { weather: '', media: 'music', camera: 'camera', thermo: 't
 const HG_GL_WX = { 'clear-night': 'moon', cloudy: 'cloud', exceptional: 'storm', fog: 'fog', hail: 'snow', lightning: 'storm', 'lightning-rainy': 'storm', partlycloudy: 'partly', pouring: 'rain', rainy: 'rain', snowy: 'snow', 'snowy-rainy': 'snow', sunny: 'sun', windy: 'wind', 'windy-variant': 'wind' };
 const HG_GL_WI = { 'clear-night': 'mdi:weather-night', cloudy: 'mdi:weather-cloudy', exceptional: 'mdi:alert-circle-outline', fog: 'mdi:weather-fog', hail: 'mdi:weather-hail', lightning: 'mdi:weather-lightning', 'lightning-rainy': 'mdi:weather-lightning-rainy', partlycloudy: 'mdi:weather-partly-cloudy', pouring: 'mdi:weather-pouring', rainy: 'mdi:weather-rainy', snowy: 'mdi:weather-snowy', 'snowy-rainy': 'mdi:weather-snowy-rainy', sunny: 'mdi:weather-sunny', windy: 'mdi:weather-windy', 'windy-variant': 'mdi:weather-windy-variant' };
 const HG_GL_SS3 = `
-.ng-bg:not(.im){ background:var(--hg-accent-tx) var(--hg-bg-wide) var(--hg-bg-pos, 50% 50%) / cover no-repeat; }
-@media (max-aspect-ratio: 1/1){ .ng-bg:not(.im){ background-image:var(--hg-bg-portrait, var(--hg-bg-wide)); background-position:50% 40%; } }
-.ng-bg:not(.im)::after{ content:''; position:absolute; inset:0; background:${K(14,16,20,.26)}; } .ng-bg:not(.im)::before{ content:''; position:absolute; inset:0; background:var(--hg-night, transparent); }
+.ng-bg:not(.im){ background:${K(14,16,20,1)} var(--gbg, none) var(--gbgp, 50% 50%) / cover no-repeat; }
+.ng-bg:not(.im)::after{ content:''; position:absolute; inset:0; background:${K(14,16,20,.26)}; } .ng-bg:not(.im)::before{ content:''; position:absolute; inset:0; z-index:1; background:${K(6,8,12,1)}; opacity:var(--gdim, 0); }
 .ng-sp{ display:none !important; }
 .ng .ng-c{ background:none !important; box-shadow:none !important; border:0 !important; padding:0 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border-radius:var(--hg-r, 24px); overflow:visible; }
 .ng .ng-c::before, .ng .ng-c::after{ display:none !important; }
-.ng .ng-c{ height:auto !important; max-height:100%; container-type:normal; } .ng .ng-col{ justify-content:flex-start; } .ng-trk, .ng-col{ align-items:flex-start; } .ng .ng-tile{ position:relative; display:block; padding:0 !important; } .ng .ng-tile > *{ display:block; width:100%; --hg-accent:${HG_GL_HEX('63D71E')}; }
+.ng .ng-car{ display:flex; align-items:center; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-padding-inline:var(--gpad, 40px); scrollbar-width:none; overscroll-behavior-x:contain; scroll-behavior:smooth; left:var(--gpad, 40px) !important; right:var(--gpad, 40px) !important; scroll-padding-inline:0; padding-block:48px; margin-block:-48px; box-sizing:content-box; }
+.ng .ng-car::-webkit-scrollbar{ display:none; }
+.ng .ng-trk{ display:grid; grid-auto-flow:column dense; grid-template-rows:repeat(var(--grows, 2), var(--grh, 260px)); grid-auto-columns:var(--gcw, 300px); gap:var(--ggap, 16px); height:auto; width:max-content; padding:0; animation:none !important; align-items:stretch; }
+.ng .ng-c{ width:auto !important; height:auto !important; max-height:none; min-height:0; container-type:normal; display:flex; scroll-snap-align:start; outline:0 !important; grid-row:span 1; grid-column:span 1; }
+.ng .ng-c.w{ grid-column:span var(--gc2, 2); } .ng .ng-c.t-boiler{ grid-row:span var(--gr2, 2); }
+.ng .ng-tile{ position:relative; display:flex; flex:1; min-width:0; min-height:0; padding:0 !important; } .ng .ng-tile > *{ display:block; flex:1; height:100%; width:100%; --hg-accent:${HG_GL_HEX('63D71E')}; }
 .ng-dt, .ng .nw-h, .ng-mt, .ng-md, .ng-mw, .ng-mp{ background:none !important; box-shadow:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; text-shadow:0 1px 12px ${K(0,0,0,.35)}; }
 .ng-wi{ display:grid; place-items:center; width:1.6em; height:1.6em; font-style:normal; } .ng-wi ha-icon{ --mdc-icon-size:1.4em; color:${HG_GL_HEX('63D71E')}; }
 `;
@@ -151,7 +155,7 @@ const HG_GL_SS = `
 .ng-mp b{ display:block; font-size:calc(17 * var(--u)); font-weight:600; max-width:calc(520 * var(--u)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ng-mp small{ font-size:calc(14 * var(--u)); opacity:.6; }
 @media (orientation:portrait){
   .ng-tb{ left:calc(24 * var(--u)); right:calc(24 * var(--u)); transform:none; top:calc(104 * var(--u)); max-width:none; gap:calc(30 * var(--u)); }
-  .ng-tb > i{ display:none; } .ng-car{ top:calc(200 * var(--u)); height:calc(100% - 380 * var(--u)); } .ng-trk{ padding-left:calc(28 * var(--u)); }
+  .ng-tb > i{ display:none; } .ng-car{ top:calc(200 * var(--u)); height:calc(100% - 380 * var(--u)); } .ng-trk{ padding-left:calc(28 * var(--u)); --edge:calc(28 * var(--u)); }
   .ng-c.m{ width:calc(440 * var(--u)); } .ng-c.l{ width:calc(470 * var(--u)); } .ng-c.w{ width:calc(600 * var(--u)); } .ng-c.s{ width:calc(300 * var(--u)); }
   .ng-fam{ right:auto; left:50%; transform:translateX(-50%); bottom:calc(70 * var(--u)); } .ng-mn{ left:calc(36 * var(--u)); top:44%; } .ng-mn.c{ left:50%; }
   .ng-mt{ font-size:calc(170 * var(--u) * var(--cs, 1)); } .ng-dt{ left:calc(28 * var(--u)); } .ng-av{ right:calc(28 * var(--u)); } .ng-orb{ bottom:calc(70 * var(--u)); left:calc(26 * var(--u)); }
@@ -216,7 +220,7 @@ Object.assign(HGWall, {
   gpw(h, e) { if (!e) return ''; const o = e.split('.')[1], S = h.states; return Object.keys(S).find((x) => x.startsWith('sensor.') && (S[x].attributes || {}).device_class === 'power' && x.split('.')[1].startsWith(o)) || ''; },
   /* karta wygaszacza = prawdziwy kafel pulpitu (ten sam komponent, szkło i odstępy) */
   gmk(c, h) { const e = c.e || '', T = {
-      weather: ['hg-weather-card', { entity: e }], media: ['hg-media-card', { entity: e }], camera: ['hg-camera-card', { entity: e }],
+      weather: ['hg-weather-card', { entity: e }], media: ['hg-media-card', { entity: e }], camera: ['hg-camera-card', { entity: e, cover: true }],
       thermo: ['hg-thermo-card', { entity: e }], boiler: ['hg-cwu-card', { cwu: { heater: e, power: c.pw || this.gpw(h, e) || null } }],
       energy: ['hg-value-card', { entity: e }], pv: ['hg-pv-card', { power: e }], car: ['hg-value-card', { entity: e }], sensor: ['hg-value-card', { entity: e }],
       light: ['hg-lamp-card', { entity: e }], scene: ['hg-scenes-card', { scripts: e ? [e] : [] }], person: ['hg-person-card', { entity: e }] }[c.t];
@@ -225,8 +229,29 @@ Object.assign(HGWall, {
     root.querySelectorAll('[data-mk]').forEach((slot, n) => { const c = (this._gC || []).find((x) => x.id === slot.dataset.mk); if (!c) return; const T = this.gmk(c, h); if (!T) return;
       const key = c.id + '#' + n, sig = JSON.stringify(T); seen[key] = 1; let el = M[key];
       if (!el || el._sig !== sig) { try { el = document.createElement(T[0]); el.setConfig(Object.assign({ type: 'custom:' + T[0] }, T[1])); el._sig = sig; M[key] = el; } catch (x) { return; } }
-      if (el.parentNode !== slot) slot.replaceChildren(el); if (el.hass !== h) el.hass = h; });
+      if (el.parentNode !== slot) slot.replaceChildren(el); if (el.hass !== h) el.hass = h; this.gfill(el); requestAnimationFrame(() => this.gfill(el)); });
     Object.keys(M).forEach((k) => { if (!seen[k]) delete M[k]; }); },
+  /* tło pulpitu: dokładnie to, co pulpit (HGApp: wybrane tło lub domyślne, kopia z CDN po błędzie, przyciemnienie) */
+  gbg() { const A = (window.HGApp && HGApp.get()) || {}, port = window.innerHeight > window.innerWidth; let B = A.bg || window.HG_DEFAULT_BG;
+    if (B && B._st === 'bad') B = window.HG_DEFAULT_BG_FB; const M = window.__hgBgAlt || {};
+    if (A.bg && A.bg.kind === 'image' && M[A.bg.v]) B = Object.assign({}, A.bg, { v: M[A.bg.v] });
+    const u = B ? (port && B.v2p ? HGApp.bgImg({ kind: 'image', v: B.v2p }) : HGApp.bgImg(B)) : null;
+    const d = A.dim != null ? Math.max(0, Math.min(1, A.dim)) : 0;
+    return { img: u || 'linear-gradient(160deg, ' + ((window.HG_DEFAULT_BG_FB || {}).v || HG_GL_HEX('16202B')) + ', ' + ((window.HG_DEFAULT_BG_FB || {}).v2 || HG_GL_HEX('05070A')) + ')', pos: (A.bg && A.bg.pos) || '50% 50%', dim: (1 - (1 - d * 0.65) * (1 - d * 0.45)).toFixed(3) }; },
+  /* siatka jak na pulpicie: równe wiersze, pełne kolumny w kadrze, blok wyśrodkowany */
+  glayout(root) { const car = root.querySelector('.ng-car'); if (!car) return; const Hh = car.clientHeight - 96, W0 = root.clientWidth; if (!W0 || !Hh) return;
+    const gap = Math.round(Math.max(10, Math.min(18, W0 * 0.012))), pad = Math.round(Math.max(gap, Math.min(56, W0 * 0.04))), W = W0 - 2 * pad;
+    const rows = Math.max(1, Math.min(3, Math.floor((Hh + gap) / (190 + gap)))), rh = Math.floor(Math.min(300, (Hh - gap * (rows - 1)) / rows));
+    const n = Math.max(1, Math.round((W + gap) / (300 + gap))), cw = Math.floor((W - (n - 1) * gap) / n);
+    const st = car.style; st.setProperty('--ggap', gap + 'px'); st.setProperty('--gpad', pad + 'px'); st.setProperty('--grows', rows); st.setProperty('--grh', rh + 'px'); st.setProperty('--gcw', cw + 'px');
+    st.setProperty('--gr2', Math.min(2, rows)); st.setProperty('--gc2', Math.min(2, n)); car._step = cw + gap; },
+  gauto2(root, G) { clearInterval(this._gai); const car = root.querySelector('.ng-car'); if (!car || !G.car.spd || G.rm === 'on' || root.classList.contains('pv')) return;
+    this._gai = setInterval(() => { if (this._ghold || this._gsh || !car.isConnected) return; const end = car.scrollLeft + car.clientWidth >= car.scrollWidth - 4;
+      if (end) car.scrollTo({ left: 0 }); else car.scrollBy({ left: car._step || 300 }); }, Math.max(5, G.car.spd / 8) * 1000); },
+  /* kafel w wygaszaczu wypełnia swoją komórkę siatki */
+  gfill(el) { const r = el.shadowRoot; if (!r || r.querySelector('style[data-ngf]')) return; const s = document.createElement('style'); s.dataset.ngf = '1';
+    s.textContent = ':host{ display:block; height:100%; } .root{ height:100%; display:flex; flex-direction:column; } .root > *{ flex:1; min-height:0; display:flex; flex-direction:column; } .root > * > ha-card{ flex:1; } ha-card{ display:flex !important; flex-direction:column; height:100% !important; min-height:0 !important; box-sizing:border-box !important; margin:0 !important; overflow:hidden; } ha-card .tile, ha-card > div{ flex:1; min-height:0; } ha-card.cv .tile{ height:100%; } ha-card.cv .fr{ flex:1; min-height:0; aspect-ratio:auto !important; }';
+    r.appendChild(s); },
   gimg(k) { return k && k !== '-' ? (HG_GL_IMG.includes(k) ? HG_ASSET + 'nuvio-3d-' + k + '.webp' : k) : ''; },
   gtf(G) { const l = G.min.h12 !== 'auto' ? G.min.h12 : this.hass && this.hass.locale ? this.hass.locale.time_format : null; return new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {})); },
   gdate(G, d) { return new Intl.DateTimeFormat(HG_LOC(), G.top.df === 'num' ? { weekday: 'short', day: '2-digit', month: '2-digit' } : G.top.df === 'short' ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }).format(d || new Date()); },
@@ -350,8 +375,8 @@ Object.assign(HGWall, {
     const all = this.gcards(h, G), C = tab ? all.filter((c) => c.tb === tab) : all; this._gC = all;
     const one = (c) => { const r = { cls: '' }; return `<div class="ng-c ${c.sz} t-${c.t}" data-gc="${H.esc(c.id)}" role="button" tabindex="-1" aria-label="${H.esc(c.n || H.name(h, c.e, ''))}"${c.ac ? ` style="--ac:${c.ac}"` : ''}><div class="ng-ci ng-tile" data-mk="${H.esc(c.id)}"></div></div>`; };
     let mid = '';
-    if (G.v === 'carousel') { const cols = []; for (let i = 0; i < C.length; i++) { if (C[i].sz === 's' && C[i + 1] && C[i + 1].sz === 's') { cols.push(`<div class="ng-col">${one(C[i])}${one(C[i + 1])}</div>`); i++; } else cols.push(C[i].sz === 's' ? `<div class="ng-col">${one(C[i])}</div>` : one(C[i])); }
-      const off = !G.car.spd || rm || pv || cols.length < 4, L = off ? cols : [...cols, ...cols];
+    if (G.v === 'carousel') { const cols = []; for (let i = 0; i < C.length; i++) cols.push(one(C[i])); /* jeden równy rząd kafli */
+      const off = true, L = cols;
       mid = `<div class="ng-car${this._ghold ? ' hold' : ''}"><div class="ng-trk${off ? ' off' : ''}" style="--dur:${G.car.spd * Math.max(1, cols.length / 4)}s">${L.join('')}</div></div>`; }
     else { const tf = this.gtf(G), parts = tf.formatToParts(d), t = parts.filter((x) => x.type !== 'dayPeriod').map((x) => x.value).join('').trim(), ap = (parts.find((x) => x.type === 'dayPeriod') || {}).value;
       const wc = all.find((c) => c.t === 'weather'), wid = (wc && wc.e) || Object.keys(h.states).find((e) => e.startsWith('weather.')), w = wid && h.states[wid];
@@ -359,7 +384,9 @@ Object.assign(HGWall, {
       mid = `<div class="ng-mn${G.min.pos === 'center' ? ' c' : ''}" style="--cs:${G.min.cs}"><div class="ng-mt">${H.esc(t)}${ap ? `<small>${H.esc(ap)}</small>` : ''}</div>${G.min.date ? `<div class="ng-md">${H.esc(this.gdate(G, d))}</div>` : ''}
         ${G.min.wx && w && H.ok(w) ? `<div class="ng-mw"><i class="ng-wi">${H.icon(HG_GL_WI[w.state] || 'mdi:weather-partly-cloudy')}</i><div><b>${H.esc(H.fmt(parseFloat(w.attributes.temperature), 0))}°</b><small>${H.esc(typeof HGWx !== 'undefined' && HGWx.cn ? HGWx.cn(w.state) : w.state)}</small></div></div>` : ''}
         ${G.min.np && M ? `<div class="ng-mp"><i${M.entity_picture ? ` style="background-image:url(&quot;${H.esc(M.entity_picture)}&quot;)"` : ''}></i><div><b>${H.esc(M.media_title)}</b><small>${H.esc(M.media_artist || H.name(h, mp, ''))}</small></div></div>` : ''}</div>`; }
-    this.glPut(root, '.ng-mid', mid); this.gmount(root, h);
+    const mk = root._gk && root._gk['.ng-mid']; this.glPut(root, '.ng-mid', mid); this.gmount(root, h); this.glayout(root); if (mk !== mid || !this._gai) this.gauto2(root, G);
+    if (!root._gro && window.ResizeObserver) { root._gro = new ResizeObserver(() => this.glayout(root)); root._gro.observe(root); }
+    const gb = this.gbg(); root.style.setProperty('--gbg', gb.img); root.style.setProperty('--gbgp', gb.pos); root.style.setProperty('--gdim', gb.dim);
     const sh = root.querySelector('.ng-sh'), sc = this._gsh && all.find((c) => c.id === this._gsh);
     root.classList.toggle('so', !!sc); sh.setAttribute('aria-hidden', String(!sc));
     if (sc) { const r = this.gcard(sc, h, G).sheet || { t: sc.n || H.name(h, sc.e, ''), t2: '', big: '', sub: '', about: '', pr: null }, ics = HG_GL_TYPES.find((x) => x[0] === sc.t);
@@ -375,6 +402,7 @@ Object.assign(HGWall, {
     if (this._gsh) { if (t.closest('[data-gx]') || !t.closest('.ng-sh')) this.glClose(); return true; }
     const gm = t.closest && t.closest('[data-gm]'), cd = t.closest && t.closest('[data-gc]'), c = cd && C.find((x) => x.id === cd.dataset.gc); if (!c) return false;
     this.glHold(G);
+    return true; /* kafel pulpitu obsługuje własne sterowanie (klik trafia do komponentu) */
     if (gm && c.e) { H.call(h, 'media_player', gm.dataset.gm, { entity_id: c.e }); setTimeout(() => this.gl(true), 600); return true; }
     if (c.tap === 'none') return false;
     if (c.tap === 'toggle') { this.gtog(h, c); setTimeout(() => this.gl(true), 600); return true; }
