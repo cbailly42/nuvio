@@ -28,13 +28,14 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
 .fs svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
 .tr{ fill:none; stroke:currentColor; stroke-opacity:.13; stroke-width:.7; stroke-linecap:round; transition:stroke var(--hg-t-slow) var(--hg-ease-out), stroke-opacity var(--hg-t-slow) var(--hg-ease-out); }
 .tr.on{ stroke:var(--c); stroke-opacity:.32; }
-.fl{ fill:none; stroke:var(--c); stroke-width:2.3; stroke-linecap:round; stroke-dasharray:0 6.5; opacity:0; filter:drop-shadow(0 0 1.2px var(--c));
+.fl{ fill:none; stroke:var(--c); stroke-width:2.3; stroke-linecap:round; stroke-dasharray:0 6.5; opacity:0;
   transition:opacity var(--hg-t-slow) var(--hg-ease-out); animation:flRun var(--d, 1s) linear infinite; animation-play-state:paused; }
 .fl.on{ opacity:1; animation-play-state:running; } .fl.rv{ animation-direction:reverse; }
+:host([hg-off]) .fl{ animation-play-state:paused !important; }   /* poza ekranem stoi */
 @keyframes flRun{ to{ stroke-dashoffset:-6.5; } }
 .nd{ all:unset; box-sizing:border-box; position:absolute; width:20%; aspect-ratio:1; transform:translate(-50%,-50%); border-radius:50%; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; text-align:center;
-  background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  background:color-mix(in srgb, var(--hg-inner-bg) 70%, var(--hg-panel-flat, rgba(30,34,40,.6))); box-shadow:var(--hg-inner-hi);   /* bez backdrop-filter: rozmycie w rozmyciu przeliczane co klatkę animacji */
   transition:box-shadow var(--hg-t-slow) var(--hg-ease-out), transform var(--hg-t-base) var(--hg-spring); }
 .nd::before{ content:''; position:absolute; inset:0; border-radius:50%; pointer-events:none;
   background:conic-gradient(from -90deg, var(--ring, color-mix(in srgb, currentColor 14%, transparent) 0 100%));
@@ -43,20 +44,18 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
 .nd:hover{ transform:translate(-50%,-50%) scale(1.04); } .nd:active{ transform:translate(-50%,-50%) scale(.96); }
 .nd:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:3px; }
 .nd ha-icon{ width:clamp(16px, 6.4cqw, 30px); height:clamp(16px, 6.4cqw, 30px); --mdc-icon-size:clamp(16px, 6.4cqw, 30px); color:var(--c); transition:color var(--hg-t-slow) var(--hg-ease-out); }
-.nd.on.sun ha-icon{ animation:flSpin 24s linear infinite; }
-@keyframes flSpin{ to{ transform:rotate(360deg); } }
 .nd b{ font-size:clamp(11px, 3.8cqw, 19px); font-weight:600; letter-spacing:-.01em; font-variant-numeric:tabular-nums; white-space:nowrap; line-height:1.1; }
 .nd b em{ font-style:normal; font-weight:500; font-size:.72em; opacity:.62; margin-left:1px; }
 .nd small{ font-size:clamp(9px, 2.5cqw, 12px); opacity:.62; white-space:nowrap; line-height:1.1; max-width:90%; overflow:hidden; text-overflow:ellipsis; }
 .cap{ position:absolute; transform:translateX(-50%); max-width:24%; font-size:clamp(9px, 2.4cqw, 12px); font-weight:500; opacity:.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; text-align:center; }
-.hub{ fill:currentColor; fill-opacity:.25; transition:fill var(--hg-t-slow) var(--hg-ease-out); } .hub.on{ fill:var(--fl-bat); fill-opacity:1; filter:drop-shadow(0 0 1.5px var(--fl-bat)); }
+.hub{ fill:currentColor; fill-opacity:.25; transition:fill var(--hg-t-slow) var(--hg-ease-out); } .hub.on{ fill:var(--fl-bat); fill-opacity:1; }
 .nd.un{ opacity:.5; } .nd.off ha-icon{ color:inherit; opacity:.55; }
 .lg{ display:flex; flex-wrap:wrap; justify-content:center; gap:var(--s1) var(--s2); font-size:var(--fs-xs); }
 .lg span{ display:inline-flex; align-items:center; gap:5px; padding:3u 9u; border-radius:var(--hg-radius-pill, 999px); background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); white-space:nowrap; }
 .lg i{ width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 6px var(--c); } .lg b{ font-weight:600; font-variant-numeric:tabular-nums; }
 @container (max-width: 300px){ .nd small, .cap{ display:none; } }
 @container (max-width: 240px){ .nd{ width:23%; } .lg{ display:none; } }
-@media (prefers-reduced-motion: reduce){ .fl{ animation:none; stroke-dasharray:none; stroke-width:1.1; filter:none; } .fl.on{ opacity:.85; } .nd.on.sun ha-icon{ animation:none; } .nd, .nd:hover, .nd:active{ transition:none; transform:translate(-50%,-50%); } }
+@media (prefers-reduced-motion: reduce){ .fl{ animation:none; stroke-dasharray:none; stroke-width:1.1; filter:none; } .fl.on{ opacity:.85; } .nd, .nd:hover, .nd:active{ transition:none; transform:translate(-50%,-50%); } }
 `); }
   /* moc encji w W ze znakiem; null = brak encji albo niedostępna */
   _w(e, inv) { if (!e) return null; const v = hgW(this._hass, e); return v == null ? null : inv ? -v : v; }
@@ -118,7 +117,7 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
     nds.push(node('h', hgArr(c.home), 'mdi:home-lightning-bolt-outline', '--fl-home', M.Hm, hgTr('dom', 'home'), ring, M.Hm > EPS, hgTr('Dom', 'Home')));
     const own = tot > EPS ? Math.round(((M.sh + M.bh) / tot) * 100) : null;
     const lgs = src.filter((x) => x[1] / tot >= .005), lg = lgs.length > 1 && tot > EPS ? `<div class="lg" role="list" aria-label="${hgTr('Skąd dom bierze prąd', 'Where the home power comes from')}">${lgs.map(([col, w, n]) => `<span role="listitem" style="--c:var(${col})"><i></i>${H.esc(n)} <b>${H.fmt((w / tot) * 100, 0)}%</b></span>`).join('')}</div>` : '';
-    this._fitSoon();
+    const fk = [vh, nb, !!lgs.length, has.s, has.g].join(); if (fk !== this._fk) { this._fk = fk; this._fitSoon(); }   /* dopasowanie tylko po zmianie układu (rozmiar śledzi ResizeObserver) */
     const sum = `${hgTr('Dom', 'Home')} ${this.fw(M.Hm).join(' ')}${own != null && (has.s || has.b) ? ', ' + hgTr('z własnej energii', 'self powered') + ' ' + own + '%' : ''}`;
     return `<ha-card class="glass">${hgUI.header(T, { icon: c.icon, sub: own != null && (has.s || has.b) ? hgTr(`${own}% z własnej energii`, `${own}% self powered`) : '' })}
       <div class="nv-mid"><div class="fs" style="--ar:100/${vh}" role="img" aria-label="${H.esc(sum)}">${svg}${nds.join('')}</div>${lg}</div></ha-card>`; }

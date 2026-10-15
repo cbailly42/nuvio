@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.0-a3e635?style=flat-square" alt="v1.7.0">
+  <img src="https://img.shields.io/badge/version-v1.7.1-a3e635?style=flat-square" alt="v1.7.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -416,9 +416,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.7.0 -m "Nuvio 1.7.0" && git push origin v1.7.0`.
+Only tagging by hand: `git tag -a v1.7.1 -m "Nuvio 1.7.1" && git push origin v1.7.1`.
 
 ## Changelog
+
+### 1.7.1
+- **Faster pages (fix)**: the scroll-hint button on wide screens no longer bobs forever (its glass blur was re-rendered every frame); only its icon bobs three times. Without the energy flow card a page now idles at 60 fps instead of about 25 on a 6x slower CPU.
+- **Lighter energy flow card (fix)**: no blur inside the card, no glow on the moving dots, no spinning sun, animations stop while the card is off-screen, and the diagram is re-fitted only when its layout changes.
 
 ### 1.7.0
 - Added: the **Energy flow** card takes several sensors per source. Grid, solar, export and home sensors are summed (for example three phases or two inverters), and each battery gets its own circle with its level, name and flow, joined by a bus under the diagram (up to 4). Tapping a circle with several sensors lets you pick which one to open.

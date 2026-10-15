@@ -1099,8 +1099,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=wide][scroll]) .panel::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.28); border-radius:3px; }
 .more{ display:none; }
 :host([mode=wide][scroll]) .more:not([hidden]){ display:flex; position:absolute; z-index:5; width:36px; height:36px; border-radius:50%; align-items:center; justify-content:center;
-  color: var(--hg-chrome-fg); animation: hgmore 2.4s ease-in-out infinite; }
-:host([mode=wide][scroll]) .more ha-icon{ width:20px; height:20px; }
+  color: var(--hg-chrome-fg); }
+/* podskakuje tylko ikona i tylko 3 razy: ruch szklanego przycisku przeliczał jego rozmycie w każdej klatce (połowa klatek na słabszym tablecie) */
+:host([mode=wide][scroll]) .more ha-icon{ width:20px; height:20px; animation: hgmore 2.4s ease-in-out 3; }
+@media (prefers-reduced-motion: reduce){ :host([mode=wide][scroll]) .more ha-icon{ animation:none; } }
 :host([mode=wide][scroll]:not([wide-panel])) .more{ right:calc(18u + var(--k) * 219 - 18px); bottom:calc(19u + 10px); }
 :host([mode=wide][scroll][wide-panel]) .more{ left:calc(86u + (100% - 86u - var(--s3)) / 2 - 18px); bottom:calc(var(--s3) + 10px); }
 

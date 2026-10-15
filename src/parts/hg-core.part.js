@@ -165,7 +165,7 @@ const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q
 /* karty poza ekranem nie przerysowują się: zmiana stanu tylko oznacza kartę jako zaległą, a odświeżenie przychodzi, gdy karta wjedzie
    w widok (z zapasem 300 px, więc przy przewijaniu jest już gotowa). Pierwsze malowanie i zmiana konfiguracji zawsze od razu. */
 const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => {
-  for (const e of es) { const c = e.target; c._off = !e.isIntersecting; if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
+  for (const e of es) { const c = e.target; c._off = !e.isIntersecting; c.toggleAttribute('hg-off', c._off);   /* karty z animacjami zatrzymują je poza ekranem */ if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
 }, { rootMargin: '300px' }));
 class HGBase extends HTMLElement {
   constructor() {

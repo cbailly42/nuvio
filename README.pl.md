@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.0-a3e635?style=flat-square" alt="v1.7.0">
+  <img src="https://img.shields.io/badge/version-v1.7.1-a3e635?style=flat-square" alt="v1.7.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -416,9 +416,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.7.0 -m "Nuvio 1.7.0" && git push origin v1.7.0`.
+Sam tag ręcznie: `git tag -a v1.7.1 -m "Nuvio 1.7.1" && git push origin v1.7.1`.
 
 ## Lista zmian
+
+### 1.7.1
+- **Szybsze strony (poprawka)**: przycisk podpowiedzi przewijania na szerokim ekranie nie podskakuje już bez końca (jego szklane rozmycie było przeliczane w każdej klatce); podskakuje tylko ikona, trzy razy. Bez karty przepływu energii strona trzyma 60 kl./s zamiast około 25 na 6x wolniejszym CPU.
+- **Lżejsza karta przepływu energii (poprawka)**: bez rozmycia wewnątrz karty, bez poświaty kropek i wirującego słońca, animacje stają, gdy karta jest poza ekranem, a schemat jest dopasowywany tylko po zmianie układu.
 
 ### 1.7.0
 - Dodano: karta **Przepływ energii** przyjmuje kilka czujników na źródło. Sieć, panele, oddawanie i dom się sumują (np. trzy fazy albo dwa falowniki), a każda bateria ma własne kółko z poziomem, nazwą i przepływem, połączone szyną pod schematem (do 4). Kliknięcie w kółko z kilkoma czujnikami pozwala wybrać, który otworzyć.
