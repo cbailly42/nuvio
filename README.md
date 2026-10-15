@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.6.0-a3e635?style=flat-square" alt="v1.6.0">
+  <img src="https://img.shields.io/badge/version-v1.7.0-a3e635?style=flat-square" alt="v1.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -262,7 +262,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Energy week | `custom:nuvio-week-card` | consumption and production sensors, days, tap target |
 | Phases | `custom:nuvio-phases-card` | power, voltage and current per phase, maximum total and per phase power |
 | Solar | `custom:nuvio-pv-card` | power, today, inverter state and temperature, strings |
-| Energy flow | `custom:nuvio-flow-card` | grid power (+ import, − export) or a separate export sensor, solar power, battery power (+ discharge, − charge) and level, home usage (empty = from the balance), invert grid or battery sign |
+| Energy flow | `custom:nuvio-flow-card` | grid power (+ import, − export, several sensors are summed, e.g. phases) or separate export sensors, solar power (several are summed, e.g. inverters), batteries each on their own (`battery` and `battery_soc` lists in the same order, or `batteries: [{ power, soc, name }]`, up to 4), home usage (empty = from the balance), invert grid or battery sign |
 | Network | `custom:nuvio-net-card` | section (internet, gateway, Wi-Fi, devices, clients), title |
 | Home sensors | `custom:nuvio-sensors-card` | device classes, extra and skipped sensors |
 | Shortcut | `custom:nuvio-link-card` | title, subtitle, entity, path or URL to open |
@@ -416,9 +416,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.6.0 -m "Nuvio 1.6.0" && git push origin v1.6.0`.
+Only tagging by hand: `git tag -a v1.7.0 -m "Nuvio 1.7.0" && git push origin v1.7.0`.
 
 ## Changelog
+
+### 1.7.0
+- Added: the **Energy flow** card takes several sensors per source. Grid, solar, export and home sensors are summed (for example three phases or two inverters), and each battery gets its own circle with its level, name and flow, joined by a bus under the diagram (up to 4). Tapping a circle with several sensors lets you pick which one to open.
 
 ### 1.6.0
 - Added: **Energy flow** card (`custom:nuvio-flow-card`): grid, solar, battery and home on one glass diagram with dots that flow along the lines, faster at higher power. The grid shows import or export, the battery its level and whether it charges, and the home ring and the legend show how much power comes from solar, grid and battery. It is in **+ Add** with a live preview, and the Energy view puts it on top when it finds grid and solar or battery power sensors.

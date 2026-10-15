@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.6.0-a3e635?style=flat-square" alt="v1.6.0">
+  <img src="https://img.shields.io/badge/version-v1.7.0-a3e635?style=flat-square" alt="v1.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -262,7 +262,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Energia, tydzień | `custom:nuvio-week-card` | czujniki zużycia i produkcji, liczba dni, cel po dotknięciu |
 | Fazy | `custom:nuvio-phases-card` | moc, napięcie i prąd każdej fazy, maksymalna moc łączna i fazy |
 | Fotowoltaika | `custom:nuvio-pv-card` | moc, produkcja dziś, stan i temperatura falownika, stringi |
-| Przepływ energii | `custom:nuvio-flow-card` | moc sieci (+ pobór, − oddawanie) albo osobny czujnik oddawania, moc paneli, moc baterii (+ rozładowanie, − ładowanie) i jej poziom, zużycie domu (puste = z bilansu), odwrócenie znaku sieci albo baterii |
+| Przepływ energii | `custom:nuvio-flow-card` | moc sieci (+ pobór, − oddawanie, kilka czujników się sumuje, np. fazy) albo osobne czujniki oddawania, moc paneli (kilka się sumuje, np. falowniki), baterie każda osobno (listy `battery` i `battery_soc` w tej samej kolejności albo `batteries: [{ power, soc, name }]`, do 4), zużycie domu (puste = z bilansu), odwrócenie znaku sieci albo baterii |
 | Sieć | `custom:nuvio-net-card` | sekcja (internet, brama, Wi-Fi, urządzenia, klienci), tytuł |
 | Czujniki domu | `custom:nuvio-sensors-card` | rodzaje czujników, dodatkowe i pominięte czujniki |
 | Skrót | `custom:nuvio-link-card` | tytuł, podtytuł, encja, ścieżka lub adres do otwarcia |
@@ -416,9 +416,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.6.0 -m "Nuvio 1.6.0" && git push origin v1.6.0`.
+Sam tag ręcznie: `git tag -a v1.7.0 -m "Nuvio 1.7.0" && git push origin v1.7.0`.
 
 ## Lista zmian
+
+### 1.7.0
+- Dodano: karta **Przepływ energii** przyjmuje kilka czujników na źródło. Sieć, panele, oddawanie i dom się sumują (np. trzy fazy albo dwa falowniki), a każda bateria ma własne kółko z poziomem, nazwą i przepływem, połączone szyną pod schematem (do 4). Kliknięcie w kółko z kilkoma czujnikami pozwala wybrać, który otworzyć.
 
 ### 1.6.0
 - Dodano: karta **Przepływ energii** (`custom:nuvio-flow-card`): sieć, panele, bateria i dom na jednym szklanym schemacie, po liniach płyną kropki, szybciej przy większej mocy. Sieć pokazuje pobór albo oddawanie, bateria poziom naładowania i czy się ładuje, a pierścień domu i legenda pokazują, ile prądu idzie z paneli, sieci i baterii. Jest w **+ Dodaj** z podglądem na żywo, a widok Energia stawia ją na górze, gdy znajdzie czujniki mocy sieci oraz paneli albo baterii.
