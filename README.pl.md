@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.1.0-a3e635?style=flat-square" alt="v2.1.0">
+  <img src="https://img.shields.io/badge/version-v2.1.1-a3e635?style=flat-square" alt="v2.1.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.1.0 origin/main -m "Nuvio 2.1.0" && git push origin v2.1.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.1.1 origin/main -m "Nuvio 2.1.1" && git push origin v2.1.1`.
 
 ## Lista zmian
+
+### 2.1.1
+- **Dopracowana tablica**: karty nie rozciągają się już z pustym miejscem; widżety są przy dole, a zdjęcie zostaje widoczne na środku. Pogoda to zwarta karta w prawym górnym rogu. „Teraz gra” to zwarty widżet z miniaturą okładki. Jasne szkło jest czystsze i bielsze, a ciemne przydymione zamiast szarej mgły. Karta zdjęcia pokazuje się tylko przy więcej niż jednym zdjęciu (wcześniej powtarzała tło). Pokoje na telefonie to kafelki z pełną nazwą. Mocniejszy cień pod nagłówkiem dla kontrastu na jasnych zdjęciach.
 
 ### 2.1.0
 - **Tablica w szkle premium**: tablica leży teraz na zdjęciu z dashboardu (ten sam pokaz slajdów, Ken Burns i przyciemnienie co w wygaszaczu ze zdjęciem), a karty są z matowego szkła z jasną krawędzią i miękkim cieniem jak reszta Nuvio; biały nagłówek z datą na zdjęciu, szklane chipy, akcentowa plakietka najbliższego wydarzenia. Motyw „Auto” idzie teraz za panelem.
