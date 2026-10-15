@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.3.1-a3e635?style=flat-square" alt="v1.3.1">
+  <img src="https://img.shields.io/badge/version-v1.4.0-a3e635?style=flat-square" alt="v1.4.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -52,7 +52,7 @@ and entities from Home Assistant and generates the views. Everything can then be
   <br><img src="docs/components/gallery-basic.png" alt="Component gallery with the Basic group" width="420">
 - **Layout backup** (admins): export / import the whole layout as versioned JSON in **Appearance → Layout backup**, with Replace or Merge and one click restore. See [Layout backup](#layout-backup).
 - **Wall tablet mode** (off by default): after inactivity a glass screensaver with a clock, the date and a photo fades in and dims the screen; touch or a motion sensor wakes it. Idle time, dimming, photo source and sensor are set in **Appearance → Wall tablet mode**. See [Wall tablet mode](#wall-tablet-mode).
-- **Per-user storage**: layout and appearance are stored per user in Home Assistant (`frontend/set_user_data`, key `nuvio_layout`) with a local fallback.
+- **Shared dashboard**: by default everyone sees the same dashboard, set up by an administrator. In **Settings → Users** an admin can turn a person off to give them their own layout that they edit themselves. See [Shared dashboard](#shared-dashboard).
 - **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
 - **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
 - **Light and dark mode**, touch friendly, reduced-motion aware.
@@ -343,6 +343,16 @@ strategy:
 
 Configuration (layout + appearance) can be exported/imported as JSON. Personal presets live outside the repository.
 
+## Shared dashboard
+
+Everyone sees the same Nuvio dashboard by default: the layout, appearance, views, rooms and wall tablet settings an administrator sets up.
+
+- **Who edits**: administrators edit the shared dashboard (edit mode). Other people see it without the edit button.
+- **Own layout**: in **Settings → Users** (edit mode, admins only) every Home Assistant user has a switch. Turn a person off and they get their own layout: it starts as a copy of the shared one, the edit button appears for them, and their changes affect only them. Turn them back on to return them to the shared dashboard. Your own account stays on the shared dashboard.
+- **Live**: changes to the shared dashboard and to the list reach open screens without a reload.
+- **Storage**: the shared layout lives in a hidden storage dashboard `nuvio-shared` (*Nuvio (wspólny układ)*, admins only, not in the sidebar). Only admins can write it; do not edit it by hand. Own layouts stay in Home Assistant user data (`frontend/set_user_data`, key `nuvio_layout`), with a local copy per user. Assist settings are always personal.
+- **Upgrading from 1.3.x**: the first time an admin opens Nuvio 1.4.0, their current layout becomes the shared dashboard. Until then everyone keeps their own layout as before.
+
 ## Wall tablet mode
 
 A screensaver for a tablet on the wall. It is **off by default**; admins turn it on in **Appearance → Wall tablet mode** (edit mode) and press **Done** to save.
@@ -356,7 +366,7 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 - Layout: a large clock in the centre (no panel behind it), the date fixed at the bottom left and, if Home Assistant has a `weather` entity, the current weather (icon, temperature, condition) at the top right. The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
 - It only starts on the Nuvio dashboard (not in edit mode, not in a background tab) and is drawn above Home Assistant dialogs.
 - **PIN lock (BETA)**: turn on *PIN lock*, set a PIN of 4 to 8 digits and choose when the screensaver locks (at once, after 1, 5, 15 or 30 min). A locked screensaver does not wake on touch or motion: touching it blurs the photo and shows a round glass PIN pad with the PIN dots above it and a **Lock** button below it, which returns to the screensaver. After 5 wrong PINs the pad waits 30 s (longer after more attempts), and it closes by itself after 20 s without a touch. **Lock screen** in the user menu locks right away, and a reload of the page stays locked. Only a hash of the PIN is stored. The lock keeps the tablet from casual use and does not replace the Home Assistant password.
-- Settings are stored per Home Assistant user like the layout. For a dedicated tablet user, sign in as an admin once on the tablet, or move the settings with **Layout backup** (the category *Wall tablet mode*).
+- Settings are part of the layout: on the shared dashboard they apply to everyone, and a person with their own layout has their own. See [Shared dashboard](#shared-dashboard).
 
 ## Layout backup
 
@@ -387,7 +397,7 @@ The source is plain JavaScript files that `tools/build.py` joins, in a fixed ord
 | `src/parts/hg-core`, `hg-styles`, `hg-select`, `hg-oss` | base class `HGBase`, theme tokens, glass select, shared helpers |
 | `src/parts/shared/` | helpers used by more than one card (weather, calendar, rooms model, generic controls…) |
 | `src/parts/cards/` | one card per file, for example `cards/light-card.part.js` |
-| `src/parts/hg-page`, `hg-edit`, `hg-wall`… | dashboard page, edit mode, wall tablet mode, backup, Assist |
+| `src/parts/hg-page`, `hg-edit`, `hg-wall`, `hg-users`… | dashboard page, edit mode, wall tablet mode, shared dashboard users, backup, Assist |
 
 A new card goes into `src/parts/cards/<name>-card.part.js` and is added to the `CARDS` list in `tools/build.py`. Load order matters: code that runs when the bundle loads (for example `class X extends Y`) may only use what an earlier file defines.
 
@@ -397,9 +407,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.3.1 -m "Nuvio 1.3.1" && git push origin v1.3.1`.
+Only tagging by hand: `git tag -a v1.4.0 -m "Nuvio 1.4.0" && git push origin v1.4.0`.
 
 ## Changelog
+
+### 1.4.0
+- Added: shared dashboard. By default everyone sees the same dashboard, set up by an administrator; non-admins no longer get an empty default layout. The first admin to open 1.4.0 turns their layout into the shared one.
+- Added: **Settings → Users** for admins, with a switch per Home Assistant user. A person turned off gets their own layout, starting as a copy of the shared one, and can edit it themselves.
+- Added: changes to the shared dashboard reach open screens live.
+- Fixed: Assist settings are now saved to Home Assistant instead of being lost on the next layout save.
 
 ### 1.3.1
 - Added: unlock animation for the PIN lock. The padlock opens, the PIN dots glow green, the keys drift outwards from the centre, a soft wave of light spreads and the blurred screensaver lifts away to reveal the dashboard. Reduced motion gets a short fade.

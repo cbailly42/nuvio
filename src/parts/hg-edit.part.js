@@ -8,14 +8,16 @@ const HGL = window.__hgL || (window.__hgL = {
   _lsKey(uid) { return this.LS + ':' + (uid || 'anon'); },
   _lsRead(uid) { try { const v = JSON.parse(localStorage.getItem(this._lsKey(uid)) || 'null'); return v && v.s ? v : null; } catch (e) { return null; } },
   data: (() => { try { const u = localStorage.getItem('home-glass:layout:last'); const v = u && JSON.parse(localStorage.getItem('home-glass:layout:' + u) || 'null'); return v && v.s ? v : { v: 1, ts: 0, s: {} }; } catch (e) { return { v: 1, ts: 0, s: {} }; } })(),
-  subs: new Set(), loaded: false, failed: false, editing: false, _p: null, _uid: null, _base: null,
+  subs: new Set(), loaded: false, failed: false, editing: false, _p: null, _uid: null, _base: null, mode: 'own', _sub: null, _mine: 0,
   get(sc) { const x = this.data.s[sc] || {}; return { order: x.order || [], hidden: x.hidden || [], size: x.size || {}, added: x.added || [], names: x.names || {}, conf: x.conf || {} }; },
   set(sc, v) { const o = { order: v.order || [], hidden: v.hidden || [], size: v.size || {}, added: v.added || [], names: v.names || {}, conf: v.conf || {} };
     for (const k of Object.keys(o.conf)) if (!o.conf[k] || !Object.keys(o.conf[k]).length) delete o.conf[k];
     if (!o.order.length && !o.hidden.length && !Object.keys(o.size).length && !o.added.length && !Object.keys(o.names).length && !Object.keys(o.conf).length) delete this.data.s[sc]; else this.data.s[sc] = o; },
+  SECS: ['app', 'wiz', 'pw', 'wall', 'assist'],
   /* zrzut stanu serwera (po load/save) – przy zapisie wysyłamy tylko to, co zmieniło się względem niego */
-  _snap(v) { const x = v || { s: {} }; return { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])), app: JSON.stringify(x.app || null), wiz: JSON.stringify(x.wiz || null), pw: JSON.stringify(x.pw || null), wall: JSON.stringify(x.wall || null) }; },
-  _fetch(h) { return h.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { const v = r && r.value; return v && v.s ? v : null; }); },
+  _snap(v) { const x = v || { s: {} }, o = { s: Object.fromEntries(Object.entries(x.s || {}).map(([k, y]) => [k, JSON.stringify(y)])) }; for (const k of this.SECS) o[k] = JSON.stringify(x[k] || null); return o; },
+  /* wspólny dashboard: edycja tylko dla admina; własny układ: każdy edytuje swój */
+  canEdit(h) { const u = h && h.user; return !!(u && (u.is_admin || (this.loaded && this.mode === 'own'))); },
   load(h) {
     if (this._p) return this._p;
     const c = h && h.connection, uid = h && h.user && h.user.id;
@@ -23,38 +25,66 @@ const HGL = window.__hgL || (window.__hgL = {
       this._uid = uid; try { localStorage.setItem('home-glass:layout:last', uid); } catch (e) {}
       if (this.data.uid !== uid) this.data = this._lsRead(uid) || { v: 1, ts: 0, s: {} };   /* cudzy układ z poprzedniej sesji -> odrzuć */
     }
-    this._p = !c ? Promise.resolve() : this._fetch(h).then((v) => {
-      this.loaded = true; this._base = this._snap(v);
+    this._p = !c ? Promise.resolve() : HGShared.eff(h).then(async (E) => {
+      /* pierwsze uruchomienie po aktualizacji: układ admina staje się wspólnym dla wszystkich */
+      if (!E.doc && h.user && h.user.is_admin && !window.__hgDryRun) try { if (await HGShared.create(h, E.user)) E = await HGShared.eff(h); } catch (e) { /* zostaje własny */ }
+      const v = E.data; this.loaded = true; this.mode = E.mode; this._base = this._snap(E.seeded ? null : v);
       /* serwer jest źródłem prawdy (zegary urządzeń się różnią); w trakcie edycji nie podmieniamy danych – scalenie nastąpi przy zapisie */
-      if (v && !this.editing) { this.data = v; this._ls(); this.notify(); }
-      HGApp.apply();
+      if (!this.editing) { if (v) this.data = this.cl(v); else if (E.mode === 'shared') this.data = { v: 1, ts: 0, s: {} }; this._ls(); this.notify(); }
+      HGApp.apply(); this._watch(h);
     }, () => { this.loaded = true; this.failed = true; });
     return this._p;
   },
+  cl(x) { return JSON.parse(JSON.stringify(x)); },
+  /* zmiana wspólnego układu lub listy osób z własnym układem (inny admin, inne urządzenie): odśwież na żywo */
+  _watch(h) { if (this._sub || !h.connection || !h.connection.subscribeEvents) return; this._sub = 1;
+    h.connection.subscribeEvents((ev) => { if (!ev || !ev.data || ev.data.url_path !== HGShared.URL || Date.now() - this._mine < 3000) return;
+      clearTimeout(this._wt); this._wt = setTimeout(() => this.reload(window.__hgHass || h), 300); }, 'lovelace_updated').then((u) => { this._sub = u; }, () => { this._sub = null; }); },
+  reload(h) { if (this.editing || !h) return; this._p = null; return this.load(h); },
   _ls() { try { if (this._uid) this.data.uid = this._uid; localStorage.setItem(this._lsKey(this._uid || this.data.uid), JSON.stringify(this.data)); } catch (e) {} },
-  /* zapis: najpierw świeża wersja z serwera, potem nałożenie tylko zmienionych zakresów (inne urządzenie mogło zapisać w międzyczasie) */
+  /* nałożenie lokalnych zmian na świeżą wersję z serwera: tylko zakresy / klucze zmienione względem _base (inne urządzenie mogło zapisać w międzyczasie) */
+  _merge(srv, secs, withS) {
+    const base = this._base || this._snap(null), out = srv ? this.cl(srv) : { v: 1, s: {} };
+    out.s = out.s || {};
+    if (withS) for (const k of new Set([...Object.keys(this.data.s), ...Object.keys(base.s)])) {
+      const mine = this.data.s[k] ? JSON.stringify(this.data.s[k]) : undefined;
+      if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
+      if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
+    }
+    /* sekcje app / wiz / pw / wall / assist: scalanie per klucz – druga karta przeglądarki z innym ustawieniem nie nadpisuje pozostałych kluczy (np. szerokości panelu innego widoku) */
+    for (const k of secs) { const mine = this.data[k] || null; if (JSON.stringify(mine) === base[k]) continue;
+      let b0 = null; try { b0 = JSON.parse(base[k] || 'null'); } catch (e) { b0 = null; }
+      if (!mine) { delete out[k]; continue; }
+      if (!b0 || typeof b0 !== 'object' || typeof mine !== 'object' || Array.isArray(mine)) { out[k] = mine; continue; }
+      const res = Object.assign({}, out[k] && typeof out[k] === 'object' ? out[k] : {});
+      for (const sk of new Set([...Object.keys(mine), ...Object.keys(b0)])) { if (JSON.stringify(mine[sk]) === JSON.stringify(b0[sk])) continue; if (sk in mine) res[sk] = mine[sk]; else delete res[sk]; }
+      out[k] = res; }
+    out.ts = this.data.ts; delete out.uid; return out;
+  },
+  _changed(secs, withS) { const b = this._base || this._snap(null), n = this._snap(this.data); return secs.some((k) => n[k] !== b[k]) || (withS && JSON.stringify(n.s) !== JSON.stringify(b.s)); },
+  _putUser(h, v) { return h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: v }); },
+  /* zapis: własny układ -> dane użytkownika HA; wspólny -> pulpit nuvio-shared (tylko admin), sekcje osobiste (PERS) zawsze do danych użytkownika */
   async save(h) {
     this.data.ts = Date.now();
     if (window.__hgDryRun || !h || !h.connection) { this._ls(); return 'local'; }
     try {
-      const srv = await this._fetch(h), base = this._base || this._snap(null), out = srv ? JSON.parse(JSON.stringify(srv)) : { v: 1, s: {} };
-      out.s = out.s || {};
-      for (const k of new Set([...Object.keys(this.data.s), ...Object.keys(base.s)])) {
-        const mine = this.data.s[k] ? JSON.stringify(this.data.s[k]) : undefined;
-        if (mine === base.s[k]) continue;                       /* zakres niezmieniony lokalnie -> zostaje wersja z serwera */
-        if (mine === undefined) delete out.s[k]; else out.s[k] = this.data.s[k];
+      if (this.mode !== 'shared') {
+        const out = this._merge(await HGShared.user(h), this.SECS, true);
+        await this._putUser(h, out); this.data = out;
+      } else {
+        const P = HGShared.PERS, SH = this.SECS.filter((k) => !P.includes(k)), res = {};
+        if (this._changed(P, false)) { const u = this._merge(await HGShared.user(h), P, false); await this._putUser(h, u); for (const k of P) res[k] = u[k]; }
+        else for (const k of P) res[k] = this.data[k];
+        if (this._changed(SH, true)) {
+          if (!(h.user && h.user.is_admin)) { this._ls(); return 'local'; }   /* wspólny układ zmienia tylko admin */
+          const doc = await HGShared.doc(h); if (!doc) throw new Error('no shared');
+          const d = this._merge(doc.data, SH, true); for (const k of P) delete d[k];
+          this._mine = Date.now(); await HGShared.put(h, Object.assign({}, doc, { data: d })); Object.assign(res, d);
+        } else Object.assign(res, this.cl(Object.assign({}, this.data, { assist: undefined })));
+        for (const k of P) if (res[k] === undefined) delete res[k];
+        res.s = res.s || {}; res.ts = this.data.ts; delete res.uid; this.data = res;
       }
-      /* sekcje app / wiz / pw / wall: scalanie per klucz – druga karta przeglądarki z innym ustawieniem nie nadpisuje pozostałych kluczy (np. szerokości panelu innego widoku) */
-      for (const k of ['app', 'wiz', 'pw', 'wall']) { const mine = this.data[k] || null; if (JSON.stringify(mine) === base[k]) continue;
-        let b0 = null; try { b0 = JSON.parse(base[k] || 'null'); } catch (e) { b0 = null; }
-        if (!mine) { delete out[k]; continue; }
-        if (!b0 || typeof b0 !== 'object' || typeof mine !== 'object' || Array.isArray(mine)) { out[k] = mine; continue; }
-        const res = Object.assign({}, out[k] && typeof out[k] === 'object' ? out[k] : {});
-        for (const sk of new Set([...Object.keys(mine), ...Object.keys(b0)])) { if (JSON.stringify(mine[sk]) === JSON.stringify(b0[sk])) continue; if (sk in mine) res[sk] = mine[sk]; else delete res[sk]; }
-        out[k] = res; }
-      out.ts = this.data.ts; delete out.uid;
-      await h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: this.KEY, value: out });
-      this.data = out; this._base = this._snap(out); this._ls(); this.failed = false; this.notify();
+      this._base = this._snap(this.data); this._ls(); this.failed = false; this.notify();
       return 'ha';
     } catch (e) { this._ls(); return 'local'; }
   },
@@ -1017,6 +1047,8 @@ const HG_EDIT = {
     return out;
   },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },
+  /* edycja: admin (wspólny dashboard) albo osoba z własnym układem (HGShared.own) */
+  _canEdit() { return HGL.canEdit(this._hass); },
   /* wszystkie kontenery edycji w widoku: panel (karty) + kontenery data-hgl w cieniach kart */
   _eConts() {
     const out = []; const sc = this._pageScope();
@@ -1033,7 +1065,7 @@ const HG_EDIT = {
     if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
       fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
         if (m && m[1] !== HG_BUILD) this._eToast(hgTr(`Załadowana wersja ${HG_BUILD.split('+')[0]} jest starsza niż na serwerze (${m[1].split('+')[0]}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).`, `Loaded version ${HG_BUILD.split('+')[0]} differs from the server (${m[1].split('+')[0]}). Reload without cache (Ctrl+Shift+R).`)); }).catch(() => {}); }
-    if (this._editing || !this._isAdmin()) return;
+    if (this._editing || !this._canEdit()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
@@ -1153,6 +1185,7 @@ const HG_EDIT = {
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
+    if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
@@ -1429,7 +1462,7 @@ const HG_EDIT = {
     const T = HGApp.tokens(acc);
     const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
     const ck = H.icon('mdi:check');
-    const TB = [['look', 'mdi:palette-outline', hgTr('Wygląd', 'Appearance')], ['views', 'mdi:view-carousel-outline', hgTr('Widoki', 'Views')], ['rooms', 'mdi:sofa-outline', hgTr('Pokoje', 'Rooms')], ['head', 'mdi:page-layout-header', hgTr('Nagłówek i nawigacja', 'Header and navigation')], ['bg', 'mdi:image-multiple-outline', hgTr('Tła', 'Backgrounds')], ['wall', 'mdi:tablet-dashboard', hgTr('Wygaszacz', 'Screensaver')], ['bk', 'mdi:backup-restore', hgTr('Kopia zapasowa', 'Backup')]];
+    const TB = [['look', 'mdi:palette-outline', hgTr('Wygląd', 'Appearance')], ['views', 'mdi:view-carousel-outline', hgTr('Widoki', 'Views')], ['rooms', 'mdi:sofa-outline', hgTr('Pokoje', 'Rooms')], ['head', 'mdi:page-layout-header', hgTr('Nagłówek i nawigacja', 'Header and navigation')], ['bg', 'mdi:image-multiple-outline', hgTr('Tła', 'Backgrounds')], ['wall', 'mdi:tablet-dashboard', hgTr('Wygaszacz', 'Screensaver')], ['users', 'mdi:account-multiple-outline', hgTr('Użytkownicy', 'Users')], ['bk', 'mdi:backup-restore', hgTr('Kopia zapasowa', 'Backup')]];
     if (!TB.some((t) => t[0] === this._lkTab)) this._lkTab = 'look'; const at = this._lkTab;
     const html0 = `<div class="hs-sc lk-sc">
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:palette-outline')}${hgTr('Akcent', 'Accent')}</h4>
@@ -1452,6 +1485,7 @@ const HG_EDIT = {
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
       ${window.HGWall ? HGWall.html(this) : ''}
+      ${window.HGUsers ? HGUsers.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
       </div>`;
     const has = new Set([...html0.matchAll(/data-tab="([a-z]+)"/g)].map((m) => m[1])), tabs = TB.filter((t) => has.has(t[0]));

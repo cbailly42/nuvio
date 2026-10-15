@@ -21,7 +21,7 @@ const HGRoomX = {
     return out.sort((x, y) => (x.src === y.src ? 0 : x.src === 'area' ? -1 : 1) || hgRxRank(x.e) - hgRxRank(y.e) || hgRxNm(h, x.e).localeCompare(hgRxNm(h, y.e)));
   },
   emptyHtml(h, a, RS) {
-    const adm = !!(h.user && h.user.is_admin), vir = !!a.virtual;
+    const adm = typeof HGL !== 'undefined' ? HGL.canEdit(h) : !!(h.user && h.user.is_admin), vir = !!a.virtual;
     return `<ha-card class="glass rxc"><style>${HG_RX_EMPTY_CSS}</style><div class="rxe">
       <span class="rxi">${H.icon('mdi:home-plus-outline')}</span>
       <div class="rxt"><b>${hgTr('Brak urządzeń w tym pokoju', 'No devices in this room')}</b>

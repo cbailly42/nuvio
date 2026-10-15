@@ -8,6 +8,33 @@ const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+'
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'home-glass');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
+/* ===== Wspólny dashboard: jeden układ dla wszystkich użytkowników HA, ustawiany przez admina.
+   Zapis: konfiguracja ukrytego pulpitu „nuvio-shared” (lovelace/config: odczyt każdy, zapis tylko admin) { nuvio_shared, own: [user_id], data: jak HGL.data }.
+   Osobny pulpit, bo zapis konfiguracji pulpitu Nuvio pokazywałby innym komunikat „konfiguracja się zmieniła” i przebudowywał widoki.
+   own = użytkownicy z własnym układem (frontend/user_data, sami edytują; zaczynają od kopii wspólnego). Bez pulpitu wspólnego: każdy ma własny (jak przed 1.4.0).
+   PERS = sekcje zawsze osobiste (ustawienia Assist). */
+const HGShared = window.__hgShared || (window.__hgShared = {
+  URL: 'nuvio-shared', KEY: 'home_glass_layout', PERS: ['assist'],
+  cl(x) { return x == null ? x : JSON.parse(JSON.stringify(x)); },
+  async doc(h) { try { const c = await h.callWS({ type: 'lovelace/config', url_path: this.URL }); return c && c.nuvio_shared ? c : null; } catch (e) { return null; } },
+  async user(h) { try { const r = await h.callWS({ type: 'frontend/get_user_data', key: this.KEY }); const v = r && r.value; return v && v.s ? v : null; } catch (e) { return null; } },
+  isOwn(h, doc) { const id = h && h.user && h.user.id; return !doc || (Array.isArray(doc.own) && doc.own.includes(id)); },
+  /* układ, który widzi zalogowana osoba: { mode: 'shared' | 'own', doc, user, data, seeded } */
+  async eff(h) { const [doc, user] = await Promise.all([this.doc(h), this.user(h)]);
+    if (!this.isOwn(h, doc)) { const data = this.cl(doc.data && doc.data.s ? doc.data : { v: 1, ts: 0, s: {} });
+      for (const k of this.PERS) { if (user && user[k] !== undefined) data[k] = user[k]; else delete data[k]; }
+      return { mode: 'shared', doc, user, data, seeded: false }; }
+    if (user) return { mode: 'own', doc, user, data: user, seeded: false };
+    const seed = doc && doc.data && doc.data.s ? this.cl(doc.data) : null; if (seed) for (const k of this.PERS) delete seed[k];
+    return { mode: 'own', doc, user, data: seed, seeded: !!seed }; },
+  async put(h, doc) { await h.callWS({ type: 'lovelace/config/save', url_path: this.URL, config: doc }); },
+  /* pierwsze uruchomienie (admin): ukryty pulpit z układem admina jako wspólnym */
+  async create(h, data) { const d = this.cl(data || { v: 1, ts: 0, s: {} }); for (const k of this.PERS) delete d[k]; delete d.uid;
+    try { await h.callWS({ type: 'lovelace/dashboards/create', url_path: this.URL, title: 'Nuvio (wspólny układ)', icon: 'mdi:account-group-outline', show_in_sidebar: false, require_admin: true, mode: 'storage' }); } catch (e) { /* już istnieje */ }
+    if (await this.doc(h)) return null;
+    const doc = { nuvio_shared: 1, own: [], data: d, views: [{ title: 'Nuvio', cards: [{ type: 'markdown', content: 'Wspólny układ Nuvio. Nie edytuj tego pulpitu ręcznie, zmieniaj układ w Nuvio.' }] }] };
+    await this.put(h, doc); return doc; },
+});
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (dist/nuvio-bg-default-*.webp, CREDITS.md); gdy się nie wczyta – gradient */
 const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
 /* 10 teł do wyboru (CC0, dist/CREDITS.md); pierwsze = domyślne. Miniatury ~5 KB, pełne zdjęcia wczytywane dopiero po wyborze */
@@ -65,7 +92,7 @@ const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k
 /* --- generator konfiguracji (strategia pulpitu) --- */
 async function hgGenerate(hass, opt) {
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */
-  if (!wiz) try { const r = await hass.callWS({ type: 'frontend/get_user_data', key: 'home_glass_layout' }); wiz = r && r.value && r.value.wiz; } catch (e) { /* brak */ }
+  if (!wiz) try { const E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
   const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
@@ -165,7 +192,7 @@ class HGHintCard extends HTMLElement {
   _draw() { const c = this._c, D = Object.assign({}, HG_HINTS[c.hint] || {}, c), h = this._h; if (!h) return; this._r = 1;
     if (this._hidden() || (c.hint_sc && typeof HGL !== 'undefined' && HGL.data && (HGL.get(c.hint_sc).added || []).length >= HG_HINT_MIN)) { this.style.display = 'none'; this.shadowRoot.innerHTML = ''; this._wrap('none'); return; } this.style.display = ''; this._wrap('');
     const C = D.comp && typeof HG_COMP !== 'undefined' && HG_COMP.find((x) => x.id === D.comp), sl = C && C.slots.find((x) => x.req), pick = sl && typeof hgSlotCands === 'function' && hgSlotCands(h, sl).length;
-    const admin = h.user && h.user.is_admin;
+    const admin = typeof HGL !== 'undefined' ? HGL.canEdit(h) : !!(h.user && h.user.is_admin);
     this.shadowRoot.innerHTML = `<style>${HG_HINT_CSS}</style><div class="hn" role="note"><div class="hd"><span class="ic">${H.icon(D.icon || 'mdi:information-outline')}</span><span><b>${H.esc(D.t || '')}</b><small>${H.esc(D.s || hgTr('Brak danych do wyświetlenia', 'Nothing to show yet'))}</small></span></div><p>${H.esc(D.d || '')}</p>
       ${admin ? `<div class="bt">${D.add ? `<button class="ok" data-a="add">${H.icon('mdi:plus')}${hgTr('Dodaj widżet', 'Add widget')}</button>` : ''}${pick ? `<button class="ok" data-a="pick">${H.icon('mdi:swap-horizontal')}${hgTr('Wybierz encję', 'Choose entity')}</button>` : ''}${D.domain ? `<a class="${pick ? '' : 'ok'}" href="https://my.home-assistant.io/redirect/config_flow_start/?domain=${encodeURIComponent(D.domain)}" target="_blank" rel="noopener">${H.icon('mdi:plus')}${hgTr('Dodaj integrację', 'Add integration')}</a>` : ''}${D.href ? `<button class="${pick || D.domain ? '' : 'ok'}" data-a="go">${H.icon('mdi:cog-outline')}${H.esc(D.hl || hgTr('Skonfiguruj', 'Configure'))}</button>` : ''}${D.hacs ? `<button data-a="hacs">${H.icon('mdi:download')}${hgTr('Zainstaluj w HACS', 'Install in HACS')}</button>` : ''}${D.add ? '' : `<button class="gh" data-a="hide">${hgTr('Ukryj', 'Hide')}</button>`}</div>` : ''}</div>`;
     if (!this._wired) { this._wired = 1; this.shadowRoot.addEventListener('click', (e) => this._click(e)); } }
@@ -440,7 +467,7 @@ const HGLookX = {
       return head; }).join('');
     return `<section class="lk-g lx" data-tab="views"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${auto ? hgTr('Włącz, wyłącz i ułóż karty pulpitu. Widoki bez encji też możesz włączyć.', 'Turn dashboard views on or off and reorder them. Views without entities can be turned on too.') : hgTr('Ten pulpit ma własną konfigurację – widokami zarządzasz w jego YAML.', 'This dashboard has its own configuration – manage its views in its YAML.')}</small>
       ${auto ? `<div class="lx-l">${rows}</div>${this.cv ? this.cvForm() : `<button class="lx-hbtn lx-new" data-hge="lx-cn">${H.icon('mdi:plus')}${hgTr('Nowy widok', 'New view')}</button>`}${this.pend ? `<button class="lk-mini lx-ap" data-hge="lx-apply">${hgTr('Zastosuj widoki', 'Apply views')}</button>` : ''}` : ''}</section>
-      <section class="lk-g lx" data-tab="look"><h4>${H.icon('mdi:puzzle-outline')}${hgTr('Integracje', 'Integrations')}</h4><small class="lk-hn">${hgTr('Opcjonalne dodatki z HACS – Nuvio działa bez nich', 'Optional add-ons from HACS – Nuvio works without them')}</small><div class="lx-l">${pk}</div>${this.kpend ? `<button class="lk-mini lx-ap" data-hge="lx-kapply">${hgTr('Zapisz ustawienia kiosku', 'Save kiosk settings')}</button>` : ''}</section>
+      ${page._isAdmin() ? `<section class="lk-g lx" data-tab="look"><h4>${H.icon('mdi:puzzle-outline')}${hgTr('Integracje', 'Integrations')}</h4><small class="lk-hn">${hgTr('Opcjonalne dodatki z HACS – Nuvio działa bez nich', 'Optional add-ons from HACS – Nuvio works without them')}</small><div class="lx-l">${pk}</div>${this.kpend ? `<button class="lk-mini lx-ap" data-hge="lx-kapply">${hgTr('Zapisz ustawienia kiosku', 'Save kiosk settings')}</button>` : ''}</section>` : ''}
       <style>.lx-l{ display:flex; flex-direction:column; gap:6px; } .lx-r{ display:flex; align-items:center; gap:10px; min-height:52px; padding:6px 8px 6px 6px; border-radius:16px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); }
       .lx-r.na{ opacity:.62; } .lx-r.na .lx-t small{ font-style:italic; } .lx-sub{ display:flex; flex-direction:column; gap:6px; margin:-2px 0 4px 18px; } .lx-sub .lx-r{ min-height:46px; padding-left:12px; }
       .lx-i{ flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }

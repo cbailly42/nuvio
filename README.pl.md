@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.3.1-a3e635?style=flat-square" alt="v1.3.1">
+  <img src="https://img.shields.io/badge/version-v1.4.0-a3e635?style=flat-square" alt="v1.4.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -52,7 +52,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
   <br><img src="docs/components/gallery-basic.png" alt="Galeria komponentów z grupą Podstawowe" width="420">
 - **Kopia układu** (administrator): eksport i import całego układu jako JSON z wersją w **Wygląd → Kopia układu**, z opcją Zastąp albo Połącz i przywracaniem jednym kliknięciem. Zobacz [Kopia układu](#kopia-układu).
 - **Tryb tabletu ściennego** (domyślnie wyłączony): po bezczynności pojawia się szklany wygaszacz z zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk lub czujnik ruchu. Czas bezczynności, przyciemnienie, źródło zdjęcia i czujnik ustawisz w **Wygląd → Tryb tabletu ściennego**. Zobacz [Tryb tabletu ściennego](#tryb-tabletu-ściennego).
-- **Zapis per użytkownik**: układ i wygląd zapisywane w Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`) z kopią lokalną.
+- **Wspólny dashboard**: domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. W **Ustawienia → Użytkownicy** administrator może odznaczyć osobę, żeby miała własny układ i sama go edytowała. Zobacz [Wspólny dashboard](#wspólny-dashboard).
 - **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
 - **Tryb jasny i ciemny**, obsługa dotyku, szacunek dla „ogranicz ruch”.
@@ -343,6 +343,16 @@ strategy:
 
 Konfigurację (układ + wygląd) można eksportować i importować jako JSON. Osobiste presety są przechowywane poza repozytorium.
 
+## Wspólny dashboard
+
+Domyślnie wszyscy widzą ten sam dashboard Nuvio: układ, wygląd, widoki, pokoje i ustawienia tabletu ściennego, które ustawia administrator.
+
+- **Kto edytuje**: administratorzy edytują wspólny dashboard (tryb edycji). Pozostałe osoby widzą go bez przycisku edycji.
+- **Własny układ**: w **Ustawienia → Użytkownicy** (tryb edycji, tylko administrator) każdy użytkownik Home Assistant ma przełącznik. Po odznaczeniu osoba dostaje własny układ: zaczyna od kopii wspólnego, widzi przycisk edycji, a jej zmiany dotyczą tylko jej. Ponowne zaznaczenie przywraca wspólny dashboard. Twoje konto zostaje na wspólnym dashboardzie.
+- **Na żywo**: zmiany wspólnego dashboardu i listy osób trafiają na otwarte ekrany bez przeładowania.
+- **Zapis**: wspólny układ jest w ukrytym pulpicie `nuvio-shared` (*Nuvio (wspólny układ)*, tylko dla administratorów, bez pozycji w pasku bocznym). Zapisywać go mogą tylko administratorzy; nie edytuj go ręcznie. Własne układy zostają w danych użytkownika Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`), z kopią lokalną dla każdego użytkownika. Ustawienia Assist są zawsze osobiste.
+- **Aktualizacja z 1.3.x**: gdy administrator pierwszy raz otworzy Nuvio 1.4.0, jego obecny układ staje się wspólnym dashboardem. Do tego czasu każdy ma własny układ jak wcześniej.
+
 ## Tryb tabletu ściennego
 
 Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrator włącza go w **Wygląd → Tryb tabletu ściennego** (tryb edycji) i zapisuje przyciskiem **Gotowe**.
@@ -356,7 +366,7 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - Układ: duży zegar pośrodku (bez panelu pod spodem), data na stałe w lewym dolnym rogu i, jeśli Home Assistant ma encję `weather`, aktualna pogoda (ikona, temperatura, stan) w prawym górnym. Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
 - Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
 - **Blokada PIN-em (BETA)**: włącz *Blokadę PIN-em*, ustaw PIN z 4 do 8 cyfr i wybierz, kiedy wygaszacz się blokuje (od razu, po 1, 5, 15 lub 30 min). Zablokowany wygaszacz nie budzi się dotykiem ani czujnikiem ruchu: dotknięcie rozmywa zdjęcie i pokazuje okrągły szklany pinpad z kropkami PIN-u nad nim i przyciskiem **Zablokuj** pod spodem, który wraca do wygaszacza. Po 5 błędnych PIN-ach pinpad czeka 30 s (dłużej po kolejnych próbach), a po 20 s bez dotyku sam się zamyka. **Zablokuj ekran** w menu użytkownika blokuje od razu, a przeładowanie strony nie zdejmuje blokady. Zapisywany jest tylko skrót PIN-u. Blokada chroni tablet przed przypadkowym użyciem i nie zastępuje hasła do Home Assistant.
-- Ustawienia zapisują się per użytkownik HA, tak jak układ. Dla osobnego użytkownika tabletu zaloguj się raz jako administrator na tablecie albo przenieś ustawienia przez **Kopię układu** (kategoria *Tryb tabletu ściennego*).
+- Ustawienia są częścią układu: na wspólnym dashboardzie dotyczą wszystkich, a osoba z własnym układem ma własne. Zobacz [Wspólny dashboard](#wspólny-dashboard).
 
 ## Kopia układu
 
@@ -387,7 +397,7 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 | `src/parts/hg-core`, `hg-styles`, `hg-select`, `hg-oss` | klasa bazowa `HGBase`, tokeny motywu, szklany select, wspólne funkcje |
 | `src/parts/shared/` | funkcje używane przez więcej niż jedną kartę (pogoda, kalendarz, model pokoi, kontrolki ogólne…) |
 | `src/parts/cards/` | jedna karta w jednym pliku, na przykład `cards/light-card.part.js` |
-| `src/parts/hg-page`, `hg-edit`, `hg-wall`… | strona pulpitu, tryb edycji, tryb tabletu ściennego, kopia zapasowa, Assist |
+| `src/parts/hg-page`, `hg-edit`, `hg-wall`, `hg-users`… | strona pulpitu, tryb edycji, tryb tabletu ściennego, użytkownicy wspólnego dashboardu, kopia zapasowa, Assist |
 
 Nową kartę dodajesz jako `src/parts/cards/<nazwa>-card.part.js` i dopisujesz do listy `CARDS` w `tools/build.py`. Kolejność ma znaczenie: kod wykonywany przy ładowaniu bundla (na przykład `class X extends Y`) może używać tylko tego, co definiuje wcześniejszy plik.
 
@@ -397,9 +407,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.3.1 -m "Nuvio 1.3.1" && git push origin v1.3.1`.
+Sam tag ręcznie: `git tag -a v1.4.0 -m "Nuvio 1.4.0" && git push origin v1.4.0`.
 
 ## Lista zmian
+
+### 1.4.0
+- Dodano: wspólny dashboard. Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator; osoby bez uprawnień administratora nie dostają już pustego układu domyślnego. Pierwszy administrator, który otworzy 1.4.0, zamienia swój układ we wspólny.
+- Dodano: **Ustawienia → Użytkownicy** dla administratora, z przełącznikiem dla każdego użytkownika Home Assistant. Odznaczona osoba dostaje własny układ, zaczyna od kopii wspólnego i może go sama edytować.
+- Dodano: zmiany wspólnego dashboardu trafiają na otwarte ekrany na żywo.
+- Naprawiono: ustawienia Assist zapisują się teraz w Home Assistant, zamiast znikać przy następnym zapisie układu.
 
 ### 1.3.1
 - Dodano: animacja odblokowania dla blokady PIN-em. Kłódka się otwiera, kropki PIN-u świecą na zielono, cyfry rozchodzą się od środka, rozchodzi się miękka fala światła, a rozmyty wygaszacz odpływa i odsłania dashboard. Przy ograniczonym ruchu zostaje krótkie przenikanie.
