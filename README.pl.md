@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.9.0-a3e635?style=flat-square" alt="v1.9.0">
+  <img src="https://img.shields.io/badge/version-v1.9.1-a3e635?style=flat-square" alt="v1.9.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -417,9 +417,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.9.0 -m "Nuvio 1.9.0" && git push origin v1.9.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v1.9.1 origin/main -m "Nuvio 1.9.1" && git push origin v1.9.1`.
 
 ## Lista zmian
+
+### 1.9.1
+- **Pilot klimatyzacji**: zmiana trybu (np. z chłodzenia na grzanie) płynnie przechodzi w nowy kolor tła, nawiewu, suwaka i kafli, a jednostka na chwilę delikatnie rozbłyskuje nowym kolorem.
 
 ### 1.9.0
 - **Odtwarzacz (nowy wygląd)**: odtwarzacze w Multimediach i w pokojach mają duży układ „Teraz odtwarzane”: okładka w tle (jej kolor barwi kartę), linia ze źródłem i stanem, duży tytuł i wykonawca, pasek postępu z czasami, losowo / poprzedni / duży play / następny / powtarzanie oraz rząd głośności z − i + i przyciskami Pokoje (łączenie głośników w grupę), Źródło i Dźwięk, gdy odtwarzacz je obsługuje. Na wąskich kartach losowo i powtarzanie się chowają, a przyciski pokazują same ikony.

@@ -7,12 +7,14 @@ const HG_FAN_IC = { auto: 'mdi:fan-auto', low: 'mdi:fan-speed-1', quiet: 'mdi:fa
 const HG_SWING_IC = { off: 'mdi:arrow-collapse-down', on: 'mdi:arrow-oscillating', swing: 'mdi:arrow-oscillating', vertical: 'mdi:arrow-up-down', horizontal: 'mdi:arrow-left-right', both: 'mdi:arrow-all' };
 const HG_PRESET_IC = { none: 'mdi:circle-off-outline', eco: 'mdi:leaf', sleep: 'mdi:power-sleep', boost: 'mdi:rocket-launch', comfort: 'mdi:sofa', away: 'mdi:home-export-outline', home: 'mdi:home', activity: 'mdi:run' };
 const HG_FAN_SP = { quiet: 3, silent: 3, low: 2.6, auto: 1.6, medium: 1.6, middle: 1.6, mid: 1.6, diffuse: 1.8, on: 1.6, high: 1, strong: 1, focus: 1, turbo: .7 };
+/* --rca jako zarejestrowany kolor: zmiana trybu płynnie przechodzi w nowy kolor (tło, nawiew, kafle) */
+try { CSS.registerProperty({ name: '--rca', syntax: '<color>', inherits: true, initialValue: '#' + '4C8DF6' }); } catch (e) { /* już zarejestrowany albo brak API */ }
 class HGACRemoteCard extends HGBase {
   defaults() { return { title: hgTr('Klimatyzator', 'Air conditioner') }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; container-type:inline-size; gap:10px; padding:14px var(--s2) var(--s2); min-height:0; user-select:none; -webkit-user-select:none;
-  background-image:radial-gradient(120% 60% at 50% 22%, color-mix(in srgb, var(--ac) 20%, transparent), transparent 72%); transition: background-image .3s; }
+  background-image:radial-gradient(120% 60% at 50% 22%, color-mix(in srgb, var(--ac) 20%, transparent), transparent 72%); --ac:var(--rca); transition: --rca .9s cubic-bezier(.4,0,.2,1); }
 ha-card.glass > *{ flex-shrink:0; }
 .hd{ display:flex; align-items:center; gap:var(--s1); min-height:40px; }
 .ht{ flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25; }
@@ -27,12 +29,18 @@ ha-card.glass > *{ flex-shrink:0; }
 .un{ flex:1 1 130px; min-height:0; max-height:190px; display:flex; justify-content:center; overflow:hidden; }
 .un svg{ height:100%; width:auto; max-width:100%; overflow:visible; }
 .un .bd{ fill:${'#' + 'FBFCFD'}; stroke:rgba(0,0,0,.08); } .un .vt{ fill:${'#' + 'DADEE3'}; } .un .lv{ stroke:${'#' + 'B9BFC6'}; stroke-width:2; stroke-linecap:round; }
-.un .led{ fill:var(--ac); transition: fill .3s; } .off .un .led{ fill:${'#' + 'C4C8CE'}; }
+.un .led{ fill:var(--ac); } .off .un .led{ fill:${'#' + 'C4C8CE'}; }
 .un .sh{ fill:rgba(0,0,0,.10); filter:blur(6px); }
 .str{ transform-box:view-box; transform-origin:120px 60px; transition: opacity .4s; }
-.str path{ fill:none; stroke:var(--ac); stroke-width:3.2; stroke-linecap:round; stroke-dasharray:12 18; animation: rcFlow var(--sp, 1.6s) linear infinite; animation-play-state:var(--hg-play, running); transition: stroke .3s; }
+.str path{ fill:none; stroke:var(--ac); stroke-width:3.2; stroke-linecap:round; stroke-dasharray:12 18; animation: rcFlow var(--sp, 1.6s) linear infinite; animation-play-state:var(--hg-play, running); }
 .str path:nth-child(2n){ animation-delay:calc(var(--sp, 1.6s) * -.5); } .str path:nth-child(3n){ animation-delay:calc(var(--sp, 1.6s) * -.25); }
 .sw .str{ animation: rcSwing 3.2s ease-in-out infinite alternate; animation-play-state:var(--hg-play, running); }
+/* zmiana trybu: jednostka delikatnie rozbłyska nowym kolorem, nawiew wraca od góry */
+.mc .un svg{ animation: rcMode 1.5s cubic-bezier(.4,0,.2,1); }
+@keyframes rcMode{ 0%{ filter:none; transform:none; } 35%{ filter:drop-shadow(0 0 22px color-mix(in srgb, var(--ac) 70%, transparent)); transform:scale(1.025); } 100%{ filter:none; transform:none; } }
+.mc .un .str path{ animation: rcFlow var(--sp, 1.6s) linear infinite, rcIn 1.1s ease-out; }
+@keyframes rcIn{ from{ opacity:0; } to{ opacity:1; } }
+@media (prefers-reduced-motion:reduce){ ha-card.glass{ transition:none; } .mc .un svg, .mc .un .str path{ animation:none; } }
 .off .str{ opacity:0; } .off .un .bd{ fill:${'#' + 'E9EBEE'}; }
 @keyframes rcFlow{ to{ stroke-dashoffset:-60; } }
 @keyframes rcSwing{ from{ transform:skewX(-14deg); } to{ transform:skewX(14deg); } }
@@ -43,7 +51,7 @@ ha-card.glass > *{ flex-shrink:0; }
 .num{ font-size:clamp(48px, 22cqi, 84px); font-weight:200; letter-spacing:-.04em; line-height:1; color:#16181B; font-variant-numeric:tabular-nums; position:relative; padding-right:.42em; cursor:pointer; }
 .num sup{ position:absolute; top:.1em; right:0; font-size:.3em; font-weight:400; letter-spacing:0; }
 .off .num{ color:#8A8F96; }
-.st{ font-size:var(--fs-sm); font-weight:600; color:var(--ac); white-space:nowrap; transition: color .3s; } .off .st{ color:#6A6E74; }
+.st{ font-size:var(--fs-sm); font-weight:600; color:var(--ac); white-space:nowrap; } .off .st{ color:#6A6E74; }
 .sl{ display:grid; grid-template-columns:44px 1fr 44px; align-items:center; gap:6px; }
 .cv{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:#2A2D31; transition: transform .1s, opacity .2s; touch-action:manipulation; }
 .cv ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; } .cv:active{ transform:scale(.92); } .cv[disabled]{ opacity:.35; }
@@ -58,7 +66,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
 @container (min-width: 520px){ .tl{ grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); } }
 .ti{ display:flex; align-items:center; gap:10px; min-width:0; min-height:56px; padding:8px 10px; border-radius:var(--r-md); background:var(--hg-tile-bg); text-align:left; color:#2A2D31; transition: background .2s, color .2s, transform .1s; }
 .ti:active{ transform:scale(.97); }
-.ti i{ width:36px; height:36px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--ac) 16%, transparent); color:var(--ac); font-style:normal; transition: background .3s, color .3s; }
+.ti i{ width:36px; height:36px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--ac) 16%, transparent); color:var(--ac); font-style:normal; }
 .ti i ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
 .ti span{ display:flex; flex-direction:column; min-width:0; line-height:1.2; }
 .ti small{ font-size:11px; color:#5A5E64; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -108,9 +116,11 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
   _stat(st, t) { if (st === 'off') return hgTr('Wyłączony', 'Off'); const l = this._lab('mode', st); return (st === 'fan_only' || st === 'dry' || t == null) ? l : hgTr(`${l} do ${H.fmt(t)}°`, `${l} to ${H.fmt(t)}°`); }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!H.ok(s)) return `<ha-card class="glass off" style="--ac:#8A9099"><div class="hd"><div class="ht"><b>${H.esc(c.title)}</b></div></div><div class="ph"><b>${hgTr('Niedostępny', 'Unavailable')}</b></div></ha-card>`;
+    if (!H.ok(s)) return `<ha-card class="glass off" style="--rca:#8A9099"><div class="hd"><div class="ht"><b>${H.esc(c.title)}</b></div></div><div class="ph"><b>${hgTr('Niedostępny', 'Unavailable')}</b></div></ha-card>`;
     const a = s.attributes, e = this._eff(s), on = e.st !== 'off', { mn, mx, step, u } = this._lim(s);
     if (s.state !== 'off') this._last = s.state;
+    if (this._pm !== undefined && this._pm !== e.st) { this._mcT = Date.now() + 1500; clearTimeout(this._mcR); this._mcR = setTimeout(() => this.isConnected && this.rerender(), 1550); }
+    this._pm = e.st;
     const fz = String(e.fan || ''), col = this._col(e.st, e.t, mn, mx), sp = HG_FAN_SP[fz] || (/high|turbo|strong|max/.test(fz) ? 1 : /low|quiet|silent|min/.test(fz) ? 2.6 : 1.6), swing = on && /^(on|auto|both|vertical|horizontal)$|swing/.test(e.swing || '');
     const cur = a.current_temperature != null ? Number(a.current_temperature) : null, room = this._room();
     const sub = [room, cur != null ? hgTr(`w pokoju ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ');
@@ -134,7 +144,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
       other.length ? ti('preset', hgTr('Program', 'Preset'), this._lab('preset', e.preset && !['eco', 'sleep'].includes(e.preset) ? e.preset : 'none')) : '',
     ].join('');
     const tv = `<div class="tv"><div class="num" data-act="more" aria-live="polite" title="${hgTr('Szczegóły', 'Details')}">${e.t != null ? H.fmt(e.t) : a.target_temp_low != null ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>${u}</sup></div><div class="st" role="status">${H.esc(this._stat(e.st, e.t))}</div></div>`;
-    return `<ha-card class="glass ${on ? 'on' : 'off'}${swing ? ' sw' : ''}" style="--ac:${col};--sp:${sp}s">
+    return `<ha-card class="glass ${on ? 'on' : 'off'}${swing ? ' sw' : ''}${this._mcT > Date.now() ? ' mc' : ''}" style="--rca:${col};--sp:${sp}s">
       <div class="hd"><div class="ht"><b>${H.esc(c.title)}</b>${sub ? `<span>${H.esc(sub)}</span>` : ''}</div>${eco}${pw}</div>
       <div class="un">${unit}</div>${tv}${sl}${tiles ? `<div class="tl">${tiles}</div>` : ''}</ha-card>`;
   }
@@ -146,7 +156,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
     this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
     const R = this.$, card = R.querySelector('ha-card');
     if (card) {
-      card.style.setProperty('--ac', this._col(e.st, v, mn, mx));
+      card.style.setProperty('--rca', this._col(e.st, v, mn, mx));
       const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
       const st = R.querySelector('.st'); if (st) st.textContent = this._stat(e.st, v);
       const rg = R.querySelector('.tsl'); if (rg) { if (+rg.value !== v) rg.value = v; rg.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
