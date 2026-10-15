@@ -40,8 +40,6 @@ const HG_NT_SS = `
 @keyframes ntopen{ from{ opacity:0; transform:translateY(calc(var(--i, 0) * -60px)) scale(.92); } to{ opacity:1; transform:none; } }
 @keyframes ntnew{ from{ opacity:0; transform:translateY(-16px) scale(.9); } to{ opacity:1; transform:none; } }
 @keyframes ntfade{ from{ opacity:0; } to{ opacity:1; } }
-.nwb .nb-top > .nb-nt{ flex:none; margin-left:auto; width:min(400px, 36vw); }
-@media (orientation:portrait){ .nwb .nb-top{ flex-direction:column; align-items:stretch; gap:clamp(12px, 2vmin, 20px); } .nwb .nb-top > .nb-nt{ width:auto; margin:0; } }
 @media (prefers-reduced-motion:reduce){ .nt-c, .nt-st{ transition:none; } .nb-nt.open .nt-c, .nt-c.new, .nb-nt.open .nt-bar{ animation:none; } }
 `;
 (() => {
@@ -91,7 +89,7 @@ const HG_NT_SS = `
     bdAct(p, b, a) { if (a === 'wl-ntf') { const v = b.dataset.v, S = this.ntSel(); wr(LS, S.includes(v) ? S.filter((x) => x !== v) : [...S, v]); this.ntSub(this.hass); p._eLook(); return true; }
       return _ba.call(this, p, b, a); },
     tick(h, page) { _tk.call(this, h, page); this.ntSub(h); },
-    show() { _sh.call(this); if (!this.el) return; if (!this.el.querySelector('.nb-nt')) { const d = document.createElement('div'); d.className = 'nb-nt'; d.hidden = true; d.setAttribute('aria-live', 'polite'); const top = this.el.querySelector('.nwb .nb-top'); (top || this.el).appendChild(d); }
+    show() { _sh.call(this); if (!this.el) return; if (!this.el.querySelector('.nb-nt')) { const d = document.createElement('div'); d.className = 'nb-nt'; d.hidden = true; d.setAttribute('aria-live', 'polite'); const bot = this.el.querySelector('.nwb .nb-bot'); if (bot) bot.prepend(d); else this.el.appendChild(d); }
       const st = document.createElement('style'); st.textContent = HG_NT_SS; this.el.prepend(st);
       this.ntWire(this.el); this.ntRender(); clearInterval(this._ntT); this._ntT = setInterval(() => this.ntTimes(), 30000); },
     ntTimes() { if (!this.el) return clearInterval(this._ntT); const L = this.ntList(); for (const t of this.el.querySelectorAll('.nt-c')) { const x = L.find((n) => n.id === t.dataset.id), tm = t.querySelector('time'); if (x && tm) tm.textContent = this.ntAgo(x.ts); } },

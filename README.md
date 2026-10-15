@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.3.0-a3e635?style=flat-square" alt="v2.3.0">
+  <img src="https://img.shields.io/badge/version-v2.4.0-a3e635?style=flat-square" alt="v2.4.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.3.0 origin/main -m "Nuvio 2.3.0" && git push origin v2.3.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.4.0 origin/main -m "Nuvio 2.4.0" && git push origin v2.4.0`.
 
 ## Changelog
+
+### 2.4.0
+- **Board redesigned like the iPhone lock screen**: date and a large thin clock centered at the top, under it a row of small glass widgets on the photo (weather with high/low and rain chance, next sunrise or sunset, countdown, the current and next event with "in 18 min", and room temperatures as round gauges with humidity), and at the bottom the notification stack and a compact Now Playing player. Everything is compact, so nothing gets cut off on short screens; on a phone the widgets go two per row. The heading defaults to the time; the photo card is gone because the photo is the background (photo source is now available for the board too).
 
 ### 2.3.0
 - **Notifications on the screensaver**: messages sent with notify to this device (a legacy `notify.mobile_app_…` service or `notify.send_message` with a `notify.*` entity) appear on the screensaver as an iPhone-style stack: the newest card on top with the next ones peeking out below, a tap expands the stack into a list (Show less / clear), and a tap on a card shows its full text. Tapping notifications doesn't wake the screen; a normal wake marks them as read. Pick the services under Wall tablet mode → Notifications on this device (stored per device). Requires an admin account, because it listens to `call_service` events.

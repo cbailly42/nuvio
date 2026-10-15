@@ -295,7 +295,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return R.sort((a, b) => pri(a) - pri(b) || nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
   html(p) { if (!this.admin(p)) return ''; const c = this.get(), h = p._hass, dv = Math.round(c.dim * 100), idles = this.IDLES.includes(c.idle) ? this.IDLES : [...this.IDLES, c.idle].sort((a, b) => a - b);
     const sens = this.sensors(h), cur = c.sensor && !sens.some((s) => s[0] === c.sensor) ? [[c.sensor, c.sensor]] : [];
-    const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = !this.bget || this.bget().style !== 'board' || this.bget().bk.pic;
+    const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = true;   /* zdjęcie jest tłem obu wariantów */
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgTr('Włącz po bezczynności', 'Start after inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
