@@ -722,9 +722,8 @@ ha-card.wmc{ gap:var(--s2); }
     const hidR = new Set(RL.hidden);
     blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
     if (!blocks.length) return HGL.editing ? `<div class="wrap" data-hgl="${H.esc(RS)}" data-hgsz="1"></div>` : HGRoomX.emptyHtml(h, a, RS);
-    /* siatka zamiast kolumn CSS przy rozmiarach S/M/L, na tabletach i w WebKit (Safari źle składa kolumny z kamerami, odtwarzaczami i rozmyciem) */
-    const grid = Object.keys(RL.size).length || window.innerWidth <= 1180 || hgWebKit();
-    return `<div class="wrap ${grid ? 'gsz' : ''}" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
+    /* zawsze siatka (jak widoki): ten sam układ w edycji i po zapisie, w szerokim widoku i w panelu z boku */
+    return `<div class="wrap gsz" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
     clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0;

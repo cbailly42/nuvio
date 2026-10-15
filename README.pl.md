@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.8.0-a3e635?style=flat-square" alt="v1.8.0">
+  <img src="https://img.shields.io/badge/version-v1.8.1-a3e635?style=flat-square" alt="v1.8.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -417,9 +417,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.8.0 -m "Nuvio 1.8.0" && git push origin v1.8.0`.
+Sam tag ręcznie: `git tag -a v1.8.1 -m "Nuvio 1.8.1" && git push origin v1.8.1`.
 
 ## Lista zmian
+
+### 1.8.1
+- **Edycja pokoju (poprawka)**: pokój układa karty w tej samej siatce co pozostałe widoki, więc w edycji i po zapisie wygląda tak samo, w szerokim widoku i w panelu z boku. Wcześniej szeroki widok pokoju używał osobnego układu kolumn i karty przeskakiwały po zapisie.
+- **Galeria w pokoju (poprawka)**: „Dodaj komponent” w pokoju pokazuje wszystkie komponenty, także kontenery, a w ustawieniach komponentu można wybrać rozmiar.
 
 ### 1.8.0
 - **Pilot klimatyzacji (nowy komponent)**: osobna karta w „Dodaj komponent” w stylu aplikacji pilota. Jednostka z animowanym nawiewem (niebieski przy chłodzeniu, pomarańczowy przy grzaniu, szybszy przy wyższym biegu wentylatora, kołysze się przy ruchomych żaluzjach), duża nastawa, suwak zimno–ciepło z − i +, przycisk zasilania i Eko. Kafle Tryb, Wentylator, Sen i Nawiew otwierają dolny panel z opcjami; karta pokazuje tylko to, co obsługuje dany klimatyzator. Działa w rozmiarach S, M i L oraz w jasnym i ciemnym motywie.

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.8.0-a3e635?style=flat-square" alt="v1.8.0">
+  <img src="https://img.shields.io/badge/version-v1.8.1-a3e635?style=flat-square" alt="v1.8.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -417,9 +417,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.8.0 -m "Nuvio 1.8.0" && git push origin v1.8.0`.
+Only tagging by hand: `git tag -a v1.8.1 -m "Nuvio 1.8.1" && git push origin v1.8.1`.
 
 ## Changelog
+
+### 1.8.1
+- **Room editing (fix)**: rooms lay out cards in the same grid as the other views, so edit mode and the saved layout look the same, in the wide view and in the side panel. Before, the wide room view used a separate column layout and cards jumped around after saving.
+- **Room gallery (fix)**: + Add in a room shows every component, containers included, and the component settings offer the size.
 
 ### 1.8.0
 - **AC remote (new component)**: a separate card in + Add styled like an AC remote app. The unit shows animated airflow (blue when cooling, orange when heating, faster at higher fan speed, sweeping when the louvers swing), a large setpoint, a cold–warm slider with − and +, power and Eco. Mode, Fan, Sleep and Airflow tiles open a bottom panel with the options; the card only shows what the unit supports. Works in sizes S, M and L and in light and dark themes.
