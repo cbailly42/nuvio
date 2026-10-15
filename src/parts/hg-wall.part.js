@@ -282,7 +282,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
   wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
-    clearTimeout(this._ck); clearTimeout(this._bdq); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
+    clearTimeout(this._ck); clearTimeout(this._bdq); clearInterval(this._sl); clearInterval(this._dr); if (this._ro) { this._ro.disconnect(); this._ro = null; } try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
     const f = this._foc; this._foc = null; try { if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) { /* bez znaczenia */ }

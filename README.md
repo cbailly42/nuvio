@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.0.0-a3e635?style=flat-square" alt="v2.0.0">
+  <img src="https://img.shields.io/badge/version-v2.1.0-a3e635?style=flat-square" alt="v2.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.0.0 origin/main -m "Nuvio 2.0.0" && git push origin v2.0.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.1.0 origin/main -m "Nuvio 2.1.0" && git push origin v2.1.0`.
 
 ## Changelog
+
+### 2.1.0
+- **Board screensaver in premium glass**: the board now sits on the dashboard photo (same slideshow, Ken Burns and dimming as the photo screensaver), with frosted glass cards, light edges and soft shadows like the rest of Nuvio; white date header over the photo, glass chips, accent badge for the next event. "Auto" theme now follows the dashboard.
+- **Phone layout**: on a portrait phone the board is a single column (photo card hidden, since the photo is the background), rooms show as a two-column grid with humidity under the name, and list rows that don't fit are hidden whole instead of being cut in half. Cards with no room left are skipped, so nothing is ever clipped.
 
 ### 2.0.0
 - **Screensaver "Board" (new)**: a second screensaver style next to the clock on a photo. It shows a large weekday or clock with the date, sunrise and sunset, a countdown to the next all-day event (for example "Halloween in 17 days"), weather with an hourly forecast (daily when the service has no hourly data), upcoming events for the next two weeks, now playing, a photo (dashboard background, slideshow or your own address) and a list of room temperatures with humidity. Everything is configurable in Settings → Screensaver: board theme (auto by the sun, light, dark), heading (weekday or time), which elements are shown, the order of the cards, the weather entity, which calendars and which rooms are used. Works in landscape and portrait, with the PIN lock and with motion wake-up.

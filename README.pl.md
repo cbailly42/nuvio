@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.0.0-a3e635?style=flat-square" alt="v2.0.0">
+  <img src="https://img.shields.io/badge/version-v2.1.0-a3e635?style=flat-square" alt="v2.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.0.0 origin/main -m "Nuvio 2.0.0" && git push origin v2.0.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.1.0 origin/main -m "Nuvio 2.1.0" && git push origin v2.1.0`.
 
 ## Lista zmian
+
+### 2.1.0
+- **Tablica w szkle premium**: tablica leży teraz na zdjęciu z dashboardu (ten sam pokaz slajdów, Ken Burns i przyciemnienie co w wygaszaczu ze zdjęciem), a karty są z matowego szkła z jasną krawędzią i miękkim cieniem jak reszta Nuvio; biały nagłówek z datą na zdjęciu, szklane chipy, akcentowa plakietka najbliższego wydarzenia. Motyw „Auto” idzie teraz za panelem.
+- **Układ na telefon**: na telefonie w pionie tablica ma jedną kolumnę (karta zdjęcia znika, bo zdjęcie jest w tle), pokoje są w dwóch kolumnach z wilgotnością pod nazwą, a wiersze list, które się nie mieszczą, są chowane w całości zamiast ucinane w połowie. Karta, dla której brakuje miejsca, jest pomijana, więc nic nie jest przycięte.
 
 ### 2.0.0
 - **Wygaszacz „Tablica” (nowość)**: drugi wygląd wygaszacza obok zegara na zdjęciu. Pokazuje duży dzień tygodnia albo godzinę z datą, wschód i zachód słońca, odliczanie do najbliższego wydarzenia całodniowego (np. „Halloween za 17 dni”), pogodę z prognozą godzinową (dzienną, gdy usługa nie ma godzinowej), najbliższe wydarzenia z kalendarzy na dwa tygodnie, to, co teraz gra, zdjęcie (tło dashboardu, pokaz slajdów albo własny adres) i listę temperatur w pokojach z wilgotnością. Wszystko ustawisz w Ustawienia → Wygaszacz: motyw tablicy (auto według słońca, jasny, ciemny), nagłówek (dzień tygodnia albo godzina), które elementy są widoczne, kolejność kart, encję pogody oraz które kalendarze i pokoje są brane pod uwagę. Działa w poziomie i w pionie, z blokadą PIN-em i wybudzaniem czujnikiem ruchu.
