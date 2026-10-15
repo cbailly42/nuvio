@@ -53,6 +53,13 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .d:nth-child(-n+2) .tip{ left:0; transform:none; } .d:nth-last-child(-n+2) .tip{ left:auto; right:0; transform:none; }
 .note{ font-size:var(--fs-xs); color:#8A8E94; display:flex; align-items:center; gap:5u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .note i{ width:5u; height:5u; border-radius:50%; background:#C3C6CA; flex:none; }
+.hd .tt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ha-card.glass{ container-type:inline-size; }
+/* wąska karta (S): sumy obok siebie, wartości nad słupkami tylko dla dziś (reszta po dotknięciu dnia) */
+@container (max-width: 300px){ .nd2{ display:none; } .sums{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); } .sm{ min-width:0; } .sm small{ white-space:nowrap; }
+  .sm b{ font-size:calc(15u * var(--hg-fsv, 1)); display:flex; flex-direction:column; } .sm b em{ margin-left:0; white-space:nowrap; }
+  .d:not(.today) .val{ display:none; } .pr{ gap:2u; } .pr i{ width:5u; } }
+@container (max-width: 380px){ .d:not(.today):not(:nth-child(even)) .val{ display:none; } }
 `);
   }
   render() {
@@ -70,7 +77,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
     const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
     const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: ${hgTr('pokaż/ukryj na wykresie', 'show/hide on chart')}">
-      <small><i></i>${H.esc(s.label)} · ${n} ${hgTr('dni', 'days')}</small><b>${H.fmt(s.tot, 1)}<em>kWh · ${hgTr('dziś', 'today')} ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+      <small><i></i><span>${H.esc(s.label)}<span class="nd2"> · ${n} ${hgTr('dni', 'days')}</span></span></small><b>${H.fmt(s.tot, 1)}<em>kWh · ${hgTr('dziś', 'today')} ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
     const dayName = (d, i) => (i === n - 1 ? hgTr('dziś', 'today') : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));

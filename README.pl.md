@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.1-a3e635?style=flat-square" alt="v1.7.1">
+  <img src="https://img.shields.io/badge/version-v1.7.2-a3e635?style=flat-square" alt="v1.7.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -416,9 +416,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.7.1 -m "Nuvio 1.7.1" && git push origin v1.7.1`.
+Sam tag ręcznie: `git tag -a v1.7.2 -m "Nuvio 1.7.2" && git push origin v1.7.2`.
 
 ## Lista zmian
+
+### 1.7.2
+- **Karty obok siebie (poprawka)**: komponenty dodane w trybie edycji są teraz osobnymi kartami w siatce widoku, więc da się je przeciągać między kartami domyślnymi i obok nich (zmiana rozmiaru i usuwanie działają na miejscu). Proste kafle encji zostają razem w swoim bloku.
+- **Karta pogody (poprawka)**: w rozmiarze S ikona i temperatura są w górnym rzędzie, a opis pod nimi; wschód i zachód nie nachodzą na siebie; linia temperatur pokrywa się z godzinami; przy kilku godzinach kolumny wypełniają szerokość; pasek wygasa na krawędziach; kropka słońca w L jest okrągła.
+- **Domownicy i Energia · tydzień w S (poprawka)**: licznik nad awatarami, strefy pod imionami; sumy obok siebie i wartość tylko nad dzisiejszym słupkiem.
+- **Galeria „Dodaj komponent” (poprawka)**: podglądy dla światła, termostatu, dużej wartości, wykresu historii, drzwi i okien, baterii, odkurzacza, mini odtwarzacza, zegara, słońca, notatki, obrazu i aktualizacji oraz odświeżony podgląd pogody.
 
 ### 1.7.1
 - **Szybsze strony (poprawka)**: przycisk podpowiedzi przewijania na szerokim ekranie nie podskakuje już bez końca (jego szklane rozmycie było przeliczane w każdej klatce); podskakuje tylko ikona, trzy razy. Bez karty przepływu energii strona trzyma 60 kl./s zamiast około 25 na 6x wolniejszym CPU.

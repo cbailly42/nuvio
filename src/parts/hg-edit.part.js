@@ -620,7 +620,7 @@ const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-
     players: [[hgTr('Salon', 'Living room'), 1], [hgTr('Kuchnia', 'Kitchen'), 0]].map(([n, on]) => `<div class="mk-r"><span class="mk-art" style="width:24px;height:24px;border-radius:7px${on ? '' : ';filter:grayscale(1);opacity:.5'}"></span><span>${n}</span><span class="mk-ic${on ? ' on' : ''}">${I(on ? 'mdi:pause' : 'mdi:play')}</span></div>`).join(''),
     power: `<div class="mk-r"><span class="mk-v">3.42<small>kW</small></span><span></span><span class="mk-s">${hgTr('teraz', 'now')}</span></div><div class="mk-tr"><i style="--w:34%"></i></div>`,
     energy: `<div style="display:flex;align-items:flex-end;gap:5px;height:52px">${[40, 62, 35, 80, 55, 70, 46].map((v, k) => `<i style="flex:1;height:${v}%;border-radius:4px;background:${k === 3 ? 'var(--hg-accent)' : 'rgba(255,255,255,.18)'}"></i>`).join('')}</div><span class="mk-s">${hgTr('Energia · tydzień', 'Energy · week')}</span>`,
-    weather: `<div class="mk-r"><span style="font-size:30px;line-height:1">⛅</span><span><span class="mk-v">22<small>°</small></span><br><span class="mk-s">${hgTr('Słonecznie', 'Sunny')}</span></span></div>`,
+    weather: `<div class="mk-r"><span style="font-size:26px;line-height:1">⛅</span><span style="min-width:0"><b>${hgTr('Pochmurno', 'Cloudy')}</b><br><span class="mk-s">${hgTr('Maks 12° · Min 5°', 'High 12° · Low 5°')}</span></span><span class="mk-v" style="margin-left:auto">8<small>°</small></span></div><div style="display:flex;justify-content:space-between;font-size:11px;opacity:.8">${['9°', '11°', '11°', '12°', '12°'].map((t, k) => `<span style="display:flex;flex-direction:column;align-items:center;gap:2px"><span class="mk-s">${k ? 10 + k : hgTr('Teraz', 'Now')}</span><b>${t}</b></span>`).join('')}</div>`,
     people: `<div style="display:flex;gap:6px;justify-content:center">${[['M', '#a3e635'], ['A', '#7dd3fc'], ['Z', '#f9a8d4']].map(([l, c]) => `<span class="mk-av" style="background:${c}">${l}</span>`).join('')}</div><span class="mk-s" style="text-align:center">${hgTr('2 osoby w domu', '2 people home')}</span>`,
     alarm: `<div class="mk-r"><span class="mk-ic on" style="width:34px;height:34px">${I('mdi:shield-check')}</span><span><b>${hgTr('Uzbrojony', 'Armed')}</b><br><span class="mk-s">${hgTr('Poza domem', 'Away')}</span></span></div>`,
     robots: `<div class="mk-r"><span class="mk-ic on" style="width:34px;height:34px;border-radius:50%">${I('mdi:robot-vacuum')}</span><span><b>${hgTr('Sprząta', 'Cleaning')}</b><br><span class="mk-s">${hgTr('Bateria 82%', 'Battery 82%')}</span></span></div><div class="mk-tr" style="height:5px"><i style="--w:60%"></i></div>`,
@@ -642,6 +642,19 @@ const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-
     cwu: `<div class="mk-r"><span class="mk-ic on">${I('mdi:water-boiler')}</span><span class="mk-v">52<small>°C</small></span></div><div class="mk-tr"><i style="--w:70%"></i></div><span class="mk-s">${hgTr('Grzanie · 1.9 kW', 'Heating · 1.9 kW')}</span>`,
     stairs: `<div class="mk-r"><span class="mk-ic on">${I('mdi:stairs-up')}</span><span><b>${hgTr('Schody', 'Stairs')}</b><br><span class="mk-s">${hgTr('dół → góra', 'bottom → top')}</span></span></div>`,
     fuel: [['PB95', '6.29'], ['ON', '6.41'], ['LPG', '2.99']].map(([l, v]) => `<div class="mk-r"><span class="mk-chip"><span>${l}</span></span><b>${v} zł</b></div>`).join(''),
+    light: `<div class="mk-r"><span class="mk-cir on" style="width:30px;height:30px">${I('mdi:lightbulb-on')}</span><span><b>${hgTr('Salon', 'Living room')}</b><br><span class="mk-s">${hgTr('Włączone · 72%', 'On · 72%')}</span></span></div><div class="mk-tr" style="height:12px"><i style="--w:72%"></i></div>`,
+    thermo: `<div style="display:grid;place-items:center"><svg viewBox="0 0 100 58" style="width:104px;height:60px"><path d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="7" stroke-linecap="round"/><path d="M10 52 A40 40 0 0 1 70 18" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/><text x="50" y="47" text-anchor="middle" font-size="19" font-weight="300" fill="currentColor">21,5°</text></svg><span class="mk-s">${hgTr('Grzanie do 22°', 'Heating to 22°')}</span></div>`,
+    value: `<span class="mk-s">${hgTr('Zużycie wody', 'Water usage')}</span><div class="mk-v">128<small> l</small></div><span class="mk-s">${hgTr('dziś', 'today')}</span>`,
+    history: `<div class="mk-r"><span class="mk-s">${hgTr('Salon · Sypialnia', 'Living · Bedroom')}</span></div><svg viewBox="0 0 100 34" preserveAspectRatio="none" style="width:100%;height:40px"><polyline points="0,22 15,18 30,20 45,12 60,15 75,8 100,10" fill="none" class="acc" stroke-width="2" vector-effect="non-scaling-stroke"/><polyline points="0,28 15,26 30,27 45,22 60,24 75,19 100,21" fill="none" stroke="#7dd3fc" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`,
+    openings: [['mdi:door-open', hgTr('Taras', 'Patio'), 1], ['mdi:window-closed-variant', hgTr('Kuchnia', 'Kitchen'), 0], ['mdi:door-closed', hgTr('Wejście', 'Entrance'), 0]].map(([i, n, on]) => `<div class="mk-r${on ? ' mk-on' : ''}"><span class="mk-ic${on ? ' on' : ''}">${I(i)}</span><span>${n}</span><span class="mk-s" style="margin-left:auto">${on ? hgTr('otwarte', 'open') : hgTr('zamk.', 'closed')}</span></div>`).join(''),
+    battery: [[hgTr('Ruch', 'Motion'), 12, '#FF6B63'], [hgTr('Pilot', 'Remote'), 38, '#F5B53D'], [hgTr('Zamek', 'Lock'), 86, 'var(--hg-accent)']].map(([n, v, c]) => `<div class="mk-r"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n}</span><span style="width:38%;height:6px;border-radius:3px;background:color-mix(in srgb, currentColor 14%, transparent);position:relative;overflow:hidden"><i style="position:absolute;inset:0 auto 0 0;width:${v}%;background:${c};border-radius:3px"></i></span><b style="width:30px;text-align:right">${v}%</b></div>`).join(''),
+    vacuum: `<div class="mk-r"><span class="mk-ic on" style="width:34px;height:34px;border-radius:50%">${I('mdi:robot-vacuum')}</span><span><b>${hgTr('Sprząta', 'Cleaning')}</b><br><span class="mk-s">${hgTr('Bateria 82%', 'Battery 82%')}</span></span></div><div style="display:flex;gap:6px"><span class="mk-btn">${I('mdi:pause')}${hgTr('Pauza', 'Pause')}</span><span class="mk-btn">${I('mdi:home-import-outline')}${hgTr('Stacja', 'Dock')}</span></div>`,
+    mediamini: `<div class="mk-r"><span class="mk-art" style="width:34px;height:34px"></span><span style="min-width:0"><b>${hgTr('Utwór', 'Song')}</b><br><span class="mk-s">${hgTr('Wykonawca', 'Artist')}</span></span><span class="mk-cir on" style="width:26px;height:26px;margin-left:auto">${I('mdi:pause')}</span></div>`,
+    clock: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><b style="font-size:30px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1">10:32</b><span class="mk-s">${hgTr('czwartek, 15 października', 'Thursday, 15 October')}</span></div>`,
+    sun: `<svg viewBox="0 0 100 40" style="width:100%;height:46px"><line x1="0" y1="32" x2="100" y2="32" stroke="currentColor" stroke-opacity=".2"/><path d="M8 32 Q50 -8 92 32" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="2 3"/><path d="M8 32 Q26 10 40 9" fill="none" stroke="#F5B53D" stroke-width="2"/><circle cx="40" cy="9" r="4" fill="#F5B53D" stroke="#fff" stroke-width="1"/></svg><div class="mk-r"><span class="mk-s">${I('mdi:weather-sunset-up')} 07:02</span><span class="mk-s" style="margin-left:auto">17:53 ${I('mdi:weather-sunset-down')}</span></div>`,
+    note: `<div style="font-size:12px;line-height:1.45"><b>${hgTr('Na weekend', 'For the weekend')}</b><div style="opacity:.75">• ${hgTr('podlać kwiaty', 'water the plants')}</div><div style="opacity:.75">• ${hgTr('wynieść śmieci', 'take out the trash')}</div></div>`,
+    image: `<div style="flex:1;border-radius:10px;background:linear-gradient(160deg,#7dd3fc 0%,#a78bfa 55%,#f9a8d4 100%);position:relative;overflow:hidden"><svg viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute;inset:auto 0 0 0;width:100%;height:60%"><path d="M0 40 L0 26 L22 12 L40 26 L58 8 L100 30 L100 40Z" fill="rgba(255,255,255,.35)"/></svg><span style="position:absolute;left:14%;top:18%;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.85)"></span></div>`,
+    updates: [['mdi:home-assistant', 'Home Assistant Core', '2026.10.2'], ['mdi:puzzle-outline', 'HACS', '2.1.0']].map(([i, n, v]) => `<div class="mk-r"><span class="mk-ic on">${I(i)}</span><span style="min-width:0"><b>${n}</b><br><span class="mk-s">→ ${v}</span></span></div>`).join(''),
     map: `<div class="mk-map" style="flex:1"><span class="mk-pin" style="left:30%;top:35%"></span><span class="mk-pin" style="left:66%;top:52%;filter:hue-rotate(160deg)"></span></div>`,
   };
   return `<div class="mk" aria-hidden="true">${M[id] || `<div style="display:grid;place-items:center;opacity:.5">${I('mdi:card-outline')}</div>`}${tag}</div>`; };
@@ -830,7 +843,7 @@ const HG_COMP_EDIT = {
           const j = L.added.findIndex((y) => y.e === key); if (j >= 0) L.added[j] = x; else L.added.push(x); }
         if (R.z && R.z !== 's') L.size[key] = R.z; else delete L.size[key]; });
       this._eSheet(false); this._eToast((R.edit ? hgTr('Zapisano: ', 'Saved: ') : hgTr('Dodano: ', 'Added: ')) + (n || C.n)); this._eCompR = null;
-      return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'HG-TILES-CARD')); }
+      return this._eRefresh(sc.endsWith(':tiles')); }
   },
   /* dzieci kontenera: dodaj (galeria jako krok), edytuj (formularz komponentu albo YAML), kopia, usuń, szerokość w siatce */
   _eKidAct(a, b) { const R = this._eCompR, A = (R.v.cards || []).slice(), i = +b.dataset.i, C = HG_COMP.find((x) => x.id === R.cid);
@@ -867,7 +880,7 @@ class HGTilesCard extends HGBase {
   constructor() { super(); this._sub = () => this.rerender(); }
   connectedCallback() { super.connectedCallback(); HGL.subs.add(this._sub); }
   disconnectedCallback() { HGL.subs.delete(this._sub); }
-  ents() { if (this._config.group) return this._config.group.es.slice(); if (this._config.single) return [this._config.single.e]; const o = []; for (const x of HGL.get(this._config.scope).added) { if (!x.c) { if (x.e) o.push(x.e); continue; } for (const v of Object.values(x.v || {})) for (const y of [].concat(v)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) o.push(e); } } return o; }
+  ents() { if (this._config.group) return this._config.group.es.slice(); if (this._config.single) return [this._config.single.e]; const o = []; for (const x of HGL.get(this._config.scope).added) { if (this._config.one && x.e !== this._config.one) continue; if (!x.c) { if (x.e) o.push(x.e); continue; } for (const v of Object.values(x.v || {})) for (const y of [].concat(v)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) o.push(e); } } return o; }
   _extraSig() { return this._config.single ? (HG_HIST.m.get(this._config.single.e) || {}).t || 0 : [HGL.data.s[this._config.scope] || null, [...HG_HIST.m.values()].map((x) => x.t).join()]; }
   css() { return `:host{ display:block; height:auto; container-type:inline-size; }` + HG_TILE_CSS; }
   render() {
@@ -875,7 +888,8 @@ class HGTilesCard extends HGBase {
       return `<div class="hgg ${G.lay}">${G.n ? `<div class="hgg-h">${G.i ? H.icon(G.i) : ''}<b>${H.esc(G.n)}</b><small>${G.es.length}</small></div>` : ''}<div class="hgg-b">${G.es.map((e) => `<div class="tg2 one">${hgTileHtml(h, e, 's', tt && hgTypesFor(h, e).includes(tt) ? { t: tt } : {})}</div>`).join('')}</div></div>`; }
     if (this._config.single) return `<div class="tg2 one">${hgTileHtml(h, this._config.single.e, 's', this._config.single)}</div>`;
     const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
-    const it = HGL.sort(L.added.filter((x) => (x.c ? customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
+    if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); return x && x.c && customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
+    const it = HGL.sort(L.added.filter((x) => (x.c ? !this._config.nocomp && customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
     return `<div class="tg2" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
   }
   afterRender() { hgSlots(this); hgCmSlots(this); }
@@ -1051,6 +1065,9 @@ const HG_EDIT = {
     if (!sc) return cards.map((cc, i) => Object.assign({}, cc, { _k: this._lkeys[i] }));
     const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
     let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
+    /* dodane komponenty (nie proste kafle) to osobne karty panelu z kluczem „+klucz”: przesuwa się je między kartami domyślnymi (siatka z obszarami: jak dawniej, w bloku kafli) */
+    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : tl.added.filter((x) => x.c && customElements.get(x.c) && !tl.hidden.includes(x.e));
+    for (const x of solo) { const z = tl.size[x.e]; out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', one: x.e, _k: '+' + x.e, span: z === 'l' ? 'full' : z === 'm' ? 2 : 1, min_h: 0, _tiles: true }); }
     if (L.order.length) {
       if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
         const ord = L.order.filter((k) => byK.has(k)); if (ord.length === out.length) out = ord.map((k, i) => { used.add(k); return Object.assign({}, byK.get(k), { area: slot[i] }); }); }
@@ -1064,8 +1081,7 @@ const HG_EDIT = {
         if (main) return { type: 'custom:hg-tiles-card', single: { e: main, t: cf.t, n: cf.n, i: cf.i }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; }
       return o; });
     for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
-    const tl = HGL.get(sc + ':tiles');
-    if (tl.added.length) { out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true });
+    if (tl.added.some((x) => areas || !x.c)) { out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true, ...(areas ? {} : { nocomp: true }) });
       const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */
     return out;
   },
@@ -1082,6 +1098,8 @@ const HG_EDIT = {
     for (const c of this._cards || []) walk(c, 0);
     return out;
   },
+  /* karta panelu z dodanym komponentem („+klucz”): ustawienia, rozmiar i usuwanie działają na zakresie kafli widoku */
+  _eMap(ct, k) { return ct.page && k && k[0] === '+' ? [Object.assign({}, ct, { scope: this._pageScope() + ':tiles', page: false, sz: true, via: ct }), k.slice(1)] : [ct, k]; },
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
     /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
@@ -1127,7 +1145,7 @@ const HG_EDIT = {
       const areas = ct.page && !!this._config.panel.areas;
       for (const it of this._eItems(ct)) {
         if (it.querySelector(':scope > .hge') || hgIsGhost(it)) continue;
-        const k = it.dataset.hgk, L = HGL.get(ct.scope), z = L.size[k] || 's', canSz = ct.page ? !areas : ct.sz;
+        const [mc, mk] = this._eMap(ct, it.dataset.hgk), L = HGL.get(mc.scope), z = L.size[mk] || 's', canSz = ct.page ? !areas : ct.sz;
         const d = document.createElement('div'); d.className = 'hge';
         d.innerHTML = `<button class="hh" data-hge="drag" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}" title="${hgTr('Przeciągnij', 'Drag')}">${H.icon('mdi:drag')}</button>`
           + `<button class="hx" data-hge="hide" aria-label="${hgTr('Ukryj kafelek', 'Hide tile')}" title="${hgTr('Ukryj', 'Hide')}">${H.icon('mdi:close')}</button>`
@@ -1190,7 +1208,7 @@ const HG_EDIT = {
     const { ctl, it, inBar } = this._ePath(e);
     if (ctl) { e.preventDefault(); e.stopPropagation(); return this._eCtl(ctl, e); }
     if (inBar) return;
-    if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(ct, it.dataset.hgk); } }
+    if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(...this._eMap(ct, it.dataset.hgk)); } }
   },
   _eCtl(b, e) {
     this._eTrig = b;
@@ -1231,7 +1249,7 @@ const HG_EDIT = {
       const fake = { dataset: { hge: 'pick', sc: this._eAddSc, e: this._eAddE, n: this._eAddN || '', t: t && t !== T0 ? t : 'def' } }; return this._eCtl(fake, e); }
     if (a === 'addback') return (this._eStk || []).length ? this._eBack() : this._eSheet('add', null, this._eSc);
     if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
-      this._eSheet(false); this._eToast(hgTr('Dodano: ', 'Added: ') + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles') && !(this._cards || []).some((c) => c.tagName === 'HG-TILES-CARD')); }
+      this._eSheet(false); this._eToast(hgTr('Dodano: ', 'Added: ') + (b.dataset.n || b.dataset.e)); return this._eRefresh(sc.endsWith(':tiles')); }
     if (a === 'repl' && this._eRepl && this._eRepl.comp) return this._eCompPick(b.dataset.e);
     if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast(R.add ? hgTr('Dodano encję', 'Entity added') : hgTr('Zmieniono encję', 'Entity changed'));
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
@@ -1244,7 +1262,7 @@ const HG_EDIT = {
       this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
     if (a === 'filter') { this._eF = b.dataset.f; return this._eSheetList(); }
     const d = b._d || b.closest('.hge'); if (!d) return;
-    const ct = d._ct, it = d._it, k = it.dataset.hgk;
+    const [ct, k] = this._eMap(d._ct, d._it.dataset.hgk), it = d._it;
     if (a === 'hide' && !b.dataset.ok) {
       const nm = (it.querySelector('.sh, .nm, .tn b, .hd b, b') || {}).textContent || hgTr('ten element', 'this item');
       const q = document.createElement('div'); q.className = 'hge-cf'; q.innerHTML = `<span>${hgTr(`Usunąć „${H.esc(nm.trim().slice(0, 40))}”?`, `Remove “${H.esc(nm.trim().slice(0, 40))}”?`)}</span><button data-hge="hide" data-ok="1">${hgTr('Usuń', 'Remove')}</button><button data-hge="cfno">${hgTr('Nie', 'No')}</button>`;
@@ -1255,17 +1273,17 @@ const HG_EDIT = {
       const A0 = HGL.get(ct.scope).added, ai = A0.findIndex((x) => x.e === k), added = ai >= 0, rem = added ? JSON.parse(JSON.stringify(A0[ai])) : null;
       this._eSet(ct.scope, (L) => { if (added) L.added = L.added.filter((x) => x.e !== k); else if (!L.hidden.includes(k)) L.hidden.push(k); });
       const rest = this._eItems(ct).filter((x) => x !== it); const fr = rest.map((x) => x.getBoundingClientRect());
-      it.style.display = 'none'; if (ct.page) it.hidden = true;
+      it.style.display = 'none'; if (ct.page || ct.via) it.hidden = true;
       this._eFlipFrom(rest, fr); this._eBar();
       this._eToast(added ? hgTr('Usunięto kafelek', 'Tile removed') : hgTr('Usunięto – przywrócisz w „Przywróć ukryte”', 'Removed – bring it back with “Restore hidden”'), () => {
         /* cofnięcie tylko tego usunięcia – inne zmiany w zakresie z ostatnich sekund zostają */
         this._eSet(ct.scope, (L) => { if (added) { if (!L.added.some((x) => x.e === k)) L.added.splice(Math.min(ai, L.added.length), 0, rem); } else L.hidden = L.hidden.filter((x) => x !== k); });
-        this._eRefresh(ct.page); });
+        this._eRefresh(ct.page || !!ct.via); });
       return;
     }
     if (a === 'size') { const z = b.dataset.z; this._eSet(ct.scope, (L) => { if (z === 's') delete L.size[k]; else L.size[k] = z; });
       const its = this._eItems(ct), fr = its.map((x) => x.getBoundingClientRect());
-      if (ct.page) { it.style.gridColumn = z === 'l' ? '1 / -1' : z === 'm' ? 'span 2' : ''; }
+      if (ct.page || ct.via) { it.style.gridColumn = z === 'l' ? '1 / -1' : z === 'm' ? 'span 2' : ''; if (ct.via && this._masOn) { delete it.dataset.masGc; requestAnimationFrame(() => this._masLay()); } }
       else { it.classList.remove('hgsz-m', 'hgsz-l'); if (z !== 's') it.classList.add('hgsz-' + z); }
       for (const x of d.querySelectorAll('[data-hge=size]')) { const on = x.dataset.z === z; x.setAttribute('aria-pressed', on); x.classList.toggle('on', on); }
       return this._eFlipFrom(its, fr);

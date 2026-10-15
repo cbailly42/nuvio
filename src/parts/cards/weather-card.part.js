@@ -22,19 +22,22 @@ class HGWeatherCard extends HGBase {
   }
   css() {
     return U(`
-ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; gap:6u; padding:var(--s2) var(--s3) var(--s2); min-width:0; overflow:hidden; }
+ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; gap:6u; padding:var(--s2) var(--s3) var(--s2); min-width:0; overflow:hidden; container-type:inline-size; }
+.hd .tt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hd .ic{ color:var(--hg-accent-tx); }
 .hdb{ display:flex; align-items:center; gap:var(--s1); min-width:0; flex:1; background:none; padding:0; color:inherit; text-align:left; cursor:pointer; }
 .now{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); min-width:0; }
 .now img{ width:max(40u, 46px); height:max(40u, 46px); margin:-6u -4u -6u -6u; }
 .cd{ min-width:0; display:flex; flex-direction:column; gap:2u; }
 .cd b{ font-size:var(--fs-md); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cd span{ font-size:var(--fs-sm); color:#4A4E54; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.cd span{ font-size:var(--fs-sm); color:#4A4E54; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
 .tn{ font-size:clamp(34px, calc(var(--k) * 34), 52px); font-weight:300; line-height:1; letter-spacing:-.04em; font-variant-numeric:tabular-nums; color:#1E2023; }
 .tn sup{ font-size:.45em; font-weight:400; vertical-align:top; margin-left:1px; position:relative; top:.15em; }
 .strip{ flex:none; position:relative; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; scrollbar-width:none; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; margin:0 calc(var(--s3) * -1); padding:0 var(--s3); scroll-snap-type:x proximity; }
 .strip::-webkit-scrollbar{ display:none; }
-.hrs{ display:grid; grid-auto-flow:column; grid-auto-columns:max(34u, 42px); gap:2u; width:max-content; }
+.strip{ -webkit-mask-image:linear-gradient(90deg, transparent, #000 var(--s3), #000 calc(100% - var(--s3)), transparent); mask-image:linear-gradient(90deg, transparent, #000 var(--s3), #000 calc(100% - var(--s3)), transparent); }
+.sc{ width:max-content; min-width:100%; }
+.hrs{ display:grid; grid-template-columns:repeat(var(--n), minmax(max(38u, 46px), 1fr)); gap:0; }   /* mało godzin: kolumny rozciągają się na całą szerokość */
 .h{ display:flex; flex-direction:column; align-items:center; gap:1u; padding:2u 0 0; scroll-snap-align:start; font-variant-numeric:tabular-nums; }
 .h small{ font-size:var(--fs-xs); color:#5A5E64; } .h.nw small{ color:#1E2023; font-weight:600; }
 .h img{ width:max(22u, 26px); height:max(22u, 26px); }
@@ -47,12 +50,18 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .tl .kn{ position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:#fff; box-shadow:0 0 0 2px rgba(0,0,0,.18), var(--hg-sh-sm); }
 .sun{ flex:none; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:#4A4E54; font-variant-numeric:tabular-nums; border-top:1px solid rgba(0,0,0,.06); padding-top:var(--s1); }
 .sun > span{ display:flex; align-items:center; gap:3u; white-space:nowrap; min-width:0; } .sun > span b{ font-size:var(--fs-sm); font-weight:600; color:#1E2023; }
+.sun .st{ display:flex; flex-direction:column; line-height:1.15; } .sun > span:last-child .st{ align-items:flex-end; }
+.arw{ position:relative; min-width:0; } .arw .sd{ position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; border:1.5px solid #fff; box-sizing:border-box; }
 .sun img{ width:22px; height:22px; margin:-4px -2px; }
-.sun svg{ width:100%; height:max(22u, 26px); overflow:visible; }
+.sun svg{ display:block; width:100%; height:max(22u, 26px); overflow:visible; }
 .arc{ fill:none; stroke:rgba(0,0,0,.14); stroke-width:1.5; stroke-dasharray:3 3; vector-effect:non-scaling-stroke; }
 .arcd{ fill:none; stroke:var(--hg-accent); stroke-width:2; vector-effect:non-scaling-stroke; }
 .hz{ stroke:rgba(0,0,0,.12); stroke-width:1; vector-effect:non-scaling-stroke; }
 .ph{ font-size:var(--fs-sm); color:#5A5E64; padding:var(--s1) 0; }
+@container (max-width: 300px){
+  .now{ grid-template-columns:auto 1fr; grid-template-areas:'i t' 'c c'; row-gap:4u; } .now img{ grid-area:i; } .tn{ grid-area:t; justify-self:end; } .cd{ grid-area:c; }
+  .sun{ grid-template-columns:1fr auto; } .sun .arw{ display:none; } .sun img{ width:18px; height:18px; } }
+@container (max-width: 400px){ .sun .st small{ display:none; } }
 /* wariant „hero”: na zdjęciu, bez tła/ramki; typografia jak ekran blokady iOS (biały tekst, warstwowy miękki cień) */
 :host([variant=hero]){ display:block; --wx-u: var(--hg-u0, 1.3px); }
 .hero{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:none; border:0; padding:0; margin:0; color:#fff; text-align:left; cursor:pointer;
@@ -141,10 +150,11 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const pts = []; for (let i = 0; i <= 20; i++) { const q = i / 20; pts.push(`${(q * 100).toFixed(1)},${(30 - Math.sin(q * Math.PI) * 26).toFixed(1)}`); }
     const done = []; if (!night) for (let i = 0; i <= 20; i++) { const q = (i / 20) * p; done.push(`${(q * 100).toFixed(1)},${(30 - Math.sin(q * Math.PI) * 26).toFixed(1)}`); }
     const svg = `<svg viewBox="0 -2 100 40" preserveAspectRatio="none" aria-hidden="true"><line class="hz" x1="0" y1="30" x2="100" y2="30"/><polyline class="arc" points="${pts.join(' ')}"/>${done.length ? `<polyline class="arcd" points="${done.join(' ')}"/>` : ''}
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${night ? '#9AA6C8' : 'var(--hg-accent)'}" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" transform="scale(1 1)"/></svg>`;
+</svg>`;
+    const arw = `<span class="arw">${svg}<i class="sd" style="left:${x.toFixed(1)}%;top:${((y + 2) / 40 * 100).toFixed(1)}%;background:${night ? '#9AA6C8' : 'var(--hg-accent)'}"></i></span>`;
     const c = this._config, ri = `${c.icon_base}static-sunrise.svg?v=${c.icon_v}`, si = `${c.icon_base}static-sunset.svg?v=${c.icon_v}`;
     const lab = (t) => { const d = new Date(t), today = new Date().toDateString() === d.toDateString(); return HGWx.hm(d) + (today ? '' : hgTr(' jutro', ' tomorrow')); };
-    return `<div class="sun" aria-label="${H.esc(hgTr(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`, `Sunrise ${lab(r)}, sunset ${lab(st)}`))}"><span><img src="${ri}" alt=""><span><b>${HGWx.hm(new Date(r))}</b> ${hgTr('wschód', 'sunrise')}${new Date().toDateString() === new Date(r).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span></span>${svg}<span><span><b>${HGWx.hm(new Date(st))}</b> ${hgTr('zachód', 'sunset')}${new Date().toDateString() === new Date(st).toDateString() ? '' : hgTr(' (jutro)', ' (tomorrow)')}</span><img src="${si}" alt=""></span></div>`;
+    return `<div class="sun" aria-label="${H.esc(hgTr(`Wschód słońca ${lab(r)}, zachód ${lab(st)}`, `Sunrise ${lab(r)}, sunset ${lab(st)}`))}"><span><img src="${ri}" alt=""><span class="st"><b>${HGWx.hm(new Date(r))}</b><small>${hgTr('wschód', 'sunrise')}${new Date().toDateString() === new Date(r).toDateString() ? '' : hgTr(' jutro', ' tomorrow')}</small></span></span>${arw}<span><span class="st"><b>${HGWx.hm(new Date(st))}</b><small>${hgTr('zachód', 'sunset')}${new Date().toDateString() === new Date(st).toDateString() ? '' : hgTr(' jutro', ' tomorrow')}</small></span><img src="${si}" alt=""></span></div>`;
   }
   _minmax() {
     const d0 = (this._daily || [])[0];
@@ -163,7 +173,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     return `<ha-card class="glass">${hd(exp)}
       <div class="now"><img src="${HGWx.icon(c, w.state, night, true)}" alt="" decoding="async"><div class="cd"><b>${H.esc(cond[0])}</b>${mm ? `<span>${hgTr('Maks', 'High')} ${H.fmt(mm[0], 0)}° · ${hgTr('Min', 'Low')} ${mm[1] != null ? H.fmt(mm[1], 0) + '°' : '–'}</span>` : ''}</div>
         ${tn ? `<div class="tn" title="${tn.src === 'sensor' ? hgTr('Czujnik zewnętrzny', 'Outdoor sensor') : hgTr('Prognoza (brak czujnika)', 'Forecast (no sensor)')}">${H.fmt(tn.v, Math.abs(tn.v) < 10 ? 1 : 0)}<sup>°</sup></div>` : ''}</div>
-      ${hr.length ? `<div class="strip" tabindex="0" aria-label="${hgTr('Prognoza godzinowa', 'Hourly forecast')}"><div class="hrs" role="list">${this._hourCells(hr, false)}</div>${this._tline(hr)}</div>` : ''}
+      ${hr.length ? `<div class="strip" tabindex="0" aria-label="${hgTr('Prognoza godzinowa', 'Hourly forecast')}"><div class="sc" style="--n:${hr.length}"><div class="hrs" role="list">${this._hourCells(hr, false)}</div>${this._tline(hr)}</div></div>` : ''}
       ${this._sun()}</ha-card>`;
   }
   _hero(w) {
