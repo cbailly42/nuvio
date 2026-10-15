@@ -329,18 +329,14 @@ const HG_GL_CSS = `
 .wg-pv{ position:relative; width:100%; aspect-ratio:1280 / 680; border-radius:18px; overflow:hidden; margin:4px 0 2px; box-shadow:0 6px 20px rgba(0,0,0,.18); isolation:isolate; }
 @media (orientation:portrait){ .wg-pv{ aspect-ratio:560 / 900; max-height:62vh; width:auto; margin-inline:auto; } }
 .wg-pv .ng{ pointer-events:none; }
-.wg-gal{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
-.wg-gt{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; padding:8px; border-radius:18px; background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.2); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:box-shadow .2s ease, transform .2s ease; }
+.wg-gal{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap:14px; }
+@media (max-width:600px){ .wg-gal{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; } }
+.wg-gt{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:10px; padding:10px; border-radius:20px; background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.2); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:box-shadow .2s ease, transform .2s ease; min-width:0; }
 .wg-gt:hover{ transform:translateY(-1px); } .wg-gt:focus-visible{ outline:2px solid #63d71e; outline-offset:2px; }
 .wg-gt[aria-checked=true]{ box-shadow:inset 0 0 0 2px #63d71e, 0 0 0 3px rgba(99,215,30,.18), 0 6px 18px rgba(0,0,0,.2); }
-.wg-gp{ container-type:inline-size; position:relative; display:block; width:100%; aspect-ratio:1280 / 680; border-radius:12px; overflow:hidden; isolation:isolate; pointer-events:none; color:#fff; }
-@media (orientation:portrait){ .wg-gp{ aspect-ratio:560 / 900; } }
-.wg-gp .ng-orb{ animation:none; } .wg-gp .ng-trk{ animation:none; }
-.wg-ph{ position:absolute; inset:0; background:center/cover #222; filter:brightness(.6); }
-.wg-gp > .wg-t{ position:absolute; left:10%; top:24%; line-height:1; font-size:22cqw; font-weight:200; text-shadow:0 1px 6px rgba(0,0,0,.5); } .wg-gp > .wg-d{ position:absolute; left:10%; top:58%; font-size:6.5cqw; text-shadow:0 1px 4px rgba(0,0,0,.6); }
-.wg-gp > .wg-d::first-letter{ text-transform:uppercase; }
-.wg-bd{ position:absolute; inset:0; background:linear-gradient(160deg, #e9edf2, #cfd6de); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto 1fr 1fr; gap:6%; padding:7%; box-sizing:border-box; }
-.wg-bd b{ grid-column:span 2; color:#1d2530; font-size:13cqw; line-height:1; font-weight:300; } .wg-bd u{ border-radius:8px; background:rgba(255,255,255,.75); box-shadow:0 2px 6px rgba(0,0,0,.08); }
+.wg-gp{ position:relative; display:block; width:100%; aspect-ratio:16 / 10; border-radius:12px; overflow:hidden; isolation:isolate; pointer-events:none; background:#05070b; }
+.wg-gs{ position:absolute; left:0; top:0; transform-origin:0 0; contain:strict; }
+.wg-gs .nw{ position:absolute !important; inset:0; z-index:0; opacity:1; } .wg-gs *{ animation-play-state:paused !important; }
 .wg-gl{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; padding:0 4px 2px; } .wg-gl ha-icon{ --mdc-icon-size:16px; color:#63d71e; } .wg-pv .ng-orb{ animation:none; }
 .wg-vs{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
 .wg-vs button{ all:unset; cursor:pointer; box-sizing:border-box; padding:10px 8px; border-radius:14px; text-align:center; background:var(--hg-surface-2, rgba(127,127,127,.12)); display:flex; flex-direction:column; align-items:center; gap:4px; font-size:13px; font-weight:600; }
@@ -407,15 +403,23 @@ Object.assign(HGWall, {
     return s; },
   /* galeria wygaszaczy (zamiast przełącznika): kafle z żywym podglądem */
   GAL: [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board'], ['glass:carousel', 'Karuzela', 'Carousel'], ['glass:minimal', 'Minimal', 'Minimal'], ['glass:bento', 'Bento', 'Bento']],
-  galHtml(style) { const cur = style === 'glass' ? 'glass:' + this.gget().v : style, fake = this.glShell().replace(/^<style>[\s\S]*?<\/style>/, '');
+  galHtml(style) { const cur = style === 'glass' ? 'glass:' + this.gget().v : style;
     return `<style>${HG_GL_SS}${HG_GL_SS2}${HG_GL_CSS}</style><div class="wg-gal" role="radiogroup" aria-label="${H.esc(hgTr('Wygaszacze', 'Screensavers'))}">${this.GAL.map(([k, pl, en]) => `<button type="button" class="wg-gt" role="radio" data-hge="wl-g-gal" data-v="${k}" aria-checked="${cur === k}">
-      <span class="wg-gp" data-gp="${k}">${k.startsWith('glass') ? fake : k === 'photo' ? `<i class="wg-ph" style="background-image:url(&quot;${H.esc(HG_ASSET + 'nuvio-bg-default-wide.webp')}&quot;)"></i><b class="wg-t"></b><small class="wg-d"></small>` : `<i class="wg-bd"><b class="wg-t"></b><u></u><u></u><u></u><u></u></i>`}</span>
-      <span class="wg-gl">${cur === k ? H.icon('mdi:check-circle') : ''}${H.esc(hgTr(pl, en))}</span></button>`).join('')}</div>`; },
-  galWire(S, h) { const G0 = this.gget(), port = matchMedia('(orientation: portrait)').matches, d = new Date(), t = this.gtf(G0).format(d);
-    for (const g of S.querySelectorAll('[data-gp]')) { const k = g.dataset.gp, r = g.getBoundingClientRect();
-      for (const x of g.querySelectorAll('.wg-t')) x.textContent = t; for (const x of g.querySelectorAll('.wg-d')) x.textContent = this.gdate(G0, d);
-      if (!k.startsWith('glass') || !r.width) continue; const root = g.querySelector('.ng'); root._gk = {};
-      this.glRender(root, Object.assign({}, G0, { v: k.slice(6) }), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); } },
+      <span class="wg-gp" data-gp="${k}"><span class="wg-gs" aria-hidden="true"></span></span><span class="wg-gl">${cur === k ? H.icon('mdi:check-circle') : ''}${H.esc(hgTr(pl, en))}</span></button>`).join('')}</div>`; },
+  /* każdy kafel to prawdziwy wygaszacz w rozmiarze ekranu, pomniejszony transformacją (position:fixed liczy się wtedy względem kafla) */
+  galWire(S, h) { const W = innerWidth, Hh = innerHeight, G0 = this.gget(), keep = this.el, d = new Date();
+    for (const g of S.querySelectorAll('[data-gp]')) { const k = g.dataset.gp, box = g.querySelector('.wg-gs'), r = g.getBoundingClientRect(); g.style.aspectRatio = W + ' / ' + Hh; if (!r.width) continue;
+      box.style.cssText = `width:${W}px;height:${Hh}px;transform:scale(${(r.width / W).toFixed(5)})`;
+      if (box._k === k && box.firstChild) continue; box._k = k;
+      const el = document.createElement('div'); el.className = 'nw in'; el.style.setProperty('--nw-dim', this.get().dim); box.replaceChildren(el);
+      try { this.el = el;
+        if (k.startsWith('glass')) { el.innerHTML = this.glShell(); el.classList.add('gl'); this.glRender(el.querySelector('.ng'), Object.assign({}, G0, { v: k.slice(6), rm: 'on' }), h, {}); }
+        else if (k === 'board' && this.bdShell) { el.innerHTML = this.bdShell(); el.classList.add('bd'); this._bdk = {}; const q = this.hass; this.hass = h; this.bd(true); this.hass = q; }
+        else { el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg on" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div><div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
+          el.querySelector('.nw-bg').style.backgroundImage = this.imgs()[0]; const l = h && h.locale ? h.locale.time_format : null;
+          el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {})).format(d);
+          el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d); const q = this.hass; this.hass = h; this.wx(); this.hass = q; } }
+      catch (e) { /* podgląd pomocniczy */ } finally { this.el = keep; } } },
   _pc(v) { return Math.round(v * 100) + '%'; }, _px(v) { return v + ' px'; },
   /* edytor jednej karty */
   glEd(x, h, G) { const T = HG_GL_TYPES.find((y) => y[0] === x.t), L = (pl, en) => H.esc(hgTr(pl, en)), cs = (f, k) => H.esc(x.id + '|' + f + '=' + k);
@@ -462,7 +466,7 @@ Object.assign(HGWall, {
     const fd = new FormData(); fd.append('file', f, f.name); p._eToast(hgTr('Przesyłanie…', 'Uploading…'));
     h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => { const u = `/api/image/serve/${j.id}/original`;
       if (tg === '@bg') this.gpatch('bg.img', u); else this.gmod(tg, (L, i) => { L[i].img = u; }); p._eToast(hgTr('Obraz zapisany', 'Image saved')); p._eLook(); }, (e) => p._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')')); },
-  glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S.querySelector('.wg-gal')) { this.galWire(S, h); requestAnimationFrame(() => this.galWire(S, h)); }
+  glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S.querySelector('.wg-gal')) { requestAnimationFrame(() => this.galWire(S, h)); setTimeout(() => this.galWire(S, h), 300); }
     const pv = S.querySelector('.wg-pv'); if (!pv) return;
     const draw = () => { const r = pv.getBoundingClientRect(), port = matchMedia('(orientation: portrait)').matches, root = pv.querySelector('.ng'); if (!root || !r.width) return; root._gk = {};
       this.glRender(root, this.gget(), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); };
