@@ -89,21 +89,25 @@ const HG_LAYS = [['grid', hgTrLazy('Siatka', 'Grid'), 'mdi:view-grid-outline', h
 const HG_HINT_MIN = 3;
 const hgViewLay = (c, one) => { const n = (k, d) => Math.max(1, Math.min(6, +c[k] || d)), r = (k) => `repeat(${k}, minmax(0, 1fr))`, cm = n('cm', 1), ct = n('ct', 2), cd = n('cd', c.lay === 'panel' ? 2 : 3);
   return { scroll: true, columns: r(cd), auto_rows: 'auto', phone_columns: r(cm), tablet: { columns: r(ct) }, ...(c.lay === 'cols' ? { flow: 'cols' } : {}), ...(c.lay === 'masonry' ? { masonry: true } : {}), ...(!c.lay || c.lay === 'grid' ? { flow: 'grid' } : {}), ...(+c.mw ? { max_w: +c.mw } : {}) }; };
+/* widok ukryty dla zalogowanej osoby: wiz.vu = { ścieżka: [user_id] } ze wspólnego dashboardu */
+const hgViewOff = (hass, w) => { const id = hass && hass.user && hass.user.id, VU = (w && w.vu) || {}; return (p) => p !== 'dashboard' && !!id && Array.isArray(VU[p]) && VU[p].includes(id); };
 /* --- generator konfiguracji (strategia pulpitu) --- */
 async function hgGenerate(hass, opt) {
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */
-  if (!wiz) try { const E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
+  let E = null; if (!wiz) try { E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
+  /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */
+  const vOff = hgViewOff(hass, (E && E.doc && E.doc.data && E.doc.data.wiz) || wiz);
   const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
-  const want = (v) => !wiz || !wiz.views || wiz.views.includes(v);
+  const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);
   const V = [['dashboard', t('panel'), 'mdi:view-dashboard-outline', true], ['rooms', t('rooms'), 'mdi:sofa-outline', Object.keys(M.areas).length > 0 || !!(wiz && wiz.areas && (wiz.areas.virtual || []).length)],
     ['multimedia', t('media'), 'mdi:play-box-multiple-outline', M.media.length > 0], ['kamery', t('cams'), 'mdi:cctv', M.cams.length > 0],
     ['family', t('family'), 'mdi:account-group-outline', M.persons.length > 0], ['energia', t('energy'), 'mdi:lightning-bolt-outline', M.power.length > 0],
     ['mapa', t('map'), 'mdi:map-outline', M.persons.length + M.trackers.length > 0], ['kalendarz', t('calendar'), 'mdi:calendar-month-outline', M.calendars.length > 0],
     ...((wiz && wiz.custom) || []).map((c) => [c.p, c.n, c.i || 'mdi:view-grid-outline', true])]
     /* jawna lista z kreatora / Wyglądu: kolejność wg listy, widok włączony nawet bez encji; bez listy – tylko dostępne */
-    .filter((x) => (wiz && wiz.views ? x[0] === 'dashboard' || wiz.views.includes(x[0]) : x[3])).sort((a, b) => (wiz && wiz.views ? (a[0] === 'dashboard' ? -1 : b[0] === 'dashboard' ? 1 : wiz.views.indexOf(a[0]) - wiz.views.indexOf(b[0])) : 0));
+    .filter((x) => (wiz && wiz.views ? x[0] === 'dashboard' || wiz.views.includes(x[0]) : x[3]) && !vOff(x[0])).sort((a, b) => (wiz && wiz.views ? (a[0] === 'dashboard' ? -1 : b[0] === 'dashboard' ? 1 : wiz.views.indexOf(a[0]) - wiz.views.indexOf(b[0])) : 0));
   /* wiz.vx[path] = { i: ikona, sl: krótka etykieta (pasek telefonu), cd/ct: kolumny komputer/tablet, rail: false = bez paska bocznego, ro: kolejność w pasku } */
   const VX = (wiz && wiz.vx) || {}; for (const v of V) { const o = VX[v[0]]; if (o && /^mdi:[a-z0-9-]+$/.test(o.i || '')) v[2] = o.i; } window.hgViewNames = Object.fromEntries(V.map((v) => [v[0], v[1]]));
   const nav = (v) => ({ icon: v[2], label: v[1], ...(VX[v[0]] && VX[v[0]].sl ? { short: VX[v[0]].sl } : {}), action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
@@ -413,7 +417,12 @@ const HG_PKGS = [
   { id: 'cardmod', name: 'card-mod', repo: 'thomasloven/lovelace-card-mod', rid: 190927524, re: /card-mod/i, live: () => !!customElements.get('card-mod'), icon: 'mdi:brush-variant', hint: hgTrLazy('Dodatkowe style CSS kart. Zainstaluj „card-mod” z HACS → Frontend.', 'Extra CSS styles for cards. Install “card-mod” from HACS → Frontend.') },
 ];
 const HGLookX = {
-  M: null, res: null, pend: null, kio: null, busy: false,
+  M: null, res: null, pend: null, kio: null, busy: false, vuOpen: null,
+  vuHtml(page, v, off) { const L = HGUsers.list; if (!L) return `<div class="lx-vu"><small>${hgTr('Wczytywanie osób…', 'Loading people…')}</small></div>`;
+    const me = page._hass.user.id, n = L.filter((u) => !off.includes(u.id)).length;
+    const rows = [...L].sort((a, b) => (a.id === me ? -1 : b.id === me ? 1 : 0) || String(a.name || '').localeCompare(String(b.name || ''), HG_LOC())).map((u) => { const vis = !off.includes(u.id), self = u.id === me, nm = String(u.name || u.username || '?');
+      return `<button type="button" class="wl-sw us-r" role="switch" data-hge="lx-vut" data-v="${H.esc(v)}" data-u="${H.esc(u.id)}" aria-checked="${vis}" ${self ? 'disabled' : ''}><span class="us-av" aria-hidden="true">${H.esc((Array.from(nm.trim())[0] || '?').toUpperCase())}</span><span>${H.esc(nm)}${self ? `<em class="us-tg">${hgTr('Ty', 'You')}</em>` : ''}<small>${vis ? hgTr('Widzi ten widok', 'Sees this view') : hgTr('Widok ukryty', 'View hidden')}</small></span><i aria-hidden="true"></i></button>`; }).join('');
+    return `<div class="lx-vu" role="group" aria-label="${hgTr('Kto widzi ten widok', 'Who sees this view')}"><style>${typeof HG_WALL_CSS === 'string' ? HG_WALL_CSS : ''}${typeof HG_US_CSS === 'string' ? HG_US_CSS : ''}</style><small>${hgTr(`Widzi ${n} z ${L.length} osób. Osoba z własnym układem też nie zobaczy ukrytego widoku.`, `${n} of ${L.length} people see it. People with their own layout don't see a hidden view either.`)}</small>${rows}</div>`; },
   async prep(page) { if (this.busy) return; this.busy = true; const h = page._hass;
     try { this.M = await HGModel.load(h); } catch (e) { this.M = null; }
     try { this.res = (await h.callWS({ type: 'lovelace/resources' })).map((r) => r.url || ''); } catch (e) { this.res = []; }
@@ -453,10 +462,14 @@ const HGLookX = {
     const lang = hgLang(page._hass, (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
     for (const c of CU) has[c.p] = true; const tl = (d) => (d[4] ? H.esc(d[4].n) : t(d[1]));
     const auto = !!(page._config && page._config._hgAuto);
+    /* kto widzi widok: tylko admin na wspólnym dashboardzie (lista osób z HGUsers) */
+    const vuOk = page._isAdmin() && typeof HGL !== 'undefined' && HGL.mode === 'shared' && window.HGUsers, VU = ((HGL.data && HGL.data.wiz) || {}).vu || {};
+    if (vuOk && !HGUsers.list) HGUsers.prep(page);
     const rows = V.order.map((v, i) => { const d = D[v], on = V.on.has(v), fx = v === 'dashboard';
-      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${tl(d)}</b><small>${d[4] ? `${hgTr('Własny widok', 'Custom view')} · ${H.esc((HG_LAYS.find((x) => x[0] === d[4].lay) || HG_LAYS[0])[1])} · /${H.esc(d[4].p)}${on ? '' : hgTr(' · ukryty', ' · hidden')}` : has[v] ? (fx ? hgTr('Zawsze widoczny', 'Always visible') : on ? hgTr('Widoczny', 'Visible') : hgTr('Ukryty', 'Hidden')) : t('na_req').replace('{x}', t(d[3]))}</small></span>${d[4] ? `<button class="lx-a" data-hge="lx-ce" data-v="${v}" aria-label="${hgTr('Edytuj widok', 'Edit view')}">${H.icon('mdi:pencil-outline')}</button>` : ''}
+      return `<div class="lx-r${on ? ' on' : ''}${has[v] ? '' : ' na'}"><span class="lx-i">${H.icon(d[2])}</span><span class="lx-t"><b>${tl(d)}</b><small>${d[4] ? `${hgTr('Własny widok', 'Custom view')} · ${H.esc((HG_LAYS.find((x) => x[0] === d[4].lay) || HG_LAYS[0])[1])} · /${H.esc(d[4].p)}${on ? '' : hgTr(' · ukryty', ' · hidden')}` : has[v] ? (fx ? hgTr('Zawsze widoczny', 'Always visible') : on ? hgTr('Widoczny', 'Visible') : hgTr('Ukryty', 'Hidden')) : t('na_req').replace('{x}', t(d[3]))}${!fx && vuOk && (VU[v] || []).length ? H.esc(hgTr(' · nie widzi: ', ' · hidden from: ') + VU[v].map((id) => { const u = (HGUsers.list || []).find((x) => x.id === id); return u ? u.name || u.username : '?'; }).join(', ')) : ''}</small></span>${d[4] ? `<button class="lx-a" data-hge="lx-ce" data-v="${v}" aria-label="${hgTr('Edytuj widok', 'Edit view')}">${H.icon('mdi:pencil-outline')}</button>` : ''}
+        ${fx || !vuOk ? '' : `<button class="lx-a${(VU[v] || []).length ? ' lx-vuh' : ''}" data-hge="lx-vu" data-v="${v}" aria-expanded="${this.vuOpen === v}" aria-label="${hgTr('Kto widzi ten widok', 'Who sees this view')}" title="${hgTr('Kto widzi ten widok', 'Who sees this view')}">${H.icon((VU[v] || []).length ? 'mdi:account-lock-outline' : 'mdi:account-multiple-outline')}</button>`}
         ${fx ? '' : `<button class="lx-a" data-hge="lx-up" data-v="${v}" aria-label="${hgTr('W górę', 'Move up')}" ${i <= 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-up')}</button><button class="lx-a" data-hge="lx-dn" data-v="${v}" aria-label="${hgTr('W dół', 'Move down')}" ${i === V.order.length - 1 ? 'disabled' : ''}>${H.icon('mdi:chevron-down')}</button>`}
-        <button class="lx-sw" role="switch" data-hge="lx-v" data-v="${v}" aria-checked="${on}" aria-label="${tl(d)}" ${fx ? 'disabled' : ''}><i></i></button></div>`; }).join('');
+        <button class="lx-sw" role="switch" data-hge="lx-v" data-v="${v}" aria-checked="${on}" aria-label="${tl(d)}" ${fx ? 'disabled' : ''}><i></i></button></div>${!fx && vuOk && this.vuOpen === v ? this.vuHtml(page, v, VU[v] || []) : ''}`; }).join('');
     const h = page._hass, kio = this.kio || {}, P = Object.fromEntries(HG_PKGS.map((p) => [p.id, this.pkg(p)]));
     const tg = (k, l, sub, val) => `<div class="lx-r on"><span class="lx-t"><b>${l}</b><small>${sub}</small></span><button class="lx-sw" role="switch" data-hge="lx-k" data-k="${k}" aria-checked="${!!val}" aria-label="${l}"><i></i></button></div>`;
     const pk = HG_PKGS.map((p) => { const st = P[p.id];
@@ -472,7 +485,9 @@ const HGLookX = {
       .lx-r.na{ opacity:.62; } .lx-r.na .lx-t small{ font-style:italic; } .lx-sub{ display:flex; flex-direction:column; gap:6px; margin:-2px 0 4px 18px; } .lx-sub .lx-r{ min-height:46px; padding-left:12px; }
       .lx-i{ flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .lx-r.on:not(.na) > .lx-i{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
       .lx-i ha-icon{ width:20px; height:20px; } .lx-t{ flex:1; min-width:0; display:flex; flex-direction:column; } .lx-t b{ font-weight:600; font-size:14px; } .lx-t small{ opacity:.66; font-size:12px; line-height:1.3; }
-      .lx-a{ all:unset; cursor:pointer; flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; } .lx-a:disabled{ opacity:.25; cursor:default; } .lx-a:not(:disabled):hover{ background:var(--hg-tile-bg); } .lx-a ha-icon{ width:20px; height:20px; }
+      .lx-a{ all:unset; cursor:pointer; flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; } .lx-a:disabled{ opacity:.25; cursor:default; } .lx-a:not(:disabled):hover{ background:var(--hg-tile-bg); } .lx-a ha-icon{ width:20px; height:20px; } .lx-a[aria-expanded=true]{ background:var(--hg-tile-bg); } .lx-a.lx-vuh{ color:var(--hg-accent-tx, var(--hg-accent)); }
+      .lx-vu{ display:flex; flex-direction:column; gap:6px; margin:-2px 0 6px 18px; padding-left:12px; border-left:2px solid color-mix(in srgb, var(--hg-accent) 45%, transparent); } .lx-vu > small{ font-size:12px; opacity:.7; padding:2px 4px; }
+      .lx-vu .wl-sw{ min-height:44px; } .lx-vu .wl-sw.us-r > .us-av{ width:28px; height:28px; font-size:12.5px; }
       .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; background:rgba(128,134,142,.38); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); backdrop-filter:blur(6px); position:relative; transition:background .18s; } .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .18s; }
       .lx-sw[aria-checked=true]{ background:var(--hg-accent); box-shadow:none; } .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .lx-sw:disabled{ opacity:.45; cursor:default; } .lx-sw:focus-visible, .lx-a:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
       .lx-hb{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; margin:-2px 0 6px 50px; } .lx-hbtn{ all:unset; cursor:pointer; box-sizing:border-box; border-radius:999px; background:var(--hg-tile-bg); height:36px; padding:0 14px; display:inline-flex; gap:6px; align-items:center; font-size:13px; } .lx-hbtn ha-icon{ width:18px; height:18px; } .lx-hbtn.ok{ background:var(--hg-accent); color:var(--hg-on-accent); font-weight:600; } .lx-hbtn:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .lx-hl{ font-size:12px; opacity:.7; color:inherit; }
@@ -499,6 +514,11 @@ const HGLookX = {
         page._eToast((c.old ? hgTr('Zapisano widok: ', 'View saved: ') : hgTr('Utworzono widok: ', 'View created: ')) + rec.n + hgTr(' (odświeżanie…)', ' (reloading…)')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); } }
     if (a === 'lx-hacs') { const p = HG_PKGS.find((x) => x.id === b.dataset.p); if (!p) return; this.hacsGo = Object.assign({}, this.hacsGo, { [p.id]: 1 }); if (!window.__hgDryRun) { if (hgHacsOpen(h, p.rid, p.repo)) page._editExit && page._editExit(false); } else page._eLook(); return; }
     if (a === 'lx-rf') { if (!window.__hgDryRun) location.reload(); return; }
+    if (a === 'lx-vu') { this.vuOpen = this.vuOpen === b.dataset.v ? null : b.dataset.v; return page._eLook(); }
+    if (a === 'lx-vut') { if (!page._isAdmin() || HGL.mode !== 'shared') return; const v = b.dataset.v, u = b.dataset.u; if (!v || !u || u === h.user.id) return;
+      const w = HGL.data.wiz = Object.assign({}, HGL.data.wiz || { lang: hgLang(h), ts: Date.now() }), vu = w.vu = Object.assign({}, w.vu || {}), s = new Set(vu[v] || []);
+      s.has(u) ? s.delete(u) : s.add(u); if (s.size) vu[v] = [...s]; else delete vu[v]; if (!Object.keys(vu).length) delete w.vu;
+      const r = await HGL.save(h); page._eToast(r === 'ha' ? hgTr('Zapisano. Ta osoba zobaczy zmianę od razu.', 'Saved. The change reaches this person right away.') : hgTr('Zapisano tylko lokalnie', 'Saved locally only')); return page._eLook(); }
     if (a === 'lx-v' || a === 'lx-up' || a === 'lx-dn') { const V = this.views(), v = b.dataset.v, o = V.order.slice(), on = new Set(V.on), i = o.indexOf(v);
       if (a === 'lx-v') on.has(v) ? on.delete(v) : on.add(v);
       if (a === 'lx-up' && i > 1) [o[i - 1], o[i]] = [o[i], o[i - 1]];

@@ -28,6 +28,9 @@ const HGL = window.__hgL || (window.__hgL = {
     this._p = !c ? Promise.resolve() : HGShared.eff(h).then(async (E) => {
       /* pierwsze uruchomienie po aktualizacji: układ admina staje się wspólnym dla wszystkich */
       if (!E.doc && h.user && h.user.is_admin && !window.__hgDryRun) try { if (await HGShared.create(h, E.user)) E = await HGShared.eff(h); } catch (e) { /* zostaje własny */ }
+      /* widoki ukryte dla tej osoby zmienione przez admina: nawigację buduje strategia, więc przeładowanie strony */
+      const off = hgViewOff(h, E.doc && E.doc.data && E.doc.data.wiz), vk = JSON.stringify([...new Set([...Object.keys((E.doc && E.doc.data && E.doc.data.wiz && E.doc.data.wiz.vu) || {})])].filter(off));
+      if (this._vk != null && vk !== this._vk && !this.editing && !window.__hgDryRun) { this._vk = vk; location.reload(); return; } this._vk = vk;
       const v = E.data; this.loaded = true; this.mode = E.mode; this._base = this._snap(E.seeded ? null : v);
       /* serwer jest źródłem prawdy (zegary urządzeń się różnią); w trakcie edycji nie podmieniamy danych – scalenie nastąpi przy zapisie */
       if (!this.editing) { if (v) this.data = this.cl(v); else if (E.mode === 'shared') this.data = { v: 1, ts: 0, s: {} }; this._ls(); this.notify(); }

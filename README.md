@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.4.0-a3e635?style=flat-square" alt="v1.4.0">
+  <img src="https://img.shields.io/badge/version-v1.5.0-a3e635?style=flat-square" alt="v1.5.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -349,6 +349,7 @@ Everyone sees the same Nuvio dashboard by default: the layout, appearance, views
 
 - **Who edits**: administrators edit the shared dashboard (edit mode). Other people see it without the edit button.
 - **Own layout**: in **Settings → Users** (edit mode, admins only) every Home Assistant user has a switch. Turn a person off and they get their own layout: it starts as a copy of the shared one, the edit button appears for them, and their changes affect only them. Turn them back on to return them to the shared dashboard. Your own account stays on the shared dashboard.
+- **Who sees a view**: in **Settings → Views** each view (except Home) has a people button. Every view is visible to everyone by default; turn a person off to hide the view from them, including from their own layout. Their screen reloads on its own to drop the view.
 - **Live**: changes to the shared dashboard and to the list reach open screens without a reload.
 - **Storage**: the shared layout lives in a hidden storage dashboard `nuvio-shared` (*Nuvio (wspólny układ)*, admins only, not in the sidebar). Only admins can write it; do not edit it by hand. Own layouts stay in Home Assistant user data (`frontend/set_user_data`, key `nuvio_layout`), with a local copy per user. Assist settings are always personal.
 - **Upgrading from 1.3.x**: the first time an admin opens Nuvio 1.4.0, their current layout becomes the shared dashboard. Until then everyone keeps their own layout as before.
@@ -407,9 +408,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.4.0 -m "Nuvio 1.4.0" && git push origin v1.4.0`.
+Only tagging by hand: `git tag -a v1.5.0 -m "Nuvio 1.5.0" && git push origin v1.5.0`.
 
 ## Changelog
+
+### 1.5.0
+- Added: per-person view visibility in **Settings → Views**. Every view is visible to everyone by default; an admin can hide a view from chosen people, and the row shows who does not see it. It also applies to people with their own layout, and their open screen reloads to drop the view.
 
 ### 1.4.0
 - Added: shared dashboard. By default everyone sees the same dashboard, set up by an administrator; non-admins no longer get an empty default layout. The first admin to open 1.4.0 turns their layout into the shared one.

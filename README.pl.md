@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.4.0-a3e635?style=flat-square" alt="v1.4.0">
+  <img src="https://img.shields.io/badge/version-v1.5.0-a3e635?style=flat-square" alt="v1.5.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -349,6 +349,7 @@ Domyślnie wszyscy widzą ten sam dashboard Nuvio: układ, wygląd, widoki, poko
 
 - **Kto edytuje**: administratorzy edytują wspólny dashboard (tryb edycji). Pozostałe osoby widzą go bez przycisku edycji.
 - **Własny układ**: w **Ustawienia → Użytkownicy** (tryb edycji, tylko administrator) każdy użytkownik Home Assistant ma przełącznik. Po odznaczeniu osoba dostaje własny układ: zaczyna od kopii wspólnego, widzi przycisk edycji, a jej zmiany dotyczą tylko jej. Ponowne zaznaczenie przywraca wspólny dashboard. Twoje konto zostaje na wspólnym dashboardzie.
+- **Kto widzi widok**: w **Ustawienia → Widoki** każdy widok (poza Panelem) ma przycisk z osobami. Domyślnie każdy widok widzą wszyscy; odznacz osobę, żeby ukryć przed nią widok, także w jej własnym układzie. Jej ekran sam się przeładuje i widok zniknie.
 - **Na żywo**: zmiany wspólnego dashboardu i listy osób trafiają na otwarte ekrany bez przeładowania.
 - **Zapis**: wspólny układ jest w ukrytym pulpicie `nuvio-shared` (*Nuvio (wspólny układ)*, tylko dla administratorów, bez pozycji w pasku bocznym). Zapisywać go mogą tylko administratorzy; nie edytuj go ręcznie. Własne układy zostają w danych użytkownika Home Assistant (`frontend/set_user_data`, klucz `nuvio_layout`), z kopią lokalną dla każdego użytkownika. Ustawienia Assist są zawsze osobiste.
 - **Aktualizacja z 1.3.x**: gdy administrator pierwszy raz otworzy Nuvio 1.4.0, jego obecny układ staje się wspólnym dashboardem. Do tego czasu każdy ma własny układ jak wcześniej.
@@ -407,9 +408,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.4.0 -m "Nuvio 1.4.0" && git push origin v1.4.0`.
+Sam tag ręcznie: `git tag -a v1.5.0 -m "Nuvio 1.5.0" && git push origin v1.5.0`.
 
 ## Lista zmian
+
+### 1.5.0
+- Dodano: widoczność widoków dla poszczególnych osób w **Ustawienia → Widoki**. Domyślnie każdy widok widzą wszyscy; administrator może ukryć widok przed wybranymi osobami, a wiersz pokazuje, kto go nie widzi. Działa też dla osób z własnym układem, a ich otwarty ekran sam się przeładuje bez tego widoku.
 
 ### 1.4.0
 - Dodano: wspólny dashboard. Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator; osoby bez uprawnień administratora nie dostają już pustego układu domyślnego. Pierwszy administrator, który otworzy 1.4.0, zamienia swój układ we wspólny.
