@@ -157,10 +157,11 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   unlock() { const el = this.el; if (!el || el.classList.contains('unl')) return; const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const li = el.querySelector('.nw-li'), r = li && li.getBoundingClientRect(); if (r) { el.style.setProperty('--rx', r.left + r.width / 2 + 'px'); el.style.setProperty('--ry', r.top + r.height / 2 + 'px'); }
     el.classList.add('unl'); try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* bez wibracji */ }
-    setTimeout(() => { this.locked = false; this.flag(false); this.wake('pin'); }, rm ? 150 : 620); },
+    setTimeout(() => { this.locked = false; this.flag(false); const pg = this.page, as = this._apin; this._apin = 0; this.wake('pin');
+      if (as && window.HGAssistUI) setTimeout(() => HGAssistUI.open(pg && pg.shadowRoot ? pg : null, 'saver'), 80); }, rm ? 150 : 620); },
   /* pinpad wraca do zablokowanego wygaszacza po 20 s bez dotyku */
   idlePad() { clearTimeout(this._pt); this._pt = setTimeout(() => this.unpad(), 20000); },
-  unpad() { clearTimeout(this._pt); this._pin = ''; const el = this.el; if (!el) return; el.classList.remove('pin'); this.msg(''); el.focus({ preventScroll: true }); },
+  unpad() { clearTimeout(this._pt); this._pin = ''; this._apin = 0; const el = this.el; if (!el) return; el.classList.remove('pin'); this.msg(''); el.focus({ preventScroll: true }); },
   key(k) { const el = this.el; if (!el || el.classList.contains('unl')) return; const c = this.get(); this.idlePad();
     if (k === 'lock') return this.unpad();
     const wait = (this._ban || 0) - Date.now(); if (wait > 0) return this.msg(hgTr(`Spróbuj za ${Math.ceil(wait / 1000)} s`, `Try again in ${Math.ceil(wait / 1000)} s`), true);
@@ -218,7 +219,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
-    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) return this.pad(); if (e.type === 'pointerdown' && this.glTap && this.glTap(e)) { this.last = Date.now(); return; } this.wake('touch'); };
+    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && this.glTap && this.glTap(e)) { this.last = Date.now(); return; } this.wake('touch'); };
     el.addEventListener('pointerdown', wk);
     el.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); if (!this.locked) return this.wake('key');
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());

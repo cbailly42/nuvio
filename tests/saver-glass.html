@@ -52,6 +52,7 @@ if (q.get('ui')) {
   if (q.get('assist')) { const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass; await new Promise((r) => setTimeout(r, 600)); W.page = pg;
     L.data.wall = Object.assign({}, L.data.wall, { on: true, style: 'glass' }); }
   else W.page = document.body;
-  W.show(); if (q.get('tab')) { W._gtab = Number(q.get('tab')); W.gl(true); } if (q.get('assist')) setTimeout(() => { const o = W.el.querySelector('.ng-orb'); o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }, 700); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
+  if (q.get('pin')) L.data.wall = Object.assign({}, L.data.wall, { lock: true, lockAfter: 0, pinH: W.hash('1234'), pinN: 4 });
+  W.show(); if (q.get('pin')) setTimeout(() => { if (!W.locked && W.lockNow) W.lockNow(); W.pad(); if (q.get('pin') === '2') { W.key('1'); W.key('2'); } }, 900); if (q.get('tab')) { W._gtab = Number(q.get('tab')); W.gl(true); } if (q.get('assist')) setTimeout(() => { const o = W.el.querySelector('.ng-orb'); o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }, 700); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
 window.__ready = true;
 </script></body></html>
