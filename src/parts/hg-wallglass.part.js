@@ -84,14 +84,14 @@ const HG_GL_SS = `
 .ng-emp{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:0 1.6em; gap:.4em; } .ng-emp b{ font-size:1.8em; } .ng-emp small{ font-size:1.3em; opacity:.7; }
 .ng-c.t-weather{ background:none; box-shadow:none; overflow:visible; }
 .t-weather .ng-im{ left:0; top:1.6em; width:23em; height:15em; object-position:left top; filter:drop-shadow(0 1.2em 1.4em ${K(0,0,0,.35)}); z-index:0; }
-.ng-pill{ position:absolute; left:17.5em; top:12.8em; width:19.5em; height:28.2em; border-radius:9.8em 9.8em 6.2em 6.2em; z-index:1;
+.ng-pill{ position:absolute; left:13.5em; top:12.8em; width:19.5em; height:28.2em; border-radius:9.8em 9.8em 6.2em 6.2em; z-index:1;
   background:linear-gradient(180deg, ${K(175,182,205,.62)} 0%, ${K(110,112,160,.32)} 22%, ${K(60,52,120,.2)} 55%, ${K(52,40,110,.28)} 100%); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}, inset 0 1px 0 ${K(255,255,255,.25)};
   -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
 .ng-pill b{ position:absolute; left:.31em; top:.58em; font-size:9.2em; font-weight:200; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
 .ng-pill b sup{ position:absolute; top:.04em; right:-.17em; width:.12em; height:.12em; border:.02em solid currentColor; border-radius:50%; font-size:1em; }
 .ng-pill p{ position:absolute; left:1.5em; right:1em; top:7.85em; margin:0; font-size:2em; font-weight:700; line-height:1.25; }
 .ng-pill small{ position:absolute; left:2em; right:1em; top:14.4em; font-size:1.5em; font-weight:500; opacity:.72; }
-.ng-fc{ position:absolute; left:39em; right:1.5em; top:14em; display:grid; grid-template-columns:repeat(3, 1fr); gap:.4em; font-size:1.6em; text-align:center; }
+.ng-fc{ position:absolute; left:36em; right:1.5em; top:14em; display:grid; grid-template-columns:repeat(3, 1fr); gap:.4em; font-size:1.6em; text-align:center; }
 .ng-fc span{ display:flex; flex-direction:column; opacity:.85; } .ng-fc b{ font-size:1.3em; font-weight:600; }
 .ng-c.s.t-weather .ng-ci{ font-size:min(calc(100cqw / 38), calc(100cqh / 41.5)); }
 .t-media .ng-art{ position:absolute; left:0; right:0; top:0; height:58%; background:center/cover no-repeat var(--art, none), linear-gradient(160deg, ${K(64,72,140,1)}, ${K(30,36,80,1)}); }
@@ -141,7 +141,7 @@ const HG_GL_SS = `
 .ng-bn .ng-c{ width:auto; height:auto; min-height:0; } .ng-bn .ng-c.m{ grid-row:span 2; } .ng-bn .ng-c.l{ grid-row:span 2; grid-column:span 2; } .ng-bn .ng-c.w{ grid-column:span 2; }
 .ng-bn .ng-c.t-weather{ background:linear-gradient(170deg, ${K(70,64,130,.55)}, ${K(40,34,90,.35)}); box-shadow:inset 0 0 0 1px ${K(255,255,255,.1)}; overflow:hidden; }
 .ng-bn .ng-c.l .ng-ci{ font-size:min(calc(100cqw / 44), calc(100cqh / 41.5)); } .ng-bn .ng-c.l.t-weather .ng-ci{ font-size:min(calc(100cqw / 60), calc(100cqh / 41.5)); }
-.ng-bn .ng-c.l.t-weather .ng-pill{ left:21em; } .ng-bn .ng-c.l.t-weather .ng-im{ left:2em; } .ng-bn .ng-c.l.t-weather .ng-fc{ left:42em; }
+.ng-bn .ng-c.l.t-weather .ng-pill{ left:15em; } .ng-bn .ng-c.l.t-weather .ng-fc{ left:40em; }
 @media (orientation:portrait){
   .ng-tb{ left:calc(24 * var(--u)); right:calc(24 * var(--u)); transform:none; top:calc(104 * var(--u)); max-width:none; gap:calc(30 * var(--u)); }
   .ng-tb > i{ display:none; } .ng-car{ top:calc(200 * var(--u)); height:calc(100% - 380 * var(--u)); } .ng-trk{ padding-left:calc(28 * var(--u)); }
@@ -224,10 +224,10 @@ Object.assign(HGWall, {
     if (!s && c.t !== 'weather') { html = `${img}<div class="ng-emp"><b>${H.esc(nm)}</b><small>${c.e ? hgTr('Encja niedostępna', 'Entity unavailable') : hgTr('Wybierz encję w ustawieniach', 'Pick an entity in settings')}</small></div>`; return { cls: 'na', html, sheet }; }
     if (c.t === 'weather') { const u = A.temperature_unit || '°C', cn = s && typeof HGWx !== 'undefined' && HGWx.cn ? HGWx.cn(s.state) : s ? s.state : '', F = this._fc && this._fc.id === c.e && this._fc.daily ? this._fc.daily.slice(1, 4) : [];
       if (s && this.fc && h.callWS) this.fc(h, c.e);
-      html = `${img}<div class="ng-pill"><b>${s ? num(A.temperature, 0) : '–'}<sup></sup></b><p>${H.esc(c.n || cn)}</p><small>${H.esc(c.n2 || (A.humidity != null ? hgTr('Wilgotność ', 'Humidity ') + H.fmt(A.humidity, 0) + '%' : ''))}</small></div>
-        ${F.length && (c.sz === 'w' || c.sz === 'l') ? `<div class="ng-fc">${F.map((f) => `<span>${H.esc(new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short' }).format(new Date(f.datetime)))}<b>${num(f.temperature, 0)}°</b></span>`).join('')}</div>` : ''}`;
+      html = `<div class="ng-pill">${img}<b>${s ? num(A.temperature, 0) : '–'}<sup></sup></b><p>${H.esc(c.n || cn)}</p><small>${H.esc(c.n2 || (A.humidity != null ? hgTr('Wilgotność ', 'Humidity ') + H.fmt(A.humidity, 0) + '%' : ''))}</small></div>
+        ${F.length && (c.sz === 'w' || (c.sz === 'l' && G.v === 'bento')) ? `<div class="ng-fc">${F.map((f) => `<span>${H.esc(new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short' }).format(new Date(f.datetime)))}<b>${num(f.temperature, 0)}°</b></span>`).join('')}</div>` : ''}`;
       sheet = s ? sh(num(A.temperature, 1) + '<small>' + H.esc(u) + '</small>', cn, [A.humidity != null ? hgTr('Wilgotność ', 'Humidity ') + H.fmt(A.humidity, 0) + '%' : '', A.wind_speed != null ? hgTr('Wiatr ', 'Wind ') + H.fmt(A.wind_speed, 0) + ' ' + (A.wind_speed_unit || '') : '', A.pressure != null ? hgTr('Ciśnienie ', 'Pressure ') + H.fmt(A.pressure, 0) + ' ' + (A.pressure_unit || '') : ''].filter(Boolean).join(' · '), null) : null; }
-    else if (c.t === 'media') { const pic = A.entity_picture_local || A.entity_picture || '', pl = s.state === 'playing', dur = Number(A.media_duration) || 0, pos = Number(A.media_position) || 0, el = pl && A.media_position_updated_at ? (Date.now() - Date.parse(A.media_position_updated_at)) / 1000 : 0, pc = dur ? Math.min(100, ((pos + el) / dur) * 100) : 0;
+    else if (c.t === 'media') { const pl = s.state === 'playing', pic = pl || s.state === 'paused' ? A.entity_picture_local || A.entity_picture || '' : '', dur = Number(A.media_duration) || 0, pos = Number(A.media_position) || 0, el = pl && A.media_position_updated_at ? (Date.now() - Date.parse(A.media_position_updated_at)) / 1000 : 0, pc = dur ? Math.min(100, ((pos + el) / dur) * 100) : 0;
       html = `<div class="ng-art${pic ? '' : ' no'}"${pic ? ` style="--art:url(&quot;${H.esc(pic)}&quot;)"` : ''}>${pic ? '' : img}</div><div class="ng-pn"><h4>${H.esc(A.media_title || c.n || nm)}</h4><div class="ng-ar">${H.esc(A.media_artist || A.app_name || (c.n ? '' : hgTr('Nic nie gra', 'Nothing playing')))}</div><span class="ng-ht">${H.icon('mdi:heart-outline')}</span>
         <div class="ng-pr"><i style="width:${pc.toFixed(1)}%"></i><b style="left:${pc.toFixed(1)}%"></b></div><div class="ng-ct"><button type="button" data-gm="media_previous_track" aria-label="${hgTr('Poprzedni', 'Previous')}">${H.icon('mdi:skip-previous')}</button><button type="button" class="pp" data-gm="media_play_pause" aria-label="${pl ? hgTr('Pauza', 'Pause') : hgTr('Odtwórz', 'Play')}">${H.icon(pl ? 'mdi:pause' : 'mdi:play')}</button><button type="button" data-gm="media_next_track" aria-label="${hgTr('Następny', 'Next')}">${H.icon('mdi:skip-next')}</button></div></div>`;
       sheet = sh(H.esc(A.media_title || st()), A.media_artist || '', H.name(h, c.e, ''), dur ? pc : null); }
@@ -254,6 +254,15 @@ Object.assign(HGWall, {
     if (['light', 'switch', 'fan', 'input_boolean', 'group', 'climate', 'water_heater'].includes(d)) return H.call(h, d === 'group' ? 'homeassistant' : d, 'toggle', { entity_id: c.e }); },
 });
 const HG_GL_SS2 = `.ng-dm{ position:absolute; inset:0; background:${K(0,0,0,1)}; opacity:calc(var(--nw-dim, 0) * .55); pointer-events:none; z-index:4; transition:opacity 1s ease; }
+.ng .ng-c{ --p:calc(26 * var(--u)); } .ng .ng-c.s{ --p:calc(20 * var(--u)); }
+.ng .ng-ci h3{ left:var(--p); top:var(--p); right:var(--p); } .ng .ng-c.s .ng-ci h3{ right:42%; }
+.ng .ng-ft{ left:var(--p); bottom:var(--p); gap:.45em; } .ng .ng-ft small{ margin-left:.2em; font-size:.8em; }
+.ng .ng-pl{ right:var(--p); bottom:var(--p); } .ng .ng-bar{ left:var(--p); right:var(--p); } .ng .ng-c.w .ng-bar{ right:55%; } .ng .ng-ics{ left:var(--p); }
+.ng .ng-bd{ left:var(--p); bottom:var(--p); right:var(--p); } .ng .ng-emp{ padding:0 var(--p); }
+.ng .t-media h4, .ng .t-media .ng-ar{ left:var(--p); right:calc(var(--p) + 3.4em); } .ng .t-media .ng-pr{ left:var(--p); right:var(--p); } .ng .t-media .ng-ht{ right:var(--p); }
+.ng .t-media .ng-ct{ left:var(--p); right:var(--p); justify-content:space-between; gap:0; } .ng .ng-c.s.t-media h4, .ng .ng-c.s.t-media .ng-ar{ left:var(--p); right:var(--p); }
+.ng .ng-car .ng-c.l.t-weather{ width:calc(300 * var(--u)); } .ng .ng-car .ng-c.l.t-weather .ng-ci{ font-size:min(calc(100cqw / 30), calc(100cqh / 41.5)); } .ng .ng-car .t-weather .ng-pill{ left:8em; }
+.ng .t-weather .ng-pill .ng-im{ left:-7.5em; top:-8.6em; width:19em; height:12.4em; object-position:center bottom; z-index:2; }
 .ng-sh, .ng-orb{ z-index:6; } .ng-c *{ pointer-events:none; } .ng-c [data-gm]{ pointer-events:auto; }`;
 Object.assign(HGWall, {
   glShell() { return `<style>${HG_WALL_SS}${HG_GL_SS}${HG_GL_SS2}</style><div class="ng"><div class="ng-st"><div class="ng-bg" aria-hidden="true"></div><div class="ng-sp" aria-hidden="true"></div>
@@ -319,7 +328,20 @@ Object.assign(HGWall, {
 const HG_GL_CSS = `
 .wg-pv{ position:relative; width:100%; aspect-ratio:1280 / 680; border-radius:18px; overflow:hidden; margin:4px 0 2px; box-shadow:0 6px 20px rgba(0,0,0,.18); isolation:isolate; }
 @media (orientation:portrait){ .wg-pv{ aspect-ratio:560 / 900; max-height:62vh; width:auto; margin-inline:auto; } }
-.wg-pv .ng{ pointer-events:none; } .wg-pv .ng-orb{ animation:none; }
+.wg-pv .ng{ pointer-events:none; }
+.wg-gal{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.wg-gt{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; padding:8px; border-radius:18px; background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.2); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:box-shadow .2s ease, transform .2s ease; }
+.wg-gt:hover{ transform:translateY(-1px); } .wg-gt:focus-visible{ outline:2px solid #63d71e; outline-offset:2px; }
+.wg-gt[aria-checked=true]{ box-shadow:inset 0 0 0 2px #63d71e, 0 0 0 3px rgba(99,215,30,.18), 0 6px 18px rgba(0,0,0,.2); }
+.wg-gp{ container-type:inline-size; position:relative; display:block; width:100%; aspect-ratio:1280 / 680; border-radius:12px; overflow:hidden; isolation:isolate; pointer-events:none; color:#fff; }
+@media (orientation:portrait){ .wg-gp{ aspect-ratio:560 / 900; } }
+.wg-gp .ng-orb{ animation:none; } .wg-gp .ng-trk{ animation:none; }
+.wg-ph{ position:absolute; inset:0; background:center/cover #222; filter:brightness(.6); }
+.wg-gp > .wg-t{ position:absolute; left:10%; top:24%; line-height:1; font-size:22cqw; font-weight:200; text-shadow:0 1px 6px rgba(0,0,0,.5); } .wg-gp > .wg-d{ position:absolute; left:10%; top:58%; font-size:6.5cqw; text-shadow:0 1px 4px rgba(0,0,0,.6); }
+.wg-gp > .wg-d::first-letter{ text-transform:uppercase; }
+.wg-bd{ position:absolute; inset:0; background:linear-gradient(160deg, #e9edf2, #cfd6de); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto 1fr 1fr; gap:6%; padding:7%; box-sizing:border-box; }
+.wg-bd b{ grid-column:span 2; color:#1d2530; font-size:13cqw; line-height:1; font-weight:300; } .wg-bd u{ border-radius:8px; background:rgba(255,255,255,.75); box-shadow:0 2px 6px rgba(0,0,0,.08); }
+.wg-gl{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; padding:0 4px 2px; } .wg-gl ha-icon{ --mdc-icon-size:16px; color:#63d71e; } .wg-pv .ng-orb{ animation:none; }
 .wg-vs{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
 .wg-vs button{ all:unset; cursor:pointer; box-sizing:border-box; padding:10px 8px; border-radius:14px; text-align:center; background:var(--hg-surface-2, rgba(127,127,127,.12)); display:flex; flex-direction:column; align-items:center; gap:4px; font-size:13px; font-weight:600; }
 .wg-vs button small{ font-weight:400; opacity:.7; font-size:11px; } .wg-vs button[aria-pressed=true]{ box-shadow:inset 0 0 0 2px var(--hg-accent, #6c7cff); }
@@ -351,7 +373,7 @@ Object.assign(HGWall, {
     const sw = (path, on, pl, en, spl, sen) => `<button type="button" class="wl-sw" role="switch" data-hge="wl-g-b" data-v="${H.esc(path)}" aria-checked="${!!on}"><span>${L(pl, en)}${spl ? `<small>${L(spl, sen)}</small>` : ''}</span><i aria-hidden="true"></i></button>`;
     const rg = (path, v, mi, mx, st, pl, en, fmt) => `<div class="wl-f"><span>${L(pl, en)}<em class="wg-rv">${H.esc(fmt(v))}</em></span><input class="lk-rg" type="range" min="${mi}" max="${mx}" step="${st}" name="wg:${path}" value="${v}" data-fmt="${fmt === this._pc ? 'pc' : fmt === this._px ? 'px' : 'x'}" style="--v:${((v - mi) / (mx - mi)) * 100}%" aria-label="${L(pl, en)}"></div>`;
     const V = [['carousel', 'Karuzela', 'Carousel', 'mdi:view-carousel-outline', 'Karty jadą w poziomie', 'Cards glide sideways'], ['minimal', 'Minimal', 'Minimal', 'mdi:clock-outline', 'Duży zegar', 'Big clock'], ['bento', 'Bento', 'Bento', 'mdi:view-dashboard-outline', 'Stała siatka', 'Fixed grid']];
-    let s = `<div class="wl-f" role="group" aria-label="${L('Wariant', 'Variant')}"><span>${L('Wariant', 'Variant')}</span><div class="wg-vs">${V.map(([k, pl, en, ic, spl, sen]) => `<button type="button" data-hge="wl-g-s" data-v="v=${k}" aria-pressed="${G.v === k}">${H.icon(ic)}${L(pl, en)}<small>${L(spl, sen)}</small></button>`).join('')}</div>
+    let s = `<div class="wl-f"><span>${L('Podgląd na żywo', 'Live preview')}</span>
       <div class="wg-pv" aria-label="${L('Podgląd na żywo', 'Live preview')}" role="img">${this.glShell().replace(/^<style>[\s\S]*?<\/style>/, '')}</div></div>`;
     if (G.v !== 'minimal') {
       s += `<div class="wg-h">${L('Karty', 'Cards')}${G.cards ? '' : ' · ' + L('automatyczne', 'automatic')}</div>`;
@@ -382,7 +404,18 @@ Object.assign(HGWall, {
     s += `<div class="wg-h">${L('Napis i ruch', 'Hint and motion')}</div>${sw('hint.on', G.hint.on, 'Napis na dole', 'Bottom hint')}${G.hint.on ? `<span class="hs-s">${H.icon('mdi:format-text')}<input class="hs-in" name="wg:hint.t" value="${H.esc(G.hint.t)}" maxlength="60" placeholder="${L('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake')}" aria-label="${L('Tekst napisu', 'Hint text')}"></span>` : ''}
       <div class="wl-f"><span>${L('Animacje', 'Motion')}</span>${seg('rm', [['auto', 'Jak w systemie', 'As system'], ['on', 'Ograniczone', 'Reduced']], G.rm)}</div><small class="lk-hn">${L('Opóźnienie startu ustawisz wyżej: „Włącz po bezczynności”.', 'Set the start delay above: “Start after inactivity”.')}</small>
       <input type="file" accept="image/*" name="wg-file" hidden>`;
-    return `<style>${HG_GL_SS}${HG_GL_SS2}${HG_GL_CSS}</style>${s}`; },
+    return s; },
+  /* galeria wygaszaczy (zamiast przełącznika): kafle z żywym podglądem */
+  GAL: [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board'], ['glass:carousel', 'Karuzela', 'Carousel'], ['glass:minimal', 'Minimal', 'Minimal'], ['glass:bento', 'Bento', 'Bento']],
+  galHtml(style) { const cur = style === 'glass' ? 'glass:' + this.gget().v : style, fake = this.glShell().replace(/^<style>[\s\S]*?<\/style>/, '');
+    return `<style>${HG_GL_SS}${HG_GL_SS2}${HG_GL_CSS}</style><div class="wg-gal" role="radiogroup" aria-label="${H.esc(hgTr('Wygaszacze', 'Screensavers'))}">${this.GAL.map(([k, pl, en]) => `<button type="button" class="wg-gt" role="radio" data-hge="wl-g-gal" data-v="${k}" aria-checked="${cur === k}">
+      <span class="wg-gp" data-gp="${k}">${k.startsWith('glass') ? fake : k === 'photo' ? `<i class="wg-ph" style="background-image:url(&quot;${H.esc(HG_ASSET + 'nuvio-bg-default-wide.webp')}&quot;)"></i><b class="wg-t"></b><small class="wg-d"></small>` : `<i class="wg-bd"><b class="wg-t"></b><u></u><u></u><u></u><u></u></i>`}</span>
+      <span class="wg-gl">${cur === k ? H.icon('mdi:check-circle') : ''}${H.esc(hgTr(pl, en))}</span></button>`).join('')}</div>`; },
+  galWire(S, h) { const G0 = this.gget(), port = matchMedia('(orientation: portrait)').matches, d = new Date(), t = this.gtf(G0).format(d);
+    for (const g of S.querySelectorAll('[data-gp]')) { const k = g.dataset.gp, r = g.getBoundingClientRect();
+      for (const x of g.querySelectorAll('.wg-t')) x.textContent = t; for (const x of g.querySelectorAll('.wg-d')) x.textContent = this.gdate(G0, d);
+      if (!k.startsWith('glass') || !r.width) continue; const root = g.querySelector('.ng'); root._gk = {};
+      this.glRender(root, Object.assign({}, G0, { v: k.slice(6) }), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); } },
   _pc(v) { return Math.round(v * 100) + '%'; }, _px(v) { return v + ' px'; },
   /* edytor jednej karty */
   glEd(x, h, G) { const T = HG_GL_TYPES.find((y) => y[0] === x.t), L = (pl, en) => H.esc(hgTr(pl, en)), cs = (f, k) => H.esc(x.id + '|' + f + '=' + k);
@@ -413,6 +446,7 @@ Object.assign(HGWall, {
       if (path === 'fam.who') val = val === '+' ? Object.keys(h.states).filter((e) => e.startsWith('person.')).sort() : [];
       else if (/^(car\.spd|bento\.cols)$/.test(path)) val = Number(val);
       this.gpatch(path, val); }
+    else if (a === 'wl-g-gal') { const [st, gv] = v.split(':'); this.last = Date.now(); this.set({ style: st }); if (gv) this.gpatch('v', gv); }
     else if (a === 'wl-g-add') this._gadd = !this._gadd;
     else if (a === 'wl-g-new') { const T = HG_GL_TYPES.find((x) => x[0] === v); if (!T) return true; const id = Math.random().toString(36).slice(2, 8), L = this.gcards(h).slice();
       L.push({ id, t: v, e: (Object.keys(h.states).find((e) => T[4].includes(e.split('.')[0])) || ''), n: '', n2: '', ic: '', img: '', ac: '', sz: T[5], tap: 'sheet', tb: 0 }); this.gset({ cards: L }); this._gadd = false; this._ged = id; }
@@ -428,7 +462,8 @@ Object.assign(HGWall, {
     const fd = new FormData(); fd.append('file', f, f.name); p._eToast(hgTr('Przesyłanie…', 'Uploading…'));
     h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => { const u = `/api/image/serve/${j.id}/original`;
       if (tg === '@bg') this.gpatch('bg.img', u); else this.gmod(tg, (L, i) => { L[i].img = u; }); p._eToast(hgTr('Obraz zapisany', 'Image saved')); p._eLook(); }, (e) => p._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')')); },
-  glWire(p, S) { const pv = S.querySelector('.wg-pv'); if (!pv) return; const h = p._hass; this.hass = this.hass || h;
+  glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S.querySelector('.wg-gal')) { this.galWire(S, h); requestAnimationFrame(() => this.galWire(S, h)); }
+    const pv = S.querySelector('.wg-pv'); if (!pv) return;
     const draw = () => { const r = pv.getBoundingClientRect(), port = matchMedia('(orientation: portrait)').matches, root = pv.querySelector('.ng'); if (!root || !r.width) return; root._gk = {};
       this.glRender(root, this.gget(), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); };
     draw(); requestAnimationFrame(draw);
