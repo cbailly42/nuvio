@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.1.1-a3e635?style=flat-square" alt="v2.1.1">
+  <img src="https://img.shields.io/badge/version-v2.2.0-a3e635?style=flat-square" alt="v2.2.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.1.1 origin/main -m "Nuvio 2.1.1" && git push origin v2.1.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.2.0 origin/main -m "Nuvio 2.2.0" && git push origin v2.2.0`.
 
 ## Lista zmian
+
+### 2.2.0
+- **Tablica jako widżety**: duża, pogrubiona data na zdjęciu z dashboardu, wschód i zachód jako zwykłe linie z ikonami, a u dołu jeden rząd równych szklanych widżetów (pogoda, najbliższe, teraz gra, pokoje) w stylu StandBy. Koniec z ramkami w ramkach: wydarzenia mają cienki kolorowy pasek, pokoje to czysta lista z kolorową ikoną i dużą, lekką temperaturą, a tytuły widżetów to małe etykiety wersalikami. Pogoda trafiła do rzędu widżetów ze zwartą prognozą. Na telefonie widżety układają się pod nagłówkiem.
 
 ### 2.1.1
 - **Dopracowana tablica**: karty nie rozciągają się już z pustym miejscem; widżety są przy dole, a zdjęcie zostaje widoczne na środku. Pogoda to zwarta karta w prawym górnym rogu. „Teraz gra” to zwarty widżet z miniaturą okładki. Jasne szkło jest czystsze i bielsze, a ciemne przydymione zamiast szarej mgły. Karta zdjęcia pokazuje się tylko przy więcej niż jednym zdjęciu (wcześniej powtarzała tło). Pokoje na telefonie to kafelki z pełną nazwą. Mocniejszy cień pod nagłówkiem dla kontrastu na jasnych zdjęciach.
