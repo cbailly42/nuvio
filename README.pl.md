@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.6.1-a3e635?style=flat-square" alt="v2.6.1">
+  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -205,6 +205,7 @@ Siedem nowych kart w **+ Dodaj**, każda z podglądem na żywo i formularzem. Od
 | `custom:nuvio-stat-card` | Minimum, średnia, maksimum i zmiana czujnika z wykresem, za 24 godziny, 7 lub 30 dni | `entity`, `name`, `icon`, `hours`, `decimals` |
 | `custom:nuvio-humidifier-card` | Docelowa wilgotność na łuku, bieżąca wilgotność i pigułki trybów | `entity`, `name` |
 | `custom:nuvio-purifier-card` | Oczyszczacz powietrza: duży odczyt PM2.5 odliczany do nowej wartości, etykieta jakości powietrza, fale powietrza wokół liczby (szybsze w Turbo, wolniejsze w trybie Sen), włącznik i tryby z przesuwanym podświetleniem | `entity` (fan), `pm` (czujnik PM2.5, automatycznie), `name`, `title`, `modes` |
+| `custom:nuvio-smartlock-card` | Inteligentny zamek: animowana kłódka w okrągłym przycisku (pałąk podnosi się po otwarciu), przytrzymanie do otwarcia z wypełniającym się pierścieniem, zamykanie dotknięciem, kręcący się łuk w trakcie ruchu, impuls po zmianie, potrząśnięcie przy zacięciu, bateria i czujnik drzwi z tego samego urządzenia, przycisk otwarcia drzwi, gdy zamek to obsługuje | `entity`, `door`, `battery` (automatycznie), `name`, `title`, `hold` |
 | `custom:nuvio-timer-card` | Pozostały czas `timer` na łuku, ze startem, pauzą i anulowaniem | `entity`, `name`, `icon` |
 | `custom:nuvio-logbook-card` | Ostatnie zmiany wybranych encji z czasem względnym | `entities`, `title`, `hours`, `max` |
 | `custom:nuvio-webpage-card` | Dowolny adres `https://`, `http://` albo `/local/` w ramce | `url`, `title`, `aspect_ratio` albo `height` |
@@ -419,9 +420,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.6.1 origin/main -m "Nuvio 2.6.1" && git push origin v2.6.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
 
 ## Lista zmian
+
+### 2.7.0
+- Nowość: karta inteligentnego zamka (`custom:nuvio-smartlock-card`, **+ Dodaj → Inteligentny zamek**). Animowana kłódka w okrągłym przycisku: przytrzymaj, a pierścień się wypełni i zamek się otworzy, dotknij, aby zamknąć. Kręcący się łuk pokazuje ruch zamka, impuls potwierdza nowy stan, a przy zacięciu kłódka się trzęsie. Bateria i czujnik drzwi dobierają się z tego samego urządzenia, a przycisk „Otwórz drzwi” pojawia się, gdy zamek to obsługuje. Zamki z kodem najpierw o niego pytają.
 
 ### 2.6.1
 - Karta oczyszczacza: czujnik PM2.5 jest brany z tego samego urządzenia co oczyszczacz (także czujniki z pm2_5 w nazwie bez device_class i starszy atrybut aqi z xiaomi_miio), więc karta nie pokazuje już innego czujnika w domu. Odczyt łapie też czujnik, który pojawi się dopiero po starcie Home Assistant.

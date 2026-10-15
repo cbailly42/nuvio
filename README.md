@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.6.1-a3e635?style=flat-square" alt="v2.6.1">
+  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -205,6 +205,7 @@ Seven new cards in **+ Add**, each with a live preview and a form. They follow t
 | `custom:nuvio-stat-card` | Minimum, average, maximum and change of a sensor with a sparkline, for 24 hours, 7 or 30 days | `entity`, `name`, `icon`, `hours`, `decimals` |
 | `custom:nuvio-humidifier-card` | Target humidity on an arc, current humidity and mode pills | `entity`, `name` |
 | `custom:nuvio-purifier-card` | Air purifier: large PM2.5 reading that counts to the new value, air-quality label, air waves around the number (faster in Turbo, slower in Sleep), power and modes with a sliding highlight | `entity` (fan), `pm` (PM2.5 sensor, auto), `name`, `title`, `modes` |
+| `custom:nuvio-smartlock-card` | Smart lock: animated padlock in a round button (the shackle lifts when unlocked), hold to unlock with a filling ring, tap to lock, spinning arc while the lock moves, pulse after a change, shake when jammed, battery and door sensor from the same device, open door button when the lock supports it | `entity`, `door`, `battery` (auto), `name`, `title`, `hold` |
 | `custom:nuvio-timer-card` | Remaining time of a `timer` on an arc, with start, pause and cancel | `entity`, `name`, `icon` |
 | `custom:nuvio-logbook-card` | Recent changes of chosen entities with relative times | `entities`, `title`, `hours`, `max` |
 | `custom:nuvio-webpage-card` | Any `https://`, `http://` or `/local/` address in a frame | `url`, `title`, `aspect_ratio` or `height` |
@@ -419,9 +420,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.6.1 origin/main -m "Nuvio 2.6.1" && git push origin v2.6.1`.
+Only tagging by hand: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
 
 ## Changelog
+
+### 2.7.0
+- New: smart lock card (`custom:nuvio-smartlock-card`, **+ Add → Smart lock**). An animated padlock in a round button: hold it to unlock while a ring fills, tap to lock. A spinning arc shows the lock moving, a pulse confirms the new state and the padlock shakes when the lock is jammed. Battery and door sensor are found on the same device, and an Open door button appears when the lock supports it. Locks with a code ask for it first.
 
 ### 2.6.1
 - Air purifier card: the PM2.5 sensor is taken from the same device as the purifier (also sensors named pm2_5 without a device class, and the older xiaomi_miio aqi attribute), so the card no longer shows another sensor in the house. The reading also follows a sensor that appears after Home Assistant starts.
