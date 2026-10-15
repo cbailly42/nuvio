@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.4.0-a3e635?style=flat-square" alt="v2.4.0">
+  <img src="https://img.shields.io/badge/version-v2.5.0-a3e635?style=flat-square" alt="v2.5.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.4.0 origin/main -m "Nuvio 2.4.0" && git push origin v2.4.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.5.0 origin/main -m "Nuvio 2.5.0" && git push origin v2.5.0`.
 
 ## Lista zmian
+
+### 2.5.0
+- Widżety tablicy wyglądają jak widżety ekranu blokady iPhone'a: jasne rozmyte tło bez obramowania, biały tekst i białe ikony (pogoda jako białe symbole, białe wskaźniki pokoi).
+- Ustawienia tabletu ściennego: widżety pod zegarem to jedna lista z przesuwaniem i usuwaniem, ukryte wracają przyciskiem „Dodaj widżet”. Pogoda, kalendarze, pokoje, czujnik ruchu i usługi notify to listy z przyciskiem „Dodaj”, który otwiera menu z wyszukiwarką.
+- Pole ikony: kliknięcie w dowolne miejsce pola otwiera listę ikon, a pisanie ją filtruje.
+- Pionowy stos nie zwija się już na iPhonie (Safari).
+- „Czujnik z wykresem” w stosie znów pokazuje wykres, a nazwy kafelków nie łamią się w połowie słowa.
 
 ### 2.4.0
 - **Tablica jak ekran blokady iPhone'a**: data i duży, cienki zegar na środku u góry, pod nim rząd małych szklanych widżetów na zdjęciu (pogoda z maks./min. i szansą opadów, najbliższy wschód lub zachód, odliczanie, bieżące i następne wydarzenie z „za 18 min” oraz temperatury w pokojach jako okrągłe wskaźniki z wilgotnością), a na dole stos powiadomień i zwarty odtwarzacz „Teraz gra”. Wszystko jest zwarte, więc nic się nie ucina na niskich ekranach; na telefonie widżety idą po dwa w rzędzie. Domyślny nagłówek to godzina; karta zdjęcia zniknęła, bo zdjęcie jest tłem (wybór zdjęcia działa teraz także dla tablicy).

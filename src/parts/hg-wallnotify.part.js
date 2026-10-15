@@ -45,7 +45,7 @@ const HG_NT_SS = `
 (() => {
   const LS = 'nuvio-wall-ntf', LL = 'nuvio-wall-ntl', W = HGWall, rd = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
   const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* bez pamięci lokalnej: tylko w tej sesji */ } };
-  const _bh = W.bdHtml, _ba = W.bdAct, _wk = W.wake, _tk = W.tick, _sh = W.show;
+  const _bh = W.bdHtml, _po = W.pkOp, _wk = W.wake, _tk = W.tick, _sh = W.show;
   Object.assign(W, {
     ntSel() { return rd(LS).filter((x) => typeof x === 'string' && /^[a-z0-9_.]+$/.test(x)); },
     ntList() { const t = Date.now() - 864e5; return rd(LL).filter((n) => n && n.ts > t).slice(0, 20); },
@@ -81,13 +81,12 @@ const HG_NT_SS = `
     ntHtml(h) { const sv = Object.keys((h.services && h.services.notify) || {}).filter((s) => !['send_message', 'persistent_notification', 'notify'].includes(s)).map((s) => 'notify.' + s);
       const en = Object.keys(h.states).filter((e) => e.startsWith('notify.')), S = this.ntSel(), all = [...new Set([...sv, ...en])];
       const lab = (k) => (h.states[k] ? H.name(h, k, k) : k.replace(/^notify\.(mobile_app_)?/, '').replace(/_/g, ' '));
-      const body = all.length ? `<div class="wl-chips">${all.map((k) => `<button type="button" data-hge="wl-ntf" data-v="${H.esc(k)}" aria-pressed="${S.includes(k)}">${H.icon('mdi:check')}${H.esc(lab(k))}</button>`).join('')}</div>`
+      const body = all.length ? this.pk('ntf', S.map((k) => ({ k, l: lab(k), s: k })), all.filter((k) => !S.includes(k)).map((k) => ({ k, l: lab(k), s: k })), { ic: 'mdi:message-badge-outline', add: hgTr('Dodaj usługę', 'Add service') })
         : `<small>${H.esc(hgTr('Brak usług notify w Home Assistant.', 'No notify services in Home Assistant.'))}</small>`;
       return `<div class="wl-f" role="group" aria-labelledby="wl-nt"><span id="wl-nt">${hgTr('Powiadomienia na tym urządzeniu', 'Notifications on this device')}</span>${body}
         <small>${H.esc(hgTr('Wiadomości wysłane przez wybraną usługę notify pokażą się na wygaszaczu. Wybór dotyczy tylko tego urządzenia.', 'Messages sent through the selected notify service appear on the screensaver. The choice applies to this device only.'))}</small></div>`; },
     bdHtml(c, h) { const r = _bh.call(this, c, h); r.top += this.ntHtml(h); return r; },
-    bdAct(p, b, a) { if (a === 'wl-ntf') { const v = b.dataset.v, S = this.ntSel(); wr(LS, S.includes(v) ? S.filter((x) => x !== v) : [...S, v]); this.ntSub(this.hass); p._eLook(); return true; }
-      return _ba.call(this, p, b, a); },
+    pkOp(id, op, k) { if (id !== 'ntf') return _po.call(this, id, op, k); const S = this.ntSel(); wr(LS, op === 'add' ? [...new Set([...S, k])] : S.filter((x) => x !== k)); this.ntSub(this.hass); return true; },
     tick(h, page) { _tk.call(this, h, page); this.ntSub(h); },
     show() { _sh.call(this); if (!this.el) return; if (!this.el.querySelector('.nb-nt')) { const d = document.createElement('div'); d.className = 'nb-nt'; d.hidden = true; d.setAttribute('aria-live', 'polite'); const bot = this.el.querySelector('.nwb .nb-bot'); if (bot) bot.prepend(d); else this.el.appendChild(d); }
       const st = document.createElement('style'); st.textContent = HG_NT_SS; this.el.prepend(st);

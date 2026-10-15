@@ -294,7 +294,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   sensors(h) { const R = Object.keys((h && h.states) || {}).filter((e) => e.startsWith('binary_sensor.')), pri = (e) => (['motion', 'occupancy', 'presence'].includes((h.states[e].attributes || {}).device_class) ? 0 : 1), nm = (e) => (h.states[e].attributes || {}).friendly_name || e;
     return R.sort((a, b) => pri(a) - pri(b) || nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
   html(p) { if (!this.admin(p)) return ''; const c = this.get(), h = p._hass, dv = Math.round(c.dim * 100), idles = this.IDLES.includes(c.idle) ? this.IDLES : [...this.IDLES, c.idle].sort((a, b) => a - b);
-    const sens = this.sensors(h), cur = c.sensor && !sens.some((s) => s[0] === c.sensor) ? [[c.sensor, c.sensor]] : [];
+    const sens = this.sensors(h);
     const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = true;   /* zdjęcie jest tłem obu wariantów */
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
@@ -302,7 +302,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f"><span>${hgTr('Przyciemnienie', 'Dimming')}<em class="wl-dv">${dv}%</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgTr('Przyciemnienie wygaszacza', 'Screensaver dimming')}"></div>
       ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgTr('Zdjęcie', 'Photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, pl, en]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${hgTr(pl, en)}</button>`).join('')}</div>
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>` : ''}
-      <label class="wl-f"><span>${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span><select class="hs-in" name="wl-sensor"><option value="">${hgTr('Brak, tylko dotyk', 'None, touch only')}</option>${[...cur, ...sens].map(([e, n]) => `<option value="${H.esc(e)}"${e === c.sensor ? ' selected' : ''}>${H.esc(n)}</option>`).join('')}</select></label>
+      <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgTr('Brak, tylko dotyk', 'None, touch only'), ic: 'mdi:gesture-tap', fix: true }],
+        sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgTr('Zmień', 'Change') : hgTr('Wybierz czujnik', 'Choose sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.lockHtml(c)}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgTr('Podgląd wygaszacza', 'Preview screensaver')}</span></button>`;
     return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
@@ -322,7 +323,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   wire(p, S) { if (!this.admin(p)) return;
     const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
     const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = rg.value + '%'; this.set({ dim: rg.value / 100 }); });
-    const wx = S.querySelector('[name=wl-wx]'); if (wx) wx.addEventListener('change', () => { this._fc = null; this.set({ wxE: wx.value }); if (this.active && this.el && this.el.classList.contains('bd')) this.bd(true); });
+    if (this.pkWire) this.pkWire(p, S);
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address'));

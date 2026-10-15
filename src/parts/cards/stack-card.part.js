@@ -16,7 +16,10 @@ const hgFromHA = (c) => { if (!c || typeof c !== 'object' || c.keep_ha) return c
   if (c.type === 'horizontal-stack') return Object.assign({ type: 'custom:hg-stack-card', direction: 'horizontal' }, base);
   return kids !== c.cards ? Object.assign({}, c, { cards: kids }) : c; };
 /* pola edytora (nv_*), rozpiętość w siatce (span) i keep_ha nie trafiają do samej karty */
-const hgCardClean = (c) => { if (!c || typeof c !== 'object') return c; const o = {}; for (const k in c) if (!/^nv_/.test(k) && k !== 'span' && k !== 'keep_ha') o[k] = c[k]; return o; };
+const hgCardClean = (c) => { if (!c || typeof c !== 'object') return c; const o = {}; for (const k in c) if (!/^nv_/.test(k) && k !== 'span' && k !== 'keep_ha') o[k] = c[k];
+  /* starsze kafelki z komponentu (np. „Czujnik z wykresem”) nie miały zapisanego stylu: styl bierzemy z komponentu */
+  if (c.single && !c.single.t && c.nv_comp && typeof HG_COMP !== 'undefined') { const C = HG_COMP.find((x) => x.id === c.nv_comp); if (C && C.tile) o.single = Object.assign({}, c.single, { t: C.tile }); }
+  return o; };
 const HG_CONT_MAX = 3;   // najwyżej 3 poziomy kontenerów (kontener w kontenerze w kontenerze)
 class HGStackCard extends HGBase {
   static getStubConfig(h) { return { cards: [{ type: 'custom:nuvio-toggle-card', ...HGToggleCard.getStubConfig(h) }, { type: 'custom:nuvio-progress-card', ...HGProgressCard.getStubConfig(h) }] }; }
@@ -28,7 +31,8 @@ ha-card.flat{ background:none; box-shadow:none; padding:0; gap:var(--s2); -webki
 .bd{ display:flex; flex-direction:column; flex:1; min-height:0; gap:var(--nv-gap, 0px); } .h:not(.nw) .bd{ flex-direction:row; align-items:var(--nv-al, stretch); }
 ha-card{ container-type:inline-size; }   /* siatka i zawijanie liczą się od szerokości kontenera */
 .sl{ min-width:0; flex:var(--nv-fl, 1) 1 0; position:relative; container-type:inline-size; }   /* dziecko dopasowuje S/M/L do własnego gniazda */
-ha-card:not(.h) .sl, ha-card.nw .sl{ flex-basis:auto; }   /* pion: wysokość gniazda z treści dziecka (podstawa 0 ściskała karty do minimum) */
+ha-card:not(.h) .sl, ha-card.nw .sl{ flex:0 0 auto; container-type:normal; }   /* pion: wysokość gniazda z treści dziecka; bez zawierania rozmiaru, bo Safari liczył wtedy wysokość treści jako 0 */
+ha-card:not(.h) .bd, ha-card.nw .bd{ flex:1 0 auto; }   /* Safari: podstawa 0% przy min-height:0 zwijała cały stos do samych odstępów */
 .glass:not(.flat) .sl{ --hg-glass-sheen:none; --hg-glass-lite:transparent; --hg-glass-bg:transparent; --hg-edge:0 0 0 transparent; --hg-card-sh:none; --hg-card-bf:none; --hg-card-under:none;
   --ha-card-background:transparent; --ha-card-box-shadow:none; --ha-card-border-width:0; }
 .glass.dv:not(.flat) .sl + .sl::before{ content:''; position:absolute; left:var(--s3); right:var(--s3); top:0; height:1px; background:currentColor; opacity:.08; }

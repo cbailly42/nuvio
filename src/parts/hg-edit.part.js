@@ -226,7 +226,7 @@ const hgIcRecent = () => { try { return JSON.parse(localStorage.getItem('nuvio:i
 const hgIcWire = (S) => { const inp = S && S.querySelector('.hge-sheet input[name=i]'); if (!inp || inp._icw) return; inp._icw = 1;
   const box = inp.closest('.hs-s'), fl = inp.closest('.hs-fl'); fl.classList.add('hs-ipw'); const pv = box.querySelector('ha-icon');
   const ob = document.createElement('button'); ob.type = 'button'; ob.className = 'hs-ipb'; ob.setAttribute('aria-haspopup', 'dialog'); ob.setAttribute('aria-expanded', 'false'); ob.setAttribute('aria-label', hgTr('Wybierz ikonę', 'Choose icon')); ob.innerHTML = H.icon('mdi:chevron-down'); box.appendChild(ob);
-  if (pv) { pv.style.cursor = 'pointer'; pv.addEventListener('click', (e) => { e.preventDefault(); open(); }); }
+  box.style.cursor = 'pointer'; box.addEventListener('click', (e) => { if (e.target.closest('.hs-ipb')) return; e.preventDefault(); if (!pop) open(); });
   let pop = null, tok = null; const cur = () => inp.value.trim();
   const pick = (ic) => { inp.value = ic; inp.dispatchEvent(new Event('input', { bubbles: true })); if (pv && /^mdi:[a-z0-9-]+$/.test(ic)) pv.setAttribute('icon', ic);
     try { localStorage.setItem('nuvio:icons', JSON.stringify([ic, ...hgIcRecent().filter((x) => x !== ic)].slice(0, 12))); } catch (e) { /* tryb prywatny */ } close(); inp.focus(); };
@@ -251,7 +251,8 @@ const hgIcWire = (S) => { const inp = S && S.querySelector('.hge-sheet input[nam
       if (mv) { e.preventDefault(); const j = i + mv; if (j < 0) return q.focus(); if (all[j]) all[j].focus(); }
       else if (e.key === 'Home') { e.preventDefault(); all[0].focus(); } else if (e.key === 'End') { e.preventDefault(); all[all.length - 1].focus(); } }); };
   ob.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(); });
-  inp.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); open(); } }); };
+  inp.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); open(); } });
+  inp.addEventListener('input', (e) => { if (!e.isTrusted) return; if (pv && /^mdi:[a-z0-9-]+$/.test(cur())) pv.setAttribute('icon', cur()); if (!pop) open(); else { const q = pop.querySelector('input[type=search]'); if (q) { q.value = cur(); fill(q.value); } } }); };
 const hgSzSeg = (act, cur) => `<div class="hs-seg" role="group" aria-label="${hgTr('Rozmiar', 'Size')}">${[['s', 'Mały', 'Small'], ['m', 'Średni', 'Medium'], ['l', 'Cała szerokość', 'Full width']].map(([v, pl, en]) => `<button type="button" data-hge="${act}" data-z="${v}" aria-pressed="${cur === v}"><span class="sg sg-${v}" aria-hidden="true"><i></i><i></i><i></i></span><span>${hgTr(pl, en)}</span></button>`).join('')}</div>`;
 const HG_TILE_CSS = `
 .tg2{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap:12px; grid-auto-flow:row dense; } .tg2[data-hgl]:not(.one){ grid-template-columns:var(--hg-vcols-tpl, repeat(auto-fill, minmax(min(100%, 210px), 1fr))); gap:12px; }
@@ -264,7 +265,7 @@ const HG_TILE_CSS = `
 .hgtl .ti{ flex:none; position:static; margin:0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); }
 .hgtl .ti ha-icon{ width:20px; height:20px; }
 .hgtl.on .ti{ background:var(--hg-accent); color:var(--hg-on-accent); }
-.hgtl .tn{ display:flex; flex-direction:column; flex:1 1 0; min-width:0; overflow:hidden; } .hgtl .tn b{ font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; white-space:normal; overflow:hidden; text-overflow:ellipsis; overflow-wrap:break-word; word-break:break-word; line-height:1.3; padding-block:1px; }
+.hgtl .tn{ display:flex; flex-direction:column; flex:1 1 0; min-width:0; overflow:hidden; } .hgtl .tn b{ font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; white-space:normal; overflow:hidden; text-overflow:ellipsis; overflow-wrap:normal; word-break:normal; -webkit-hyphens:auto; hyphens:auto; line-height:1.3; padding-block:1px; }
 .hgtl .tn{ justify-content:center; } .hgtl .tv.nd{ font-size:13px; font-weight:500; opacity:.6; white-space:nowrap; }
 .hgtl .tn small{ opacity:.66; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hgtl.on .tn small{ color:var(--hg-accent-tx); opacity:1; }
 .hgtl .tv{ flex:none; margin-left:auto; align-self:center; text-align:right; font-size:30px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; } .hgtl .tv.tx{ font-size:15px; font-weight:600; letter-spacing:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; } .hgtl .tv em{ font-style:normal; font-size:13px; opacity:.65; margin-left:3px; font-weight:400; }
@@ -522,7 +523,7 @@ const hgHaTag = (c) => (c && /^custom:/.test(c.type) && /-(stack|grid|tabs)-card
 /* dziecko kontenera z formularza komponentu (nv_* = dane do ponownej edycji, karta ich nie widzi) */
 const hgKidCfg = (C, R, h) => { const n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '', meta = { nv_comp: C.id, nv_v: JSON.parse(JSON.stringify(R.v || {})), ...(n ? { nv_n: n } : {}), ...(i ? { nv_i: i } : {}) };
   if (C.id === 'hacard') { const c = hgHaCard(R.v); return c ? Object.assign({}, c, meta) : null; }
-  if (C.tile) return Object.assign({ type: 'custom:hg-tiles-card', single: Object.assign({ e: R.v.e }, R.t && R.t !== C.tile ? { t: R.t } : {}, n ? { n } : {}, i ? { i } : {}) }, meta, R.t ? { nv_t: R.t } : {});
+  if (C.tile) return Object.assign({ type: 'custom:hg-tiles-card', single: Object.assign({ e: R.v.e, t: R.t || C.tile }, n ? { n } : {}, i ? { i } : {}) }, meta, R.t ? { nv_t: R.t } : {});
   return Object.assign({ type: 'custom:' + hgCompCard(C, R.v) }, hgCompCfg(C, R.v, h), n ? { title: n, name: n } : {}, i ? { icon: i } : {}, meta); };
 /* pozycja panelu (L.added) -> dziecko kontenera i z powrotem */
 const hgAddedToKid = (x) => { const meta = { nv_comp: x.comp, nv_v: x.v ? JSON.parse(JSON.stringify(x.v)) : { e: x.e }, ...(x.n ? { nv_n: x.n } : {}), ...(x.i ? { nv_i: x.i } : {}), ...(x.t ? { nv_t: x.t } : {}) };

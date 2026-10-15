@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.4.0-a3e635?style=flat-square" alt="v2.4.0">
+  <img src="https://img.shields.io/badge/version-v2.5.0-a3e635?style=flat-square" alt="v2.5.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.4.0 origin/main -m "Nuvio 2.4.0" && git push origin v2.4.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.5.0 origin/main -m "Nuvio 2.5.0" && git push origin v2.5.0`.
 
 ## Changelog
+
+### 2.5.0
+- Board widgets look like iPhone lock-screen widgets: light blurred background with no border, white text and white icons (weather uses white symbols, room gauges are white).
+- Wall tablet settings: widgets under the clock are one list with up, down and remove; hidden widgets come back with "Add widget". Weather, calendars, rooms, the motion sensor and notify services are lists with an "Add" button that opens a searchable dropdown.
+- Icon field: clicking anywhere on the field opens the icon list, and typing filters it.
+- Vertical stack no longer collapses on iPhone (Safari).
+- "Sensor with chart" inside a stack shows the chart again, and tile names no longer break mid-word.
 
 ### 2.4.0
 - **Board redesigned like the iPhone lock screen**: date and a large thin clock centered at the top, under it a row of small glass widgets on the photo (weather with high/low and rain chance, next sunrise or sunset, countdown, the current and next event with "in 18 min", and room temperatures as round gauges with humidity), and at the bottom the notification stack and a compact Now Playing player. Everything is compact, so nothing gets cut off on short screens; on a phone the widgets go two per row. The heading defaults to the time; the photo card is gone because the photo is the background (photo source is now available for the board too).

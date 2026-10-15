@@ -2,18 +2,24 @@
    teraz gra, zdjęcie i temperatury w pokojach. Ustawienia w HGL.data.wall: style 'photo' | 'board', bt (motyw auto/light/dark), hd (nagłówek: dzień / godzina),
    bk { sun, cnt, wx, cal, np, tmp, hum } (włączone elementy), ord (kolejność kart), wxE (encja pogody), calX / roomX (wykluczone kalendarze i pokoje).
    Kolory przez K() (interpolacja): tokenizer motywu ich nie zmienia, motyw tablicy wybiera się w ustawieniach. */
-const HG_WB_CARDS = [['cal', 'Najbliższe wydarzenia', 'Coming up', 'mdi:calendar-blank-outline'], ['np', 'Teraz gra', 'Now playing', 'mdi:music'],
+/* widżety w rzędzie pod zegarem, w kolejności z ord (✕ w ustawieniach chowa widżet: bk[k] = false) */
+const HG_WB_CARDS = [['wx', 'Pogoda', 'Weather', 'mdi:weather-partly-cloudy'], ['sun', 'Wschód i zachód słońca', 'Sunrise & sunset', 'mdi:weather-sunset'],
+  ['cnt', 'Odliczanie do wydarzenia', 'Event countdown', 'mdi:calendar-star'], ['cal', 'Najbliższe wydarzenia', 'Coming up', 'mdi:calendar-blank-outline'],
   ['tmp', 'Temperatury w pokojach', 'Room temperatures', 'mdi:thermometer']];
+/* ikony pogody jak na iPhonie: białe symbole zamiast kolorowych obrazków */
+const HG_WB_WXI = { 'clear-night': 'weather-night', cloudy: 'weather-cloudy', exceptional: 'alert-circle-outline', fog: 'weather-fog', hail: 'weather-hail', lightning: 'weather-lightning',
+  'lightning-rainy': 'weather-lightning-rainy', partlycloudy: 'weather-partly-cloudy', pouring: 'weather-pouring', rainy: 'weather-rainy', snowy: 'weather-snowy', 'snowy-rainy': 'weather-snowy-rainy',
+  sunny: 'weather-sunny', windy: 'weather-windy', 'windy-variant': 'weather-windy-variant' };
 const HG_WB_BK = [['wx', 'Pogoda', 'Weather'], ['sun', 'Wschód i zachód', 'Sunrise & sunset'], ['cnt', 'Odliczanie', 'Countdown'], ['cal', 'Kalendarz', 'Calendar'],
   ['np', 'Teraz gra', 'Now playing'], ['tmp', 'Temperatury', 'Temperatures'], ['hum', 'Wilgotność', 'Humidity']];
 const HG_WB_SS = `
 /* tablica jak ekran blokady iPhone'a: cienki duży zegar na środku u góry, pod nim rząd małych widżetów na zdjęciu, u dołu odtwarzacz i powiadomienia */
 .nwb{ --nb-glass:${K(250,251,253,.78)}; --nb-tx:${K(22,24,28,1)}; --nb-tx2:${K(22,24,28,.58)}; --nb-edge:inset 0 1px 0 ${K(255,255,255,.7)}, inset 0 0 0 1px ${K(255,255,255,.3)};
-  --nb-wg:${K(255,255,255,.16)}; --nb-wedge:inset 0 1px 0 ${K(255,255,255,.22)}, inset 0 0 0 1px ${K(255,255,255,.10)}; --wh:clamp(56px, 7.6vmin, 72px); --gp:clamp(8px, 1.2vmin, 12px);
+  --nb-wg:${K(255,255,255,.2)}; --wh:clamp(56px, 7.6vmin, 72px); --gp:clamp(8px, 1.2vmin, 12px);
   position:absolute; inset:0; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; gap:clamp(12px, 2vmin, 20px);
   padding:calc(clamp(18px, 4vmin, 48px) + env(safe-area-inset-top, 0px)) calc(clamp(16px, 4vmin, 48px) + env(safe-area-inset-right, 0px)) calc(clamp(44px, 6.4vmin, 68px) + env(safe-area-inset-bottom, 0px)) calc(clamp(16px, 4vmin, 48px) + env(safe-area-inset-left, 0px));
   color:${K(255,255,255,1)}; transition:transform 5s cubic-bezier(.4,0,.2,1), opacity .4s ease; transform:translate(var(--nw-x, 0), var(--nw-y, 0)); }
-.nwb.dk{ --nb-glass:${K(26,28,34,.58)}; --nb-tx:${K(255,255,255,1)}; --nb-tx2:${K(255,255,255,.6)}; --nb-edge:inset 0 1px 0 ${K(255,255,255,.14)}, inset 0 0 0 1px ${K(255,255,255,.07)}; --nb-wg:${K(255,255,255,.12)}; }
+.nwb.dk{ --nb-glass:${K(26,28,34,.58)}; --nb-tx:${K(255,255,255,1)}; --nb-tx2:${K(255,255,255,.6)}; --nb-edge:inset 0 1px 0 ${K(255,255,255,.14)}, inset 0 0 0 1px ${K(255,255,255,.07)}; --nb-wg:${K(255,255,255,.14)}; }
 .nw.bd .nw-sh{ background:linear-gradient(180deg, ${K(0,0,0,.42)}, ${K(0,0,0,.08)} 38%, transparent 55%, ${K(0,0,0,.30)}), ${K(4,6,10,'calc(var(--nw-dim, .5) * .45)')}; }
 .nw.bd.dk .nw-sh{ background:linear-gradient(180deg, ${K(0,0,0,.42)}, ${K(0,0,0,.08)} 38%, transparent 55%, ${K(0,0,0,.36)}), ${K(4,6,10,'calc(.2 + var(--nw-dim, .5) * .45)')}; }
 .nw.bd.dk .nw-bg{ filter:brightness(.82) saturate(.92); }
@@ -23,23 +29,22 @@ const HG_WB_SS = `
 .nb-h2::first-letter{ text-transform:uppercase; }
 .nb-h1{ margin:0; font-size:clamp(72px, 20vmin, 240px); font-weight:300; line-height:1; letter-spacing:-.04em; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .nb-h1.wd{ font-size:clamp(56px, 13vmin, 160px); letter-spacing:-.035em; padding:.04em 0 .02em; } .nb-h1::first-letter{ text-transform:uppercase; }
-/* widżety na zdjęciu (najwyżej dwa rzędy, reszta się nie pokazuje) */
+/* widżety na zdjęciu jak na ekranie blokady iPhone'a: jasny rozmyty prostokąt bez obramowania, biały tekst i białe ikony (najwyżej dwa rzędy) */
 .nb-row{ margin-top:clamp(6px, 1.4vmin, 16px); width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-content:flex-start; gap:var(--gp); max-height:calc(var(--wh) * 2 + var(--gp)); overflow:hidden; text-shadow:none; }
 .nb-row:empty{ display:none; }
 .nb-w{ flex:none; height:var(--wh); max-width:min(340px, 100%); box-sizing:border-box; display:flex; align-items:center; gap:10px; padding:0 18px 0 12px; border-radius:calc(var(--wh) * .32); text-align:left;
-  background:var(--nb-wg); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%); box-shadow:var(--nb-wedge); animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
-.nb-w > i{ flex:none; width:calc(var(--wh) * .56); height:calc(var(--wh) * .56); border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--c, ${K(255,255,255,1)}) 22%, transparent); color:var(--c, ${K(255,255,255,1)}); }
-.nb-w > i ha-icon{ --mdc-icon-size:calc(var(--wh) * .3); width:calc(var(--wh) * .3); height:calc(var(--wh) * .3); }
-.nb-w > img{ flex:none; width:calc(var(--wh) * .7); height:calc(var(--wh) * .7); margin:0 -4px 0 -2px; }
+  color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%); box-shadow:none; animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
+.nb-w > i{ flex:none; width:calc(var(--wh) * .44); height:calc(var(--wh) * .44); display:flex; align-items:center; justify-content:center; color:${K(255,255,255,1)}; }
+.nb-w > i ha-icon{ --mdc-icon-size:calc(var(--wh) * .4); width:calc(var(--wh) * .4); height:calc(var(--wh) * .4); }
 .nb-w > div{ min-width:0; display:flex; flex-direction:column; gap:1px; }
 .nb-w b{ font-size:clamp(15px, 2.1vmin, 20px); font-weight:600; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
-.nb-w small{ font-size:clamp(12px, 1.6vmin, 14px); opacity:.75; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
-.nb-w small em{ font-style:normal; font-weight:700; color:var(--hg-accent, ${K(99,215,30,1)}); opacity:1; }
+.nb-w small{ font-size:clamp(12px, 1.6vmin, 14px); opacity:.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.nb-w small em{ font-style:normal; font-weight:700; color:inherit; }
 /* pokoje: okrągłe wskaźniki jak widżety ekranu blokady */
 .nb-wr{ gap:clamp(10px, 1.6vmin, 16px); padding:0 16px; }
 .nb-g{ display:flex; flex-direction:column; align-items:center; gap:3px; width:calc(var(--wh) * 1.05); min-width:0; }
 .nb-g span{ position:relative; width:calc(var(--wh) * .6); height:calc(var(--wh) * .6); display:flex; align-items:center; justify-content:center; font-size:calc(var(--wh) * .2); font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
-.nb-g span::before{ content:''; position:absolute; inset:0; border-radius:50%; background:conic-gradient(var(--c) calc(var(--p) * 1%), ${K(255,255,255,.22)} 0);
+.nb-g span::before{ content:''; position:absolute; inset:0; border-radius:50%; background:conic-gradient(${K(255,255,255,1)} calc(var(--p) * 1%), ${K(255,255,255,.28)} 0);
   -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); }
 .nb-g small{ max-width:100%; font-size:calc(var(--wh) * .17); opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .nb-g span{ flex-direction:column; line-height:1; } .nb-g span u{ text-decoration:none; font-size:calc(var(--wh) * .12); font-weight:500; opacity:.75; margin-top:1px; }
@@ -67,19 +72,34 @@ const HG_WB_CSS = `
 .wl-chips button{ all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 14px 0 10px; border-radius:999px; font-size:13px; font-weight:600; background:var(--hg-tile-bg); transition:background .2s ease, color .2s ease; }
 .wl-chips button ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; opacity:.35; }
 .wl-chips button[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); } .wl-chips button[aria-pressed=true] ha-icon{ opacity:1; }
-.wl-chips button:focus-visible, .wl-ord button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-.wl-ord{ display:flex; flex-direction:column; gap:4px; }
-.wl-ord > div{ display:flex; align-items:center; gap:10px; min-height:44px; padding:0 4px 0 12px; border-radius:14px; background:var(--hg-tile-bg); font-size:14px; font-weight:600; }
-.wl-ord > div.off{ opacity:.45; } .wl-ord span{ flex:1; min-width:0; } .wl-ord small{ font-weight:400; opacity:.65; font-size:12px; }
-.wl-ord button{ all:unset; box-sizing:border-box; cursor:pointer; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-.wl-ord button:hover{ background:var(--hg-hover-fill, color-mix(in srgb, currentColor 8%, transparent)); } .wl-ord button[disabled]{ opacity:.25; pointer-events:none; }
-.wl-ord ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
+.wl-chips button:focus-visible, .wl-pk button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+/* lista wybranych pozycji + „Dodaj” z rozwijaną wyszukiwarką (kalendarze, pogoda, pokoje, czujnik, powiadomienia, widżety) */
+.wl-pk{ display:flex; flex-direction:column; gap:4px; }
+.wl-it{ display:flex; align-items:center; gap:10px; min-height:48px; padding:0 4px 0 12px; border-radius:14px; background:var(--hg-tile-bg); }
+.wl-it > ha-icon{ flex:none; --mdc-icon-size:20px; width:20px; height:20px; opacity:.7; }
+.wl-it > span, .wl-ol button > span{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.wl-it b, .wl-ol b{ font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wl-it small, .wl-ol small{ font-size:12px; opacity:.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wl-it button{ all:unset; box-sizing:border-box; flex:none; cursor:pointer; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.wl-it button:hover{ background:var(--hg-hover-fill, color-mix(in srgb, currentColor 8%, transparent)); } .wl-it button[disabled]{ opacity:.25; pointer-events:none; }
+.wl-it button ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; } .wl-it button.x ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; opacity:.7; }
+.wl-add{ all:unset; box-sizing:border-box; cursor:pointer; align-self:flex-start; display:inline-flex; align-items:center; gap:6px; min-height:40px; margin-top:4px; padding:0 16px 0 12px; border-radius:999px; font-size:13px; font-weight:600;
+  color:var(--hg-accent-tx, var(--hg-accent)); background:color-mix(in srgb, var(--hg-accent) 14%, transparent); }
+.wl-add ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; } .wl-add[aria-expanded=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
+.wl-dd{ display:flex; flex-direction:column; gap:6px; margin-top:4px; padding:8px; border-radius:18px; background:var(--hg-tile-bg); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); animation:wlpk .18s ease both; }
+@keyframes wlpk{ from{ opacity:0; transform:translateY(-4px); } } @media (prefers-reduced-motion:reduce){ .wl-dd{ animation:none; } }
+.wl-dd .hs-s{ height:42px; }
+.wl-ol{ max-height:264px; overflow:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:2px; }
+.wl-ol button{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; min-height:44px; padding:4px 10px; border-radius:12px; }
+.wl-ol button:hover, .wl-ol button:focus-visible{ background:var(--hg-hover-fill, color-mix(in srgb, currentColor 8%, transparent)); outline:none; }
+.wl-ol button > ha-icon{ flex:none; --mdc-icon-size:20px; width:20px; height:20px; opacity:.7; } .wl-ol button[hidden], .wl-ol .no[hidden]{ display:none; }
+.wl-ol .no{ padding:10px; font-size:13px; opacity:.6; }
 `;
 Object.assign(HGWall, {
   /* ---- ustawienia tablicy ---- */
   bget() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, bk0 = w.bk && typeof w.bk === 'object' ? w.bk : {}, ids = HG_WB_CARDS.map((x) => x[0]);
     const bk = {}; for (const [k] of HG_WB_BK) bk[k] = bk0[k] !== false;
-    const ord = (Array.isArray(w.ord) ? w.ord.filter((k) => ids.includes(k)) : []); for (const k of ids) if (!ord.includes(k)) ord.push(k);
+    const ord = [...new Set(Array.isArray(w.ord) ? w.ord.filter((k) => ids.includes(k)) : [])]; ord.unshift(...ids.filter((k) => !ord.includes(k)));   /* starsza kolejność (cal, np, tmp): brakujące widżety na początek */
     const L = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^[a-z0-9_.]+$/.test(x)) : []);
     return { style: w.style === 'board' ? 'board' : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
       wxE: typeof w.wxE === 'string' && /^weather\.[a-z0-9_]+$/.test(w.wxE) ? w.wxE : '', calX: L(w.calX), roomX: L(w.roomX) }; },
@@ -105,29 +125,25 @@ Object.assign(HGWall, {
     const h1 = this._put('.nb-h1', H.esc(B.hd === 'time' ? tm : wd)); if (h1) h1.classList.toggle('wd', B.hd !== 'time');
     this._put('.nb-h2', H.esc(B.hd === 'time' ? `${wd}, ${dt}` : `${dt} · ${tm}`));
     this.bdCal(h, B);
-    const W = []; if (B.bk.wx) W.push(this.bdWx(h, B)); W.push(...this.bdChips(h, B, tf));
-    for (const k of B.ord) if (B.bk[k]) { if (k === 'cal') W.push(...this.bdEv(h, B, tf)); else if (k === 'tmp') W.push(this.bdTmp(h, B)); }
+    const W = []; for (const k of B.ord) if (B.bk[k]) { if (k === 'wx') W.push(this.bdWx(h, B)); else if (k === 'sun') W.push(this.bdSun(h, tf)); else if (k === 'cnt') W.push(this.bdCnt());
+      else if (k === 'cal') W.push(...this.bdEv(h, B, tf)); else if (k === 'tmp') W.push(this.bdTmp(h, B)); }
     this._put('.nb-row', W.filter(Boolean).join(''));
     const np = B.bk.np ? this.bdNp(h) : ''; this._put('.nb-np', np, !np); },
-  /* mały widżet: ikona albo obrazek + dwie linie */
-  bdW(ic, col, t, sub, cls) { return `<div class="nb-w${cls ? ' ' + cls : ''}">${ic.startsWith('<') ? ic : `<i${col ? ` style="--c:${col}"` : ''}>${H.icon(ic)}</i>`}<div><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div></div>`; },
-  bdChips(h, B, tf) { const out = [], sun = h.states['sun.sun'];
-    if (B.bk.sun && sun) { const r = new Date(sun.attributes.next_rising), s = new Date(sun.attributes.next_setting);
-      const up = !isNaN(r) && (isNaN(s) || r < s);
-      if (up) out.push(this.bdW('mdi:weather-sunset-up', K(255,184,60,1), H.esc(tf.format(r)), H.esc(hgTr('Wschód słońca', 'Sunrise'))));
-      else if (!isNaN(s)) out.push(this.bdW('mdi:weather-sunset-down', K(255,140,70,1), H.esc(tf.format(s)), H.esc(hgTr('Zachód słońca', 'Sunset')))); }
-    if (B.bk.cnt && this._bev) { const d0 = new Date(); d0.setHours(0, 0, 0, 0);
-      const ev = this._bev.find((e) => e.ad && e.s > d0); if (ev) { const n = Math.round((ev.s - d0) / 864e5);
-        out.push(this.bdW('mdi:calendar-star', K(170,150,255,1), H.esc(ev.t), H.esc(n === 1 ? hgTr('jutro', 'tomorrow') : hgTr(`za ${n} dni`, `in ${n} days`)))); } }
-    return out; },
+  /* mały widżet: biała ikona + dwie linie */
+  bdW(ic, t, sub, cls) { return `<div class="nb-w${cls ? ' ' + cls : ''}"><i>${H.icon(ic)}</i><div><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div></div>`; },
+  bdSun(h, tf) { const sun = h.states['sun.sun']; if (!sun) return ''; const r = new Date(sun.attributes.next_rising), s = new Date(sun.attributes.next_setting);
+    if (!isNaN(r) && (isNaN(s) || r < s)) return this.bdW('mdi:weather-sunset-up', H.esc(tf.format(r)), H.esc(hgTr('Wschód słońca', 'Sunrise')));
+    return isNaN(s) ? '' : this.bdW('mdi:weather-sunset-down', H.esc(tf.format(s)), H.esc(hgTr('Zachód słońca', 'Sunset'))); },
+  bdCnt() { if (!this._bev) return ''; const d0 = new Date(); d0.setHours(0, 0, 0, 0); const ev = this._bev.find((e) => e.ad && e.s > d0); if (!ev) return '';
+    const n = Math.round((ev.s - d0) / 864e5); return this.bdW('mdi:calendar-star', H.esc(ev.t), H.esc(n === 1 ? hgTr('jutro', 'tomorrow') : hgTr(`za ${n} dni`, `in ${n} days`))); },
   wxId(h, B) { if (B.wxE && H.ok(h.states[B.wxE])) return B.wxE; return Object.keys(h.states).find((e) => e.startsWith('weather.') && H.ok(h.states[e])) || ''; },
   bdWx(h, B) { const id = this.wxId(h, B); if (!id || typeof HGWx === 'undefined') return ''; const w = h.states[id], A = w.attributes;
     const u = A.temperature_unit || '°C', deg = (v) => (isFinite(v) ? H.esc(H.fmt(v, 0)) + (u.startsWith('°') ? '°' : ' ' + H.esc(u)) : '–'), sun = h.states['sun.sun'], night = !!sun && sun.state === 'below_horizon';
-    const ic = H.esc(HGWx.icon({ icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1' }, w.state, night, true));
+    const ic = 'mdi:' + (night && w.state === 'sunny' ? 'weather-night' : night && w.state === 'partlycloudy' ? 'weather-night-partly-cloudy' : HG_WB_WXI[w.state] || 'weather-partly-cloudy');
     this.fc(h, id); const F = this._fc && this._fc.id === id ? this._fc : null, D = F && F.daily && F.daily[0], hi = D ? parseFloat(D.temperature) : NaN, lo = D ? parseFloat(D.templow) : NaN;
     const hr = F && F.hourly ? F.hourly.filter((x) => new Date(x.datetime) > Date.now() - 3600000) : [], pp = hr.length && hr[0].precipitation_probability != null ? Number(hr[0].precipitation_probability) : D && D.precipitation_probability != null ? Number(D.precipitation_probability) : null;
     const sub = [isFinite(hi) ? `↑${deg(hi)}${isFinite(lo) ? ` ↓${deg(lo)}` : ''}` : '', pp ? hgTr(`opady ${pp}%`, `rain ${pp}%`) : ''].filter(Boolean).join(' · ');
-    return this.bdW(`<img alt="" src="${ic}">`, '', `${deg(parseFloat(A.temperature))} ${H.esc(HGWx.cn(w.state))}`, sub); },
+    return this.bdW(ic, `${deg(parseFloat(A.temperature))} ${H.esc(HGWx.cn(w.state))}`, sub); },
   /* wydarzenia na 60 dni (lista: 14 dni, odliczanie: najbliższe całodniowe), co 10 min */
   bdCal(h, B) { const ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
     const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setDate(d1.getDate() + 60); const key = d0.toDateString() + ids.join();
@@ -140,13 +156,12 @@ Object.assign(HGWall, {
   /* najbliższe wydarzenia: trwające albo kolejne (najwyżej dwa widżety) */
   bdEv(h, B, tf) { if (!this._bev) return [];
     const now = new Date(), d0 = new Date(now); d0.setHours(0, 0, 0, 0); const lim = new Date(d0); lim.setDate(lim.getDate() + 14);
-    const C = [K(122,184,255,1), K(255,159,110,1), K(126,224,168,1), K(213,155,255,1), K(255,211,110,1), K(255,127,168,1)];
     const E = this._bev.filter((e) => !e.ad && e.en > now && e.s < lim).slice(0, 2);
     const day = (s) => { const n = Math.round((new Date(s).setHours(0, 0, 0, 0) - d0) / 864e5); return n <= 0 ? hgTr('Dziś', 'Today') : n === 1 ? hgTr('Jutro', 'Tomorrow') : new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short', day: 'numeric', month: 'short' }).format(s); };
     const rel = (e) => { const m = Math.round((e.s - now) / 60000); return m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 600 ? hgTr(`za ${Math.floor(m / 60)} h ${m % 60} min`, `in ${Math.floor(m / 60)} h ${m % 60} min`) : ''; };
     return E.map((e) => { const live = e.s <= now, r = live ? '' : rel(e);
       const sub = live ? `<em>${H.esc(hgTr('Teraz', 'Now'))}</em> · ${H.esc(hgTr('do ', 'until ') + tf.format(e.en))}` : `${H.esc(day(e.s) + ' ' + tf.format(e.s))}${r ? ` · <em>${H.esc(r)}</em>` : ''}`;
-      return this.bdW('mdi:calendar-blank', C[e.c % C.length], H.esc(e.t), sub); }); },
+      return this.bdW('mdi:calendar-blank', H.esc(e.t), sub); }); },
   bdNp(h) { const L = Object.keys(h.states).filter((e) => e.startsWith('media_player.') && hgMpActive(h.states[e]) && (h.states[e].attributes.media_title || h.states[e].attributes.media_channel));
     const id = L.find((e) => h.states[e].state === 'playing') || L[0]; if (!id) return ''; const s = h.states[id], A = s.attributes, pl = s.state === 'playing';
     const sub = [A.media_artist || A.media_series_title || A.app_name, H.name(h, id, id)].filter(Boolean).join(' · '), pic = A.entity_picture ? String(A.entity_picture).replace(/["\\()]/g, '') : '';
@@ -155,34 +170,61 @@ Object.assign(HGWall, {
   bdTmp(h, B) { if (typeof HGAreas === 'undefined') return ''; let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp && !B.roomX.includes(a.id)); } catch (e) { return ''; }
     const L = R.map((a) => ({ a, v: HGAreas.env(h, a) })).filter((x) => x.v.t != null).slice(0, innerWidth < 640 ? 4 : 5); if (!L.length) return '';
     return `<div class="nb-w nb-wr">${L.map(({ a, v }) => { const p = Math.max(4, Math.min(100, Math.round((v.t - 10) * 5)));
-      return `<div class="nb-g" style="--c:${HGWx.tcol(v.t)};--p:${p}" title="${H.esc(a.name)}"><span>${H.esc(H.fmt(v.t, 0))}°${B.bk.hum && v.u != null ? `<u>${H.esc(H.fmt(v.u, 0))}%</u>` : ''}</span><small>${H.esc(a.name)}</small></div>`; }).join('')}</div>`; },
+      return `<div class="nb-g" style="--p:${p}" title="${H.esc(a.name)}"><span>${H.esc(H.fmt(v.t, 0))}°${B.bk.hum && v.u != null ? `<u>${H.esc(H.fmt(v.u, 0))}%</u>` : ''}</span><small>${H.esc(a.name)}</small></div>`; }).join('')}</div>`; },
   /* ---- UI ustawień ---- */
+  /* lista wybranych + „Dodaj”: sel/opt = [{ k, l, s, ic, x }]; x = dodatkowe przyciski w wierszu; o.one = jedna wartość (przycisk „Zmień”), o.fix = wiersz bez ✕ */
+  pk(id, sel, opt, o) { o = o || {}; const open = this._dd === id && opt.length, v = (k) => H.esc(id + '|' + k);
+    const row = (x) => `<div class="wl-it">${H.icon(x.ic || o.ic || 'mdi:circle-small')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span>${x.x || ''}${x.fix ? '' : `<button type="button" class="x" data-hge="wl-pk-rm" data-v="${v(x.k)}" aria-label="${H.esc(hgTr('Usuń: ', 'Remove: ') + x.l)}">${H.icon('mdi:close')}</button>`}</div>`;
+    const dd = open ? `<div class="wl-dd">${opt.length > 1 ? `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" data-pk-q="${H.esc(id)}" placeholder="${hgTr('Szukaj…', 'Search…')}" aria-label="${hgTr('Szukaj', 'Search')}" autocomplete="off"></label>` : ''}
+      <div class="wl-ol" role="listbox">${opt.map((x) => `<button type="button" role="option" data-hge="wl-pk-add" data-v="${v(x.k)}" data-q="${H.esc((x.l + ' ' + (x.s || '') + ' ' + x.k).toLowerCase())}">${H.icon(x.ic || o.ic || 'mdi:plus')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span></button>`).join('')}<div class="no" hidden>${hgTr('Nic nie pasuje', 'No matches')}</div></div></div>` : '';
+    return `<div class="wl-pk" data-pk="${H.esc(id)}">${sel.map(row).join('')}${opt.length ? `<button type="button" class="wl-add" data-hge="wl-pk-open" data-v="${H.esc(id)}" aria-expanded="${!!open}">${H.icon(o.one ? 'mdi:swap-horizontal' : 'mdi:plus')}${H.esc(o.add || (o.one ? hgTr('Zmień', 'Change') : hgTr('Dodaj', 'Add')))}</button>` : ''}${dd}</div>`; },
+  /* wyszukiwarka w rozwiniętej liście (wywoływane z wire po każdym renderze) */
+  pkWire(p, S) { const q = S.querySelector('[data-pk-q]'), dd = S.querySelector('.wl-dd');
+    if (dd) setTimeout(() => { try { dd.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* stare przeglądarki */ } if (q && q.isConnected) q.focus({ preventScroll: true }); }, 60);
+    if (!q) return; const L = [...dd.querySelectorAll('.wl-ol [data-q]')], no = dd.querySelector('.no');
+    q.addEventListener('input', () => { const t = q.value.trim().toLowerCase(); let n = 0; for (const b of L) { const ok = !t || t.split(/\s+/).every((w) => b.dataset.q.includes(w)); b.hidden = !ok; n += ok; } no.hidden = n > 0; });
+    q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const f = L.find((b) => !b.hidden); if (f) f.click(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this._dd = ''; p._eLook(); } else if (e.key === 'ArrowDown') { e.preventDefault(); const f = L.find((b) => !b.hidden); if (f) f.focus(); } }); },
+  /* zmiana z listy: true = obsłużone */
+  pkOp(id, op, k) { const B = this.bget(), add = op === 'add', tog = (L) => (add ? L.filter((x) => x !== k) : [...new Set([...L, k])]);
+    if (id === 'wid') { const bk = Object.assign({}, B.bk, { [k]: add }); this.set(add ? { bk, ord: [...B.ord.filter((x) => x !== k), k] } : { bk }); }
+    else if (id === 'cal') this.set({ calX: tog(B.calX) });
+    else if (id === 'room') this.set({ roomX: tog(B.roomX) });
+    else if (id === 'wx') { this._fc = null; this.set({ wxE: add ? k : '' }); }
+    else if (id === 'sens') { this._ms = undefined; this.set({ sensor: add ? k : '' }); }
+    else return false; return true; },
   bdHtml(c, h) { const B = this.bget(), seg = (a, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, pl, en]) => `<button type="button" data-hge="${a}" data-v="${k}" aria-pressed="${cur === k}">${hgTr(pl, en)}</button>`).join('')}</div>`;
     const style = `<div class="wl-f" role="group" aria-labelledby="wl-st"><span id="wl-st">${hgTr('Wygląd wygaszacza', 'Screensaver style')}</span>${seg('wl-style', [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board']], B.style)}</div>`;
     if (B.style !== 'board') return { top: style, board: '' };
-    const W = Object.keys(h.states).filter((e) => e.startsWith('weather.')), Cs = Object.keys(h.states).filter((e) => e.startsWith('calendar.'));
+    const W = Object.keys(h.states).filter((e) => e.startsWith('weather.')), Cs = Object.keys(h.states).filter((e) => e.startsWith('calendar.')), nm = (e) => H.name(h, e, e);
     let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp); } catch (e) { /* bez pokoi */ }
+    const grp = (id, t, body, hint) => `<div class="wl-f" role="group" aria-labelledby="wl-${id}"><span id="wl-${id}">${t}</span>${body}${hint ? `<small>${H.esc(hint)}</small>` : ''}</div>`;
     const chips = (a, list) => `<div class="wl-chips">${list.map(([k, l, on]) => `<button type="button" data-hge="${a}" data-v="${H.esc(k)}" aria-pressed="${on}">${H.icon('mdi:check')}${H.esc(l)}</button>`).join('')}</div>`;
-    const cn = Object.fromEntries(HG_WB_CARDS.map(([k, pl, en, ic]) => [k, [hgTr(pl, en), ic]]));
-    const ord = `<div class="wl-ord">${B.ord.map((k, i) => `<div class="${B.bk[k] ? '' : 'off'}">${H.icon(cn[k][1])}<span>${H.esc(cn[k][0])}${B.bk[k] ? '' : `<small> · ${hgTr('ukryte', 'hidden')}</small>`}</span>
-      <button type="button" data-hge="wl-up" data-v="${k}" ${i === 0 ? 'disabled' : ''} aria-label="${hgTr('Wyżej', 'Move up')}">${H.icon('mdi:chevron-up')}</button><button type="button" data-hge="wl-dn" data-v="${k}" ${i === B.ord.length - 1 ? 'disabled' : ''} aria-label="${hgTr('Niżej', 'Move down')}">${H.icon('mdi:chevron-down')}</button></div>`).join('')}</div>`;
+    const cn = Object.fromEntries(HG_WB_CARDS.map(([k, pl, en, ic]) => [k, { l: hgTr(pl, en), ic }])), vis = B.ord.filter((k) => B.bk[k]);
+    const mv = (k, i) => `<button type="button" data-hge="wl-up" data-v="${k}" ${i === 0 ? 'disabled' : ''} aria-label="${hgTr('Wyżej', 'Move up')}">${H.icon('mdi:chevron-up')}</button><button type="button" data-hge="wl-dn" data-v="${k}" ${i === vis.length - 1 ? 'disabled' : ''} aria-label="${hgTr('Niżej', 'Move down')}">${H.icon('mdi:chevron-down')}</button>`;
+    const wid = this.pk('wid', vis.map((k, i) => ({ k, l: cn[k].l, ic: cn[k].ic, x: mv(k, i) })), B.ord.filter((k) => !B.bk[k]).map((k) => ({ k, l: cn[k].l, ic: cn[k].ic })), { add: hgTr('Dodaj widżet', 'Add widget') });
+    const on = (k) => vis.includes(k), auto = this.wxId(h, Object.assign({}, B, { wxE: '' }));
+    const wx = on('wx') && W.length > 1 ? grp('wx', hgTr('Pogoda', 'Weather'), this.pk('wx', [B.wxE && h.states[B.wxE] ? { k: B.wxE, l: nm(B.wxE), s: B.wxE } : { k: '', l: hgTr('Automatycznie', 'Automatic'), s: auto ? nm(auto) : '', fix: true }],
+      W.filter((e) => e !== B.wxE).map((e) => ({ k: e, l: nm(e), s: e })), { one: true, ic: 'mdi:weather-partly-cloudy' })) : '';
+    const cal = (on('cal') || on('cnt')) && Cs.length ? grp('cl', hgTr('Kalendarze', 'Calendars'), this.pk('cal', Cs.filter((e) => !B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })),
+      Cs.filter((e) => B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })), { ic: 'mdi:calendar', add: hgTr('Dodaj kalendarz', 'Add calendar') })) : '';
+    const rm = on('tmp') && R.length ? grp('rm', hgTr('Pokoje na liście temperatur', 'Rooms in the temperature list'), this.pk('room', R.filter((a) => !B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })),
+      R.filter((a) => B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })), { ic: 'mdi:sofa-outline', add: hgTr('Dodaj pokój', 'Add room') })) : '';
     const board = `
       <div class="wl-f" role="group" aria-labelledby="wl-bt"><span id="wl-bt">${hgTr('Motyw tablicy', 'Board theme')}</span>${seg('wl-bt', [['auto', 'Jak panel', 'Like dashboard'], ['light', 'Jasny', 'Light'], ['dark', 'Ciemny', 'Dark']], B.bt)}</div>
       <div class="wl-f" role="group" aria-labelledby="wl-hd"><span id="wl-hd">${hgTr('Nagłówek', 'Heading')}</span>${seg('wl-hd', [['time', 'Godzina', 'Time'], ['day', 'Dzień tygodnia', 'Weekday']], B.hd)}</div>
-      <div class="wl-f" role="group" aria-labelledby="wl-bk"><span id="wl-bk">${hgTr('Elementy', 'Elements')}</span>${chips('wl-bk', HG_WB_BK.map(([k, pl, en]) => [k, hgTr(pl, en), B.bk[k]]))}</div>
-      <div class="wl-f" role="group" aria-labelledby="wl-or"><span id="wl-or">${hgTr('Kolejność kart', 'Card order')}</span>${ord}</div>
-      ${B.bk.wx && W.length > 1 ? `<label class="wl-f"><span>${hgTr('Pogoda', 'Weather')}</span><select class="hs-in" name="wl-wx"><option value="">${hgTr('Automatycznie', 'Automatic')}</option>${W.map((e) => `<option value="${H.esc(e)}"${e === B.wxE ? ' selected' : ''}>${H.esc(H.name(h, e, e))}</option>`).join('')}</select></label>` : ''}
-      ${(B.bk.cal || B.bk.cnt) && Cs.length ? `<div class="wl-f" role="group" aria-labelledby="wl-cl"><span id="wl-cl">${hgTr('Kalendarze', 'Calendars')}</span>${chips('wl-cal', Cs.map((e) => [e, H.name(h, e, e), !B.calX.includes(e)]))}</div>` : ''}
-      ${B.bk.tmp && R.length ? `<div class="wl-f" role="group" aria-labelledby="wl-rm"><span id="wl-rm">${hgTr('Pokoje na liście temperatur', 'Rooms in the temperature list')}</span>${chips('wl-room', R.map((a) => [a.id, a.name, !B.roomX.includes(a.id)]))}</div>` : ''}`;
+      ${grp('wd', hgTr('Widżety pod zegarem', 'Widgets under the clock'), wid)}
+      ${grp('bk', hgTr('Dodatki', 'Extras'), chips('wl-bk', [['np', hgTr('Teraz gra', 'Now playing'), B.bk.np], ['hum', hgTr('Wilgotność w pokojach', 'Room humidity'), B.bk.hum]]))}
+      ${wx}${cal}${rm}`;
     return { top: style, board }; },
-  bdAct(p, b, a) { const B = this.bget(), v = b.dataset.v, tog = (L) => (L.includes(v) ? L.filter((x) => x !== v) : [...L, v]);
-    if (a === 'wl-style') this.set({ style: v });
+  bdAct(p, b, a) { const B = this.bget(), v = b.dataset.v || '';
+    if (a === 'wl-pk-open') { this._dd = this._dd === v ? '' : v; p._eLook(); return true; }
+    if (a === 'wl-pk-add' || a === 'wl-pk-rm') { const i = v.indexOf('|'); if (i < 0 || !this.pkOp(v.slice(0, i), a === 'wl-pk-add' ? 'add' : 'rm', v.slice(i + 1))) return false; this._dd = ''; }
+    else if (a === 'wl-style') this.set({ style: v });
     else if (a === 'wl-bt') this.set({ bt: v });
     else if (a === 'wl-hd') this.set({ hd: v });
     else if (a === 'wl-bk') this.set({ bk: Object.assign({}, B.bk, { [v]: !B.bk[v] }) });
-    else if (a === 'wl-up' || a === 'wl-dn') { const o = B.ord.slice(), i = o.indexOf(v), j = i + (a === 'wl-up' ? -1 : 1); if (i < 0 || j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; this.set({ ord: o }); }
-    else if (a === 'wl-cal') this.set({ calX: tog(B.calX) });
-    else if (a === 'wl-room') this.set({ roomX: tog(B.roomX) });
+    else if (a === 'wl-up' || a === 'wl-dn') { const vis = B.ord.filter((k) => B.bk[k]), i = vis.indexOf(v), j = i + (a === 'wl-up' ? -1 : 1); if (i < 0 || j < 0 || j >= vis.length) return true;
+      const o = B.ord.slice(), x = o.indexOf(vis[i]), y = o.indexOf(vis[j]); [o[x], o[y]] = [o[y], o[x]]; this.set({ ord: o }); }
     else return false;
     this._bevk = ''; if (this.active && this.el && this.el.classList.contains('bd')) this.bd(true);
     p._eLook(); return true; },
