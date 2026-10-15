@@ -51,6 +51,7 @@ CARDS = [
     'cards/phases-card.part.js',
     'cards/energy-stats-card.part.js',
     'cards/pv-card.part.js',
+    'cards/flow-card.part.js',
     'cards/robots-card.part.js',
     'cards/areas-card.part.js',
     'cards/room-card.part.js',

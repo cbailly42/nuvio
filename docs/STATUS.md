@@ -8,6 +8,7 @@ Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard stra
 (j) 1.3.0: screensaver PIN lock (BETA) in hg-wall: HGWall.lock/pinH/pinN/lockAfter, pinpad overlay, 5-try back-off, lockNow from the user menu, locked flag survives reload (nuvio:wall-locked).
 (k) 1.4.0: shared dashboard (HGShared in hg-oss: hidden storage dashboard nuvio-shared { nuvio_shared, own: [user_id], data }); Settings → Users (hg-users.part.js) opts people out to their own layout; live sync via lovelace_updated; assist stays per user.
 (l) 1.5.0: view visibility per person in Settings → Views (wiz.vu[path] = [hidden user_id], hgViewOff in the strategy); 1.5.1: closed Assist dialog no longer leaves ghost content.
+(m) 1.6.0: energy flow card (cards/flow-card.part.js, hg-flow-card): grid / solar / battery / home diagram, dots by stroke-dashoffset, home ring split by source; hgFlowGuess picks sensors by name for + Add (slot auto: 'rank') and the Energy view.
 
 ## Planned (source of truth for README roadmap)
 

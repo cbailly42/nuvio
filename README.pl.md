@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.5.1-a3e635?style=flat-square" alt="v1.5.1">
+  <img src="https://img.shields.io/badge/version-v1.6.0-a3e635?style=flat-square" alt="v1.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -99,6 +99,10 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 <tr>
 <td width="50%" valign="top"><img src="docs/components/solar.png" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-solar-card</code><br>Produkcja PV z ostatnich dni jako wykres. Jedna statystyka energii i opcjonalny czujnik „dziś”.</td>
 <td width="50%" valign="top"><img src="docs/components/pv.png" alt="Fotowoltaika" width="100%"><br><b>Fotowoltaika</b> <code>custom:nuvio-pv-card</code><br>Stan falownika, moc teraz, energia dziś, stringi i temperatura. Czujniki falownika.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/flow.png" alt="Przepływ energii" width="100%"><br><b>Przepływ energii</b> <code>custom:nuvio-flow-card</code><br>Sieć, panele, bateria i dom na jednym schemacie. Po liniach płyną świecące kropki, szybciej przy większej mocy; pierścień domu pokazuje, skąd bierze prąd, a pierścień baterii jej naładowanie. Czujniki mocy (W albo kW) sieci, paneli i baterii, poziom baterii, opcjonalnie zużycie domu.</td>
+<td width="50%" valign="top"></td>
 </tr>
 </table>
 </details>
@@ -258,6 +262,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Energia, tydzień | `custom:nuvio-week-card` | czujniki zużycia i produkcji, liczba dni, cel po dotknięciu |
 | Fazy | `custom:nuvio-phases-card` | moc, napięcie i prąd każdej fazy, maksymalna moc łączna i fazy |
 | Fotowoltaika | `custom:nuvio-pv-card` | moc, produkcja dziś, stan i temperatura falownika, stringi |
+| Przepływ energii | `custom:nuvio-flow-card` | moc sieci (+ pobór, − oddawanie) albo osobny czujnik oddawania, moc paneli, moc baterii (+ rozładowanie, − ładowanie) i jej poziom, zużycie domu (puste = z bilansu), odwrócenie znaku sieci albo baterii |
 | Sieć | `custom:nuvio-net-card` | sekcja (internet, brama, Wi-Fi, urządzenia, klienci), tytuł |
 | Czujniki domu | `custom:nuvio-sensors-card` | rodzaje czujników, dodatkowe i pominięte czujniki |
 | Skrót | `custom:nuvio-link-card` | tytuł, podtytuł, encja, ścieżka lub adres do otwarcia |
@@ -411,9 +416,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.5.1 -m "Nuvio 1.5.1" && git push origin v1.5.1`.
+Sam tag ręcznie: `git tag -a v1.6.0 -m "Nuvio 1.6.0" && git push origin v1.6.0`.
 
 ## Lista zmian
+
+### 1.6.0
+- Dodano: karta **Przepływ energii** (`custom:nuvio-flow-card`): sieć, panele, bateria i dom na jednym szklanym schemacie, po liniach płyną kropki, szybciej przy większej mocy. Sieć pokazuje pobór albo oddawanie, bateria poziom naładowania i czy się ładuje, a pierścień domu i legenda pokazują, ile prądu idzie z paneli, sieci i baterii. Jest w **+ Dodaj** z podglądem na żywo, a widok Energia stawia ją na górze, gdy znajdzie czujniki mocy sieci oraz paneli albo baterii.
 
 ### 1.5.1
 - Naprawiono: zamknięcie okna Assist krzyżykiem zostawiało na ekranie wiadomości, podpowiedzi i pole tekstowe bez szkła pod spodem. Zamknięte okno znika teraz w całości, a rozmowa zostaje na następne otwarcie.

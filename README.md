@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.5.1-a3e635?style=flat-square" alt="v1.5.1">
+  <img src="https://img.shields.io/badge/version-v1.6.0-a3e635?style=flat-square" alt="v1.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -99,6 +99,10 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <tr>
 <td width="50%" valign="top"><img src="docs/components/solar.png" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-solar-card</code><br>PV production over the last days as an area chart. One energy statistic plus an optional today sensor.</td>
 <td width="50%" valign="top"><img src="docs/components/pv.png" alt="Photovoltaics" width="100%"><br><b>Photovoltaics</b> <code>custom:nuvio-pv-card</code><br>Inverter state, power now, energy today, strings and temperature. Inverter sensors.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/components/flow.png" alt="Energy flow" width="100%"><br><b>Energy flow</b> <code>custom:nuvio-flow-card</code><br>Grid, solar, battery and home on one diagram. Glowing dots run along the lines, faster at higher power; the home ring shows where its power comes from and the battery ring shows the charge level. Power sensors (W or kW) for grid, solar and battery, battery level, optional home usage.</td>
+<td width="50%" valign="top"></td>
 </tr>
 </table>
 </details>
@@ -258,6 +262,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Energy week | `custom:nuvio-week-card` | consumption and production sensors, days, tap target |
 | Phases | `custom:nuvio-phases-card` | power, voltage and current per phase, maximum total and per phase power |
 | Solar | `custom:nuvio-pv-card` | power, today, inverter state and temperature, strings |
+| Energy flow | `custom:nuvio-flow-card` | grid power (+ import, − export) or a separate export sensor, solar power, battery power (+ discharge, − charge) and level, home usage (empty = from the balance), invert grid or battery sign |
 | Network | `custom:nuvio-net-card` | section (internet, gateway, Wi-Fi, devices, clients), title |
 | Home sensors | `custom:nuvio-sensors-card` | device classes, extra and skipped sensors |
 | Shortcut | `custom:nuvio-link-card` | title, subtitle, entity, path or URL to open |
@@ -411,9 +416,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.5.1 -m "Nuvio 1.5.1" && git push origin v1.5.1`.
+Only tagging by hand: `git tag -a v1.6.0 -m "Nuvio 1.6.0" && git push origin v1.6.0`.
 
 ## Changelog
+
+### 1.6.0
+- Added: **Energy flow** card (`custom:nuvio-flow-card`): grid, solar, battery and home on one glass diagram with dots that flow along the lines, faster at higher power. The grid shows import or export, the battery its level and whether it charges, and the home ring and the legend show how much power comes from solar, grid and battery. It is in **+ Add** with a live preview, and the Energy view puts it on top when it finds grid and solar or battery power sensors.
 
 ### 1.5.1
 - Fixed: closing the Assist window with X left its messages, suggestions and input on the screen without the glass behind them. The closed window is now removed completely, and the conversation is kept for the next opening.
