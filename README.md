@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.5.0-a3e635?style=flat-square" alt="v2.5.0">
+  <img src="https://img.shields.io/badge/version-v2.5.1-a3e635?style=flat-square" alt="v2.5.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.5.0 origin/main -m "Nuvio 2.5.0" && git push origin v2.5.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.5.1 origin/main -m "Nuvio 2.5.1" && git push origin v2.5.1`.
 
 ## Changelog
+
+### 2.5.1
+- Now playing card on the board matches the widgets: light blurred background with no border, white text and icons. A title too long for the card scrolls (marquee).
 
 ### 2.5.0
 - Board widgets look like iPhone lock-screen widgets: light blurred background with no border, white text and white icons (weather uses white symbols, room gauges are white).
