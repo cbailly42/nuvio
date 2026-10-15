@@ -101,6 +101,7 @@ CARDS = [
     'cards/glance-card.part.js',
     'cards/stat-card.part.js',
     'cards/humidifier-card.part.js',
+    'cards/purifier-card.part.js',
     'cards/timer-card.part.js',
     'cards/logbook-card.part.js',
     'cards/webpage-card.part.js',

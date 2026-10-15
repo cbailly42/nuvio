@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.5.1-a3e635?style=flat-square" alt="v2.5.1">
+  <img src="https://img.shields.io/badge/version-v2.6.0-a3e635?style=flat-square" alt="v2.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -204,6 +204,7 @@ Seven new cards in **+ Add**, each with a live preview and a form. They follow t
 | `custom:nuvio-glance-card` | Several entities in a row: icon, name and state; tap opens more info | `entities`, `title`, `columns`, `show_name`, `show_state` |
 | `custom:nuvio-stat-card` | Minimum, average, maximum and change of a sensor with a sparkline, for 24 hours, 7 or 30 days | `entity`, `name`, `icon`, `hours`, `decimals` |
 | `custom:nuvio-humidifier-card` | Target humidity on an arc, current humidity and mode pills | `entity`, `name` |
+| `custom:nuvio-purifier-card` | Air purifier: large PM2.5 reading that counts to the new value, air-quality label, air waves around the number (faster in Turbo, slower in Sleep), power and modes with a sliding highlight | `entity` (fan), `pm` (PM2.5 sensor, auto), `name`, `title`, `modes` |
 | `custom:nuvio-timer-card` | Remaining time of a `timer` on an arc, with start, pause and cancel | `entity`, `name`, `icon` |
 | `custom:nuvio-logbook-card` | Recent changes of chosen entities with relative times | `entities`, `title`, `hours`, `max` |
 | `custom:nuvio-webpage-card` | Any `https://`, `http://` or `/local/` address in a frame | `url`, `title`, `aspect_ratio` or `height` |
@@ -418,9 +419,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.5.1 origin/main -m "Nuvio 2.5.1" && git push origin v2.5.1`.
+Only tagging by hand: `git fetch origin && git tag -a v2.6.0 origin/main -m "Nuvio 2.6.0" && git push origin v2.6.0`.
 
 ## Changelog
+
+### 2.6.0
+- New: air purifier card (`custom:nuvio-purifier-card`, **+ Add → Air purifier**). Large PM2.5 reading that counts step by step to a new value, label and color from air quality (clean, good, moderate, poor, very poor), air waves spreading from the number at a speed that follows the mode, power switch and preset modes with a sliding highlight. The PM2.5 sensor is found automatically or chosen in the form.
 
 ### 2.5.1
 - Now playing card on the board matches the widgets: light blurred background with no border, white text and icons. A title too long for the card scrolls (marquee).

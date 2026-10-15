@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.5.1-a3e635?style=flat-square" alt="v2.5.1">
+  <img src="https://img.shields.io/badge/version-v2.6.0-a3e635?style=flat-square" alt="v2.6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -204,6 +204,7 @@ Siedem nowych kart w **+ Dodaj**, każda z podglądem na żywo i formularzem. Od
 | `custom:nuvio-glance-card` | Kilka encji w rzędzie: ikona, nazwa i stan; dotknięcie otwiera szczegóły | `entities`, `title`, `columns`, `show_name`, `show_state` |
 | `custom:nuvio-stat-card` | Minimum, średnia, maksimum i zmiana czujnika z wykresem, za 24 godziny, 7 lub 30 dni | `entity`, `name`, `icon`, `hours`, `decimals` |
 | `custom:nuvio-humidifier-card` | Docelowa wilgotność na łuku, bieżąca wilgotność i pigułki trybów | `entity`, `name` |
+| `custom:nuvio-purifier-card` | Oczyszczacz powietrza: duży odczyt PM2.5 odliczany do nowej wartości, etykieta jakości powietrza, fale powietrza wokół liczby (szybsze w Turbo, wolniejsze w trybie Sen), włącznik i tryby z przesuwanym podświetleniem | `entity` (fan), `pm` (czujnik PM2.5, automatycznie), `name`, `title`, `modes` |
 | `custom:nuvio-timer-card` | Pozostały czas `timer` na łuku, ze startem, pauzą i anulowaniem | `entity`, `name`, `icon` |
 | `custom:nuvio-logbook-card` | Ostatnie zmiany wybranych encji z czasem względnym | `entities`, `title`, `hours`, `max` |
 | `custom:nuvio-webpage-card` | Dowolny adres `https://`, `http://` albo `/local/` w ramce | `url`, `title`, `aspect_ratio` albo `height` |
@@ -418,9 +419,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.5.1 origin/main -m "Nuvio 2.5.1" && git push origin v2.5.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.6.0 origin/main -m "Nuvio 2.6.0" && git push origin v2.6.0`.
 
 ## Lista zmian
+
+### 2.6.0
+- Nowość: karta oczyszczacza powietrza (`custom:nuvio-purifier-card`, **+ Dodaj → Oczyszczacz powietrza**). Duży odczyt PM2.5 odliczany krok po kroku do nowej wartości, etykieta i kolor z jakości powietrza (czyste, dobre, umiarkowane, złe, bardzo złe), fale powietrza rozchodzące się od liczby w tempie zależnym od trybu, włącznik i tryby z przesuwanym podświetleniem. Czujnik PM2.5 dobiera się sam albo wybierasz go w formularzu.
 
 ### 2.5.1
 - Karta „Teraz gra” na tablicy wygląda jak widżety: jasne rozmyte tło bez obramowania, biały tekst i ikony. Za długi tytuł przewija się (marquee).
