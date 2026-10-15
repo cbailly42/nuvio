@@ -30,10 +30,11 @@ const HG_GL_SS3 = `
 .ng .ng-c::before, .ng .ng-c::after{ display:none !important; }
 .ng .ng-car{ display:flex; align-items:center; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-padding-inline:var(--gpad, 40px); scrollbar-width:none; overscroll-behavior-x:contain; scroll-behavior:smooth; left:var(--gpad, 40px) !important; right:var(--gpad, 40px) !important; scroll-padding-inline:0; padding-block:48px; margin-block:-48px; box-sizing:content-box; }
 .ng .ng-car::-webkit-scrollbar{ display:none; }
-.ng .ng-trk{ display:grid; grid-auto-flow:column dense; grid-template-rows:repeat(var(--grows, 2), var(--grh, 260px)); grid-auto-columns:var(--gcw, 300px); gap:var(--ggap, 16px); height:auto; width:max-content; padding:0; animation:none !important; align-items:stretch; }
-.ng .ng-c{ width:auto !important; height:auto !important; max-height:none; min-height:0; container-type:normal; display:flex; scroll-snap-align:start; outline:0 !important; grid-row:span 1; grid-column:span 1; }
-.ng .ng-c.w{ grid-column:span var(--gc2, 2); } .ng .ng-c.t-boiler{ grid-row:span var(--gr2, 2); }
-.ng .ng-tile{ position:relative; display:flex; flex:1; min-width:0; min-height:0; padding:0 !important; } .ng .ng-tile > *{ display:block; flex:1; height:100%; width:100%; --hg-accent:${HG_GL_HEX('63D71E')}; }
+.ng .ng-trk{ position:relative; display:block; height:100%; width:var(--gtw, 100%); padding:0; animation:none !important; }
+.ng .ng-pg{ position:absolute; top:0; bottom:0; width:var(--gpw, 100%); scroll-snap-align:start; pointer-events:none; }
+.ng .ng-c{ position:absolute; left:0; top:0; height:auto !important; max-height:none; min-height:0; container-type:normal; display:block; outline:0 !important; }
+.ng .ng-c:not(.lo){ visibility:hidden; }
+.ng .ng-tile{ position:relative; display:block; padding:0 !important; } .ng .ng-tile > *{ display:block; width:100%; --hg-accent:${HG_GL_HEX('63D71E')}; }
 .ng-dt, .ng .nw-h, .ng-mt, .ng-md, .ng-mw, .ng-mp{ background:none !important; box-shadow:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; text-shadow:0 1px 12px ${K(0,0,0,.35)}; }
 .ng-wi{ display:grid; place-items:center; width:1.6em; height:1.6em; font-style:normal; } .ng-wi ha-icon{ --mdc-icon-size:1.4em; color:${HG_GL_HEX('63D71E')}; }
 `;
@@ -220,7 +221,7 @@ Object.assign(HGWall, {
   gpw(h, e) { if (!e) return ''; const o = e.split('.')[1], S = h.states; return Object.keys(S).find((x) => x.startsWith('sensor.') && (S[x].attributes || {}).device_class === 'power' && x.split('.')[1].startsWith(o)) || ''; },
   /* karta wygaszacza = prawdziwy kafel pulpitu (ten sam komponent, szkło i odstępy) */
   gmk(c, h) { const e = c.e || '', T = {
-      weather: ['hg-weather-card', { entity: e }], media: ['hg-media-card', { entity: e }], camera: ['hg-camera-card', { entity: e, cover: true }],
+      weather: ['hg-weather-card', { entity: e }], media: ['hg-media-card', { entity: e }], camera: ['hg-camera-card', { entity: e }],
       thermo: ['hg-thermo-card', { entity: e }], boiler: ['hg-cwu-card', { cwu: { heater: e, power: c.pw || this.gpw(h, e) || null } }],
       energy: ['hg-value-card', { entity: e }], pv: ['hg-pv-card', { power: e }], car: ['hg-value-card', { entity: e }], sensor: ['hg-value-card', { entity: e }],
       light: ['hg-lamp-card', { entity: e }], scene: ['hg-scenes-card', { scripts: e ? [e] : [] }], person: ['hg-person-card', { entity: e }] }[c.t];
@@ -229,7 +230,7 @@ Object.assign(HGWall, {
     root.querySelectorAll('[data-mk]').forEach((slot, n) => { const c = (this._gC || []).find((x) => x.id === slot.dataset.mk); if (!c) return; const T = this.gmk(c, h); if (!T) return;
       const key = c.id + '#' + n, sig = JSON.stringify(T); seen[key] = 1; let el = M[key];
       if (!el || el._sig !== sig) { try { el = document.createElement(T[0]); el.setConfig(Object.assign({ type: 'custom:' + T[0] }, T[1])); el._sig = sig; M[key] = el; } catch (x) { return; } }
-      if (el.parentNode !== slot) slot.replaceChildren(el); if (el.hass !== h) el.hass = h; this.gfill(el); requestAnimationFrame(() => this.gfill(el)); });
+      if (el.parentNode !== slot) slot.replaceChildren(el); if (el.hass !== h) el.hass = h; const sr = el.shadowRoot; if (sr && !sr.querySelector('style[data-ngb]')) { const st = document.createElement('style'); st.dataset.ngb = '1'; st.textContent = 'ha-card{ display:block; }'; sr.appendChild(st); } });
     Object.keys(M).forEach((k) => { if (!seen[k]) delete M[k]; }); },
   /* tło pulpitu: dokładnie to, co pulpit (HGApp: wybrane tło lub domyślne, kopia z CDN po błędzie, przyciemnienie) */
   gbg() { const A = (window.HGApp && HGApp.get()) || {}, port = window.innerHeight > window.innerWidth; let B = A.bg || window.HG_DEFAULT_BG;
@@ -238,20 +239,29 @@ Object.assign(HGWall, {
     const u = B ? (port && B.v2p ? HGApp.bgImg({ kind: 'image', v: B.v2p }) : HGApp.bgImg(B)) : null;
     const d = A.dim != null ? Math.max(0, Math.min(1, A.dim)) : 0;
     return { img: u || 'linear-gradient(160deg, ' + ((window.HG_DEFAULT_BG_FB || {}).v || HG_GL_HEX('16202B')) + ', ' + ((window.HG_DEFAULT_BG_FB || {}).v2 || HG_GL_HEX('05070A')) + ')', pos: (A.bg && A.bg.pos) || '50% 50%', dim: (1 - (1 - d * 0.65) * (1 - d * 0.45)).toFixed(3) }; },
-  /* siatka jak na pulpicie: równe wiersze, pełne kolumny w kadrze, blok wyśrodkowany */
-  glayout(root) { const car = root.querySelector('.ng-car'); if (!car) return; const Hh = car.clientHeight - 96, W0 = root.clientWidth; if (!W0 || !Hh) return;
-    const gap = Math.round(Math.max(10, Math.min(18, W0 * 0.012))), pad = Math.round(Math.max(gap, Math.min(56, W0 * 0.04))), W = W0 - 2 * pad;
-    const rows = Math.max(1, Math.min(3, Math.floor((Hh + gap) / (190 + gap)))), rh = Math.floor(Math.min(300, (Hh - gap * (rows - 1)) / rows));
-    const n = Math.max(1, Math.round((W + gap) / (300 + gap))), cw = Math.floor((W - (n - 1) * gap) / n);
-    const st = car.style; st.setProperty('--ggap', gap + 'px'); st.setProperty('--gpad', pad + 'px'); st.setProperty('--grows', rows); st.setProperty('--grh', rh + 'px'); st.setProperty('--gcw', cw + 'px');
-    st.setProperty('--gr2', Math.min(2, rows)); st.setProperty('--gc2', Math.min(2, n)); car._step = cw + gap; },
+  /* układ jak widok pulpitu (masonry): naturalna wysokość kafli, kafel do najkrótszej kolumny; strony po wysokości ekranu, przewijanie stronami */
+  glayout(root) { const car = root.querySelector('.ng-car'), trk = car && car.querySelector('.ng-trk'); if (!trk) return; const Hh = car.clientHeight - 96, W0 = root.clientWidth; if (!W0 || !Hh) return;
+    const gap = Math.round(Math.max(10, Math.min(16, W0 * 0.011))), pad = Math.round(Math.max(16, Math.min(56, W0 * 0.04))), W = W0 - 2 * pad;
+    const n = Math.max(1, Math.round((W + gap) / (300 + gap))), cw = (W - (n - 1) * gap) / n;
+    car.style.setProperty('--gpad', pad + 'px'); const C = [...trk.querySelectorAll(':scope > .ng-c')];
+    C.forEach((c) => { const sp = Math.min(n, c.classList.contains('w') || c.classList.contains('l') ? 2 : 1); c._sp = sp; c.style.width = (cw * sp + gap * (sp - 1)) + 'px'; });
+    const P = []; let H = new Array(n).fill(0), pg = [];
+    const flush = () => { if (pg.length) P.push({ L: pg, h: Math.max(...H) - gap }); H = new Array(n).fill(0); pg = []; };
+    C.forEach((c) => { const h = Math.ceil(c.offsetHeight), sp = c._sp; let col = 0, best = Infinity;
+      for (let k = 0; k + sp <= n; k++) { const t = Math.max(...H.slice(k, k + sp)); if (t < best) { best = t; col = k; } }
+      if (pg.length && best + h > Hh) { flush(); col = 0; best = 0; }
+      for (let k = col; k < col + sp; k++) H[k] = best + h + gap; pg.push([c, col, best]); });
+    flush(); const stride = W + 2 * pad;
+    P.forEach((p, i) => { const off = Math.max(0, (Hh - p.h) / 2); p.L.forEach(([c, col, top]) => { c.style.transform = `translate(${i * stride + col * (cw + gap)}px, ${off + top}px)`; c.classList.add('lo'); }); });
+    trk.style.setProperty('--gtw', (P.length * stride - 2 * pad) + 'px'); trk.style.setProperty('--gpw', W + 'px');
+    trk.querySelectorAll(':scope > .ng-pg').forEach((x) => x.remove());
+    P.forEach((p, i) => { const d = document.createElement('i'); d.className = 'ng-pg'; d.style.left = (i * stride) + 'px'; trk.appendChild(d); });
+    car._step = stride;
+    if (!trk._ro && window.ResizeObserver) { trk._ro = new ResizeObserver(() => { cancelAnimationFrame(trk._rf); trk._rf = requestAnimationFrame(() => this.glayout(root)); }); }
+    if (trk._ro) C.forEach((c) => { if (!c._ob) { c._ob = 1; trk._ro.observe(c); } }); },
   gauto2(root, G) { clearInterval(this._gai); const car = root.querySelector('.ng-car'); if (!car || !G.car.spd || G.rm === 'on' || root.classList.contains('pv')) return;
     this._gai = setInterval(() => { if (this._ghold || this._gsh || !car.isConnected) return; const end = car.scrollLeft + car.clientWidth >= car.scrollWidth - 4;
       if (end) car.scrollTo({ left: 0 }); else car.scrollBy({ left: car._step || 300 }); }, Math.max(5, G.car.spd / 8) * 1000); },
-  /* kafel w wygaszaczu wypełnia swoją komórkę siatki */
-  gfill(el) { const r = el.shadowRoot; if (!r || r.querySelector('style[data-ngf]')) return; const s = document.createElement('style'); s.dataset.ngf = '1';
-    s.textContent = ':host{ display:block; height:100%; } .root{ height:100%; display:flex; flex-direction:column; } .root > *{ flex:1; min-height:0; display:flex; flex-direction:column; } .root > * > ha-card{ flex:1; } ha-card{ display:flex !important; flex-direction:column; height:100% !important; min-height:0 !important; box-sizing:border-box !important; margin:0 !important; overflow:hidden; } ha-card .tile, ha-card > div{ flex:1; min-height:0; } ha-card.cv .tile{ height:100%; } ha-card.cv .fr{ flex:1; min-height:0; aspect-ratio:auto !important; }';
-    r.appendChild(s); },
   gimg(k) { return k && k !== '-' ? (HG_GL_IMG.includes(k) ? HG_ASSET + 'nuvio-3d-' + k + '.webp' : k) : ''; },
   gtf(G) { const l = G.min.h12 !== 'auto' ? G.min.h12 : this.hass && this.hass.locale ? this.hass.locale.time_format : null; return new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {})); },
   gdate(G, d) { return new Intl.DateTimeFormat(HG_LOC(), G.top.df === 'num' ? { weekday: 'short', day: '2-digit', month: '2-digit' } : G.top.df === 'short' ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }).format(d || new Date()); },
