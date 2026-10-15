@@ -74,10 +74,12 @@ const HG_GL_SS2 = `.ng-dm{ position:absolute; inset:0; background:${K(0,0,0,1)};
 .ng-orb{ z-index:6; }
 /* PIN nad wygaszaczem: ta sama warstwa co w Zegarze na zdjęciu (rozmyte tło, treść schowana, pinpad osobno nad wszystkim) */
 .nw.gl .ng-st{ transition:filter .5s ease, transform .5s ease; }
-.nw.gl.pin .ng-st{ filter:blur(28px) saturate(1.2) brightness(.62); transform:scale(1.04); }
-.nw.gl.pin .ng-mid, .nw.gl.pin .ng-fam, .nw.gl.pin .ng-top, .nw.gl.pin .ng-orb, .nw.gl.pin .nw-h{ opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.nw.gl.pin .ng-st{ filter:blur(28px) saturate(1.15); transform:scale(1.04); }
+.nw.gl.pin .ng-orb{ filter:blur(18px); pointer-events:none; } .nw.gl.pin .ng-dm, .nw.gl.pin .nw-sh{ opacity:0 !important; background:none !important; }
+.nw.gl .ng-orb{ transition:filter .5s ease; }
+.nw.gl.pin .ng-mid, .nw.gl.pin .ng-fam, .nw.gl.pin .ng-top, .nw.gl.pin .nw-h{ opacity:0; pointer-events:none; transition:opacity .3s ease; }
 .nw.gl .nw-pp{ z-index:20; }
-@media (prefers-reduced-motion:reduce){ .nw.gl .ng-st{ transition:none; } }
+@media (prefers-reduced-motion:reduce){ .nw.gl .ng-st, .nw.gl .ng-orb{ transition:none; } }
 `;
 Object.assign(HGWall, {
   glShell() { return `<style>${HG_WALL_SS}${HG_GL_SS}${HG_GL_SS2}</style><div class="ng"><div class="ng-st"><div class="ng-bg" aria-hidden="true"></div><div class="ng-sp" aria-hidden="true"></div>

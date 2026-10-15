@@ -37,7 +37,7 @@ const hass = { states: S, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin:
   callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3, 4, 5].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i, templow: 6 + i, condition: ['sunny', 'partlycloudy', 'rainy', 'cloudy', 'sunny', 'lightning-rainy'][i % 6] })) } } } : null), callApi: async () => [] };
 window.__hgHass = window.__nuvioHass = hass;
 const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
-L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } };
+L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel', bg: q.get('img') ? { img: '/dist/nuvio-bg-default-wide.webp' } : {} } };
 const W = window.HGWall;
 if (q.get('ui')) {
   const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass;
