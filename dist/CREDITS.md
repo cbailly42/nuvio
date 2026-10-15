@@ -31,3 +31,10 @@ Each id has `<id>-wide.webp` (1920 px, ≤250 KB), `<id>-portrait.webp` (900×16
 | `kuchnia` | Kuchnia | NeONBRAND | [Blue white kitchen interior (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Blue_white_kitchen_interior_(Unsplash).jpg) | https://unsplash.com/photos/kdwahpWYfQo |
 | `mglisty-las` | Mglisty las | Milo McDowell | [Mist-wreathed forest on a hill (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Mist-wreathed_forest_on_a_hill_(Unsplash).jpg) | https://unsplash.com/photos/ehDntmNgsR0 |
 | `nad-mgla` | Nad mgłą | Joshua Sortino | [Sunset beyond the fog (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Sunset_beyond_the_fog_(Unsplash).jpg) | https://unsplash.com/photos/uAcrEhN8JEQ |
+
+
+# 3D images (screensaver "Szkło")
+
+`nuvio-3d-<name>.webp` (256 px, 26 files: sun, partly, cloud, rain, storm, snow, fog, moon, wind, camera, thermo, car, plug, bolt, battery, bulb, drop, fire, hotspring, sparkles, person, music, house, speaker, gauge, snowflake) are resized from the 3D style of **Fluent Emoji** by **Microsoft**, https://github.com/microsoft/fluentui-emoji
+
+- Licence: **MIT**, full text in `nuvio-3d-LICENSE.txt`

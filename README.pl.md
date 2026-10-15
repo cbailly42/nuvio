@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
+  <img src="https://img.shields.io/badge/version-v2.8.0-a3e635?style=flat-square" alt="v2.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuvio 2.8.0" && git push origin v2.8.0`.
 
 ## Lista zmian
+
+### 2.8.0
+- Nowość: wygląd wygaszacza **Szkło** (Ustawienia > Wygaszacz > Wygląd wygaszacza) w trzech wariantach: **Karuzela** (szklane karty jadą w poziomie), **Minimal** (duży zegar z datą, pogodą i tym, co teraz gra) i **Bento** (stała siatka tych samych kart). Pod wyborem wariantu jest podgląd na żywo.
+- Karty w pełni do ustawienia: dodawanie, usuwanie i zmiana kolejności kart pogody, multimediów, kamery, termostatu, bojlera lub CWU, energii, fotowoltaiki, samochodu lub EV, czujnika, grupy świateł, sceny i osoby. Każda karta ma encję, tytuł i drugą linię, ikonę albo obraz 3D (wbudowany, z adresu lub przesłany), kolor, rozmiar S, M, L lub szeroki, akcję po dotknięciu (arkusz szczegółów, przełączenie albo nic) i zakładkę. Bez własnej listy karty dobierają się z encji w Home Assistant.
+- Do ustawienia także: kolory gradientu, kula asystenta (włączona lub nie, kolory, intensywność), sfera w tle, własne zdjęcie z galerii lub przesłane, przyciemnienie w nocy, data i jej format, zakładki z własnymi nazwami, awatar, prędkość karuzeli i pauza po dotknięciu, format, wielkość i położenie zegara, kolumny, odstęp i zaokrąglenie w Bento, rodzina (kto, szarzy poza domem), tekst napisu i ograniczone animacje. Ustawienia zapisują się dla użytkownika Home Assistant i są w eksporcie oraz imporcie.
+- Obrazy 3D są w dist jako `nuvio-3d-*.webp` (Fluent Emoji 3D od Microsoft, licencja MIT).
 
 ### 2.7.0
 - Nowość: karta inteligentnego zamka (`custom:nuvio-smartlock-card`, **+ Dodaj → Inteligentny zamek**). Animowana kłódka w okrągłym przycisku: przytrzymaj, a pierścień się wypełni i zamek się otworzy, dotknij, aby zamknąć. Kręcący się łuk pokazuje ruch zamka, impuls potwierdza nowy stan, a przy zacięciu kłódka się trzęsie. Bateria i czujnik drzwi dobierają się z tego samego urządzenia, a przycisk „Otwórz drzwi” pojawia się, gdy zamek to obsługuje. Zamki z kodem najpierw o niego pytają.

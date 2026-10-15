@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
+  <img src="https://img.shields.io/badge/version-v2.8.0-a3e635?style=flat-square" alt="v2.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuvio 2.8.0" && git push origin v2.8.0`.
 
 ## Changelog
+
+### 2.8.0
+- New: screensaver style **Glass** (Settings > Screensaver > Screensaver style) in three variants: **Carousel** (glass cards glide sideways), **Minimal** (big clock with date, weather and now playing) and **Bento** (fixed grid of the same cards). A live preview sits under the variant picker.
+- Cards are fully configurable: add, remove and reorder weather, media, camera, thermostat, water heater, energy, solar, car or EV, sensor, light group, scene and person cards. Each card has an entity, title and second line, icon or 3D image (built in, URL or upload), accent colour, size S, M, L or wide, tap action (details sheet, toggle or nothing) and a tab. Without your own list the cards are picked from the entities in Home Assistant.
+- Also configurable: gradient colours, assistant orb (on or off, colours, intensity), background sphere, own image from the gallery or an upload, dimmer at night, date and its format, tabs with their own names, avatar, carousel speed and pause on touch, clock format, size and position, Bento columns, gap and corner radius, family (who, grey when away), hint text and reduced motion. Settings are saved per Home Assistant user and included in export and import.
+- The 3D images ship in dist as `nuvio-3d-*.webp` (Fluent Emoji 3D by Microsoft, MIT licence).
 
 ### 2.7.0
 - New: smart lock card (`custom:nuvio-smartlock-card`, **+ Add → Smart lock**). An animated padlock in a round button: hold it to unlock while a ring fills, tap to lock. A spinning arc shows the lock moving, a pulse confirms the new state and the padlock shakes when the lock is jammed. Battery and door sensor are found on the same device, and an Open door button appears when the lock supports it. Locks with a code ask for it first.

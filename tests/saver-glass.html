@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Wygaszacz „Szkło” na sztucznym hass (bez HA). Uruchomienie: python3 tools/build.py && python3 -m http.server 8000,
+     potem http://localhost:8000/tests/saver-glass.html?v=carousel|minimal|bento[&ui=settings|editor][&sheet=1] -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio wygaszacz</title>
+<style>body{ margin:0; font-family:system-ui,sans-serif; background:#111; }</style></head><body>
+<script type="module">
+const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true;
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const IC = {}; customElements.define('ha-icon', class extends HTMLElement { static get observedAttributes() { return ['icon']; }
+  connectedCallback() { this.attributeChangedCallback(); }
+  attributeChangedCallback() { const n = (this.getAttribute('icon') || '').replace(/^mdi:/, ''); if (!n || this._n === n) return; this._n = n;
+    const r = this.shadowRoot || this.attachShadow({ mode: 'open' });
+    (IC[n] = IC[n] || fetch('https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/' + n + '.svg').then((x) => (x.ok ? x.text() : ''))).then((t) => { r.innerHTML = '<style>:host{display:inline-flex;vertical-align:middle;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);flex:none}svg{width:100%;height:100%;fill:currentColor}</style>' + t; }); } });
+await import('../dist/' + v.core);
+const st = (e, s, a) => [e, { entity_id: e, state: s, attributes: a || {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() }];
+const S = Object.fromEntries([
+  st('weather.dom', 'partlycloudy', { friendly_name: 'Dom', temperature: 14, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, pressure_unit: 'hPa', temperature_unit: '°C' }),
+  st('media_player.salon', 'playing', { friendly_name: 'Salon', media_title: 'Strangers in the Night', media_artist: 'Frank Sinatra', media_duration: 160, media_position: 58, media_position_updated_at: new Date().toISOString() }),
+  st('camera.wejscie', 'idle', { friendly_name: 'Wejście' }),
+  st('climate.salon', 'heat', { friendly_name: 'Salon', current_temperature: 21.5, temperature: 22, min_temp: 5, max_temp: 30, hvac_action: 'heating' }),
+  st('water_heater.cwu', 'eco', { friendly_name: 'CWU', current_temperature: 48, temperature: 52, min_temp: 30, max_temp: 65 }),
+  st('sensor.moc_domu', '1240', { friendly_name: 'Pobór mocy', unit_of_measurement: 'W', device_class: 'power' }),
+  st('sensor.pv_moc', '3.4', { friendly_name: 'Fotowoltaika', unit_of_measurement: 'kW', device_class: 'power' }),
+  st('sensor.auto_bateria', '76', { friendly_name: 'Auto bateria', unit_of_measurement: '%', device_class: 'battery' }),
+  st('sensor.temp_zewn', '13.8', { friendly_name: 'Na zewnątrz', unit_of_measurement: '°C', device_class: 'temperature' }),
+  st('light.parter', 'on', { friendly_name: 'Parter', entity_id: ['light.a', 'light.b'] }),
+  st('scene.wieczor', 'scening', { friendly_name: 'Wieczór' }),
+  st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' }), st('person.anna', 'home', { friendly_name: 'Anna' }), st('person.ola', 'not_home', { friendly_name: 'Ola' }),
+  st('sun.sun', 'above_horizon', {}), st('binary_sensor.ruch', 'off', { friendly_name: 'Ruch', device_class: 'motion' })]);
+const hass = { states: S, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true }, language: 'pl', locale: { language: 'pl', time_format: '24' }, themes: { darkMode: true }, callService: async () => {},
+  callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i })) } } } : null), callApi: async () => [] };
+window.__hgHass = window.__nuvioHass = hass;
+const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
+L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } };
+const W = window.HGWall;
+if (q.get('ui')) {
+  const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass;
+  await new Promise((r) => setTimeout(r, 600)); L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } }; pg._lkTab = 'wall';
+  if (q.get('ui') === 'editor') { W.hass = hass; W.gset({ cards: W.gauto(hass) }); W._ged = 'a1'; }
+  pg._eLook();
+  if (q.get('scroll')) setTimeout(() => { const S = pg._eSheetEl, w = S && S.querySelector(q.get('ui') === 'editor' ? '.wg-ed' : 'section.wl'); let n = w; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement;
+    if (n && w) n.scrollTop = q.get('ui') === 'editor' ? w.offsetTop - 120 + Number(q.get('scroll')) : Number(q.get('scroll')); }, 700);
+} else { W.hass = hass; W.page = document.body; W.show(); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
+window.__ready = true;
+</script></body></html>
