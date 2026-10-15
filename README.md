@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.5.0-a3e635?style=flat-square" alt="v1.5.0">
+  <img src="https://img.shields.io/badge/version-v1.5.1-a3e635?style=flat-square" alt="v1.5.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -408,9 +408,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.5.0 -m "Nuvio 1.5.0" && git push origin v1.5.0`.
+Only tagging by hand: `git tag -a v1.5.1 -m "Nuvio 1.5.1" && git push origin v1.5.1`.
 
 ## Changelog
+
+### 1.5.1
+- Fixed: closing the Assist window with X left its messages, suggestions and input on the screen without the glass behind them. The closed window is now removed completely, and the conversation is kept for the next opening.
 
 ### 1.5.0
 - Added: per-person view visibility in **Settings → Views**. Every view is visible to everyone by default; an admin can hide a view from chosen people, and the row shows who does not see it. It also applies to people with their own layout, and their open screen reloads to drop the view.

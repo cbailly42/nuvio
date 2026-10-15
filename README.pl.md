@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.5.0-a3e635?style=flat-square" alt="v1.5.0">
+  <img src="https://img.shields.io/badge/version-v1.5.1-a3e635?style=flat-square" alt="v1.5.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -408,9 +408,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.5.0 -m "Nuvio 1.5.0" && git push origin v1.5.0`.
+Sam tag ręcznie: `git tag -a v1.5.1 -m "Nuvio 1.5.1" && git push origin v1.5.1`.
 
 ## Lista zmian
+
+### 1.5.1
+- Naprawiono: zamknięcie okna Assist krzyżykiem zostawiało na ekranie wiadomości, podpowiedzi i pole tekstowe bez szkła pod spodem. Zamknięte okno znika teraz w całości, a rozmowa zostaje na następne otwarcie.
 
 ### 1.5.0
 - Dodano: widoczność widoków dla poszczególnych osób w **Ustawienia → Widoki**. Domyślnie każdy widok widzą wszyscy; administrator może ukryć widok przed wybranymi osobami, a wiersz pokazuje, kto go nie widzi. Działa też dla osób z własnym układem, a ich otwarty ekran sam się przeładuje bez tego widoku.

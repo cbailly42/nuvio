@@ -4,6 +4,8 @@
 const HG_ASSIST_CSS = `
 .as-l{ position:fixed; inset:0; z-index:1002; visibility:hidden; pointer-events:none; }
 .as-l.open{ visibility:visible; pointer-events:auto; }
+/* zamknięte okno: samo visibility nie wystarcza (ha-card w karcie ma własne visibility:visible, dymki i podpowiedzi zostawały na ekranie po zamknięciu) -> bez warstwy w ogóle */
+.as-l:not(.open){ opacity:0; } .as-l:not(.open) .as-d{ display:none; }
 .as-l .as-scrim{ position:absolute; inset:0; background:rgba(8,10,14,.32); opacity:0; transition:opacity var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in); }
 .as-l.in .as-scrim{ opacity:1; transition-timing-function:var(--hg-ease-out, ease-out); }
 /* ten sam przepis szkła co okna hgOverlay (ui/overlay): połysk + --hg-panel-flat, krawędź, cień; jedno rozmycie na samym oknie, od pierwszej klatki
