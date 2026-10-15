@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.8.1-a3e635?style=flat-square" alt="v2.8.1">
+  <img src="https://img.shields.io/badge/version-v2.8.2-a3e635?style=flat-square" alt="v2.8.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.8.1 origin/main -m "Nuvio 2.8.1" && git push origin v2.8.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.8.2 origin/main -m "Nuvio 2.8.2" && git push origin v2.8.2`.
 
 ## Lista zmian
+
+### 2.8.2
+- Poprawka: gdy na wygaszaczu Szkło Minimal otwarty jest pinpad, ekran nie jest już przyciemniany. Tło, treść i kula asystenta są rozmyte, a pinpad pozostaje czytelny.
 
 ### 2.8.1
 - Poprawka: pinpad na wygaszaczu Szkło Minimal otwiera się teraz na osobnej warstwie nad rozmytym wygaszaczem, jak w Zegarze na zdjęciu, a nie na zegarze i kartach. Dotknięcie kuli przy blokadzie najpierw prosi o PIN, a potem otwiera Assist.

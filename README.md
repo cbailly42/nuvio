@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.8.1-a3e635?style=flat-square" alt="v2.8.1">
+  <img src="https://img.shields.io/badge/version-v2.8.2-a3e635?style=flat-square" alt="v2.8.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.8.1 origin/main -m "Nuvio 2.8.1" && git push origin v2.8.1`.
+Only tagging by hand: `git fetch origin && git tag -a v2.8.2 origin/main -m "Nuvio 2.8.2" && git push origin v2.8.2`.
 
 ## Changelog
+
+### 2.8.2
+- Fixed: while the PIN pad is open on the Glass Minimal screensaver the screen is no longer darkened. The background, content and assistant orb are blurred instead, and the pad stays easy to read.
 
 ### 2.8.1
 - Fixed: the PIN pad on the Glass Minimal screensaver now opens on its own layer above a blurred screensaver, like on Clock on photo, instead of on top of the clock and cards. Tapping the orb while locked asks for the PIN first and then opens Assist.
