@@ -31,7 +31,7 @@ const S = Object.fromEntries([
   st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' }), st('person.anna', 'home', { friendly_name: 'Anna' }), st('person.ola', 'not_home', { friendly_name: 'Ola' }),
   st('sun.sun', 'above_horizon', {}), st('binary_sensor.ruch', 'off', { friendly_name: 'Ruch', device_class: 'motion' })]);
 const hass = { states: S, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true }, language: 'pl', locale: { language: 'pl', time_format: '24' }, themes: { darkMode: true }, callService: async () => {},
-  callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i })) } } } : null), callApi: async () => [] };
+  callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3, 4, 5].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i, templow: 6 + i, condition: ['sunny', 'partlycloudy', 'rainy', 'cloudy', 'sunny', 'lightning-rainy'][i % 6] })) } } } : null), callApi: async () => [] };
 window.__hgHass = window.__nuvioHass = hass;
 const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
 L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } };
@@ -43,6 +43,11 @@ if (q.get('ui')) {
   pg._eLook();
   if (q.get('scroll')) setTimeout(() => { const S = pg._eSheetEl, w = S && S.querySelector(q.get('ui') === 'editor' ? '.wg-ed' : 'section.wl'); let n = w; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement;
     if (n && w) n.scrollTop = q.get('ui') === 'editor' ? w.offsetTop - 120 + Number(q.get('scroll')) : Number(q.get('scroll')); }, 700);
-} else { W.hass = hass; W.page = document.body; W.show(); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
+} else { W.hass = hass;
+  if (q.get('ww')) W.gset({ cards: W.gauto(hass).map((c) => (c.t === 'weather' ? Object.assign(c, { sz: 'w' }) : c)) });
+  if (q.get('assist')) { const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass; await new Promise((r) => setTimeout(r, 600)); W.page = pg;
+    L.data.wall = Object.assign({}, L.data.wall, { on: true, style: 'glass' }); }
+  else W.page = document.body;
+  W.show(); if (q.get('tab')) { W._gtab = Number(q.get('tab')); W.gl(true); } if (q.get('assist')) setTimeout(() => { const o = W.el.querySelector('.ng-orb'); o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }, 700); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
 window.__ready = true;
 </script></body></html>

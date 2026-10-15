@@ -425,9 +425,9 @@ Sam tag ręcznie: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuvio 2
 ## Lista zmian
 
 ### 2.8.0
-- Nowość: wygląd wygaszacza **Szkło** (Ustawienia > Wygaszacz > Wygląd wygaszacza) w trzech wariantach: **Karuzela** (szklane karty jadą w poziomie), **Minimal** (duży zegar z datą, pogodą i tym, co teraz gra) i **Bento** (stała siatka tych samych kart). Pod wyborem wariantu jest podgląd na żywo.
+- Nowość: wygląd wygaszacza **Szkło** (Ustawienia > Wygaszacz > Wygląd wygaszacza) w dwóch wariantach: **Karuzela** (szklane karty jadą w poziomie) i **Minimal** (duży zegar z datą, pogodą i tym, co teraz gra). Wszystkie wygaszacze wybierasz z galerii podglądów na żywo, każdy pokazuje cały ekran w pomniejszeniu. Dotknięcie kuli asystenta otwiera Assist prosto z wygaszacza (można to wyłączyć).
 - Karty w pełni do ustawienia: dodawanie, usuwanie i zmiana kolejności kart pogody, multimediów, kamery, termostatu, bojlera lub CWU, energii, fotowoltaiki, samochodu lub EV, czujnika, grupy świateł, sceny i osoby. Każda karta ma encję, tytuł i drugą linię, ikonę albo obraz 3D (wbudowany, z adresu lub przesłany), kolor, rozmiar S, M, L lub szeroki, akcję po dotknięciu (arkusz szczegółów, przełączenie albo nic) i zakładkę. Bez własnej listy karty dobierają się z encji w Home Assistant.
-- Do ustawienia także: kolory gradientu, kula asystenta (włączona lub nie, kolory, intensywność), sfera w tle, własne zdjęcie z galerii lub przesłane, przyciemnienie w nocy, data i jej format, zakładki z własnymi nazwami, awatar, prędkość karuzeli i pauza po dotknięciu, format, wielkość i położenie zegara, kolumny, odstęp i zaokrąglenie w Bento, rodzina (kto, szarzy poza domem), tekst napisu i ograniczone animacje. Ustawienia zapisują się dla użytkownika Home Assistant i są w eksporcie oraz imporcie.
+- Do ustawienia także: kolory gradientu, kula asystenta (włączona lub nie, kolory, intensywność), sfera w tle, własne zdjęcie z galerii lub przesłane, przyciemnienie w nocy, data i jej format, zakładki z własnymi nazwami, awatar, prędkość karuzeli i pauza po dotknięciu, format, wielkość i położenie zegara, rodzina (kto, szarzy poza domem), tekst napisu i ograniczone animacje. Ustawienia zapisują się dla użytkownika Home Assistant i są w eksporcie oraz imporcie.
 - Obrazy 3D są w dist jako `nuvio-3d-*.webp` (Fluent Emoji 3D od Microsoft, licencja MIT).
 
 ### 2.7.0

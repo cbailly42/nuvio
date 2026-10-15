@@ -425,9 +425,9 @@ Only tagging by hand: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuv
 ## Changelog
 
 ### 2.8.0
-- New: screensaver style **Glass** (Settings > Screensaver > Screensaver style) in three variants: **Carousel** (glass cards glide sideways), **Minimal** (big clock with date, weather and now playing) and **Bento** (fixed grid of the same cards). A live preview sits under the variant picker.
+- New: screensaver style **Glass** (Settings > Screensaver > Screensaver style) in two variants: **Carousel** (glass cards glide sideways) and **Minimal** (big clock with date, weather and now playing). All screensavers are picked from a gallery of live previews, each showing the whole screen scaled down. Tapping the assistant orb opens Assist straight from the screensaver (can be turned off).
 - Cards are fully configurable: add, remove and reorder weather, media, camera, thermostat, water heater, energy, solar, car or EV, sensor, light group, scene and person cards. Each card has an entity, title and second line, icon or 3D image (built in, URL or upload), accent colour, size S, M, L or wide, tap action (details sheet, toggle or nothing) and a tab. Without your own list the cards are picked from the entities in Home Assistant.
-- Also configurable: gradient colours, assistant orb (on or off, colours, intensity), background sphere, own image from the gallery or an upload, dimmer at night, date and its format, tabs with their own names, avatar, carousel speed and pause on touch, clock format, size and position, Bento columns, gap and corner radius, family (who, grey when away), hint text and reduced motion. Settings are saved per Home Assistant user and included in export and import.
+- Also configurable: gradient colours, assistant orb (on or off, colours, intensity), background sphere, own image from the gallery or an upload, dimmer at night, date and its format, tabs with their own names, avatar, carousel speed and pause on touch, clock format, size and position, family (who, grey when away), hint text and reduced motion. Settings are saved per Home Assistant user and included in export and import.
 - The 3D images ship in dist as `nuvio-3d-*.webp` (Fluent Emoji 3D by Microsoft, MIT licence).
 
 ### 2.7.0
