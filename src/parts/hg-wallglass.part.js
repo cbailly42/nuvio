@@ -28,10 +28,10 @@ const HG_GL_SS3 = `
 .ng-sp{ display:none !important; }
 .ng .ng-c{ background:none !important; box-shadow:none !important; border:0 !important; padding:0 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border-radius:var(--hg-r, 24px); overflow:visible; }
 .ng .ng-c::before, .ng .ng-c::after{ display:none !important; }
-.ng .ng-car{ display:flex; align-items:center; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-padding-inline:var(--gpad, 40px); scrollbar-width:none; overscroll-behavior-x:contain; scroll-behavior:smooth; left:var(--gpad, 40px) !important; right:var(--gpad, 40px) !important; scroll-padding-inline:0; padding-block:48px; margin-block:-48px; box-sizing:content-box; }
+.ng .ng-car{ display:flex; align-items:center; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-padding-inline:var(--gpad, 40px); scrollbar-width:none; overscroll-behavior-x:contain; scroll-behavior:smooth; left:0 !important; right:0 !important; scroll-padding-inline:0; padding-block:48px; margin-block:-48px; box-sizing:content-box; }
 .ng .ng-car::-webkit-scrollbar{ display:none; }
-.ng .ng-trk{ position:relative; display:block; height:100%; width:var(--gtw, 100%); padding:0; animation:none !important; }
-.ng .ng-pg{ position:absolute; top:0; bottom:0; width:var(--gpw, 100%); scroll-snap-align:start; pointer-events:none; }
+.ng .ng-trk{ position:relative; display:block; flex:none; height:100%; width:var(--gtw, 100%); margin:0 var(--gpad, 40px); padding:0; animation:none !important; }
+.ng .ng-pg{ position:absolute; top:0; bottom:0; width:var(--gpw, 100%); scroll-snap-align:start; scroll-margin-left:var(--gpad, 40px); pointer-events:none; }
 .ng .ng-c{ position:absolute; left:0; top:0; height:auto !important; max-height:none; min-height:0; container-type:normal; display:block; outline:0 !important; }
 .ng .ng-c:not(.lo){ visibility:hidden; }
 .ng .ng-tile{ position:relative; display:block; padding:0 !important; } .ng .ng-tile > *{ display:block; width:100%; --hg-accent:${HG_GL_HEX('63D71E')}; }
@@ -251,7 +251,13 @@ Object.assign(HGWall, {
       for (let k = 0; k + sp <= n; k++) { const t = Math.max(...H.slice(k, k + sp)); if (t < best) { best = t; col = k; } }
       if (pg.length && best + h > Hh) { flush(); col = 0; best = 0; }
       for (let k = col; k < col + sp; k++) H[k] = best + h + gap; pg.push([c, col, best]); });
-    flush(); const stride = W + 2 * pad;
+    flush();
+    /* wyrównanie dołów kolumn: na każdej stronie najpierw szerokie i najwyższe kafle, każdy do najniższej kolumny */
+    P.forEach((p) => { const L = p.L.map(([c]) => [c, Math.ceil(c.offsetHeight), c._sp]).sort((x, y) => (y[2] - x[2]) || (y[1] - x[1])); const Hc = new Array(n).fill(0);
+      const R = L.map(([c, h, sp]) => { let col = 0, best = Infinity; for (let k = 0; k + sp <= n; k++) { const t = Math.max(...Hc.slice(k, k + sp)); if (t < best - 0.5) { best = t; col = k; } }
+        for (let k = col; k < col + sp; k++) Hc[k] = best + h + gap; return [c, col, best]; });
+      const nh = Math.max(...Hc) - gap; if (nh <= Hh + 0.5) { p.L = R; p.h = nh; } });
+    const stride = W + 2 * pad;
     P.forEach((p, i) => { const off = Math.max(0, (Hh - p.h) / 2); p.L.forEach(([c, col, top]) => { c.style.transform = `translate(${i * stride + col * (cw + gap)}px, ${off + top}px)`; c.classList.add('lo'); }); });
     trk.style.setProperty('--gtw', (P.length * stride - 2 * pad) + 'px'); trk.style.setProperty('--gpw', W + 'px');
     trk.querySelectorAll(':scope > .ng-pg').forEach((x) => x.remove());
