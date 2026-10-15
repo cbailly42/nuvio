@@ -15,13 +15,16 @@ const IC = {}; customElements.define('ha-icon', class extends HTMLElement { stat
 await import('../dist/' + v.core);
 const art = (() => { const c = document.createElement('canvas'); c.width = c.height = 300; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 300, 300); g.addColorStop(0, '#f6b26b'); g.addColorStop(.5, '#c2407a'); g.addColorStop(1, '#2b1d5c'); x.fillStyle = g; x.fillRect(0, 0, 300, 300);
   x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(150, 130, 60, 0, 7); x.fill(); x.fillStyle = '#2b1d5c'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.fillText('NIGHT', 150, 250); return c.toDataURL('image/jpeg', .85); })();
+const cam = (() => { const c = document.createElement('canvas'); c.width = 640; c.height = 400; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 400); g.addColorStop(0, '#5b6b7d'); g.addColorStop(.55, '#8a8f86'); g.addColorStop(1, '#3b3f3a'); x.fillStyle = g; x.fillRect(0, 0, 640, 400);
+  x.fillStyle = '#6d4b36'; x.fillRect(250, 120, 140, 230); x.fillStyle = '#c8b9a2'; x.fillRect(0, 330, 640, 70); x.fillStyle = '#2f3a2c'; x.beginPath(); x.ellipse(90, 300, 90, 60, 0, 0, 7); x.ellipse(560, 290, 100, 70, 0, 0, 7); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '16px monospace'; x.fillText('CAM 1  2026-10-15 22:40', 14, 24); return c.toDataURL('image/jpeg', .8); })();
 const st = (e, s, a) => [e, { entity_id: e, state: s, attributes: a || {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() }];
 const S = Object.fromEntries([
   st('weather.dom', 'partlycloudy', { friendly_name: 'Dom', temperature: 14, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, pressure_unit: 'hPa', temperature_unit: '°C' }),
   st('media_player.salon', 'playing', { friendly_name: 'Salon', media_title: 'Strangers in the Night', entity_picture: art, media_artist: 'Frank Sinatra', media_duration: 160, media_position: 58, media_position_updated_at: new Date().toISOString() }),
-  st('camera.wejscie', 'idle', { friendly_name: 'Wejście' }),
+  st('camera.wejscie', 'idle', { friendly_name: 'Wejście', entity_picture: cam }),
   st('climate.salon', 'heat', { friendly_name: 'Salon', current_temperature: 21.5, temperature: 22, min_temp: 5, max_temp: 30, hvac_action: 'heating' }),
-  st('water_heater.cwu', 'eco', { friendly_name: 'CWU', current_temperature: 48, temperature: 52, min_temp: 30, max_temp: 65 }),
+  st('sensor.cwu_moc', '1800', { friendly_name: 'CWU moc', unit_of_measurement: 'W', device_class: 'power' }), st('water_heater.cwu', 'electric', { friendly_name: 'CWU', operation_mode: 'electric', current_temperature: 48, temperature: 52, min_temp: 30, max_temp: 65 }),
   st('sensor.moc_domu', '1240', { friendly_name: 'Pobór mocy', unit_of_measurement: 'W', device_class: 'power' }),
   st('sensor.pv_moc', '3.4', { friendly_name: 'Fotowoltaika', unit_of_measurement: 'kW', device_class: 'power' }),
   st('sensor.auto_bateria', '76', { friendly_name: 'Auto bateria', unit_of_measurement: '%', device_class: 'battery' }),
@@ -44,6 +47,7 @@ if (q.get('ui')) {
   if (q.get('scroll')) setTimeout(() => { const S = pg._eSheetEl, w = S && S.querySelector(q.get('ui') === 'editor' ? '.wg-ed' : 'section.wl'); let n = w; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement;
     if (n && w) n.scrollTop = q.get('ui') === 'editor' ? w.offsetTop - 120 + Number(q.get('scroll')) : Number(q.get('scroll')); }, 700);
 } else { W.hass = hass;
+  if (q.get('only')) { const T = q.get('only').split(/[\s,]+/); W.gset({ cards: W.gauto(hass).filter((c) => T.includes(c.t)).sort((a, b) => T.indexOf(a.t) - T.indexOf(b.t)) }); }
   if (q.get('ww')) W.gset({ cards: W.gauto(hass).map((c) => (c.t === 'weather' ? Object.assign(c, { sz: 'w' }) : c)) });
   if (q.get('assist')) { const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass; await new Promise((r) => setTimeout(r, 600)); W.page = pg;
     L.data.wall = Object.assign({}, L.data.wall, { on: true, style: 'glass' }); }
