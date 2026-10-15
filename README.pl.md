@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.2-a3e635?style=flat-square" alt="v1.7.2">
+  <img src="https://img.shields.io/badge/version-v1.7.3-a3e635?style=flat-square" alt="v1.7.3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -416,9 +416,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.7.2 -m "Nuvio 1.7.2" && git push origin v1.7.2`.
+Sam tag ręcznie: `git tag -a v1.7.3 -m "Nuvio 1.7.3" && git push origin v1.7.3`.
 
 ## Lista zmian
+
+### 1.7.3
+- **Galeria „Dodaj komponent” (poprawka)**: miniatury zawsze pokazują przykładowe podglądy; pomniejszone karty na żywo były ściśnięte, puste (klimatyzacja) albo pokazywały przypadkowe urządzenie (roboty, czujnik z wykresem, scena). Poprawione podglądy fotowoltaiki, pokoi, mocy, AGD, schodów, aktualizacji, pogody i mini odtwarzacza, żeby nic nie było ucięte.
 
 ### 1.7.2
 - **Karty obok siebie (poprawka)**: komponenty dodane w trybie edycji są teraz osobnymi kartami w siatce widoku, więc da się je przeciągać między kartami domyślnymi i obok nich (zmiana rozmiaru i usuwanie działają na miejscu). Proste kafle encji zostają razem w swoim bloku.

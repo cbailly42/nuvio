@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.2-a3e635?style=flat-square" alt="v1.7.2">
+  <img src="https://img.shields.io/badge/version-v1.7.3-a3e635?style=flat-square" alt="v1.7.3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -416,9 +416,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.7.2 -m "Nuvio 1.7.2" && git push origin v1.7.2`.
+Only tagging by hand: `git tag -a v1.7.3 -m "Nuvio 1.7.3" && git push origin v1.7.3`.
 
 ## Changelog
+
+### 1.7.3
+- **Add component gallery (fix)**: thumbnails always use the sample previews; scaled-down live cards were cramped, empty (air conditioning) or showed a random device (robots, sensor chart, scene). Reworked the solar, rooms, power, appliance, stairs, updates, weather and mini player previews so nothing is cut off.
 
 ### 1.7.2
 - **Cards next to each other (fix)**: components added in edit mode are now separate cards in the view grid, so they can be dragged between and next to the default cards (also resized and removed in place). Simple entity tiles stay together in their block.
