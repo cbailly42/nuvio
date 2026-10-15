@@ -28,6 +28,7 @@ ha-card.flat{ background:none; box-shadow:none; padding:0; gap:var(--s2); -webki
 .bd{ display:flex; flex-direction:column; flex:1; min-height:0; gap:var(--nv-gap, 0px); } .h:not(.nw) .bd{ flex-direction:row; align-items:var(--nv-al, stretch); }
 ha-card{ container-type:inline-size; }   /* siatka i zawijanie liczą się od szerokości kontenera */
 .sl{ min-width:0; flex:var(--nv-fl, 1) 1 0; position:relative; container-type:inline-size; }   /* dziecko dopasowuje S/M/L do własnego gniazda */
+ha-card:not(.h) .sl, ha-card.nw .sl{ flex-basis:auto; }   /* pion: wysokość gniazda z treści dziecka (podstawa 0 ściskała karty do minimum) */
 .glass:not(.flat) .sl{ --hg-glass-sheen:none; --hg-glass-lite:transparent; --hg-glass-bg:transparent; --hg-edge:0 0 0 transparent; --hg-card-sh:none; --hg-card-bf:none; --hg-card-under:none;
   --ha-card-background:transparent; --ha-card-box-shadow:none; --ha-card-border-width:0; }
 .glass.dv:not(.flat) .sl + .sl::before{ content:''; position:absolute; left:var(--s3); right:var(--s3); top:0; height:1px; background:currentColor; opacity:.08; }

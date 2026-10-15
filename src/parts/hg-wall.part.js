@@ -1,5 +1,5 @@
 /* ===== Tryb tabletu ściennego: po bezczynności wygaszacz z zegarem i zdjęciem, przyciemnienie, wybudzanie dotykiem albo czujnikiem ruchu.
-   Ustawienia: HGL.data.wall = { on, idle (s), dim (0–0.9), src: 'bg' | 'slides' | 'url', url, sensor (binary_sensor), lock, pinH (skrót PIN-u, nie sam PIN), pinN (długość), lockAfter (s) } – dane użytkownika HA jak „app”,
+   Ustawienia: HGL.data.wall = { on, style ('photo' | 'board': tablica w hg-wallboard.part.js), idle (s), dim (0–0.9), src: 'bg' | 'slides' | 'url', url, sensor (binary_sensor), lock, pinH (skrót PIN-u, nie sam PIN), pinN (długość), lockAfter (s) } – dane użytkownika HA jak „app”,
    zapisywane razem z układem. Domyślnie wyłączone. Sekcja w arkuszu Wygląd (HGWall.html), wygaszacz to nakładka na <body> (Popover API → nad dialogami HA). */
 const HG_WALL_CSS = `
 .wl ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; flex:none; }
@@ -173,7 +173,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this._bad >= 5) { const s = 30 * Math.pow(2, Math.min(4, Math.floor(this._bad / 5) - 1)); this._ban = Date.now() + s * 1000; this.msg(hgTr(`Za dużo prób. Spróbuj za ${s} s`, `Too many attempts. Try again in ${s} s`), true); }
     else this.msg(hgTr('Nieprawidłowy PIN', 'Wrong PIN'), true); },
   /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
-  set(p) { HGL.data.wall = Object.assign({}, this.get(), p); HGL._ls(); this.sync();
+  set(p) { HGL.data.wall = Object.assign({}, (HGL.data && HGL.data.wall) || {}, this.get(), p); HGL._ls(); this.sync();
     clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
   tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h);
@@ -186,7 +186,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); this.wx(); } },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('bd')) this.bd(); else this.wx(); } },
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -212,7 +212,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Wygaszacz ekranu', 'Screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
-    el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
+    const bd = !!(this.board && this.board());
+    el.innerHTML = bd ? this.bdShell() : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
@@ -223,10 +224,11 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(el);
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
-    this.clock(); this.photos(rm); this.drift(rm);
+    if (bd) { this.bdStart(rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
     requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('in'); el.focus({ preventScroll: true }); }));
     try { if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then((l) => { if (this.active) this._wl = l; else l.release(); }, () => {}); } catch (e) { /* ekran może zgasnąć wg systemu */ } },
   clock() { clearTimeout(this._ck); const el = this.el; if (!el) return;
+    if (el.classList.contains('bd')) { this.bd(true); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
     const l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {}, d = new Date();
     el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)).format(d);
     el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
@@ -280,7 +282,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
   wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
-    clearTimeout(this._ck); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
+    clearTimeout(this._ck); clearTimeout(this._bdq); clearInterval(this._sl); clearInterval(this._dr); try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
     const f = this._foc; this._foc = null; try { if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) { /* bez znaczenia */ }
@@ -293,15 +295,17 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return R.sort((a, b) => pri(a) - pri(b) || nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
   html(p) { if (!this.admin(p)) return ''; const c = this.get(), h = p._hass, dv = Math.round(c.dim * 100), idles = this.IDLES.includes(c.idle) ? this.IDLES : [...this.IDLES, c.idle].sort((a, b) => a - b);
     const sens = this.sensors(h), cur = c.sensor && !sens.some((s) => s[0] === c.sensor) ? [[c.sensor, c.sensor]] : [];
+    const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = !this.bget || this.bget().style !== 'board' || this.bget().bk.pic;
     const body = !c.on ? '' : `
+      ${BD.top}${BD.board}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgTr('Włącz po bezczynności', 'Start after inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
       <div class="wl-f"><span>${hgTr('Przyciemnienie', 'Dimming')}<em class="wl-dv">${dv}%</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgTr('Przyciemnienie wygaszacza', 'Screensaver dimming')}"></div>
-      <div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgTr('Zdjęcie', 'Photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, pl, en]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${hgTr(pl, en)}</button>`).join('')}</div>
-        ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>
+      ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgTr('Zdjęcie', 'Photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, pl, en]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${hgTr(pl, en)}</button>`).join('')}</div>
+        ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>` : ''}
       <label class="wl-f"><span>${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span><select class="hs-in" name="wl-sensor"><option value="">${hgTr('Brak, tylko dotyk', 'None, touch only')}</option>${[...cur, ...sens].map(([e, n]) => `<option value="${H.esc(e)}"${e === c.sensor ? ' selected' : ''}>${H.esc(n)}</option>`).join('')}</select></label>
       ${this.lockHtml(c)}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgTr('Podgląd wygaszacza', 'Preview screensaver')}</span></button>`;
-    return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
+    return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
       <small class="lk-hn">${hgTr('Po bezczynności zegar ze zdjęciem i przyciemnieniem; dotyk lub czujnik ruchu budzi ekran. ' + (HGL.mode === 'shared' ? 'Ustawienie dotyczy wszystkich osób ze wspólnym dashboardem.' : 'Ustawienie dotyczy konta użytkownika HA.'), 'After inactivity: a clock over a dimmed photo; touch or a motion sensor wakes the screen. ' + (HGL.mode === 'shared' ? 'Applies to everyone on the shared dashboard.' : 'Applies to this Home Assistant user.'))}</small>
       <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgTr('Wygaszacz', 'Screensaver')}<small>${c.on ? hgTr('Włączony', 'On') : hgTr('Wyłączony', 'Off')}</small></span><i aria-hidden="true"></i></button>${body}</section>`; },
   lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgTr('Od razu', 'At once'));
@@ -318,11 +322,13 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   wire(p, S) { if (!this.admin(p)) return;
     const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
     const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = rg.value + '%'; this.set({ dim: rg.value / 100 }); });
+    const wx = S.querySelector('[name=wl-wx]'); if (wx) wx.addEventListener('change', () => { this._fc = null; this.set({ wxE: wx.value }); if (this.active && this.el && this.el.classList.contains('bd')) this.bd(true); });
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address'));
       this.set({ url: v }); }); },
   act(p, b, a) { if (!this.admin(p)) return;
+    if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); this.set({ on: !this.get().on }); return p._eLook(); }
     if (a === 'wl-idle') { this.last = Date.now(); this.set({ idle: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-src') { this.set({ src: b.dataset.v }); return p._eLook(); }

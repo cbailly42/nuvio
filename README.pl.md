@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.9.1-a3e635?style=flat-square" alt="v1.9.1">
+  <img src="https://img.shields.io/badge/version-v2.0.0-a3e635?style=flat-square" alt="v2.0.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -372,6 +372,7 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - **Zdjęcie**: tło Twojego dashboardu, pokaz slajdów wbudowanych teł (płynne przejście co 45 s) albo własny adres obrazu (`https://…` lub `/local/…`).
 - **Czujnik ruchu**: dowolny `binary_sensor`; czujniki ruchu, obecności i zajętości są na początku listy. Gdy przejdzie w stan `on` w czasie wygaszacza, ekran się wybudza. Bez czujnika budzi tylko dotyk.
 - **Wybudzanie**: dotyk, klawisz lub przewinięcie. Pierwszy dotyk tylko budzi ekran i nie naciska kafla pod spodem.
+- **Wygląd wygaszacza**: *Zegar na zdjęciu* (opis niżej) albo *Tablica*: jasna lub ciemna tablica z dużym dniem tygodnia albo godziną i datą, wschodem i zachodem słońca, odliczaniem do najbliższego wydarzenia całodniowego, pogodą z prognozą, najbliższymi wydarzeniami, tym, co teraz gra, zdjęciem i temperaturami w pokojach. W trybie Tablica wybierasz motyw (auto według słońca, jasny, ciemny), nagłówek, widoczne elementy, kolejność kart, encję pogody oraz kalendarze i pokoje.
 - **Podgląd wygaszacza** pokazuje go od razu; dotknij, aby zamknąć.
 - Układ: duży zegar pośrodku (bez panelu pod spodem), data na stałe w lewym dolnym rogu i, jeśli Home Assistant ma encję `weather`, aktualna pogoda (ikona, temperatura, stan) w prawym górnym. Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
 - Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
@@ -417,9 +418,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v1.9.1 origin/main -m "Nuvio 1.9.1" && git push origin v1.9.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.0.0 origin/main -m "Nuvio 2.0.0" && git push origin v2.0.0`.
 
 ## Lista zmian
+
+### 2.0.0
+- **Wygaszacz „Tablica” (nowość)**: drugi wygląd wygaszacza obok zegara na zdjęciu. Pokazuje duży dzień tygodnia albo godzinę z datą, wschód i zachód słońca, odliczanie do najbliższego wydarzenia całodniowego (np. „Halloween za 17 dni”), pogodę z prognozą godzinową (dzienną, gdy usługa nie ma godzinowej), najbliższe wydarzenia z kalendarzy na dwa tygodnie, to, co teraz gra, zdjęcie (tło dashboardu, pokaz slajdów albo własny adres) i listę temperatur w pokojach z wilgotnością. Wszystko ustawisz w Ustawienia → Wygaszacz: motyw tablicy (auto według słońca, jasny, ciemny), nagłówek (dzień tygodnia albo godzina), które elementy są widoczne, kolejność kart, encję pogody oraz które kalendarze i pokoje są brane pod uwagę. Działa w poziomie i w pionie, z blokadą PIN-em i wybudzaniem czujnikiem ruchu.
+- **Stos pionowy (poprawka)**: karty w stosie pionowym mają naturalną wysokość; wcześniej karta mogła zostać ściśnięta do wąskiego paska.
 
 ### 1.9.1
 - **Pilot klimatyzacji**: zmiana trybu (np. z chłodzenia na grzanie) płynnie przechodzi w nowy kolor tła, nawiewu, suwaka i kafli, a jednostka na chwilę delikatnie rozbłyskuje nowym kolorem.

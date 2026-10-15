@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.9.1-a3e635?style=flat-square" alt="v1.9.1">
+  <img src="https://img.shields.io/badge/version-v2.0.0-a3e635?style=flat-square" alt="v2.0.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -372,6 +372,7 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 - **Photo**: your dashboard background, a slideshow of the bundled backgrounds (crossfade every 45 s) or your own image URL (`https://…` or `/local/…`).
 - **Motion sensor**: pick any `binary_sensor`; motion, occupancy and presence sensors are listed first. When it turns `on` while the screensaver is showing, the screen wakes. Without a sensor, only touch wakes it.
 - **Wake**: touch, key press or scroll. The first touch only wakes the screen and does not press the tile underneath.
+- **Screensaver style**: *Clock on photo* (described below) or *Board*: a light or dark board with a large weekday or clock and the date, sunrise and sunset, a countdown to the next all-day event, weather with forecast, upcoming events, now playing, a photo and room temperatures. In Board mode you choose the theme (auto by the sun, light, dark), the heading, which elements are shown, the order of the cards, the weather entity and which calendars and rooms are used.
 - **Preview screensaver** shows it immediately; touch to close.
 - Layout: a large clock in the centre (no panel behind it), the date fixed at the bottom left and, if Home Assistant has a `weather` entity, the current weather (icon, temperature, condition) at the top right. The clock follows your HA time format (12 / 24 h) and language, moves slightly every minute to protect OLED panels, asks the browser to keep the screen on while showing (Screen Wake Lock) and respects reduced motion.
 - It only starts on the Nuvio dashboard (not in edit mode, not in a background tab) and is drawn above Home Assistant dialogs.
@@ -417,9 +418,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v1.9.1 origin/main -m "Nuvio 1.9.1" && git push origin v1.9.1`.
+Only tagging by hand: `git fetch origin && git tag -a v2.0.0 origin/main -m "Nuvio 2.0.0" && git push origin v2.0.0`.
 
 ## Changelog
+
+### 2.0.0
+- **Screensaver "Board" (new)**: a second screensaver style next to the clock on a photo. It shows a large weekday or clock with the date, sunrise and sunset, a countdown to the next all-day event (for example "Halloween in 17 days"), weather with an hourly forecast (daily when the service has no hourly data), upcoming events for the next two weeks, now playing, a photo (dashboard background, slideshow or your own address) and a list of room temperatures with humidity. Everything is configurable in Settings → Screensaver: board theme (auto by the sun, light, dark), heading (weekday or time), which elements are shown, the order of the cards, the weather entity, which calendars and which rooms are used. Works in landscape and portrait, with the PIN lock and with motion wake-up.
+- **Vertical stack (fix)**: cards in a vertical stack take their natural height; before, a card could be squeezed to a narrow strip.
 
 ### 1.9.1
 - **AC remote**: changing the mode (for example cooling to heating) fades the card, airflow, slider thumb and tiles smoothly into the new colour, and the unit glows briefly in the new colour.
