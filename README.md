@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.8.1-a3e635?style=flat-square" alt="v1.8.1">
+  <img src="https://img.shields.io/badge/version-v1.9.0-a3e635?style=flat-square" alt="v1.9.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -417,9 +417,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.8.1 -m "Nuvio 1.8.1" && git push origin v1.8.1`.
+Only tagging by hand: `git tag -a v1.9.0 -m "Nuvio 1.9.0" && git push origin v1.9.0`.
 
 ## Changelog
+
+### 1.9.0
+- **Media player (redesign)**: players in Multimedia and in rooms use a large Now Playing layout: artwork as the background (its colour tints the card), source and state line, big title and artist, progress with times, shuffle / previous / large play / next / repeat, and a volume row with − and + plus Rooms (join speakers into a group), Source and Sound chips when the player supports them. On narrow cards shuffle and repeat hide and chips show only icons.
+- **AC remote**: on screens 700 px and wider the Mode, Fan, Sleep and Airflow tiles open a dropdown menu next to the tile (arrow keys work, a second tap closes it); phones keep the bottom panel.
 
 ### 1.8.1
 - **Room editing (fix)**: rooms lay out cards in the same grid as the other views, so edit mode and the saved layout look the same, in the wide view and in the side panel. Before, the wide room view used a separate column layout and cards jumped around after saving.

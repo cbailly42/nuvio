@@ -47,14 +47,15 @@ class HGPlayersCard extends HGBase {
       if (t.dataset.act === 'src' && t.value) H.call(this._hass, 'media_player', 'select_source', { entity_id: en, source: t.value });
       t.blur(); if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); }
     });
-    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
     this.shadowRoot.addEventListener('focusout', () => { if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); } });
   }
   css() {
     return U(`
-ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
+${HG_NP_CSS}
+ha-card.glass:not(.np){ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s3); height:auto; min-height:100%; }
 .hd .cnt{ font-size:var(--fs-xs); color:#5A5E64; font-weight:400; }
-.big{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, calc(var(--k) * 250)), 1fr)); gap:var(--s2); }
+.big{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap:var(--s2); }
 .pl{ position:relative; display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); overflow:hidden; min-width:0; contain:layout paint; }
 .pl .art{ position:relative; display:flex; gap:var(--s2); align-items:center; min-width:0; }
 .cov{ width:64u; height:64u; border-radius:var(--r-sm); flex:none; background:#E9ECEF center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:#8A8E94; box-shadow:var(--hg-sh); }
@@ -121,32 +122,7 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
     const c = this._config, h = this._hass, list = this._list(), nm = (e) => c.names[e] || H.name(h, e);
     const act = [], idle = [], un = [];
     for (const e of list) { const s = h.states[e]; if (!H.ok(s)) un.push(e); else if (hgMpActive(s)) act.push(e); else idle.push(e); }
-    const fmtT = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), ss = x % 60; return (hh ? hh + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0'); };
-    const big = act.map((e) => {
-      const s = h.states[e], a = s.attributes, f = Number(a.supported_features) || 0;
-      const title = a.media_title || a.media_channel || a.app_name || hgMpSt(s.state) || s.state;
-      const sub = [a.media_artist || a.media_series_title, a.media_album_name].filter(Boolean).join(' · ') || (a.app_name && a.app_name !== title ? a.app_name : '') || (a.media_start_time ? `${a.media_start_time}–${a.media_end_time || ''}` : '');
-      let pg = '';
-      if (a.media_duration > 0 && a.media_position != null) {
-        const upd = Date.parse(a.media_position_updated_at || s.last_updated), pos = Math.min(a.media_duration, a.media_position + (s.state === 'playing' ? (Date.now() - upd) / 1000 : 0));
-        pg = `<div class="pg"><span>${fmtT(pos)}</span><span class="tr"><i style="--p0:${((pos / a.media_duration) * 100).toFixed(2)}%;--dur:${Math.max(0, a.media_duration - pos).toFixed(0)}s"></i></span><span>${fmtT(a.media_duration)}</span></div>`;
-      } else if (typeof a.media_start_time === 'string' && typeof a.media_end_time === 'string') {
-        // program TV (Enigma2): postęp audycji wg godzin z EPG
-        const [sh, sm] = a.media_start_time.split(':').map(Number), [eh, em] = a.media_end_time.split(':').map(Number);
-        const now = new Date(), st0 = new Date(now); st0.setHours(sh, sm, 0, 0); const en = new Date(now); en.setHours(eh, em, 0, 0); if (en <= st0) en.setDate(en.getDate() + 1);
-        const dur = (en - st0) / 1000, pos = Math.min(dur, Math.max(0, (now - st0) / 1000));
-        if (dur > 0 && dur < 86400) pg = `<div class="pg"><span>${H.esc(a.media_start_time)}</span><span class="tr"><i style="--p0:${((pos / dur) * 100).toFixed(2)}%;--dur:${(dur - pos).toFixed(0)}s"></i></span><span>${H.esc(a.media_end_time)}</span></div>`;
-      }
-      const vol = (f & HG_MP.VOL_SET) && a.volume_level != null ? Math.round(a.volume_level * 100) : null;
-      const volH = vol != null ? `<label class="vol">${H.icon(a.is_volume_muted ? 'mdi:volume-off' : 'mdi:volume-high')}<input type="range" min="0" max="100" step="1" value="${vol}" style="--v:${vol}%" data-act="vol" data-e="${e}" aria-label="${hgTr('Głośność', 'Volume')}: ${H.esc(nm(e))}"><output>${vol}%</output></label>`
-        : (f & HG_MP.VOL_STEP) ? `<span class="vol">${H.icon('mdi:volume-high')}<button class="cb" data-act="vdn" data-e="${e}" aria-label="${hgTr('Ciszej', 'Volume down')}">${H.icon('mdi:minus')}</button><button class="cb" data-act="vup" data-e="${e}" aria-label="${hgTr('Głośniej', 'Volume up')}">${H.icon('mdi:plus')}</button></span>` : '';
-      const srcs = (f & HG_MP.SOURCE) && Array.isArray(a.source_list) && a.source_list.length ? a.source_list : null;
-      const srcH = srcs ? `<select data-act="src" data-e="${e}" aria-label="${hgTr('Źródło', 'Source')}: ${H.esc(nm(e))}">${(a.source && !srcs.includes(a.source) ? [a.source] : []).concat(srcs).map((x) => `<option ${x === a.source || x === a.app_name ? 'selected' : ''}>${H.esc(x)}</option>`).join('')}${!a.source && !srcs.includes(a.app_name) ? `<option selected value="">${hgTr('Źródło…', 'Source…')}</option>` : ''}</select>` : '';
-      return `<div class="pl ${s.state}"><div class="art">${this._cov(e, s)}<div class="meta"><span class="who"><i class="dot"></i><b>${H.esc(nm(e))}</b><span>· ${H.esc(hgMpSt(s.state) || s.state)}</span></span>
-          <span class="ttl">${H.esc(title)}</span>${sub ? `<span class="sub">${H.esc(sub)}</span>` : ''}</div></div>
-        ${pg}<div class="ctl">${this._ctl(e, s, true)}<span class="sp2"></span>${this._pw(e, s)}<button class="cb" data-act="more" data-e="${e}" aria-label="${hgTr('Szczegóły', 'Details')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:dots-horizontal')}</button></div>
-        ${volH || srcH ? `<div class="row2">${volH}${srcH}</div>` : ''}</div>`;
-    }).join('');
+    const big = act.map((e) => hgNP.html(h, e, { name: nm(e) })).join('');   /* wspólny wygląd „Teraz gra” (shared/media) */
     const sm = idle.map((e) => { const s = h.states[e], a = s.attributes;
       return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${H.esc(hgMpSt(s.state) || s.state)}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
         ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
@@ -155,7 +131,10 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? `${act.length} ${hgTr('aktywne', 'active')}` : hgTr('nic nie gra', 'nothing playing')}</span></div>
       ${big ? `<div class="big">${big}</div>` : ''}${sm ? `<div class="sm">${sm}</div>` : ''}${!big && !sm ? `<div class="empty">${hgTr('Brak dostępnych odtwarzaczy', 'No available players')}</div>` : ''}${unH}</ha-card>`;
   }
+  afterRender() { hgNP.after(this); }
+  disconnectedCallback() { super.disconnectedCallback(); clearInterval(this._npT); }
   onAct(a, t) {
+    if (hgNP.act(this, a, t)) return;
     const e = t.dataset.e, s = H.st(this._hass, e), m = (sv, d = {}) => H.call(this._hass, 'media_player', sv, { entity_id: e, ...d });
     if (a === 'pp') return m(s && s.state === 'playing' ? 'media_pause' : 'media_play');
     if (a === 'stop') return m('media_stop');

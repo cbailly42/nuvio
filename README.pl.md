@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.8.1-a3e635?style=flat-square" alt="v1.8.1">
+  <img src="https://img.shields.io/badge/version-v1.9.0-a3e635?style=flat-square" alt="v1.9.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -417,9 +417,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.8.1 -m "Nuvio 1.8.1" && git push origin v1.8.1`.
+Sam tag ręcznie: `git tag -a v1.9.0 -m "Nuvio 1.9.0" && git push origin v1.9.0`.
 
 ## Lista zmian
+
+### 1.9.0
+- **Odtwarzacz (nowy wygląd)**: odtwarzacze w Multimediach i w pokojach mają duży układ „Teraz odtwarzane”: okładka w tle (jej kolor barwi kartę), linia ze źródłem i stanem, duży tytuł i wykonawca, pasek postępu z czasami, losowo / poprzedni / duży play / następny / powtarzanie oraz rząd głośności z − i + i przyciskami Pokoje (łączenie głośników w grupę), Źródło i Dźwięk, gdy odtwarzacz je obsługuje. Na wąskich kartach losowo i powtarzanie się chowają, a przyciski pokazują same ikony.
+- **Pilot klimatyzacji**: na ekranach od 700 px kafle Tryb, Wentylator, Sen i Nawiew otwierają rozwijane menu przy kaflu (działają strzałki, drugie dotknięcie zamyka); na telefonie zostaje dolny panel.
 
 ### 1.8.1
 - **Edycja pokoju (poprawka)**: pokój układa karty w tej samej siatce co pozostałe widoki, więc w edycji i po zapisie wygląda tak samo, w szerokim widoku i w panelu z boku. Wcześniej szeroki widok pokoju używał osobnego układu kolumn i karty przeskakiwały po zapisie.

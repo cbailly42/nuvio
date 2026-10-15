@@ -63,6 +63,8 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
 .ti span{ display:flex; flex-direction:column; min-width:0; line-height:1.2; }
 .ti small{ font-size:11px; color:#5A5E64; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ti b{ font-size:var(--fs-sm); font-weight:600; color:#1E2023; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ti .dd{ display:none; margin-left:auto; flex:none; color:#5A5E64; transition: transform .2s; } .ti .dd ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; display:flex; } .ti[aria-expanded=true] .dd{ transform:rotate(180deg); }
+@media (min-width: 700px){ .ti .dd{ display:flex; } }
 .ti.act{ background:var(--ac); } .ti.act i{ background:rgba(255,255,255,.22); color:#fff; } .ti.act small, .ti.act b{ color:#fff; }
 .off .ti i{ background:rgba(0,0,0,.06); color:#6A6E74; }
 @container (max-width: 300px){ .eco span{ display:none; } .eco{ padding:0 7px; } .ti{ flex-direction:column; justify-content:center; text-align:center; padding:8px 6px; gap:4px; } .ti span{ align-items:center; max-width:100%; } .ti i{ width:30px; height:30px; } .ti small{ display:none; } .cv{ width:40px; height:40px; } .sl{ grid-template-columns:40px 1fr 40px; } }
@@ -122,7 +124,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
     const dis = !on || e.t == null;
     const cv = (d, ic, l) => `<button class="cv" data-act="step" data-d="${d}" ${dis || (d < 0 ? e.t <= mn : e.t >= mx) ? 'disabled' : ''} aria-label="${l}" title="${l}">${H.icon(ic)}</button>`;
     const sl = `<div class="sl">${cv(-1, 'mdi:minus', hgTr('Obniż temperaturę', 'Lower temperature'))}<input class="tsl" type="range" min="${mn}" max="${mx}" step="${step}" value="${e.t ?? (mn + mx) / 2}" ${dis ? 'disabled' : ''} aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuetext="${e.t != null ? H.fmt(e.t) + '°' : ''}">${cv(1, 'mdi:plus', hgTr('Podwyższ temperaturę', 'Raise temperature'))}</div>`;
-    const ti = (k, l, v, act) => `<button class="ti ${act ? 'act' : ''}" data-act="${k === 'sleep' ? 'preset' : 'pick'}" data-k="${k}"${k === 'sleep' ? ' data-v="sleep"' : ''} aria-label="${H.esc(`${l}: ${v}`)}"><i>${H.icon(k === 'sleep' ? 'mdi:power-sleep' : this._ic(k, k === 'mode' ? e.st : e[k]))}</i><span><small>${H.esc(l)}</small><b>${H.esc(v)}</b></span></button>`;
+    const ti = (k, l, v, act) => `<button class="ti ${act ? 'act' : ''}" data-act="${k === 'sleep' ? 'preset' : 'pick'}" data-k="${k}"${k === 'sleep' ? ' data-v="sleep"' : ''} aria-label="${H.esc(`${l}: ${v}`)}"><i>${H.icon(k === 'sleep' ? 'mdi:power-sleep' : this._ic(k, k === 'mode' ? e.st : e[k]))}</i><span><small>${H.esc(l)}</small><b>${H.esc(v)}</b></span>${k === 'sleep' ? '' : `<em class="dd">${H.icon('mdi:chevron-down')}</em>`}</button>`;
     const hv = (a.hvac_modes || []).filter((x) => x !== 'off');
     const tiles = [
       hv.length > 1 ? ti('mode', hgTr('Tryb', 'Mode'), on ? this._lab('mode', e.st) : hgTr('Wyłączony', 'Off')) : '',
@@ -166,7 +168,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
   }
   disconnectedCallback() { super.disconnectedCallback(); if (this._ct) { clearTimeout(this._ct); this._commit(); } if (this._sh) this._sh.close(); }
   /* dolny arkusz z opcjami (tryb / wentylator / nawiew / program) */
-  _pick(k) {
+  _pick(k, anchor) {
     const s = H.st(this._hass, this._config.entity); if (!s) return;
     const a = s.attributes, e = this._eff(s), { mn, mx } = this._lim(s);
     const L = k === 'mode' ? (a.hvac_modes || []).filter((x) => x !== 'off') : k === 'fan' ? a.fan_modes || [] : k === 'swing' ? a.swing_modes || [] : (a.preset_modes || []).filter((x) => !['eco', 'sleep'].includes(x));
@@ -182,7 +184,29 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
 .nvrc em ha-icon, .nvrc i ha-icon{ --mdc-icon-size:22px; width:22px; height:22px; display:flex; }
 .nvrc .o.on{ background:var(--ac); color:#fff; } .nvrc .o.on i{ background:rgba(255,255,255,.22); color:#fff; }
 @media (hover:hover){ .nvrc .o:not(.on):hover{ background:color-mix(in srgb, currentColor 11%, transparent); } }</style>`;
-    if (this._sh) this._sh.close();
+    if (this._sh) { const same = this._shK === k; this._sh.close(); this._sh = null; if (same && anchor && innerWidth >= 700) return; }   // drugie dotknięcie kafla zamyka menu
+    this._shK = k;
+    /* duży ekran: rozwijane menu pod kaflem; telefon: dolny arkusz z dużymi kafelkami */
+    if (anchor && innerWidth >= 700) {
+      const row = (v) => { const sel = v === curV, col = k === 'mode' ? this._col(v, e.t, mn, mx) : this._col(e.st, e.t, mn, mx);
+        return `<button class="o${sel ? ' on' : ''}" role="menuitemradio" aria-checked="${sel}" data-v="${H.esc(v)}" style="--ac:${col}"><i>${H.icon(this._ic(k, v))}</i><span>${H.esc(this._lab(k, v))}</span>${sel ? `<em>${H.icon('mdi:check')}</em>` : ''}</button>`; };
+      const dcss = `<style>.nvrd{ display:flex; flex-direction:column; gap:2px; min-width:var(--w, 200px); }
+.nvrd > b{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; opacity:.6; padding:4px 10px 6px; }
+.nvrd .o{ all:unset; box-sizing:border-box; display:flex; align-items:center; gap:12px; min-height:48px; padding:6px 12px 6px 6px; border-radius:12px; cursor:pointer; color:inherit; font:inherit; font-size:14px; transition: background .15s; }
+.nvrd i{ width:34px; height:34px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--ac) 16%, transparent); color:var(--ac); }
+.nvrd i ha-icon, .nvrd em ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; display:flex; }
+.nvrd span{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .nvrd em{ display:flex; color:var(--ac); }
+.nvrd .o.on{ background:color-mix(in srgb, var(--ac) 14%, transparent); font-weight:600; } .nvrd .o:focus-visible{ outline:2px solid var(--ac); outline-offset:-2px; }
+@media (hover:hover){ .nvrd .o:not(.on):hover{ background:color-mix(in srgb, currentColor 7%, transparent); } }</style>`;
+      anchor.setAttribute('aria-expanded', 'true');
+      const pp = this._sh = hgOverlay.popover(anchor, `${dcss}<div class="nvrd" role="menu" aria-label="${H.esc(T)}" style="--w:${Math.round(anchor.getBoundingClientRect().width - 16)}px"><b>${H.esc(T)}</b>${L.map(row).join('')}</div>`,
+        { role: 'menu', onClose: () => { anchor.setAttribute('aria-expanded', 'false'); if (this._sh === pp) this._sh = null; } });
+      pp.el.addEventListener('click', (ev) => { const b = ev.composedPath().find((n) => n.dataset && n.dataset.v != null); if (!b) return; H.haptic('light'); this._apply(k, b.dataset.v); pp.close(); });
+      pp.el.addEventListener('keydown', (ev) => { const f = [...pp.el.querySelectorAll('.o')], i = f.indexOf(pp.el.getRootNode().activeElement);
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); f.at((i + (ev.key === 'ArrowDown' ? 1 : -1) + f.length) % f.length).focus(); } });
+      requestAnimationFrame(() => { const f = pp.el.querySelector('.o.on') || pp.el.querySelector('.o'); if (f) f.focus({ preventScroll: true }); });
+      return;
+    }
     const sh = this._sh = hgOverlay.sheet({ title: T, side: 'bottom', html: `${css}<div class="nvrc">${L.map(btn).join('')}</div>`, onClose: () => { if (this._sh === sh) this._sh = null; } });
     sh.body.addEventListener('click', (ev) => {
       const b = ev.composedPath().find((n) => n.dataset && n.dataset.v != null); if (!b) return;
@@ -202,7 +226,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
     if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: c.entity });
     if (a === 'step') { if (e.t != null) this._setT(e.t + (+el.dataset.d) * this._lim(s).step, 700); return; }
     H.haptic('light');
-    if (a === 'pick') return this._pick(el.dataset.k);
+    if (a === 'pick') return this._pick(el.dataset.k, el);
     if (a === 'preset') {   // Eko / Sen: przełącznik; wyłączenie wraca do „none” albo do pierwszego innego programu
       const v = el.dataset.v, pr = s.attributes.preset_modes || [];
       return this._apply('preset', e.preset === v ? (pr.includes('none') ? 'none' : pr.find((x) => !['eco', 'sleep'].includes(x)) || v) : v);

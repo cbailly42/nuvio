@@ -85,7 +85,7 @@ class HGRoomCard extends HGBase {
     super.connectedCallback(); this._onLoc();
     this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub);
   }
-  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0; }
+  disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._npT); this._npT = 0; }
   set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; if (this._cams) for (const el of this._cams.values()) el.hass = h; }
   get hass() { return this._hass; }
   _rid() { return (this._config && this._config.room) || HGAreas.areaFromUrl(); }
@@ -133,37 +133,7 @@ ${HG_TILE_CSS}
 .unb .unh{ min-height:40px; padding:0 var(--s3); font-size:var(--fs-sm); color:#fff; opacity:.85; text-shadow:0 1px 2px rgba(0,0,0,.35); }
 .unb .unh ha-icon{ color:inherit; }
 /* odtwarzacz */
-ha-card.mpc{ position:relative; overflow:hidden; display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); }
-.mpbg{ position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1s; background:radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--mt) 34%, transparent), color-mix(in srgb, var(--mt) 8%, transparent) 60%, transparent); }
-.mpc[style*="--mt"] .mpbg{ opacity:1; }
-.mpc > *:not(.mpbg){ position:relative; }
-.mph{ display:flex; align-items:center; gap:var(--s2); min-width:0; }
-.mpa{ width:72px; height:72px; border-radius:var(--r-md); flex:none; object-fit:cover; box-shadow:0 8px 24px rgba(0,0,0,.18); background:rgba(255,255,255,.55); transition:transform .5s cubic-bezier(.2,.7,.2,1); }
-.mpc.pl .mpa{ transform:scale(1.04); } .mpa.ic{ display:grid; place-items:center; color:#3A3D42; --mdc-icon-size:34px; }
-.mpi{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; text-align:left; color:inherit; }
-.mpi .mpd{ font-size:var(--fs-xs); color:#4A4E54; font-weight:600; letter-spacing:.02em; }
-.mpc .mpi b{ font-size:calc(var(--fs-md) * 1.35); font-weight:700; line-height:1.2; color:#111111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mpc .mpi > span:last-child{ font-size:var(--fs-sm); color:#3A3D42; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mpg{ display:flex; flex-direction:column; gap:4px; }
-.mpt{ height:5px; border-radius:3px; background:rgba(0,0,0,.12); overflow:hidden; } .mpt i{ display:block; height:100%; background:#1E2023; transform-origin:left; transition:transform 1s linear; }
-.mpn{ display:flex; justify-content:space-between; font-size:var(--fs-xs); color:#4A4E54; font-variant-numeric:tabular-nums; }
-.mpk{ display:flex; align-items:center; justify-content:center; gap:var(--s3); }
-.mb{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; color:#1E2023; background:transparent; flex:none; transition:transform .15s, background .2s; }
-.mb:active{ transform:scale(.92); } .mb:hover{ background:rgba(0,0,0,.06); }
-.mb.big{ width:56px; height:56px; background:#1E2023; color:#FFFFFF; --mdc-icon-size:30px; box-shadow:0 6px 18px rgba(0,0,0,.18); } .mb.big:hover{ background:#2C2F33; }
-.mpf{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
-.mpv{ flex:1 1 220px; display:flex; align-items:center; gap:var(--s1); min-width:0; color:#3A3D42; }
-.mpv input{ flex:1; min-width:0; height:24px; -webkit-appearance:none; appearance:none; background:transparent; }
-.mpc .mpv input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:3px; background:linear-gradient(90deg, #1E2023 var(--v), rgba(0,0,0,.14) var(--v)); }
-.mpc .mpv input[type=range]::-moz-range-progress{ background:#1E2023; }
-.mpc .mpv input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px; height:18px; margin-top:-6.5px; border-radius:50%; background:var(--hg-thumb); box-shadow:var(--hg-thumb-sh); }
-.mpv output{ width:3.2em; text-align:right; font-size:var(--fs-xs); color:#4A4E54; font-variant-numeric:tabular-nums; }
-.mpch{ display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border-radius:999px; background:rgba(255,255,255,.45); box-shadow:inset 0 0 0 1px var(--hg-glass-bd); font-size:var(--fs-xs); font-weight:600; color:#1E2023; --mdc-icon-size:16px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mpc.off .mpa{ filter:grayscale(1); opacity:.7; }
-.mb ha-icon{ width:24px; height:24px; } .mb.big ha-icon{ width:30px; height:30px; } .mb.sm{ width:40px; height:40px; background:transparent !important; box-shadow:none !important; border:0 !important; } .mb.sm ha-icon{ width:20px; height:20px; }
-.mpa.ic ha-icon{ width:34px; height:34px; } .mpch ha-icon{ width:16px; height:16px; flex:none; } .mpv > ha-icon{ width:20px; height:20px; }
-@media (max-width:600px){ .mpa{ width:60px; height:60px; } .mpk{ gap:var(--s2); } }
-@media (prefers-reduced-motion: reduce){ .mpa, .mpt i, .mpbg{ transition:none; } }
+${HG_NP_CSS}
 /* schody – dwie karty lamp (Dół/Góra) + tor sekwencji między nimi, chipy czujników, przełącznik grupy i automatyzacji; jeden akcent */
 .stb{ column-span:all; } ha-card.stc{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); }
 .sth{ display:flex; align-items:center; gap:var(--s2); } .sth > div{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -543,32 +513,8 @@ ha-card.wmc{ gap:var(--s2); }
   }
   /* odtwarzacz w stylu „Teraz odtwarzane”: okładka (entity_picture) z tłem barwionym kolorem okładki, tytuł/wykonawca/aplikacja,
      postęp z media_position/duration (na żywo), sterowanie wg supported_features, głośność + wyciszenie, źródło */
-  _player(e) {
-    const h = this._hass, s = h.states[e], at = s.attributes, f = at.supported_features || 0, nm = this._nm(e, hgTr('Odtwarzacz', 'Player')), E = H.esc(e);
-    const pl = s.state === 'playing', act = ['playing', 'paused', 'buffering'].includes(s.state), off = ['off', 'standby'].includes(s.state);
-    const tv = at.device_class === 'tv' || /tv|telewiz/i.test(nm + e);
-    const ST = hgTr({ playing: 'Odtwarza', paused: 'Wstrzymano', idle: 'Bezczynny', on: 'Włączony', off: 'Wyłączony', standby: 'Czuwanie', buffering: 'Buforowanie' }, { playing: 'Playing', paused: 'Paused', idle: 'Idle', on: 'On', off: 'Off', standby: 'Standby', buffering: 'Buffering' });
-    const app = at.app_name && !/^[a-z]+\.[a-z0-9.]+$/i.test(at.app_name) ? at.app_name : '', src = at.source || '';
-    const title = at.media_title || app || ST[s.state] || H.stateLabel(s.state);
-    const sub = [at.media_title ? (at.media_artist || at.media_album_name || app) : '', at.media_series_title].filter(Boolean).join(' · ') || (at.media_title || app ? ST[s.state] || '' : nm);
-    const art = at.entity_picture ? `<img class="mpa" src="${H.esc(at.entity_picture)}" alt="" loading="lazy"${/^\/(?!\/)/.test(at.entity_picture) ? ' crossorigin="anonymous"' : ''}>` : `<span class="mpa ic">${H.icon(tv ? 'mdi:television-play' : 'mdi:speaker')}</span>`;
-    const dur = Number(at.media_duration) || 0, has = dur > 0 && at.media_position != null && (f & 2 || true);
-    const pos = has ? Math.min(dur, Number(at.media_position) + (pl && at.media_position_updated_at ? (Date.now() - new Date(at.media_position_updated_at)) / 1000 : 0)) : 0;
-    const tm = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
-    const prog = has ? `<div class="mpg" data-dur="${dur}" data-pos="${pos.toFixed(1)}" data-t="${Date.now()}" data-pl="${pl ? 1 : 0}"><div class="mpt"><i style="transform:scaleX(${(pos / dur).toFixed(4)})"></i></div><div class="mpn"><span>${tm(pos)}</span><span>-${tm(dur - pos)}</span></div></div>` : '';
-    const B = (a, ic, lab, big) => `<button class="mb ${big ? 'big' : ''}" data-act="${a}" data-e="${E}" aria-label="${lab}">${H.icon(ic)}</button>`;
-    const ctl = act || s.state === 'idle' || s.state === 'on' ? [f & 16 ? B('mpprev', 'mdi:skip-previous', hgTr('Poprzedni', 'Previous')) : '', (pl ? f & 1 : f & 16384) ? B('mpp', pl ? 'mdi:pause' : 'mdi:play', pl ? hgTr('Pauza', 'Pause') : hgTr('Odtwarzaj', 'Play'), 1) : '', f & 32 ? B('mpnext', 'mdi:skip-next', hgTr('Następny', 'Next')) : ''].join('') : '';
-    const vl = at.volume_level, mu = !!at.is_volume_muted, vp = vl != null ? Math.round(vl * 100) : null;
-    const vol = !off && (f & 4) && vp != null ? `<div class="mpv">${f & 8 ? `<button class="mb sm" data-act="mpmu" data-e="${E}" aria-label="${mu ? hgTr('Wyłącz wyciszenie', 'Unmute') : hgTr('Wycisz', 'Mute')}" aria-pressed="${mu}">${H.icon(mu || vp === 0 ? 'mdi:volume-off' : vp < 40 ? 'mdi:volume-medium' : 'mdi:volume-high')}</button>` : H.icon('mdi:volume-high')}
-      <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgTr('Głośność: ', 'Volume: ') + nm)}"><output>${vp}%</output></div>` : '';
-    const pw = f & 384 ? B('mpw', 'mdi:power', off ? `${hgTr('Włącz', 'Turn on')}: ${H.esc(nm)}` : `${hgTr('Wyłącz', 'Turn off')}: ${H.esc(nm)}`) : '';
-    const chip = src || app ? `<span class="mpch">${H.icon(tv ? 'mdi:television' : 'mdi:music-note')}${H.esc(src || app)}</span>` : '';
-    return `<div class="blk"><ha-card class="glass mpc ${pl ? 'pl' : ''} ${off ? 'off' : ''}">
-      <div class="mpbg" aria-hidden="true"></div>
-      <div class="mph">${art}<button class="mpi" data-act="more" data-e="${E}"><span class="mpd">${H.esc(nm)} · ${H.esc(ST[s.state] || H.stateLabel(s.state))}</span><b>${H.esc(title)}</b><span>${H.esc(sub)}</span></button>${pw}</div>
-      ${prog}${ctl ? `<div class="mpk">${ctl}</div>` : ''}${vol || chip ? `<div class="mpf">${vol}${chip}</div>` : ''}
-    </ha-card></div>`;
-  }
+  /* odtwarzacz: wspólny wygląd „Teraz gra” (shared/media) */
+  _player(e) { return `<div class="blk">${hgNP.html(this._hass, e, { name: this._nm(e, hgTr('Odtwarzacz', 'Player')) })}</div>`; }
   _devCard(g, a) {
     const h = this._hass, dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents), st = (e) => h.states[e];
     const av = g.ents.filter((e) => HGDev.ok(st(e)));
@@ -726,12 +672,8 @@ ha-card.wmc{ gap:var(--s2); }
     return `<div class="wrap gsz" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
-    clearInterval(this._stT); this._stT = 0; clearInterval(this._mpT); this._mpT = 0;
-    const tmf = (x) => { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
-    if (this.$.querySelector('.mpg[data-pl="1"]')) this._mpT = setInterval(() => { for (const g of this.$.querySelectorAll('.mpg[data-pl="1"]')) { const d = +g.dataset.dur, p = Math.min(d, +g.dataset.pos + (Date.now() - +g.dataset.t) / 1000);
-      g.querySelector('i').style.transform = `scaleX(${(p / d).toFixed(4)})`; const n = g.querySelectorAll('.mpn span'); n[0].textContent = tmf(p); n[1].textContent = '-' + tmf(d - p); } }, 1000);
-    for (const im of this.$.querySelectorAll('img.mpa:not([data-t])')) { im.dataset.t = 1; const go = () => { try { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.drawImage(im, 0, 0, 8, 8); const d = x.getImageData(0, 0, 8, 8).data; let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
-      const n = d.length / 4, cd = im.closest('.mpc'); if (cd) cd.style.setProperty('--mt', `rgb(${Math.round(r / n)} ${Math.round(g / n)} ${Math.round(b / n)})`); } catch (_) {} }; im.complete && im.naturalWidth ? go() : im.addEventListener('load', go, { once: true }); }
+    clearInterval(this._stT); this._stT = 0;
+    hgNP.after(this);
     if (this._stFade) this._stT = setInterval(() => { const el = this.$.querySelector('.stf'), r = Math.ceil((this._stFade - Date.now()) / 1000);
       if (!el || r <= 0) { clearInterval(this._stT); this._stT = 0; this._stFade = null; if (el) el.textContent = hgTr('Gaśnie…', 'Turning off…'); return; } el.textContent = hgTr(`Gaśnie za ${r} s`, `Turning off in ${r} s`); const n = this.$.querySelector('.stn'); if (n) n.textContent = r; }, 1000);
     const h = this._hass, keep = new Set();
@@ -754,6 +696,7 @@ ha-card.wmc{ gap:var(--s2); }
     if (typeof hgCmSlots === 'function') hgCmSlots(this);
   }
   onAct(act, t) {
+    if (hgNP.act(this, act, t)) return;
     const h = this._hass, e = t.dataset.e;
     if (act[0] === 't' && hgTileAct(this, act, t)) return;
     if (act === 'more') return H.fire(this, 'hass-more-info', { entityId: e });
@@ -767,11 +710,6 @@ ha-card.wmc{ gap:var(--s2); }
     if (act === 'cwus') { const e = t.dataset.e; return H.call(h, 'switch', h.states[e] && h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
     if (act === 'sta') return H.call(h, 'automation', h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e });
     if (act === 'wm') return H.call(h, 'select', 'select_option', { entity_id: e, option: t.dataset.o });
-    if (act === 'mpp') return H.call(h, 'media_player', h.states[e].state === 'playing' && (h.states[e].attributes.supported_features & 1) ? 'media_pause' : 'media_play', { entity_id: e });
-    if (act === 'mpprev') return H.call(h, 'media_player', 'media_previous_track', { entity_id: e });
-    if (act === 'mpnext') return H.call(h, 'media_player', 'media_next_track', { entity_id: e });
-    if (act === 'mpmu') return H.call(h, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !h.states[e].attributes.is_volume_muted });
-    if (act === 'mpw') return H.call(h, 'media_player', ['off', 'standby'].includes(h.states[e].state) ? 'turn_on' : 'turn_off', { entity_id: e });
     if (act === 'cov') return H.call(h, 'cover', t.dataset.s, { entity_id: e });
     if (act === 'robots') return H.navigate(this._config.robots_path);
     if (act === 'dev') return H.navigate('/config/devices/device/' + t.dataset.d);
