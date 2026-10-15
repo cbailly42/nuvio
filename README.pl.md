@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.2.0-a3e635?style=flat-square" alt="v2.2.0">
+  <img src="https://img.shields.io/badge/version-v2.3.0-a3e635?style=flat-square" alt="v2.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.2.0 origin/main -m "Nuvio 2.2.0" && git push origin v2.2.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.3.0 origin/main -m "Nuvio 2.3.0" && git push origin v2.3.0`.
 
 ## Lista zmian
+
+### 2.3.0
+- **Powiadomienia na wygaszaczu**: wiadomości wysłane przez notify na to urządzenie (stara usługa `notify.mobile_app_…` albo `notify.send_message` z encją `notify.*`) pokazują się na wygaszaczu jako stos jak na iPhonie: najnowsza karta na wierzchu, kolejne wystają spod niej, dotknięcie rozwija stos w listę (Pokaż mniej / wyczyść), a dotknięcie karty pokazuje całą treść. Dotykanie powiadomień nie wybudza ekranu; zwykłe wybudzenie oznacza je jako przeczytane. Usługi wybierasz w Trybie tabletu ściennego → Powiadomienia na tym urządzeniu (zapis osobno dla każdego urządzenia). Wymaga konta administratora, bo nasłuchuje zdarzeń `call_service`.
 
 ### 2.2.0
 - **Tablica jako widżety**: duża, pogrubiona data na zdjęciu z dashboardu, wschód i zachód jako zwykłe linie z ikonami, a u dołu jeden rząd równych szklanych widżetów (pogoda, najbliższe, teraz gra, pokoje) w stylu StandBy. Koniec z ramkami w ramkach: wydarzenia mają cienki kolorowy pasek, pokoje to czysta lista z kolorową ikoną i dużą, lekką temperaturą, a tytuły widżetów to małe etykiety wersalikami. Pogoda trafiła do rzędu widżetów ze zwartą prognozą. Na telefonie widżety układają się pod nagłówkiem.

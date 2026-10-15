@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.2.0-a3e635?style=flat-square" alt="v2.2.0">
+  <img src="https://img.shields.io/badge/version-v2.3.0-a3e635?style=flat-square" alt="v2.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -418,9 +418,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.2.0 origin/main -m "Nuvio 2.2.0" && git push origin v2.2.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.3.0 origin/main -m "Nuvio 2.3.0" && git push origin v2.3.0`.
 
 ## Changelog
+
+### 2.3.0
+- **Notifications on the screensaver**: messages sent with notify to this device (a legacy `notify.mobile_app_…` service or `notify.send_message` with a `notify.*` entity) appear on the screensaver as an iPhone-style stack: the newest card on top with the next ones peeking out below, a tap expands the stack into a list (Show less / clear), and a tap on a card shows its full text. Tapping notifications doesn't wake the screen; a normal wake marks them as read. Pick the services under Wall tablet mode → Notifications on this device (stored per device). Requires an admin account, because it listens to `call_service` events.
 
 ### 2.2.0
 - **Board redesigned as widgets**: big bold date over the dashboard photo, sunrise and sunset as plain icon lines, and one row of equal glass widgets at the bottom (weather, coming up, now playing, rooms), StandBy style. No more boxes inside boxes: events have a thin color bar, rooms are a clean list with a colored icon and a large light temperature, widget titles are small uppercase labels. Weather moved into the widget row with a compact forecast. On a phone the widgets stack under the header.
