@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
+  <img src="https://img.shields.io/badge/version-v2.8.0-a3e635?style=flat-square" alt="v2.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,15 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuvio 2.8.0" && git push origin v2.8.0`.
 
 ## Lista zmian
+
+### 2.8.0
+- Nowość: wygaszacz **Szkło Minimal** (Ustawienia > Wygaszacz): duży zegar z datą, pogoda z ikoną 3D, teraz gra z okładką albumu, sfera w tle, kula asystenta i pasek rodziny. Wszystkie wygaszacze wybierasz z galerii żywych podglądów, każdy pokazuje cały ekran w pomniejszeniu. Dotknięcie kuli otwiera Assist prosto z wygaszacza (można wyłączyć).
+- Do ustawienia: kolory gradientu, kula (włączona lub nie, kolory, intensywność), sfera w tle, własne zdjęcie z galerii lub przesłane, ciemniej w nocy, format daty, awatar, format, wielkość i położenie zegara, data, pogoda i teraz gra osobno, rodzina (kto, szarzy poza domem), napis i ograniczone animacje. Ustawienia zapisują się dla każdego użytkownika HA i są w eksporcie oraz imporcie. Wcześniej wybrane Karuzela i Bento otwierają się jako Minimal.
+- Wszystkie karty mają teraz jedno wspólne szkło; osobny ciepły odcień kart fotowoltaiki, energii, mocy i faz zniknął.
+- Obrazy 3D są w dist jako `nuvio-3d-*.webp` (Fluent Emoji 3D od Microsoftu, licencja MIT).
 
 ### 2.7.0
 - Nowość: karta inteligentnego zamka (`custom:nuvio-smartlock-card`, **+ Dodaj → Inteligentny zamek**). Animowana kłódka w okrągłym przycisku: przytrzymaj, a pierścień się wypełni i zamek się otworzy, dotknij, aby zamknąć. Kręcący się łuk pokazuje ruch zamka, impuls potwierdza nowy stan, a przy zacięciu kłódka się trzęsie. Bateria i czujnik drzwi dobierają się z tego samego urządzenia, a przycisk „Otwórz drzwi” pojawia się, gdy zamek to obsługuje. Zamki z kodem najpierw o niego pytają.

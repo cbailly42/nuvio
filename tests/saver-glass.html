@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- Wygaszacz „Szkło” na sztucznym hass (bez HA). Uruchomienie: python3 tools/build.py && python3 -m http.server 8000,
+     potem http://localhost:8000/tests/saver-glass.html?v=carousel|minimal|bento[&ui=settings|editor][&sheet=1] -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio wygaszacz</title>
+<style>body{ margin:0; font-family:system-ui,sans-serif; background:#111; }</style></head><body>
+<script type="module">
+const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true;
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const IC = {}; customElements.define('ha-icon', class extends HTMLElement { static get observedAttributes() { return ['icon']; }
+  connectedCallback() { this.attributeChangedCallback(); }
+  attributeChangedCallback() { const n = (this.getAttribute('icon') || '').replace(/^mdi:/, ''); if (!n || this._n === n) return; this._n = n;
+    const r = this.shadowRoot || this.attachShadow({ mode: 'open' });
+    (IC[n] = IC[n] || fetch('https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/' + n + '.svg').then((x) => (x.ok ? x.text() : ''))).then((t) => { r.innerHTML = '<style>:host{display:inline-flex;vertical-align:middle;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);flex:none}svg{width:100%;height:100%;fill:currentColor}</style>' + t; }); } });
+await import('../dist/' + v.core);
+const art = (() => { const c = document.createElement('canvas'); c.width = c.height = 300; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 300, 300); g.addColorStop(0, '#f6b26b'); g.addColorStop(.5, '#c2407a'); g.addColorStop(1, '#2b1d5c'); x.fillStyle = g; x.fillRect(0, 0, 300, 300);
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(150, 130, 60, 0, 7); x.fill(); x.fillStyle = '#2b1d5c'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.fillText('NIGHT', 150, 250); return c.toDataURL('image/jpeg', .85); })();
+const cam = (() => { const c = document.createElement('canvas'); c.width = 640; c.height = 400; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 400); g.addColorStop(0, '#5b6b7d'); g.addColorStop(.55, '#8a8f86'); g.addColorStop(1, '#3b3f3a'); x.fillStyle = g; x.fillRect(0, 0, 640, 400);
+  x.fillStyle = '#6d4b36'; x.fillRect(250, 120, 140, 230); x.fillStyle = '#c8b9a2'; x.fillRect(0, 330, 640, 70); x.fillStyle = '#2f3a2c'; x.beginPath(); x.ellipse(90, 300, 90, 60, 0, 0, 7); x.ellipse(560, 290, 100, 70, 0, 0, 7); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '16px monospace'; x.fillText('CAM 1  2026-10-15 22:40', 14, 24); return c.toDataURL('image/jpeg', .8); })();
+const st = (e, s, a) => [e, { entity_id: e, state: s, attributes: a || {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() }];
+const S = Object.fromEntries([
+  st('weather.dom', 'partlycloudy', { friendly_name: 'Dom', temperature: 14, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, pressure_unit: 'hPa', temperature_unit: '°C' }),
+  st('media_player.salon', 'playing', { friendly_name: 'Salon', media_title: 'Strangers in the Night', entity_picture: art, media_artist: 'Frank Sinatra', media_duration: 160, media_position: 58, media_position_updated_at: new Date().toISOString() }),
+  st('camera.wejscie', 'idle', { friendly_name: 'Wejście', entity_picture: cam }),
+  st('climate.salon', 'heat', { friendly_name: 'Salon', current_temperature: 21.5, temperature: 22, min_temp: 5, max_temp: 30, hvac_action: 'heating' }),
+  st('sensor.cwu_moc', '1800', { friendly_name: 'CWU moc', unit_of_measurement: 'W', device_class: 'power' }), st('water_heater.cwu', 'electric', { friendly_name: 'CWU', operation_mode: 'electric', current_temperature: 48, temperature: 52, min_temp: 30, max_temp: 65 }),
+  st('sensor.moc_domu', '1240', { friendly_name: 'Pobór mocy', unit_of_measurement: 'W', device_class: 'power' }),
+  st('sensor.pv_moc', '3.4', { friendly_name: 'Fotowoltaika', unit_of_measurement: 'kW', device_class: 'power' }),
+  st('sensor.auto_bateria', '76', { friendly_name: 'Auto bateria', unit_of_measurement: '%', device_class: 'battery' }),
+  st('sensor.temp_zewn', '13.8', { friendly_name: 'Na zewnątrz', unit_of_measurement: '°C', device_class: 'temperature' }),
+  st('light.parter', 'on', { friendly_name: 'Parter', entity_id: ['light.a', 'light.b'] }),
+  st('scene.wieczor', 'scening', { friendly_name: 'Wieczór' }),
+  st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' }), st('person.anna', 'home', { friendly_name: 'Anna' }), st('person.ola', 'not_home', { friendly_name: 'Ola' }),
+  st('sun.sun', 'above_horizon', {}), st('binary_sensor.ruch', 'off', { friendly_name: 'Ruch', device_class: 'motion' })]);
+const hass = { states: S, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true }, language: 'pl', locale: { language: 'pl', time_format: '24' }, themes: { darkMode: true }, callService: async () => {},
+  callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3, 4, 5].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i, templow: 6 + i, condition: ['sunny', 'partlycloudy', 'rainy', 'cloudy', 'sunny', 'lightning-rainy'][i % 6] })) } } } : null), callApi: async () => [] };
+window.__hgHass = window.__nuvioHass = hass;
+const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
+L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } };
+const W = window.HGWall;
+if (q.get('ui')) {
+  const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass;
+  await new Promise((r) => setTimeout(r, 600)); L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } }; pg._lkTab = 'wall';
+  if (q.get('ui') === 'editor') { W.hass = hass; W.gset({ cards: W.gauto(hass) }); W._ged = 'a1'; }
+  pg._eLook();
+  if (q.get('scroll')) setTimeout(() => { const S = pg._eSheetEl, w = S && S.querySelector(q.get('ui') === 'editor' ? '.wg-ed' : 'section.wl'); let n = w; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement;
+    if (n && w) n.scrollTop = q.get('ui') === 'editor' ? w.offsetTop - 120 + Number(q.get('scroll')) : Number(q.get('scroll')); }, 700);
+} else { W.hass = hass;
+  if (q.get('only')) { const T = q.get('only').split(/[\s,]+/); W.gset({ cards: W.gauto(hass).filter((c) => T.includes(c.t)).sort((a, b) => T.indexOf(a.t) - T.indexOf(b.t)) }); }
+  if (q.get('ww')) W.gset({ cards: W.gauto(hass).map((c) => (c.t === 'weather' ? Object.assign(c, { sz: 'w' }) : c)) });
+  if (q.get('assist')) { const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass; await new Promise((r) => setTimeout(r, 600)); W.page = pg;
+    L.data.wall = Object.assign({}, L.data.wall, { on: true, style: 'glass' }); }
+  else W.page = document.body;
+  W.show(); if (q.get('tab')) { W._gtab = Number(q.get('tab')); W.gl(true); } if (q.get('assist')) setTimeout(() => { const o = W.el.querySelector('.ng-orb'); o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }, 700); if (q.get('sheet')) setTimeout(() => { W._gsh = 'a7'; W.gl(true); }, 300); }
+window.__ready = true;
+</script></body></html>

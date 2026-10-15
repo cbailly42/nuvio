@@ -106,7 +106,7 @@ Object.assign(HGWall, {
     const bk = {}; for (const [k] of HG_WB_BK) bk[k] = bk0[k] !== false;
     const ord = [...new Set(Array.isArray(w.ord) ? w.ord.filter((k) => ids.includes(k)) : [])]; ord.unshift(...ids.filter((k) => !ord.includes(k)));   /* starsza kolejność (cal, np, tmp): brakujące widżety na początek */
     const L = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^[a-z0-9_.]+$/.test(x)) : []);
-    return { style: w.style === 'board' ? 'board' : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
+    return { style: w.style === 'board' || w.style === 'glass' ? w.style : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
       wxE: typeof w.wxE === 'string' && /^weather\.[a-z0-9_]+$/.test(w.wxE) ? w.wxE : '', calX: L(w.calX), roomX: L(w.roomX) }; },
   board() { return this.bget().style === 'board'; },
   /* ---- nakładka ---- */
@@ -202,7 +202,8 @@ Object.assign(HGWall, {
     else if (id === 'sens') { this._ms = undefined; this.set({ sensor: add ? k : '' }); }
     else return false; return true; },
   bdHtml(c, h) { const B = this.bget(), seg = (a, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, pl, en]) => `<button type="button" data-hge="${a}" data-v="${k}" aria-pressed="${cur === k}">${hgTr(pl, en)}</button>`).join('')}</div>`;
-    const style = `<div class="wl-f" role="group" aria-labelledby="wl-st"><span id="wl-st">${hgTr('Wygląd wygaszacza', 'Screensaver style')}</span>${seg('wl-style', [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board']], B.style)}</div>`;
+    const style = `<div class="wl-f" role="group" aria-labelledby="wl-st"><span id="wl-st">${hgTr('Wygaszacze', 'Screensavers')}</span>${this.galHtml ? this.galHtml(B.style) : seg('wl-style', [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board'], ['glass', 'Szkło', 'Glass']], B.style)}</div>`;
+    if (B.style === 'glass' && this.glHtml) return { top: style, board: this.glHtml(c, h) };
     if (B.style !== 'board') return { top: style, board: '' };
     const W = Object.keys(h.states).filter((e) => e.startsWith('weather.')), Cs = Object.keys(h.states).filter((e) => e.startsWith('calendar.')), nm = (e) => H.name(h, e, e);
     let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp); } catch (e) { /* bez pokoi */ }

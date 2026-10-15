@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.7.0-a3e635?style=flat-square" alt="v2.7.0">
+  <img src="https://img.shields.io/badge/version-v2.8.0-a3e635?style=flat-square" alt="v2.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -420,9 +420,15 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.7.0 origin/main -m "Nuvio 2.7.0" && git push origin v2.7.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.8.0 origin/main -m "Nuvio 2.8.0" && git push origin v2.8.0`.
 
 ## Changelog
+
+### 2.8.0
+- New: screensaver style **Glass Minimal** (Settings > Screensaver): a big clock with the date, weather with a 3D icon, now playing with the album art, a background sphere, the assistant orb and the family row. All screensavers are picked from a gallery of live previews, each showing the whole screen scaled down. Tapping the orb opens Assist straight from the screensaver (can be turned off).
+- Configurable: gradient colours, orb (on or off, colours, intensity), background sphere, own image from the gallery or an upload, dimmer at night, date format, avatar, clock format, size and position, date, weather and now playing on or off, family (who, grey when away), hint text and reduced motion. Settings are saved per Home Assistant user and included in export and import. Earlier Carousel and Bento choices open as Minimal.
+- All cards now share one glass background; the separate warm tint on the solar, energy, power and phases cards is gone.
+- The 3D images ship in dist as `nuvio-3d-*.webp` (Fluent Emoji 3D by Microsoft, MIT licence).
 
 ### 2.7.0
 - New: smart lock card (`custom:nuvio-smartlock-card`, **+ Add → Smart lock**). An animated padlock in a round button: hold it to unlock while a ring fills, tap to lock. A spinning arc shows the lock moving, a pulse confirms the new state and the padlock shakes when the lock is jammed. Battery and door sensor are found on the same device, and an Open door button appears when the lock supports it. Locks with a code ask for it first.

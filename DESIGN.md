@@ -100,6 +100,9 @@ All shape, glass, motion and type values live as CSS variables in `src/theme_hea
 ## Screensaver (wall tablet mode)
 
 - No backgrounds, panels or pills behind any screensaver element (clock, date, weather, calendar, hint). Plain white text and icons with a soft text shadow only.
+- Exception, style **Glass** (`hg-wallglass.part.js`): the cards themselves are glass (rounded 24 to 32, soft inner highlight, deep shadow) and the details sheet slides up from the bottom. The clock, date, tabs, hint and the Family label stay plain text with a text shadow, never on a panel.
+- Glass layout is drawn on a 1280 x 680 grid (`--u`), portrait on 560 x 900, so every size scales from one design. Colours go through `K()` or `'#' + '...'`, so the theme tokenizer leaves them alone (the overlay is always dark).
+- 3D images: only `nuvio-3d-*.webp` in `dist/` (Fluent Emoji 3D, MIT), or the user's own image. No frames cut from reference videos.
 - The wake hint is centred at the bottom and pulses gently, with no motion when reduced motion is set.
 - PIN lock (BETA): the PIN pad has no panel either. Round keys of light frosted glass on the blurred photo, PIN dots above, a glass **Lock** pill below. Wrong PIN shakes the dots; the pad closes after 20 s idle. Unlock (about 1.2 s): the padlock opens, the dots glow green, the keys drift out from the centre with a blur, a light wave spreads from the padlock and the blurred layer scales up slightly while it fades; reduced motion only fades. Only a hash of the PIN is stored (`pinH`, `pinN` in `HGL.data.wall`).
 

@@ -59,7 +59,7 @@ const HG_BASE = U(`
 button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 button *, [data-act] ha-icon{ pointer-events:none; }
 ha-icon{ display:inline-flex; --mdc-icon-size: 100%; }
-/* szkło: domyślnie jasnoszare, .warm = kremowo-beżowe jak Energy/AC w projekcie */
+/* szkło: jeden wspólny token dla wszystkich kart; stan tylko na ikonach i pigułkach */
 ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); overflow:hidden; border-radius:var(--hg-card-r, var(--hg-radius, 18u));
   /* szkło: przezroczyste wypełnienie + delikatny refleks (135°, biel -> przezroczystość 40%), bez kolorowych gradientów */
   background: var(--hg-glass-sheen, none), var(--hg-card-under, linear-gradient(transparent, transparent)), var(--hg-glass-lite, var(--hg-glass-bg));
@@ -70,8 +70,7 @@ ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); 
   /* cienka jasna krawędź (mocniejsza u góry) + miękki cień, jak w projekcie */
   box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:#1E2023; padding:var(--s2); contain: layout paint style; }
-ha-card.glass.warm{
-  background: var(--hg-glass-sheen, none), var(--hg-warm-lite, var(--hg-warm-bg)); }
+/* .warm: jedno wspólne szkło dla wszystkich kart (bez osobnego odcienia) */
 .hd{ display:flex; align-items:center; gap:var(--s1); min-height:20u; position:relative; z-index:2; }
 .hd .ic{ width:12u; height:12u; color:#2A2D31; flex:none; }
 .hd .tt{ font-size:var(--fs-md); font-weight:600; letter-spacing:-.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
