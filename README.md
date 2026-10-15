@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.3-a3e635?style=flat-square" alt="v1.7.3">
+  <img src="https://img.shields.io/badge/version-v1.8.0-a3e635?style=flat-square" alt="v1.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -259,6 +259,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Stairs | `custom:nuvio-stairs-card` | bottom and top light and motion sensor, light group, sequence automation |
 | Fuel prices | `custom:nuvio-fuel-card` | price sensors with labels and an optional tomorrow change sensor |
 | Air conditioning (card) | `custom:nuvio-ac-card` | climate entity, title |
+| AC remote | `custom:nuvio-acremote-card` | climate entity, title |
 | Energy week | `custom:nuvio-week-card` | consumption and production sensors, days, tap target |
 | Phases | `custom:nuvio-phases-card` | power, voltage and current per phase, maximum total and per phase power |
 | Solar | `custom:nuvio-pv-card` | power, today, inverter state and temperature, strings |
@@ -416,9 +417,12 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git tag -a v1.7.3 -m "Nuvio 1.7.3" && git push origin v1.7.3`.
+Only tagging by hand: `git tag -a v1.8.0 -m "Nuvio 1.8.0" && git push origin v1.8.0`.
 
 ## Changelog
+
+### 1.8.0
+- **AC remote (new component)**: a separate card in + Add styled like an AC remote app. The unit shows animated airflow (blue when cooling, orange when heating, faster at higher fan speed, sweeping when the louvers swing), a large setpoint, a cold–warm slider with − and +, power and Eco. Mode, Fan, Sleep and Airflow tiles open a bottom panel with the options; the card only shows what the unit supports. Works in sizes S, M and L and in light and dark themes.
 
 ### 1.7.3
 - **Add component gallery (fix)**: thumbnails always use the sample previews; scaled-down live cards were cramped, empty (air conditioning) or showed a random device (robots, sensor chart, scene). Reworked the solar, rooms, power, appliance, stairs, updates, weather and mini player previews so nothing is cut off.

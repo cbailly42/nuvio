@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v1.7.3-a3e635?style=flat-square" alt="v1.7.3">
+  <img src="https://img.shields.io/badge/version-v1.8.0-a3e635?style=flat-square" alt="v1.8.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -259,6 +259,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Schody | `custom:nuvio-stairs-card` | światło i czujnik ruchu na dole i na górze, grupa świateł, automatyzacja sekwencji |
 | Ceny paliw | `custom:nuvio-fuel-card` | czujniki cen z etykietami i opcjonalny czujnik zmiany na jutro |
 | Klimatyzacja (karta) | `custom:nuvio-ac-card` | encja climate, tytuł |
+| Pilot klimatyzacji | `custom:nuvio-acremote-card` | encja climate, tytuł |
 | Energia, tydzień | `custom:nuvio-week-card` | czujniki zużycia i produkcji, liczba dni, cel po dotknięciu |
 | Fazy | `custom:nuvio-phases-card` | moc, napięcie i prąd każdej fazy, maksymalna moc łączna i fazy |
 | Fotowoltaika | `custom:nuvio-pv-card` | moc, produkcja dziś, stan i temperatura falownika, stringi |
@@ -416,9 +417,12 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git tag -a v1.7.3 -m "Nuvio 1.7.3" && git push origin v1.7.3`.
+Sam tag ręcznie: `git tag -a v1.8.0 -m "Nuvio 1.8.0" && git push origin v1.8.0`.
 
 ## Lista zmian
+
+### 1.8.0
+- **Pilot klimatyzacji (nowy komponent)**: osobna karta w „Dodaj komponent” w stylu aplikacji pilota. Jednostka z animowanym nawiewem (niebieski przy chłodzeniu, pomarańczowy przy grzaniu, szybszy przy wyższym biegu wentylatora, kołysze się przy ruchomych żaluzjach), duża nastawa, suwak zimno–ciepło z − i +, przycisk zasilania i Eko. Kafle Tryb, Wentylator, Sen i Nawiew otwierają dolny panel z opcjami; karta pokazuje tylko to, co obsługuje dany klimatyzator. Działa w rozmiarach S, M i L oraz w jasnym i ciemnym motywie.
 
 ### 1.7.3
 - **Galeria „Dodaj komponent” (poprawka)**: miniatury zawsze pokazują przykładowe podglądy; pomniejszone karty na żywo były ściśnięte, puste (klimatyzacja) albo pokazywały przypadkowe urządzenie (roboty, czujnik z wykresem, scena). Poprawione podglądy fotowoltaiki, pokoi, mocy, AGD, schodów, aktualizacji, pogody i mini odtwarzacza, żeby nic nie było ucięte.

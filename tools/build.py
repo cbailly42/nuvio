@@ -28,6 +28,7 @@ SHARED = [
 CARDS = [
     'cards/energy-card.part.js',
     'cards/ac-card.part.js',
+    'cards/remote-card.part.js',
     'cards/light-card.part.js',
     'cards/switch-card.part.js',
     'cards/solar-card.part.js',
