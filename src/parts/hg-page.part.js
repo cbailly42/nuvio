@@ -186,7 +186,7 @@ class HGPage extends HTMLElement {
     if (!this._built) this._build();
     for (const el of this._cards) el.hass = h;
     if (this._wxEl) this._wxEl.hass = h;
-    if (first) { this._subscribe(); HGVer.check(h, true); }
+    if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
     // górny pasek / hub zależą tylko od kilku encji -> przerysuj tylko gdy zmienił się ich obiekt stanu
     const w = this._watch();
     if (!old || old.user !== h.user || w.some((e) => old.states[e] !== h.states[e])) { this._paintTop(); this._paintHub(); }
@@ -246,6 +246,9 @@ class HGPage extends HTMLElement {
     this._syncPlay();
     this._hglSub = this._hglSub || (() => { if (!this._editing && this._built && this._hass) this._paintTop(); if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
     HGL.subs.add(this._hglSub);
+    /* zmiana języka bez przeładowania: strona przerysowana od razu (karty, pasek); HA i tak generuje dashboard od nowa (config-refresh) */
+    this._onLang = this._onLang || (() => { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; this._build(); });
+    window.addEventListener('hg-lang', this._onLang);
     hgBmPassThrough(true);
     this.toggleAttribute('lite', hgLite());
     this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this);
@@ -254,7 +257,7 @@ class HGPage extends HTMLElement {
     if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
   }
   disconnectedCallback() {
-    HGL.subs.delete(this._hglSub);
+    HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
     if (this._config && this._config.redirect) return;
@@ -679,6 +682,9 @@ class HGPage extends HTMLElement {
     return `<div class="mfoot" role="presentation"><span class="mver">Nuvio v${H.esc(run)}</span>${pill}</div>`; }
   /* Kiosk Mode zainstalowany: administrator wyłącza go do końca sesji tej karty i włącza z powrotem (pełne przeładowanie, bo kiosk czyta adres przy starcie) */
   _lockItem() { return window.HGWall && HGWall.lockOn() ? `<button role="menuitem" data-act="walllock">${H.icon('mdi:lock-outline')}<span>${hgTr('Zablokuj ekran', 'Lock screen')}</span></button>` : ''; }
+  /* język dla każdego (także bez dostępu do ustawień): kolejny z listy, od razu bez przeładowania */
+  _langItem() { const cur = hgCurLang(), L = HGLang.LIST, nx = L[(L.findIndex((x) => x[0] === cur) + 1) % L.length];
+    return `<button role="menuitem" data-act="lang" data-l="${nx[0]}" lang="${nx[0]}">${H.icon('mdi:translate')}<span>${H.esc(nx[1])}</span></button>`; }
   _kmItem() { if (!window.KioskMode || !this._isAdmin()) return ''; const off = hgKmOff() || /[?&]disable_km\b/.test(location.search);
     return `<button role="menuitem" data-act="kmtoggle">${H.icon(off ? 'mdi:monitor-lock' : 'mdi:monitor-off')}<span>${off ? hgTr('Włącz tryb kiosku', 'Turn kiosk mode on') : hgTr('Wyłącz tryb kiosku', 'Turn kiosk mode off')}</span></button>`; }
   _kmToggle() { const off = hgKmOff() || /[?&]disable_km\b/.test(location.search), q = new URLSearchParams(location.search); hgKmOff(!off); if (off) q.delete('disable_km'); else q.set('disable_km', '');
@@ -689,7 +695,7 @@ class HGPage extends HTMLElement {
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._lockItem()}${this._kmItem()}${this._updFoot()}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._langItem()}${this._lockItem()}${this._kmItem()}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -842,6 +848,7 @@ class HGPage extends HTMLElement {
       case 'updreload': { location.reload(); return; }
       case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
       case 'walllock': this._menuOpen = false; this._paintTop(true); HGWall.page = HGWall.page || this; HGWall.hass = HGWall.hass || this._hass; return HGWall.lockNow();
+      case 'lang': this._menuOpen = false; this._paintTop(true); return HGLang.set(this._hass, t.dataset.l, this);
       case 'kmtoggle': this._menuOpen = false; this._paintTop(true); return this._kmToggle();
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);

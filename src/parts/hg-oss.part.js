@@ -61,8 +61,25 @@ const HG_I18N = {
     hub: 'Household', hub_sub: 'Who is home right now', na_req: 'No entities, needs {x}', req_rooms: 'areas (Settings → Areas)', req_media: 'a media player (media_player)', req_cams: 'a camera (camera)', req_family: 'people (person)',
     req_energy: 'a power sensor (sensor, W/kW)', req_map: 'a person or a device with location', req_cal: 'a calendar (calendar)' },
 };
-const hgLang = (h, pref) => { const l = pref || (h && ((h.locale && h.locale.language) || h.language)) || navigator.language || 'en'; return /^pl/i.test(l) ? 'pl' : 'en'; };
+/* język: pref (wybór) albo język przeglądarki; nieobsługiwany -> angielski. h zostaje w podpisie dla zgodności wywołań */
+const hgLang = (h, pref) => { const l = String(pref || navigator.language || 'en').toLowerCase().split(/[-_]/)[0]; return HG_I18N[l] ? l : 'en'; };
 const hgI = (lang, k) => (HG_I18N[lang] || HG_I18N.en)[k] || HG_I18N.en[k] || k;
+/* osobisty wybór języka (Ustawienia → Język, menu użytkownika): '' = automatycznie. Kolejność: ten wybór, opcja language strategii, kreator, przeglądarka.
+   Zapis w localStorage (od razu przy starcie) i w danych użytkownika HA (inne urządzenia). Nowy język: wpis w LIST, słownik w HG_I18N i pary hgTr. */
+const HGLang = window.__hgLangSel || (window.__hgLangSel = {
+  KEY: 'home-glass:lang',
+  LIST: [['pl', 'Polski'], ['en', 'English']],
+  ok(v) { return this.LIST.some((x) => x[0] === v); },
+  /* czytane przy każdym hgTr: kopia w pamięci, localStorage tylko raz */
+  get() { if (this._v === undefined) { let v = ''; try { v = localStorage.getItem(this.KEY); } catch (e) { v = ''; } this._v = this.ok(v) ? v : ''; } return this._v; },
+  _w(v) { this._v = v; try { if (v) localStorage.setItem(this.KEY, v); else localStorage.removeItem(this.KEY); } catch (e) { /* tryb prywatny */ } },
+  /* raz na sesję: wybór z innego urządzenia (dane użytkownika HA) wygrywa z kopią lokalną */
+  sync(h, el) { if (this._s || !h || !h.callWS) return; this._s = 1;
+    h.callWS({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { if (!r || !('value' in r) || r.value === undefined) return; const v = this.ok(r.value) ? r.value : ''; if (v !== this.get()) { this._w(v); this.refresh(el); } }, () => {}); },
+  set(h, v, el) { v = this.ok(v) ? v : ''; this._w(v); if (h && h.callWS) h.callWS({ type: 'frontend/set_user_data', key: this.KEY, value: v || null }).catch(() => {}); this.refresh(el); },
+  /* bez przeładowania strony: HA generuje dashboard od nowa (etykiety nawigacji i widoków ze strategii), karty rysują się w nowym języku */
+  refresh(el) { window.dispatchEvent(new CustomEvent('hg-lang')); if (el && el.isConnected) el.dispatchEvent(new Event('config-refresh', { bubbles: true, composed: true })); },
+});
 
 /* --- model domu z rejestrów HA (bez żadnych encji „na sztywno”) --- */
 const HGModel = {
@@ -97,7 +114,7 @@ async function hgGenerate(hass, opt) {
   let E = null; if (!wiz) try { E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
   /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */
   const vOff = hgViewOff(hass, (E && E.doc && E.doc.data && E.doc.data.wiz) || wiz);
-  const lang = hgLang(hass, opt.language || (wiz && wiz.lang)), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
+  const lang = hgLang(hass, HGLang.get() || opt.language || (wiz && wiz.lang)), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
   const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);
@@ -332,7 +349,7 @@ const HG_WZ_CSS = `<style>
 const HGWizard = {
   async open(page) {
     const h = page._hass; if (!h || document.getElementById('hg-wiz')) return; const M = await HGModel.load(h);
-    let lang = hgLang(h, window.__hgLangOpt) === 'en' ? 'en' : 'pl', step = 0, dir = 1, shown = -1, hit = ''; const app = Object.assign({}, (HGL.data && HGL.data.app) || {});
+    let lang = hgCurLang(), picked = false, step = 0, dir = 1, shown = -1, hit = ''; const app = Object.assign({}, (HGL.data && HGL.data.app) || {});
     const all = [['dashboard', 'panel', 'mdi:view-dashboard-outline'], ['rooms', 'rooms', 'mdi:sofa-outline'], ['multimedia', 'media', 'mdi:play-box-multiple-outline'], ['kamery', 'cams', 'mdi:cctv'], ['family', 'family', 'mdi:account-group-outline'], ['energia', 'energy', 'mdi:lightning-bolt-outline'], ['mapa', 'map', 'mdi:map-outline'], ['kalendarz', 'calendar', 'mdi:calendar-month-outline']];
     const cnt = { mapa: M.persons.length + M.trackers.length, kalendarz: M.calendars.length, dashboard: (M.climate.length ? 1 : 0) + M.scenes.length + (M.power.length ? 1 : 0), rooms: Object.keys(M.areas).length, multimedia: M.media.length, kamery: M.cams.length, family: M.persons.length, energia: M.power.length };
     const has = Object.fromEntries(all.map(([v]) => [v, v === 'dashboard' || cnt[v] > 0]));
@@ -385,7 +402,7 @@ const HGWizard = {
     document.addEventListener('keydown', onKey);
     d.addEventListener('click', async (e) => { const b = e.target.closest('button'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
       hit = (b.dataset.v && `[data-v="${b.dataset.v}"]`) || (b.dataset.a && `[data-a="${CSS.escape(b.dataset.a)}"]`) || (b.dataset.l && `[data-l="${b.dataset.l}"]`) || '';
-      if (b.dataset.l) { lang = b.dataset.l; return draw(); }
+      if (b.dataset.l) { lang = b.dataset.l; picked = true; return draw(); }
       if (b.dataset.v) { sel.has(b.dataset.v) ? sel.delete(b.dataset.v) : sel.add(b.dataset.v); return draw(); }
       if (b.dataset.a) { hid.has(b.dataset.a) ? hid.delete(b.dataset.a) : hid.add(b.dataset.a); return draw(); }
       if (b.dataset.c) { app.accent = b.dataset.c; return draw(); }
@@ -393,7 +410,8 @@ const HGWizard = {
       if (b.dataset.j) return go(+b.dataset.j);
       if (b.dataset.x === 'all') { hid.clear(); return draw(); } if (b.dataset.x === 'none') { areas.forEach((x) => hid.add(x.area_id)); return draw(); }
       if (b.dataset.x === 'next') return go(step + 1); if (b.dataset.x === 'back') return go(step - 1);
-      if (b.dataset.x === 'go' || b.dataset.x === 'skip') { HGL.data.wiz = b.dataset.x === 'go' ? { lang, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { lang, ts: Date.now() };
+      if (b.dataset.x === 'go' || b.dataset.x === 'skip') { HGL.data.wiz = b.dataset.x === 'go' ? { lang, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { ...(picked ? { lang } : {}), ts: Date.now() };
+        if (HGLang.get() && HGLang.get() !== lang && (picked || b.dataset.x === 'go')) HGLang.set(page._hass, lang);   /* osobisty wybór idzie za decyzją w kreatorze */
         if (b.dataset.x === 'go') { HGL.data.app = app; if (typeof HGApp !== 'undefined') HGApp.apply(); }
         await HGL.save(page._hass); document.removeEventListener('keydown', onKey); d.remove(); if (!window.__hgDryRun) location.reload(); } });
   },
@@ -461,7 +479,7 @@ const HGLookX = {
   pkg(p) { const reg = (this.res || []).some((u) => p.re.test(u)); let live = false; try { live = p.live(); } catch (e) { live = false; } return { reg, live, ok: reg && live }; },
   html(page) {
     if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g" data-tab="views"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${hgTr('Wczytywanie…', 'Loading…')}</small></section>`; }
-    const lang = hgLang(page._hass, window.__hgLangOpt || (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
+    const lang = hgCurLang(), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
     for (const c of CU) has[c.p] = true; const tl = (d) => (d[4] ? H.esc(d[4].n) : t(d[1]));
     const auto = !!(page._config && page._config._hgAuto);
     /* kto widzi widok: tylko admin na wspólnym dashboardzie (lista osób z HGUsers) */
@@ -503,7 +521,7 @@ const HGLookX = {
       if (a === 'lx-ci') { c.i = b.dataset.i; return page._eLook(); }
       if (a === 'lx-cl') { c.lay = b.dataset.l; return page._eLook(); }
       if (a === 'lx-cw') { c.pw = b.dataset.w; hgPwMark(b); if (c.old && page._config.view === c.old) { HGL.data.pw = Object.assign({}, HGL.data.pw, { [c.old]: c.pw }); page._panelGrid(page.getAttribute('mode')); } return; }
-      const w = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {}), CU = (w.custom || []).slice(), cur = this.views();
+      const w = HGL.data.wiz = Object.assign({ ts: Date.now() }, HGL.data.wiz || {}), CU = (w.custom || []).slice(), cur = this.views();
       if (a === 'lx-cd') { if (!c.del) { c.del = 1; return page._eLook(); }
         w.custom = CU.filter((x) => x.p !== c.old); w.views = cur.order.filter((v) => cur.on.has(v) && v !== c.old && v !== 'dashboard'); w.ts = Date.now(); this.cv = null; this.pend = null; await HGL.save(h);
         page._eToast(hgTr('Usunięto widok: ', 'View deleted: ') + c.n); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
@@ -518,7 +536,7 @@ const HGLookX = {
     if (a === 'lx-rf') { if (!window.__hgDryRun) location.reload(); return; }
     if (a === 'lx-vu') { this.vuOpen = this.vuOpen === b.dataset.v ? null : b.dataset.v; return page._eLook(); }
     if (a === 'lx-vut') { if (!page._isAdmin() || HGL.mode !== 'shared') return; const v = b.dataset.v, u = b.dataset.u; if (!v || !u || u === h.user.id) return;
-      const w = HGL.data.wiz = Object.assign({}, HGL.data.wiz || { lang: hgLang(h), ts: Date.now() }), vu = w.vu = Object.assign({}, w.vu || {}), s = new Set(vu[v] || []);
+      const w = HGL.data.wiz = Object.assign({}, HGL.data.wiz || { ts: Date.now() }), vu = w.vu = Object.assign({}, w.vu || {}), s = new Set(vu[v] || []);
       s.has(u) ? s.delete(u) : s.add(u); if (s.size) vu[v] = [...s]; else delete vu[v]; if (!Object.keys(vu).length) delete w.vu;
       const r = await HGL.save(h); page._eToast(r === 'ha' ? hgTr('Zapisano. Ta osoba zobaczy zmianę od razu.', 'Saved. The change reaches this person right away.') : hgTr('Zapisano tylko lokalnie', 'Saved locally only')); return page._eLook(); }
     if (a === 'lx-v' || a === 'lx-up' || a === 'lx-dn') { const V = this.views(), v = b.dataset.v, o = V.order.slice(), on = new Set(V.on), i = o.indexOf(v);
@@ -526,7 +544,7 @@ const HGLookX = {
       if (a === 'lx-up' && i > 1) [o[i - 1], o[i]] = [o[i], o[i - 1]];
       if (a === 'lx-dn' && i < o.length - 1) [o[i + 1], o[i]] = [o[i], o[i + 1]];
       this.pend = { order: o, on }; return page._eLook(); }
-    if (a === 'lx-apply' && this.pend) { const w = HGL.data.wiz || { lang: hgLang(h), ts: Date.now() };
+    if (a === 'lx-apply' && this.pend) { const w = HGL.data.wiz || { ts: Date.now() };
       HGL.data.wiz = Object.assign({}, w, { views: this.pend.order.filter((v) => this.pend.on.has(v)), ts: Date.now() }); this.pend = null; await HGL.save(h);
       page._eToast(hgTr('Zapisano widoki – odświeżanie…', 'Views saved – reloading…')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
     if (a === 'lx-k') { const k = this.kio = Object.assign({}, this.kio || {}), key = b.dataset.k;

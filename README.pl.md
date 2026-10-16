@@ -53,7 +53,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 - **Kopia układu** (administrator): eksport i import całego układu jako JSON z wersją w **Wygląd → Kopia układu**, z opcją Zastąp albo Połącz i przywracaniem jednym kliknięciem. Zobacz [Kopia układu](#kopia-układu).
 - **Tryb tabletu ściennego** (domyślnie wyłączony): po bezczynności pojawia się szklany wygaszacz z zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk lub czujnik ruchu. Czas bezczynności, przyciemnienie, źródło zdjęcia i czujnik ustawisz w **Wygląd → Tryb tabletu ściennego**. Zobacz [Tryb tabletu ściennego](#tryb-tabletu-ściennego).
 - **Wspólny dashboard**: domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. W **Ustawienia → Użytkownicy** administrator może odznaczyć osobę, żeby miała własny układ i sama go edytowała. Zobacz [Wspólny dashboard](#wspólny-dashboard).
-- **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku z opcji `language:`, a bez niej w języku wybranym w kreatorze albo w profilu HA; liczby i daty w tym samym formacie.
+- **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w wybranym języku. Zmiana w **Ustawienia → Wygląd → Język** albo w menu użytkownika (prawy górny róg) działa od razu, bez przeładowania, i zapisuje się na Twoim koncie HA. Zobacz [Język](#język); liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
 - **Tryb jasny i ciemny**, obsługa dotyku, szacunek dla „ogranicz ruch”.
 
@@ -344,8 +344,21 @@ Opcjonalne ustawienia strategii:
 ```yaml
 strategy:
   type: custom:nuvio
-  language: pl        # pl | en (ma pierwszeństwo przed kreatorem; domyślnie: kreator, potem język Twojego HA)
+  language: pl        # pl | en: domyślny język pulpitu (osobisty wybór w Ustawieniach i tak wygrywa)
 ```
+
+### Język
+
+Nuvio mówi po polsku i po angielsku. Każdy wybiera swój język w **Ustawienia → Wygląd → Język** (Automatycznie / Polski / English) albo pozycją języka w menu użytkownika, dostępną dla wszystkich, także bez dostępu do ustawień. Cały pulpit zmienia się od razu, bez przeładowania strony: nawigacja, karty, ustawienia, tryb edycji, komunikaty, liczby i daty. Wybór zapisuje się na tym urządzeniu i na Twoim koncie Home Assistant, więc działa też na innych urządzeniach.
+
+Który język jest używany (wygrywa pierwszy pasujący):
+
+1. Twój wybór w Ustawieniach albo w menu użytkownika.
+2. Opcja strategii `language:` (domyślny język pulpitu w YAML).
+3. Język wybrany w kreatorze pierwszego uruchomienia.
+4. Język przeglądarki: polski, jeśli przeglądarka jest po polsku, w przeciwnym razie angielski.
+
+**Nowy język**: dodaj wpis w `HGLang.LIST` i słownik w `HG_I18N` w `src/parts/hg-oss.part.js`, potem teksty kreatora w `HG_WZ_T`. Teksty kart to pary `hgTr('Polski', 'English')` w miejscu użycia (zobacz `src/parts/hg-core.part.js`); dla nowego języka `hgTr` dostaje kolejny argument.
 
 > [!TIP]
 > Aby przejąć wygenerowany pulpit jako zwykły YAML, użyj *Przejmij kontrolę* w edytorze pulpitu. Wszystkie karty `custom:nuvio-*` dalej działają.
@@ -423,6 +436,9 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 Sam tag ręcznie: `git fetch origin && git tag -a v2.8.4 origin/main -m "Nuvio 2.8.4" && git push origin v2.8.4`.
 
 ## Lista zmian
+
+### 2.9.0
+- Nowość: wybór języka w **Ustawienia → Wygląd → Język** (Automatycznie / Polski / English) i w menu użytkownika dla wszystkich. Zmiana działa od razu, bez przeładowania strony, a wybór zapisuje się dla każdej osoby (to urządzenie i konto HA). Domyślnym językiem jest teraz język przeglądarki (polski albo angielski, w innym razie angielski) zamiast języka profilu HA.
 
 ### 2.8.4
 - Poprawka: karta robotów pokazuje teraz każdy czujnik eksploatacji z jego własną jednostką. Wcześniej każda wartość była pokazywana jako procent, więc szczotka główna z 255 h do wymiany miała 255%. Czujniki w `%` zachowują pasek zużycia, a czujniki w godzinach, dniach i innych jednostkach pokazują wartość z jednostką bez paska. Wartości ostatniego sprzątania (czas, powierzchnia, łącznie) też biorą jednostkę z encji.
