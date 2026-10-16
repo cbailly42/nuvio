@@ -165,7 +165,7 @@ class HGPage extends HTMLElement {
       notifications_action: { notifications: true }, mail_action: { notifications: true },
       menu: [], storage_key: 'home-glass', zoom: { min: 0.8, max: 1.3, step: 0.1 },
     }, c);
-    if (this._config._hgLang) window.__hgLang = this._config._hgLang;   /* język wybrany w strategii (kreator / opcja language) */
+    if (this._config._hgLang) { window.__hgLang = this._config._hgLang; window.__hgLangOpt = this._config._hgLangOpt || ''; }   /* język wybrany w strategii; opcja language ma pierwszeństwo przed kreatorem */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
     this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
