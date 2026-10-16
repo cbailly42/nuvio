@@ -424,6 +424,9 @@ Only tagging by hand: `git fetch origin && git tag -a v2.8.3 origin/main -m "Nuv
 
 ## Changelog
 
+### 2.8.4
+- Fixed: the robots card now shows each maintenance sensor with its own unit. Before, every value was shown as a percentage, so a main brush with 255 h left read 255%. Sensors in `%` keep the wear bar; sensors in hours, days or other units show the value and unit without a bar. The last cleaning values (time, area, total) also take their unit from the entity.
+
 ### 2.8.3
 - Fixed: the `language:` strategy option now always wins. Before, it was ignored once the wizard (or saving views or rooms) had stored a language, so the dashboard could stay in Polish even with `language: en`.
 

@@ -424,6 +424,9 @@ Sam tag ręcznie: `git fetch origin && git tag -a v2.8.3 origin/main -m "Nuvio 2
 
 ## Lista zmian
 
+### 2.8.4
+- Poprawka: karta robotów pokazuje teraz każdy czujnik eksploatacji z jego własną jednostką. Wcześniej każda wartość była pokazywana jako procent, więc szczotka główna z 255 h do wymiany miała 255%. Czujniki w `%` zachowują pasek zużycia, a czujniki w godzinach, dniach i innych jednostkach pokazują wartość z jednostką bez paska. Wartości ostatniego sprzątania (czas, powierzchnia, łącznie) też biorą jednostkę z encji.
+
 ### 2.8.3
 - Poprawka: opcja strategii `language:` ma teraz zawsze pierwszeństwo. Wcześniej była pomijana, gdy kreator (albo zapis widoków lub pokoi) zapisał już język, więc pulpit mógł zostać po polsku mimo `language: en`.
 

@@ -22,6 +22,8 @@ const hgRobotState = (s) => {
   if (st === 'idle') return [hgTr('Bezczynny', 'Idle'), 'idle'];
   return [H.T(window.__hgHass, s), 'idle'];
 };
+const hgUnit = (h, e) => String((h.states[e] && h.states[e].attributes.unit_of_measurement) || '').trim();
+const hgUV = (v, u) => H.fmt(v, Math.abs(v) >= 10 ? 0 : 1) + (u ? (u.startsWith('°') ? '' : ' ') + u : '');
 const hgAgo = (iso) => {
   const t = Date.parse(iso); if (!isFinite(t)) return '';
   const m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -188,22 +190,26 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
     }
     // eksploatacja
     const cons = r.cons.filter((x) => H.ok(h.states[x.e]) && H.num(h, x.e) != null).map((x) => {   // wartość nieliczbowa -> pomiń
-      const v = H.num(h, x.e), t = x.t && H.num(h, x.t);
+      // jednostka z encji: % -> pasek zużycia; h/min/d itp. -> sama wartość z jej jednostką (bez zgadywania procentów)
+      const v = H.num(h, x.e), t = x.t && H.ok(h.states[x.t]) ? H.num(h, x.t) : null, u = hgUnit(h, x.e), pc = u === '%';
       const lb = hgTr(x.nm, x.en), full = x.full ? hgTr(x.full[0], x.full[1]) : lb, dirty = /Czujnik/.test(x.nm) && v <= 0;
-      return `<div class="cs ${v < 10 ? 'bad' : v <= 30 ? 'warn' : ''}" title="${H.esc(`${full}: ${Math.round(v)}%${t != null ? hgTr(`, zostało ${H.fmt(t, 0)} h`, `, ${H.fmt(t, 0)} h left`) : ''}`)}"><span class="cl">${H.esc(lb)}</span>
-        <div class="cv"><b>${Math.round(v)}%</b>${t != null ? `<em>${H.fmt(t, 0)} h</em>` : ''}</div><div class="tr"><i style="width:${Math.max(2, Math.min(100, v))}%"></i></div>${dirty ? `<span class="hint">${hgTr('Do wyczyszczenia', 'Needs cleaning')}</span>` : ''}</div>`;
+      const main = pc ? `${Math.round(v)}%` : hgUV(v, u), tt = t != null ? hgUV(t, hgUnit(h, x.t) || 'h') : '';
+      const lvl = pc ? (v < 10 ? 'bad' : v <= 30 ? 'warn' : '') : (v <= 0 ? 'bad' : '');
+      return `<div class="cs ${lvl}" title="${H.esc(`${full}: ${main}${tt ? hgTr(`, zostało ${tt}`, `, ${tt} left`) : ''}`)}"><span class="cl">${H.esc(lb)}</span>
+        <div class="cv"><b>${H.esc(main)}</b>${tt ? `<em>${H.esc(tt)}</em>` : ''}</div>${pc ? `<div class="tr"><i style="width:${Math.max(2, Math.min(100, v))}%"></i></div>` : ''}${dirty ? `<span class="hint">${hgTr('Do wyczyszczenia', 'Needs cleaning')}</span>` : ''}</div>`;
     }).join('');
     // ostatnie sprzątanie
     const kv = [];
-    const val = (e, attr) => (e && H.ok(h.states[e]) ? H.num(h, e) : (a[attr] != null ? Number(a[attr]) : null));
-    const tm = val(r.time, 'cleaning_time'), ar = val(r.area, 'cleaned_area'), cnt = val(r.count, 'cleaning_count'), tot = val(r.total, 'total_cleaned_area');
-    if (tm != null) kv.push([hgTr('Czas', 'Time'), H.fmt(tm, 0), 'min']); if (ar != null) kv.push([hgTr('Powierzchnia', 'Area'), H.fmt(ar, 0), 'm²']);
+    // wartość z encji (z jej jednostką) albo z atrybutu odkurzacza (domyślna jednostka)
+    const val = (e, attr, du) => (e && H.ok(h.states[e]) && H.num(h, e) != null ? [H.num(h, e), hgUnit(h, e) || du] : (a[attr] != null && isFinite(a[attr]) ? [Number(a[attr]), du] : null));
+    const tm = val(r.time, 'cleaning_time', 'min'), ar = val(r.area, 'cleaned_area', 'm²'), cnt = val(r.count, 'cleaning_count', ''), tot = val(r.total, 'total_cleaned_area', 'm²');
+    if (tm) kv.push([hgTr('Czas', 'Time'), H.fmt(tm[0], Math.abs(tm[0]) >= 10 ? 0 : 1), tm[1]]); if (ar) kv.push([hgTr('Powierzchnia', 'Area'), H.fmt(ar[0], Math.abs(ar[0]) >= 10 ? 0 : 1), ar[1]]);
     if (r.hist && H.ok(h.states[r.hist])) { const dt = new Date(h.states[r.hist].state); if (isFinite(dt)) {
       const d0 = new Date(); d0.setHours(0, 0, 0, 0); const dd = new Date(dt); dd.setHours(0, 0, 0, 0); const n = Math.round((d0 - dd) / 86400000);
       const hm = dt.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' });
       kv.push([hgTr('Kiedy', 'When'), n === 0 ? hgTr(`dziś ${hm}`, `today ${hm}`) : n === 1 ? hgTr(`wczoraj ${hm}`, `yesterday ${hm}`) : `${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}, ${hm}`, '']); } }
-    if (cnt != null) kv.push([hgTr('Sprzątań', 'Cleanings'), H.fmt(cnt, 0), '']); if (tot != null) kv.push([hgTr('Łącznie', 'Total'), H.fmt(tot, 0), 'm²']);
-    const last = kv.length ? `<div><div class="sec">${hgTr('Ostatnie sprzątanie', 'Last cleaning')}</div><div class="kv">${kv.map(([k, v, u]) => `<div title="${H.esc(`${k}: ${v}${u ? ' ' + u : ''}`)}"><small>${k}</small><p><b>${H.esc(v)}</b>${u ? `<em>${u}</em>` : ''}</p></div>`).join('')}</div></div>` : '';
+    if (cnt) kv.push([hgTr('Sprzątań', 'Cleanings'), H.fmt(cnt[0], 0), '']); if (tot) kv.push([hgTr('Łącznie', 'Total'), H.fmt(tot[0], Math.abs(tot[0]) >= 10 ? 0 : 1), tot[1]]);
+    const last = kv.length ? `<div><div class="sec">${hgTr('Ostatnie sprzątanie', 'Last cleaning')}</div><div class="kv">${kv.map(([k, v, u]) => `<div title="${H.esc(`${k}: ${v}${u ? ' ' + u : ''}`)}"><small>${k}</small><p><b>${H.esc(v)}</b>${u ? `<em>${H.esc(u)}</em>` : ''}</p></div>`).join('')}</div></div>` : '';
     const cam = r.cam && h.states[r.cam];
     const map = cam ? `<div class="map" data-cam="${r.cam}" style="--a:${this._asp && this._asp[r.cam] || 1.25}"><div class="ph">${H.ok(cam) ? hgTr('Wczytywanie mapy…', 'Loading map…') : hgTr('Mapa niedostępna', 'Map unavailable')}</div><img alt="${hgTr('Mapa', 'Map')} ${H.esc(nm)}" ${this._src && this._src[r.cam] ? `src="${this._src[r.cam]}" class="ok"` : ''}>${room ? `<span class="rm">${H.esc(room)}</span>` : ''}</div>` : '';
     const ill = map ? '' : `<div class="media ill" aria-hidden="true"><span class="ring" style="--p:${batV != null ? Math.round(batV) : 0}"><span class="in">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span></span><b>${H.esc(lbl)}</b><small>${batV != null ? `${hgTr('Bateria', 'Battery')} ${Math.round(batV)}%` : H.esc(sub)}</small>${cls === 'chg' || cls === 'dock' ? H.icon('mdi:home-lightning-bolt-outline', 'dock') : ''}</div>`;
