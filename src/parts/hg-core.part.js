@@ -78,9 +78,9 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
   document.addEventListener('visibilitychange', f); f();
 })();
 
-/* język interfejsu kart (pl / en): wybór z kreatora (dane użytkownika), inaczej język profilu HA.
+/* język interfejsu kart (pl / en): opcja language strategii, potem wybór z kreatora (dane użytkownika), inaczej język profilu HA.
    hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, (w && w.lang) || window.__hgLang); };
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, window.__hgLangOpt || (w && w.lang) || window.__hgLang); };
 const hgTr = (pl, en) => (hgCurLang() === 'en' ? en : pl);
 const HG_LOC = () => (hgCurLang() === 'en' ? 'en-GB' : 'pl-PL');
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */

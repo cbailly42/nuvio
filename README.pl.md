@@ -53,7 +53,7 @@ z Home Assistant i generuje widoki. Potem wszystko zmienisz w trybie edycji.
 - **Kopia układu** (administrator): eksport i import całego układu jako JSON z wersją w **Wygląd → Kopia układu**, z opcją Zastąp albo Połącz i przywracaniem jednym kliknięciem. Zobacz [Kopia układu](#kopia-układu).
 - **Tryb tabletu ściennego** (domyślnie wyłączony): po bezczynności pojawia się szklany wygaszacz z zegarem, datą i zdjęciem, który przyciemnia ekran; wybudza go dotyk lub czujnik ruchu. Czas bezczynności, przyciemnienie, źródło zdjęcia i czujnik ustawisz w **Wygląd → Tryb tabletu ściennego**. Zobacz [Tryb tabletu ściennego](#tryb-tabletu-ściennego).
 - **Wspólny dashboard**: domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. W **Ustawienia → Użytkownicy** administrator może odznaczyć osobę, żeby miała własny układ i sama go edytowała. Zobacz [Wspólny dashboard](#wspólny-dashboard).
-- **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku wybranym w kreatorze (albo `language:` / profil HA); liczby i daty w tym samym formacie.
+- **Interfejs po polsku i angielsku**: karty, tryb edycji i wygląd w języku z opcji `language:`, a bez niej w języku wybranym w kreatorze albo w profilu HA; liczby i daty w tym samym formacie.
 - **Tryb edycji z klawiatury**: strzałki na uchwycie kafla przesuwają go, strzałki góra/dół zmieniają kolejność encji na listach.
 - **Tryb jasny i ciemny**, obsługa dotyku, szacunek dla „ogranicz ruch”.
 
@@ -344,7 +344,7 @@ Opcjonalne ustawienia strategii:
 ```yaml
 strategy:
   type: custom:nuvio
-  language: pl        # pl | en (domyślnie: język Twojego HA)
+  language: pl        # pl | en (ma pierwszeństwo przed kreatorem; domyślnie: kreator, potem język Twojego HA)
 ```
 
 > [!TIP]
@@ -423,6 +423,9 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 Sam tag ręcznie: `git fetch origin && git tag -a v2.8.2 origin/main -m "Nuvio 2.8.2" && git push origin v2.8.2`.
 
 ## Lista zmian
+
+### 2.8.3
+- Poprawka: opcja strategii `language:` ma teraz zawsze pierwszeństwo. Wcześniej była pomijana, gdy kreator (albo zapis widoków lub pokoi) zapisał już język, więc pulpit mógł zostać po polsku mimo `language: en`.
 
 ### 2.8.2
 - Poprawka: gdy na wygaszaczu Szkło Minimal otwarty jest pinpad, ekran nie jest już przyciemniany. Tło, treść i kula asystenta są rozmyte, a pinpad pozostaje czytelny.

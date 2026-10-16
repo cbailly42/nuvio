@@ -97,7 +97,7 @@ async function hgGenerate(hass, opt) {
   let E = null; if (!wiz) try { E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
   /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */
   const vOff = hgViewOff(hass, (E && E.doc && E.doc.data && E.doc.data.wiz) || wiz);
-  const lang = hgLang(hass, (wiz && wiz.lang) || opt.language), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
+  const lang = hgLang(hass, opt.language || (wiz && wiz.lang)), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
   const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);
@@ -127,7 +127,7 @@ async function hgGenerate(hass, opt) {
   const base = (view, title, sub, cards, panel, extra) => ({ type: 'custom:hg-page', view, brand, title, subtitle: sub, user: {}, tabs, rail, phone_nav: phone, rail_overflow: V.slice(5).map((v) => v[1]),
     menu: [{ label: t('profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: t('settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
     hub: HUB === false ? null : HUB && typeof HUB === 'object' && (HUB.persons || M.persons).length ? { title: HUB.title || t('hub'), subtitle: HUB.subtitle ?? t('hub_sub'), persons: HUB.persons || M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : M.persons.length ? { title: t('hub'), subtitle: t('hub_sub'), persons: M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : null,
-    back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, ...(extra || {}) });
+    back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, _hgLangOpt: opt.language || '', ...(extra || {}) });
   const scroll = { scroll: true, columns: '1fr 1fr', auto_rows: 'auto', phone_columns: '1fr', tablet: { columns: '1fr 1fr' } };
   const one = (a) => ({ wide: true, scroll: true, columns: '1fr', auto_rows: 'auto', areas: `"${a}"`, phone_areas: `"${a}"`, phone_columns: '1fr', tablet: { columns: '1fr' } });
   const dash = [];
@@ -332,7 +332,7 @@ const HG_WZ_CSS = `<style>
 const HGWizard = {
   async open(page) {
     const h = page._hass; if (!h || document.getElementById('hg-wiz')) return; const M = await HGModel.load(h);
-    let lang = hgLang(h) === 'en' ? 'en' : 'pl', step = 0, dir = 1, shown = -1, hit = ''; const app = Object.assign({}, (HGL.data && HGL.data.app) || {});
+    let lang = hgLang(h, window.__hgLangOpt) === 'en' ? 'en' : 'pl', step = 0, dir = 1, shown = -1, hit = ''; const app = Object.assign({}, (HGL.data && HGL.data.app) || {});
     const all = [['dashboard', 'panel', 'mdi:view-dashboard-outline'], ['rooms', 'rooms', 'mdi:sofa-outline'], ['multimedia', 'media', 'mdi:play-box-multiple-outline'], ['kamery', 'cams', 'mdi:cctv'], ['family', 'family', 'mdi:account-group-outline'], ['energia', 'energy', 'mdi:lightning-bolt-outline'], ['mapa', 'map', 'mdi:map-outline'], ['kalendarz', 'calendar', 'mdi:calendar-month-outline']];
     const cnt = { mapa: M.persons.length + M.trackers.length, kalendarz: M.calendars.length, dashboard: (M.climate.length ? 1 : 0) + M.scenes.length + (M.power.length ? 1 : 0), rooms: Object.keys(M.areas).length, multimedia: M.media.length, kamery: M.cams.length, family: M.persons.length, energia: M.power.length };
     const has = Object.fromEntries(all.map(([v]) => [v, v === 'dashboard' || cnt[v] > 0]));
@@ -461,7 +461,7 @@ const HGLookX = {
   pkg(p) { const reg = (this.res || []).some((u) => p.re.test(u)); let live = false; try { live = p.live(); } catch (e) { live = false; } return { reg, live, ok: reg && live }; },
   html(page) {
     if (!this.M || !this.res) { this.prep(page); return `<section class="lk-g" data-tab="views"><h4>${H.icon('mdi:view-carousel-outline')}${hgTr('Widoki', 'Views')}</h4><small class="lk-hn">${hgTr('Wczytywanie…', 'Loading…')}</small></section>`; }
-    const lang = hgLang(page._hass, (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
+    const lang = hgLang(page._hass, window.__hgLangOpt || (HGL.data.wiz || {}).lang), t = (k) => hgI(lang, k), has = hgViewHas(this.M), V = this.views(), CU = (HGL.data.wiz || {}).custom || [], D = Object.fromEntries([...HG_VIEW_DEF.map((v) => [v[0], v]), ...CU.map((c) => [c.p, [c.p, '', c.i || 'mdi:view-grid-outline', '', c]])]);
     for (const c of CU) has[c.p] = true; const tl = (d) => (d[4] ? H.esc(d[4].n) : t(d[1]));
     const auto = !!(page._config && page._config._hgAuto);
     /* kto widzi widok: tylko admin na wspólnym dashboardzie (lista osób z HGUsers) */

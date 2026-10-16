@@ -53,7 +53,7 @@ and entities from Home Assistant and generates the views. Everything can then be
 - **Layout backup** (admins): export / import the whole layout as versioned JSON in **Appearance → Layout backup**, with Replace or Merge and one click restore. See [Layout backup](#layout-backup).
 - **Wall tablet mode** (off by default): after inactivity a glass screensaver with a clock, the date and a photo fades in and dims the screen; touch or a motion sensor wakes it. Idle time, dimming, photo source and sensor are set in **Appearance → Wall tablet mode**. See [Wall tablet mode](#wall-tablet-mode).
 - **Shared dashboard**: by default everyone sees the same dashboard, set up by an administrator. In **Settings → Users** an admin can turn a person off to give them their own layout that they edit themselves. See [Shared dashboard](#shared-dashboard).
-- **Polish and English UI**: cards, edit mode and appearance follow the language picked in the wizard (or `language:` / your HA profile); numbers and dates use the same locale.
+- **Polish and English UI**: cards, edit mode and appearance follow the `language:` option if set, otherwise the language picked in the wizard or your HA profile; numbers and dates use the same locale.
 - **Keyboard friendly edit mode**: arrow keys on a tile's drag handle move it, arrow up/down reorder entity lists.
 - **Light and dark mode**, touch friendly, reduced-motion aware.
 
@@ -344,7 +344,7 @@ Optional strategy options:
 ```yaml
 strategy:
   type: custom:nuvio
-  language: en        # pl | en (default: your HA language)
+  language: en        # pl | en (overrides the wizard choice; default: wizard, then your HA language)
 ```
 
 > [!TIP]
@@ -423,6 +423,9 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 Only tagging by hand: `git fetch origin && git tag -a v2.8.2 origin/main -m "Nuvio 2.8.2" && git push origin v2.8.2`.
 
 ## Changelog
+
+### 2.8.3
+- Fixed: the `language:` strategy option now always wins. Before, it was ignored once the wizard (or saving views or rooms) had stored a language, so the dashboard could stay in Polish even with `language: en`.
 
 ### 2.8.2
 - Fixed: while the PIN pad is open on the Glass Minimal screensaver the screen is no longer darkened. The background, content and assistant orb are blurred instead, and the pad stays easy to read.
