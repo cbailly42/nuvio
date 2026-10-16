@@ -97,14 +97,14 @@ const HGRoomsX = window.HGRoomsX = {
     if (a === 'rx-ea') { const e = (this.q || '').trim(); if (!h.states[e]) return page._eToast(hgTr('Nie ma takiej encji', 'No such entity')); const V = (A.virtual || []).find((v) => v.id === r);
       if (V) V.entities = [...new Set([...(V.entities || []), e])]; else A.assign = Object.assign({}, A.assign, { [e]: r }); this.q = ''; this.dirty = true; return page._eLook(); }
     if (a === 'rx-eu') { const e = b.dataset.e, V = (A.virtual || []).find((v) => v.id === r); if (V) V.entities = (V.entities || []).filter((x) => x !== e); if (A.assign && A.assign[e] === r) { A.assign = Object.assign({}, A.assign); delete A.assign[e]; } this.dirty = true; return page._eLook(); }
-    if (a === 'rx-save') { const W = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {}); const hs = new Set(A.hide || []);
+    if (a === 'rx-save') { const W = HGL.data.wiz = Object.assign({ ts: Date.now() }, HGL.data.wiz || {}); const hs = new Set(A.hide || []);
       W.hiddenRooms = (W.hiddenRooms || []).filter((x) => hs.has(x)); W.areas = JSON.parse(JSON.stringify(A)); W.ts = Date.now(); this.dirty = false; await HGL.save(h); this.draft = null; page._eToast(hgTr('Zapisano pokoje', 'Rooms saved')); return page._eLook(); }
     const H2 = this.hd;
     if (a === 'rx-hp') { H2.hubPos = b.dataset.k; this.hdirty = true; return page._eLook(); }
     if (a === 'rx-hub') { H2.hub = H2.hub === false ? {} : false; this.hdirty = true; return page._eLook(); }
     if (a === 'rx-fa') { H2.fuel.push({ label: '', entity: '' }); this.hdirty = true; return page._eLook(); }
     if (a === 'rx-fd') { H2.fuel.splice(+b.dataset.i, 1); this.hdirty = true; return page._eLook(); }
-    if (a === 'rx-hsave') { const W = HGL.data.wiz = Object.assign({ lang: hgLang(h), ts: Date.now() }, HGL.data.wiz || {});
+    if (a === 'rx-hsave') { const W = HGL.data.wiz = Object.assign({ ts: Date.now() }, HGL.data.wiz || {});
       if (H2.hub === false) W.hub = false; else { const P0 = W.hub && W.hub.persons; if (H2.hub.title || H2.hub.subtitle || P0) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}), ...(P0 ? { persons: P0 } : {}) }; else delete W.hub; }
       const F = H2.fuel.filter((f) => f.entity).map((f) => ({ label: f.label || H.name(h, f.entity), entity: f.entity, ...(f.change ? { change: f.change } : {}) })); if (F.length) W.fuel = F; else delete W.fuel;
       const WX = Object.fromEntries(Object.entries(H2.wx || {}).filter(([, x]) => x)); if (Object.keys(WX).length) W.weather = WX; else delete W.weather;

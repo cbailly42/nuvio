@@ -1000,6 +1000,7 @@ const HG_LOOK_CSS = `
 .lk-gh{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); } .lk-gh ha-icon{ width:18px; height:18px; }
 .lk-ok{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 26px; }
 .lk-gh:focus-visible, .lk-ok:focus-visible, .lk-up:focus-visible, .lk-mini:focus-visible, .lk-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.lk-seg.lk-lng{ grid-column:auto; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); margin-top:12px; } .lk-lng button{ transition:background .2s, color .2s; }
 @media (max-width:480px){ .lk-up span{ display:none; } .lk-up{ width:44px; padding:0; justify-content:center; } .lk-g{ padding:12px; } }
 @media (max-height:500px){ .lk{ max-height:calc(100dvh - 16px); } .lk-bgs{ grid-template-columns:repeat(5, minmax(0,1fr)); } .lk-sw{ grid-template-columns:repeat(9, minmax(0,1fr)); } }
 @media (prefers-reduced-motion: reduce){ .lk *{ transition:none !important; } }
@@ -1124,7 +1125,7 @@ const HG_EDIT = {
     this._editing = false; HGL.editing = false; this.removeAttribute('editing'); clearInterval(this._eGh); for (const ct of this._eConts()) for (const g of ct.el.querySelectorAll(':scope > .hge-ghost')) g.classList.remove('hge-ghost');
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
-      HGL.notify(); if (this.isConnected) this._build(); };
+      HGL.notify(); if (this.isConnected) this._build(); if (HGLang._pend) { HGLang._pend = 0; HGLang.refresh(this); } };
     if (save) HGL.save(this._hass).then((w) => { this._eToast(w === 'ha' ? hgTr('Zapisano układ (synchronizacja przez Home Assistant)', 'Layout saved (synced via Home Assistant)') : hgTr('Zapisano układ na tym urządzeniu', 'Layout saved on this device')); fin(); }); else fin();
   },
   /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
@@ -1223,6 +1224,9 @@ const HG_EDIT = {
       for (const s of sc) HGL.set(s, {}); this._eToast(hgTr('Przywrócono domyślny układ widoku (zapisz „Gotowe”)', 'View layout reset to default (save with “Done”)')); return this._eRefresh(true); }
     if (a === 'hidden') return this._eSheet('hidden');
     if (a === 'look') return this._eLook();
+    /* zmiana języka w edycji: arkusz, pasek i karty od razu po nowemu; nawigację ze strategii HA generuje po wyjściu z edycji (niezapisany układ zostaje) */
+    if (a === 'lang') { const v = b.dataset.l || ''; if (v === HGLang.get()) return; HGLang.set(this._hass, v); HGLang._pend = 1; this._eBar(); this._eLook(); Promise.resolve(this._eRefresh(true)).then(() => { if (this._editing) { this._eBar(); this._eLook(); } });
+      return this._eToast(hgTr('Język: ', 'Language: ') + (v ? (HGLang.LIST.find((x) => x[0] === v) || [v, v])[1] : hgTr('automatycznie', 'automatic'))); }
     if (a === 'headedit') return this._eHead();
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
     if (a === 'hdok' || a === 'hdreset' || a === 'hdvar') return this._eHeadAct(a, b);
@@ -1499,6 +1503,13 @@ const HG_EDIT = {
   _eApp(f) { const A = Object.assign({}, HGApp.get()); f(A); HGApp.set(A); this._eBgSync(); },
   /* tło strony: nadpisanie z „Wygląd” ma pierwszeństwo przed zdjęciem z CFG (zmienne na hoście usuwane) */
   _eBgSync() { const A = HGApp.get(); if (A.bg) { this.style.removeProperty('--hg-bg-wide'); this.style.removeProperty('--hg-bg-portrait'); } else if (this._bgDef) { for (const [k, v] of this._bgDef) if (v) this.style.setProperty(k, `url('${v}')`); } this._glassRefresh && this._glassRefresh(); },
+  /* Język: osobisty wybór (konto HA + to urządzenie), „Automatycznie” = ustawienie pulpitu / kreator / przeglądarka */
+  _eLangHtml() {
+    const sel = HGLang.get(), w = (HGL.data && HGL.data.wiz) || {}, src = window.__hgLangOpt ? hgTr('ustawienie pulpitu', 'dashboard setting') : w.lang ? hgTr('kreator', 'setup wizard') : hgTr('język przeglądarki', 'browser language');
+    const auto = hgLang(null, window.__hgLangOpt || w.lang || ''), nm = (l) => (HGLang.LIST.find((x) => x[0] === l) || [l, l])[1];
+    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgTr('Język', 'Language')}</h4><small class="lk-hn">${hgTr('Zapisywany na Twoim koncie. Automatycznie: ', 'Saved to your account. Automatic: ')}${H.esc(nm(auto))} (${src})</small>
+      <div class="lk-seg lk-lng" role="group" aria-label="${hgTr('Język', 'Language')}">${[['', hgTr('Automatycznie', 'Automatic')], ...HGLang.LIST].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
+  },
   _eLook() {
     /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */
     { const S0 = this._eSheetEl, sc0 = S0 && S0.querySelector('.hge-sheet.lk .hs-sc'); if (sc0) { const fe = S0.querySelector(':focus') || (S0.getRootNode && S0.getRootNode().activeElement), key = fe && fe.dataset ? ['hge', 'v', 'k', 'c'].map((x) => fe.dataset[x] || '').join('|') : ''; const top = sc0.scrollTop;
@@ -1526,6 +1537,7 @@ const HG_EDIT = {
           <div class="lk-seg"><button data-hge="bgcol" data-k="color" aria-pressed="${!!bg && bg.kind === 'color'}">${hgTr('Jednolity', 'Solid')}</button><button data-hge="bgcol" data-k="gradient" aria-pressed="${!!bg && bg.kind === 'gradient'}">${hgTr('Gradient', 'Gradient')}</button></div></div></section>
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:brightness-6')}${hgTr('Przyciemnienie', 'Dimming')}<em class="dv">${dv}%</em></h4><small class="lk-hn">${hgTr('Dotyczy tła w trybie ciemnym', 'Applies to the background in dark mode')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
+      ${this._eLangHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}

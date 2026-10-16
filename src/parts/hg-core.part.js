@@ -78,11 +78,12 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
   document.addEventListener('visibilitychange', f); f();
 })();
 
-/* język interfejsu kart (pl / en): opcja language strategii, potem wybór z kreatora (dane użytkownika), inaczej język profilu HA.
+/* język interfejsu kart (pl / en): osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej język przeglądarki (domyślnie angielski).
    hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, window.__hgLangOpt || (w && w.lang) || window.__hgLang); };
-const hgTr = (pl, en) => (hgCurLang() === 'en' ? en : pl);
-const HG_LOC = () => (hgCurLang() === 'en' ? 'en-GB' : 'pl-PL');
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang)); };
+/* argumenty w kolejności HGLang.LIST (pl, en, …); brak tłumaczenia -> angielski */
+const hgTr = (...t) => { const i = HGLang.LIST.findIndex((x) => x[0] === hgCurLang()); return t[i] != null ? t[i] : t[1] != null ? t[1] : t[0]; };
+const HG_LOC = () => { const l = hgCurLang(); return { pl: 'pl-PL', en: 'en-GB' }[l] || l; };
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
 const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };
 const hgKmPath = (p) => { if (!hgKmOff() || typeof p !== 'string' || !p.startsWith('/') || /[?&]disable_km\b/.test(p)) return p; const [a, hs] = p.split('#'); return a + (a.includes('?') ? '&' : '?') + 'disable_km' + (hs !== undefined ? '#' + hs : ''); };
