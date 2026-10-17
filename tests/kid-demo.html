@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- Karta Dziecko (LiveKid), jej miejsce w galerii, opcja LiveKid w ustawieniach wygaszacza i panel dziecka na wygaszaczu,
+     na sztucznym hass (bez HA), z zamrożoną datą (czwartek 10:20). Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem
+     http://localhost:8000/tests/kid-demo.html?view=tile|gallery|settings|wall[&style=photo|board|glass][&state=present|absent|done][&lk=0][&nolk=1][&lang=en][&at=2026-10-15T14:40] -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio dziecko</title>
+<style>body{ margin:0; font-family:system-ui,sans-serif; background:#0d1218 url(../dist/nuvio-bg-default-wide.webp) center/cover fixed; color:#fff; }
+#tile{ display:flex; gap:24px; padding:28px; align-items:flex-start; } .box{ container-type:inline-size; width:340px; }</style></head><body><div id="tile"></div>
+<script type="module">
+const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+/* zamrożony czas: dzień roboczy, żeby panel na wygaszaczu był widoczny niezależnie od dnia zrobienia zrzutu */
+const D0 = Date, off = new D0(q.get('at') || '2026-10-15T10:20:00').getTime() - D0.now();
+window.Date = class extends D0 { constructor(...a) { a.length ? super(...a) : super(D0.now() + off); } static now() { return D0.now() + off; } };
+const lang = q.get('lang') === 'en' ? 'en' : 'pl'; window.__hgLangOpt = window.__nuvioLangOpt = lang;
+window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true;
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const IC = {}; customElements.define('ha-icon', class extends HTMLElement { static get observedAttributes() { return ['icon']; }
+  connectedCallback() { this.attributeChangedCallback(); }
+  attributeChangedCallback() { const n = (this.getAttribute('icon') || '').replace(/^mdi:/, ''); if (!n || this._n === n) return; this._n = n;
+    const r = this.shadowRoot || this.attachShadow({ mode: 'open' });
+    (IC[n] = IC[n] || fetch('https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/' + n + '.svg').then((x) => (x.ok ? x.text() : ''))).then((t) => { r.innerHTML = '<style>:host{display:inline-flex;vertical-align:middle;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);flex:none}svg{width:100%;height:100%;fill:currentColor}</style>' + t; }); } });
+await import('../dist/' + v.core);
+const day = '2026-10-15', iso = (t) => new Date(`${day}T${t}:00`).toISOString();
+const st = (e, s, a) => [e, { entity_id: e, state: s, attributes: a || {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() }];
+const N = 'Zosia', acts = [
+  { title: 'Rytmika', start: '09:00', end: '09:45', all_day: false }, { title: 'Spacer do parku', start: '10:30', end: '11:30', all_day: false },
+  { title: 'Zajęcia plastyczne', start: '13:15', end: '14:00', all_day: false }, { title: 'Język angielski', start: '14:30', end: '15:00', all_day: false }];
+const K = [
+  ['binary_sensor.zosia_w_placowce', 'on', { friendly_name: `${N} W placówce`, scheduled_today: true, not_scheduled_reason: null, absent: false, planned_absence: false, check_in: '08:12', check_out: null }, 'present'],
+  ['sensor.zosia_ostatnie_przyjscie', iso('08:12'), { friendly_name: `${N} Ostatnie przyjście`, device_class: 'timestamp' }, 'last_check_in'],
+  ['sensor.zosia_ostatnie_wyjscie', new Date('2026-10-14T15:47:00').toISOString(), { friendly_name: `${N} Ostatnie wyjście`, device_class: 'timestamp' }, 'last_check_out'],
+  ['sensor.zosia_posilki_dzis', 'Całodzienne', { friendly_name: `${N} Posiłki dziś`, scheduled: true, reason: null, meals: ['Całodzienne'], meal_plan: ['Całodzienne'] }, 'meals_today'],
+  ['sensor.zosia_plan_dnia', String(acts.length), { friendly_name: `${N} Plan dnia`, activities: acts, date: day }, 'today_plan'],
+  ['sensor.zosia_nieprzeczytane', '3', { friendly_name: `${N} Nieprzeczytane`, items: [], checked_items: 20 }, 'unread_feed'],
+  ['sensor.zosia_do_zaplaty', '612.5', { friendly_name: `${N} Do zapłaty`, unit_of_measurement: 'PLN', device_class: 'monetary', overdue: false, to_pay_by_category: {} }, 'bill_to_pay'],
+  ['sensor.zosia_termin_platnosci', '2026-10-20', { friendly_name: `${N} Termin płatności`, device_class: 'date' }, 'bill_due_date'],
+  ['calendar.zosia_kalendarz', 'off', { friendly_name: `${N} Kalendarz` }, 'calendar']];
+const S = Object.fromEntries([
+  st('weather.dom', 'partlycloudy', { friendly_name: 'Dom', temperature: 14, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, pressure_unit: 'hPa', temperature_unit: '°C' }),
+  st('calendar.rodzina', 'off', { friendly_name: 'Rodzina' }), st('sun.sun', 'above_horizon', {}),
+  st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' }), st('binary_sensor.ruch', 'off', { friendly_name: 'Ruch', device_class: 'motion' }),
+  ...(q.get('nolk') ? [] : K.map(([e, s, a]) => st(e, s, a)))]);
+/* stany do zrzutów: present (domyślnie), absent (jeszcze nie przyszła), done (po wyjściu) */
+const ST = q.get('state') || 'present', pb = S['binary_sensor.zosia_w_placowce'];
+if (pb && ST === 'absent') { pb.state = 'off'; pb.attributes.check_in = null; S['sensor.zosia_ostatnie_przyjscie'].state = new Date('2026-10-14T08:05:00').toISOString(); }
+if (pb && ST === 'done') { pb.state = 'off'; pb.attributes.check_out = '15:47'; S['sensor.zosia_ostatnie_wyjscie'].state = iso('15:47'); }
+const entities = q.get('nolk') ? {} : Object.fromEntries(K.map(([e, , , k]) => [e, { entity_id: e, platform: 'livekid', device_id: 'kid1', translation_key: k }]));
+const ev = { 'calendar.rodzina': [{ summary: 'Odbiór paczki', start: { dateTime: iso('12:00') }, end: { dateTime: iso('12:30') } }, { summary: 'Basen', start: { dateTime: iso('17:30') }, end: { dateTime: iso('18:30') } }],
+  'calendar.zosia_kalendarz': acts.map((a) => ({ summary: a.title, start: { dateTime: iso(a.start) }, end: { dateTime: iso(a.end) } })) };
+const hass = { states: S, entities, devices: { kid1: { id: 'kid1', name: N, name_by_user: null } }, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true },
+  language: lang, locale: { language: lang, time_format: '24' }, themes: { darkMode: true }, callService: async () => {},
+  callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3, 4, 5].map((i) => ({ datetime: new Date(Math.ceil(Date.now() / 36e5) * 36e5 + i * 36e5).toISOString(), temperature: 14 + i, templow: 6 + i, condition: ['sunny', 'partlycloudy', 'rainy', 'cloudy', 'sunny', 'lightning-rainy'][i % 6] })) } } } : null),
+  callApi: async (m, p) => ev[(p.match(/^calendars\/([^?]+)/) || [])[1]] || [] };
+window.__hgHass = window.__nuvioHass = hass;
+const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
+const wall = (o) => Object.assign({ on: true, style: q.get('style') || 'photo', idle: 120, dim: 0, src: 'url', url: '/dist/nuvio-bg-default-wide.webp', gl: { v: q.get('v') || 'minimal' } }, q.get('lk') === '0' ? { lk: false } : {}, o || {});
+const view = q.get('view') || 'tile';
+if (view === 'wall') { L.data.wall = wall();
+  const W = window.HGWall; W.hass = hass; W.page = document.body; W.show();
+} else if (view === 'settings' || view === 'gallery') {
+  document.getElementById('tile').remove();
+  const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass;
+  await new Promise((r) => setTimeout(r, 600)); L.data.wall = wall({ style: 'photo' });
+  if (view === 'settings') { pg._lkTab = 'wall'; pg._eLook();
+    setTimeout(() => { const S = pg._eSheetEl, b = S && S.querySelector('.wl-lk'); let n = b; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement; if (n && b) n.scrollTop = b.offsetTop - 260; }, 700);
+  } else { pg._eGallery();
+    setTimeout(() => { const S = pg._eSheetEl, b = S && S.querySelector('[data-c="child"]'); if (b) { const st = document.createElement('style'); st.textContent = '.mk{ animation:none !important; opacity:1 !important; }'; S.appendChild(st); b.scrollIntoView({ block: 'center' }); b.style.outline = '2px solid #7EE0A8'; b.style.outlineOffset = '3px'; } }, 700); }
+} else { const T = document.getElementById('tile');
+  for (const c of [{}, { title: '' }]) { const box = document.createElement('div'); box.className = 'box'; T.appendChild(box);
+    const el = document.createElement('nuvio-kid-card'); el.setConfig({ type: 'custom:nuvio-kid-card', ...c }); el.style.display = 'block'; box.appendChild(el); el.hass = hass; }
+  /* druga karta: dzień bez opieki i rachunek po terminie */
+  const h2 = JSON.parse(JSON.stringify(hass)); Object.assign(h2, { callApi: hass.callApi, callWS: hass.callWS });
+  const s = h2.states; s['binary_sensor.zosia_w_placowce'].state = 'off'; Object.assign(s['binary_sensor.zosia_w_placowce'].attributes, { check_in: null, scheduled_today: false, not_scheduled_reason: 'weekend' });
+  s['sensor.zosia_ostatnie_przyjscie'].state = new Date('2026-10-14T08:05:00').toISOString(); s['sensor.zosia_posilki_dzis'].state = 'Brak'; s['sensor.zosia_posilki_dzis'].attributes.scheduled = false; s['sensor.zosia_nieprzeczytane'].state = '0';
+  s['sensor.zosia_termin_platnosci'].state = '2026-10-10'; s['sensor.zosia_do_zaplaty'].attributes.overdue = true;
+  T.lastChild.querySelector('nuvio-kid-card').hass = h2;
+  /* karta widoczna w wyborze kart HA (window.customCards) */
+  const cc = (window.customCards || []).find((x) => x.type === 'nuvio-kid-card'); const pk = document.createElement('div'); pk.className = 'box'; pk.id = 'cc';
+  pk.innerHTML = cc ? `<div style="padding:14px 16px;border-radius:18px;background:rgba(20,24,30,.72);backdrop-filter:blur(12px);font-size:13px;line-height:1.45"><div style="opacity:.6;font-size:11px;letter-spacing:.08em;text-transform:uppercase">window.customCards</div><b style="font-size:15px">${cc.name}</b><div style="opacity:.75">${cc.description}</div><code style="opacity:.6">custom:${cc.type}</code></div>` : 'missing'; T.appendChild(pk); }
+window.__ready = true;
+</script></body></html>

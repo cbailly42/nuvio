@@ -66,11 +66,27 @@ const HG_WB_SS = `
 @keyframes nbmq{ to{ transform:translateX(-50%); } }
 @keyframes nbeq{ from{ transform:scaleY(.3); } to{ transform:scaleY(1); } }
 .nwb .nb-bot > .nb-nt{ width:100%; }
+/* dziecko: ta sama karta co odtwarzacz (szkło, promień 24), duże cienkie godziny jak zegar, lista zajęć oddzielona linią */
+.nb-kid{ display:flex; flex-direction:column; gap:10px; }
+.nb-k{ padding:14px 18px 16px 14px; border-radius:24px; color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%); animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
+.nb-kh{ display:flex; align-items:center; gap:12px; min-width:0; }
+.nb-kh > i{ flex:none; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:${K(255,255,255,.16)}; } .nb-kh > i ha-icon{ --mdc-icon-size:24px; width:24px; height:24px; }
+.nb-kh > b{ flex:1; min-width:0; font-size:17px; font-weight:600; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nb-kp{ flex:none; display:inline-flex; align-items:center; gap:7px; padding:5px 11px 5px 9px; border-radius:999px; font-size:13px; font-weight:600; background:${K(255,255,255,.16)}; }
+.nb-kp i{ width:8px; height:8px; border-radius:50%; background:${K(255,255,255,.6)}; } .nb-kp.on{ background:${K(126,224,168,.26)}; } .nb-kp.on i{ background:${K(126,224,168,1)}; }
+.nb-kt{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0 0 4px; }
+.nb-kt div{ display:flex; flex-direction:column; gap:2px; min-width:0; } .nb-kt b{ font-size:clamp(30px, 4.4vmin, 40px); font-weight:300; line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums; } .nb-kt b.mu{ opacity:.45; }
+.nb-kt small{ font-size:13px; opacity:.72; }
+.nb-kl{ list-style:none; margin:14px 0 0 4px; padding:12px 0 0; box-shadow:inset 0 1px 0 ${K(255,255,255,.16)}; display:flex; flex-direction:column; gap:7px; }
+.nb-kl li{ display:grid; grid-template-columns:3.2em minmax(0, 1fr) auto; gap:10px; align-items:baseline; font-size:14px; opacity:.75; }
+.nb-kl li > span:first-child{ font-variant-numeric:tabular-nums; } .nb-kl li > span:nth-child(2){ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nb-kl li.nx{ font-size:16px; font-weight:600; opacity:1; } .nb-kl li em{ font-style:normal; font-size:13px; font-weight:700; white-space:nowrap; }
+.nb-kn{ margin:12px 0 0 4px; font-size:14px; opacity:.72; }
 .nw.bd .nw-h{ color:${K(255,255,255,.8)}; bottom:calc(clamp(14px, 2.4vmin, 24px) + env(safe-area-inset-bottom, 0px)); font-size:clamp(12px, 1.5vmin, 14px); }
 .nw.bd.pin .nwb{ opacity:0; }
 .nwb [hidden]{ display:none !important; }
 @media (max-width:640px) and (orientation:portrait){ .nwb{ --wh:60px; } .nb-row{ max-height:calc(var(--wh) * 4 + var(--gp) * 3); } .nb-w{ flex:1 1 calc(50% - var(--gp)); max-width:100%; padding-right:12px; } .nb-w:first-child, .nb-wr{ flex-basis:100%; justify-content:center; } }
-@media (prefers-reduced-motion:reduce){ .nwb{ transition:none; } .nb-np .eq u, .nb-np .mq.run > span{ animation:none; } .nb-w, .nb-np{ animation:none; } }
+@media (prefers-reduced-motion:reduce){ .nwb{ transition:none; } .nb-np .eq u, .nb-np .mq.run > span{ animation:none; } .nb-w, .nb-np, .nb-k{ animation:none; } }
 `;
 const HG_WB_CSS = `
 .wl-chips{ display:flex; flex-wrap:wrap; gap:6px; }
@@ -111,7 +127,7 @@ Object.assign(HGWall, {
   board() { return this.bget().style === 'board'; },
   /* ---- nakładka ---- */
   bdShell() { return `<style>${HG_WALL_SS}${HG_WB_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
-      <div class="nwb"><header class="nb-top"><div class="nb-h2"></div><h1 class="nb-h1"></h1><div class="nb-row"></div></header><div class="nb-bot"><section class="nb-np" hidden></section></div></div>
+      <div class="nwb"><header class="nb-top"><div class="nb-h2"></div><h1 class="nb-h1"></h1><div class="nb-row"></div></header><div class="nb-bot"><section class="nb-kid" hidden></section><section class="nb-np" hidden></section></div></div>
       <p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`; },
   bdStart(rm) { const el = this.el; el.classList.add('bd'); this._bdk = {};
     const b = el.querySelector('.nwb'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.008; b.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); b.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
@@ -129,7 +145,8 @@ Object.assign(HGWall, {
     const wd = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long' }).format(d), dt = new Intl.DateTimeFormat(HG_LOC(), { day: 'numeric', month: 'long' }).format(d), tm = tf.format(d);
     const h1 = this._put('.nb-h1', H.esc(B.hd === 'time' ? tm : wd)); if (h1) h1.classList.toggle('wd', B.hd !== 'time');
     this._put('.nb-h2', H.esc(B.hd === 'time' ? `${wd}, ${dt}` : `${dt} · ${tm}`));
-    this.bdCal(h, B);
+    const KD = this.kidList ? this.kidList(h) : []; this.bdCal(h, B);
+    const KH = KD.map((k) => this.bdKid(h, k)).join(''); this._put('.nb-kid', KH, !KH);
     const W = []; for (const k of B.ord) if (B.bk[k]) { if (k === 'wx') W.push(this.bdWx(h, B)); else if (k === 'sun') W.push(this.bdSun(h, tf)); else if (k === 'cnt') W.push(this.bdCnt());
       else if (k === 'cal') W.push(...this.bdEv(h, B, tf)); else if (k === 'tmp') W.push(this.bdTmp(h, B)); }
     this._put('.nb-row', W.filter(Boolean).join(''));
@@ -138,6 +155,12 @@ Object.assign(HGWall, {
   bdMq(pn) { const b = pn.querySelector('.mq'), sp = b && b.firstElementChild; if (!sp || b.classList.contains('run')) return;
     requestAnimationFrame(() => { if (!b.isConnected || sp.scrollWidth <= b.clientWidth + 1) return; const i = sp.firstElementChild, c = i.cloneNode(true); c.setAttribute('aria-hidden', 'true'); sp.appendChild(c);
       b.classList.add('run'); b.style.setProperty('--d', Math.max(6, Math.round(i.offsetWidth / 40)) + 's'); }); },
+  /* dziecko (LiveKid): karta nad odtwarzaczem w tym samym szkle; stan, duże godziny, najbliższe zajęcia ze „za X min” i dwa kolejne */
+  bdKid(h, k) { const v = this.kidView(h, k), L = v.next ? [Object.assign({ nx: 1 }, v.next), ...v.rest] : [];
+    const tm = (l, x) => `<div><b class="${x ? '' : 'mu'}">${H.esc(x || '--:--')}</b><small>${H.esc(l)}</small></div>`;
+    return `<article class="nb-k"><header class="nb-kh"><i>${H.icon('mdi:human-child')}</i><b>${H.esc(v.name)}</b>${this.kidPill(v, 'nb-kp')}</header>
+      <div class="nb-kt">${tm(hgTr('Przyjście', 'Check-in'), v.inT)}${tm(hgTr('Wyjście', 'Check-out'), v.outT)}</div>
+      ${L.length ? `<ul class="nb-kl">${L.map((x) => `<li${x.nx ? ' class="nx"' : ''}><span>${H.esc(x.t)}</span><span>${H.esc(x.title)}</span>${x.nx && x.rel ? `<em>${H.esc(x.rel)}</em>` : '<span></span>'}</li>`).join('')}</ul>` : `<p class="nb-kn">${H.esc(v.note)}</p>`}</article>`; },
   /* mały widżet: biała ikona + dwie linie */
   bdW(ic, t, sub, cls) { return `<div class="nb-w${cls ? ' ' + cls : ''}"><i>${H.icon(ic)}</i><div><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div></div>`; },
   bdSun(h, tf) { const sun = h.states['sun.sun']; if (!sun) return ''; const r = new Date(sun.attributes.next_rising), s = new Date(sun.attributes.next_setting);
@@ -154,7 +177,7 @@ Object.assign(HGWall, {
     const sub = [isFinite(hi) ? `↑${deg(hi)}${isFinite(lo) ? ` ↓${deg(lo)}` : ''}` : '', pp ? hgTr(`opady ${pp}%`, `rain ${pp}%`) : ''].filter(Boolean).join(' · ');
     return this.bdW(ic, `${deg(parseFloat(A.temperature))} ${H.esc(HGWx.cn(w.state))}`, sub); },
   /* wydarzenia na 60 dni (lista: 14 dni, odliczanie: najbliższe całodniowe), co 10 min */
-  bdCal(h, B) { const ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
+  bdCal(h, B) { const kx = this._kidCal || [], ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e) && !kx.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
     const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setDate(d1.getDate() + 60); const key = d0.toDateString() + ids.join();
     if (this._bevk === key && Date.now() - this._bevt < 600000) return; this._bevk = key; this._bevt = Date.now();
     const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;
