@@ -295,7 +295,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const done = !!k.outToday || (k.plan.length > 0 && !P.length), nx = done ? null : P[0] || null;
     const rel = (x) => { if (x.s <= now) return x.te ? hgTr(`teraz, do ${x.te}`, `now, until ${x.te}`) : hgTr('teraz', 'now'); const m = Math.round((x.s - now) / 60000);
       return m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 600 ? (m % 60 ? hgTr(`za ${Math.floor(m / 60)} h ${m % 60} min`, `in ${Math.floor(m / 60)} h ${m % 60} min`) : hgTr(`za ${m / 60} h`, `in ${m / 60} h`)) : ''; };
-    return { name: k.name || hgTr('Dziecko', 'Child'), present: k.present, pill: k.present ? hgTr('Obecna', 'Present') : hgTr('Nieobecna', 'Absent'),
+    return { name: k.name || hgTr('Dziecko', 'Child'), present: k.present, pill: k.present ? hgTr('W placówce', 'At facility') : hgTr('Poza placówką', 'Away'),
       inT: k.inToday || '', outT: k.outToday || '', next: nx ? { t: nx.t, title: nx.title, rel: rel(nx) } : null, rest: done ? [] : P.slice(1, 3).map((x) => ({ t: x.t, title: x.title })),
       done, note: done ? hgTr('Na dziś to wszystko', 'All done for today') : !P.length ? hgTr('Brak zajęć w planie', 'No activities planned') : '' }; },
   kidPill(v, cls) { return `<span class="${cls}${v.present ? ' on' : ''}"><i aria-hidden="true"></i>${H.esc(v.pill)}</span>`; },

@@ -11,7 +11,7 @@ class HGKidCard extends HGBase {
 .li + .li{ border-top:1px solid color-mix(in srgb, currentColor 8%, transparent); }`; }
   render() { const h = this._hass, c = this._config, k = this._kid();
     if (!k) return `<ha-card class="glass">${hgHead('mdi:human-child', c.title || hgTr('Dziecko', 'Child'), '', false)}<div class="em">${hgTr('Brak danych dziecka.', 'No child data.')}</div></ha-card>`;
-    const st = k.present ? hgTr('W placówce', 'At the facility') : hgTr('Poza placówką', 'Not at the facility');
+    const st = k.present ? hgTr('W placówce', 'At facility') : hgTr('Poza placówką', 'Away');
     const row = (ic, nm, vl, e, cls = '', sub = '') => `<button class="li ${cls}" data-act="more" data-e="${H.esc(e || '')}">${H.icon(ic)}<span class="nm">${H.esc(nm)}</span><span class="vl">${H.esc(vl)}${sub ? `<small>${H.esc(sub)}</small>` : ''}</span></button>`;
     const none = hgTr('Brak', 'None'), rows = [
       row('mdi:login', hgTr('Przyjście', 'Check-in'), k.inToday || k.lastIn || '--:--', k.ids.last_check_in || k.ids.present, k.inToday || k.lastIn ? '' : 'mu'),
@@ -20,7 +20,7 @@ class HGKidCard extends HGBase {
       k.unread != null ? row('mdi:bell-badge-outline', hgTr('Nieprzeczytane', 'Unread'), String(k.unread), k.ids.unread_feed, k.unread ? 'al' : 'mu') : '',
       k.bill ? row('mdi:cash', hgTr('Rachunek', 'Bill'), k.billNum > 0 ? k.bill : hgTr('Opłacony', 'Paid'), k.ids.bill_to_pay, k.billNum > 0 ? (k.overdue ? 'od' : '') : 'mu',
         k.billNum > 0 && k.due ? (k.overdue ? hgTr(`po terminie ${k.due}`, `overdue since ${k.due}`) : hgTr(`termin ${k.due}`, `due ${k.due}`)) : '') : ''].join('');
-    return `<ha-card class="glass">${hgHead(k.present ? 'mdi:human-child' : 'mdi:home-outline', c.title || k.name || hgTr('Dziecko', 'Child'), H.esc(st), k.present, `<span class="cnt${k.present ? ' al' : ''}">${H.esc(k.present ? hgTr('Obecna', 'Present') : hgTr('Nieobecna', 'Absent'))}</span>`)}<div class="ls">${rows}</div></ha-card>`; }
+    return `<ha-card class="glass">${hgHead(k.present ? 'mdi:human-child' : 'mdi:home-outline', c.title || k.name || hgTr('Dziecko', 'Child'), '', k.present, `<span class="cnt${k.present ? ' al' : ''}">${H.esc(st)}</span>`)}<div class="ls">${rows}</div></ha-card>`; }
   onAct(a, t) { if (a === 'more') hgMore(this, t.dataset.e); }
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
