@@ -1,4 +1,4 @@
-# Nuvio status (2026-10-15)
+# Nuvio status (2026-10-18)
 Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard strategy `custom:nuvio` + first-run wizard (PL/EN), registry via hass.areas/entities with WS fallback;
 (c) edit mode covers tiles/sections/appearance and whole views (Appearance → Views); (d) HACS layout (dist/nuvio.js + dist/assets in nuvio.zip, hacs.json zip_release, README PL/EN, MIT, release workflow);
 (e) views only for present domains; (f) Polish / English UI for cards, page and edit mode (hgTr); empty-state hints.
@@ -29,6 +29,8 @@ Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard stra
 (o) 1.7.1: perf. hg-page .more no longer animated (bob on its ha-icon, 3 runs, reduced-motion off); HG_VIS sets [hg-off] on off-screen cards; flow card: no backdrop-filter on .nd, no drop-shadow on .fl/.hub, no sun spin, .fl paused under :host([hg-off]), _fitSoon only when layout key changes.
 (n) 1.7.0: flow card sums lists for grid / grid_export / solar / home (hgArr), batteries separate (bats(): batteries[] or battery / battery_soc lists, up to 4, bus hub at 50,60 with spokes).
 
+(ag) 2.11.1-2.11.3: LiveKid child card (cards/kid-card.part.js, hg-kid-card, shared/livekid.part.js HGLiveKid: kids()/groups() by registry platform 'livekid' + translation keys, attribute shape fallback; options child / entity). Gallery entry and HA card picker from 2.11.2; Settings, Wall tablet mode LiveKid switch (on by default when detected). Screensaver child panel on photo / board / glass styles with one shared model (next, later, done for the day, not arrived yet), neutral status W placówce / Poza placówką. Mock demo tests/kid-demo.html.
+(ah) 2.12.0: room section editor (hg-edit _eSubj kind 'sec' with rid/sk): rows from HGAreas.model().byId[rid].sec[sk] tagged rm 'man' | 'area', + row {secAdd, doms: HG_SEC_DOMS[sk]} opens the add picker; cfgrm -> _eSecRm (drops assign / virtual entity, area entities go to wiz.areas.room_hide[rid]), cfgsecadd -> _eSecAdd (assign[e]=rid, sec_of[e]=sk, un-hide). areas.part.js: model() skips room_hide, _classify honours sec_of for assigned entities, areaOf() helper. Merged with feat/livekid-card on main.
 ## Planned (source of truth for README roadmap)
 
 - Assist: talk to Home Assistant Assist with the reply shown inline (card in 0.10.0, dialog from the header in 0.11.0)

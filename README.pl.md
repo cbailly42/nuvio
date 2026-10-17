@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.11.3-a3e635?style=flat-square" alt="v2.11.3">
+  <img src="https://img.shields.io/badge/version-v2.12.0-a3e635?style=flat-square" alt="v2.12.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -270,6 +270,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Czujniki domu | `custom:nuvio-sensors-card` | rodzaje czujników, dodatkowe i pominięte czujniki |
 | Skrót | `custom:nuvio-link-card` | tytuł, podtytuł, encja, ścieżka lub adres do otwarcia |
 | Osoba | `custom:nuvio-person-card` | osoba, etykiety w domu i poza domem |
+| Dziecko (LiveKid) | `custom:nuvio-kid-card` | tytuł, dziecko (imię) albo encja przy kilkorgu dzieci; encje integracji LiveKid są wykrywane same |
 
 **Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi.
 
@@ -433,9 +434,28 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.11.3 origin/main -m "Nuvio 2.11.0" && git push origin v2.11.3`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.
 
 ## Lista zmian
+
+### 2.12.0
+- Nowość: w ustawieniach sekcji pokoju można teraz dodawać i usuwać encje. W trybie edycji otwórz sekcję w pokoju (na przykład **Światła**): lista **Encje** kończy się wierszem **Dodaj encję**, którego wybór pokazuje tylko pasujące encje (światła i przełączniki dla Świateł, termostaty dla Klimatyzacji, kamery dla Kamer itd.). Encja zostaje przypisana do pokoju i od razu trafia do tej sekcji.
+- Nowość: każda encja w sekcji pokoju ma przycisk usuwania. Encja dodana ręcznie jest usuwana z pokoju (**Usuń z pokoju**). Encja z obszaru Home Assistant jest ukrywana tylko w tym pokoju (**Ukryj w tym pokoju**), bez zmiany obszaru w Home Assistant; ponowne dodanie znowu ją pokazuje. Ustawienia zapisują się w układzie razem z innymi przypisaniami pokoi.
+- Zawiera kartę dziecka i panel wygaszacza LiveKid z wersji testowych 2.11.1 do 2.11.3.
+
+### 2.11.3
+- Nowość: nowy wygląd panelu dziecka (LiveKid) na wygaszaczu. Tablica: karta nad odtwarzaczem z dużymi godzinami przyjścia i wyjścia, najbliższymi zajęciami z odliczaniem i dwoma kolejnymi. Szkło: blok obok pogody w tym samym stylu co temperatura. Zdjęcia: czytelny stan i imię.
+- Nowość: neutralny stan dziecka, **W placówce** i **Poza placówką**, we wszystkich stylach wygaszacza, na karcie Dziecko i w jej podglądzie w galerii.
+- Nowość: panel na wygaszaczu pokazuje, czy dziecko jest w placówce, jeszcze nie przyszło albo dzień już się skończył.
+
+### 2.11.2
+- Nowość: karta Dziecko (LiveKid) jest teraz zwykłą kartą, w galerii kart Nuvio i w wyborze kart HA, z podglądem. Pokazuje obecność w żłobku lub przedszkolu, przyjście i wyjście, posiłki, nieprzeczytane aktualności i rachunek.
+- Nowość: panel dziecka na wygaszaczu. W dni robocze pokazuje dzisiejszy plan zajęć oraz godziny przyjścia i wyjścia, we wszystkich stylach wygaszacza.
+- Nowość: w **Ustawienia > Tryb tabletu ściennego** jest przełącznik LiveKid. Pokazuje, czy encje integracji zostały wykryte; gdy są, jest domyślnie włączony, gdy ich nie ma, jest nieaktywny z opisem **Nie wykryto**.
+
+### 2.11.1
+- Nowość: karta Dziecko dla integracji LiveKid (w tej wersji tylko w YAML). Encje dziecka są wykrywane same, po integracji, nigdy po identyfikatorach encji; przy kilku dzieciach wybierz jedno opcją `child` (imię) albo `entity`.
+- Nowość: zwarty panel dziecka na wygaszaczu ze zdjęciami (w tej wersji tylko testowo, za flagą).
 
 ### 2.11.0
 - Nowość: ceny paliw w nagłówku można wyłączyć bez usuwania. W **Ustawienia > Nagłówek i nawigacja** jest przełącznik całej sekcji paliw i osobny przy każdym paliwie. Ukryte paliwo zostaje na liście z przygaszonymi polami, a po wyłączeniu sekcji lista zwija się do krótkiej informacji. Nagłówek zmienia się od razu, a ustawienie zapisuje się w układzie i trafia do eksportu i importu.

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.11.3-a3e635?style=flat-square" alt="v2.11.3">
+  <img src="https://img.shields.io/badge/version-v2.12.0-a3e635?style=flat-square" alt="v2.12.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -270,6 +270,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Home sensors | `custom:nuvio-sensors-card` | device classes, extra and skipped sensors |
 | Shortcut | `custom:nuvio-link-card` | title, subtitle, entity, path or URL to open |
 | Person | `custom:nuvio-person-card` | person, home and away labels |
+| Child (LiveKid) | `custom:nuvio-kid-card` | title, child (name) or entity when there are several children; entities of the LiveKid integration are found automatically |
 
 **Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms.
 
@@ -433,9 +434,28 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.11.3 origin/main -m "Nuvio 2.11.0" && git push origin v2.11.3`.
+Only tagging by hand: `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.
 
 ## Changelog
+
+### 2.12.0
+- New: a room section's settings can now add and remove entities. In edit mode open a section in a room (for example **Lights**): the **Entities** list ends with an **Add entity** row whose picker shows only entities that fit the section (lights and switches for Lights, thermostats for Climate, cameras for Cameras and so on). The entity is assigned to the room and lands in that section right away.
+- New: every entity in a room section has a remove button. An entity you added yourself is removed from the room (**Remove from room**). An entity that comes from the Home Assistant area is hidden only in this room (**Hide in this room**), without touching the area in Home Assistant; adding it again shows it again. The settings are saved in the layout with the other room assignments.
+- Includes the LiveKid child card and screensaver panel from the 2.11.1 to 2.11.3 test releases.
+
+### 2.11.3
+- New: redesigned child panel (LiveKid) on the screensaver. Board: a card above the media player with large check-in and check-out times, the next activity with a countdown and two later ones. Glass: a block next to the weather in the same style as the temperature. Photo: clearer status and name.
+- New: neutral child status, **At facility** and **Away**, on every screensaver style, on the Child card and in its gallery preview.
+- New: the screensaver panel shows when the child is at the facility, has not arrived yet or is done for the day.
+
+### 2.11.2
+- New: the Child card (LiveKid) is a normal card now, listed in the Nuvio card gallery and in the HA card picker with a preview. It shows presence at nursery or kindergarten, check-in and check-out, meals, unread news and the bill.
+- New: child panel on the screensaver. On weekdays it shows today's activity plan plus check-in and check-out times, on all screensaver styles.
+- New: **Settings > Wall tablet mode** has a LiveKid switch. It shows whether the integration's entities were detected; when they are, it is on by default, otherwise it is disabled with a **Not detected** note.
+
+### 2.11.1
+- New: Child card for the LiveKid integration (YAML only in this version). The child's entities are found automatically by the integration, never by entity ids; with several children choose one with `child` (name) or `entity`.
+- New: a compact child panel on the photo screensaver (test only, behind a flag in this version).
 
 ### 2.11.0
 - New: fuel prices in the header can be turned off without deleting them. **Settings > Header and navigation** has a switch for the whole fuel section and one on every fuel row. A hidden fuel keeps its row with dimmed fields, and with the section off the list collapses to a short note. The header updates right away, and the setting is saved in the layout and included in export and import.
