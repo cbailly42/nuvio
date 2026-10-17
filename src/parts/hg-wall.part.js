@@ -63,7 +63,9 @@ const HG_WALL_SS = `
 .nw-e li.nx .nw-et, .nw-k li.nx .nw-et{ opacity:1; }
 .nw-e .nw-en, .nw-k .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* dziecko (LiveKid, funkcja ukryta): przyjście / wyjście jak kolumny prognozy, plan zajęć jak lista wydarzeń */
-.nw-k h5{ display:flex; align-items:center; gap:8px; } .nw-k h5 i{ width:7px; height:7px; border-radius:50%; background:${K(255,255,255,.45)}; } .nw-k h5 i.on{ background:${K(126,224,168,1)}; box-shadow:0 0 10px ${K(126,224,168,.9)}; }
+.nw-k h5{ display:flex; align-items:center; justify-content:space-between; gap:8px; opacity:1; } .nw-k h5 > b{ font-weight:700; opacity:.9; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nw-kst{ flex:none; display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 7px; border-radius:999px; font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.02em; text-transform:none; background:${K(255,255,255,.14)}; }
+.nw-kst i{ width:7px; height:7px; border-radius:50%; background:${K(255,255,255,.55)}; } .nw-kst.on{ background:${K(126,224,168,.22)}; } .nw-kst.on i{ background:${K(126,224,168,1)}; }
 .nw-kt{ display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:clamp(8px, 1.3vmin, 12px); padding-bottom:clamp(8px, 1.3vmin, 12px); border-bottom:1px solid ${K(255,255,255,.14)}; }
 .nw-kt div{ display:flex; flex-direction:column; gap:1px; } .nw-kt i{ font-style:normal; font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.08em; text-transform:uppercase; opacity:.62; }
 .nw-kt b{ font-size:clamp(20px, 3vmin, 28px); font-weight:300; letter-spacing:-.02em; font-variant-numeric:tabular-nums; } .nw-kt b.mu{ opacity:.45; }
@@ -287,27 +289,28 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   kidOn(h) { return this.get().lk && typeof HGLiveKid !== 'undefined' && HGLiveKid.has(h); },
   kidList(h) { const wd = new Date().getDay(), K = h && wd > 0 && wd < 6 && this.kidOn(h) ? HGLiveKid.kids(h).filter((k) => k.ok && (k.scheduled || k.inToday)).slice(0, 2) : [];
     const kx = K.map((k) => k.ids.calendar).filter(Boolean); if (kx.join() !== (this._kidCal || []).join()) this._kidCal = kx; return K; },
-  /* jedna linia dla tablicy i szkła: stan oraz przyjście / wyjście i najbliższe zajęcia */
-  kidSum(h, k) { const now = new Date(), at = (v) => { if (!v) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
-    const nx = k.plan.find((a) => !a.all_day && a.start && (at(a.end || a.start) || 0) > now);
-    const t = `${k.name || hgTr('Dziecko', 'Child')} · ${k.present ? hgTr('w placówce', 'at the facility') : hgTr('poza placówką', 'not at the facility')}`;
-    const sub = [k.outToday ? hgTr(`wyjście ${k.outToday}`, `check-out ${k.outToday}`) : k.inToday ? hgTr(`przyjście ${k.inToday}`, `check-in ${k.inToday}`) : '', nx ? `${HGLiveKid.hhmm(h, nx.start)} ${nx.title || ''}`.trim() : ''].filter(Boolean).join(' · ');
-    return { t, sub }; },
+  /* wspólny model dla wszystkich stylów: stan, godziny, najbliższe zajęcia ze „za X min” i kolejne (bez zakończonych) */
+  kidView(h, k) { const now = new Date(), at = (v) => { if (!v || !/^\d{1,2}:\d{2}$/.test(v)) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
+    const P = k.plan.filter((a) => !a.all_day && a.start).map((a) => ({ title: a.title || hgTr('Zajęcia', 'Activity'), s: at(a.start), e: at(a.end), t: HGLiveKid.hhmm(h, a.start), te: a.end ? HGLiveKid.hhmm(h, a.end) : '' })).filter((x) => x.s && (x.e || x.s) > now);
+    const done = !!k.outToday || (k.plan.length > 0 && !P.length), nx = done ? null : P[0] || null;
+    const rel = (x) => { if (x.s <= now) return x.te ? hgTr(`teraz, do ${x.te}`, `now, until ${x.te}`) : hgTr('teraz', 'now'); const m = Math.round((x.s - now) / 60000);
+      return m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 600 ? (m % 60 ? hgTr(`za ${Math.floor(m / 60)} h ${m % 60} min`, `in ${Math.floor(m / 60)} h ${m % 60} min`) : hgTr(`za ${m / 60} h`, `in ${m / 60} h`)) : ''; };
+    return { name: k.name || hgTr('Dziecko', 'Child'), present: k.present, pill: k.present ? hgTr('Obecna', 'Present') : hgTr('Nieobecna', 'Absent'),
+      inT: k.inToday || '', outT: k.outToday || '', next: nx ? { t: nx.t, title: nx.title, rel: rel(nx) } : null, rest: done ? [] : P.slice(1, 3).map((x) => ({ t: x.t, title: x.title })),
+      done, note: done ? hgTr('Na dziś to wszystko', 'All done for today') : !P.length ? hgTr('Brak zajęć w planie', 'No activities planned') : '' }; },
+  kidPill(v, cls) { return `<span class="${cls}${v.present ? ' on' : ''}"><i aria-hidden="true"></i>${H.esc(v.pill)}</span>`; },
   kidHtml(c, h) { const K = typeof HGLiveKid !== 'undefined' && h ? HGLiveKid.kids(h) : [], det = K.length > 0, nm = K.map((k) => k.name).filter(Boolean).join(', ');
     const sub = !det ? hgTr('Nie wykryto', 'Not detected') : c.lk ? hgTr(`Wykryto${nm ? ': ' + nm : ''}. W dni robocze plan dnia, przyjście i wyjście na wygaszaczu`, `Detected${nm ? ': ' + nm : ''}. On weekdays the day plan, check-in and check-out on the screensaver`) : hgTr(`Wykryto${nm ? ': ' + nm : ''}. Wyłączone`, `Detected${nm ? ': ' + nm : ''}. Off`);
     return `<button type="button" class="wl-sw wl-lk" role="switch" data-hge="wl-lk" aria-checked="${det && c.lk}" ${det ? '' : 'disabled aria-disabled="true"'}><span>${hgTr('LiveKid (dziecko)', 'LiveKid (child)')}<small>${H.esc(sub)}</small></span><i aria-hidden="true"></i></button>`; },
   kid() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-k'); if (!box) return;
     const K = this.kidList(h);
     if (!K.length) { box.hidden = true; return; }
-    const now = new Date(), at = (v) => { if (!v) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
-    const rel = (s) => { const m = Math.round((s - now) / 60000); return s <= now ? hgTr('Teraz', 'Now') : m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 180 ? hgTr(`za ${Math.round(m / 60)} h`, `in ${Math.round(m / 60)} h`) : ''; };
     const C = ['#7EE0A8', '#7AB8FF', '#FFD36E', '#D59BFF', '#FF9F6E'];
-    const one = (k) => { const P = k.plan.map((a) => ({ a, s: at(a.start), en: at(a.end) })).filter((x) => x.a.all_day || !x.en || x.en > now).slice(0, 4), nx = P.find((x) => !x.a.all_day && x.s);
-      const tm = (x) => (x.a.all_day ? hgTr('Cały dzień', 'All day') : HGLiveKid.hhmm(h, x.a.start) + (x.a.end ? ' – ' + HGLiveKid.hhmm(h, x.a.end) : ''));
-      const li = P.map((x, i) => { const b = x === nx ? rel(x.s) : ''; return `<li${x === nx ? ' class="nx"' : ''} style="--c:${C[i % C.length]}"><span class="nw-et">${H.esc(tm(x))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(x.a.title)}">${H.esc(x.a.title || hgTr('Zajęcia', 'Activity'))}</span></li>`; }).join('');
-      return `<h5><i class="${k.present ? 'on' : ''}"></i>${H.esc(k.name || hgTr('Przedszkole', 'Kindergarten'))}</h5>
-        <div class="nw-kt"><div><i>${H.esc(hgTr('Przyjście', 'Check-in'))}</i><b class="${k.inToday ? '' : 'mu'}">${H.esc(k.inToday || '--:--')}</b></div><div><i>${H.esc(hgTr('Wyjście', 'Check-out'))}</i><b class="${k.outToday ? '' : 'mu'}">${H.esc(k.outToday || '--:--')}</b></div></div>
-        ${li ? `<ul>${li}</ul>` : `<span class="nw-kn">${H.esc(k.plan.length ? hgTr('Zajęcia na dziś zakończone', 'Today\'s activities are over') : hgTr('Brak zajęć w planie', 'No activities planned'))}</span>`}`; };
+    const one = (k) => { const v = this.kidView(h, k), L = v.next ? [Object.assign({ nx: 1 }, v.next), ...v.rest] : [];
+      const li = L.map((x, i) => `<li${x.nx ? ' class="nx"' : ''} style="--c:${C[i % C.length]}"><span class="nw-et">${H.esc(x.t)}${x.nx && x.rel ? `<em>${H.esc(x.rel)}</em>` : ''}</span><span class="nw-en" title="${H.esc(x.title)}">${H.esc(x.title)}</span></li>`).join('');
+      return `<h5><b>${H.esc(v.name)}</b>${this.kidPill(v, 'nw-kst')}</h5>
+        <div class="nw-kt"><div><i>${H.esc(hgTr('Przyjście', 'Check-in'))}</i><b class="${v.inT ? '' : 'mu'}">${H.esc(v.inT || '--:--')}</b></div><div><i>${H.esc(hgTr('Wyjście', 'Check-out'))}</i><b class="${v.outT ? '' : 'mu'}">${H.esc(v.outT || '--:--')}</b></div></div>
+        ${li ? `<ul>${li}</ul>` : `<span class="nw-kn">${H.esc(v.note)}</span>`}`; };
     const html = K.map(one).join('<div class="nw-ks"></div>');
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* dwie warstwy zdjęcia: płynne przenikanie (pokaz slajdów co 45 s) */

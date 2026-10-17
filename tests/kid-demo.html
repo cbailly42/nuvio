@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- Karta Dziecko (LiveKid), jej miejsce w galerii, opcja LiveKid w ustawieniach wygaszacza i panel dziecka na wygaszaczu,
      na sztucznym hass (bez HA), z zamrożoną datą (czwartek 10:20). Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem
-     http://localhost:8000/tests/kid-demo.html?view=tile|gallery|settings|wall[&style=photo|board|glass][&lk=0][&nolk=1][&lang=en][&at=2026-10-15T14:40] -->
+     http://localhost:8000/tests/kid-demo.html?view=tile|gallery|settings|wall[&style=photo|board|glass][&state=present|absent|done][&lk=0][&nolk=1][&lang=en][&at=2026-10-15T14:40] -->
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio dziecko</title>
 <style>body{ margin:0; font-family:system-ui,sans-serif; background:#0d1218 url(../dist/nuvio-bg-default-wide.webp) center/cover fixed; color:#fff; }
 #tile{ display:flex; gap:24px; padding:28px; align-items:flex-start; } .box{ container-type:inline-size; width:340px; }</style></head><body><div id="tile"></div>
@@ -39,6 +39,10 @@ const S = Object.fromEntries([
   st('calendar.rodzina', 'off', { friendly_name: 'Rodzina' }), st('sun.sun', 'above_horizon', {}),
   st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' }), st('binary_sensor.ruch', 'off', { friendly_name: 'Ruch', device_class: 'motion' }),
   ...(q.get('nolk') ? [] : K.map(([e, s, a]) => st(e, s, a)))]);
+/* stany do zrzutów: present (domyślnie), absent (jeszcze nie przyszła), done (po wyjściu) */
+const ST = q.get('state') || 'present', pb = S['binary_sensor.zosia_w_placowce'];
+if (pb && ST === 'absent') { pb.state = 'off'; pb.attributes.check_in = null; S['sensor.zosia_ostatnie_przyjscie'].state = new Date('2026-10-14T08:05:00').toISOString(); }
+if (pb && ST === 'done') { pb.state = 'off'; pb.attributes.check_out = '15:47'; S['sensor.zosia_ostatnie_wyjscie'].state = iso('15:47'); }
 const entities = q.get('nolk') ? {} : Object.fromEntries(K.map(([e, , , k]) => [e, { entity_id: e, platform: 'livekid', device_id: 'kid1', translation_key: k }]));
 const ev = { 'calendar.rodzina': [{ summary: 'Odbiór paczki', start: { dateTime: iso('12:00') }, end: { dateTime: iso('12:30') } }, { summary: 'Basen', start: { dateTime: iso('17:30') }, end: { dateTime: iso('18:30') } }],
   'calendar.zosia_kalendarz': acts.map((a) => ({ summary: a.title, start: { dateTime: iso(a.start) }, end: { dateTime: iso(a.end) } })) };
