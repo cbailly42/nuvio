@@ -31,6 +31,7 @@ const HG_COLOR_CSS = `
 .hgc-sw:hover{ transform:scale(1.08); } .hgc-sw[aria-pressed=true]{ box-shadow:inset 0 0 0 1px rgba(127,127,127,.35), 0 0 0 2px var(--hg-panel-flat, #1e1f23), 0 0 0 4px var(--hg-accent, #63D71E); }
 .hgc-sw:focus-visible{ outline:2px solid var(--hg-accent, #63D71E); outline-offset:2px; }
 .hgc .acts{ margin-top:0; } .hgc .btn{ height:40px; }
+@media (max-height:760px){ .hgc-sv{ height:110px; } .hgc{ gap:10px; } }
 @media (pointer:coarse){ .hgc .btn, .hgc-hx, .hgc-pv{ height:44px; } .hgc-pv{ width:44px; } }`;
 /* wygląd pola w miejscu natywnego (jeden <style> w każdym shadow root) */
 const HG_COLOR_FIELD_CSS = `input[type=color][data-hgc]{ -webkit-appearance:none; appearance:none; background:var(--hgc, #63D71E) !important; border:0; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(255,255,255,.22), 0 1px 3px rgba(0,0,0,.25); }
@@ -63,7 +64,9 @@ const hgColor = window.__hgColor || (window.__hgColor = {
     hx.addEventListener('input', () => { const ok = pick(hx.value, 'hex'); hx.parentNode.classList.toggle('bad', !ok && hx.value.replace('#', '').length >= 6); });
     hx.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); P.close(); } });
     el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.classList && (n.classList.contains('hgc-sw') || n.classList.contains('hgc-ok'))); if (!b) return; if (b.classList.contains('hgc-ok')) return P.close(); pick(b.dataset.c); });
-    paint(); setTimeout(() => sv.focus({ preventScroll: true }), 30); this.cur = P; return P; },
+    paint(); this.fit(el); setTimeout(() => sv.focus({ preventScroll: true }), 30); this.cur = P; return P; },
+  /* popover cały na ekranie: gdy nie mieści się ani pod, ani nad polem (telefon), przesuwamy go w górę do krawędzi */
+  fit(el) { const r = el.getBoundingClientRect(), vh = innerHeight; if (r.bottom > vh - 8) el.style.top = Math.max(8, parseFloat(el.style.top || r.top) - (r.bottom - (vh - 8))) + 'px'; },
   /* ukryte pole (opacity 0 w etykiecie z własnym podglądem): popover przy etykiecie */
   anchor(inp) { const r = inp.getBoundingClientRect(); return r.width > 4 && r.height > 4 ? inp : (inp.closest('label') || inp.parentNode || inp); },
 });
