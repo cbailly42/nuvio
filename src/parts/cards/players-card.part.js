@@ -6,7 +6,7 @@ const HG_MP_ST_EN = { playing: 'Playing', paused: 'Paused', idle: 'Idle', on: 'O
 const hgMpSt = (st) => (hgCurLang() === 'en' ? HG_MP_ST_EN : HG_MP_ST)[st];
 class HGPlayersCard extends HGBase {
   defaults() {
-    return { title: 'Multimedia', icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
+    return { title: hgTr('Multimedia', 'Media'), icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
       exclude_platforms: ['browser_mod'], exclude: [] };
   }
   _list() {

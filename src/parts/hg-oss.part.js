@@ -30,9 +30,9 @@ const HGShared = window.__hgShared || (window.__hgShared = {
   async put(h, doc) { await h.callWS({ type: 'lovelace/config/save', url_path: this.URL, config: doc }); },
   /* pierwsze uruchomienie (admin): ukryty pulpit z układem admina jako wspólnym */
   async create(h, data) { const d = this.cl(data || { v: 1, ts: 0, s: {} }); for (const k of this.PERS) delete d[k]; delete d.uid;
-    try { await h.callWS({ type: 'lovelace/dashboards/create', url_path: this.URL, title: 'Nuvio (wspólny układ)', icon: 'mdi:account-group-outline', show_in_sidebar: false, require_admin: true, mode: 'storage' }); } catch (e) { /* już istnieje */ }
+    try { await h.callWS({ type: 'lovelace/dashboards/create', url_path: this.URL, title: String(hgTrLazy('Nuvio (wspólny układ)', 'Nuvio (shared layout)')), icon: 'mdi:account-group-outline', show_in_sidebar: false, require_admin: true, mode: 'storage' }); } catch (e) { /* już istnieje */ }
     if (await this.doc(h)) return null;
-    const doc = { nuvio_shared: 1, own: [], data: d, views: [{ title: 'Nuvio', cards: [{ type: 'markdown', content: 'Wspólny układ Nuvio. Nie edytuj tego pulpitu ręcznie, zmieniaj układ w Nuvio.' }] }] };
+    const doc = { nuvio_shared: 1, own: [], data: d, views: [{ title: 'Nuvio', cards: [{ type: 'markdown', content: String(hgTrLazy('Wspólny układ Nuvio. Nie edytuj tego pulpitu ręcznie, zmieniaj układ w Nuvio.', 'Shared Nuvio layout. Do not edit this dashboard by hand, change the layout in Nuvio.')) }] }] };
     await this.put(h, doc); return doc; },
 });
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (dist/nuvio-bg-default-*.webp, CREDITS.md); gdy się nie wczyta – gradient */

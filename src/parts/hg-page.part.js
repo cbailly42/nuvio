@@ -457,7 +457,7 @@ class HGPage extends HTMLElement {
       try {
         if (helpers) el = helpers.createCardElement(conf);
         else { el = document.createElement(conf.type.replace('custom:', '')); el.setConfig(conf); }
-      } catch (e) { el = document.createElement('div'); el.textContent = 'Card error: ' + e.message; }
+      } catch (e) { el = document.createElement('div'); el.textContent = hgTr('Błąd karty: ', 'Card error: ') + e.message; }
       try { if (this._hass) el.hass = this._hass; } catch (e) { console.error('home-glass card', conf.type, e); }
       w.appendChild(el); this._panelEl.appendChild(w);
       this._cards.push(el); this._cardWraps.push(w);
@@ -574,7 +574,9 @@ class HGPage extends HTMLElement {
     const ui = this._userInfo();
     const hd = (typeof HGL !== 'undefined' && HGL.data && HGL.data.s && this._pageScope && ((HGL.data.s[this._pageScope()] || {}).conf || {})._head) || {}, md = this.getAttribute('mode');
     const pick = (k, def) => String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '');
-    this._headEl.innerHTML = `<h1 title="${H.esc(pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')))}">${H.esc(pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')))}</h1><p>${H.esc(pick('s', c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place')))}</p>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    const ttl = pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')), hic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? H.icon(hd.i, 'hdi') : '';
+    this._headEl.classList.toggle('hd-off', !!hd.hide); this._headEl.toggleAttribute('data-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden');
+    this._headEl.innerHTML = `<h1 title="${H.esc(ttl)}">${hic}${H.esc(ttl)}</h1>${hd.nos ? '' : `<p>${H.esc(pick('s', c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place')))}</p>`}${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
     this._placeWx();
   }
@@ -1157,6 +1159,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .head{ grid-area:head; padding:2px 4px 0; }
 :host([mode=phone]) .head h1{ font-size:clamp(20px, 6.6vw, 26px); } :host([mode=phone]) .head p{ font-size:clamp(15px, 4.9vw, 19px); }
 .head h1, .head p{ overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; text-overflow:ellipsis; } .head p{ -webkit-line-clamp:2; }
+.head h1 .hdi{ width:1em; height:1em; --mdc-icon-size:1em; margin-right:.32em; vertical-align:-.12em; color:var(--hg-accent); }
+.head.hd-off > h1, .head.hd-off > p{ display:none; } :host([editing]) .head.hd-off > h1, :host([editing]) .head.hd-off > p{ display:-webkit-box; opacity:.38; }
+:host([editing]) .head.hd-off::before{ content:attr(data-off); display:inline-block; margin-bottom:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; background:var(--hg-accent); color:var(--hg-on-accent, #000); }
 .head .hge-hd{ all:unset; cursor:pointer; position:absolute; top:0; right:-40px; z-index:2; width:32px; height:32px; border-radius:50%; display:inline-grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); vertical-align:middle; box-shadow:0 4px 14px rgba(0,0,0,.25); } .head .hge-hd ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ position:relative; } :host([mode=phone]) .head .hge-hd, :host([mode=tablet]) .head .hge-hd{ right:4px; }
 :host([mode=phone]) .fuel{ flex-wrap:nowrap; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .hrow{ gap:6px; margin-top:10px; max-width:100%; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ min-width:0; } :host([mode=phone]) .hrow .fuel{ margin-top:0; flex:1; } :host([mode=phone]) .hrow{ --chip-h:40px; --chip-r:12px; --chip-pl:6px; --chip-pr:10px; --chip-ic:28px; align-items:center; scroll-snap-type:x proximity; }
 .fc .fl{ opacity:1 !important; height:16u; padding:0 6u; border-radius:999px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.02em; background:var(--hg-accent); color:var(--hg-on-accent); }

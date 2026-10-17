@@ -702,33 +702,42 @@ const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new 
 const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
-    const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle')); b.title = hgTr('Edytuj tytuł i podtytuł', 'Edit title and subtitle'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
+    const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj nagłówek widoku', 'Edit view header')); b.title = hgTr('Edytuj nagłówek widoku', 'Edit view header'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
   _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
-  _eHead() { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; const c = this._config, H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
+  _eHead() { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; const c = Object.assign({}, this._config), H0 = this._eHeadGet(), ui = this._userInfo(); c.title = c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!'); c.subtitle = c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place'); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
     const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
-    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Tytuł widoku', 'View title')}"><style>${HG_STY_CSS}
-      .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:#FF6B6B; opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } }
+    S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Nagłówek widoku', 'View header')}"><style>${HG_STY_CSS}
+      .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:#FF6B6B; opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } .hd-d.d, .hd-d.t{ display:none; } }
       .hd-d{ border-radius:16px; padding:12px; background:var(--hg-tile-bg); min-width:0; } .hd-d small{ display:block; font-size:11px; opacity:.55; margin-bottom:6px; } .hd-d b{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; font-weight:600; line-height:1.18; } .hd-d p{ margin:4px 0 0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; opacity:.85; line-height:1.2; }
       .hd-d.d b{ font-size:20px; } .hd-d.d p{ font-size:17px; } .hd-d.t b{ font-size:17px; } .hd-d.t p{ font-size:14px; } .hd-d.m b{ font-size:15px; } .hd-d.m p{ font-size:12.5px; }
-      .hd-v{ display:none; } .hd-v.on{ display:block; } .hd-hint{ font-size:12px; opacity:.6; margin:-4px 0 4px; }</style>
-      <div class="hs-h"><b>${hgTr('Tytuł i podtytuł', 'Title and subtitle')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      .hd-v{ display:none; } .hd-v.on{ display:block; } .hd-hint{ font-size:12px; opacity:.6; margin:-4px 0 4px; }
+      .hd-d b ha-icon{ width:1.1em; height:1.1em; --mdc-icon-size:1.1em; margin-right:6px; vertical-align:-.12em; color:var(--hg-accent); } .hd-d.off{ opacity:.4; } .hd-d.off small::after{ content:' · ' attr(data-off); }
+      .hd-vis{ display:flex; flex-direction:column; gap:6px; margin:2px 0 8px; } .hd-vr{ display:flex; align-items:center; gap:12px; min-height:48px; padding:6px 10px 6px 14px; border-radius:16px; background:var(--hg-tile-bg); }
+      .hd-vr .lx-t{ flex:1; min-width:0; display:flex; flex-direction:column; } .hd-vr .lx-t b{ font-weight:600; font-size:14px; } .hd-vr .lx-t small{ opacity:.66; font-size:12px; }
+      .hd-vr .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; position:relative; transition:background .18s; } .hd-vr .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .18s; }
+      .hd-vr .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .hd-vr .lx-sw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }</style>
+      <div class="hs-h"><b>${hgTr('Nagłówek widoku', 'View header')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na urządzeniach', 'Preview on devices')}</small><div class="hd-pv"></div></div>
+      <div class="hd-vis">${[['hide', hgTr('Pokaż nagłówek', 'Show header'), hgTr('Tytuł, podtytuł i ikona nad kartami', 'Title, subtitle and icon above the cards')], ['nos', hgTr('Pokaż podtytuł', 'Show subtitle'), hgTr('Druga linia pod tytułem', 'Second line under the title')]].map(([k, l, d]) => `<div class="hd-vr"><span class="lx-t"><b>${l}</b><small>${d}</small></span><button class="lx-sw" role="switch" data-hge="hdvis" data-k="${k}" aria-checked="${!H0[k]}" aria-label="${H.esc(l)}"><i></i></button></div>`).join('')}</div>
       ${fld('t', hgTr('Tytuł', 'Title'), c.title, HG_HEAD_LIM.t)}${fld('s', hgTr('Podtytuł', 'Subtitle'), c.subtitle, HG_HEAD_LIM.s)}
+      <label class="hs-fl"><span>${hgTr('Ikona przy tytule (opcjonalnie)', 'Icon next to the title (optional)')}</span><span class="hs-s">${H.icon(H0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(H0.i || '')}" placeholder="${hgTr('bez ikony', 'no icon')}" autocomplete="off"></span></label>
       <p class="hd-hint">${hgTr(`Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).`, `Insert {name} to show the signed-in person's first name (now: ${H.esc(ui.first || 'none')}).`)}</p>
       <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>${hgTr('Krótsze wersje dla telefonu i tabletu', 'Shorter versions for phone and tablet')}</b><small>${hgTr('Opcjonalne – puste pola używają wersji głównej', 'Optional – empty fields use the main version')}</small></span></button>
       <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', hgTr('Tytuł – tablet', 'Title – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.t)}${fld('st', hgTr('Podtytuł – tablet', 'Subtitle – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.s)}${fld('tm', hgTr('Tytuł – telefon', 'Title – phone'), hgTr('jak główny', 'same as main'), 22)}${fld('sm', hgTr('Podtytuł – telefon', 'Subtitle – phone'), hgTr('jak główny', 'same as main'), 36)}</div>
-      </div>${this._panel ? `<div class="hs-fl"><span>${hgTr('Szerokość panelu', 'Panel width')}</span>${hgPwPick(this._pwCur(), 'pw')}</div>` : ''}<style>${HG_PW_CSS}</style>
+      ${this._panel ? `<div class="hs-fl"><span>${hgTr('Szerokość panelu', 'Panel width')}</span>${hgPwPick(this._pwCur(), 'pw')}</div>` : ''}</div><style>${HG_PW_CSS}</style>
       <div class="hs-ac"><button class="hs-b2" data-hge="hdreset">${hgTr('Przywróć domyślne', 'Restore defaults')}</button><button class="hs-b" data-hge="hdok">${hgTr('Zapisz', 'Save')}</button></div></div>`;
     for (const i of S.querySelectorAll('input.hs-in')) i.addEventListener('input', () => this._eHeadPv());
-    this._eHeadPv(); },
-  _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; } return o; },
-  _eHeadPv() { const S = this._eSheetEl, c = this._config, V = this._eHeadVals(), nm = this._userInfo().first || '';
+    hgIcWire(S); this._eHeadPv(); },
+  _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; }
+    if (o.i && !/^mdi:[a-z0-9-]+$/.test(o.i)) delete o.i; for (const b of S.querySelectorAll('[data-hge=hdvis]')) if (b.getAttribute('aria-checked') === 'false') o[b.dataset.k] = 1; return o; },
+  _eHeadPv() { const S = this._eSheetEl, c = { title: this._config.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!'), subtitle: this._config.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place') }, V = this._eHeadVals(), nm = this._userInfo().first || '';
     for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
-    const r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm)), one = (cls, l, t, s) => `<div class="hd-d ${cls}"><small>${l}</small><b>${r(t)}</b><p>${r(s)}</p></div>`;
+    const ic = V.i ? H.icon(V.i) : '', off = hgTr('ukryty', 'hidden'), r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
     const T = V.t || c.title, Su = V.s || c.subtitle;
     S.querySelector('.hd-pv').innerHTML = one('d', hgTr('Komputer', 'Desktop'), T, Su) + one('t', hgTr('Tablet', 'Tablet'), V.tt || T, V.st || Su) + one('m', hgTr('Telefon', 'Phone'), V.tm || T, V.sm || Su); },
   _eHeadAct(a) { const sc = this._pageScope();
     if (a === 'hdvar') { this._eSheetEl.querySelector('.hd-v').classList.toggle('on'); return; }
+    if (a === 'hdvis') { const b = arguments[1]; if (b) { b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') === 'false')); this._eHeadPv(); } return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
     this._eSheet(false);
@@ -1229,7 +1238,7 @@ const HG_EDIT = {
       return this._eToast(hgTr('Język: ', 'Language: ') + (v ? (HGLang.LIST.find((x) => x[0] === v) || [v, v])[1] : hgTr('automatycznie', 'automatic'))); }
     if (a === 'headedit') return this._eHead();
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
-    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar') return this._eHeadAct(a, b);
+    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis') return this._eHeadAct(a, b);
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
