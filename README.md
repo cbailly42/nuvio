@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.9.0-a3e635?style=flat-square" alt="v2.9.0">
+  <img src="https://img.shields.io/badge/version-v2.10.0-a3e635?style=flat-square" alt="v2.10.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -433,9 +433,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.9.0 origin/main -m "Nuvio 2.9.0" && git push origin v2.9.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.10.0 origin/main -m "Nuvio 2.10.0" && git push origin v2.10.0`.
 
 ## Changelog
+
+### 2.10.0
+- New: the header of every view can be edited in edit mode. Tap the lime pencil next to the title to set the title, subtitle and an optional icon, show or hide the whole header or only the subtitle, and add shorter versions for phone and tablet. This works in all views, including Rooms and the single room view: there `{room}` inserts the room name, an empty subtitle keeps the live temperature and room status, and the icon defaults to the room icon. A hidden header stays visible, faded and marked "Header hidden", while editing. Headers are saved in the layout and included in export and import.
+- Fixed: the last untranslated texts now follow the selected language (the shared layout dashboard, the default Media card title and the card error message). A new check in the build fails when any text has no Polish or English version.
 
 ### 2.9.0
 - New: language picker in **Settings → Appearance → Language** (Automatic / Polski / English) and in the user menu for everyone. Switching is instant, without a page reload, and the choice is saved per person (this device and the HA account). The default is now the browser language (Polish or English, otherwise English) instead of the HA profile language.
