@@ -550,7 +550,7 @@ class HGPage extends HTMLElement {
     return { full, first, handle, person: c.user.person || (pe && pe.entity_id) };
   }
   /* nagłówek widoku pokoju: przycisk „Pokoje”, ikona i nazwa pokoju, temperatura / wilgotność (adres ?area=<id>) */
-  _roomHead() {
+  _roomHead(hd = {}) {
     const c = this._config, h = this._hass, m = HGAreas.model(h, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()];
     const back = `<button class="rback" data-act="roomback" aria-label="${hgTr('Wróć do pokoi', 'Back to rooms')}">${H.icon('mdi:chevron-left')}<span>${hgTr('Pokoje', 'Rooms')}</span></button>`;
     if (!a) return `${back}<h1>${hgTr('Pokój', 'Room')}</h1><p>${hgTr('Nie znaleziono pokoju', 'Room not found')}</p>`;
@@ -566,16 +566,22 @@ class HGPage extends HTMLElement {
       lOn ? `<span class="rp lt">${H.icon('mdi:lightbulb-on')}${pl(lOn, 'światło', 'światła', 'świateł', 'light on', 'lights on')}</span>` : '',
       opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? hgTr('Otwarte', 'Open') : hgTr(`${opn} otwarte`, `${opn} open`)}</span>` : ''].join('');
     const sub = big || hum || pills ? `${big}${hum}${pills ? `<span class="rps">${pills}</span>` : ''}` : `<span>${a.devN ? pl(a.devN, 'urządzenie', 'urządzenia', 'urządzeń', 'device', 'devices') : hgTr('Brak urządzeń', 'No devices')}</span>`;
-    return `${back}<h1 class="rh">${H.icon(a.icon, 'rhi')}<span>${H.esc(a.name)}</span></h1><p class="renv">${sub}</p>`;
+    const ttl = this._headPick(hd, 't', a.name, a.name), ic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? hd.i : a.icon, st = this._headPick(hd, 's', '', a.name);
+    return `${back}<h1 class="rh" title="${H.esc(ttl)}">${H.icon(ic, 'rhi')}<span>${H.esc(ttl)}</span></h1>${hd.nos ? '' : `<p class="renv">${st ? `<span>${H.esc(st)}</span>` : sub}</p>`}`;
   }
+  /* nagłówek widoku (tytuł, podtytuł, ikona, widoczność) z układu: zwykłe widoki pod kluczem widoku, Pokoje i Pokój pod '<widok>:head' (bez układu kart) */
+  _headScope() { const v = this._config && this._config.view; return ['rooms', 'pokoj'].includes(v) ? v + ':head' : v; }
+  _headConf() { try { return ((HGL.data.s[this._headScope()] || {}).conf || {})._head || {}; } catch (e) { return {}; } }
+  _headPick(hd, k, def, room) { const md = this.getAttribute('mode'), ui = this._userInfo();
+    return String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''); }
+  _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
     const c = this._config; if (!this._hass) return;
-    if (c.room_head) { this._setHTML(this._headEl, this._roomHead()); return; }
-    const ui = this._userInfo();
-    const hd = (typeof HGL !== 'undefined' && HGL.data && HGL.data.s && this._pageScope && ((HGL.data.s[this._pageScope()] || {}).conf || {})._head) || {}, md = this.getAttribute('mode');
-    const pick = (k, def) => String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '');
+    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); return; }
+    const hd = this._headConf();
+    const pick = (k, def) => this._headPick(hd, k, def);
     const ttl = pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')), hic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? H.icon(hd.i, 'hdi') : '';
-    this._headEl.classList.toggle('hd-off', !!hd.hide); this._headEl.toggleAttribute('data-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden');
+    this._headVis(hd);
     this._headEl.innerHTML = `<h1 title="${H.esc(ttl)}">${hic}${H.esc(ttl)}</h1>${hd.nos ? '' : `<p>${H.esc(pick('s', c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place')))}</p>`}${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgTr('Ceny paliw', 'Fuel prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
     this._placeWx();
@@ -1160,8 +1166,8 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .head h1{ font-size:clamp(20px, 6.6vw, 26px); } :host([mode=phone]) .head p{ font-size:clamp(15px, 4.9vw, 19px); }
 .head h1, .head p{ overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; text-overflow:ellipsis; } .head p{ -webkit-line-clamp:2; }
 .head h1 .hdi{ width:1em; height:1em; --mdc-icon-size:1em; margin-right:.32em; vertical-align:-.12em; color:var(--hg-accent); }
-.head.hd-off > h1, .head.hd-off > p{ display:none; } :host([editing]) .head.hd-off > h1, :host([editing]) .head.hd-off > p{ display:-webkit-box; opacity:.38; }
-:host([editing]) .head.hd-off::before{ content:attr(data-off); display:inline-block; margin-bottom:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; background:var(--hg-accent); color:var(--hg-on-accent, #000); }
+.head.hd-off > h1, .head.hd-off > p{ display:none; } :host([editing]) .head.hd-off > h1, :host([editing]) .head.hd-off > p{ display:-webkit-box; opacity:.38; } :host([editing]) .head.hd-off > h1.rh, :host([editing]) .head.hd-off > p.renv{ display:flex; }
+:host([editing]) .head.hd-off::before{ content:attr(data-off); display:block; width:max-content; margin-bottom:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; background:var(--hg-accent); color:var(--hg-on-accent, #000); }
 .head .hge-hd{ all:unset; cursor:pointer; position:absolute; top:0; right:-40px; z-index:2; width:32px; height:32px; border-radius:50%; display:inline-grid; place-items:center; background:var(--hg-accent); color:var(--hg-on-accent); vertical-align:middle; box-shadow:0 4px 14px rgba(0,0,0,.25); } .head .hge-hd ha-icon{ width:18px; height:18px; --mdc-icon-size:18px; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ position:relative; } :host([mode=phone]) .head .hge-hd, :host([mode=tablet]) .head .hge-hd{ right:4px; }
 :host([mode=phone]) .fuel{ flex-wrap:nowrap; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .hrow{ gap:6px; margin-top:10px; max-width:100%; } :host([mode=phone]) .head, :host([mode=tablet]) .head{ min-width:0; } :host([mode=phone]) .hrow .fuel{ margin-top:0; flex:1; } :host([mode=phone]) .hrow{ --chip-h:40px; --chip-r:12px; --chip-pl:6px; --chip-pr:10px; --chip-ic:28px; align-items:center; scroll-snap-type:x proximity; }
 .fc .fl{ opacity:1 !important; height:16u; padding:0 6u; border-radius:999px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.02em; background:var(--hg-accent); color:var(--hg-on-accent); }

@@ -701,10 +701,16 @@ const hgCleanL = (L) => { let ch = false; const uq = (a) => { const r = [...new 
   L.hidden = uq(L.hidden || []); L.order = uq(L.order || []); const seen = new Set(); L.added = (L.added || []).filter((x) => { if (!x || !x.e || seen.has(x.e)) { ch = true; return false; } seen.add(x.e); return true; }); return ch; };
 const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
-  _eHeadBtn() { const hd = this._headEl; if (!hd || this._config.room_head || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
+  _eHeadBtn() { const hd = this._headEl; if (!hd || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
     const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj nagłówek widoku', 'Edit view header')); b.title = hgTr('Edytuj nagłówek widoku', 'Edit view header'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
-  _eHeadGet() { return Object.assign({}, (HGL.get(this._pageScope()).conf || {})._head || {}); },
-  _eHead() { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; const c = Object.assign({}, this._config), H0 = this._eHeadGet(), ui = this._userInfo(); c.title = c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!'); c.subtitle = c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place'); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
+  _eHeadGet() { return Object.assign({}, (HGL.get(this._headScope()).conf || {})._head || {}); },
+  /* domyślny tytuł i podtytuł widoku (placeholder i podgląd); w widoku pokoju {room} = nazwa pokoju, pusty podtytuł = temperatura i stan pokoju */
+  _eHeadDef() { const c = this._config;
+    if (c.room_head) { let rn = ''; try { const m = HGAreas.model(this._hass, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()]; rn = (a && a.name) || ''; } catch (e) { /* brak obszarów */ }
+      let ri = ''; try { const m = HGAreas.model(this._hass, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()]; ri = (a && a.icon) || ''; } catch (e) { /* brak obszarów */ }
+      return { title: '{room}', subtitle: hgTr('Temperatura, wilgotność i stan pokoju', 'Temperature, humidity and room status'), room: rn || hgTr('Salon', 'Living room'), icon: ri || 'mdi:home-outline', iconPh: hgTr('ikona pokoju', 'room icon'), sub0: hgTr('Temperatura i stan pokoju (na żywo)', 'Temperature and room status (live)') }; }
+    return { title: c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!'), subtitle: c.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place'), room: '' }; },
+  _eHead() { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; const c = this._eHeadDef(), H0 = this._eHeadGet(), ui = this._userInfo(); this._eSheet('cfg'); const S = this._eSheetEl; this._eHd = H0;
     const fld = (k, l, ph, lim) => `<label class="hs-fl"><span>${l} <em class="hd-c" data-c="${k}">${(H0[k] || '').length}/${lim}</em></span><span class="hs-s"><input class="hs-in" name="${k}" maxlength="${lim}" value="${H.esc(H0[k] || '')}" placeholder="${H.esc(ph)}" autocomplete="off"></span></label>`;
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${hgTr('Nagłówek widoku', 'View header')}"><style>${HG_STY_CSS}
       .hd-c{ font-style:normal; opacity:.55; font-size:11px; margin-left:6px; } .hd-c.ov{ color:#FF6B6B; opacity:1; } .hd-pv{ display:grid; grid-template-columns:1.6fr 1.1fr .8fr; gap:10px; align-items:start; } @media (max-width:560px){ .hd-pv{ grid-template-columns:1fr; } .hd-d.d, .hd-d.t{ display:none; } }
@@ -720,8 +726,8 @@ const HG_COMP_EDIT = {
       <div class="hs-pv"><small>${hgTr('Podgląd na urządzeniach', 'Preview on devices')}</small><div class="hd-pv"></div></div>
       <div class="hd-vis">${[['hide', hgTr('Pokaż nagłówek', 'Show header'), hgTr('Tytuł, podtytuł i ikona nad kartami', 'Title, subtitle and icon above the cards')], ['nos', hgTr('Pokaż podtytuł', 'Show subtitle'), hgTr('Druga linia pod tytułem', 'Second line under the title')]].map(([k, l, d]) => `<div class="hd-vr"><span class="lx-t"><b>${l}</b><small>${d}</small></span><button class="lx-sw" role="switch" data-hge="hdvis" data-k="${k}" aria-checked="${!H0[k]}" aria-label="${H.esc(l)}"><i></i></button></div>`).join('')}</div>
       ${fld('t', hgTr('Tytuł', 'Title'), c.title, HG_HEAD_LIM.t)}${fld('s', hgTr('Podtytuł', 'Subtitle'), c.subtitle, HG_HEAD_LIM.s)}
-      <label class="hs-fl"><span>${hgTr('Ikona przy tytule (opcjonalnie)', 'Icon next to the title (optional)')}</span><span class="hs-s">${H.icon(H0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(H0.i || '')}" placeholder="${hgTr('bez ikony', 'no icon')}" autocomplete="off"></span></label>
-      <p class="hd-hint">${hgTr(`Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).`, `Insert {name} to show the signed-in person's first name (now: ${H.esc(ui.first || 'none')}).`)}</p>
+      <label class="hs-fl"><span>${hgTr('Ikona przy tytule (opcjonalnie)', 'Icon next to the title (optional)')}</span><span class="hs-s">${H.icon(H0.i || c.icon || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(H0.i || '')}" placeholder="${H.esc(c.iconPh || hgTr('bez ikony', 'no icon'))}" autocomplete="off"></span></label>
+      <p class="hd-hint">${hgTr(`Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).`, `Insert {name} to show the signed-in person's first name (now: ${H.esc(ui.first || 'none')}).`)}${c.room ? ' ' + hgTr('{room} to nazwa otwartego pokoju; pusty podtytuł pokazuje temperaturę i stan pokoju.', '{room} is the name of the open room; an empty subtitle shows the temperature and room status.') : ''}</p>
       <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>${hgTr('Krótsze wersje dla telefonu i tabletu', 'Shorter versions for phone and tablet')}</b><small>${hgTr('Opcjonalne – puste pola używają wersji głównej', 'Optional – empty fields use the main version')}</small></span></button>
       <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', hgTr('Tytuł – tablet', 'Title – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.t)}${fld('st', hgTr('Podtytuł – tablet', 'Subtitle – tablet'), hgTr('jak główny', 'same as main'), HG_HEAD_LIM.s)}${fld('tm', hgTr('Tytuł – telefon', 'Title – phone'), hgTr('jak główny', 'same as main'), 22)}${fld('sm', hgTr('Podtytuł – telefon', 'Subtitle – phone'), hgTr('jak główny', 'same as main'), 36)}</div>
       ${this._panel ? `<div class="hs-fl"><span>${hgTr('Szerokość panelu', 'Panel width')}</span>${hgPwPick(this._pwCur(), 'pw')}</div>` : ''}</div><style>${HG_PW_CSS}</style>
@@ -730,18 +736,18 @@ const HG_COMP_EDIT = {
     hgIcWire(S); this._eHeadPv(); },
   _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; }
     if (o.i && !/^mdi:[a-z0-9-]+$/.test(o.i)) delete o.i; for (const b of S.querySelectorAll('[data-hge=hdvis]')) if (b.getAttribute('aria-checked') === 'false') o[b.dataset.k] = 1; return o; },
-  _eHeadPv() { const S = this._eSheetEl, c = { title: this._config.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!'), subtitle: this._config.subtitle ?? hgTr('Steruj domem w jednym miejscu', 'Control your home in one place') }, V = this._eHeadVals(), nm = this._userInfo().first || '';
+  _eHeadPv() { const S = this._eSheetEl, c = this._eHeadDef(), V = this._eHeadVals(), nm = this._userInfo().first || '';
     for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
-    const ic = V.i ? H.icon(V.i) : '', off = hgTr('ukryty', 'hidden'), r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
-    const T = V.t || c.title, Su = V.s || c.subtitle;
+    const ic = V.i || c.icon ? H.icon(V.i || c.icon) : '', off = hgTr('ukryty', 'hidden'), r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm).replace(/\{room\}/g, c.room)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
+    const T = V.t || c.title, Su = V.s || c.sub0 || c.subtitle;
     S.querySelector('.hd-pv').innerHTML = one('d', hgTr('Komputer', 'Desktop'), T, Su) + one('t', hgTr('Tablet', 'Tablet'), V.tt || T, V.st || Su) + one('m', hgTr('Telefon', 'Phone'), V.tm || T, V.sm || Su); },
-  _eHeadAct(a) { const sc = this._pageScope();
+  _eHeadAct(a) { const sc = this._headScope();
     if (a === 'hdvar') { this._eSheetEl.querySelector('.hd-v').classList.toggle('on'); return; }
     if (a === 'hdvis') { const b = arguments[1]; if (b) { b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') === 'false')); this._eHeadPv(); } return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
     this._eSheet(false);
-    this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? hgTr('Przywrócono domyślny tytuł', 'Default title restored') : hgTr('Zapisano tytuł', 'Title saved')); },
+    this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? hgTr('Przywrócono domyślny nagłówek', 'Default header restored') : hgTr('Zapisano nagłówek', 'Header saved')); },
   _eGhostSweep() { if (!this._eOn && !this.classList.contains('hge')) {} for (const ct of this._eConts()) for (const it of this._eItems(ct)) { const g = hgIsGhost(it), d = it.querySelector(':scope > .hge');
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
