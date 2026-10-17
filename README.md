@@ -517,7 +517,7 @@ Only tagging by hand: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nu
 - **Room gallery (fix)**: + Add in a room shows every component, containers included, and the component settings offer the size.
 
 ### 1.8.0
-- **AC remote (new component)**: a separate card in + Add styled like an AC remote app. The unit shows animated airflow (blue when cooling, orange when heating, faster at higher fan speed, sweeping when the louvers swing), a large setpoint, a cold–warm slider with − and +, power and Eco. Mode, Fan, Sleep and Airflow tiles open a bottom panel with the options; the card only shows what the unit supports. Works in sizes S, M and L and in light and dark themes.
+- **AC remote (new component)**: a separate card in + Add styled like an AC remote app. The unit shows animated airflow (blue when cooling, orange when heating, faster at higher fan speed, sweeping when the louvers swing), a large setpoint, a cold to warm slider with − and +, power and Eco. Mode, Fan, Sleep and Airflow tiles open a bottom panel with the options; the card only shows what the unit supports. Works in sizes S, M and L and in light and dark themes.
 
 ### 1.7.3
 - **Add component gallery (fix)**: thumbnails always use the sample previews; scaled-down live cards were cramped, empty (air conditioning) or showed a random device (robots, sensor chart, scene). Reworked the solar, rooms, power, appliance, stairs, updates, weather and mini player previews so nothing is cut off.

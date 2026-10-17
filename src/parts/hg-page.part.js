@@ -597,11 +597,15 @@ class HGPage extends HTMLElement {
     if (this._hass) this._wxEl.hass = this._hass;
   }
   /* ceny paliw (gov.pl): małe chipy pod powitaniem; strzałka = zmiana jutro; brak danych -> wiersz znika */
-  _fuelEnts() { return (this._config.fuel || []).flatMap((f) => [f.entity, f.change].filter(Boolean)); }
+  /* ceny paliw z bieżącego układu (wiz.fuel, wiz.fuelOff), więc włącznik w Ustawieniach działa bez przebudowy pulpitu; własna lista z YAML bez układu zostaje */
+  _fuelList() { const c = this._config, W = typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz; if (!c.fuel) return [];
+    const L = W && Array.isArray(W.fuel) ? W.fuel : W && c._hgAuto ? [] : c.fuel; if (W && W.fuelOff) return [];
+    return L.filter((f) => f && f.entity && !f.off); }
+  _fuelEnts() { return this._fuelList().flatMap((f) => [f.entity, f.change].filter(Boolean)); }
   _paintFuel(force) {
     const el = this._fuelEl; if (!el || !this._hass) return;
     const chips = [];
-    for (const f of this._config.fuel) {
+    for (const f of this._fuelList()) {
       const s = H.st(this._hass, f.entity), v = s ? parseFloat(s.state) : NaN;
       if (!H.ok(s) || !isFinite(v)) continue;
       const ch = H.st(this._hass, f.change), ca = (H.ok(ch) && ch.attributes) || {};
