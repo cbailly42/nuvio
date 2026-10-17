@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.10.1-a3e635?style=flat-square" alt="v2.10.1">
+  <img src="https://img.shields.io/badge/version-v2.11.0-a3e635?style=flat-square" alt="v2.11.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -433,9 +433,16 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nuvio 2.10.1" && git push origin v2.10.1`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.11.0 origin/main -m "Nuvio 2.11.0" && git push origin v2.11.0`.
 
 ## Lista zmian
+
+### 2.11.0
+- Nowość: ceny paliw w nagłówku można wyłączyć bez usuwania. W **Ustawienia > Nagłówek i nawigacja** jest przełącznik całej sekcji paliw i osobny przy każdym paliwie. Ukryte paliwo zostaje na liście z przygaszonymi polami, a po wyłączeniu sekcji lista zwija się do krótkiej informacji. Nagłówek zmienia się od razu, a ustawienie zapisuje się w układzie i trafia do eksportu i importu.
+- Nowość: szklany wybór koloru zastępuje przeglądarkowy we wszystkich polach koloru (gradient i kolory kuli wygaszacza, akcent, kolory tła i ustawienia kart). Ma pole nasycenia i jasności, suwak odcienia, pole HEX i szybkie kolory z limonką Nuvio.
+- Poprawka: galeria wygaszaczy i podgląd na żywo w Ustawieniach pokazują teraz prawdziwy obraz z Twoim tłem i danymi. Wcześniej były czarne albo puste, gdy kartę Wygaszacz otwierało się po innej karcie, a na telefonie podgląd na żywo nie miał szerokości.
+- Poprawka: wybór czujnika ruchu dla wygaszacza nie zawiesza już strony przy tysiącach encji. Lista otwiera się od razu, pokazuje czujniki ruchu, zajętości i obecności i filtruje podczas pisania. Okno Ustawień otwiera się też dużo szybciej, bo długie listy czujników wypełniają się dopiero po otwarciu.
+- Poprawka: Anuluj w trybie edycji nie cofa już zmian zapisanych wcześniej w Ustawieniach.
 
 ### 2.10.1
 - Poprawka: w **Ustawienia > Nagłówek i nawigacja** tytuł i podtytuł paska domowników (awatary osób) znowu się zapisują. Wcześniej zmiany przepadały po zamknięciu okna przyciskiem **Gotowe**; teraz Gotowe je zapisuje, pasek zmienia się od razu bez przeładowania strony, a sekcja pokazuje podgląd na żywo. Nowy wiersz prowadzi do edytora nagłówka bieżącego widoku.

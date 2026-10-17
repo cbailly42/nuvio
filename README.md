@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.10.1-a3e635?style=flat-square" alt="v2.10.1">
+  <img src="https://img.shields.io/badge/version-v2.11.0-a3e635?style=flat-square" alt="v2.11.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -433,9 +433,16 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nuvio 2.10.1" && git push origin v2.10.1`.
+Only tagging by hand: `git fetch origin && git tag -a v2.11.0 origin/main -m "Nuvio 2.11.0" && git push origin v2.11.0`.
 
 ## Changelog
+
+### 2.11.0
+- New: fuel prices in the header can be turned off without deleting them. **Settings > Header and navigation** has a switch for the whole fuel section and one on every fuel row. A hidden fuel keeps its row with dimmed fields, and with the section off the list collapses to a short note. The header updates right away, and the setting is saved in the layout and included in export and import.
+- New: a glass colour picker replaces the browser colour picker in every colour field (screensaver gradient and orb colours, accent, background colours and card settings). It has a saturation and brightness area, a hue slider, a HEX field and quick colours including Nuvio lime.
+- Fixed: the screensaver gallery and the live preview in Settings now show real renders with your background and data. Before, they stayed black or empty when you opened the Screensaver tab after another tab, and the live preview had no width on phones.
+- Fixed: choosing the screensaver motion sensor no longer freezes the page with thousands of entities. The list opens at once, shows motion, occupancy and presence sensors and filters as you type. The Settings sheet also opens much faster because long sensor lists are filled only when you open them.
+- Fixed: Cancel in edit mode no longer undoes changes already saved in Settings.
 
 ### 2.10.1
 - Fixed: in **Settings > Header and navigation** the title and subtitle of the household strip (the people avatars) are saved again. Before, the changes were lost when you closed the sheet with **Done**; now Done saves them, the strip updates right away without a page reload and the section shows a live preview. A new row links to the header editor of the current view.
