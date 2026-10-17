@@ -53,14 +53,20 @@ const HG_WALL_SS = `
 .nw-fc{ display:grid; grid-template-columns:repeat(var(--n, 4), 1fr); gap:4px; margin-top:clamp(8px, 1.3vmin, 12px); padding-top:clamp(8px, 1.3vmin, 12px); border-top:1px solid ${K(255,255,255,.14)}; }
 .nw-fc div{ display:flex; flex-direction:column; align-items:center; gap:0; font-size:clamp(11px, 1.4vmin, 13px); font-variant-numeric:tabular-nums; }
 .nw-fc i{ font-style:normal; opacity:.65; font-size:.88em; font-weight:500; } .nw-fc img{ width:clamp(38px, 5.2vmin, 50px); height:clamp(38px, 5.2vmin, 50px); margin:-6px 0; } .nw-fc b{ font-weight:500; }
-.nw-e h5{ margin:0 0 clamp(8px, 1.2vmin, 11px); font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.12em; text-transform:uppercase; opacity:.62; }
-.nw-e ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:clamp(8px, 1.2vmin, 11px); }
-.nw-e li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
-.nw-e li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
-.nw-e .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
-.nw-e .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }; text-shadow:none; opacity:1; }
-.nw-e li.nx .nw-et{ opacity:1; }
-.nw-e .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nw-e h5, .nw-k h5{ margin:0 0 clamp(8px, 1.2vmin, 11px); font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.12em; text-transform:uppercase; opacity:.62; }
+.nw-e ul, .nw-k ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:clamp(8px, 1.2vmin, 11px); }
+.nw-e li, .nw-k li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
+.nw-e li::before, .nw-k li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
+.nw-e .nw-et, .nw-k .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
+.nw-e .nw-et em, .nw-k .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }; text-shadow:none; opacity:1; }
+.nw-e li.nx .nw-et, .nw-k li.nx .nw-et{ opacity:1; }
+.nw-e .nw-en, .nw-k .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* dziecko (LiveKid, funkcja ukryta): przyjście / wyjście jak kolumny prognozy, plan zajęć jak lista wydarzeń */
+.nw-k h5{ display:flex; align-items:center; gap:8px; } .nw-k h5 i{ width:7px; height:7px; border-radius:50%; background:${K(255,255,255,.45)}; } .nw-k h5 i.on{ background:${K(126,224,168,1)}; box-shadow:0 0 10px ${K(126,224,168,.9)}; }
+.nw-kt{ display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:clamp(8px, 1.3vmin, 12px); padding-bottom:clamp(8px, 1.3vmin, 12px); border-bottom:1px solid ${K(255,255,255,.14)}; }
+.nw-kt div{ display:flex; flex-direction:column; gap:1px; } .nw-kt i{ font-style:normal; font-size:clamp(10px, 1.3vmin, 12px); font-weight:600; letter-spacing:.08em; text-transform:uppercase; opacity:.62; }
+.nw-kt b{ font-size:clamp(20px, 3vmin, 28px); font-weight:300; letter-spacing:-.02em; font-variant-numeric:tabular-nums; } .nw-kt b.mu{ opacity:.45; }
+.nw-k .nw-kn{ font-size:clamp(12px, 1.5vmin, 14px); opacity:.7; } .nw-ks{ height:clamp(10px, 1.6vmin, 16px); }
 @media (prefers-reduced-motion:reduce){ .nw-p{ animation:none; } }
 .nw-h{ position:absolute; margin:0; left:0; right:0; bottom:calc(clamp(18px, 3.5vmin, 36px) + env(safe-area-inset-bottom, 0px)); padding:0 16px; text-align:center; font-size:clamp(13px, 2vmin, 16px); font-weight:500; letter-spacing:.03em; color:#fff; background:none; text-shadow:0 1px 3px ${K(0,0,0,.6)}, 0 2px 16px ${K(0,0,0,.5)}; animation:nwhp 3.2s ease-in-out infinite; }
 @keyframes nwhp{ 0%, 100%{ opacity:.7; } 50%{ opacity:1; } }
@@ -187,7 +193,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else this.wx(); } },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else { this.wx(); this.kid(); } } },
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -215,7 +221,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     el.style.setProperty('--nw-dim', c.dim);
     const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board());
     el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
-      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
+      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
@@ -234,7 +240,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {}, d = new Date();
     el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)).format(d);
     el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
-    this.wx(); this.cal();
+    this.wx(); this.kid(); this.cal();
     this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); },
   /* pogoda w prawym górnym rogu (szklana karta), tylko gdy w HA jest encja weather */
   wx() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-w'); if (el && el.classList.contains('gl')) return this.gl(true); if (!box) return;
@@ -258,7 +264,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     Promise.all([one('hourly'), one('daily')]).then(([hr, dy]) => { this._fcb = false; this._fc = { id, t: Date.now(), hourly: hr, daily: dy }; if (this.el) this.wx(); }); },
   /* dzisiejsze wydarzenia ze wszystkich encji calendar.* (API kalendarza HA), odświeżane co 5 min; blok ukryty bez kalendarzy lub bez wydarzeń */
   cal() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-e'); if (!box) return;
-    const ids = Object.keys((h && h.states) || {}).filter((e) => e.startsWith('calendar.')); if (!ids.length || !h.callApi) { box.hidden = true; return; }
+    const kx = this._kidCal || [], ids = Object.keys((h && h.states) || {}).filter((e) => e.startsWith('calendar.') && !kx.includes(e)); if (!ids.length || !h.callApi) { box.hidden = true; return; }
     const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setDate(d1.getDate() + 1); const key = d0.toDateString() + ids.join();
     if (this._ev && this._evk === key && Date.now() - this._evt < 300000) return this.evDraw(box);
     this._evk = key; this._evt = Date.now();
@@ -274,6 +280,24 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       return e.s <= now ? hgTr('Teraz', 'Now') : m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 180 ? hgTr(`za ${Math.round(m / 60)} h`, `in ${Math.round(m / 60)} h`) : ''; };
     const html = `<h5>${H.esc(hgTr('Dzisiaj', 'Today'))}</h5><ul>${E.map((e) => { const b = e === nx ? rel(e) : '';
       return `<li${e === nx ? ' class="nx"' : ''} style="--c:${C[e.c % C.length]}"><span class="nw-et">${H.esc(e.ad ? hgTr('Cały dzień', 'All day') : f.format(e.s) + ' – ' + f.format(e.en))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(e.t)}">${H.esc(e.t)}</span></li>`; }).join('')}</ul>`;
+    if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
+  /* dziecko w żłobku / przedszkolu (integracja LiveKid): tylko w dni robocze, gdy encje istnieją i jest flaga nuvio-wall-lk (HGLiveKid.flag).
+     Przyjście, wyjście i dzisiejszy plan zajęć; kalendarz integracji nie dubluje się wtedy w bloku „Dzisiaj”. */
+  kidOn(h) { return typeof HGLiveKid !== 'undefined' && HGLiveKid.flag() && HGLiveKid.has(h); },
+  kid() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-k'); if (!box) return;
+    const wd = new Date().getDay(), K = wd > 0 && wd < 6 && this.kidOn(h) ? HGLiveKid.kids(h).filter((k) => k.ok && (k.scheduled || k.inToday)).slice(0, 2) : [];
+    const kx = K.map((k) => k.ids.calendar).filter(Boolean); if (kx.join() !== (this._kidCal || []).join()) { this._kidCal = kx; this._evk = ''; }
+    if (!K.length) { box.hidden = true; return; }
+    const now = new Date(), at = (v) => { if (!v) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
+    const rel = (s) => { const m = Math.round((s - now) / 60000); return s <= now ? hgTr('Teraz', 'Now') : m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 180 ? hgTr(`za ${Math.round(m / 60)} h`, `in ${Math.round(m / 60)} h`) : ''; };
+    const C = ['#7EE0A8', '#7AB8FF', '#FFD36E', '#D59BFF', '#FF9F6E'];
+    const one = (k) => { const P = k.plan.map((a) => ({ a, s: at(a.start), en: at(a.end) })).filter((x) => x.a.all_day || !x.en || x.en > now).slice(0, 4), nx = P.find((x) => !x.a.all_day && x.s);
+      const tm = (x) => (x.a.all_day ? hgTr('Cały dzień', 'All day') : HGLiveKid.hhmm(h, x.a.start) + (x.a.end ? ' – ' + HGLiveKid.hhmm(h, x.a.end) : ''));
+      const li = P.map((x, i) => { const b = x === nx ? rel(x.s) : ''; return `<li${x === nx ? ' class="nx"' : ''} style="--c:${C[i % C.length]}"><span class="nw-et">${H.esc(tm(x))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(x.a.title)}">${H.esc(x.a.title || hgTr('Zajęcia', 'Activity'))}</span></li>`; }).join('');
+      return `<h5><i class="${k.present ? 'on' : ''}"></i>${H.esc(k.name || hgTr('Przedszkole', 'Kindergarten'))}</h5>
+        <div class="nw-kt"><div><i>${H.esc(hgTr('Przyjście', 'Check-in'))}</i><b class="${k.inToday ? '' : 'mu'}">${H.esc(k.inToday || '--:--')}</b></div><div><i>${H.esc(hgTr('Wyjście', 'Check-out'))}</i><b class="${k.outToday ? '' : 'mu'}">${H.esc(k.outToday || '--:--')}</b></div></div>
+        ${li ? `<ul>${li}</ul>` : `<span class="nw-kn">${H.esc(k.plan.length ? hgTr('Zajęcia na dziś zakończone', 'Today\'s activities are over') : hgTr('Brak zajęć w planie', 'No activities planned'))}</span>`}`; };
+    const html = K.map(one).join('<div class="nw-ks"></div>');
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* dwie warstwy zdjęcia: płynne przenikanie (pokaz slajdów co 45 s) */
   photos(rm) { const L = [...this.el.querySelectorAll('.nw-bg')], im = this.imgs(); let i = Math.floor(Math.random() * im.length), f = 0;
