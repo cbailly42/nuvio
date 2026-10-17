@@ -294,7 +294,9 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   admin(p) { const h = p && p._hass; return !!(h && h.user && h.user.is_admin); },
   fmt(s) { return s < 60 ? s + ' s' : Math.round(s / 60) + ' min'; },
   sensors(h) { const R = Object.keys((h && h.states) || {}).filter((e) => e.startsWith('binary_sensor.')), pri = (e) => (['motion', 'occupancy', 'presence'].includes((h.states[e].attributes || {}).device_class) ? 0 : 1), nm = (e) => (h.states[e].attributes || {}).friendly_name || e;
-    return R.sort((a, b) => pri(a) - pri(b) || nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
+    /* tylko czujniki ruchu, zajętości i obecności (przy tysiącach binary_sensor lista była ogromna); gdy takich nie ma, wszystkie binary_sensor */
+    const M = R.filter((e) => !pri(e)), L = M.length ? M : R;
+    return L.sort((a, b) => nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
   html(p) { if (!this.admin(p)) return ''; const c = this.get(), h = p._hass, dv = Math.round(c.dim * 100), idles = this.IDLES.includes(c.idle) ? this.IDLES : [...this.IDLES, c.idle].sort((a, b) => a - b);
     const sens = this.sensors(h);
     const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = !(this.glass && this.glass());   /* zdjęcie jest tłem obu wariantów */
