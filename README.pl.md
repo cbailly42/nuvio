@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.10.0-a3e635?style=flat-square" alt="v2.10.0">
+  <img src="https://img.shields.io/badge/version-v2.10.1-a3e635?style=flat-square" alt="v2.10.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -433,9 +433,13 @@ Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podb
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Sam tag ręcznie: `git fetch origin && git tag -a v2.10.0 origin/main -m "Nuvio 2.10.0" && git push origin v2.10.0`.
+Sam tag ręcznie: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nuvio 2.10.1" && git push origin v2.10.1`.
 
 ## Lista zmian
+
+### 2.10.1
+- Poprawka: w **Ustawienia > Nagłówek i nawigacja** tytuł i podtytuł paska domowników (awatary osób) znowu się zapisują. Wcześniej zmiany przepadały po zamknięciu okna przyciskiem **Gotowe**; teraz Gotowe je zapisuje, pasek zmienia się od razu bez przeładowania strony, a sekcja pokazuje podgląd na żywo. Nowy wiersz prowadzi do edytora nagłówka bieżącego widoku.
+- Poprawka: wykres **Energia · tydzień** jest dużo wyższy i czytelniejszy. Jego wysokość rośnie z rozmiarem karty (S, M, L), słupki są szersze, produkcja ma własny bursztynowy kolor i małe wartości pozostają widoczne, a etykiety dni i wartości są większe.
 
 ### 2.10.0
 - Nowość: nagłówek każdego widoku można edytować w trybie edycji. Limonkowy ołówek obok tytułu pozwala ustawić tytuł, podtytuł i opcjonalną ikonę, pokazać lub ukryć cały nagłówek albo sam podtytuł oraz dodać krótsze wersje dla telefonu i tabletu. Działa we wszystkich widokach, także w Pokojach i w widoku pojedynczego pokoju: tam `{room}` wstawia nazwę pokoju, pusty podtytuł zostawia temperaturę i stan pokoju na żywo, a domyślną ikoną jest ikona pokoju. Ukryty nagłówek podczas edycji zostaje widoczny, przygaszony i oznaczony „Nagłówek ukryty”. Nagłówki zapisują się w układzie i trafiają do eksportu i importu.

@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.10.0-a3e635?style=flat-square" alt="v2.10.0">
+  <img src="https://img.shields.io/badge/version-v2.10.1-a3e635?style=flat-square" alt="v2.10.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -433,9 +433,13 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Only tagging by hand: `git fetch origin && git tag -a v2.10.0 origin/main -m "Nuvio 2.10.0" && git push origin v2.10.0`.
+Only tagging by hand: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nuvio 2.10.1" && git push origin v2.10.1`.
 
 ## Changelog
+
+### 2.10.1
+- Fixed: in **Settings > Header and navigation** the title and subtitle of the household strip (the people avatars) are saved again. Before, the changes were lost when you closed the sheet with **Done**; now Done saves them, the strip updates right away without a page reload and the section shows a live preview. A new row links to the header editor of the current view.
+- Fixed: the **Energy · week** chart is much taller and easier to read. Its height grows with the card size (S, M, L), the bars are wider, production uses its own amber colour and small values stay visible, and the day and value labels are larger.
 
 ### 2.10.0
 - New: the header of every view can be edited in edit mode. Tap the lime pencil next to the title to set the title, subtitle and an optional icon, show or hide the whole header or only the subtitle, and add shorter versions for phone and tablet. This works in all views, including Rooms and the single room view: there `{room}` inserts the room name, an empty subtitle keeps the live temperature and room status, and the icon defaults to the room icon. A hidden header stays visible, faded and marked "Header hidden", while editing. Headers are saved in the layout and included in export and import.
