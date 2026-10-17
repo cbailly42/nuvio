@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <title>Nuvio</title>
+  <!-- Small-size cut, hinted to a 16-unit pixel grid (also exact at 32 and 48 px). Dark tabs get the lit door. -->
+  <style>
+    .frame, .door { fill: #13211A; }
+    @media (prefers-color-scheme: dark) { .frame { fill: #FFFFFF; } .door { fill: #63D71E; } }
+  </style>
+  <path class="frame" d="M1 15 V8 A7 7 0 0 1 15 8 V15 H12 V8 A4 4 0 0 0 4 8 V15 Z"/>
+  <path class="door" d="M6 15 V10 A2 2 0 0 1 10 10 V15 Z"/>
+</svg>

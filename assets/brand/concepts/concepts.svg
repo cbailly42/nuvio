@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1600" height="984" viewBox="0 0 1600 984"><defs><filter id="grey"><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1600" height="984" fill="#f7f7f4"/><text x="60" y="78" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#161616">Nuvio: logo concepts</text><text x="60" y="116" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#6b6b6b">Calm, safe, quiet, homely. Greyscale first round.</text><rect x="60" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#161616" stroke-width="2"/><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="90" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <title id="c0-title">Nuvio concept A, Lit Doorway, v6</title>
+  <path id="c0-symbol" fill="#111111" fill-rule="evenodd" d="M40 232 V112 A88 88 0 0 1 216 112 V232 H176 V112 A48 48 0 0 0 80 112 V232 Z M104 232 V112 A24 24 0 0 1 152 112 V232 Z"/>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 754 256" x="90" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <title id="l0-title">Nuvio concept A, Lit Doorway, horizontal lockup v2</title>
+  <path id="l0-symbol" fill="#111111" fill-rule="evenodd" d="M40 232 V112 A88 88 0 0 1 216 112 V232 H176 V112 A48 48 0 0 0 80 112 V232 Z M104 232 V112 A24 24 0 0 1 152 112 V232 Z"/>
+  <g id="l0-wordmark" transform="translate(264 0)">
+    <path fill="#111111" fill-rule="evenodd" d="M0 178 V122 A44 44 0 0 1 88 122 V178 H66 V122 A22 22 0 0 0 22 122 V178 Z M106 78 V134 A44 44 0 0 0 194 134 V78 H172 V134 A22 22 0 0 1 128 134 V78 Z M202 78 H226 L248 142 L270 78 H294 L260 178 H236 Z M306 78 H328 V178 H306 Z M303 48 A14 14 0 1 0 331 48 A14 14 0 1 0 303 48 Z M346 128 A52 52 0 1 0 450 128 A52 52 0 1 0 346 128 Z M368 128 A30 30 0 1 1 428 128 A30 30 0 1 1 368 128 Z"/>
+  </g>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="90" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <title id="s064-title">Nuvio concept A, Lit Doorway, v6</title>
+  <path id="s064-symbol" fill="#111111" fill-rule="evenodd" d="M40 232 V112 A88 88 0 0 1 216 112 V232 H176 V112 A48 48 0 0 0 80 112 V232 Z M104 232 V112 A24 24 0 0 1 152 112 V232 Z"/>
+</svg>
+</g><text x="122" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="180" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <title id="s032-title">Nuvio concept A, Lit Doorway, v6</title>
+  <path id="s032-symbol" fill="#111111" fill-rule="evenodd" d="M40 232 V112 A88 88 0 0 1 216 112 V232 H176 V112 A48 48 0 0 0 80 112 V232 Z M104 232 V112 A24 24 0 0 1 152 112 V232 Z"/>
+</svg>
+</g><text x="196" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="238" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <title id="s016-title">Nuvio concept A, Lit Doorway, v6</title>
+  <path id="s016-symbol" fill="#111111" fill-rule="evenodd" d="M40 232 V112 A88 88 0 0 1 216 112 V232 H176 V112 A48 48 0 0 0 80 112 V232 Z M104 232 V112 A24 24 0 0 1 152 112 V232 Z"/>
+</svg>
+</g><text x="246" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="90.0" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">A · Lit Doorway</text><text x="90.0" y="808" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#161616" letter-spacing="1.5">RECOMMENDED</text><text x="90.0" y="842" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">A lowercase n drawn as an arched doorway</text><text x="90.0" y="868" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">with the door inside: shelter, home, a</text><text x="90.0" y="894" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">light left on.</text><rect x="562.667" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#e4e4e0" stroke-width="1"/><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="592.667" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <title id="c1-title">Nuvio concept B, Calm Wave nu, v3</title>
+  <path id="c1-symbol" fill="#111111" d="M18 206 V108 A64 64 0 0 1 146 108 V148 A28 28 0 0 0 202 148 V50 A18 18 0 0 1 238 50 V148 A64 64 0 0 1 110 148 V108 A28 28 0 0 0 54 108 V206 A18 18 0 0 1 18 206 Z"/>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 752 256" x="592.667" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <title id="l1-title">Nuvio concept B, Calm Wave, horizontal lockup v2</title>
+  <path id="l1-symbol" fill="#111111" d="M18 206 V108 A64 64 0 0 1 146 108 V148 A28 28 0 0 0 202 148 V50 A18 18 0 0 1 238 50 V148 A64 64 0 0 1 110 148 V108 A28 28 0 0 0 54 108 V206 A18 18 0 0 1 18 206 Z"/>
+  <g id="l1-wordmark" transform="translate(284 0)">
+    <path fill="#111111" fill-rule="evenodd" d="M0 178 V122 A44 44 0 0 1 88 122 V178 H66 V122 A22 22 0 0 0 22 122 V178 Z M106 78 V134 A44 44 0 0 0 194 134 V78 H172 V134 A22 22 0 0 1 128 134 V78 Z M202 78 H226 L248 142 L270 78 H294 L260 178 H236 Z M306 78 H328 V178 H306 Z M303 48 A14 14 0 1 0 331 48 A14 14 0 1 0 303 48 Z M346 128 A52 52 0 1 0 450 128 A52 52 0 1 0 346 128 Z M368 128 A30 30 0 1 1 428 128 A30 30 0 1 1 368 128 Z"/>
+  </g>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="592.667" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <title id="s164-title">Nuvio concept B, Calm Wave nu, v3</title>
+  <path id="s164-symbol" fill="#111111" d="M18 206 V108 A64 64 0 0 1 146 108 V148 A28 28 0 0 0 202 148 V50 A18 18 0 0 1 238 50 V148 A64 64 0 0 1 110 148 V108 A28 28 0 0 0 54 108 V206 A18 18 0 0 1 18 206 Z"/>
+</svg>
+</g><text x="624.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="682.667" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <title id="s132-title">Nuvio concept B, Calm Wave nu, v3</title>
+  <path id="s132-symbol" fill="#111111" d="M18 206 V108 A64 64 0 0 1 146 108 V148 A28 28 0 0 0 202 148 V50 A18 18 0 0 1 238 50 V148 A64 64 0 0 1 110 148 V108 A28 28 0 0 0 54 108 V206 A18 18 0 0 1 18 206 Z"/>
+</svg>
+</g><text x="698.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="740.667" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <title id="s116-title">Nuvio concept B, Calm Wave nu, v3</title>
+  <path id="s116-symbol" fill="#111111" d="M18 206 V108 A64 64 0 0 1 146 108 V148 A28 28 0 0 0 202 148 V50 A18 18 0 0 1 238 50 V148 A64 64 0 0 1 110 148 V108 A28 28 0 0 0 54 108 V206 A18 18 0 0 1 18 206 Z"/>
+</svg>
+</g><text x="748.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="592.6666666666667" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">B · Calm Wave</text><text x="592.6666666666667" y="814" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">n and u in one even, unbroken stroke: a</text><text x="592.6666666666667" y="840" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">slow wave that reads the same upside down.</text><rect x="1065.33" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#e4e4e0" stroke-width="1"/><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="1095.33" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <title id="c2-title">Nuvio concept C, Still Horizon, v2</title>
+  <path id="c2-symbol" fill="#111111" d="M35.59 154 A96 96 0 1 1 220.41 154 Z M44.86 176 H211.14 A96 96 0 0 1 44.86 176 Z"/>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 754 256" x="1095.33" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <title id="l2-title">Nuvio concept C, Still Horizon, horizontal lockup v2</title>
+  <path id="l2-symbol" fill="#111111" d="M35.59 154 A96 96 0 1 1 220.41 154 Z M44.86 176 H211.14 A96 96 0 0 1 44.86 176 Z"/>
+  <g id="l2-wordmark" transform="translate(272 0)">
+    <path fill="#111111" fill-rule="evenodd" d="M0 178 V122 A44 44 0 0 1 88 122 V178 H66 V122 A22 22 0 0 0 22 122 V178 Z M106 78 V134 A44 44 0 0 0 194 134 V78 H172 V134 A22 22 0 0 1 128 134 V78 Z M202 78 H226 L248 142 L270 78 H294 L260 178 H236 Z M306 78 H328 V178 H306 Z M303 48 A14 14 0 1 0 331 48 A14 14 0 1 0 303 48 Z M346 128 A52 52 0 1 0 450 128 A52 52 0 1 0 346 128 Z M368 128 A30 30 0 1 1 428 128 A30 30 0 1 1 368 128 Z"/>
+  </g>
+</svg>
+</g><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="1095.33" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <title id="s264-title">Nuvio concept C, Still Horizon, v2</title>
+  <path id="s264-symbol" fill="#111111" d="M35.59 154 A96 96 0 1 1 220.41 154 Z M44.86 176 H211.14 A96 96 0 0 1 44.86 176 Z"/>
+</svg>
+</g><text x="1127.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="1185.33" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <title id="s232-title">Nuvio concept C, Still Horizon, v2</title>
+  <path id="s232-symbol" fill="#111111" d="M35.59 154 A96 96 0 1 1 220.41 154 Z M44.86 176 H211.14 A96 96 0 0 1 44.86 176 Z"/>
+</svg>
+</g><text x="1201.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g filter="url(#grey)"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" viewBox="0 0 256 256" x="1243.33" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <title id="s216-title">Nuvio concept C, Still Horizon, v2</title>
+  <path id="s216-symbol" fill="#111111" d="M35.59 154 A96 96 0 1 1 220.41 154 Z M44.86 176 H211.14 A96 96 0 0 1 44.86 176 Z"/>
+</svg>
+</g><text x="1251.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="1095.3333333333335" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">C · Still Horizon</text><text x="1095.3333333333335" y="814" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">A low sun resting on still water: the end</text><text x="1095.3333333333335" y="840" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">of the day, everything settled.</text></svg>

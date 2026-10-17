@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Nuvio symbol, small-size cut for dark backgrounds</title>
+  <path id="frame" fill="#FFFFFF" d="M29.5 232 V124 A98.5 98.5 0 0 1 226.5 124 V232 H177.5 V124 A49.5 49.5 0 0 0 78.5 124 V232 Z"/>
+  <path id="door" fill="#63D71E" d="M109.5 232 V156 A18.5 18.5 0 0 1 146.5 156 V232 Z"/>
+</svg>

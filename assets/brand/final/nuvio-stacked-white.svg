@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 24 450 398" width="450" height="398" role="img" aria-labelledby="title">
+  <title id="title">Nuvio logo, stacked, white</title>
+  <g id="symbol" transform="translate(97 0)">
+    <path fill="#FFFFFF" fill-rule="evenodd" d="M41.5 232 V112 A86.5 86.5 0 0 1 214.5 112 V232 H177.5 V112 A49.5 49.5 0 0 0 78.5 112 V232 Z M107.5 232 V112 A20.5 20.5 0 0 1 148.5 112 V232 Z"/>
+  </g>
+  <g id="wordmark" transform="translate(0 242)">
+    <path fill="#FFFFFF" fill-rule="evenodd" d="M0 178 V120 A44 44 0 0 1 88 120 V178 H66 V120 A22 22 0 0 0 22 120 V178 Z M106 78 V136 A44 44 0 0 0 194 136 V78 H172 V136 A22 22 0 0 1 128 136 V78 Z M202 78 H226 L248 142 L270 78 H294 L262.96 169.29 A15.8 15.8 0 0 1 233.04 169.29 Z M306 78 H328 V178 H306 Z M303 48 A14 14 0 1 0 331 48 A14 14 0 1 0 303 48 Z M346 128 A52 52 0 1 0 450 128 A52 52 0 1 0 346 128 Z M368 128 A30 30 0 1 1 428 128 A30 30 0 1 1 368 128 Z"/>
+  </g>
+</svg>
