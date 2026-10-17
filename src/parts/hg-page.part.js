@@ -571,7 +571,8 @@ class HGPage extends HTMLElement {
   }
   /* nagłówek widoku (tytuł, podtytuł, ikona, widoczność) z układu: zwykłe widoki pod kluczem widoku, Pokoje i Pokój pod '<widok>:head' (bez układu kart) */
   _headScope() { const v = this._config && this._config.view; return ['rooms', 'pokoj'].includes(v) ? v + ':head' : v; }
-  _headConf() { try { return ((HGL.data.s[this._headScope()] || {}).conf || {})._head || {}; } catch (e) { return {}; } }
+  /* przed 2.10.0 nagłówek widoku Pokoje trafiał pod klucz 'null' (widok bez układu kart): odczyt stamtąd, dopóki nie zapisze się nowy */
+  _headConf() { try { const S = HGL.data.s, sc = this._headScope(), h = ((S[sc] || {}).conf || {})._head; if (h) return h; return (sc === 'rooms:head' && ((S.null || {}).conf || {})._head) || {}; } catch (e) { return {}; } }
   _headPick(hd, k, def, room) { const md = this.getAttribute('mode'), ui = this._userInfo();
     return String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''); }
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden'); else delete this._headEl.dataset.off; }
@@ -818,8 +819,11 @@ class HGPage extends HTMLElement {
   }
   _paintHub(force) {
     if (!this._built || !this._hass) return;
-    const hb = this._config.hub; this.toggleAttribute('hub-right', !!(hb && hb.pos === 'right')); if (!hb) { this._hubEl.style.display = 'none'; return; }
-    const sig = JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
+    let hb = this._config.hub; const WH = typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.hub;
+    /* tytuł i podtytuł paska z bieżącego układu (jedno źródło: wiz.hub), więc zmiana w Ustawieniach działa bez przebudowy pulpitu */
+    if (hb && WH && typeof WH === 'object') hb = Object.assign({}, hb, { title: WH.title || hgTr('Domownicy', 'Household'), subtitle: WH.subtitle || hgTr('Kto jest teraz w domu', 'Who is home right now') });
+    this.toggleAttribute('hub-right', !!(hb && hb.pos === 'right')); if (!hb) { this._hubEl.style.display = 'none'; return; }
+    const sig = hb.title + '|' + hb.subtitle + JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
     if (!force && sig === this._sigHub) return; this._sigHub = sig;
     this._setHTML(this._hubEl, `<div class="ht"><b>${H.esc(hb.title)}</b><span>${H.esc(hb.subtitle)}</span></div>
       <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || hgTr('Rodzina', 'Family'))}">${H.icon('mdi:plus')}</button>
