@@ -20,6 +20,8 @@ const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', 'Lights'],
   ['cover', 'Rolety', 'mdi:window-shutter', 'Covers'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', 'Switches'], ['sens', 'Czujniki', 'mdi:gauge', 'Sensors'],
   ['mot', 'Ruch i obecność', 'mdi:motion-sensor', 'Motion & presence'], ['door', 'Drzwi i okna', 'mdi:door', 'Doors & windows'], ['cam', 'Kamery', 'mdi:cctv', 'Cameras'], ['rob', 'Roboty', 'mdi:robot-vacuum', 'Robots'],
   ['misc', 'Inne', 'mdi:tune-variant', 'Other']];
+/* domeny, które można dodać do sekcji pokoju (Ustawienia sekcji → Dodaj encję) */
+const HG_SEC_DOMS = { light: ['light', 'switch'], sw: ['switch', 'fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'], clim: ['climate', 'water_heater'], media: ['media_player'], cover: ['cover'], sens: ['sensor', 'binary_sensor'], mot: ['binary_sensor'], door: ['binary_sensor'], cam: ['camera'], rob: ['vacuum', 'lawn_mower'] };
 const hgPl = (n, one, few, many, en1, enN) => en1 && hgCurLang() === 'en' ? `${n} ${n === 1 ? en1 : enN || en1 + 's'}` : `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
 
 const HGAreas = {
@@ -50,7 +52,7 @@ const HGAreas = {
     for (const [from, to] of Object.entries(merge)) { const a = areasReg[from]; if (a && byId[to]) byId[to].strip.push(a.name); }
     for (const v of cfg.virtual || []) add(v.id, v.name, v.icon, true);
     for (const v of cfg.virtual || []) for (const e of v.entities || []) if (!assign[e]) assign[e] = v.id;
-    const un = [];
+    const un = [], rHide = cfg.room_hide || {};
     for (const e of Object.keys(h.states)) {
       const dom = e.slice(0, e.indexOf('.')), r = reg[e];
       const forced = assign[e];
@@ -59,7 +61,7 @@ const HGAreas = {
       }
       let aid = forced || (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null;
       if (aid && merge[aid]) aid = merge[aid];
-      if (aid && byId[aid]) byId[aid].ents.push(e);
+      if (aid && byId[aid]) { if (!(rHide[aid] && rHide[aid].includes(e))) byId[aid].ents.push(e); }   /* ukryte w tym pokoju (Ustawienia sekcji → Ukryj w tym pokoju) */
       else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
     }
     if (cfg.unassigned !== false && un.length) { add('_none', hgTr('Bez pokoju', 'No room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
@@ -80,6 +82,9 @@ const HGAreas = {
     this._memo.set(cfg, m);
     return m;
   },
+  /* pokój encji tylko z rejestru HA (obszar encji albo urządzenia, z merge) – bez ręcznych przypisań */
+  areaOf(h, cfg, e) { cfg = this.glob(cfg) || this._e; const r = (h.entities || {})[e], dev = h.devices || {}, merge = cfg.merge || {};
+    let aid = (r && (r.area_id || (r.device_id && dev[r.device_id] && dev[r.device_id].area_id))) || null; if (aid && merge[aid]) aid = merge[aid]; return aid; },
   _classify(h, a, cfg) {
     const reg = h.entities || {}, sec = {};
     for (const [k] of HG_SEC) sec[k] = [];
@@ -103,6 +108,7 @@ const HGAreas = {
       else if (dom === 'vacuum' || dom === 'lawn_mower') k = 'rob';
       else if (dom === 'binary_sensor') k = ['motion', 'occupancy', 'presence'].includes(dc) ? 'mot' : ['door', 'window', 'opening', 'garage_door'].includes(dc) ? 'door' : 'sens';
       else if (dom === 'sensor') k = dc || at.unit_of_measurement || isFinite(parseFloat(s.state)) ? 'sens' : 'misc';
+      const fk = cfg.sec_of && cfg.sec_of[e]; if (fk && fk !== 'misc' && sec[fk] && cfg.assign && cfg.assign[e] === a.id) k = fk;   /* encja dodana do konkretnej sekcji */
       if (k === 'misc') {
         const g = r.device_id || e;
         if (!misc.has(g)) misc.set(g, { dev: r.device_id || null, ents: [] });
