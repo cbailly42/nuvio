@@ -7,7 +7,7 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
 # ui/ = shared building blocks (morph engine, primitives); loaded before cards so every card can use them
 UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
-      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js','ui/form.part.js']
+      'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js','ui/form.part.js','ui/color.part.js']
 SHARED = [
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
