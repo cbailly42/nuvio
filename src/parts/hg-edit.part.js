@@ -703,7 +703,7 @@ const HG_HEAD_LIM = { t: 28, s: 48 };
 const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
     const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgTr('Edytuj nagłówek widoku', 'Edit view header')); b.title = hgTr('Edytuj nagłówek widoku', 'Edit view header'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
-  _eHeadGet() { return Object.assign({}, (HGL.get(this._headScope()).conf || {})._head || {}); },
+  _eHeadGet() { return Object.assign({}, this._headConf()); },
   /* domyślny tytuł i podtytuł widoku (placeholder i podgląd); w widoku pokoju {room} = nazwa pokoju, pusty podtytuł = temperatura i stan pokoju */
   _eHeadDef() { const c = this._config;
     if (c.room_head) { let rn = ''; try { const m = HGAreas.model(this._hass, c.areas || HG_NO_AREAS), a = m.byId[HGAreas.areaFromUrl()]; rn = (a && a.name) || ''; } catch (e) { /* brak obszarów */ }
@@ -746,6 +746,7 @@ const HG_COMP_EDIT = {
     if (a === 'hdvis') { const b = arguments[1]; if (b) { b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') === 'false')); this._eHeadPv(); } return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
+    if (sc === 'rooms:head' && HGL.data.s.null) this._eSet('null', (L) => { delete L.conf._head; });   /* stary klucz sprzed 2.10.0 */
     this._eSheet(false);
     this._paintHead(); this._eHeadBtn(); this._eToast(a === 'hdreset' ? hgTr('Przywrócono domyślny nagłówek', 'Default header restored') : hgTr('Zapisano nagłówek', 'Header saved')); },
   _eGhostSweep() { if (!this._eOn && !this.classList.contains('hge')) {} for (const ct of this._eConts()) for (const it of this._eItems(ct)) { const g = hgIsGhost(it), d = it.querySelector(':scope > .hge');
@@ -1264,6 +1265,9 @@ const HG_EDIT = {
     if (a === 'sback') return this._eBack();
     if (a === 'cfstay') { const c = b.closest('.hs-cf'); if (c) c.remove(); return; }
     if (a === 'cfdrop') return this._eSheet(false);
+    if (a === 'sheetclose' && b.matches('.lk-ok') && window.HGRoomsX && (HGRoomsX.hdirty || HGRoomsX.dirty)) return (async () => {   /* Ustawienia → Gotowe: zapisz też niezapisane szkice (nagłówek, widoki, pokoje), zamiast je porzucać */
+      const S = this._eSheetEl, pick = (k) => S && S.querySelector(`[data-hge="${k}"]`);
+      if (HGRoomsX.dirty) await HGRoomsX.act(this, pick('rx-save') || b, 'rx-save'); if (HGRoomsX.hdirty) await HGRoomsX.act(this, pick('rx-hsave') || b, 'rx-hsave'); this._eSheet(false); })();
     if (a === 'sheetclose' && !b.matches('.hs-x, .hge-scrim, .hs-b2')) return this._eSheet(false);   /* przycisk główny (Gotowe) zatwierdza bez pytania */
     if (a === 'sheetclose') return (this._eStk || []).length && b.classList.contains('hs-x') ? this._eBack() : this._eClose();
     if (a === 'pick' && b.dataset.sc !== 'rooms' && !b.dataset.t) { const sc0 = this._eSc, ct0 = this._eSheetCt; return this._eGo(() => this._eSheet('add', ct0, sc0), () => this._eAddStep(b.dataset.sc, b.dataset.e, b.dataset.n)); }

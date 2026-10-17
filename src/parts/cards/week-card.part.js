@@ -3,7 +3,7 @@
 class HGWeekCard extends HGBase {
   defaults() {
     return { title: hgTr('Energia · tydzień', 'Energy · week'), icon: 'mdi:chart-bar', days: 7, consumption: [], production: [], expand: null,
-      labels: { consumption: hgTr('Zużycie', 'Consumption'), production: hgTr('Produkcja', 'Production') }, colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent-lo)' } };
+      labels: { consumption: hgTr('Zużycie', 'Consumption'), production: hgTr('Produkcja', 'Production') }, colors: { consumption: 'var(--hg-accent)', production: '#F5B53D' } };   /* produkcja: kolor słońca jak w karcie przepływu, wyraźnie inny niż akcent */
   }
   setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return []; }
@@ -32,20 +32,22 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .sm.off{ opacity:.4; }
 .sm small{ font-size:var(--fs-xs); color:#5A5E64; display:flex; align-items:center; gap:4u; } .sm small i{ width:6u; height:6u; border-radius:50%; background:var(--c); }
 .sm b{ font-size:calc(18u * var(--hg-fsv, 1)); font-weight:300; letter-spacing:-.01em; } .sm b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:#5A5E64; margin-left:3u; }
-.ch{ position:relative; flex:1; min-height:60u; max-height:200u; display:grid; grid-template-columns:repeat(var(--n), 1fr); }
-.ch::after{ content:''; position:absolute; left:0; right:0; bottom:15u; height:1px; background:rgba(30,32,36,.12); pointer-events:none; }
-.d{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5u; border-radius:var(--r-sm); padding-top:3u; min-width:0; }
+/* wysokość wykresu rośnie z rozmiarem karty: (z etykietami) S 160px, M 210px, L 264px, czyli same słupki ok. 118/168/222px; karta wyższa niż minimum oddaje resztę wykresowi */
+.ch{ position:relative; flex:1 0 auto; min-height:210px; display:grid; grid-template-columns:repeat(var(--n), 1fr); gap:2px; }
+.ch::after{ content:''; position:absolute; left:0; right:0; bottom:22px; height:1px; background:rgba(30,32,36,.14); pointer-events:none; }
+.d{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; border-radius:var(--r-sm); padding-top:3u; min-width:0; }
 .d.sel{ background:var(--hg-tile-bg); }
 .bs{ position:relative; flex:1; min-height:0; width:100%; }
 /* absolutnie pozycjonowany kontener => procentowe wysokości słupków liczone od stałej wysokości wykresu */
-.bw{ position:absolute; left:0; right:0; top:13u; bottom:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
-.pr{ position:relative; display:flex; align-items:flex-end; justify-content:center; gap:3u; min-height:1px; }
-.pr i{ display:block; width:7u; height:var(--h); min-height:2px; border-radius:999px; background:linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 25%, transparent)); transform-origin:bottom; animation:hgbar .6s cubic-bezier(.2,.8,.2,1) both; }
-.today .pr i{ opacity:.5; }
+.bw{ position:absolute; left:0; right:0; top:20px; bottom:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+.pr{ position:relative; display:flex; align-items:flex-end; justify-content:center; gap:clamp(2px, .6cqi, 5px); min-height:6px; }
+/* słupki szersze, skalowane z szerokością karty; mała niezerowa wartość ma min. 6px, zero to cienka kreska */
+.pr i{ display:block; width:clamp(7px, calc(100cqi / var(--n) * .3), 28px); height:var(--h); min-height:8px; border-radius:999px; background:linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 25%, transparent)); transform-origin:bottom; animation:hgbar .6s cubic-bezier(.2,.8,.2,1) both; }
+.today .pr i{ opacity:.6; } .pr i.z{ min-height:2px; opacity:.35; }
 .pr i.nd{ width:5u; height:5u; min-height:0; border-radius:50%; background:#C3C6CA; animation:none; margin:0 1u -2.5u; }
 @keyframes hgbar{ from{ transform:scaleY(0) } }
-.d small{ font-size:var(--fs-xs); color:#5A5E64; line-height:10u; height:10u; } .d.today small{ color:#1E2023; font-weight:600; }
-.val{ position:absolute; bottom:calc(100% + 1u); left:50%; transform:translateX(-50%); font-size:var(--fs-xs); color:#3B3F45; white-space:nowrap; line-height:12u; }
+.d small{ font-size:max(12px, var(--fs-xs)); color:#5A5E64; line-height:16px; height:16px; } .d.today small{ color:#1E2023; font-weight:600; }
+.val{ position:absolute; bottom:calc(100% + 3px); left:50%; transform:translateX(-50%); font-size:max(12.5px, var(--fs-xs)); font-weight:500; color:#3B3F45; white-space:nowrap; line-height:16px; }
 .today .val{ font-weight:600; }
 .tip{ position:absolute; bottom:calc(100% + 2u); left:50%; transform:translateX(-50%); background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:var(--r-sm); padding:var(--s1) var(--s2); font-size:var(--fs-xs); line-height:1.4; white-space:nowrap; color:#2B2E33; box-shadow:var(--hg-sh);
   z-index:5; pointer-events:none; text-align:left; }
@@ -56,9 +58,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .hd .tt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 ha-card.glass{ container-type:inline-size; }
 /* wąska karta (S): sumy obok siebie, wartości nad słupkami tylko dla dziś (reszta po dotknięciu dnia) */
-@container (max-width: 300px){ .nd2{ display:none; } .sums{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); } .sm{ min-width:0; } .sm small{ white-space:nowrap; }
+@container (max-width: 300px){ .ch{ min-height:160px; } .nd2{ display:none; } .sums{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); } .sm{ min-width:0; } .sm small{ white-space:nowrap; }
   .sm b{ font-size:calc(15u * var(--hg-fsv, 1)); display:flex; flex-direction:column; } .sm b em{ margin-left:0; white-space:nowrap; }
-  .d:not(.today) .val{ display:none; } .pr{ gap:2u; } .pr i{ width:5u; } }
+  .d:not(.today) .val{ display:none; } .pr{ gap:2px; } }
+@container (min-width: 560px){ .ch{ min-height:264px; } }
 @container (max-width: 380px){ .d:not(.today):not(:nth-child(even)) .val{ display:none; } }
 `);
   }
@@ -81,7 +84,7 @@ ha-card.glass{ container-type:inline-size; }
     const dayName = (d, i) => (i === n - 1 ? hgTr('dziś', 'today') : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));
-      const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="${hgTr('brak danych', 'no data')}"></i>` : `<i style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
+      const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="${hgTr('brak danych', 'no data')}"></i>` : `<i class="${s.vals[i] > 0 ? '' : 'z'}" style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
       const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? hgTr(' (do teraz)', ' (so far)') : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.esc(s.label)}: <b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : hgTr('brak danych', 'no data')}</b>`).join('<br>')}</span>` : '';
       const top = vis[0] && vis[0].has[i] ? `<span class="val">${H.fmt(vis[0].vals[i], 1)}</span>` : '';
       const pair = `<span class="pr" style="height:${(pm / mx) * 100}%">${top}${bars}</span>`;
@@ -97,6 +100,6 @@ ha-card.glass{ container-type:inline-size; }
     if (a === 'ser') { const h = this._hide = this._hide || new Set(); const k = t.dataset.k; if (h.has(k)) h.delete(k); else { h.clear(); h.add(k); } return this.rerender(); }   // nigdy oba ukryte: druga seria przełącza widok
     if (a === 'expand') H.action(this, this._hass, this._config.expand);
   }
-  getGridOptions() { return { columns: 12, rows: 3 }; }
+  getGridOptions() { return { columns: 12, rows: 4 }; }
 }
 hgReg('hg-week-card', HGWeekCard, hgTr('Home Glass – Energia tydzień', 'Home Glass – Energy week'), hgTr('Zużycie z sieci i produkcja PV z 7 dni (statystyki)', 'Grid consumption and PV production over 7 days (statistics)'));
