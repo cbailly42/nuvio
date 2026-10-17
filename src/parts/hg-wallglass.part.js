@@ -39,6 +39,7 @@ const HG_GL_SS = `
 .ng-mw{ display:flex; align-items:center; gap:calc(16 * var(--u)); margin-top:calc(30 * var(--u)); } .ng-mw img{ width:calc(84 * var(--u)); height:calc(84 * var(--u)); object-fit:contain; filter:drop-shadow(0 6px 16px ${K(0,0,0,.35)}); }
 .ng-mw b{ display:block; font-size:calc(46 * var(--u)); font-weight:300; } .ng-mw small{ font-size:calc(17 * var(--u)); opacity:.8; }
 .ng-mp{ display:flex; align-items:center; gap:calc(14 * var(--u)); margin-top:calc(26 * var(--u)); } .ng-mp i{ flex:none; width:calc(52 * var(--u)); height:calc(52 * var(--u)); border-radius:calc(14 * var(--u)); background:center/cover ${K(255,255,255,.15)}; box-shadow:0 6px 18px ${K(0,0,0,.35)}; }
+.ng-mk i{ display:grid; place-items:center; } .ng-mk i ha-icon{ --mdc-icon-size:calc(28 * var(--u)); width:calc(28 * var(--u)); height:calc(28 * var(--u)); }
 .ng-mp b{ display:block; font-size:calc(17 * var(--u)); font-weight:600; max-width:calc(520 * var(--u)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ng-mp small{ font-size:calc(14 * var(--u)); opacity:.6; }
 @media (orientation:portrait){
   .ng-fam{ right:auto; left:50%; transform:translateX(-50%); bottom:calc(70 * var(--u)); } .ng-mn{ left:calc(36 * var(--u)); top:44%; } .ng-mn.c{ left:50%; }
@@ -112,6 +113,7 @@ Object.assign(HGWall, {
       const mp = mps.find(pic) || mps[0], M = mp && h.states[mp].attributes, art0 = mp ? pic(mp) : '', art = art0 && !/^(https?:|data:|\/)/.test(art0) ? '/' + art0 : art0;   /* okładka: entity_picture (ścieżka HA przez proxy lub pełny adres) */
       mid = `<div class="ng-mn${G.min.pos === 'center' ? ' c' : ''}" style="--cs:${G.min.cs}"><div class="ng-mt">${H.esc(t)}${ap ? `<small>${H.esc(ap)}</small>` : ''}</div>${G.min.date ? `<div class="ng-md">${H.esc(this.gdate(G, d))}</div>` : ''}
         ${G.min.wx && w && H.ok(w) ? `<div class="ng-mw"><img src="${H.esc(this.gimg(HG_GL_WX[w.state] || 'partly'))}" alt=""><div><b>${H.esc(H.fmt(parseFloat(w.attributes.temperature), 0))}°</b><small>${H.esc(typeof HGWx !== 'undefined' && HGWx.cn ? HGWx.cn(w.state) : w.state)}</small></div></div>` : ''}
+        ${(this.kidList ? this.kidList(h) : []).map((k) => { const x = this.kidSum(h, k); return `<div class="ng-mp ng-mk"><i>${H.icon(k.present ? 'mdi:human-child' : 'mdi:home-outline')}</i><div><b>${H.esc(x.t)}</b><small>${H.esc(x.sub)}</small></div></div>`; }).join('')}
         ${G.min.np && M ? `<div class="ng-mp"><i${art ? ` style="background-image:url(&quot;${H.esc(art)}&quot;)"` : ''}>${art ? '' : H.icon('mdi:music-note')}</i><div><b>${H.esc(M.media_title)}</b><small>${H.esc(M.media_artist || H.name(h, mp, ''))}</small></div></div>` : ''}</div>`; }
     this.glPut(root, '.ng-mid', mid); },
   /* dotknięcie w nakładce: true = obsłużone (nie budzi ekranu) */

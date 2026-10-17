@@ -24,6 +24,7 @@ const HG_WALL_CSS = `
 .wl-f > span em.wl-ok{ background:none; padding:0; color:var(--hg-accent-tx, var(--hg-accent)); }
 .wl-warn{ font-size:12.5px; opacity:.8; }
 @media (max-width:520px){ .wl-seg.six{ grid-template-columns:repeat(3, 1fr); } }
+.wl-sw:disabled{ cursor:default; opacity:.55; } .wl-sw:disabled i{ opacity:.6; }
 @media (prefers-reduced-motion:reduce){ .wl-sw i, .wl-sw i::after, .wl-seg button{ transition:none; } }
 `;
 const K = (r, g, b, a) => 'rgb' + `a(${r},${g},${b},${a})`;   /* kolory wygaszacza przez interpolację: tokenizer motywu ich nie rusza (nakładka jest zawsze ciemna) */
@@ -134,7 +135,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
-      lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0 }; },
+      lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false }; },
   /* ---- blokada PIN-em (BETA): wygaszacz zablokowany po lockAfter s; dotknięcie pokazuje pinpad. Wygoda w kiosku, nie zabezpieczenie konta HA: zapisany jest tylko skrót PIN-u. ---- */
   LOCKS: [0, 60, 300, 900, 1800],
   lockOn() { const c = this.get(); return !!(c.on && c.lock && c.pinH); },
@@ -281,12 +282,22 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const html = `<h5>${H.esc(hgTr('Dzisiaj', 'Today'))}</h5><ul>${E.map((e) => { const b = e === nx ? rel(e) : '';
       return `<li${e === nx ? ' class="nx"' : ''} style="--c:${C[e.c % C.length]}"><span class="nw-et">${H.esc(e.ad ? hgTr('Cały dzień', 'All day') : f.format(e.s) + ' – ' + f.format(e.en))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(e.t)}">${H.esc(e.t)}</span></li>`; }).join('')}</ul>`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
-  /* dziecko w żłobku / przedszkolu (integracja LiveKid): tylko w dni robocze, gdy encje istnieją i jest flaga nuvio-wall-lk (HGLiveKid.flag).
-     Przyjście, wyjście i dzisiejszy plan zajęć; kalendarz integracji nie dubluje się wtedy w bloku „Dzisiaj”. */
-  kidOn(h) { return typeof HGLiveKid !== 'undefined' && HGLiveKid.flag() && HGLiveKid.has(h); },
+  /* dziecko w żłobku / przedszkolu (integracja LiveKid): w dni robocze, gdy encje są wykryte i opcja LiveKid w ustawieniach jest włączona
+     (domyślnie tak). Przyjście, wyjście i dzisiejszy plan zajęć; kalendarz integracji nie dubluje się wtedy w wydarzeniach. Wszystkie style wygaszacza. */
+  kidOn(h) { return this.get().lk && typeof HGLiveKid !== 'undefined' && HGLiveKid.has(h); },
+  kidList(h) { const wd = new Date().getDay(), K = h && wd > 0 && wd < 6 && this.kidOn(h) ? HGLiveKid.kids(h).filter((k) => k.ok && (k.scheduled || k.inToday)).slice(0, 2) : [];
+    const kx = K.map((k) => k.ids.calendar).filter(Boolean); if (kx.join() !== (this._kidCal || []).join()) this._kidCal = kx; return K; },
+  /* jedna linia dla tablicy i szkła: stan oraz przyjście / wyjście i najbliższe zajęcia */
+  kidSum(h, k) { const now = new Date(), at = (v) => { if (!v) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
+    const nx = k.plan.find((a) => !a.all_day && a.start && (at(a.end || a.start) || 0) > now);
+    const t = `${k.name || hgTr('Dziecko', 'Child')} · ${k.present ? hgTr('w placówce', 'at the facility') : hgTr('poza placówką', 'not at the facility')}`;
+    const sub = [k.outToday ? hgTr(`wyjście ${k.outToday}`, `check-out ${k.outToday}`) : k.inToday ? hgTr(`przyjście ${k.inToday}`, `check-in ${k.inToday}`) : '', nx ? `${HGLiveKid.hhmm(h, nx.start)} ${nx.title || ''}`.trim() : ''].filter(Boolean).join(' · ');
+    return { t, sub }; },
+  kidHtml(c, h) { const K = typeof HGLiveKid !== 'undefined' && h ? HGLiveKid.kids(h) : [], det = K.length > 0, nm = K.map((k) => k.name).filter(Boolean).join(', ');
+    const sub = !det ? hgTr('Nie wykryto', 'Not detected') : c.lk ? hgTr(`Wykryto${nm ? ': ' + nm : ''}. W dni robocze plan dnia, przyjście i wyjście na wygaszaczu`, `Detected${nm ? ': ' + nm : ''}. On weekdays the day plan, check-in and check-out on the screensaver`) : hgTr(`Wykryto${nm ? ': ' + nm : ''}. Wyłączone`, `Detected${nm ? ': ' + nm : ''}. Off`);
+    return `<button type="button" class="wl-sw wl-lk" role="switch" data-hge="wl-lk" aria-checked="${det && c.lk}" ${det ? '' : 'disabled aria-disabled="true"'}><span>${hgTr('LiveKid (dziecko)', 'LiveKid (child)')}<small>${H.esc(sub)}</small></span><i aria-hidden="true"></i></button>`; },
   kid() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-k'); if (!box) return;
-    const wd = new Date().getDay(), K = wd > 0 && wd < 6 && this.kidOn(h) ? HGLiveKid.kids(h).filter((k) => k.ok && (k.scheduled || k.inToday)).slice(0, 2) : [];
-    const kx = K.map((k) => k.ids.calendar).filter(Boolean); if (kx.join() !== (this._kidCal || []).join()) { this._kidCal = kx; this._evk = ''; }
+    const K = this.kidList(h);
     if (!K.length) { box.hidden = true; return; }
     const now = new Date(), at = (v) => { if (!v) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
     const rel = (s) => { const m = Math.round((s - now) / 60000); return s <= now ? hgTr('Teraz', 'Now') : m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 180 ? hgTr(`za ${Math.round(m / 60)} h`, `in ${Math.round(m / 60)} h`) : ''; };
@@ -332,6 +343,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>` : ''}
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgTr('Brak, tylko dotyk', 'None, touch only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgTr('Zmień', 'Change') : hgTr('Wybierz czujnik', 'Choose sensor'), ic: 'mdi:motion-sensor' })}</div>
+      ${this.kidHtml(c, h)}
       ${this.lockHtml(c)}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgTr('Podgląd wygaszacza', 'Preview screensaver')}</span></button>`;
     return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
@@ -362,6 +374,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); this.set({ on: !this.get().on }); return p._eLook(); }
     if (a === 'wl-idle') { this.last = Date.now(); this.set({ idle: Number(b.dataset.v) }); return p._eLook(); }
+    if (a === 'wl-lk') { if (b.disabled) return; this.set({ lk: !this.get().lk }); return p._eLook(); }
     if (a === 'wl-src') { this.set({ src: b.dataset.v }); return p._eLook(); }
     if (a === 'wl-lock') { this.set({ lock: !this.get().lock }); if (!this.get().lock) this.flag(false); return p._eLook(); }
     if (a === 'wl-lockafter') { this.set({ lockAfter: Number(b.dataset.v) }); return p._eLook(); }

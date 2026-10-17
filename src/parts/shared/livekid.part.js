@@ -1,14 +1,10 @@
-/* shared/livekid: dane dziecka z integracji LiveKid (nieoficjalna, instalowana ręcznie). Wykrywanie po platformie w rejestrze encji
+/* shared/livekid: dane dziecka z integracji LiveKid. Wykrywanie po platformie w rejestrze encji
    (hass.entities[e].platform + translation_key), bez wpisanych na sztywno identyfikatorów; bez rejestru po kształcie atrybutów.
-   Funkcja ukryta: nie ma jej w galerii + Dodaj ani w ustawieniach. Karta na wygaszaczu działa tylko z flagą w localStorage
-   (nuvio-wall-lk = 1), którą ustawia się raz adresem dashboardu z ?nuvio_lk=1 (?nuvio_lk=0 wyłącza). */
+   Używają go karta Dziecko i panel dziecka na wygaszaczu (Ustawienia → Tryb tabletu ściennego → LiveKid). */
 const HGLiveKid = {
-  PLATFORM: 'livekid', FLAG: 'nuvio-wall-lk',
+  PLATFORM: 'livekid',
   /* klucze tłumaczeń encji integracji -> rola w karcie */
   KEYS: ['present', 'last_check_in', 'last_check_out', 'meals_today', 'today_plan', 'unread_feed', 'bill_to_pay', 'bill_due_date', 'calendar'],
-  flag() { try { return localStorage.getItem(this.FLAG) === '1'; } catch (e) { return false; } },
-  /* jednorazowo z adresu: ?nuvio_lk=1 włącza, ?nuvio_lk=0 wyłącza (na tablecie bez konsoli przeglądarki) */
-  fromUrl() { try { const v = new URLSearchParams(location.search).get('nuvio_lk'); if (v === '1') localStorage.setItem(this.FLAG, '1'); else if (v === '0') localStorage.removeItem(this.FLAG); } catch (e) { /* bez pamięci */ } },
   _sig(st) { const a = (st && st.attributes) || {}; return a; },
   /* zgadywanie bez rejestru: binary_sensor z atrybutami planned_absence + not_scheduled_reason to "w placówce", reszta po atrybutach */
   _guess(h) { const S = h.states || {}, ids = {};
@@ -54,5 +50,4 @@ const HGLiveKid = {
       due: bd && /^\d{4}-\d{2}-\d{2}$/.test(bd.state) ? new Intl.DateTimeFormat(HG_LOC(), { day: 'numeric', month: 'numeric' }).format(new Date(bd.state + 'T12:00:00')) : '' }; },
   kids(h) { return this.groups(h).map((g) => this.read(h, g)); },
 };
-HGLiveKid.fromUrl();
 window.HGLiveKid = HGLiveKid;

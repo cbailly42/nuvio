@@ -129,8 +129,8 @@ Object.assign(HGWall, {
     const wd = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long' }).format(d), dt = new Intl.DateTimeFormat(HG_LOC(), { day: 'numeric', month: 'long' }).format(d), tm = tf.format(d);
     const h1 = this._put('.nb-h1', H.esc(B.hd === 'time' ? tm : wd)); if (h1) h1.classList.toggle('wd', B.hd !== 'time');
     this._put('.nb-h2', H.esc(B.hd === 'time' ? `${wd}, ${dt}` : `${dt} · ${tm}`));
-    this.bdCal(h, B);
-    const W = []; for (const k of B.ord) if (B.bk[k]) { if (k === 'wx') W.push(this.bdWx(h, B)); else if (k === 'sun') W.push(this.bdSun(h, tf)); else if (k === 'cnt') W.push(this.bdCnt());
+    const KD = this.kidList ? this.kidList(h) : []; this.bdCal(h, B);
+    const W = KD.map((k) => { const x = this.kidSum(h, k); return this.bdW(k.present ? 'mdi:human-child' : 'mdi:home-outline', H.esc(x.t), H.esc(x.sub)); }); for (const k of B.ord) if (B.bk[k]) { if (k === 'wx') W.push(this.bdWx(h, B)); else if (k === 'sun') W.push(this.bdSun(h, tf)); else if (k === 'cnt') W.push(this.bdCnt());
       else if (k === 'cal') W.push(...this.bdEv(h, B, tf)); else if (k === 'tmp') W.push(this.bdTmp(h, B)); }
     this._put('.nb-row', W.filter(Boolean).join(''));
     const np = B.bk.np ? this.bdNp(h) : '', pn = this._put('.nb-np', np, !np); if (np && pn) this.bdMq(pn); },
@@ -154,7 +154,7 @@ Object.assign(HGWall, {
     const sub = [isFinite(hi) ? `↑${deg(hi)}${isFinite(lo) ? ` ↓${deg(lo)}` : ''}` : '', pp ? hgTr(`opady ${pp}%`, `rain ${pp}%`) : ''].filter(Boolean).join(' · ');
     return this.bdW(ic, `${deg(parseFloat(A.temperature))} ${H.esc(HGWx.cn(w.state))}`, sub); },
   /* wydarzenia na 60 dni (lista: 14 dni, odliczanie: najbliższe całodniowe), co 10 min */
-  bdCal(h, B) { const ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
+  bdCal(h, B) { const kx = this._kidCal || [], ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e) && !kx.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
     const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setDate(d1.getDate() + 60); const key = d0.toDateString() + ids.join();
     if (this._bevk === key && Date.now() - this._bevt < 600000) return; this._bevk = key; this._bevt = Date.now();
     const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;

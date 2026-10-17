@@ -1,5 +1,5 @@
 /* --- dziecko w żłobku / przedszkolu (integracja LiveKid): obecność, przyjście i wyjście, posiłki, aktualności, rachunek.
-   Ukryta: tylko z YAML (type: custom:nuvio-kid-card, opcjonalnie child: imię albo entity: binary_sensor dziecka), bez wpisu w galerii. --- */
+   Encje wykrywane same; przy kilku dzieciach opcja child (imię) albo entity (binary_sensor obecności dziecka). --- */
 class HGKidCard extends HGBase {
   defaults() { return { title: '', child: '', entity: '' }; }
   _kid() { const h = this._hass, c = this._config, L = HGLiveKid.kids(h);
@@ -25,6 +25,4 @@ class HGKidCard extends HGBase {
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-kid-card', HGKidCard, hgTr('Home Glass – Dziecko', 'Home Glass – Child'), hgTr('Obecność i dzień dziecka', 'Presence and day of a child'));
-/* ukryta: bez wpisu w wyborze kart HA (tylko YAML) */
-window.customCards = window.customCards.filter((x) => x.type !== 'hg-kid-card');
+hgReg('hg-kid-card', HGKidCard, hgTr('Nuvio – Dziecko (LiveKid)', 'Nuvio – Child (LiveKid)'), hgTr('Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek', 'Presence at nursery or kindergarten, check-in, check-out, meals, news and bill'));
