@@ -122,7 +122,7 @@ Object.assign(HGWall, {
 });
 const HG_GL_CSS = `
 .wg-pv{ position:relative; width:100%; aspect-ratio:1280 / 680; border-radius:18px; overflow:hidden; margin:4px 0 2px; box-shadow:0 6px 20px rgba(0,0,0,.18); isolation:isolate; }
-@media (orientation:portrait){ .wg-pv{ aspect-ratio:560 / 900; max-height:62vh; width:auto; margin-inline:auto; } }
+@media (orientation:portrait){ .wg-pv{ aspect-ratio:560 / 900; width:min(100%, calc(62vh * 560 / 900)); margin-inline:auto; } }   /* stała szerokość: przy width:auto w kolumnie flex podgląd miał 0 px */
 .wg-pv .ng{ pointer-events:none; }
 .wg-gal{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap:16px; }
 @media (max-width:600px){ .wg-gal{ grid-template-columns:minmax(0, 1fr); gap:12px; } }
@@ -131,7 +131,7 @@ const HG_GL_CSS = `
 .wg-gt[aria-checked=true]{ box-shadow:inset 0 0 0 2px #63d71e, 0 0 0 3px rgba(99,215,30,.18), 0 6px 18px rgba(0,0,0,.2); }
 .wg-gp{ position:relative; display:block; width:100%; aspect-ratio:16 / 10; border-radius:12px; overflow:hidden; isolation:isolate; pointer-events:none; background:${K(5,7,11,1)}; }
 .wg-gs{ position:absolute; left:0; top:0; transform-origin:0 0; contain:strict; }
-.wg-gs .nw{ position:absolute !important; inset:0; z-index:0; opacity:1; } .wg-gs *{ animation-play-state:paused !important; }
+.wg-gs .nw{ position:absolute !important; inset:0; z-index:0; opacity:1; } .wg-gs *, .wg-gs *::before, .wg-gs *::after{ animation:none !important; transition:none !important; }   /* stały kadr: wstrzymane animacje wejścia zostawiały elementy niewidoczne (np. kafle tablicy) */
 .wg-gl{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; padding:0 4px 2px; } .wg-gl ha-icon{ --mdc-icon-size:16px; color:#63d71e; } .wg-pv .ng-orb{ animation:none; }
 .wg-vs{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
 .wg-vs button{ all:unset; cursor:pointer; box-sizing:border-box; padding:10px 8px; border-radius:14px; text-align:center; background:var(--hg-surface-2, rgba(127,127,127,.12)); display:flex; flex-direction:column; align-items:center; gap:4px; font-size:13px; font-weight:600; }
@@ -214,10 +214,16 @@ Object.assign(HGWall, {
     const fd = new FormData(); fd.append('file', f, f.name); p._eToast(hgTr('Przesyłanie…', 'Uploading…'));
     h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => { const u = `/api/image/serve/${j.id}/original`;
       this.gpatch('bg.img', u); p._eToast(hgTr('Obraz zapisany', 'Image saved')); p._eLook(); }, (e) => p._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')')); },
-  glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S.querySelector('.wg-gal')) { requestAnimationFrame(() => this.galWire(S, h)); setTimeout(() => this.galWire(S, h), 300); }
-    const pv = S.querySelector('.wg-pv'); if (!pv) return;
-    const draw = () => { const r = pv.getBoundingClientRect(), port = matchMedia('(orientation: portrait)').matches, root = pv.querySelector('.ng'); if (!root || !r.width) return; root._gk = {};
-      this.glRender(root, this.gget(), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); };
+  /* podglądy rysują się dopiero, gdy mają rozmiar: karta Wygaszacz bywa ukryta (inna zakładka Ustawień) w chwili renderu,
+     więc ResizeObserver rysuje je przy pierwszym pokazaniu i przeskalowuje przy zmianie szerokości */
+  glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S._wgRo) { S._wgRo.disconnect(); S._wgRo = null; }
+    const gal = S.querySelector('.wg-gal'), pv = S.querySelector('.wg-pv'); if (!gal && !pv) return;
+    let raf = 0; const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { if (!S.isConnected) { ro.disconnect(); return; } if (gal) this.galWire(S, h); if (pv) draw(); }); }) : null;
+    if (ro) { S._wgRo = ro; for (const g of S.querySelectorAll('[data-gp]')) ro.observe(g); if (pv) ro.observe(pv); }
+    if (gal) { requestAnimationFrame(() => this.galWire(S, h)); setTimeout(() => this.galWire(S, h), 300); }
+    if (!pv) return;
+    function draw() { const r = pv.getBoundingClientRect(), port = matchMedia('(orientation: portrait)').matches, root = pv.querySelector('.ng'); if (!root || !r.width) return; root._gk = {};
+      HGWall.glRender(root, HGWall.gget(), h, { pv: true, pu: (r.width / (port ? 560 : 1280)).toFixed(4) + 'px' }); }
     draw(); requestAnimationFrame(draw);
     const live = (fn) => { clearTimeout(this._gwt); this._gwt = setTimeout(() => { fn(); draw(); }, 250); };
     for (const i of S.querySelectorAll('input[name^="wg:"]')) { const path = i.name.slice(3);

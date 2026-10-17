@@ -64,7 +64,8 @@ function hgSelUp(sel) {
   const out = (e) => { if (!L) return; const p = e.composedPath(); if (!p.includes(L) && !p.includes(t)) close(false); };
   const rep = () => place();
   const gone = () => { if (!t.isConnected) close(false); };
-  function open() { if (L || sel.disabled) return; L = document.createElement('ul'); L.className = 'hgs-l'; L.id = id + 'l'; L.setAttribute('role', 'listbox'); L.tabIndex = -1;
+  function open() { if (L || sel.disabled) return; if (typeof sel._hgsFill === 'function') { sel._hgsFill(); paint(); }   /* pełna lista opcji dopiero przy otwarciu (np. tysiące czujników) */
+    L = document.createElement('ul'); L.className = 'hgs-l'; L.id = id + 'l'; L.setAttribute('role', 'listbox'); L.tabIndex = -1;
     if (lab) L.setAttribute('aria-label', lab.trim());
     L.innerHTML = opts().map((o, i) => `<li class="hgs-o" role="option" id="${id}o${i}" aria-selected="${i === sel.selectedIndex}"${o.disabled ? ' aria-disabled="true"' : ''} style="transition-delay:${Math.min(i, 8) * 18}ms">${HGS_TICK}<span>${hgsEsc(o.text)}</span></li>`).join('');
     root.appendChild(L); hgsOpen.add(gone); if (t.getRootNode().activeElement !== t) t.focus({ preventScroll: true }); t.setAttribute('aria-expanded', 'true'); t.setAttribute('aria-controls', L.id); place(); mark(Math.max(0, sel.selectedIndex));
@@ -118,7 +119,7 @@ function hgSugUp(inp) {
 }
 function hgSelWatch(root) {
   if (!root || root.__hgs) return; root.__hgs = 1;
-  const scan = () => { root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp); root.querySelectorAll('input[list]:not([data-hgs])').forEach(hgSugUp); };
+  const scan = () => { root.querySelectorAll('select:not([data-hgs])').forEach(hgSelUp); root.querySelectorAll('input[list]:not([data-hgs])').forEach(hgSugUp); if (typeof hgColorUp === 'function') root.querySelectorAll('input[type=color]:not([data-hgc])').forEach(hgColorUp); };
   new MutationObserver((m) => { hgsOpen.forEach((f) => f()); if (m.some((r) => r.addedNodes.length)) scan(); }).observe(root, { childList: true, subtree: true }); scan();
 }
 window.hgSelWatch = hgSelWatch;

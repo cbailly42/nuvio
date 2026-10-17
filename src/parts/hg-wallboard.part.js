@@ -183,16 +183,30 @@ Object.assign(HGWall, {
   /* ---- UI ustawień ---- */
   /* lista wybranych + „Dodaj”: sel/opt = [{ k, l, s, ic, x }]; x = dodatkowe przyciski w wierszu; o.one = jedna wartość (przycisk „Zmień”), o.fix = wiersz bez ✕ */
   pk(id, sel, opt, o) { o = o || {}; const open = this._dd === id && opt.length, v = (k) => H.esc(id + '|' + k);
+    (this._pko || (this._pko = {}))[id] = { opt, o };   /* dane listy do otwarcia w miejscu (bez przerysowania arkusza) */
     const row = (x) => `<div class="wl-it">${H.icon(x.ic || o.ic || 'mdi:circle-small')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span>${x.x || ''}${x.fix ? '' : `<button type="button" class="x" data-hge="wl-pk-rm" data-v="${v(x.k)}" aria-label="${H.esc(hgTr('Usuń: ', 'Remove: ') + x.l)}">${H.icon('mdi:close')}</button>`}</div>`;
-    const dd = open ? `<div class="wl-dd">${opt.length > 1 ? `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" data-pk-q="${H.esc(id)}" placeholder="${hgTr('Szukaj…', 'Search…')}" aria-label="${hgTr('Szukaj', 'Search')}" autocomplete="off"></label>` : ''}
-      <div class="wl-ol" role="listbox">${opt.map((x) => `<button type="button" role="option" data-hge="wl-pk-add" data-v="${v(x.k)}" data-q="${H.esc((x.l + ' ' + (x.s || '') + ' ' + x.k).toLowerCase())}">${H.icon(x.ic || o.ic || 'mdi:plus')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span></button>`).join('')}<div class="no" hidden>${hgTr('Nic nie pasuje', 'No matches')}</div></div></div>` : '';
-    return `<div class="wl-pk" data-pk="${H.esc(id)}">${sel.map(row).join('')}${opt.length ? `<button type="button" class="wl-add" data-hge="wl-pk-open" data-v="${H.esc(id)}" aria-expanded="${!!open}">${H.icon(o.one ? 'mdi:swap-horizontal' : 'mdi:plus')}${H.esc(o.add || (o.one ? hgTr('Zmień', 'Change') : hgTr('Dodaj', 'Add')))}</button>` : ''}${dd}</div>`; },
-  /* wyszukiwarka w rozwiniętej liście (wywoływane z wire po każdym renderze) */
+    return `<div class="wl-pk" data-pk="${H.esc(id)}">${sel.map(row).join('')}${opt.length ? `<button type="button" class="wl-add" data-hge="wl-pk-open" data-v="${H.esc(id)}" aria-expanded="${!!open}">${H.icon(o.one ? 'mdi:swap-horizontal' : 'mdi:plus')}${H.esc(o.add || (o.one ? hgTr('Zmień', 'Change') : hgTr('Dodaj', 'Add')))}</button>` : ''}${open ? this.pkDd(id) : ''}</div>`; },
+  /* rozwinięta lista: rysowane najwyżej PK_MAX pasujących pozycji (przy tysiącach encji lista otwiera się od razu), reszta przez wyszukiwanie */
+  PK_MAX: 60,
+  pkRows(id, t) { const st = (this._pko || {})[id]; if (!st) return ''; const { opt, o } = st, w = (t || '').trim().toLowerCase().split(/\s+/).filter(Boolean), v = (k) => H.esc(id + '|' + k);
+    const hit = []; for (const x of opt) { const q = x._q || (x._q = (x.l + ' ' + (x.s || '') + ' ' + x.k).toLowerCase()); if (!w.length || w.every((y) => q.includes(y))) { hit.push(x); if (hit.length > this.PK_MAX) break; } }
+    const more = hit.length > this.PK_MAX; if (more) hit.length = this.PK_MAX;
+    return hit.map((x) => `<button type="button" role="option" data-hge="wl-pk-add" data-v="${v(x.k)}">${H.icon(x.ic || o.ic || 'mdi:plus')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span></button>`).join('')
+      + (hit.length ? '' : `<div class="no">${hgTr('Nic nie pasuje', 'No matches')}</div>`) + (more ? `<div class="no">${hgTr('Wpisz więcej, aby zawęzić listę', 'Type more to narrow the list')}</div>` : ''); },
+  pkDd(id) { const st = (this._pko || {})[id], n = st ? st.opt.length : 0;
+    return `<div class="wl-dd">${n > 1 ? `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" data-pk-q="${H.esc(id)}" placeholder="${hgTr('Szukaj…', 'Search…')}" aria-label="${hgTr('Szukaj', 'Search')}" autocomplete="off"></label>` : ''}<div class="wl-ol" role="listbox">${this.pkRows(id, '')}</div></div>`; },
+  /* otwarcie i zamknięcie listy w miejscu: bez p._eLook(), więc podglądy wygaszacza i reszta arkusza się nie przerysowują */
+  pkToggle(p, id) { const S = p._eSheetEl, el = S && [...S.querySelectorAll('.wl-pk')].find((x) => x.dataset.pk === id); if (!el || !(this._pko || {})[id]) return false;
+    const was = this._dd === id; for (const d of S.querySelectorAll('.wl-pk > .wl-dd')) d.remove(); for (const b of S.querySelectorAll('[data-hge="wl-pk-open"]')) b.setAttribute('aria-expanded', 'false');
+    this._dd = was ? '' : id; if (was) return true;
+    el.insertAdjacentHTML('beforeend', this.pkDd(id)); const b = el.querySelector('[data-hge="wl-pk-open"]'); if (b) b.setAttribute('aria-expanded', 'true'); this.pkWire(p, el); return true; },
+  /* wyszukiwarka w rozwiniętej liście (po renderze arkusza albo po otwarciu w miejscu); filtr na danych z opóźnieniem 120 ms */
   pkWire(p, S) { const q = S.querySelector('[data-pk-q]'), dd = S.querySelector('.wl-dd');
     if (dd) setTimeout(() => { try { dd.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* stare przeglądarki */ } if (q && q.isConnected) q.focus({ preventScroll: true }); }, 60);
-    if (!q) return; const L = [...dd.querySelectorAll('.wl-ol [data-q]')], no = dd.querySelector('.no');
-    q.addEventListener('input', () => { const t = q.value.trim().toLowerCase(); let n = 0; for (const b of L) { const ok = !t || t.split(/\s+/).every((w) => b.dataset.q.includes(w)); b.hidden = !ok; n += ok; } no.hidden = n > 0; });
-    q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const f = L.find((b) => !b.hidden); if (f) f.click(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this._dd = ''; p._eLook(); } else if (e.key === 'ArrowDown') { e.preventDefault(); const f = L.find((b) => !b.hidden); if (f) f.focus(); } }); },
+    if (!q) return; const id = q.dataset.pkQ, ol = dd.querySelector('.wl-ol'); let tm = 0;
+    q.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => { if (ol.isConnected) ol.innerHTML = this.pkRows(id, q.value); }, 120); });
+    q.addEventListener('keydown', (e) => { const f = () => ol.querySelector('[role=option]');
+      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(tm); ol.innerHTML = this.pkRows(id, q.value); const x = f(); if (x) x.click(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this.pkToggle(p, id); } else if (e.key === 'ArrowDown') { e.preventDefault(); const x = f(); if (x) x.focus(); } }); },
   /* zmiana z listy: true = obsłużone */
   pkOp(id, op, k) { const B = this.bget(), add = op === 'add', tog = (L) => (add ? L.filter((x) => x !== k) : [...new Set([...L, k])]);
     if (id === 'wid') { const bk = Object.assign({}, B.bk, { [k]: add }); this.set(add ? { bk, ord: [...B.ord.filter((x) => x !== k), k] } : { bk }); }
@@ -227,7 +241,7 @@ Object.assign(HGWall, {
       ${wx}${cal}${rm}`;
     return { top: style, board }; },
   bdAct(p, b, a) { const B = this.bget(), v = b.dataset.v || '';
-    if (a === 'wl-pk-open') { this._dd = this._dd === v ? '' : v; p._eLook(); return true; }
+    if (a === 'wl-pk-open') { if (!this.pkToggle(p, v)) { this._dd = this._dd === v ? '' : v; p._eLook(); } return true; }
     if (a === 'wl-pk-add' || a === 'wl-pk-rm') { const i = v.indexOf('|'); if (i < 0 || !this.pkOp(v.slice(0, i), a === 'wl-pk-add' ? 'add' : 'rm', v.slice(i + 1))) return false; this._dd = ''; }
     else if (a === 'wl-style') this.set({ style: v });
     else if (a === 'wl-bt') this.set({ bt: v });

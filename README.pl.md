@@ -517,7 +517,7 @@ Sam tag ręcznie: `git fetch origin && git tag -a v2.10.1 origin/main -m "Nuvio 
 - **Galeria w pokoju (poprawka)**: „Dodaj komponent” w pokoju pokazuje wszystkie komponenty, także kontenery, a w ustawieniach komponentu można wybrać rozmiar.
 
 ### 1.8.0
-- **Pilot klimatyzacji (nowy komponent)**: osobna karta w „Dodaj komponent” w stylu aplikacji pilota. Jednostka z animowanym nawiewem (niebieski przy chłodzeniu, pomarańczowy przy grzaniu, szybszy przy wyższym biegu wentylatora, kołysze się przy ruchomych żaluzjach), duża nastawa, suwak zimno–ciepło z − i +, przycisk zasilania i Eko. Kafle Tryb, Wentylator, Sen i Nawiew otwierają dolny panel z opcjami; karta pokazuje tylko to, co obsługuje dany klimatyzator. Działa w rozmiarach S, M i L oraz w jasnym i ciemnym motywie.
+- **Pilot klimatyzacji (nowy komponent)**: osobna karta w „Dodaj komponent” w stylu aplikacji pilota. Jednostka z animowanym nawiewem (niebieski przy chłodzeniu, pomarańczowy przy grzaniu, szybszy przy wyższym biegu wentylatora, kołysze się przy ruchomych żaluzjach), duża nastawa, suwak od zimna do ciepła z − i +, przycisk zasilania i Eko. Kafle Tryb, Wentylator, Sen i Nawiew otwierają dolny panel z opcjami; karta pokazuje tylko to, co obsługuje dany klimatyzator. Działa w rozmiarach S, M i L oraz w jasnym i ciemnym motywie.
 
 ### 1.7.3
 - **Galeria „Dodaj komponent” (poprawka)**: miniatury zawsze pokazują przykładowe podglądy; pomniejszone karty na żywo były ściśnięte, puste (klimatyzacja) albo pokazywały przypadkowe urządzenie (roboty, czujnik z wykresem, scena). Poprawione podglądy fotowoltaiki, pokoi, mocy, AGD, schodów, aktualizacji, pogody i mini odtwarzacza, żeby nic nie było ucięte.
