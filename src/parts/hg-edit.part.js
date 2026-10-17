@@ -1286,6 +1286,10 @@ const HG_EDIT = {
     if (a === 'cfgsave') return this._eCfgSave();
     if (a === 'cfgz' || a === 'cfgt' || a === 'cfgw') { for (const x of b.parentElement.children) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); } if (a === 'cfgt') this._eCfgPv(); return; }
     if (a === 'cfgadd') { const n = ((this._eCfgArrGet(this._eCfgR, b.dataset.k)) || []).length; this._eRepl = Object.assign({}, this._eCfgR, { path: b.dataset.k + '.' + n, old: '', add: true, doms: b.dataset.d ? b.dataset.d.split(',') : null, excl: (this._eCfgArrGet(this._eCfgR, b.dataset.k) || []).map((y) => (typeof y === 'string' ? y : y && y.entity)) }); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
+    if (a === 'cfgsecadd') { const S0 = this._eCfgR.S; this._eRepl = Object.assign({}, this._eCfgR, { secAdd: b.dataset.k, add: true, old: '', doms: HG_SEC_DOMS[b.dataset.k] || null, excl: (S0.ents.find((y) => y.secAdd) || {}).excl || [] }); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
+    if (a === 'cfgrm') { const R = this._eCfgR, S0 = R.S, e = b.dataset.e, rid = S0.rid; if (!rid || !e) return;
+      const was = this._eSecRm(rid, e); this._eToast(was === 'man' ? hgTr('Usunięto z pokoju: ', 'Removed from room: ') + H.name(this._hass, e) : hgTr('Ukryto w tym pokoju: ', 'Hidden in this room: ') + H.name(this._hass, e));
+      const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, R.k), 120); }; const pr = this._eRefresh(R.sc === this._pageScope()); if (pr && pr.then) pr.then(re); else requestAnimationFrame(re); return; }
     if (a === 'cfgdel') { const i = +b.dataset.i; return this._eCfgArr(this._eCfgR, b.dataset.k, (A) => { A.splice(i, 1); }, hgTr('Usunięto encję', 'Entity removed')); }
     if (a === 'cfgent') { const R0 = this._eCfgR, ex = R0.S && R0.S.kind === 'added' ? HGL.get(R0.sc).added.map((y) => y.e).filter((e) => e !== b.dataset.v) : null;   /* kafel dodany: bez encji już obecnych w zakresie (duplikat klucza) */
       this._eRepl = Object.assign({}, R0, { path: b.dataset.p, old: b.dataset.v }, ex ? { excl: ex } : {}); return this._eGo(() => this._eCfgBack(), () => this._eSheet('add', null, this._eCfgR.sc)); }
@@ -1419,7 +1423,13 @@ const HG_EDIT = {
         types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: cf.n || '', i: cf.i || '', dn: a.name || k }; }
     const it = ct.el.querySelector(`:scope > [data-hgk="${CSS.escape(k)}"]`), sw = (L.conf._swap) || {}, seen = new Set(), ents = [];
     if (it) for (const el of it.querySelectorAll('[data-e],[data-ac],[data-cam]')) { const v = el.dataset.e || el.dataset.ac || el.dataset.cam; if (ok(v) && !seen.has(v)) { seen.add(v); ents.push({ p: 'swap', l: ents.length ? hgTr('Encja', 'Entity') : hgTr('Główna encja', 'Main entity'), v }); } }
-    const hd = it && it.querySelector('.sh');
+    const hd = it && it.querySelector('.sh'), rid = sc.startsWith('room:') ? sc.slice(5) : null, sd = HG_SEC.find((y) => y[1] === k), sk = sd && sd[0], doms = sk && HG_SEC_DOMS[sk];
+    if (rid && doms) { const W = (HGL.data.wiz && HGL.data.wiz.areas) || {}, ac = (this._cards || []).map((c) => c._config && c._config.areas).find(Boolean) || {}, ra = HGAreas.model(h, ac).byId[rid];
+      const man = (e) => (W.assign && W.assign[e] === rid) || (W.virtual || []).some((v) => v.id === rid && (v.entities || []).includes(e));
+      const shown = new Set(ents.map((y) => y.v)), list = ((ra && ra.sec && ra.sec[sk]) || []).filter((e) => typeof e === 'string').map((e) => (sw[e] && h.states[sw[e]] ? sw[e] : e)).filter((e, i, A) => ok(e) && A.indexOf(e) === i && (shown.has(e) || man(e)));
+      const rows = list.slice(0, 40).map((v, i) => ({ p: 'swap', l: i ? hgTr('Encja', 'Entity') : hgTr('Główna encja', 'Main entity'), v, rm: man(v) ? 'man' : 'area' }));
+      rows.push({ secAdd: sk, doms, excl: list });
+      return { kind: 'sec', rid, sk, ents: rows, types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it }; }
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
   _eCfg(ct, k) { this._eStk = []; this._eKidStk = []; if (!this._eBacking) this._eSnapTake();
@@ -1433,8 +1443,8 @@ const HG_EDIT = {
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${ttl}"><style>${HG_STY_CSS}</style><div class="hs-h"><b>${ttl}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
       <div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
-      ${S0.ents.length ? `<div class="hs-fl hs-ents"><span>${hgTr('Encje', 'Entities')}</span>${S0.ents.map((x) => x.add ? `<button class="hs-r hs-add" data-hge="cfgadd" data-k="${H.esc(x.add)}" data-d="${H.esc(x.doms.join(','))}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(x.doms.join(', '))}</small></span></button>`
-        : `<div class="hs-r hs-er" ${x.ak ? `data-ak="${H.esc(x.ak)}" data-ai="${x.ai}"` : ''}>${x.ak ? `<span class="hs-dg" data-hgdrag role="button" tabindex="0" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}" title="${hgTr('Przeciągnij', 'Drag')}">${H.icon('mdi:drag-vertical')}</span>` : ''}<button class="hs-eb" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${x.ak ? `<em class="hs-ix">${x.ai + 1}</em>` : ''}${H.esc(x.v ? H.name(h, x.v) : hgTr('Wybierz encję', 'Choose entity'))}</b><small>${H.esc(x.ak ? (x.v || '—') : x.l + ' · ' + (x.v || '—'))}</small></span><span class="hs-p" title="${hgTr('Zmień', 'Change')}">${H.icon('mdi:swap-horizontal')}</span></button>${x.ak ? `<button class="hs-del" data-hge="cfgdel" data-k="${H.esc(x.ak)}" data-i="${x.ai}" aria-label="${hgTr('Usuń', 'Remove')}" title="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button>` : ''}</div>`).join('')}</div>` : ''}
+      ${S0.ents.length ? `<div class="hs-fl hs-ents"><span>${hgTr('Encje', 'Entities')}</span>${S0.ents.map((x) => x.secAdd ? `<button class="hs-r hs-add" data-hge="cfgsecadd" data-k="${H.esc(x.secAdd)}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(x.doms.join(', '))}</small></span></button>` : x.add ? `<button class="hs-r hs-add" data-hge="cfgadd" data-k="${H.esc(x.add)}" data-d="${H.esc(x.doms.join(','))}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(x.doms.join(', '))}</small></span></button>`
+        : `<div class="hs-r hs-er" ${x.ak ? `data-ak="${H.esc(x.ak)}" data-ai="${x.ai}"` : ''}>${x.ak ? `<span class="hs-dg" data-hgdrag role="button" tabindex="0" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}" title="${hgTr('Przeciągnij', 'Drag')}">${H.icon('mdi:drag-vertical')}</span>` : ''}<button class="hs-eb" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${x.ak ? `<em class="hs-ix">${x.ai + 1}</em>` : ''}${H.esc(x.v ? H.name(h, x.v) : hgTr('Wybierz encję', 'Choose entity'))}</b><small>${H.esc(x.ak ? (x.v || '—') : x.l + ' · ' + (x.v || '—'))}</small></span><span class="hs-p" title="${hgTr('Zmień', 'Change')}">${H.icon('mdi:swap-horizontal')}</span></button>${x.ak ? `<button class="hs-del" data-hge="cfgdel" data-k="${H.esc(x.ak)}" data-i="${x.ai}" aria-label="${hgTr('Usuń', 'Remove')}" title="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button>` : x.rm ? (() => { const t = x.rm === 'man' ? hgTr('Usuń z pokoju', 'Remove from room') : hgTr('Ukryj w tym pokoju', 'Hide in this room'); return `<button class="hs-del" data-hge="cfgrm" data-e="${H.esc(x.v)}" aria-label="${H.esc(t + ': ' + H.name(h, x.v))}" title="${H.esc(t)}">${H.icon(x.rm === 'man' ? 'mdi:close' : 'mdi:eye-off-outline')}</button>`; })() : ''}</div>`).join('')}</div>` : ''}
       <div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
@@ -1492,7 +1502,20 @@ const HG_EDIT = {
       this._eCfgArr(this._eCfgR, key, (A) => { [A[i], A[j]] = [A[j], A[i]]; }, hgTr('Zmieniono kolejność', 'Order changed'));
       setTimeout(() => { const nh = this._eSheetEl && this._eSheetEl.querySelector(`.hs-er[data-ak="${CSS.escape(key)}"][data-ai="${j}"] [data-hgdrag]`); if (nh) nh.focus(); }, 450); });
   },
+  /* układ pokoi (wiz.areas) w trybie edycji: zmiany w HGL.data, „Anuluj” przywraca migawkę, „Gotowe” zapisuje */
+  _eWizA(f) { const W = HGL.data.wiz = Object.assign({}, HGL.data.wiz || {}), A = W.areas = JSON.parse(JSON.stringify(W.areas || {})); f(A); W.ts = Date.now(); },
+  _eSecAdd(rid, sk, e) { this._eWizA((A) => { A.assign = Object.assign({}, A.assign, { [e]: rid }); A.sec_of = Object.assign({}, A.sec_of, { [e]: sk });
+    if (A.room_hide && A.room_hide[rid]) { A.room_hide[rid] = A.room_hide[rid].filter((x) => x !== e); if (!A.room_hide[rid].length) delete A.room_hide[rid]; } }); },
+  _eSecRm(rid, e) { let was = 'area'; const h = this._hass;
+    this._eWizA((A) => { const V = (A.virtual || []).find((v) => v.id === rid);
+      if (V && (V.entities || []).includes(e)) { V.entities = V.entities.filter((x) => x !== e); was = 'man'; }
+      if (A.assign && A.assign[e] === rid) { delete A.assign[e]; was = 'man'; }
+      if (A.sec_of && was === 'man') delete A.sec_of[e];
+      /* z obszaru HA (także gdy było też przypisane ręcznie): ukryj tylko w tym pokoju */
+      if (was === 'area' || HGAreas.areaOf(h, A, e) === rid) { const RH = A.room_hide = Object.assign({}, A.room_hide); RH[rid] = [...new Set([...(RH[rid] || []), e])]; } });
+    return was; },
   _eCfgSet(R, nv) {
+    if (R.secAdd) { if (R.S && R.S.rid) this._eSecAdd(R.S.rid, R.secAdd, nv); return; }
     const S0 = R.S, p = R.path;
     this._eSet(R.sc, (L) => { const cf = L.conf[R.k] = L.conf[R.k] || {};
       if (S0.kind === 'added') { const x = L.added.find((y) => y.e === R.k); if (x) { if (L.size[R.k]) { L.size[nv] = L.size[R.k]; delete L.size[R.k]; } x.e = nv; } L.order = L.order.map((k) => (k === R.k ? nv : k)); delete L.conf[R.k]; }
