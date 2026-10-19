@@ -2,6 +2,11 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.14.1
+- Fixed: a tile or card dragged in edit mode jumped back to its old place. The panel grid packed narrow cards into gaps before wide ones, so the new order was saved but not shown. Once you reorder a view, its cards and tiles now stay exactly in your order (a gap can stay next to a wide card; resize a card to fill it). On views with the Masonry or Columns layout the cards also move while you drag instead of only after saving.
+- Fixed: the S, M and L size buttons did nothing visible on built-in cards of the home panel until you saved, S could not make a card narrower than its default width, and a card with **Width** set in its settings ignored them. The size now changes at once, S really means one column, and choosing a size replaces the Width setting. On touch screens the size and drag buttons are larger.
+- Fixed: the **Calendar** component's picker showed no calendars, so a calendar that was not picked automatically (for example a second Google calendar) could not be added. The component and the Calendar view now use all your calendars, not the first four or six.
+
 ### 2.14.0
 - Fixed: after an update the dashboard could keep running the previous version. A release that only changed the version number kept the same bundle file name, so the browser and the Home Assistant app served the old cached file. The version is now part of the file name hash. 2.13.0 shipped without the performance changes below.
 - New: **Settings > Appearance > Performance**, saved per device. **Glass blur** can be Auto, Full, Light or Off; with Off no surface uses `backdrop-filter`, and glass gets a denser fill so text stays readable (dialogs and sheets become opaque). **Power saving** (Auto, On, Off) stops looping animations (screensaver photo zoom, spinning fans, pulsing rings, the washing machine drum and similar) and refreshes camera snapshots at most every 30 s. On Auto it turns on for iPads and iPhones on iOS or iPadOS older than 18 and for very weak hardware, and then blur is off too. The old `home-glass:lite` override still works.
