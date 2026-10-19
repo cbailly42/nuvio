@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
-    <img src="docs/assets/logo-light.png" alt="Nuvio" width="300">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/final/png/nuvio-horizontal-on-dark.png">
+    <img src="assets/brand/final/png/nuvio-horizontal.png" alt="Nuvio" width="300">
   </picture>
 </p>
 
