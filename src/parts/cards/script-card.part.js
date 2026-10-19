@@ -11,7 +11,7 @@ ha-card.glass{ padding:0; }
 .ic{ position:relative; width:34u; height:34u; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:#fff; color:var(--c); box-shadow:var(--hg-sh); transition:background .3s, color .3s; }
 .ic ha-icon{ width:18u; height:18u; transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .2s; }
 .run .ic{ background:var(--c); color:#fff; }
-.run .ic::after{ content:''; position:absolute; inset:-4u; border-radius:var(--r-md); border:2u solid transparent; border-top-color:var(--c); border-right-color:var(--c); animation:hgspin 1s linear infinite; }
+.run .ic::after{ content:''; position:absolute; inset:-4u; border-radius:var(--r-md); border:2u solid transparent; border-top-color:var(--c); border-right-color:var(--c); animation:var(--hg-loop, hgspin 1s linear infinite); }
 .ok .ic{ background:var(--hg-accent); color:var(--hg-on-accent); } .ok .ic ha-icon{ animation:hgpop .45s cubic-bezier(.2,.8,.2,1.4); }
 @keyframes hgpop{ 0%{ transform:scale(.3); opacity:0 } 100%{ transform:scale(1); opacity:1 } }
 .tx b{ display:block; font-size:var(--fs-md); font-weight:600; letter-spacing:-.01em; }

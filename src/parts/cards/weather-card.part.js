@@ -89,7 +89,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 /* wariant kompaktowy (tablet pionowo / telefon): chip obok cen paliw */
 .chip{ display:inline-flex; align-items:center; gap:6px; box-sizing:border-box; height:var(--chip-h, 100%); min-height:var(--chip-h, 32px); padding:0 var(--chip-pr, 12px) 0 var(--chip-pl, 6px); border-radius:var(--chip-r, 12px); position:relative; isolation:isolate; background:transparent;
   border: var(--glass-border, 1px solid transparent); box-shadow: var(--glass-shadow, none); color:#1E2023; font-size:var(--fs-sm); white-space:nowrap; cursor:pointer; font-variant-numeric:tabular-nums; }
-.chip::after{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg, rgba(255,255,255,.6)); -webkit-backdrop-filter: var(--glass-bf, none); backdrop-filter: var(--glass-bf, none); }
+.chip::after{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none; background: var(--glass-bg, rgba(255,255,255,.6)); -webkit-backdrop-filter: var(--hg-bfo, var(--glass-bf, none)); backdrop-filter: var(--hg-bfo, var(--glass-bf, none)); }
 .chip img{ width:var(--chip-ic, 26px); height:var(--chip-ic, 26px); flex:none; } .chip .s{ display:none; }
 @media (max-width:600px){ .chip .f{ display:none; } .chip .s{ display:inline; } } .chip b{ font-weight:600; } .chip span{ color:#3A3D42; }
 /* szczegóły: kolumny bez odstępów -> gradient wyrównany do środków godzin */

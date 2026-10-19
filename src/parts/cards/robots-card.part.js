@@ -73,7 +73,7 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
   background: conic-gradient(var(--hg-accent) calc(var(--p, 0) * 1%), rgba(0,0,0,.08) 0); }
 .ill .ring .in{ position:absolute; inset:5u; border-radius:50%; background:#fff; box-shadow: inset 0 1u 4u rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center; }
 .ill .ring ha-icon{ position:relative; width:46u; height:46u; color:#2A2D31; }
-.work .ill .ring ha-icon{ animation: hgrb 2.4s ease-in-out infinite; } .ret .ill .ring ha-icon{ animation: hgrb-ret 1.6s ease-in-out infinite; }
+.work .ill .ring ha-icon{ animation: var(--hg-loop, hgrb 2.4s ease-in-out infinite); } .ret .ill .ring ha-icon{ animation: var(--hg-loop, hgrb-ret 1.6s ease-in-out infinite); }
 .ill b{ font-size:var(--fs-md); font-weight:600; margin-top:6u; } .ill small{ font-size:var(--fs-xs); color:#5A5E64; }
 .ill .dock{ position:absolute; right:10u; bottom:8u; width:16u; height:16u; color:#6A6E74; }
 /* desktop / tablet poziomo: roboty obok siebie (2 równe kolumny), w każdej mapa u góry i sterowanie pod spodem */
@@ -94,8 +94,8 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
 .top{ display:flex; align-items:center; gap:var(--s1); min-width:0; }
 .av{ width:34u; height:34u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:#fff; color:#2A2D31; box-shadow:var(--hg-sh-sm); }
 .av ha-icon{ width:19u; height:19u; }
-.work .av{ background:var(--hg-accent); } .work .av ha-icon{ animation: hgrb 2.4s ease-in-out infinite; }
-.ret .av ha-icon{ animation: hgrb-ret 1.6s ease-in-out infinite; }
+.work .av{ background:var(--hg-accent); } .work .av ha-icon{ animation: var(--hg-loop, hgrb 2.4s ease-in-out infinite); }
+.ret .av ha-icon{ animation: var(--hg-loop, hgrb-ret 1.6s ease-in-out infinite); }
 .err .av{ background:#FF6B5B; color:#fff; }
 @keyframes hgrb{ 0%{ transform:translateX(-2px) rotate(-12deg); } 50%{ transform:translateX(2px) rotate(12deg); } 100%{ transform:translateX(-2px) rotate(-12deg); } }
 @keyframes hgrb-ret{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-3px); } }
@@ -103,7 +103,7 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
 .nm span{ display:block; font-size:var(--fs-xs); color:#5A5E64; margin-top:1u; }
 .pill{ display:inline-flex; align-items:center; gap:4u; height:20u; padding:0 var(--s1); border-radius:var(--r-sm); font-size:var(--fs-xs); font-weight:400; background:rgba(0,0,0,.06); color:#2A2D31; flex:none; white-space:nowrap; }
 .pill i{ width:6u; height:6u; border-radius:50%; background:#9AA0A6; }
-.work .pill i{ background:var(--hg-accent); animation:hgpulse 1.6s infinite; } .chg .pill i{ background:var(--hg-accent); } .err .pill{ background:#FFE3DF; color:#B3261E; } .err .pill i{ background:#FF3B30; }
+.work .pill i{ background:var(--hg-accent); animation:var(--hg-loop, hgpulse 1.6s infinite); } .chg .pill i{ background:var(--hg-accent); } .err .pill{ background:#FFE3DF; color:#B3261E; } .err .pill i{ background:#FF3B30; }
 .bat{ display:inline-flex; align-items:center; gap:3u; font-size:var(--fs-sm); font-weight:600; flex:none; } .bat ha-icon{ width:13u; height:13u; color:var(--hg-accent-tx); } .bat.low ha-icon{ color:#FF3B30; }
 .map{ position:relative; border-radius:var(--r-sm); overflow:hidden; background:#2B3038; aspect-ratio: var(--a, 1.25); max-height:46vh; margin:0 auto; width:100%; }
 .map img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity .3s; }

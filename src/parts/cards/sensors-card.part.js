@@ -70,7 +70,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .t.on .ic{ background:var(--hg-accent); color:var(--hg-on-accent); }
 .t.on.otw .ic{ background:var(--hg-accent); }
 .t.on.inne .ic{ background:#E53935; }
-.t.on .ic::after{ content:''; position:absolute; inset:0; border-radius:inherit; border:2u solid currentColor; color:inherit; background:none; animation:hgsring 1.8s cubic-bezier(.2,.8,.2,1) infinite; }
+.t.on .ic::after{ content:''; position:absolute; inset:0; border-radius:inherit; border:2u solid currentColor; color:inherit; background:none; animation:var(--hg-loop, hgsring 1.8s cubic-bezier(.2,.8,.2,1) infinite); }
 .t.on .ic::after{ border-color:var(--hg-accent); } .t.on.otw .ic::after{ border-color:var(--hg-accent); } .t.on.inne .ic::after{ border-color:#E53935; }
 @keyframes hgsring{ 0%{ transform:scale(1); opacity:.6 } 100%{ transform:scale(1.55); opacity:0 } }
 .t .tx{ min-width:0; flex:1; display:flex; flex-direction:column; gap:2u; }

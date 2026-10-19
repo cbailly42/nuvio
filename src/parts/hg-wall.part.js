@@ -32,7 +32,7 @@ const HG_WALL_SS = `
 .nw{ position:fixed; inset:0; margin:0; padding:0; border:0; max-width:none; max-height:none; width:100%; height:100%; overflow:hidden; background:${K(5,7,11,1)}; color:${K(255,255,255,1)}; z-index:2147483000;
   font-family:'DM Sans','HG DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; cursor:none; opacity:0; transition:opacity 1.4s ease; outline:none; user-select:none; -webkit-user-select:none; touch-action:none; }
 .nw.in{ opacity:1; } .nw.out{ opacity:0; transition-duration:.4s; }
-.nw-bg{ position:absolute; inset:-3%; background-size:cover; background-position:center; opacity:0; transition:opacity 2.4s ease; animation:nwkb 48s ease-in-out infinite alternate; animation-play-state:var(--hg-play, running); will-change:transform, opacity; }
+.nw-bg{ position:absolute; inset:-3%; background-size:cover; background-position:center; opacity:0; transition:opacity 2.4s ease; animation:var(--hg-loop, nwkb 48s ease-in-out infinite alternate); animation-play-state:var(--hg-play, running); will-change:transform, opacity; }
 .nw-bg.on{ opacity:1; }
 @keyframes nwkb{ from{ transform:scale(1) translate3d(0,0,0); } to{ transform:scale(1.07) translate3d(-1.2%, -.8%, 0); } }
 .nw-sh{ position:absolute; inset:0; background:radial-gradient(120% 95% at 50% 45%, transparent 55%, ${K(0,0,0,.38)} 100%), ${K(4,6,10,'var(--nw-dim, .5)')}; }
@@ -71,7 +71,7 @@ const HG_WALL_SS = `
 .nw-kt b{ font-size:clamp(20px, 3vmin, 28px); font-weight:300; letter-spacing:-.02em; font-variant-numeric:tabular-nums; } .nw-kt b.mu{ opacity:.45; }
 .nw-k .nw-kn{ font-size:clamp(12px, 1.5vmin, 14px); opacity:.7; } .nw-ks{ height:clamp(10px, 1.6vmin, 16px); }
 @media (prefers-reduced-motion:reduce){ .nw-p{ animation:none; } }
-.nw-h{ position:absolute; margin:0; left:0; right:0; bottom:calc(clamp(18px, 3.5vmin, 36px) + env(safe-area-inset-bottom, 0px)); padding:0 16px; text-align:center; font-size:clamp(13px, 2vmin, 16px); font-weight:500; letter-spacing:.03em; color:#fff; background:none; text-shadow:0 1px 3px ${K(0,0,0,.6)}, 0 2px 16px ${K(0,0,0,.5)}; animation:nwhp 3.2s ease-in-out infinite; }
+.nw-h{ position:absolute; margin:0; left:0; right:0; bottom:calc(clamp(18px, 3.5vmin, 36px) + env(safe-area-inset-bottom, 0px)); padding:0 16px; text-align:center; font-size:clamp(13px, 2vmin, 16px); font-weight:500; letter-spacing:.03em; color:#fff; background:none; text-shadow:0 1px 3px ${K(0,0,0,.6)}, 0 2px 16px ${K(0,0,0,.5)}; animation:var(--hg-loop, nwhp 3.2s ease-in-out infinite); }
 @keyframes nwhp{ 0%, 100%{ opacity:.7; } 50%{ opacity:1; } }
 @keyframes nwh{ 0%, 100%{ opacity:.25; } 50%{ opacity:.6; } }
 .nw-bg, .nw-sh, .nw-c, .nw-r, .nw-h{ transition-property:opacity, filter, transform; }
@@ -94,7 +94,7 @@ const HG_WALL_SS = `
 @keyframes nwsh{ 10%, 90%{ transform:translateX(-2px); } 20%, 80%{ transform:translateX(4px); } 30%, 50%, 70%{ transform:translateX(-8px); } 40%, 60%{ transform:translateX(8px); } }
 .nw-kp{ display:grid; grid-template-columns:repeat(3, var(--k)); gap:clamp(14px, 2.4vmin, 22px) clamp(20px, 3.4vmin, 30px); --k:clamp(64px, 11vmin, 84px); }
 .nw-kp button{ all:unset; box-sizing:border-box; cursor:pointer; width:var(--k); height:var(--k); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff;
-  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:blur(18px) saturate(1.3); backdrop-filter:blur(18px) saturate(1.3); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}, inset 0 1px 0 ${K(255,255,255,.18)};
+  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:var(--hg-bfo, blur(18px) saturate(1.3)); backdrop-filter:var(--hg-bfo, blur(18px) saturate(1.3)); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}, inset 0 1px 0 ${K(255,255,255,.18)};
   font-size:calc(var(--k) * .42); font-weight:300; line-height:1; font-variant-numeric:tabular-nums; transition:background .25s ease, transform .18s cubic-bezier(.2,.8,.2,1); -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 .nw-kp button small{ font-size:9.5px; font-weight:600; letter-spacing:.18em; opacity:.6; margin-top:2px; height:11px; }
 .nw-kp button:active, .nw-kp button.hit{ background:${K(255,255,255,.34)}; transform:scale(.94); transition-duration:0s, .08s; }
@@ -102,7 +102,7 @@ const HG_WALL_SS = `
 .nw-kp button.fn{ background:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; } .nw-kp button.fn svg{ width:30%; height:30%; }
 .nw-kp button.fn:active{ background:${K(255,255,255,.14)}; } .nw-kp button[disabled]{ opacity:.35; pointer-events:none; } .nw-kp .gap{ visibility:hidden; pointer-events:none; }
 .nw-lb{ all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 22px; border-radius:999px; font-size:15px; font-weight:600; color:#fff;
-  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}; transition:background .2s ease, transform .15s ease; }
+  background:${K(255,255,255,.13)}; -webkit-backdrop-filter:var(--hg-bfo, blur(18px)); backdrop-filter:var(--hg-bfo, blur(18px)); box-shadow:inset 0 0 0 1px ${K(255,255,255,.16)}; transition:background .2s ease, transform .15s ease; }
 .nw-lb svg{ width:18px; height:18px; } .nw-lb:active{ transform:scale(.96); background:${K(255,255,255,.26)}; }
 @media (max-height:560px){ .nw-kp{ --k:clamp(52px, 12vmin, 64px); gap:10px 22px; } .nw-pt .nw-li{ display:none; } }
 /* odblokowanie: kłódka się otwiera, kropki pulsują na zielono, cyfry rozchodzą się od środka, fala światła i rozmycie znikają, nakładka odsłania panel */

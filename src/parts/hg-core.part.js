@@ -33,7 +33,7 @@ const HGVer = window.__hgVer || {
     const dark = document.documentElement.getAttribute('data-hg-scheme') === 'dark';
     d.style.cssText = `position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;
       padding:8px 8px 8px 16px;border-radius:24px;font:400 14px/1.2 'HG DM Sans',system-ui,sans-serif;box-shadow:var(--hg-sh);
-      -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
+      -webkit-backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));
       background:${dark ? 'rgba(40,40,44,.88)' : 'rgba(255,255,255,.9)'};color:${dark ? '#fff' : '#1C1C1E'};border:1px solid ${dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)'}`;
     d.innerHTML = `<span>${hgTr('Nowa wersja panelu', 'New dashboard version')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgTr('Odśwież', 'Reload')}</button><button type="button" data-x aria-label="${hgTr('Zamknij', 'Close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
     d.querySelector('[data-r]').onclick = () => location.reload();
@@ -77,6 +77,42 @@ const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k)
   const f = () => document.documentElement.style.setProperty('--hg-play', document.hidden ? 'paused' : 'running');
   document.addEventListener('visibilitychange', f); f();
 })();
+
+/* wydajność (osobno na każdym urządzeniu, localStorage): rozmycie szkła i oszczędzanie baterii.
+   blur: '' = automatycznie | 'full' | 'light' | 'off'; eco: '' = automatycznie | '1' | '0'.
+   Atrybuty na <html> (data-hg-blur, data-hg-eco) przełączają tokeny w motywie: --hg-bfo: none wyłącza każde backdrop-filter,
+   --hg-loop: none zatrzymuje animacje w pętli (zmienne dziedziczą się przez shadow DOM). Stare nadpisanie home-glass:lite = 1/0 działa dalej jako light/full. */
+const HGPerf = window.__hgPerf || (window.__hgPerf = {
+  KB: 'home-glass:blur', KE: 'home-glass:eco', BLURS: ['full', 'light', 'off'],
+  _g(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  _s(k, v) { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { /* tryb prywatny */ } },
+  _mq(q) { return !!(window.matchMedia && matchMedia(q).matches); },
+  blurSel() { const v = this._g(this.KB); if (this.BLURS.includes(v)) return v; const o = this._g('home-glass:lite'); return o === '1' ? 'light' : o === '0' ? 'full' : ''; },
+  ecoSel() { const v = this._g(this.KE); return v === '1' || v === '0' ? v : ''; },
+  /* stary iPad / iPhone (WebKit na dotyku z systemem starszym niż 18) albo bardzo słaby sprzęt */
+  weak() {
+    const ua = navigator.userAgent || '', touch = (navigator.maxTouchPoints || 0) > 1 || /iPad|iPhone|iPod/.test(ua);
+    const m = /\bOS (\d+)_\d+[_\d]* like Mac OS X/.exec(ua) || (/Safari\//.test(ua) && !/Chrome|CriOS|Edg|Firefox|FxiOS/.test(ua) && /Version\/(\d+)/.exec(ua));
+    const oldApple = touch && /AppleWebKit/.test(ua) && !/Android/.test(ua) && !!m && +m[1] < 18;
+    return oldApple || (navigator.hardwareConcurrency || 8) <= 2 || (navigator.deviceMemory || 8) <= 2;
+  },
+  eco() { const s = this.ecoSel(); return s ? s === '1' : this.weak(); },
+  /* automatycznie: bez rozmycia przy oszczędzaniu baterii albo „Ogranicz przezroczystość”; lżejsze na dotyku i słabszym sprzęcie; pełne na komputerze */
+  blur() {
+    const s = this.blurSel(); if (s) return s;
+    if (this.eco() || this._mq('(prefers-reduced-transparency: reduce)')) return 'off';
+    return this._mq('(pointer: coarse)') || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4 ? 'light' : 'full';
+  },
+  set(kind, v) { if (kind === 'blur') { this._s(this.KB, this.BLURS.includes(v) ? v : ''); this._s('home-glass:lite', ''); } else this._s(this.KE, v === '1' || v === '0' ? v : ''); this.apply(); },
+  apply() {
+    const d = document.documentElement, b = this.blur(), e = this.eco();
+    if (d.getAttribute('data-hg-blur') !== b) d.setAttribute('data-hg-blur', b);
+    d.toggleAttribute('data-hg-eco', e);
+    window.dispatchEvent(new CustomEvent('hg-perf', { detail: { blur: b, eco: e } }));
+  },
+});
+HGPerf.apply();
+if (window.matchMedia && !window.__hgPerfMq) { window.__hgPerfMq = 1; try { matchMedia('(prefers-reduced-transparency: reduce)').addEventListener('change', () => HGPerf.apply()); } catch (e) { /* stary Safari: bez nasłuchu */ } }
 
 /* język interfejsu kart (pl / en): osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej język przeglądarki (domyślnie angielski).
    hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */

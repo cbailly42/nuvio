@@ -29,7 +29,7 @@ const HGWx = {
     return () => { s.cbs.delete(cb); if (!s.cbs.size && s.unsub) { s.unsub(); this.subs.delete(k); } };
   },
   cn: (k) => (HG_WX_COND[k] ? hgTr(HG_WX_COND[k][0], HG_WX_COND_EN[k]) : k),
-  still: () => (typeof hgLite === 'function' && hgLite()) || matchMedia('(prefers-reduced-motion: reduce)').matches,
+  still: () => (typeof hgLite === 'function' && hgLite()) || HGPerf.eco() || matchMedia('(prefers-reduced-motion: reduce)').matches,
   icon(cfg, cond, night, anim) {
     const d = HG_WX_COND[cond] || HG_WX_COND.exceptional, f = night ? d[2] : d[1];
     return `${cfg.icon_base}${anim && !this.still() ? '' : 'static-'}${f}.svg?v=${cfg.icon_v}`;

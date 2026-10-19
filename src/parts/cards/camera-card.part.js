@@ -18,7 +18,7 @@ const HGCamFS = {
   .hg-camfs .bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 12px) 24px calc(env(safe-area-inset-left) + 16px);
     background:rgba(0,0,0,.45);color:#fff;font:400 15px/1.2 'HG DM Sans',system-ui,sans-serif;pointer-events:none}
   .hg-camfs .bar b{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hg-camfs .bar i{font-style:normal;font-size:11px;padding:3px 8px;border-radius:9px;background:#E5484D;letter-spacing:.04em}
-  .hg-camfs .x{pointer-events:auto;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .hg-camfs .x{pointer-events:auto;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-backdrop-filter:var(--hg-bfo, blur(8px));backdrop-filter:var(--hg-bfo, blur(8px))}
   .hg-camfs .x ha-icon{--mdc-icon-size:26px}
   .hg-camfs .hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);color:rgba(255,255,255,.55);font:12px system-ui,sans-serif;pointer-events:none}
   @media (prefers-reduced-motion: reduce){.hg-camfs{transition:none}}`,
@@ -88,13 +88,13 @@ const HG_CAM_CSS = `
 .hd .st{ display:none !important; } .chips[hidden]{ display:none !important; }
 .st::before{ content:''; width:5u; height:5u; border-radius:50%; background:#9AA0A6; }
 .st.ok::before{ background:var(--hg-accent); }
-.st.rec{ color:#B3261E; } .st.rec::before{ background:#E53935; animation:hgpulse 1.6s infinite; }
-.st.live{ color:var(--hg-on-accent); background:var(--hg-accent); } .st.live::before{ background:#fff; animation:hgpulse 1.2s infinite; }
+.st.rec{ color:#B3261E; } .st.rec::before{ background:#E53935; animation:var(--hg-loop, hgpulse 1.6s infinite); }
+.st.live{ color:var(--hg-on-accent); background:var(--hg-accent); } .st.live::before{ background:#fff; animation:var(--hg-loop, hgpulse 1.2s infinite); }
 .fr{ position:relative; border-radius:var(--r-sm); overflow:hidden; background:rgba(30,36,46,.18); width:min(100%, calc(var(--frmax, 100000px) * var(--aspn))); aspect-ratio: var(--aspn);
   margin:0 auto; flex:none; cursor:pointer; touch-action:manipulation; isolation:isolate; transform:translateZ(0); }
 .fr img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity .35s ease; }
 .fr.ok img{ opacity:1; }
-.shim{ position:absolute; inset:0; overflow:hidden; background:rgba(214,218,224,.55); transition:opacity .4s ease; animation:hgshim 1.6s ease-in-out infinite; }
+.shim{ position:absolute; inset:0; overflow:hidden; background:rgba(214,218,224,.55); transition:opacity .4s ease; animation:var(--hg-loop, hgshim 1.6s ease-in-out infinite); }
 .shim::after{ content:none; }
 .shim .ph{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#4A4E54; font-size:var(--fs-sm, 13px); } .shim .ph ha-icon{ --mdc-icon-size:28px; opacity:.55; } .shim .ph .e{ display:none; } .fr.err .shim .ph .l{ display:none; } .fr.err .shim .ph .e{ display:inline; }
 .fr.ok .shim{ opacity:0; animation:none; }
@@ -110,7 +110,7 @@ const HG_CAM_CSS = `
 @media (hover:hover){ .fr:hover .ov{ opacity:1; transform:none; } }
 .pb{ position:relative; height:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); min-width:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); justify-content:center; padding:0 var(--s2); border-radius:999px;
   background:rgba(255,255,255,.22); border:0; color:#fff; font-size:var(--fs-sm); font-weight:400; display:inline-flex; align-items:center; gap:5u;
-  -webkit-backdrop-filter: var(--hg-inner-bf, blur(10px) saturate(140%)); backdrop-filter: var(--hg-inner-bf, blur(10px) saturate(140%)); box-shadow:var(--hg-card-sh, var(--hg-sh)); }
+  -webkit-backdrop-filter: var(--hg-bfo, var(--hg-inner-bf, blur(10px) saturate(140%))); backdrop-filter: var(--hg-bfo, var(--hg-inner-bf, blur(10px) saturate(140%))); box-shadow:var(--hg-card-sh, var(--hg-sh)); }
 .pb.ic{ padding:0; width:max(calc(var(--k) * 26), 40px, var(--hg-tgt, 0px)); }
 .pb ha-icon{ width:20px; height:20px; }
 .pb:hover{ background:rgba(255,255,255,.32); }
@@ -197,9 +197,9 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   }
   connectedCallback() { super.connectedCallback();
     clearInterval(this._iv);
-    // tyk co 2 s: miniatura co `refresh` s; na pełnym ekranie (Fullscreen API) co 2 s
+    // tyk co 2 s: miniatura co `refresh` s (oszczędzanie baterii: najwyżej co 30 s); na pełnym ekranie (Fullscreen API) co 2 s
     this._iv = setInterval(() => { const fs = document.fullscreenElement === this._fr || document.webkitFullscreenElement === this._fr;
-      if (fs || Date.now() - (this._lastSnap || 0) >= Math.max(2, this._config ? this._config.refresh : 10) * 1000 - 300) { this._lastSnap = Date.now(); this._snap(); } }, 2000);
+      if (fs || Date.now() - (this._lastSnap || 0) >= Math.max(HGPerf.eco() ? 30 : 2, this._config ? this._config.refresh : 10) * 1000 - 300) { this._lastSnap = Date.now(); this._snap(); } }, 2000);
     if (this._fr && this._io) this._io.observe(this._fr);
   }
   disconnectedCallback() { clearInterval(this._iv); this._stopLive(); this._io && this._io.disconnect(); }

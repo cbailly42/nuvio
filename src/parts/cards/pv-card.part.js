@@ -30,7 +30,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .st{ display:flex; align-items:center; gap:var(--s2); }
 .bd{ width:40u; height:40u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:#fff; background:var(--c); }
 .off .st b{ color:#4A4E54; }
-.on .bd{ color:#1E2023; } .bd ha-icon{ width:20u; height:20u; } .on .bd ha-icon{ animation:hgspin 8s linear infinite; }
+.on .bd{ color:#1E2023; } .bd ha-icon{ width:20u; height:20u; } .on .bd ha-icon{ animation:var(--hg-loop, hgspin 8s linear infinite); }
 .st b{ display:block; font-size:var(--fs-md); font-weight:600; color:color-mix(in srgb, var(--c), var(--hg-ink, #000) calc(var(--hg-ink-p, 40%) * 1.7)); } .st div span{ display:block; font-size:var(--fs-xs); color:#5A5E64; margin-top:2u; }
 .kv{ display:grid; grid-template-columns:repeat(auto-fit, minmax(max(calc(var(--k) * 84), 112px), 1fr)); gap:var(--s1); }
 @media (max-width:600px){ .kv{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }

@@ -1018,7 +1018,7 @@ const HG_LOOK_CSS = `
 .lk-gh{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); } .lk-gh ha-icon{ width:18px; height:18px; }
 .lk-ok{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 26px; }
 .lk-gh:focus-visible, .lk-ok:focus-visible, .lk-up:focus-visible, .lk-mini:focus-visible, .lk-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-.lk-seg.lk-lng{ grid-column:auto; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); margin-top:12px; } .lk-lng button{ transition:background .2s, color .2s; }
+.lk-seg.lk-lng{ grid-column:auto; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); margin-top:12px; } .lk-seg.lk-pf{ grid-template-columns:repeat(var(--n, 3), minmax(0, 1fr)); margin-top:4px; } .lk-pf button{ padding:0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .lk-lng button{ transition:background .2s, color .2s; }
 @media (max-width:480px){ .lk-up span{ display:none; } .lk-up{ width:44px; padding:0; justify-content:center; } .lk-g{ padding:12px; } }
 @media (max-height:500px){ .lk{ max-height:calc(100dvh - 16px); } .lk-bgs{ grid-template-columns:repeat(5, minmax(0,1fr)); } .lk-sw{ grid-template-columns:repeat(9, minmax(0,1fr)); } }
 @media (prefers-reduced-motion: reduce){ .lk *{ transition:none !important; } }
@@ -1254,6 +1254,7 @@ const HG_EDIT = {
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
+    if (a === 'perfblur' || a === 'perfeco') { HGPerf.set(a === 'perfblur' ? 'blur' : 'eco', b.dataset.v || ''); return this._eLook(); }
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
     if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address')); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
@@ -1554,6 +1555,17 @@ const HG_EDIT = {
     return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgTr('Język', 'Language')}</h4><small class="lk-hn">${hgTr('Zapisywany na Twoim koncie. Automatycznie: ', 'Saved to your account. Automatic: ')}${H.esc(nm(auto))} (${src})</small>
       <div class="lk-seg lk-lng" role="group" aria-label="${hgTr('Język', 'Language')}">${[['', hgTr('Automatycznie', 'Automatic')], ...HGLang.LIST].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },
+  /* Wydajność (osobno na tym urządzeniu, HGPerf): rozmycie szkła i oszczędzanie baterii; „Automatycznie” pokazuje, co wybrano */
+  _ePerfHtml() {
+    const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
+    const BN = { full: hgTr('Pełne', 'Full'), light: hgTr('Lekkie', 'Light'), off: hgTr('Wyłączone', 'Off') };
+    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:speedometer')}${hgTr('Wydajność', 'Performance')}</h4><small class="lk-hn">${hgTr('Zapisywane tylko na tym urządzeniu. Na starszym tablecie wyłączone rozmycie i oszczędzanie baterii wyraźnie zmniejszają zużycie energii.', 'Saved on this device only. On an older tablet, turning blur off and power saving on noticeably reduce battery drain.')}</small>
+      <small class="lk-hn">${hgTr('Rozmycie szkła', 'Glass blur')} · ${hgTr('teraz', 'now')}: ${H.esc(BN[b])}</small>
+      ${seg('perfblur', bs, [['', 'Auto'], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgTr('Rozmycie szkła', 'Glass blur'))}
+      <small class="lk-hn">${hgTr('Oszczędzanie baterii (zatrzymuje animacje w pętli, rzadziej odświeża kamery)', 'Power saving (stops looping animations, refreshes cameras less often)')} · ${hgTr('teraz', 'now')}: ${e ? hgTr('włączone', 'on') : hgTr('wyłączone', 'off')}</small>
+      ${seg('perfeco', es, [['', 'Auto'], ['1', hgTr('Włączone', 'On')], ['0', hgTr('Wyłączone', 'Off')]], hgTr('Oszczędzanie baterii', 'Power saving'))}</section>`;
+  },
   _eLook() {
     /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */
     { const S0 = this._eSheetEl, sc0 = S0 && S0.querySelector('.hge-sheet.lk .hs-sc'); if (sc0) { const fe = S0.querySelector(':focus') || (S0.getRootNode && S0.getRootNode().activeElement), key = fe && fe.dataset ? ['hge', 'v', 'k', 'c'].map((x) => fe.dataset[x] || '').join('|') : ''; const top = sc0.scrollTop;
@@ -1582,6 +1594,7 @@ const HG_EDIT = {
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:brightness-6')}${hgTr('Przyciemnienie', 'Dimming')}<em class="dv">${dv}%</em></h4><small class="lk-hn">${hgTr('Dotyczy tła w trybie ciemnym', 'Applies to the background in dark mode')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${this._eLangHtml()}
+      ${this._ePerfHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}

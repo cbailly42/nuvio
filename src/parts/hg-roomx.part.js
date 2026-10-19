@@ -96,9 +96,9 @@ class HGRoomImport extends HTMLElement {
 }
 if (!customElements.get('hg-room-import')) customElements.define('hg-room-import', HGRoomImport);
 const HG_RX_CSS = `:host{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; font-family:'DM Sans', system-ui, sans-serif; color-scheme:light dark; } :host([hidden]){ display:none; }
-.scr{ position:absolute; inset:0; background:color-mix(in srgb, #000 42%, transparent); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); animation:rxf 150ms ease-out; }
+.scr{ position:absolute; inset:0; background:color-mix(in srgb, #000 42%, transparent); -webkit-backdrop-filter:var(--hg-bfo, blur(6px)); backdrop-filter:var(--hg-bfo, blur(6px)); animation:rxf 150ms ease-out; }
 .rxd{ position:relative; box-sizing:border-box; width:min(560px, calc(100vw - 24px)); max-height:min(84vh, 760px); display:flex; flex-direction:column; gap:14px; padding:20px; border-radius:28px; outline:none;
-  background:var(--hg-glass-bg, color-mix(in srgb, #1E242C 78%, transparent)); -webkit-backdrop-filter:blur(calc(var(--hg-glass-blur, 24px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)); backdrop-filter:blur(calc(var(--hg-glass-blur, 24px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%));
+  background:var(--hg-glass-bg, color-mix(in srgb, #1E242C 78%, transparent)); -webkit-backdrop-filter:var(--hg-bfo, blur(calc(var(--hg-glass-blur, 24px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%))); backdrop-filter:var(--hg-bfo, blur(calc(var(--hg-glass-blur, 24px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)));
   box-shadow:var(--hg-card-sh, 0 20px 60px rgba(0,0,0,.35)), inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); animation:rxu 180ms cubic-bezier(.2,.8,.2,1); }
 @media (max-width:600px){ :host{ place-items:end center; } .rxd{ width:100vw; max-height:88vh; border-radius:28px 28px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px)); } }
 @keyframes rxf{ from{ opacity:0; } } @keyframes rxu{ from{ opacity:0; transform:translateY(12px) scale(.98); } } @media (prefers-reduced-motion: reduce){ .scr, .rxd{ animation:none; } }

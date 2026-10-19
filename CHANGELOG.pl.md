@@ -2,7 +2,10 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.14.0
+- Poprawka: po aktualizacji panel mógł dalej działać w poprzedniej wersji. Wydanie, które zmieniało tylko numer wersji, zostawiało tę samą nazwę pliku paczki, więc przeglądarka i aplikacja Home Assistant podawały stary plik z pamięci podręcznej. Wersja jest teraz częścią skrótu w nazwie pliku. Wersja 2.13.0 wyszła bez poniższych zmian wydajności.
+- Nowość: **Ustawienia > Wygląd > Wydajność**, zapisywane osobno na każdym urządzeniu. **Rozmycie szkła**: Auto, Pełne, Lekkie albo Wyłączone; przy Wyłączonym żadna powierzchnia nie używa `backdrop-filter`, a szkło ma gęstsze wypełnienie, więc tekst jest czytelny (okna i arkusze są nieprzezroczyste). **Oszczędzanie baterii** (Auto, Włączone, Wyłączone) zatrzymuje animacje w pętli (przybliżanie zdjęcia na wygaszaczu, obracające się wentylatory, pulsujące pierścienie, bęben pralki i podobne) i odświeża migawki kamer najwyżej co 30 s. Na Auto włącza się na iPadach i iPhone'ach z iOS lub iPadOS starszym niż 18 oraz na bardzo słabym sprzęcie, i wtedy rozmycie też jest wyłączone. Stare nadpisanie `home-glass:lite` nadal działa.
+- Poprawka: szybkie rozładowywanie baterii na starszych tabletach. Animacje w kartach przewiniętych poza ekran stoją, dopóki karta nie wróci, licznik postępu multimediów nie tyka, gdy strona albo karta jest ukryta, a sprawdzanie motywu, które każda karta robi przy każdej zmianie stanu w Home Assistant, nie czyta już za każdym razem pamięci przeglądarki.
 - Dokumentacja: przeprojektowano README; listę zmian, konfigurację i opis rozwoju przeniesiono do osobnych plików.
 
 ### 2.12.0

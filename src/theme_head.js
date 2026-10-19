@@ -69,7 +69,12 @@
   --hg-edge: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.08);
   --hg-shadow-lg: 0 12px 40px rgba(0,0,0,.28); --hg-shadow-float: 0 8px 28px rgba(0,0,0,.30);
 /*@DARK@*/
-}`;
+}
+/* wydajność (HGPerf w hg-core): bez rozmycia każde backdrop-filter = none (var(--hg-bfo, …)), a szkło dostaje gęstsze wypełnienie (okna i arkusze nieprzezroczyste),
+   żeby tekst na zdjęciu tła był czytelny; oszczędzanie baterii zatrzymuje animacje w pętli (var(--hg-loop, …)) */
+:root[data-hg-blur=off]{ --hg-bfo: none; --hg-panel-bg: rgba(236,238,242,.82); --hg-glass-bg: var(--hg-panel-bg); --hg-panel-flat: var(--hg-ov-bg); --hg-sheet-bg: var(--hg-ov-bg); --hg-glass-lite: var(--hg-glass-lite-c); --hg-card-bf: none; }
+:root[data-hg-blur=off][data-hg-scheme=dark]{ --hg-panel-bg: rgba(30,31,35,.86); --hg-glass-lite-c: rgba(52,56,62,.86); }
+:root[data-hg-eco]{ --hg-loop: none; }`;
   /* soczewka SVG usunięta (szwy/tęczowe smugi w Chrome); sprzątanie po starej wersji */
   try { document.documentElement.removeAttribute('data-hg-lens'); const o = document.getElementById('hg-liquid-svg'); if (o) o.remove(); } catch (e) {}
 })();
@@ -85,6 +90,8 @@ const HGTheme = window.__hgTheme || {
   },
   _ov() { try { const v = localStorage.getItem('home-glass:scheme'); return v === 'dark' || v === 'light' ? v : null; } catch (e) { return null; } },
   pick(h) {
+    /* każda karta woła pick przy każdej zmianie stanu w domu: ten sam obiekt hass = już zastosowane (bez odczytu localStorage) */
+    if (h && h === this._h && this.dark !== null) return;
     if (h) this._h = h;
     const ov = this._ov(); if (ov) return this.apply(ov === 'dark');
     const t = this._h && this._h.themes;

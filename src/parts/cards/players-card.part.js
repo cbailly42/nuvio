@@ -65,7 +65,7 @@ ha-card.glass:not(.np){ display:flex; flex-direction:column; gap:var(--s2); padd
 .meta .who b{ font-weight:600; color:#2A2D31; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .meta .ttl{ font-size:var(--fs-md); font-weight:600; line-height:1.2; color:#16181B; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .meta .sub{ font-size:var(--fs-sm); color:#4A4E54; line-height:1.25; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
-.dot{ width:6u; height:6u; border-radius:50%; background:#9AA0A6; flex:none; } .playing .dot, .on .dot{ background:var(--hg-accent); } .playing .dot{ animation:hgpulse 1.6s infinite; } .paused .dot{ background:var(--hg-accent); }
+.dot{ width:6u; height:6u; border-radius:50%; background:#9AA0A6; flex:none; } .playing .dot, .on .dot{ background:var(--hg-accent); } .playing .dot{ animation:var(--hg-loop, hgpulse 1.6s infinite); } .paused .dot{ background:var(--hg-accent); }
 .pg{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:#5A5E64; font-variant-numeric:tabular-nums; }
 .pg .tr{ position:relative; flex:1; height:4u; border-radius:2u; background:rgba(0,0,0,.08); overflow:hidden; }
 .pg .tr i{ position:absolute; left:0; top:0; bottom:0; border-radius:2u; background:var(--hg-accent); width:var(--p0); }

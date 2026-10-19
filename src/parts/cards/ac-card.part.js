@@ -33,7 +33,7 @@ ha-card.glass > *{ flex-shrink:0; }
 .temp .num{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .bar .tk{ position:absolute; left:0; right:0; top:10px; height:24px; background:repeating-linear-gradient(90deg, rgba(128,134,140,.55) 0 1px, transparent 1px calc(100% / 28)); -webkit-mask:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); transition: opacity .2s; }
 .bar .cu{ position:absolute; top:8px; width:2px; height:28px; margin-left:-1px; border-radius:1px; background:var(--hg-accent); opacity:.9; left:var(--pc); }
-.bar .kn{ position:absolute; top:0; left:var(--pp); width:22px; height:44px; margin-left:-11px; border-radius:11px; background:var(--hg-tile-bg); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 4px 14px rgba(0,0,0,.22); transition: transform .12s; }
+.bar .kn{ position:absolute; top:0; left:var(--pp); width:22px; height:44px; margin-left:-11px; border-radius:11px; background:var(--hg-tile-bg); -webkit-backdrop-filter:var(--hg-bfo, blur(8px)); backdrop-filter:var(--hg-bfo, blur(8px)); box-shadow:0 4px 14px rgba(0,0,0,.22); transition: transform .12s; }
 .bar .kn::before{ content:''; position:absolute; left:50%; top:9px; bottom:9px; width:2px; margin-left:-1px; border-radius:1px; background:var(--hg-ink, #000); opacity:.75; }
 .bar.drag .kn{ transform:scale(1.15); } .bar:focus-visible .kn{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 /* przyciski trybów (styl dolnych kontrolek Tesli) */

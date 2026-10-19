@@ -20,7 +20,7 @@ ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:12px; bac
 .b.e{ color:var(--hg-warn); background:color-mix(in srgb, var(--hg-warn) 12%, var(--hg-inner-bg)); }
 .b .pl{ all:unset; cursor:pointer; margin-left:6px; vertical-align:-3px; color:var(--hg-accent-tx, var(--hg-accent)); transition:transform var(--hg-t-fast) var(--hg-ease-out); } .b .pl:active{ transform:scale(.9); }
 .b .pl ha-icon{ width:16px; height:16px; } .b .pl:focus-visible{ outline:2px solid var(--hg-accent); border-radius:6px; }
-.ty{ display:inline-flex; gap:4px; padding:3px 0; } .ty i{ width:7px; height:7px; border-radius:50%; background:var(--hg-accent); animation:dot 1s var(--hg-ease-out) infinite; } .ty i:nth-child(2){ animation-delay:.15s; } .ty i:nth-child(3){ animation-delay:.3s; }
+.ty{ display:inline-flex; gap:4px; padding:3px 0; } .ty i{ width:7px; height:7px; border-radius:50%; background:var(--hg-accent); animation:var(--hg-loop, dot 1s var(--hg-ease-out) infinite); } .ty i:nth-child(2){ animation-delay:.15s; } .ty i:nth-child(3){ animation-delay:.3s; }
 @keyframes dot{ 0%, 100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(-3px); opacity:1; } }
 @keyframes bin{ from{ opacity:0; transform:translateY(8px) scale(.94); } }
 @keyframes rise{ from{ opacity:0; transform:translateY(6px); } }
@@ -44,7 +44,7 @@ ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:12px; bac
 .inp .gb.r.ok{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow:0 0 12px var(--hg-accent-glow); transition:transform var(--hg-t-fast) var(--hg-ease-out), opacity var(--hg-t-base); }
 .inp .gb.r.ok:disabled{ opacity:.45; box-shadow:none; }
 .mic{ transition:background var(--hg-t-base) var(--hg-ease-out), color var(--hg-t-base) var(--hg-ease-out); }
-.mic.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; animation:pul 1.2s var(--hg-ease-out) infinite; }
+.mic.on{ background:var(--hg-accent) !important; color:var(--hg-on-accent) !important; animation:var(--hg-loop, pul 1.2s var(--hg-ease-out) infinite); }
 @keyframes pul{ 0%, 100%{ box-shadow:0 0 0 0 var(--hg-accent-glow); } 50%{ box-shadow:0 0 0 8px transparent; } }
 @media (prefers-reduced-motion: reduce){ .b, .ty i, .mic.on, .sg button, .em{ animation:none !important; } .cv{ scroll-behavior:auto; } }
 @container (max-width: 360px){ .inp .ps{ max-width:96px; } .b{ max-width:92%; font-size:13px; } }`); }

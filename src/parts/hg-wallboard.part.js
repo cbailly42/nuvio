@@ -33,7 +33,7 @@ const HG_WB_SS = `
 .nb-row{ margin-top:clamp(6px, 1.4vmin, 16px); width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-content:flex-start; gap:var(--gp); max-height:calc(var(--wh) * 2 + var(--gp)); overflow:hidden; text-shadow:none; }
 .nb-row:empty{ display:none; }
 .nb-w{ flex:none; height:var(--wh); max-width:min(340px, 100%); box-sizing:border-box; display:flex; align-items:center; gap:10px; padding:0 18px 0 12px; border-radius:calc(var(--wh) * .32); text-align:left;
-  color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%); box-shadow:none; animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
+  color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); box-shadow:none; animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
 .nb-w > i{ flex:none; width:calc(var(--wh) * .44); height:calc(var(--wh) * .44); display:flex; align-items:center; justify-content:center; color:${K(255,255,255,1)}; }
 .nb-w > i ha-icon{ --mdc-icon-size:calc(var(--wh) * .4); width:calc(var(--wh) * .4); height:calc(var(--wh) * .4); }
 .nb-w > div{ min-width:0; display:flex; flex-direction:column; gap:1px; }
@@ -50,25 +50,25 @@ const HG_WB_SS = `
 .nb-g span{ flex-direction:column; line-height:1; } .nb-g span u{ text-decoration:none; font-size:calc(var(--wh) * .12); font-weight:500; opacity:.75; margin-top:1px; }
 /* dół: powiadomienia i odtwarzacz */
 .nb-bot{ margin-top:auto; width:min(440px, 100%); display:flex; flex-direction:column; gap:10px; }
-.nb-np{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:24px; color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%); box-shadow:none; animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
+.nb-np{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:24px; color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); box-shadow:none; animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
 .nb-np > i, .nb-np .ph{ flex:none; width:56px; height:56px; border-radius:12px; background:center/cover no-repeat ${K(255,255,255,.16)}; }
 .nb-np .ph{ display:flex; align-items:center; justify-content:center; color:${K(255,255,255,1)}; } .nb-np .ph ha-icon{ --mdc-icon-size:26px; width:26px; height:26px; }
 .nb-np > div{ flex:1; min-width:0; }
 .nb-np small{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.75; } .nb-np small ha-icon{ display:none; }
 .nb-np b{ display:block; margin-top:2px; font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; }
 .nb-np span.s{ display:block; font-size:13px; opacity:.75; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.nb-np .eq{ display:inline-flex; align-items:flex-end; gap:2px; height:10px; } .nb-np .eq u{ width:3px; height:100%; background:currentColor; border-radius:1px; animation:nbeq 1s ease-in-out infinite alternate; transform-origin:bottom; }
+.nb-np .eq{ display:inline-flex; align-items:flex-end; gap:2px; height:10px; } .nb-np .eq u{ width:3px; height:100%; background:currentColor; border-radius:1px; animation:var(--hg-loop, nbeq 1s ease-in-out infinite alternate); transform-origin:bottom; }
 .nb-np .eq u:nth-child(2){ animation-delay:-.4s; } .nb-np .eq u:nth-child(3){ animation-delay:-.7s; }
 /* tytuł za długi na kartę przewija się w kółko (marquee), krótki stoi */
 .nb-np .mq > span{ display:inline-flex; } .nb-np .mq i{ font-style:normal; white-space:nowrap; }
 .nb-np .mq.run{ -webkit-mask:linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 16px), transparent); mask:linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 16px), transparent); }
-.nb-np .mq.run i{ padding:0 48px 0 12px; } .nb-np .mq.run > span{ margin-left:-12px; animation:nbmq var(--d, 12s) linear 1.5s infinite; }
+.nb-np .mq.run i{ padding:0 48px 0 12px; } .nb-np .mq.run > span{ margin-left:-12px; animation:var(--hg-loop, nbmq var(--d, 12s) linear 1.5s infinite); }
 @keyframes nbmq{ to{ transform:translateX(-50%); } }
 @keyframes nbeq{ from{ transform:scaleY(.3); } to{ transform:scaleY(1); } }
 .nwb .nb-bot > .nb-nt{ width:100%; }
 /* dziecko: ta sama karta co odtwarzacz (szkło, promień 24), duże cienkie godziny jak zegar, lista zajęć oddzielona linią */
 .nb-kid{ display:flex; flex-direction:column; gap:10px; }
-.nb-k{ padding:14px 18px 16px 14px; border-radius:24px; color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%); animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
+.nb-k{ padding:14px 18px 16px 14px; border-radius:24px; color:${K(255,255,255,1)}; background:var(--nb-wg); -webkit-backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); backdrop-filter:var(--hg-bfo, blur(26px) saturate(150%)); animation:nwin .8s cubic-bezier(.2,.8,.2,1) both; }
 .nb-kh{ display:flex; align-items:center; gap:12px; min-width:0; }
 .nb-kh > i{ flex:none; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:${K(255,255,255,.16)}; } .nb-kh > i ha-icon{ --mdc-icon-size:24px; width:24px; height:24px; }
 .nb-kh > b{ flex:1; min-width:0; font-size:17px; font-weight:600; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

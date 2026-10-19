@@ -167,7 +167,9 @@ def main():
         js = '\n'.join(open(os.path.join(w, 'www', p)).read() for p in PARTS)
         ver = json.load(open(os.path.join(R, 'package.json')))['version'] if os.path.exists(os.path.join(R, 'package.json')) else '0.0.0'
         js = brand(js)   # hash after branding: a build-only change must also give a new content-hashed core name
-        v = ver + '+' + hashlib.md5(js.encode()).hexdigest()[:8]
+        # the version is part of the hash: a release that only bumps package.json must still get a new core file name,
+        # or browsers and HA's service worker keep serving the previous build's core under the same immutable URL
+        v = ver + '+' + hashlib.md5((ver + '\n' + js).encode()).hexdigest()[:8]
         js = js.replace("'__HG_BUILD__'", "'%s'" % v, 1)
         dd = os.path.join(R, 'dist'); os.makedirs(dd, exist_ok=True)
         # The bundle goes to a content-hashed file (immutable URL, safe to cache forever).

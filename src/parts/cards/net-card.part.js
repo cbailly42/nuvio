@@ -208,7 +208,7 @@ ha-card.glass{ container-type:inline-size; }
     sr.innerHTML = `<style>${HG_BASE}${U(`
 :host{ position:fixed; inset:0; z-index:9100; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(14,16,20,.42); animation:f .16s ease; }
 @keyframes f{ from{ opacity:0; } } @media (prefers-reduced-motion: reduce){ :host{ animation:none; } }
-.d{ position:relative; width:min(360px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, rgba(236,238,242,.94)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+.d{ position:relative; width:min(360px, 100%); box-sizing:border-box; padding:24px; border-radius:var(--r-lg); background:var(--hg-panel-flat, rgba(236,238,242,.94)); -webkit-backdrop-filter:var(--hg-bfo, blur(24px)); backdrop-filter:var(--hg-bfo, blur(24px));
   border:1px solid var(--hg-glass-bd); box-shadow:var(--hg-sh); color:#1E2023; display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
 .hd{ display:flex; align-items:center; gap:8px; align-self:stretch; } .hd ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx); } .hd b{ flex:1; text-align:left; font-size:18px; font-weight:600; }
 .x{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.06); } .x ha-icon{ color:#1E2023; width:20px; height:20px; }

@@ -18,7 +18,7 @@ const HG_ASSIST_CSS = `
 .as-l.in .as-d{ transform:none; transition:transform var(--hg-t-slow, 320ms) var(--hg-ease-out, cubic-bezier(.2,.8,.2,1)); }
 /* szkło na warstwie ::before: samo okno bez backdrop-filter, więc lista wyboru modelu (position:fixed) nie jest przycinana przez okno */
 .as-l .as-d::before{ content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none; background:var(--hg-glass-sheen, none), var(--hg-panel-flat, rgba(236,238,242,.9));
-  -webkit-backdrop-filter:blur(calc(28px * var(--hg-bf, 1))) saturate(150%); backdrop-filter:blur(calc(28px * var(--hg-bf, 1))) saturate(150%); }
+  -webkit-backdrop-filter:var(--hg-bfo, blur(calc(28px * var(--hg-bf, 1))) saturate(150%)); backdrop-filter:var(--hg-bfo, blur(calc(28px * var(--hg-bf, 1))) saturate(150%)); }
 .as-l .as-d > *{ flex:1; min-height:0; }
 .as-l .grab{ display:none; }
 @media (max-width: 600px){
