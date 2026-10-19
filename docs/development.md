@@ -30,6 +30,6 @@ There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z`
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Add the changelog entry to `CHANGELOG.md` (and the Polish one to `README.pl.md`) before you release: the script only updates the version in `package.json` and the version badge in the README files.
+Add the changelog entry to `CHANGELOG.md` and `CHANGELOG.pl.md` before you release: the script only updates the version in `package.json` and the version badge in the README files.
 
 Only tagging by hand: `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.

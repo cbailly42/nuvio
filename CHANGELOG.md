@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [README.pl.md](README.pl.md#lista-zmian).
+All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
 - Docs: README redesigned; changelog, configuration and development docs moved to separate files.

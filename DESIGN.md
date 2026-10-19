@@ -6,8 +6,8 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
 
 - The UI is Polish first. Every string goes through `hgTr('Polski', 'English')`; the English text is the fallback for non Polish users.
 - Short, plain labels. No jargon where a simple word works ("Zapisz", "Gotowe", "Wstecz").
-- No em dashes or en dashes in the README files, `CHANGELOG.md`, docs or release notes. Use commas, colons or full stops.
-- Every user visible change gets a changelog entry in both CHANGELOG.md and README.pl.md.
+- No em dashes or en dashes in the README files, the changelogs, docs or release notes. Use commas, colons or full stops.
+- Every user visible change gets a changelog entry in both CHANGELOG.md and CHANGELOG.pl.md.
 
 ## Visual style
 
