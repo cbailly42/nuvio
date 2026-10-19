@@ -40,7 +40,7 @@ Every new feature has to meet the UI rules in [DESIGN.md](DESIGN.md).
 - Branch names use a prefix: `feature/`, `fix/` or `chore/`.
 - Commit messages follow Conventional Commits, for example `feat: Air purifier card` or `fix: Stack height in Safari`.
 - Versions follow semantic versioning. A new feature raises the minor number and a fix raises the patch number.
-- Describe the change in `CHANGELOG.md`, in the Polish changelog in `README.pl.md`, in the component list (`docs/components.md`) and in `docs/STATUS.md`, and update the version in `package.json`.
+- Describe the change in `CHANGELOG.md` and `CHANGELOG.pl.md`, in the component lists (`docs/components.md` and `docs/pl/components.md`) and in `docs/STATUS.md`, and update the version in `package.json`.
 
 ## Pull requests
 
