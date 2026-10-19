@@ -33,10 +33,10 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 
 Older tablets drain their battery fast when every glass surface is blurred and decorative animations keep running. **Settings > Appearance > Performance** has two options, saved on this device only, so a wall tablet and a desktop can differ:
 
-- **Glass blur**: *Full* (desktop default), *Light* (touch default: weaker blur, no heavy shadows), *Off* (no blur at all; glass gets a denser fill and dialogs are opaque). *Automatic* picks one of these and shows which.
-- **Power saving**: stops looping animations (screensaver photo zoom, spinning fans, pulsing rings, the washing machine drum and similar) and refreshes camera snapshots at most every 30 s. *Automatic* turns it on for iPads and iPhones on iOS or iPadOS older than 18 and for very weak hardware; blur on *Automatic* is then off as well.
+- **Glass blur**: *Full* (desktop default), *Light* (touch default: weaker blur, no heavy shadows), *Off* (no blur at all; glass gets a denser fill and dialogs are opaque). *Auto* picks one of these and shows which.
+- **Power saving**: stops looping animations (screensaver photo zoom, spinning fans, pulsing rings, the washing machine drum and similar) and refreshes camera snapshots at most every 30 s. *Auto* turns it on for iPads and iPhones on iOS or iPadOS older than 18 and for very weak hardware; blur on *Auto* is then off as well.
 
-Independent of these options, animations in cards scrolled off screen pause, and *Reduce transparency* in the system settings turns blur off on *Automatic*.
+Independent of these options, animations in cards scrolled off screen pause, and *Reduce transparency* in the system settings turns blur off on *Auto*.
 
 ## Layout backup
 

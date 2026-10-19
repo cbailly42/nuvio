@@ -1018,7 +1018,7 @@ const HG_LOOK_CSS = `
 .lk-gh{ box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); } .lk-gh ha-icon{ width:18px; height:18px; }
 .lk-ok{ background:var(--hg-accent); color:var(--hg-on-accent); padding:0 26px; }
 .lk-gh:focus-visible, .lk-ok:focus-visible, .lk-up:focus-visible, .lk-mini:focus-visible, .lk-seg button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
-.lk-seg.lk-lng{ grid-column:auto; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); margin-top:12px; } .lk-lng button{ transition:background .2s, color .2s; }
+.lk-seg.lk-lng{ grid-column:auto; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); margin-top:12px; } .lk-seg.lk-pf{ grid-template-columns:repeat(var(--n, 3), minmax(0, 1fr)); margin-top:4px; } .lk-pf button{ padding:0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .lk-lng button{ transition:background .2s, color .2s; }
 @media (max-width:480px){ .lk-up span{ display:none; } .lk-up{ width:44px; padding:0; justify-content:center; } .lk-g{ padding:12px; } }
 @media (max-height:500px){ .lk{ max-height:calc(100dvh - 16px); } .lk-bgs{ grid-template-columns:repeat(5, minmax(0,1fr)); } .lk-sw{ grid-template-columns:repeat(9, minmax(0,1fr)); } }
 @media (prefers-reduced-motion: reduce){ .lk *{ transition:none !important; } }
@@ -1559,12 +1559,12 @@ const HG_EDIT = {
   _ePerfHtml() {
     const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
     const BN = { full: hgTr('Pełne', 'Full'), light: hgTr('Lekkie', 'Light'), off: hgTr('Wyłączone', 'Off') };
-    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
     return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:speedometer')}${hgTr('Wydajność', 'Performance')}</h4><small class="lk-hn">${hgTr('Zapisywane tylko na tym urządzeniu. Na starszym tablecie wyłączone rozmycie i oszczędzanie baterii wyraźnie zmniejszają zużycie energii.', 'Saved on this device only. On an older tablet, turning blur off and power saving on noticeably reduce battery drain.')}</small>
       <small class="lk-hn">${hgTr('Rozmycie szkła', 'Glass blur')} · ${hgTr('teraz', 'now')}: ${H.esc(BN[b])}</small>
-      ${seg('perfblur', bs, [['', hgTr('Automatycznie', 'Automatic')], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgTr('Rozmycie szkła', 'Glass blur'))}
+      ${seg('perfblur', bs, [['', 'Auto'], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgTr('Rozmycie szkła', 'Glass blur'))}
       <small class="lk-hn">${hgTr('Oszczędzanie baterii (zatrzymuje animacje w pętli, rzadziej odświeża kamery)', 'Power saving (stops looping animations, refreshes cameras less often)')} · ${hgTr('teraz', 'now')}: ${e ? hgTr('włączone', 'on') : hgTr('wyłączone', 'off')}</small>
-      ${seg('perfeco', es, [['', hgTr('Automatycznie', 'Automatic')], ['1', hgTr('Włączone', 'On')], ['0', hgTr('Wyłączone', 'Off')]], hgTr('Oszczędzanie baterii', 'Power saving'))}</section>`;
+      ${seg('perfeco', es, [['', 'Auto'], ['1', hgTr('Włączone', 'On')], ['0', hgTr('Wyłączone', 'Off')]], hgTr('Oszczędzanie baterii', 'Power saving'))}</section>`;
   },
   _eLook() {
     /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */

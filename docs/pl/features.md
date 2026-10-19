@@ -33,10 +33,10 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 
 Starsze tablety szybko rozładowują baterię, gdy każda szklana powierzchnia jest rozmyta, a ozdobne animacje działają bez przerwy. **Ustawienia > Wygląd > Wydajność** ma dwie opcje zapisywane tylko na tym urządzeniu, więc tablet ścienny i komputer mogą mieć inne:
 
-- **Rozmycie szkła**: *Pełne* (domyślnie na komputerze), *Lekkie* (domyślnie na dotyku: słabsze rozmycie, bez ciężkich cieni), *Wyłączone* (bez rozmycia; szkło ma gęstsze wypełnienie, a okna są nieprzezroczyste). *Automatycznie* wybiera jedno z nich i pokazuje które.
-- **Oszczędzanie baterii**: zatrzymuje animacje w pętli (przybliżanie zdjęcia na wygaszaczu, obracające się wentylatory, pulsujące pierścienie, bęben pralki i podobne) i odświeża migawki kamer najwyżej co 30 s. *Automatycznie* włącza się na iPadach i iPhone'ach z iOS lub iPadOS starszym niż 18 oraz na bardzo słabym sprzęcie; rozmycie na *Automatycznie* jest wtedy też wyłączone.
+- **Rozmycie szkła**: *Pełne* (domyślnie na komputerze), *Lekkie* (domyślnie na dotyku: słabsze rozmycie, bez ciężkich cieni), *Wyłączone* (bez rozmycia; szkło ma gęstsze wypełnienie, a okna są nieprzezroczyste). *Auto* wybiera jedno z nich i pokazuje które.
+- **Oszczędzanie baterii**: zatrzymuje animacje w pętli (przybliżanie zdjęcia na wygaszaczu, obracające się wentylatory, pulsujące pierścienie, bęben pralki i podobne) i odświeża migawki kamer najwyżej co 30 s. *Auto* włącza się na iPadach i iPhone'ach z iOS lub iPadOS starszym niż 18 oraz na bardzo słabym sprzęcie; rozmycie na *Auto* jest wtedy też wyłączone.
 
-Niezależnie od tych opcji animacje w kartach przewiniętych poza ekran stoją, a *Ogranicz przezroczystość* w ustawieniach systemu wyłącza rozmycie na *Automatycznie*.
+Niezależnie od tych opcji animacje w kartach przewiniętych poza ekran stoją, a *Ogranicz przezroczystość* w ustawieniach systemu wyłącza rozmycie na *Auto*.
 
 ## Kopia układu
 
