@@ -1,0 +1,43 @@
+{
+  "brand": "Nuvio",
+  "tagline": "Your home, quietly in order",
+  "brief": "A glass-style Home Assistant dashboard that builds itself from your home. The mark should feel calm and safe, stay clear of Home Assistant's house-and-nodes look and generic smart-home clichés, and work at 16 px in a browser tab or the HA sidebar.",
+  "adjectives": ["calm", "safe", "quiet", "homely", "trustworthy"],
+  "criteria": "Success: recognisable at 16 px, reads as calm and safe before it reads as tech, distinct from Home Assistant, works in one colour.",
+  "mockups": ["readme", "favicon-tab", "app-icon", "website", "social", "sticker"],
+  "nav": ["Home", "Rooms", "Energy"],
+  "brand_color": "#63D71E",
+  "tile_color": "#13211A",
+  "greyscale": false,
+  "final": true,
+  "round": 2,
+  "designer": "Nuvio",
+  "concepts": [
+    {
+      "name": "Lit Doorway",
+      "symbol": "../final/nuvio-symbol.svg",
+      "lockup": "../final/nuvio-horizontal.svg",
+      "stacked": "../final/nuvio-stacked.svg",
+      "avatar": "../icons/nuvio-app-icon.svg",
+      "symbol_on_tile": "../final/nuvio-symbol-on-dark.svg",
+      "stacked_on_tile": "../final/nuvio-stacked-on-dark.svg",
+      "lockup_on_tile": "../final/nuvio-horizontal-on-dark.svg",
+      "symbol_on_dark": "../final/nuvio-symbol-on-dark.svg",
+      "lockup_on_dark": "../final/nuvio-horizontal-on-dark.svg",
+      "stacked_on_dark": "../final/nuvio-stacked-on-dark.svg",
+      "idea": "A lowercase n drawn as an arched doorway with the door inside: shelter and home. On dark backgrounds the door lights up lime, a light left on.",
+      "rationale": [
+        "Says safe and homely without a house outline, shield or wifi arcs",
+        "Soft symmetric arch on a flat base: stable, quiet, calm",
+        "Deep ink mark; lime only as the light, so the accent stays gentle",
+        "Small-size cut and pixel-grid favicon keep it an arch, not an m, at 16 px"
+      ]
+    }
+  ],
+  "recommendation": "Lit Doorway in Nuvio Ink, with the lime door reserved for dark surfaces and the app icon.",
+  "next_steps": [
+    "Swap docs/assets/logo-light.png and logo-dark.png for final/png/nuvio-horizontal(-on-dark).png",
+    "Add the icons/ set and head-snippet.html to the docs site; use the small cut in the HA sidebar",
+    "Run a trademark search before wider use"
+  ]
+}
