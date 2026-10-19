@@ -21,4 +21,4 @@
 - [ ] `node --check` passes for every file in `dist/`
 - [ ] Every visible text has Polish and English versions (`hgTr`)
 - [ ] Works in light and dark mode and on a phone
-- [ ] Changelog in both READMEs, `docs/STATUS.md` and `package.json` are updated
+- [ ] Changelog (`CHANGELOG.md` and `README.pl.md`), `docs/STATUS.md` and `package.json` are updated

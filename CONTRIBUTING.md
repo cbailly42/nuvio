@@ -23,7 +23,7 @@ To try a change, copy everything in `dist/` to `<config>/www/nuvio/` in a test H
 
 ## How the code is organised
 
-The source is plain JavaScript in `src/parts/`. `tools/build.py` joins the files in a fixed order into one bundle, so there are no imports and load order matters. The README section [Source layout](README.md#source-layout) explains the folders. A new card goes into `src/parts/cards/<name>-card.part.js` and into the `CARDS` list in `tools/build.py`.
+The source is plain JavaScript in `src/parts/`. `tools/build.py` joins the files in a fixed order into one bundle, so there are no imports and load order matters. The section [Source layout](docs/development.md#source-layout) in the development docs explains the folders. A new card goes into `src/parts/cards/<name>-card.part.js` and into the `CARDS` list in `tools/build.py`.
 
 Every new feature has to meet the UI rules in [DESIGN.md](DESIGN.md).
 
@@ -40,7 +40,7 @@ Every new feature has to meet the UI rules in [DESIGN.md](DESIGN.md).
 - Branch names use a prefix: `feature/`, `fix/` or `chore/`.
 - Commit messages follow Conventional Commits, for example `feat: Air purifier card` or `fix: Stack height in Safari`.
 - Versions follow semantic versioning. A new feature raises the minor number and a fix raises the patch number.
-- Describe the change in both READMEs (changelog and component list) and in `docs/STATUS.md`, and update the version in `package.json`.
+- Describe the change in `CHANGELOG.md`, in the Polish changelog in `README.pl.md`, in the component list (`docs/components.md`) and in `docs/STATUS.md`, and update the version in `package.json`.
 
 ## Pull requests
 
