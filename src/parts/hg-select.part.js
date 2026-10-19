@@ -13,7 +13,7 @@ const HGS_CSS = `
 .hgs-c{ flex:none; width:18px; height:18px; opacity:.7; transition:transform .22s cubic-bezier(.2,.8,.2,1); }
 .hgs-t[aria-expanded=true] .hgs-c{ transform:rotate(180deg); }
 .hgs-l{ position:fixed; z-index:2147483000; box-sizing:border-box; margin:0; padding:6px; list-style:none; overflow:auto; overscroll-behavior:contain; border-radius:16px; color:#fff;
-  background:rgba(28,32,38,.62); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%);
+  background:rgba(28,32,38,.62); -webkit-backdrop-filter:var(--hg-bfo, blur(22px) saturate(160%)); backdrop-filter:var(--hg-bfo, blur(22px) saturate(160%));
   border:1px solid rgba(255,255,255,.16); box-shadow:0 18px 48px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.10);
   font-size:14px; clip-path:inset(0 0 100% 0 round 16px); transform:translateY(-6px) scale(.98); transform-origin:top center;
   transition:clip-path .24s cubic-bezier(.2,.8,.2,1), transform .24s cubic-bezier(.2,.8,.2,1); }

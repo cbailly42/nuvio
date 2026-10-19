@@ -13,7 +13,7 @@ ha-card.np{ position:relative; overflow:hidden; display:flex; flex-direction:col
 .npbg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.28) 35%, rgba(0,0,0,.62) 70%, rgba(0,0,0,.78)); }
 ha-card.np > *:not(.npbg){ position:relative; }
 .nph{ display:flex; align-items:center; gap:8px; min-height:36px; }
-.npc{ display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; color:${HG_NP_W}; background:rgba(255,255,255,.16); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; transition:background .2s, transform .1s; }
+.npc{ display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; color:${HG_NP_W}; background:rgba(255,255,255,.16); -webkit-backdrop-filter:var(--hg-bfo, blur(12px)); backdrop-filter:var(--hg-bfo, blur(12px)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; transition:background .2s, transform .1s; }
 .npc ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; flex:none; display:flex; } .npc:active{ transform:scale(.96); }
 .npc.on{ background:${HG_NP_W}; color:${HG_NP_K}; }
 @media (hover:hover){ .npc:not(.on):hover{ background:rgba(255,255,255,.26); } }
@@ -95,7 +95,7 @@ const hgNP = {
   /* po renderze: tykanie postępu i kolor z okładki (raz na obraz) */
   after(card) {
     clearInterval(card._npT); card._npT = 0; const R = card.$;
-    if (R.querySelector('.npg[data-pl="1"]')) card._npT = setInterval(() => { for (const g of R.querySelectorAll('.npg[data-pl="1"]')) { const d = +g.dataset.dur, p = Math.min(d, +g.dataset.pos + (Date.now() - +g.dataset.t) / 1000);
+    if (R.querySelector('.npg[data-pl="1"]')) card._npT = setInterval(() => { if (document.hidden || card._off) return; for (const g of R.querySelectorAll('.npg[data-pl="1"]')) { const d = +g.dataset.dur, p = Math.min(d, +g.dataset.pos + (Date.now() - +g.dataset.t) / 1000);
       g.querySelector('i').style.setProperty('--p', (p / d).toFixed(4)); const n = g.querySelectorAll('.npn span'); n[0].textContent = hgNP.tm(p); n[1].textContent = '-' + hgNP.tm(d - p); } }, 1000);
     for (const bg of R.querySelectorAll('.npbg[data-pic]')) { const u = bg.dataset.pic; if (HG_NP_COL.has(u)) continue; HG_NP_COL.set(u, '');
       const im = new Image(); if (/^\/(?!\/)/.test(u)) im.crossOrigin = 'anonymous';

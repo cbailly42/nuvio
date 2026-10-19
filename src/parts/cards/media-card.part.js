@@ -13,7 +13,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
 .cb{ width:max(30u, 40px); height:max(30u, 40px); border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.75); position:relative; }
 .cb ha-icon{ width:20px; height:20px; } .cb.pp{ width:max(34u, 44px); height:max(34u, 44px); background:var(--hg-accent); } .cb.pp ha-icon{ width:24px; height:24px; }
 @media (pointer:coarse){ .cb::before{ content:''; position:absolute; inset:-7px; } }
-.playing .art{ animation: hgpulse 3s ease-in-out infinite; }
+.playing .art{ animation: var(--hg-loop, hgpulse 3s ease-in-out infinite); }
 `);
   }
   render() {

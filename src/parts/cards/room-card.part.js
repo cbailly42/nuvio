@@ -157,7 +157,7 @@ ${HG_NP_CSS}
 .trk2 .f{ position:absolute; top:0; bottom:0; border-radius:2px; background:var(--hg-accent); opacity:0; transition:opacity 1.8s cubic-bezier(.25,.6,.3,1); }
 .trk2 .f.a{ left:0; width:50%; } .trk2 .f.b{ right:0; width:50%; } .trk2 .f.on{ opacity:.85; }
 .trk2 .dt{ position:absolute; top:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; background:var(--hg-accent); box-shadow:0 0 10px var(--hg-accent-glow); opacity:0; }
-.trk2.up .dt{ animation:var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite); } .trk2.dn .dt{ animation:var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite reverse); }
+.trk2.up .dt{ animation:var(--hg-loop, var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite)); } .trk2.dn .dt{ animation:var(--hg-loop, var(--hg-sc-anim, stTr 1.8s cubic-bezier(.4,0,.2,1) infinite reverse)); }
 .trk2 .ar{ position:absolute; left:50%; top:-18px; transform:translateX(-50%); width:16px; height:16px; opacity:.5; } .trk2.dn .ar{ transform:translateX(-50%) scaleX(-1); }
 @keyframes stTr{ 0%{ left:0; opacity:0 } 15%{ opacity:1 } 85%{ opacity:1 } 100%{ left:100%; opacity:0 } }
 .str{ position:relative; width:40px; height:40px; flex:none; display:grid; place-items:center; }
@@ -189,7 +189,7 @@ ha-card.stc{ container-type:inline-size; }
 .sv3 .lmp{ cursor:pointer; } .sv3 .lmp .hit{ fill:transparent; } .sv3 .lmp:focus-visible .bulb{ stroke-width:3; }
 .sv3 text{ fill:currentColor; font-size:11px; } .sv3 .tl{ fill-opacity:.9; font-weight:500; } .sv3 .ts{ fill-opacity:.55; font-size:10px; } .sv3 .mk.on .ts{ fill:var(--hg-accent-tx); fill-opacity:1; }
 .sv3 .mk .dt{ fill:currentColor; fill-opacity:.35; } .sv3 .mk.on .dt{ fill:var(--hg-accent); fill-opacity:1; }
-.sv3 .mk .rp{ fill:none; stroke:var(--hg-accent); stroke-width:1.5; opacity:0; transform-box:fill-box; transform-origin:center; } .sv3 .mk.on .rp{ animation:var(--hg-sc-anim, scRipple 1.8s cubic-bezier(.2,0,0,1) infinite); } .sv3 .mk.on .rp.r2{ animation-delay:.9s; }
+.sv3 .mk .rp{ fill:none; stroke:var(--hg-accent); stroke-width:1.5; opacity:0; transform-box:fill-box; transform-origin:center; } .sv3 .mk.on .rp{ animation:var(--hg-loop, var(--hg-sc-anim, scRipple 1.8s cubic-bezier(.2,0,0,1) infinite)); } .sv3 .mk.on .rp.r2{ animation-delay:.9s; }
 .stg2{ display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; gap:var(--s1); }
 .stg2 .cp{ flex:0 0 auto; width:auto; justify-content:flex-start; gap:10px; }
 .cp{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 6px 0 14px; border-radius:999px; background:var(--hg-tile-bg); font-size:var(--fs-sm); color:inherit; }
@@ -202,12 +202,12 @@ ha-card.cwc{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s
 .cwt{ position:relative; width:56px; height:150px; border-radius:var(--r-lg); background:repeating-linear-gradient(-55deg, rgba(128,134,140,.22) 0 2px, transparent 2px 6px), var(--hg-tile-bg); overflow:hidden; }
 .cwt .fl{ position:absolute; left:0; right:0; bottom:0; height:calc(var(--f) * 100%); background:linear-gradient(0deg, var(--hg-accent), var(--hg-accent-hi)); border-radius:0 0 28px 28px; transition:height 1.2s cubic-bezier(.2,.8,.2,1); box-shadow:0 0 18px var(--hg-accent-glow); }
 .cwt .tg2{ position:absolute; left:8px; right:8px; bottom:calc(var(--tf) * 100%); height:2px; border-radius:1px; background:var(--hg-thumb, #fff); opacity:.9; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
-.cwt .bb{ position:absolute; bottom:6px; width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.75); animation:var(--hg-sc-anim, cwB 2.4s ease-in infinite); }
+.cwt .bb{ position:absolute; bottom:6px; width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.75); animation:var(--hg-loop, var(--hg-sc-anim, cwB 2.4s ease-in infinite)); }
 .cwt .b1{ left:14px; } .cwt .b2{ left:26px; animation-delay:.8s; } .cwt .b3{ left:38px; animation-delay:1.6s; }
 @keyframes cwB{ 0%{ transform:translateY(0) scale(.6); opacity:0 } 20%{ opacity:.9 } 100%{ transform:translateY(calc(var(--f) * -150px)) scale(1); opacity:0 } }
 .cwv{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .cwn{ font-size:calc(var(--fs-md) * 4.4); font-weight:200; letter-spacing:-.05em; line-height:.95; font-variant-numeric:tabular-nums; } .cwn sup{ font-size:.28em; font-weight:300; vertical-align:1.9em; margin-left:2px; letter-spacing:0; opacity:.7; }
-.cws{ display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-sm); opacity:.7; } .cws ha-icon{ width:16px; height:16px; } .heat .cws{ color:var(--hg-accent-tx); opacity:1; } .heat .cws ha-icon{ animation:var(--hg-sc-anim, hgwave 1.6s ease-in-out infinite); }
+.cws{ display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-sm); opacity:.7; } .cws ha-icon{ width:16px; height:16px; } .heat .cws{ color:var(--hg-accent-tx); opacity:1; } .heat .cws ha-icon{ animation:var(--hg-loop, var(--hg-sc-anim, hgwave 1.6s ease-in-out infinite)); }
 .cwa{ display:inline-flex; align-items:center; gap:6px; margin-top:4px; padding:4px; border-radius:999px; background:var(--hg-tile-bg); align-self:flex-start; }
 .cv2{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--hg-tile-bg); } .cv2 ha-icon{ width:18px; height:18px; } .cv2:active{ transform:scale(.92); } .cv2[disabled]{ opacity:.35; }
 .cwg{ display:flex; flex-direction:column; align-items:center; min-width:56px; line-height:1.1; } .cwg small{ font-size:var(--fs-xs); opacity:.6; } .cwg b{ font-size:var(--fs-md); font-weight:400; font-variant-numeric:tabular-nums; }
@@ -237,9 +237,9 @@ ha-card.chips{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(
 .st2 em{ font-style:normal; font-weight:600; color:#4A4E54; } .st2 small{ font-size:inherit; color:#6A6E74; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
 .sc.opn .st2 em, .sc.act .st2 em{ color:var(--hg-accent-tx); }
 /* animacje stanu (transform/opacity) */
-.sc.opn.k-door .sb ha-icon{ animation:var(--hg-sc-anim, scSwing 2.8s cubic-bezier(.45,0,.55,1) infinite); transform-origin:30% 50%; }
-.sc.act.k-occ .rg{ animation:var(--hg-sc-anim, scBreath 3s cubic-bezier(.2,0,0,1) infinite); }
-.sc.act.k-mot .rg{ animation:var(--hg-sc-anim, scRipple 2s cubic-bezier(.2,0,0,1) infinite); } .sc.act.k-mot .rg.r2{ animation-delay:1s; }
+.sc.opn.k-door .sb ha-icon{ animation:var(--hg-loop, var(--hg-sc-anim, scSwing 2.8s cubic-bezier(.45,0,.55,1) infinite)); transform-origin:30% 50%; }
+.sc.act.k-occ .rg{ animation:var(--hg-loop, var(--hg-sc-anim, scBreath 3s cubic-bezier(.2,0,0,1) infinite)); }
+.sc.act.k-mot .rg{ animation:var(--hg-loop, var(--hg-sc-anim, scRipple 2s cubic-bezier(.2,0,0,1) infinite)); } .sc.act.k-mot .rg.r2{ animation-delay:1s; }
 @keyframes scSwing{ 0%,100%{ transform:perspective(60px) rotateY(0deg); } 50%{ transform:perspective(60px) rotateY(-28deg); } }
 @keyframes scBreath{ 0%{ transform:scale(1); opacity:.7; } 70%,100%{ transform:scale(1.55); opacity:0; } }
 @keyframes scRipple{ 0%{ transform:scale(1); opacity:.8; } 100%{ transform:scale(1.8); opacity:0; } }
@@ -331,11 +331,11 @@ ha-card.wmc{ gap:var(--s2); }
 .wm-glow{ opacity:0; transition:opacity .4s; }
 .wm-wt{ transform:translateY(var(--wy, 40px)); }
 .ph-wash{ --wy:10px; } .ph-rinse{ --wy:0px; } .ph-pause{ --wy:10px; --hg-play:paused; } .ph-spin, .ph-done, .ph-idle{ --wy:44px; }
-.ph-wash .wm-dr{ animation:wmr 3.6s linear infinite; } .ph-wash .wm-cl{ animation:var(--hg-wm-tumble, wmt 3.6s cubic-bezier(.45,0,.55,1) infinite); } .ph-wash .wm-wt{ animation:var(--hg-wm-slosh, wms 2.4s cubic-bezier(.45,0,.55,1) infinite); }
-.ph-rinse .wm-dr{ animation:wmr 5s linear infinite; } .ph-rinse .wm-cl{ animation:var(--hg-wm-tumble, wmt 5s cubic-bezier(.45,0,.55,1) infinite); } .ph-rinse .wm-wt{ animation:var(--hg-wm-slosh, wms 1.8s cubic-bezier(.45,0,.55,1) infinite); }
-.ph-rinse .wm-bb circle{ animation:var(--hg-wm-bub, wmb 2.4s ease-in infinite); } .ph-rinse .wm-bb circle:nth-child(2){ animation-delay:.8s; } .ph-rinse .wm-bb circle:nth-child(3){ animation-delay:1.6s; } .ph-rinse .wm-bb circle:nth-child(4){ animation-delay:.4s; }
-.ph-spin .wm-dr, .ph-spin .wm-cl, .ph-spin .wm-str{ animation:wmr var(--spd, .4s) linear infinite; } .ph-spin .wm-str{ opacity:1; } .ph-spin .wm-cl{ transform:none; }
-.ph-pause .wm-dr, .ph-pause .wm-cl{ animation:wmr 3.6s linear infinite; }
+.ph-wash .wm-dr{ animation:var(--hg-loop, wmr 3.6s linear infinite); } .ph-wash .wm-cl{ animation:var(--hg-loop, var(--hg-wm-tumble, wmt 3.6s cubic-bezier(.45,0,.55,1) infinite)); } .ph-wash .wm-wt{ animation:var(--hg-loop, var(--hg-wm-slosh, wms 2.4s cubic-bezier(.45,0,.55,1) infinite)); }
+.ph-rinse .wm-dr{ animation:var(--hg-loop, wmr 5s linear infinite); } .ph-rinse .wm-cl{ animation:var(--hg-loop, var(--hg-wm-tumble, wmt 5s cubic-bezier(.45,0,.55,1) infinite)); } .ph-rinse .wm-wt{ animation:var(--hg-loop, var(--hg-wm-slosh, wms 1.8s cubic-bezier(.45,0,.55,1) infinite)); }
+.ph-rinse .wm-bb circle{ animation:var(--hg-loop, var(--hg-wm-bub, wmb 2.4s ease-in infinite)); } .ph-rinse .wm-bb circle:nth-child(2){ animation-delay:.8s; } .ph-rinse .wm-bb circle:nth-child(3){ animation-delay:1.6s; } .ph-rinse .wm-bb circle:nth-child(4){ animation-delay:.4s; }
+.ph-spin .wm-dr, .ph-spin .wm-cl, .ph-spin .wm-str{ animation:var(--hg-loop, wmr var(--spd, .4s) linear infinite); } .ph-spin .wm-str{ opacity:1; } .ph-spin .wm-cl{ transform:none; }
+.ph-pause .wm-dr, .ph-pause .wm-cl{ animation:var(--hg-loop, wmr 3.6s linear infinite); }
 .ph-done .wm-chk{ opacity:1; transform:scale(1); } .ph-done .wm-glow{ opacity:1; }
 .ph-idle svg{ opacity:.6; }
 @keyframes wmr{ to{ transform:rotate(360deg); } }

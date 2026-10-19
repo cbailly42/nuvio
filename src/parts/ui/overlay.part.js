@@ -8,11 +8,11 @@ const hgOverlay = window.__hgOverlay || (() => {
 *{ box-sizing:border-box; }
 button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
-.scrim{ position:fixed; inset:0; pointer-events:auto; background:rgba(8,10,14,.32); -webkit-backdrop-filter:blur(calc(10px * var(--hg-bf, 1))); backdrop-filter:blur(calc(10px * var(--hg-bf, 1)));
+.scrim{ position:fixed; inset:0; pointer-events:auto; background:rgba(8,10,14,.32); -webkit-backdrop-filter:var(--hg-bfo, blur(calc(10px * var(--hg-bf, 1)))); backdrop-filter:var(--hg-bfo, blur(calc(10px * var(--hg-bf, 1))));
   animation: nvScrim var(--hg-t-base, 200ms) var(--hg-ease-out, ease-out) both; }
 .scrim.out{ animation: nvScrim var(--hg-t-base, 200ms) var(--hg-ease-in, ease-in) reverse both; }
 .glass{ pointer-events:auto; background: var(--hg-glass-sheen, none), var(--hg-panel-flat, rgba(236,238,242,.9)); box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-shadow-float, 0 8px 24px rgba(0,0,0,.2));
-  -webkit-backdrop-filter: blur(calc(24px * var(--hg-bf, 1))) saturate(140%); backdrop-filter: blur(calc(24px * var(--hg-bf, 1))) saturate(140%); }
+  -webkit-backdrop-filter: var(--hg-bfo, blur(calc(24px * var(--hg-bf, 1))) saturate(140%)); backdrop-filter: var(--hg-bfo, blur(calc(24px * var(--hg-bf, 1))) saturate(140%)); }
 /* dialog i alert dialog: środek ekranu, skala 0.94 -> 1 */
 .dlg{ position:fixed; left:50%; top:50%; width:min(var(--w, 400px), calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow:auto; transform:translate(-50%, -50%);
   border-radius:var(--hg-radius, 24px); padding:24px; display:flex; flex-direction:column; gap:14px; animation: nvPop var(--hg-t-slow, 320ms) var(--hg-ease-out, ease-out) both; }

@@ -28,7 +28,7 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
 .mid{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4u; padding:12u 0 16u; z-index:1; }
 .rg{ position:absolute; left:50%; top:50%; width:150u; height:150u; margin:-75u 0 0 -75u; pointer-events:none; z-index:-1; }
 .rg::before{ content:''; position:absolute; inset:0; border-radius:50%; border:2px solid color-mix(in srgb, var(--aq) 16%, transparent); }
-.rg i{ position:absolute; inset:0; border-radius:50%; border:3px solid color-mix(in srgb, var(--aq) 34%, transparent); opacity:0; transform:scale(.7); animation:aqRip var(--sp, 4.5s) cubic-bezier(.25,.6,.4,1) infinite; animation-delay:calc(var(--sp, 4.5s) * var(--k) / -3); }
+.rg i{ position:absolute; inset:0; border-radius:50%; border:3px solid color-mix(in srgb, var(--aq) 34%, transparent); opacity:0; transform:scale(.7); animation:var(--hg-loop, aqRip var(--sp, 4.5s) cubic-bezier(.25,.6,.4,1) infinite); animation-delay:calc(var(--sp, 4.5s) * var(--k) / -3); }
 .rg i:nth-child(1){ --k:0; } .rg i:nth-child(2){ --k:1; } .rg i:nth-child(3){ --k:2; }
 .fast .rg i{ border-width:5px; border-color:color-mix(in srgb, var(--aq) 26%, transparent); }
 @keyframes aqRip{ 0%{ transform:scale(.7); opacity:0; } 15%{ opacity:1; } 100%{ transform:scale(2.3); opacity:0; } }

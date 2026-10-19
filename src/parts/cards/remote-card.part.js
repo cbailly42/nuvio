@@ -32,13 +32,13 @@ ha-card.glass > *{ flex-shrink:0; }
 .un .led{ fill:var(--ac); } .off .un .led{ fill:${'#' + 'C4C8CE'}; }
 .un .sh{ fill:rgba(0,0,0,.10); filter:blur(6px); }
 .str{ transform-box:view-box; transform-origin:120px 60px; transition: opacity .4s; }
-.str path{ fill:none; stroke:var(--ac); stroke-width:3.2; stroke-linecap:round; stroke-dasharray:12 18; animation: rcFlow var(--sp, 1.6s) linear infinite; animation-play-state:var(--hg-play, running); }
+.str path{ fill:none; stroke:var(--ac); stroke-width:3.2; stroke-linecap:round; stroke-dasharray:12 18; animation: var(--hg-loop, rcFlow var(--sp, 1.6s) linear infinite); animation-play-state:var(--hg-play, running); }
 .str path:nth-child(2n){ animation-delay:calc(var(--sp, 1.6s) * -.5); } .str path:nth-child(3n){ animation-delay:calc(var(--sp, 1.6s) * -.25); }
-.sw .str{ animation: rcSwing 3.2s ease-in-out infinite alternate; animation-play-state:var(--hg-play, running); }
+.sw .str{ animation: var(--hg-loop, rcSwing 3.2s ease-in-out infinite alternate); animation-play-state:var(--hg-play, running); }
 /* zmiana trybu: jednostka delikatnie rozbłyska nowym kolorem, nawiew wraca od góry */
 .mc .un svg{ animation: rcMode 1.5s cubic-bezier(.4,0,.2,1); }
 @keyframes rcMode{ 0%{ filter:none; transform:none; } 35%{ filter:drop-shadow(0 0 22px color-mix(in srgb, var(--ac) 70%, transparent)); transform:scale(1.025); } 100%{ filter:none; transform:none; } }
-.mc .un .str path{ animation: rcFlow var(--sp, 1.6s) linear infinite, rcIn 1.1s ease-out; }
+.mc .un .str path{ animation: var(--hg-loop, rcFlow var(--sp, 1.6s) linear infinite, rcIn 1.1s ease-out); }
 @keyframes rcIn{ from{ opacity:0; } to{ opacity:1; } }
 @media (prefers-reduced-motion:reduce){ ha-card.glass{ transition:none; } .mc .un svg, .mc .un .str path{ animation:none; } }
 .off .str{ opacity:0; } .off .un .bd{ fill:${'#' + 'E9EBEE'}; }

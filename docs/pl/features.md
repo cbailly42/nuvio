@@ -29,6 +29,15 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - **Blokada PIN-em (BETA)**: włącz *Blokadę PIN-em*, ustaw PIN z 4 do 8 cyfr i wybierz, kiedy wygaszacz się blokuje (od razu, po 1, 5, 15 lub 30 min). Zablokowany wygaszacz nie budzi się dotykiem ani czujnikiem ruchu: dotknięcie rozmywa zdjęcie i pokazuje okrągły szklany pinpad z kropkami PIN-u nad nim i przyciskiem **Zablokuj** pod spodem, który wraca do wygaszacza. Po 5 błędnych PIN-ach pinpad czeka 30 s (dłużej po kolejnych próbach), a po 20 s bez dotyku sam się zamyka. **Zablokuj ekran** w menu użytkownika blokuje od razu, a przeładowanie strony nie zdejmuje blokady. Zapisywany jest tylko skrót PIN-u. Blokada chroni tablet przed przypadkowym użyciem i nie zastępuje hasła do Home Assistant.
 - Ustawienia są częścią układu: na wspólnym dashboardzie dotyczą wszystkich, a osoba z własnym układem ma własne. Zobacz [Wspólny dashboard](#wspólny-dashboard).
 
+## Wydajność
+
+Starsze tablety szybko rozładowują baterię, gdy każda szklana powierzchnia jest rozmyta, a ozdobne animacje działają bez przerwy. **Ustawienia > Wygląd > Wydajność** ma dwie opcje zapisywane tylko na tym urządzeniu, więc tablet ścienny i komputer mogą mieć inne:
+
+- **Rozmycie szkła**: *Pełne* (domyślnie na komputerze), *Lekkie* (domyślnie na dotyku: słabsze rozmycie, bez ciężkich cieni), *Wyłączone* (bez rozmycia; szkło ma gęstsze wypełnienie, a okna są nieprzezroczyste). *Automatycznie* wybiera jedno z nich i pokazuje które.
+- **Oszczędzanie baterii**: zatrzymuje animacje w pętli (przybliżanie zdjęcia na wygaszaczu, obracające się wentylatory, pulsujące pierścienie, bęben pralki i podobne) i odświeża migawki kamer najwyżej co 30 s. *Automatycznie* włącza się na iPadach i iPhone'ach z iOS lub iPadOS starszym niż 18 oraz na bardzo słabym sprzęcie; rozmycie na *Automatycznie* jest wtedy też wyłączone.
+
+Niezależnie od tych opcji animacje w kartach przewiniętych poza ekran stoją, a *Ogranicz przezroczystość* w ustawieniach systemu wyłącza rozmycie na *Automatycznie*.
+
 ## Kopia układu
 
 Administrator może wyeksportować i zaimportować cały układ Nuvio w **Wygląd → Kopia układu** (tryb edycji).

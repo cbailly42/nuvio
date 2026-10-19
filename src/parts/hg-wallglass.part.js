@@ -18,7 +18,7 @@ const HG_GL_SS = `
   background:radial-gradient(circle at 30% 38%, color-mix(in srgb, var(--o2) 80%, ${K(255,255,255,.4)}), var(--o2) 45%, color-mix(in srgb, var(--o2) 60%, ${K(30,20,70,1)}) 85%); filter:brightness(var(--nd, 1)); }
 .ng-orb{ position:absolute; left:calc(38 * var(--u)); bottom:calc(16 * var(--u)); width:calc(70 * var(--u)); height:calc(70 * var(--u)); border-radius:50%; opacity:calc(.35 + var(--oi) * .65); z-index:2;
   background:radial-gradient(circle at 35% 30%, ${K(255,255,255,.95)}, transparent 42%), conic-gradient(from 0deg, var(--o1), var(--o2), ${K(120,230,255,1)}, var(--o1));
-  box-shadow:0 0 calc(30 * var(--u) * var(--oi)) color-mix(in srgb, var(--o1) 60%, transparent), inset 0 0 calc(12 * var(--u)) ${K(255,255,255,.4)}; animation:ngorb 9s linear infinite; }
+  box-shadow:0 0 calc(30 * var(--u) * var(--oi)) color-mix(in srgb, var(--o1) 60%, transparent), inset 0 0 calc(12 * var(--u)) ${K(255,255,255,.4)}; animation:var(--hg-loop, ngorb 9s linear infinite); }
 @keyframes ngorb{ to{ transform:rotate(360deg); } }
 .ng-top{ position:absolute; left:0; right:0; top:0; height:calc(124 * var(--u)); pointer-events:none; text-shadow:0 1px 3px ${K(0,0,0,.45)}, 0 2px 18px ${K(0,0,0,.35)}; z-index:1; }
 .ng-dt{ position:absolute; left:calc(44 * var(--u)); top:calc(46 * var(--u)); font-size:calc(25 * var(--u)); font-weight:400; letter-spacing:.005em; white-space:nowrap; }
@@ -139,7 +139,7 @@ const HG_GL_CSS = `
 .wg-pv .ng{ pointer-events:none; }
 .wg-gal{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap:16px; }
 @media (max-width:600px){ .wg-gal{ grid-template-columns:minmax(0, 1fr); gap:12px; } }
-.wg-gt{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:10px; padding:10px; border-radius:20px; background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.2); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:box-shadow .2s ease, transform .2s ease; min-width:0; }
+.wg-gt{ all:unset; cursor:pointer; box-sizing:border-box; display:flex; flex-direction:column; gap:10px; padding:10px; border-radius:20px; background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.2); -webkit-backdrop-filter:var(--hg-bfo, blur(10px)); backdrop-filter:var(--hg-bfo, blur(10px)); transition:box-shadow .2s ease, transform .2s ease; min-width:0; }
 .wg-gt:hover{ transform:translateY(-1px); } .wg-gt:focus-visible{ outline:2px solid #63d71e; outline-offset:2px; }
 .wg-gt[aria-checked=true]{ box-shadow:inset 0 0 0 2px #63d71e, 0 0 0 3px rgba(99,215,30,.18), 0 6px 18px rgba(0,0,0,.2); }
 .wg-gp{ position:relative; display:block; width:100%; aspect-ratio:16 / 10; border-radius:12px; overflow:hidden; isolation:isolate; pointer-events:none; background:${K(5,7,11,1)}; }

@@ -30,7 +30,7 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
 .rg .pg{ stroke:var(--lk); stroke-dasharray:100 100; stroke-dashoffset:100; opacity:0; transition:stroke-dashoffset .25s ease, opacity .25s ease; }
 .kb.hold .rg .pg, .mv .rg .pg{ opacity:1; }
 .kb.hold .rg .pg{ stroke-dashoffset:0; transition:stroke-dashoffset var(--hd, .9s) linear; }
-.mv .rg .pg{ stroke-dasharray:28 72; stroke-dashoffset:0; transition:none; transform-origin:50% 50%; transform-box:fill-box; animation:slSpin 1s linear infinite; }
+.mv .rg .pg{ stroke-dasharray:28 72; stroke-dashoffset:0; transition:none; transform-origin:50% 50%; transform-box:fill-box; animation:var(--hg-loop, slSpin 1s linear infinite); }
 @keyframes slSpin{ to{ transform:rotate(360deg); } }
 /* impuls po zmianie stanu */
 .kb::after{ content:''; position:absolute; inset:0; border-radius:50%; border:2px solid var(--lk); opacity:0; pointer-events:none; }

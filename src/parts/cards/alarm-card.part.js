@@ -25,9 +25,9 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   background:var(--c); box-shadow:var(--hg-sh); }
 .ring ha-icon{ width:28px; height:28px; --mdc-icon-size:28px; }
 .ring::before, .ring::after{ content:''; position:absolute; inset:-6u; border-radius:50%; border:2u solid var(--c); opacity:0; pointer-events:none; }
-.anim .ring::before{ animation:hgring 1.6s cubic-bezier(.2,.8,.2,1) infinite; }
-.anim .ring::after{ animation:hgring 1.6s cubic-bezier(.2,.8,.2,1) .8s infinite; }
-.trig .ring{ animation:hgpulse 1s infinite; }
+.anim .ring::before{ animation:var(--hg-loop, hgring 1.6s cubic-bezier(.2,.8,.2,1) infinite); }
+.anim .ring::after{ animation:var(--hg-loop, hgring 1.6s cubic-bezier(.2,.8,.2,1) .8s infinite); }
+.trig .ring{ animation:var(--hg-loop, hgpulse 1s infinite); }
 @keyframes hgring{ 0%{ transform:scale(.9); opacity:.7 } 100%{ transform:scale(1.45); opacity:0 } }
 .st{ min-width:0; } .st b{ display:block; font-size:clamp(20px, calc(var(--k) * 17), 24px); font-weight:600; letter-spacing:-.01em; color:#1E2023; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .st span{ display:block; font-size:var(--fs-sm); color:#5A5E64; margin-top:3u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

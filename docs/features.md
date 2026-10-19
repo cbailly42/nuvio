@@ -29,6 +29,15 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 - **PIN lock (BETA)**: turn on *PIN lock*, set a PIN of 4 to 8 digits and choose when the screensaver locks (at once, after 1, 5, 15 or 30 min). A locked screensaver does not wake on touch or motion: touching it blurs the photo and shows a round glass PIN pad with the PIN dots above it and a **Lock** button below it, which returns to the screensaver. After 5 wrong PINs the pad waits 30 s (longer after more attempts), and it closes by itself after 20 s without a touch. **Lock screen** in the user menu locks right away, and a reload of the page stays locked. Only a hash of the PIN is stored. The lock keeps the tablet from casual use and does not replace the Home Assistant password.
 - Settings are part of the layout: on the shared dashboard they apply to everyone, and a person with their own layout has their own. See [Shared dashboard](#shared-dashboard).
 
+## Performance
+
+Older tablets drain their battery fast when every glass surface is blurred and decorative animations keep running. **Settings > Appearance > Performance** has two options, saved on this device only, so a wall tablet and a desktop can differ:
+
+- **Glass blur**: *Full* (desktop default), *Light* (touch default: weaker blur, no heavy shadows), *Off* (no blur at all; glass gets a denser fill and dialogs are opaque). *Automatic* picks one of these and shows which.
+- **Power saving**: stops looping animations (screensaver photo zoom, spinning fans, pulsing rings, the washing machine drum and similar) and refreshes camera snapshots at most every 30 s. *Automatic* turns it on for iPads and iPhones on iOS or iPadOS older than 18 and for very weak hardware; blur on *Automatic* is then off as well.
+
+Independent of these options, animations in cards scrolled off screen pause, and *Reduce transparency* in the system settings turns blur off on *Automatic*.
+
 ## Layout backup
 
 Admins can export and import the whole Nuvio layout from **Appearance → Layout backup** (edit mode).

@@ -29,7 +29,7 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
 .tr{ fill:none; stroke:currentColor; stroke-opacity:.13; stroke-width:.7; stroke-linecap:round; transition:stroke var(--hg-t-slow) var(--hg-ease-out), stroke-opacity var(--hg-t-slow) var(--hg-ease-out); }
 .tr.on{ stroke:var(--c); stroke-opacity:.32; }
 .fl{ fill:none; stroke:var(--c); stroke-width:2.3; stroke-linecap:round; stroke-dasharray:0 6.5; opacity:0;
-  transition:opacity var(--hg-t-slow) var(--hg-ease-out); animation:flRun var(--d, 1s) linear infinite; animation-play-state:paused; }
+  transition:opacity var(--hg-t-slow) var(--hg-ease-out); animation:var(--hg-loop, flRun var(--d, 1s) linear infinite); animation-play-state:paused; }
 .fl.on{ opacity:1; animation-play-state:running; } .fl.rv{ animation-direction:reverse; }
 :host([hg-off]) .fl{ animation-play-state:paused !important; }   /* poza ekranem stoi */
 @keyframes flRun{ to{ stroke-dashoffset:-6.5; } }

@@ -66,7 +66,7 @@ ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); 
   /* bez własnego backdrop-filter: karta leży na szklanym panelu, który już rozmywa tło (jedno rozmycie zamiast zagnieżdżonych) */
   border:0;
   /* własne rozmycie tylko gdy panel nie ma tła (panel_backdrop: false) */
-  -webkit-backdrop-filter: var(--hg-card-bf, none); backdrop-filter: var(--hg-card-bf, none);
+  -webkit-backdrop-filter: var(--hg-bfo, var(--hg-card-bf, none)); backdrop-filter: var(--hg-bfo, var(--hg-card-bf, none));
   /* cienka jasna krawędź (mocniejsza u góry) + miękki cień, jak w projekcie */
   box-shadow: var(--hg-edge, 0 0 0 transparent), var(--hg-card-sh, var(--hg-shadow-lg, 0 6px 20px var(--hg-glass-sh)));
   color:#1E2023; padding:var(--s2); contain: layout paint style; }
@@ -106,5 +106,7 @@ ha-card.glass{ position:relative; height:100%; min-height:var(--hg-min-h, 0px); 
 @keyframes hgwave{ 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(2u) } }
 @keyframes hgglow{ 0%,100%{ filter: drop-shadow(0 0 0 var(--hg-accent-faint)) } 50%{ filter: drop-shadow(0 0 3u var(--hg-accent)) } }
 *, *::before, *::after{ animation-play-state: var(--hg-play, running) !important; }
+/* karta poza ekranem (hg-off z IntersectionObserver w hg-core, zapas 300 px): animacje stoją, nie liczą klatek w tle */
+:host([hg-off]) *, :host([hg-off]) *::before, :host([hg-off]) *::after{ animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 `) + HG_RANGE_CSS + HG_FORM_CSS;

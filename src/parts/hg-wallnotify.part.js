@@ -8,7 +8,7 @@ const HG_NT_SS = `
 .nwb.dk .nb-nt, .nw:not(.bd) .nb-nt{ --nt-bg:${K(30,32,38,.62)}; --nt-tx:${K(255,255,255,1)}; --nt-tx2:${K(255,255,255,.6)}; --nt-edge:inset 0 1px 0 ${K(255,255,255,.14)}, inset 0 0 0 1px ${K(255,255,255,.07)}; --nt-btn:${K(30,32,38,.55)}; }
 .nw > .nb-nt{ position:absolute; left:50%; bottom:calc(clamp(60px, 9vmin, 96px) + env(safe-area-inset-bottom, 0px)); width:min(420px, calc(100vw - 32px)); transform:translateX(-50%); }
 .nt-st{ position:relative; display:flex; flex-direction:column; gap:8px; padding-bottom:var(--nt-pb, 0px); transition:padding .35s ease; }
-.nt-c{ position:relative; box-sizing:border-box; padding:12px 14px 13px; border-radius:22px; background:var(--nt-bg); -webkit-backdrop-filter:blur(30px) saturate(180%); backdrop-filter:blur(30px) saturate(180%);
+.nt-c{ position:relative; box-sizing:border-box; padding:12px 14px 13px; border-radius:22px; background:var(--nt-bg); -webkit-backdrop-filter:var(--hg-bfo, blur(30px) saturate(180%)); backdrop-filter:var(--hg-bfo, blur(30px) saturate(180%));
   box-shadow:var(--nt-edge), 0 10px 30px ${K(0,0,0,.18)}; cursor:pointer; transform-origin:50% 0; transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .35s ease; }
 .nt-c header{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nt-tx2); }
 .nt-c header i{ flex:none; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:var(--hg-accent, ${K(99,215,30,1)}); color:var(--hg-on-accent, ${K(11,15,10,1)}); }
@@ -30,7 +30,7 @@ const HG_NT_SS = `
 .nb-nt.open .nt-bar{ display:flex; animation:ntfade .3s ease both; }
 .nt-bar b{ font-size:clamp(18px, 2.4vmin, 22px); font-weight:700; letter-spacing:-.01em; color:${K(255,255,255,1)}; text-shadow:0 1px 12px ${K(0,0,0,.35)}; }
 .nt-bar span{ display:flex; gap:6px; }
-.nt-bar button{ height:30px; padding:0 12px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--nt-tx); background:var(--nt-btn); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:var(--nt-edge); cursor:pointer; }
+.nt-bar button{ height:30px; padding:0 12px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--nt-tx); background:var(--nt-btn); -webkit-backdrop-filter:var(--hg-bfo, blur(20px)); backdrop-filter:var(--hg-bfo, blur(20px)); box-shadow:var(--nt-edge); cursor:pointer; }
 .nt-bar button.x{ width:30px; padding:0; display:flex; align-items:center; justify-content:center; } .nt-bar button ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; }
 .nb-nt.open .nt-st{ max-height:min(62vh, 560px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; margin:-4px; padding:4px; }
 .nb-nt.open .nt-c{ animation:ntopen .5s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i, 0) * 35ms); }

@@ -1254,6 +1254,7 @@ const HG_EDIT = {
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
+    if (a === 'perfblur' || a === 'perfeco') { HGPerf.set(a === 'perfblur' ? 'blur' : 'eco', b.dataset.v || ''); return this._eLook(); }
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
     if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address')); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
@@ -1554,6 +1555,17 @@ const HG_EDIT = {
     return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgTr('Język', 'Language')}</h4><small class="lk-hn">${hgTr('Zapisywany na Twoim koncie. Automatycznie: ', 'Saved to your account. Automatic: ')}${H.esc(nm(auto))} (${src})</small>
       <div class="lk-seg lk-lng" role="group" aria-label="${hgTr('Język', 'Language')}">${[['', hgTr('Automatycznie', 'Automatic')], ...HGLang.LIST].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },
+  /* Wydajność (osobno na tym urządzeniu, HGPerf): rozmycie szkła i oszczędzanie baterii; „Automatycznie” pokazuje, co wybrano */
+  _ePerfHtml() {
+    const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
+    const BN = { full: hgTr('Pełne', 'Full'), light: hgTr('Lekkie', 'Light'), off: hgTr('Wyłączone', 'Off') };
+    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:speedometer')}${hgTr('Wydajność', 'Performance')}</h4><small class="lk-hn">${hgTr('Zapisywane tylko na tym urządzeniu. Na starszym tablecie wyłączone rozmycie i oszczędzanie baterii wyraźnie zmniejszają zużycie energii.', 'Saved on this device only. On an older tablet, turning blur off and power saving on noticeably reduce battery drain.')}</small>
+      <small class="lk-hn">${hgTr('Rozmycie szkła', 'Glass blur')} · ${hgTr('teraz', 'now')}: ${H.esc(BN[b])}</small>
+      ${seg('perfblur', bs, [['', hgTr('Automatycznie', 'Automatic')], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgTr('Rozmycie szkła', 'Glass blur'))}
+      <small class="lk-hn">${hgTr('Oszczędzanie baterii (zatrzymuje animacje w pętli, rzadziej odświeża kamery)', 'Power saving (stops looping animations, refreshes cameras less often)')} · ${hgTr('teraz', 'now')}: ${e ? hgTr('włączone', 'on') : hgTr('wyłączone', 'off')}</small>
+      ${seg('perfeco', es, [['', hgTr('Automatycznie', 'Automatic')], ['1', hgTr('Włączone', 'On')], ['0', hgTr('Wyłączone', 'Off')]], hgTr('Oszczędzanie baterii', 'Power saving'))}</section>`;
+  },
   _eLook() {
     /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */
     { const S0 = this._eSheetEl, sc0 = S0 && S0.querySelector('.hge-sheet.lk .hs-sc'); if (sc0) { const fe = S0.querySelector(':focus') || (S0.getRootNode && S0.getRootNode().activeElement), key = fe && fe.dataset ? ['hge', 'v', 'k', 'c'].map((x) => fe.dataset[x] || '').join('|') : ''; const top = sc0.scrollTop;
@@ -1582,6 +1594,7 @@ const HG_EDIT = {
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:brightness-6')}${hgTr('Przyciemnienie', 'Dimming')}<em class="dv">${dv}%</em></h4><small class="lk-hn">${hgTr('Dotyczy tła w trybie ciemnym', 'Applies to the background in dark mode')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgTr('Przyciemnienie tła', 'Background dimming')}"></section>
       ${this._eLangHtml()}
+      ${this._ePerfHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
