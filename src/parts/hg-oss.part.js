@@ -172,7 +172,7 @@ const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
   if (V.some((v) => v[0] === 'mapa')) { const ents = [...M.persons, ...M.trackers.slice(0, 12), ...(M.zones.includes('zone.home') ? ['zone.home'] : [])];
     views.push(view('mapa', t('map'), base('mapa', t('map'), t('map_sub'), [ents.length ? { type: 'custom:hg-map-card', area: 'm', min_h: 560, title: t('map'), entities: ents, theme_mode: 'auto', hours_to_show: 0 } : { ...hint('map'), area: 'm' }], one('m')))); }
   if (V.some((v) => v[0] === 'kalendarz')) views.push(view('kalendarz', t('calendar'), base('kalendarz', t('calendar'), t('cal_sub'), (M.calendars.length
-    ? [{ type: 'custom:hg-month-card', calendars: M.calendars.slice(0, 6), min_h: 380 }, { type: 'custom:hg-agenda-card', calendars: M.calendars.slice(0, 6), days: 14, min_h: 380 }] : [hint('calendar')]), scroll)));
+    ? [{ type: 'custom:hg-month-card', calendars: M.calendars, min_h: 380 }, { type: 'custom:hg-agenda-card', calendars: M.calendars, days: 14, min_h: 380 }] : [hint('calendar')]), scroll)));
   for (const c of (wiz && wiz.custom) || []) if (V.some((v) => v[0] === c.p)) views.push(view(c.p, c.n, base(c.p, c.n, c.s || '', [{ ...hint('custom'), hint_sc: c.p + ':tiles', min_h: 150, span: 'full' }], hgViewLay(c, one), c.lay === 'panel' && weather ? { weather } : {})));
   views.sort((a, b) => (a.subview ? 1 : 0) - (b.subview ? 1 : 0) || V.findIndex((v) => v[0] === a.path) - V.findIndex((v) => v[0] === b.path));
   /* kolumny widoku z Wyglądu (wiz.vx[path].cd / ct) – także dla widoków wbudowanych; widoki z jednym obszarem (areas) zostają bez zmian */

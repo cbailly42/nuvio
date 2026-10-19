@@ -340,7 +340,7 @@ class HGPage extends HTMLElement {
     for (const w of this._cardWraps) { const c = w.firstElementChild; if (c && !c._masObs) { c._masObs = 1; this._masRO.observe(c); } } this._masLay(); }
   /* własne widoki: jawne rozmieszczenie w rzędach 4 px. masonry: karta do najkrótszej kolumny; cols: kolumny po kolei (bez wyrównania rzędów) */
   _masLay() { const el = this._panelEl, cs = getComputedStyle(el), gap = parseFloat(cs.rowGap) || 0, n = Math.max(1, cs.gridTemplateColumns.split(' ').filter(Boolean).length), cols = this._masMode === 'cols';
-    const aw = el.querySelector(':scope > .hge-addw'), W = this._cardWraps.filter((w) => !w.hidden && w.style.display !== 'none' && w.firstElementChild).concat(aw ? [aw] : []);
+    const aw = el.querySelector(':scope > .hge-addw'), cw = new Set(this._cardWraps), W = [...el.children].filter((w) => cw.has(w) && !w.hidden && w.style.display !== 'none' && w.firstElementChild).concat(aw ? [aw] : []);   /* kolejność DOM (po przeciągnięciu w edycji), nie kolejność budowania */
     for (const w of W) { if (w.dataset.masGc == null) w.dataset.masGc = w.style.gridColumn || ''; w.style.minHeight = '0px'; w.style.gridRow = ''; w.style.gridRowEnd = 'span 1'; }
     const spanOf = (w) => { const g = w.dataset.masGc; if (/1\s*\/\s*-1/.test(g)) return n; const m = /span\s+(\d+)/.exec(g); return Math.min(n, m ? +m[1] : 1); };
     const hs = W.map((w) => { const c = w.firstElementChild, r = c.shadowRoot && c.shadowRoot.querySelector('ha-card, .hn, .root'); return Math.max(c.scrollHeight, r ? r.scrollHeight : 0, 40); });
@@ -385,7 +385,9 @@ class HGPage extends HTMLElement {
     /* szerokość panelu wybrana dla widoku (wąski / cała szerokość); wąski panel mieści najwyżej 2 kolumny */
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
-    { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? 'row dense' : '';
+    { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && HGL.get(sc).order.length > 0; } catch (e) { return false; } })();
+    el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
     el.style.alignItems = p.align === 'start' || p.masonry || p.flow === 'cols' ? 'start' : p.flow === 'grid' ? 'stretch' : '';
