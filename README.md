@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.15.1-a3e635?style=flat-square" alt="v2.15.1">
+  <img src="https://img.shields.io/badge/version-v2.16.0-a3e635?style=flat-square" alt="v2.16.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -29,7 +29,7 @@ Nuvio is a glass-style dashboard for Home Assistant: pages, navigation, cards an
 - **Edit in place.** Drag and drop, resize tiles, add components from a gallery, change accent colour and background.
 - **Many cards, one look.** Over 70 cards for lights, climate, energy, media, cameras, people and more, each also usable on its own in a regular dashboard. See [Components](docs/components.md).
 - **Shared by default.** An administrator sets up one dashboard for everyone, and any person can be given their own layout. See [Features guide](docs/features.md#shared-dashboard).
-- **Wall tablet mode.** A calm screensaver with a clock, the date and a photo, with optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
+- **Wall tablet mode.** Seven screensavers (clock on photo, board, minimal, analog, flip, aurora and night) with previews and an optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
 - **Layout backup.** Export and import the whole layout as versioned JSON. See [Layout backup](docs/features.md#layout-backup).
 - **Polish and English.** Switch language at any time, without reloading. See [Language](docs/configuration.md#language).
 - **Light and dark mode**, touch friendly, keyboard friendly in edit mode, and aware of reduced motion.

@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.15.1-a3e635?style=flat-square" alt="v2.15.1">
+  <img src="https://img.shields.io/badge/version-v2.16.0-a3e635?style=flat-square" alt="v2.16.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -29,7 +29,7 @@ Nuvio to szklany pulpit Home Assistant: widoki, nawigacja, karty i edytor na mie
 - **Edycja na miejscu.** Przeciąganie, rozmiary kafli, galeria komponentów, kolor akcentu i tło.
 - **Wiele kart, jeden styl.** Ponad 70 kart do świateł, klimatu, energii, multimediów, kamer, osób i nie tylko; każdej można użyć samodzielnie w zwykłym pulpicie. Zobacz [Komponenty](docs/pl/components.md).
 - **Domyślnie wspólny.** Administrator ustawia jeden dashboard dla wszystkich, a wybrana osoba może dostać własny układ. Zobacz [Wspólny dashboard](docs/pl/features.md#wspólny-dashboard).
-- **Tryb tabletu ściennego.** Spokojny wygaszacz z zegarem, datą i zdjęciem, z opcjonalną blokadą PIN-em. Zobacz [Tryb tabletu ściennego](docs/pl/features.md#tryb-tabletu-ściennego).
+- **Tryb tabletu ściennego.** Siedem wygaszaczy (zegar na zdjęciu, tablica, minimal, analogowy, klapkowy, zorza i nocny) z podglądami i opcjonalną blokadą PIN-em. Zobacz [Tryb tabletu ściennego](docs/pl/features.md#tryb-tabletu-ściennego).
 - **Kopia układu.** Eksport i import całego układu jako JSON z wersją. Zobacz [Kopia układu](docs/pl/features.md#kopia-układu).
 - **Po polsku i po angielsku.** Język zmienisz w każdej chwili, bez przeładowania. Zobacz [Język](docs/pl/configuration.md#język).
 - **Tryb jasny i ciemny**, obsługa dotyku i klawiatury w trybie edycji, szacunek dla „ogranicz ruch”.

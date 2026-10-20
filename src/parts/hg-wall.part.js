@@ -196,7 +196,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else { this.wx(); this.kid(); } } },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -222,8 +222,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Wygaszacz ekranu', 'Screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
-    const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board());
-    el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
+    const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board()), xs = !gl && !bd && this.xs ? this.xs() : '';
+    el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : xs ? this.xsShell(xs) : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
@@ -234,11 +234,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(el);
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
-    if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
+    if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else if (xs) { this.xsStart(xs, rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
     requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('in'); el.focus({ preventScroll: true }); }));
     try { if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then((l) => { if (this.active) this._wl = l; else l.release(); }, () => {}); } catch (e) { /* ekran może zgasnąć wg systemu */ } },
   clock() { clearTimeout(this._ck); const el = this.el; if (!el) return;
     if (el.classList.contains('gl')) { this.gl(true); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
+    if (el.classList.contains('xs')) { this.xsDraw(); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
     if (el.classList.contains('bd')) { this.bd(true); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
     const l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {}, d = new Date();
     el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)).format(d);
@@ -337,7 +338,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return L.sort((a, b) => nm(a).localeCompare(nm(b), HG_LOC())).map((e) => [e, nm(e)]); },
   html(p) { if (!this.admin(p)) return ''; const c = this.get(), h = p._hass, dv = Math.round(c.dim * 100), idles = this.IDLES.includes(c.idle) ? this.IDLES : [...this.IDLES, c.idle].sort((a, b) => a - b);
     const sens = this.sensors(h);
-    const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, pic = !(this.glass && this.glass());   /* zdjęcie jest tłem obu wariantów */
+    const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, xk = this.xs ? this.xs() : '', pic = !(this.glass && this.glass()) && (!xk || this.xsPic(xk));   /* zdjęcie jest tłem zegara na zdjęciu, tablicy i zegara analogowego */
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgTr('Włącz po bezczynności', 'Start after inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
