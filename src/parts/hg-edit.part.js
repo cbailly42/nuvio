@@ -553,8 +553,9 @@ const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new
     if (el.parentElement !== slot) slot.appendChild(el); el.hass = h; } };
 /* ===== makiety podglądu w galerii „Dodaj komponent”: przykładowe dane, ten sam system wizualny (szkło, akcent, czarny na akcencie) ===== */
 const HG_MOCK_CSS = `
-.mk{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:6px; padding:10px 12px; box-sizing:border-box; color:inherit; font-size:11px; line-height:1.2; }
-.mk-tag{ position:absolute; right:8px; bottom:5px; font-size:9px; letter-spacing:.04em; text-transform:uppercase; opacity:.5; font-weight:600; }
+.mk{ position:absolute; inset:0; display:flex; flex-direction:column; padding:10px 12px 20px; box-sizing:border-box; color:inherit; font-size:11px; line-height:1.2; }
+.mk-in{ flex:1; min-height:0; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:6px; }
+.mk-tag{ position:absolute; right:10px; bottom:5px; line-height:1; font-size:9px; letter-spacing:.04em; text-transform:uppercase; opacity:.5; font-weight:600; }
 .mk-g{ background:rgba(255,255,255,.10); border-radius:10px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.10); }
 .mk-r{ display:flex; align-items:center; gap:8px; min-width:0; } .mk-r > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mk ha-icon{ width:16px; height:16px; --mdc-icon-size:16px; flex:none; } .mk-r > span.mk-ic, .mk-r > span.mk-sw, .mk-r > span.mk-art, .mk-r > span.mk-cir{ flex:none; overflow:visible; }
@@ -667,9 +668,14 @@ const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-
     image: `<div style="flex:1;border-radius:10px;background:linear-gradient(160deg,#7dd3fc 0%,#a78bfa 55%,#f9a8d4 100%);position:relative;overflow:hidden"><svg viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute;inset:auto 0 0 0;width:100%;height:60%"><path d="M0 40 L0 26 L22 12 L40 26 L58 8 L100 30 L100 40Z" fill="rgba(255,255,255,.35)"/></svg><span style="position:absolute;left:14%;top:18%;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.85)"></span></div>`,
     child: `<div class="mk-r"><span class="mk-ic on">${I('mdi:human-child')}</span><span><b>${hgTr('Zosia', 'Zoe')}</b><br><span class="mk-s">${hgTr('W placówce', 'At facility')}</span></span></div>` + [['mdi:login', hgTr('Przyjście', 'Check-in'), '08:12'], ['mdi:silverware-fork-knife', hgTr('Posiłki', 'Meals'), '3']].map(([i, n, v]) => `<div class="mk-r"><span class="mk-ic">${I(i)}</span><span>${n}</span><b style="margin-left:auto">${v}</b></div>`).join(''),
     updates: [['mdi:home-assistant', 'Core', '2026.10.2'], ['mdi:puzzle-outline', 'HACS', '2.1.0']].map(([i, n, v]) => `<div class="mk-r"><span class="mk-ic on">${I(i)}</span><b>${n}</b><span class="mk-s" style="margin-left:auto">→ ${v}</span></div>`).join(''),
+    smartlock: `<div style="display:flex;align-items:center;gap:12px;justify-content:center"><span class="mk-cir on" style="width:46px;height:46px;box-shadow:0 0 0 6px color-mix(in srgb, var(--hg-accent) 22%, transparent)">${I('mdi:lock')}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:14px">${hgTr('Zamknięte', 'Locked')}</b><span class="mk-s" style="white-space:nowrap">${hgTr('Przytrzymaj', 'Hold to open')}</span></span></div>`,
+    purifier: `<div class="mk-r"><span class="mk-ic on" style="width:30px;height:30px;border-radius:50%">${I('mdi:air-purifier')}</span><span class="mk-v" style="font-weight:300">8<small> µg/m³</small></span><span class="mk-sw on"></span></div><svg viewBox="0 0 100 16" preserveAspectRatio="none" style="width:100%;height:14px"><path class="acc mk-dash" fill="none" stroke-width="1.6" d="M0 8 Q6 2 12 8 T24 8 T36 8 T48 8 T60 8 T72 8 T84 8 T96 8 T108 8"/></svg><div class="mk-r"><span class="mk-s">PM2,5 · ${hgTr('Dobra', 'Good')}</span><span class="mk-s" style="text-align:right">${hgTr('Tryb auto', 'Auto mode')}</span></div>`,
     map: `<div class="mk-map" style="flex:1"><span class="mk-pin" style="left:30%;top:35%"></span><span class="mk-pin" style="left:66%;top:52%;filter:hue-rotate(160deg)"></span></div>`,
   };
-  return `<div class="mk" aria-hidden="true">${M[id] || `<div style="display:grid;place-items:center;opacity:.5">${I('mdi:card-outline')}</div>`}${tag}</div>`; };
+  return `<div class="mk" aria-hidden="true"><div class="mk-in">${M[id] || `<div style="display:grid;place-items:center;opacity:.5">${I('mdi:card-outline')}</div>`}</div>${tag}</div>`; };
+/* makieta wyższa lub szersza niż miniatura (długie nazwy, mniejsza miniatura na telefonie): pomniejszenie zamiast ucięcia */
+const hgMkFit = (root) => { for (const el of root.querySelectorAll('.mk-in')) { el.style.zoom = ''; const h = el.clientHeight, w = el.clientWidth; if (!h || !w) continue;
+  const z = Math.min(1, h / el.scrollHeight, w / el.scrollWidth); if (z < 0.99) el.style.zoom = Math.max(0.55, z).toFixed(3); } };
 /* podgląd na żywo tylko z dobrą encją: wszystkie domyślne encje mają znany stan */
 const hgPvGood = (h, v) => { if (window.__hgPvMock) return false; const es = []; for (const x of Object.values(v || {})) for (const y of [].concat(x)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) es.push(e); }
   return es.length > 0 && es.every((e) => { const s = h.states[e]; return s && !['unknown', 'unavailable', ''].includes(s.state); }); };
@@ -769,6 +775,7 @@ const HG_COMP_EDIT = {
       ${lay.length ? `<h4 class="cgh">${hgTr('Układ', 'Layout')}<small>${hgTr('Kontenery jak w HA: siatka, stosy, warunek i karta z YAML', 'Containers like in HA: grid, stacks, conditional and a card from YAML')}</small></h4><div class="cg" role="list">${lay.map(card).join('')}</div>` : ''}
       ${bas.length ? `<h4 class="cgh">${hgTr('Podstawowe', 'Basic')}<small>${hgTr('Uniwersalne elementy dla dowolnych encji', 'General controls for any entity')}</small></h4><div class="cg" role="list">${bas.map(card).join('')}</div>` : ''}
       ${rest.length ? `<h4 class="cgh">${hgTr('Karty', 'Cards')}<small>${hgTr('Gotowe karty dla konkretnych rodzajów urządzeń', 'Ready made cards for specific device types')}</small></h4><div class="cg" role="list">${rest.map(card).join('')}</div>` : ''}</div></div>`;
+    requestAnimationFrame(() => hgMkFit(S));
     /* miniatury zawsze z makiet: pomniejszone prawdziwe karty z pierwszą pasującą encją były ściśnięte, puste albo pokazywały przypadkowe urządzenie */
   },
   /* domyślne wartości slotów (pierwsze pasujące encje, listy: do 4) */
