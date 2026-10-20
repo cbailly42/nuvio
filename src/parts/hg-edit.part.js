@@ -556,6 +556,8 @@ const hgKidToAdded = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp),
   if (C && C.id !== 'hacard' && /^custom:/.test(k.type)) return Object.assign({ e: key, c: k.type.slice(7), comp: C.id, cfg: clean(k), v: k.nv_v || {} }, k.nv_n ? { n: k.nv_n } : {}, k.nv_i ? { i: k.nv_i } : {});
   const kid = Object.assign({}, k); delete kid.span; const cfg = { direction: 'vertical', glass: false, divider: false, cards: [kid] };   // karta HA: w stosie bez szkła
   return { e: key, c: 'hg-stack-card', comp: 'vstack', cfg, v: { cards: [kid], o: { flat: true, nodiv: true } } }; };
+/* nadpisanie karty widoku (conf.set): null usuwa pole z bazowej konfiguracji */
+const hgSetMerge = (c, set) => { const o = Object.assign({}, c, set || {}); for (const q in set || {}) if (set[q] === null) delete o[q]; return o; };
 const hgKidName = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_n || k.title || k.name || (C && C.n) || String(k.type || '').replace(/^custom:/, ''); };
 const hgKidIcon = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_i || k.icon || (C && C.i) || 'mdi:card-outline'; };
 /* testy i zrzuty (tests/cards-demo.html): lista komponentów i budowanie konfiguracji jak w galerii */
@@ -808,7 +810,7 @@ const HG_COMP_EDIT = {
     if (!st && !this._eBacking && !(this._eStk || []).length) this._eSnapTake();
     const R = this._eCompR = st || { cid, sc: this._eGalSc, v: this._eCompDef(C) || {}, t: C.tile || '', n: '', i: '', z: HG_COMP_Z[C.id] || 's', ...((this._eKidStk || []).length ? { kid: 1 } : {}) };
     for (const sl of C.slots) if (sl.multi && R.v[sl.k] && !Array.isArray(R.v[sl.k])) R.v[sl.k] = [R.v[sl.k]];   /* zapis sprzed zmiany slotu na listę */
-    const ed = !!R.edit && !R.kid, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
+    const ed = (!!R.edit || !!R.pageK) && !R.kid, eid = (x) => (typeof x === 'string' ? x : x && x.entity), ico = (e) => (h.states[e] && h.states[e].attributes.icon) || HG_DOM_ICON2[String(e).split('.')[0]] || 'mdi:circle-outline';
     const slot = (sl) => { const v = R.v[sl.k];
       if (!sl.multi) return `<div class="hs-fl"><span>${H.esc(sl.l)}${sl.req ? '' : ''}</span><div class="hs-r hs-er"><button class="hs-eb" data-hge="cslot" data-k="${sl.k}"><span class="hs-i">${H.icon(v ? ico(v) : 'mdi:plus')}</span><span class="hs-t"><b>${H.esc(v ? H.name(h, v) : hgTr('Wybierz encję', 'Choose entity'))}</b><small>${H.esc(v || sl.dom.join(', '))}</small></span><span class="hs-p" title="${hgTr('Zmień', 'Change')}">${H.icon(v ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>${v && !sl.req ? `<button class="hs-del" data-hge="cdel" data-k="${sl.k}" aria-label="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button>` : ''}</div></div>`;
       const A = v || [];
@@ -821,7 +823,7 @@ const HG_COMP_EDIT = {
       return `<div class="hs-fl hs-ents"><span>${hgTr('Karty w kontenerze', 'Cards in the container')}</span>${A.length ? '' : `<p class="hs-e" style="margin:2px 0 4px;opacity:.7">${hgTr('Pusty kontener. Dodaj pierwszą kartę.', 'Empty container. Add the first card.')}</p>`}${A.map((k, i) => { const K = HG_COMP.find((c) => c.id === k.nv_comp), sp = Math.max(1, +k.span || 1);
         return `<div class="hs-r hs-er" data-ak="cards" data-ai="${i}"><span class="hs-dg" data-hgdrag role="button" tabindex="0" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}">${H.icon('mdi:drag-vertical')}</span><button class="hs-eb" data-hge="kedit" data-i="${i}"><span class="hs-i">${H.icon(hgKidIcon(k))}</span><span class="hs-t"><b><em class="hs-ix">${i + 1}</em>${H.esc(hgKidName(k))}</b><small>${H.esc(K ? K.n : String(k.type || '').replace(/^custom:/, ''))}${hgIsCont(k) ? ' · ' + (k.cards || []).length + ' ' + hgTr('kart', 'cards') : ''}</small></span><span class="hs-p" title="${hgTr('Edytuj', 'Edit')}">${H.icon('mdi:pencil-outline')}</span></button>${cols > 1 ? `<button class="hs-del" data-hge="kspan" data-i="${i}" title="${hgTr('Szerokość w kolumnach', 'Width in columns')}" aria-label="${hgTr('Szerokość', 'Width')}: ${sp}" style="font:600 12px/1 inherit;width:auto;min-width:36px;padding:0 8px">${sp}×</button>` : ''}${ed ? `<button class="hs-del" data-hge="kout" data-i="${i}" title="${hgTr('Wyjmij na panel', 'Move out to the panel')}" aria-label="${hgTr('Wyjmij na panel', 'Move out to the panel')}">${H.icon('mdi:arrow-top-left-bold-box-outline')}</button>` : ''}<button class="hs-del" data-hge="kdup" data-i="${i}" title="${hgTr('Duplikuj', 'Duplicate')}" aria-label="${hgTr('Duplikuj', 'Duplicate')}">${H.icon('mdi:content-copy')}</button><button class="hs-del" data-hge="kdel" data-i="${i}" title="${hgTr('Usuń', 'Remove')}" aria-label="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button></div>`; }).join('')}
         <button class="hs-r hs-add" data-hge="kadd"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj kartę', 'Add card')}</b><small>${hgTr('Dowolny komponent, kafelek albo karta z HA', 'Any component, tile or card from HA')}</small></span></button></div>`; };
-    const tgts = ed ? (HGL.get(R.sc || this._eGalSc).added || []).filter((x) => x.e !== R.edit && x.v && HG_COMP.some((c) => c.id === x.comp && c.kids)) : [];
+    const tgts = ed && R.edit ? (HGL.get(R.sc || this._eGalSc).added || []).filter((x) => x.e !== R.edit && x.v && HG_COMP.some((c) => c.id === x.comp && c.kids)) : [];
     const mv = tgts.length ? `<div class="hs-fl"><span>${hgTr('Przenieś do kontenera', 'Move into a container')}</span><div class="hs-f wrap" role="group" aria-label="${hgTr('Przenieś do kontenera', 'Move into a container')}">${tgts.map((x) => { const K = HG_COMP.find((c) => c.id === x.comp); return `<button data-hge="kmove" data-t="${H.esc(x.e)}">${H.icon(x.i || K.i)}${H.esc(x.n || K.n)}</button>`; }).join('')}</div></div>` : '';
     S.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide" role="dialog" aria-modal="true" aria-label="${H.esc(C.n)}"><style>${HG_STY_CSS}${HG_COMP_CSS}</style><div class="hs-h"><b>${H.icon(C.i)} ${H.esc(C.n)}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
@@ -885,6 +887,12 @@ const HG_COMP_EDIT = {
       const P = F.R, A = (P.v.cards || []).slice(); if (F.i != null) { if (A[F.i] && A[F.i].span) kc.span = A[F.i].span; A[F.i] = kc; } else A.push(kc);
       P.v = Object.assign({}, P.v, { cards: A }); this._eStk.length = Math.min(this._eStk.length, F.d0); this._eRepl = null; this._eNav('b'); this._eComp(P.cid, P);
       return this._eToast((F.i != null ? hgTr('Zapisano: ', 'Saved: ') : hgTr('Dodano do kontenera: ', 'Added to container: ')) + hgKidName(kc)); }
+    if (a === 'cok' && R.pageK) { if (R._xBad) return; const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '', cfg = hgCompCfg(C, R.v, h);
+      /* pełne nadpisanie karty widoku: typ Nuvio, karty i opcje; wyczyszczone opcje jako null (usuwane przy scalaniu) */
+      const set = { type: 'custom:' + hgCompCard(C, R.v) }; for (const q of C.opts || []) if (q.k !== 'flat' && q.k !== 'nodiv') set[q.k] = null; if (C.id !== 'grid') { set.glass = null; set.divider = null; } Object.assign(set, cfg);
+      this._eSet(sc, (L) => { const cf = L.conf[R.pageK] = Object.assign({}, L.conf[R.pageK]); cf.set = Object.assign({}, cf.set || {}, set); if (n) cf.n = n; else delete cf.n; if (i) cf.i = i; else delete cf.i; delete cf.t;
+        if (R.z && R.z !== this._eBaseZ(sc, R.pageK)) L.size[R.pageK] = R.z; else delete L.size[R.pageK]; });
+      this._eSheet(false); this._eToast(hgTr('Zapisano: ', 'Saved: ') + (n || C.n)); this._eCompR = null; return this._eRefresh(true); }
     if (a === 'cok') { if (R._xBad) return; const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '';
       this._eSet(sc, (L) => { let key;
         if (C.tile) { const e = R.v.e; key = e; const x0 = R.edit ? L.added.find((y) => y.e === R.edit) : null, x = { e, ...(R.t && R.t !== C.tile ? { t: R.t } : R.t === C.tile && hgTypesFor(h, e)[0] !== C.tile ? { t: C.tile } : {}), ...(n ? { n } : {}), ...(i ? { i } : {}), comp: C.id };
@@ -1126,7 +1134,7 @@ const HG_EDIT = {
         const ord = L.order.filter((k) => byK.has(k)); if (ord.length === out.length) out = ord.map((k, i) => { used.add(k); return Object.assign({}, byK.get(k), { area: slot[i] }); }); }
       else out = HGL.sort(out, (c) => c._k, L.order);
     }
-    out = out.map((c) => { const cf = L.conf[c._k]; if (!cf) return c; const o = Object.assign({}, c, cf.set || {});
+    out = out.map((c) => { const cf = L.conf[c._k]; if (!cf) return c; const o = hgSetMerge(c, cf.set);
       if (cf.n) { o.title = cf.n; o.name = cf.n; } if (cf.i) o.icon = cf.i;
       if (cf.t && cf.t.startsWith('g-')) { const st = this._hass && this._hass.states, es = []; for (const v of Object.values(o)) if (Array.isArray(v)) for (const y of v) { const e = typeof y === 'string' ? y : y && y.entity; if (e && st && st[e] && !es.includes(e)) es.push(e); }
         if (es.length) return { type: 'custom:hg-tiles-card', group: { es, lay: cf.t, n: cf.n || o.title || o.name || HG_GRP_LBL[String(o.type || '').replace(/^custom:(hg|nuvio)-|-card$/g, '')] || '', i: cf.i || o.icon || '' }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; return o; }
@@ -1263,8 +1271,10 @@ const HG_EDIT = {
     const { ctl, it, inBar } = this._ePath(e);
     if (ctl) { e.preventDefault(); e.stopPropagation(); return this._eCtl(ctl, e); }
     if (inBar) return;
-    if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(...this._eMap(ct, it.dataset.hgk)); } }
+    if (it) { e.preventDefault(); e.stopPropagation(); if (Date.now() - (this._eSwallow || 0) > 400) { const ct = this._eConts().find((c) => c.el === it.parentElement); if (ct) this._eCfg(...this._eMap(ct, it.dataset.hgk), this._eKidPath(e, it)); } }
   },
+  /* klik w kartę wewnątrz stosu / siatki: indeksy gniazd od zewnętrznego kontenera do klikniętej karty */
+  _eKidPath(e, it) { const p = e.composedPath(), o = []; for (const n of p) { if (n === it) break; const m = n.classList && n.classList.contains('sl') && n.dataset.own != null && /^[sgc]-(\d+)$/.exec(n.dataset.key || ''); if (m) o.unshift(+m[1]); } return o; },
   _eCtl(b, e) {
     this._eTrig = b;
     const a = b.dataset.hge;
@@ -1481,10 +1491,18 @@ const HG_EDIT = {
       return { kind: 'sec', rid, sk, ents: rows, types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it }; }
     return { kind: 'sec', ents: ents.slice(0, 12), types: [['', hgTr('Normalny', 'Default')], ['compact', HG_TYPES.compact], ['minimal', HG_TYPES.minimal]], t: cf.t || '', n: L.names[k] || '', i: cf.i || '', dn: hd ? hd.textContent.replace(/\d+.*$/, '').trim() : k, it };
   },
-  _eCfg(ct, k) { this._eStk = []; this._eKidStk = []; if (!this._eBacking) this._eSnapTake();
+  _eCfg(ct, k, kp) { this._eStk = []; this._eKidStk = []; if (!this._eBacking) this._eSnapTake();
     { const L0 = HGL.get(ct.scope); if (hgDedupConf(JSON.parse(JSON.stringify(L0)))) this._eSet(ct.scope, (L) => { hgDedupConf(L); }); }
+    /* kontener jak w HA: najpierw jego ustawienia (lista kart: dodaj, usuń, kolejność), kp = ścieżka klikniętej karty w środku, od razu jej formularz */
+    const kids = () => { for (const i of kp || []) { const R = this._eCompR, C = R && HG_COMP.find((c) => c.id === R.cid); if (!C || !C.kids || !(R.v.cards || [])[i]) break; this._eKidAct('kedit', { dataset: { i } }); } };
     { const x0 = HGL.get(ct.scope).added.find((y) => y.e === k); if (x0 && x0.comp && HG_COMP.some((C) => C.id === x0.comp)) { const C = HG_COMP.find((c) => c.id === x0.comp);
-      this._eGalSc = ct.scope; this._eGalCt = ct; return this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); } }
+      this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(C.id, { cid: C.id, sc: ct.scope, edit: k, v: x0.v ? JSON.parse(JSON.stringify(x0.v)) : { e: x0.e }, t: x0.t || C.tile || '', n: x0.n || '', i: x0.i || '', z: HGL.get(ct.scope).size[k] || 's' }); return kids(); } }
+    /* stos / siatka z konfiguracji widoku (także vertical-stack, horizontal-stack, grid z HA): ten sam formularz, zapis jako nadpisanie karty (conf.set) */
+    { const L0 = HGL.get(ct.scope), cc0 = ct.scope === this._pageScope() && !L0.added.some((y) => y.e === k) ? (this._config.cards || [])[(this._lkeys || []).indexOf(k)] : null;
+      const cf0 = L0.conf[k] || {}, cc = cc0 && hgFromHA(hgSetMerge(cc0, cf0.set)), ty = String((cc && cc.type) || ''), cid = /-grid-card$/.test(ty) ? 'grid' : /-stack-card$/.test(ty) ? (cc.direction === 'horizontal' ? 'hstack' : 'vstack') : null;
+      if (cid) { const C = HG_COMP.find((c) => c.id === cid), o = {};
+        for (const q of C.opts || []) { const v = q.k === 'flat' ? cc.glass === false : q.k === 'nodiv' ? cc.divider === false : cc[q.k]; if (v != null && v !== '' && v !== false) o[q.k] = Array.isArray(v) ? v.join(', ') : v; }
+        this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(cid, { cid, sc: ct.scope, pageK: k, v: { cards: JSON.parse(JSON.stringify(cc.cards || [])), o }, t: '', n: cf0.n || '', i: cf0.i || '', z: L0.size[k] || this._eBaseZ(ct.scope, k) }); return kids(); } }
     const h = this._hass, sc = ct.scope, L = HGL.get(sc), z = L.size[k] || this._eBaseZ(sc, k), canSz = ct.page ? !this._config.panel.areas : ct.sz;
     const S0 = this._eSubj(ct, k); this._eCfgR = { sc, k, ct, S: S0 }; this._eSheet('cfg');
     const S = this._eSheetEl, ttl = { added: hgTr('Ustawienia kafelka', 'Tile settings'), card: hgTr('Ustawienia karty', 'Card settings'), room: hgTr('Ustawienia pokoju', 'Room settings'), sec: hgTr('Ustawienia sekcji', 'Section settings') }[S0.kind]; requestAnimationFrame(() => this._eEntDrag());
@@ -1494,7 +1512,7 @@ const HG_EDIT = {
       <div class="hs-pv"><small>${hgTr('Podgląd na żywo', 'Live preview')}</small><div class="hs-pvb"></div></div>
       ${S0.ents.length ? `<div class="hs-fl hs-ents"><span>${hgTr('Encje', 'Entities')}</span>${S0.ents.map((x) => x.secAdd ? `<button class="hs-r hs-add" data-hge="cfgsecadd" data-k="${H.esc(x.secAdd)}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(x.doms.join(', '))}</small></span></button>` : x.add ? `<button class="hs-r hs-add" data-hge="cfgadd" data-k="${H.esc(x.add)}" data-d="${H.esc(x.doms.join(','))}"><span class="hs-i">${H.icon('mdi:plus')}</span><span class="hs-t"><b>${hgTr('Dodaj encję', 'Add entity')}</b><small>${H.esc(x.doms.join(', '))}</small></span></button>`
         : `<div class="hs-r hs-er" ${x.ak ? `data-ak="${H.esc(x.ak)}" data-ai="${x.ai}"` : ''}>${x.ak ? `<span class="hs-dg" data-hgdrag role="button" tabindex="0" aria-label="${hgTr('Przeciągnij lub użyj strzałek, aby zmienić kolejność', 'Drag or use arrow keys to reorder')}" title="${hgTr('Przeciągnij', 'Drag')}">${H.icon('mdi:drag-vertical')}</span>` : ''}<button class="hs-eb" data-hge="cfgent" data-p="${H.esc(x.p)}" data-v="${H.esc(x.v)}"><span class="hs-i">${H.icon(x.v ? ico(x.v) : 'mdi:plus')}</span><span class="hs-t"><b>${x.ak ? `<em class="hs-ix">${x.ai + 1}</em>` : ''}${H.esc(x.v ? H.name(h, x.v) : hgTr('Wybierz encję', 'Choose entity'))}</b><small>${H.esc(x.ak ? (x.v || '—') : x.l + ' · ' + (x.v || '—'))}</small></span><span class="hs-p" title="${hgTr('Zmień', 'Change')}">${H.icon('mdi:swap-horizontal')}</span></button>${x.ak ? `<button class="hs-del" data-hge="cfgdel" data-k="${H.esc(x.ak)}" data-i="${x.ai}" aria-label="${hgTr('Usuń', 'Remove')}" title="${hgTr('Usuń', 'Remove')}">${H.icon('mdi:close')}</button>` : x.rm ? (() => { const t = x.rm === 'man' ? hgTr('Usuń z pokoju', 'Remove from room') : hgTr('Ukryj w tym pokoju', 'Hide in this room'); return `<button class="hs-del" data-hge="cfgrm" data-e="${H.esc(x.v)}" aria-label="${H.esc(t + ': ' + H.name(h, x.v))}" title="${H.esc(t)}">${H.icon(x.rm === 'man' ? 'mdi:close' : 'mdi:eye-off-outline')}</button>`; })() : ''}</div>`).join('')}</div>` : ''}
-      <div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', S0.kind === 'room' || S0.kind === 'sec')}</div>
+      ${S0.types.length > 1 && S0.kind !== 'room' && S0.kind !== 'sec' ? `<div class="hs-fl"><span>${hgTr('Tryb wyświetlania', 'Display mode')}</span>${hgStyleCards(h, S0.main || (S0.kind === 'added' ? k : ''), S0.types, S0.t, 'cfgt', false)}</div>` : ''}
       <label class="hs-fl"><span>${hgTr('Nazwa', 'Name')}</span><span class="hs-s"><input class="hs-in" name="n" value="${H.esc(S0.n)}" placeholder="${H.esc(S0.dn)}" autocomplete="off"></span></label>
       <label class="hs-fl"><span>${hgTr('Ikona (np. mdi:sofa)', 'Icon (e.g. mdi:sofa)')}</span><span class="hs-s">${H.icon(S0.i || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(S0.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
       ${ct.page ? (() => { const w0 = (L.conf[k] && L.conf[k].w) || '', box = (f) => `<span aria-hidden="true" style="display:flex;gap:3px;width:44px;height:22px;flex:none"><i style="flex:1;border-radius:4px;background:${f ? 'currentColor' : 'color-mix(in srgb, currentColor 40%, transparent)'}"></i>${f ? '' : '<i style="flex:1;border-radius:4px;border:1.5px dashed color-mix(in srgb, currentColor 35%, transparent)"></i>'}</span>`;
@@ -1521,13 +1539,16 @@ const HG_EDIT = {
       const el = document.createElement(src.tagName.toLowerCase()); el._hgPv = true; try { el.setConfig(cfg); } catch (e) { /* zła konfiguracja – pokaż pusty */ }
       const ir = it.getBoundingClientRect();
       pv.className = 'hs-pvb live'; pv.innerHTML = ''; const box = document.createElement('div'); box.className = 'hs-pvf'; box.appendChild(el); pv.appendChild(box); el.hass = h; this._ePvEl = el; hgPvLive(pv); hgPvFit(box, el, ir.width || 0, ir.height > 40 ? Math.round(ir.height) : 0); return; } }
-    const cl = it.cloneNode(true); for (const x of cl.querySelectorAll('.hge, .hge-cf')) x.remove();
+    /* kopia DOM nie niesie shadow DOM kart (np. klimatyzacja w sekcji): w ich miejsce świeże egzemplarze z tą samą konfiguracją */
+    const cl = it.cloneNode(true), oa = [...it.querySelectorAll('*')], ca = [...cl.querySelectorAll('*')], live = [];
+    oa.forEach((o, j) => { if (!o.localName.includes('-') || !o._config || !o.setConfig || !ca[j] || !cl.contains(ca[j])) return; const n = document.createElement(o.localName); n._hgPv = true; try { n.setConfig(o._config); } catch (e) { return; } ca[j].replaceWith(n); live.push(n); });
+    for (const x of cl.querySelectorAll('.hge, .hge-cf')) x.remove();
     cl.classList.remove('hgm-compact', 'hgm-minimal'); if (V.t) cl.classList.add('hgm-' + V.t); cl.style.cssText = 'animation:none;outline:none;width:100%;transform:none;';
     const nmEl = cl.querySelector('.nm, .sh'); if (nmEl && V.n) { const ic0 = nmEl.querySelector('ha-icon'); nmEl.textContent = V.n; if (ic0) nmEl.prepend(ic0); }
     const icEl = cl.querySelector('.sh ha-icon') || cl.querySelector('.ic ha-icon'); if (icEl && V.i) icEl.setAttribute('icon', V.i);
     pv.className = 'hs-pvb clone'; pv.innerHTML = ''; const host = document.createElement('div'); pv.appendChild(host);
     const sr = host.attachShadow({ mode: 'open' }); const src = R.ct.root; sr.innerHTML = [...src.querySelectorAll('style')].map((x) => x.outerHTML).join('');
-    const wrap = document.createElement('div'); wrap.className = R.ct.el.className.replace('hge-on', ''); wrap.style.cssText = 'display:block;columns:auto;pointer-events:none'; wrap.appendChild(cl); sr.appendChild(wrap);
+    const wrap = document.createElement('div'); wrap.className = R.ct.el.className.replace('hge-on', ''); wrap.style.cssText = 'display:block;columns:auto;pointer-events:none'; wrap.appendChild(cl); sr.appendChild(wrap); for (const n of live) n.hass = h;
   },
   /* tablice encji karty (sceny, kamery, …): nadpisanie cf.set[key] – dodaj / usuń / kolejność, potem odśwież widok i wróć do ustawień */
   _eCfgArrGet(R, key) { const cf = HGL.get(R.sc).conf[R.k] || {}; return hgDedupArr((cf.set && cf.set[key]) || (R.S.cc && R.S.cc[key]) || []); },

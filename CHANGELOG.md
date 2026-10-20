@@ -4,6 +4,9 @@ All notable changes to Nuvio are listed here, newest first. Versions follow [sem
 
 ### 2.15.1
 - Improved: the temperature and humidity in the room header show a small pen when you can change their sensor. Hovering no longer puts a box behind the number; the pen lights up in the accent colour instead.
+- Fixed: stacks and grids could not be edited when they came from the dashboard configuration (for example a `vertical-stack`, `horizontal-stack` or `grid` from HA). In edit mode, tapping a stack or grid now opens its settings with the list of its cards, where you can add, remove, reorder and duplicate cards and change the stack options (for example **Each card in its own glass**). Tapping a card inside a stack or grid opens that card's settings right away, like in HA; **Back** returns to the container, and **Save** on the container keeps the changes.
+- Fixed: the **Live preview** in the settings of a room section stayed empty when the section showed a card such as air conditioning. The preview now shows that card.
+- Removed: the **Display mode** choice (Default, Compact, Minimal) for rooms, room sections and cards with only one style. It made almost no visible difference. Tiles and cards that can switch to a tile or list style keep their style choice.
 
 ### 2.15.0
 - Fixed: the room header temperature could break onto two lines ("23," and "2°") and slide under the side rail on narrow screens. The temperature and humidity now always stay on one line, and the side rail moves below a header that grows taller.
