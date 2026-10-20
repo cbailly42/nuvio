@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/final/png/nuvio-horizontal-on-dark.png">
-    <img src="assets/brand/final/png/nuvio-horizontal.png" alt="Nuvio" width="280">
-  </picture>
+  <img src="assets/brand/final/png/nuvio-horizontal-badge.png" alt="Nuvio" width="300">
 </p>
 
 <p align="center"><strong>Your home, quietly in order.</strong></p>
