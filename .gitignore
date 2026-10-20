@@ -4,3 +4,4 @@ __pycache__/
 tests/out/
 .ha-test/
 node_modules/
+dist/.*/
