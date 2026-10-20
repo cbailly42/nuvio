@@ -4,7 +4,7 @@ import os, sys, shutil, subprocess, hashlib, tempfile, json
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Load order matters: one shared script scope, so a file may only use (at load time) what an earlier file defines.
 # shared/ = helpers used by more than one card; cards/ = one card per file, in this order (appliance, stairs and cwu extend room).
-CORE = ['hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
+CORE = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
 # ui/ = shared building blocks (morph engine, primitives); loaded before cards so every card can use them
 UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
       'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js','ui/form.part.js','ui/color.part.js']
