@@ -4,8 +4,7 @@ const HGRoomsX = window.HGRoomsX = {
   open: null, draft: null, hd: null, q: '',
   A() { return this.draft || (this.draft = JSON.parse(JSON.stringify(((HGL.data.wiz || {}).areas) || {}))); },
   rooms(h) { const A = this.A(); return HGAreas.model(h, Object.assign({}, A, { hide: [], _own: 1 })).list.filter((a) => a.id !== '_none'); },
-  cands(h, a, dc) { const reg = h.entities || {}, all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc);
-    const inR = new Set(a.ents || []); return [...all.filter((e) => inR.has(e)), ...all.filter((e) => !inR.has(e))].filter((e) => !(reg[e] && reg[e].hidden)); },
+  cands(h, a, dc) { return HGAreas.cands(h, a, dc); },
   slug(x) { return String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 32); },
   html(page) { const h = page._hass; if (!h) return ''; if (!this.dirty) this.draft = null; if (!this.hdirty) this.hd = null; const A = this.A(), R = this.rooms(h), hide = new Set([...(A.hide || []), ...(((HGL.data.wiz || {}).hiddenRooms) || [])]);
     const T = (a, k, dc) => { const cur = ((A.sensors || {})[a.id] || {})[k] || '', det = a[k === 'temperature' ? 'temp' : 'hum'], cs = this.cands(h, a, dc), inR = new Set(a.ents || []);

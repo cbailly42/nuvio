@@ -19,9 +19,12 @@ const HG_GEN_CSS = `
 button.gic{ all:unset; cursor:pointer; flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); transition:background-color var(--hg-t-base, 200ms), transform var(--hg-t-fast, 120ms); } button.gic:active{ transform:scale(.94); }
 button.gic.on{ background:color-mix(in srgb, var(--hg-accent) 22%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); }
 .gh{ display:flex; align-items:center; gap:12px; min-width:0; } .gn{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.gn b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.25; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; } .gn small{ font-size:12px; opacity:.66; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gn b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.25; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:break-word; } .gn small{ font-size:12px; opacity:.66; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gv{ font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; } .gv small{ font-size:12px; font-weight:500; opacity:.66; margin-left:2px; }
 .un{ opacity:.55; }
+ha-card.glass{ container-type:inline-size; }
+/* wąska karta (S): ikona wiersza ustępuje miejsca nazwie */
+@container (max-width: 220px){ .gr > span.gic, .gh > span.gic{ display:none; } .gr, .gh{ gap:8px; } }
 `;
 const hgDom = (e) => String(e || '').split('.')[0];
 const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 'siren', 'humidifier', 'climate', 'media_player', 'water_heater', 'vacuum', 'lock', 'cover', 'valve'];

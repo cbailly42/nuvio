@@ -15,6 +15,8 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .ph .va{ grid-column:1 / -1; display:flex; gap:var(--s2); font-size:var(--fs-xs); color:#5A5E64; font-variant-numeric:tabular-nums; }
 .ph.na{ opacity:.55; }
 .lst{ display:flex; flex-direction:column; gap:var(--s1); }
+ha-card.glass{ container-type:inline-size; } .ph .va{ flex-wrap:wrap; row-gap:0; }
+@container (max-width: 240px){ .hd .lv{ display:none; } .ph .va span:last-child{ display:none; } }
 `);
   }
   render() {

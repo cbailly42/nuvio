@@ -15,7 +15,8 @@ class HGEnergyStatsCard extends HGBase {
     const c = this._config, h = this._hass; if (!h || !c || this._loading) return; this._loading = true;
     try {
       let pr = {}; try { pr = await HGEnergyPrefs.get(h); } catch (e) { /* bez prefs -> konfiguracja karty */ }
-      const cons = c.consumption || pr.consumption || [], prod = c.production || pr.production || [], price = c.price != null ? c.price : pr.price;
+      const L = (x) => [].concat(x || []).filter(Boolean), cons = L(c.consumption).length ? L(c.consumption) : L(pr.consumption), prod = L(c.production).length ? L(c.production) : L(pr.production),   /* z galerii: jedna encja jako tekst */
+      price = c.price != null ? c.price : pr.price;
       const ids = cons.concat(prod), tz = HGStats.tz(h), now = Date.now();
       const t0 = HGStats.midnight(now, tz), key = HGStats.key(new Date(now), tz), [y, mo, da] = key.split('-').map(Number);
       const dow = (new Date(Date.UTC(y, mo - 1, da)).getUTCDay() + 6) % 7;            // 0 = poniedziałek (tydzień jak w HA)
@@ -46,6 +47,7 @@ class HGEnergyStatsCard extends HGBase {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s2); }
 .tiles{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s1); }
+@container (max-width: 330px){ ha-card.glass{ padding:var(--s2); } .tiles{ grid-template-columns:minmax(0, 1fr); } .tl{ flex-direction:row; flex-wrap:wrap; align-items:center; column-gap:var(--s2); } .tl small{ flex:1 0 100%; } .tl .r span{ display:none; } }
 .tl{ display:flex; flex-direction:column; gap:3u; padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:rgba(255,255,255,.55); text-align:left; min-width:0; position:relative; transition:background .2s; }
 .tl.sel{ background:rgba(255,255,255,.9); box-shadow:var(--hg-sh); }
 .tl small{ font-size:var(--fs-xs); color:#5A5E64; font-weight:400; }

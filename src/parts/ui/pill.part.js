@@ -4,7 +4,7 @@ hgUI.add(`
 .nv-pill{ display:inline-flex; align-items:center; gap:4u; height:24u; padding:0 10u; border-radius:var(--hg-radius-pill, 999px); flex:none; white-space:nowrap;
   font-size:var(--fs-sm); font-weight:500; background:var(--hg-inner-bg); box-shadow:var(--hg-inner-hi); color:inherit;
   transition: background var(--hg-t-base) var(--hg-ease-out), color var(--hg-t-base) var(--hg-ease-out), transform var(--hg-t-fast) var(--hg-ease-out); }
-.nv-pill ha-icon{ width:12u; height:12u; }
+.nv-pill ha-icon{ width:12u; height:12u; } .nv-pill{ max-width:100%; min-width:0; } .nv-pill > span{ min-width:0; overflow:hidden; text-overflow:ellipsis; } .nv-pill ha-icon{ flex:none; }
 button.nv-pill{ cursor:pointer; } button.nv-pill:active{ transform: scale(.96); }
 .nv-pill.on{ background:#fff; color:#111; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
 .nv-pill.acc{ background:var(--hg-accent); color:var(--hg-on-accent); box-shadow: 0 0 12px var(--hg-accent-glow); }

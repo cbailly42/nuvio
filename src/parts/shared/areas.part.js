@@ -136,6 +136,9 @@ const HGAreas = {
     a.lights = sec.light;
     a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
   },
+  /* czujniki temperatury / wilgotności do wyboru dla pokoju: najpierw z pokoju, potem pozostałe (bez ukrytych) */
+  cands(h, a, dc) { const reg = h.entities || {}, inR = new Set(a.ents || []), all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc && !(reg[e] && reg[e].hidden));
+    return [...all.filter((e) => inR.has(e)), ...all.filter((e) => !inR.has(e))]; },
   val(h, ref) {
     if (!ref) return null;
     const s = h.states[ref.e]; if (!H.ok(s)) return null;

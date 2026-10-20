@@ -1,0 +1,183 @@
+<!doctype html>
+<!-- Wszystkie komponenty z galerii „Dodaj komponent” na sztucznym hass (bez HA), z konfiguracją zbudowaną jak w galerii.
+     Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem
+     http://localhost:8000/tests/cards-demo.html[?mode=shots|sizes][&only=light,ac][&scheme=light][&lang=en]
+     mode=shots (domyślnie): każdy komponent w ramce o tym samym rozmiarze (zrzuty do docs/components, tools/shots.mjs)
+     mode=sizes: każdy komponent w szerokościach S, M i L obok siebie (sprawdzanie responsywności, overflow zaznaczony na czerwono) -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio komponenty</title>
+<style>
+  body{ margin:0; font-family:system-ui,sans-serif; background:#0d1218; color:#fff; }
+  #out{ display:flex; flex-wrap:wrap; gap:16px; padding:16px; align-items:flex-start; }
+  .frame{ position:relative; isolation:isolate; width:var(--fw, 440px); height:var(--fh, 330px); border-radius:24px; overflow:hidden; display:grid; place-items:center; background:#0d1218; }
+  .frame::before{ content:''; position:absolute; inset:-30px; z-index:-1; background:url(../dist/nuvio-bg-default-wide.webp) 38% 30% / 1500px auto; filter:blur(14px) brightness(var(--bb, .62)) saturate(1.05); }
+  :root[data-hg-scheme=light] .frame::before{ --bb:.95; }
+  .frame > .fit{ width:var(--cw, 380px); }
+  .box{ container-type:inline-size; width:100%; }
+  .row{ display:flex; gap:16px; align-items:flex-start; padding:14px; border-radius:20px; background:#0d1218 url(../dist/nuvio-bg-default-wide.webp) center / 1600px auto; }
+  .row > div{ display:flex; flex-direction:column; gap:6px; } .row .lab{ font-size:12px; opacity:.8; } .row .box.s{ width:180px; } .row .box.m{ width:300px; } .row .box.l{ width:460px; }
+  .row h3{ margin:0; width:140px; font-size:13px; font-weight:600; flex:none; }
+  .bad{ outline:2px solid #ff4d4f; outline-offset:2px; }
+</style></head><body><div id="out"></div>
+<script type="module">
+const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+const lang = q.get('lang') === 'en' ? 'en' : 'pl', sch = q.get('scheme') === 'light' ? 'light' : 'dark', MODE = q.get('mode') || 'shots';
+window.__hgLangOpt = window.__nuvioLangOpt = lang; window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true; window.__nuvioNoPause = window.__hgNoPause = true;
+/* zamrożony czas (zegar, kalendarz, harmonogramy wyglądają tak samo przy każdym zrzucie) */
+const D0 = Date, off = new D0(q.get('at') || '2026-10-15T10:32:00').getTime() - D0.now();
+window.Date = class extends D0 { constructor(...a) { a.length ? super(...a) : super(D0.now() + off); } static now() { return D0.now() + off; } };
+document.documentElement.setAttribute('data-hg-scheme', sch);
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const IC = {}; customElements.define('ha-icon', class extends HTMLElement { static get observedAttributes() { return ['icon']; }
+  connectedCallback() { this.attributeChangedCallback(); }
+  attributeChangedCallback() { const n = (this.getAttribute('icon') || '').replace(/^mdi:/, ''); if (!n || this._n === n) return; this._n = n;
+    const r = this.shadowRoot || this.attachShadow({ mode: 'open' });
+    (IC[n] = IC[n] || fetch('https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/' + n + '.svg').then((x) => (x.ok ? x.text() : '')).catch(() => '')).then((t) => { r.innerHTML = '<style>:host{display:inline-flex;vertical-align:middle;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);flex:none}svg{width:100%;height:100%;fill:currentColor}</style>' + t; }); } });
+await import('../dist/' + v.core);
+const now = Date.now(), iso = (t) => new Date(t).toISOString(), S = {}, entities = {}, devices = {};
+const st = (e, s, a, area, dev) => { S[e] = { entity_id: e, state: String(s), attributes: Object.assign({}, a), last_changed: iso(now - (a && a._ago || 4) * 60e3), last_updated: iso(now - 60e3) }; delete S[e].attributes._ago; entities[e] = { entity_id: e, area_id: area || null, device_id: dev || null, platform: 'demo' }; };
+const T = (pl, en) => (lang === 'en' ? en : pl);
+const areas = { salon: { area_id: 'salon', name: T('Salon', 'Living room'), icon: 'mdi:sofa-outline' }, kuchnia: { area_id: 'kuchnia', name: T('Kuchnia', 'Kitchen'), icon: 'mdi:countertop-outline' }, sypialnia: { area_id: 'sypialnia', name: T('Sypialnia', 'Bedroom'), icon: 'mdi:bed-outline' }, lazienka: { area_id: 'lazienka', name: T('Łazienka', 'Bathroom'), icon: 'mdi:shower' } };
+const N = (pl, en) => ({ friendly_name: T(pl, en) });
+/* światła, przełączniki */
+st('light.salon_sufit', 'on', { ...N('Salon Sufit', 'Living room Ceiling'), brightness: 184, supported_color_modes: ['color_temp', 'hs'], color_mode: 'color_temp', color_temp_kelvin: 3400, min_color_temp_kelvin: 2200, max_color_temp_kelvin: 6500, hs_color: [30, 60] }, 'salon');
+st('light.salon_lampa', 'off', { ...N('Salon Lampa', 'Living room Lamp'), supported_color_modes: ['brightness'] }, 'salon');
+st('light.kuchnia', 'on', { ...N('Kuchnia Światło', 'Kitchen Light'), brightness: 255, supported_color_modes: ['brightness'], color_mode: 'brightness' }, 'kuchnia');
+st('light.schody_dol', 'off', N('Schody dół', 'Stairs bottom')); st('light.schody_gora', 'off', N('Schody góra', 'Stairs top'));
+st('switch.salon_choinka', 'on', N('Salon Choinka', 'Living room Tree'), 'salon'); st('switch.ekspres', 'off', N('Ekspres', 'Coffee machine'), 'kuchnia');
+st('input_boolean.tryb_goscia', 'off', N('Tryb gościa', 'Guest mode'));
+st('fan.wentylator', 'on', { ...N('Wentylator', 'Fan'), percentage: 66, percentage_step: 33, preset_modes: ['auto', 'sleep'], preset_mode: null, supported_features: 9 }, 'sypialnia');
+st('fan.oczyszczacz', 'on', { ...N('Oczyszczacz', 'Air purifier'), percentage: 40, preset_modes: ['Auto', 'Silent', 'Favorite'], preset_mode: 'Auto', supported_features: 9 }, 'salon', 'pur');
+devices.pur = { id: 'pur', name: T('Oczyszczacz', 'Air purifier'), area_id: 'salon' };
+st('sensor.oczyszczacz_pm25', 8, { ...N('Oczyszczacz PM2.5', 'Air purifier PM2.5'), device_class: 'pm25', unit_of_measurement: 'µg/m³', state_class: 'measurement' }, 'salon', 'pur');
+st('sensor.oczyszczacz_filtr', 74, { ...N('Oczyszczacz Filtr', 'Air purifier Filter'), unit_of_measurement: '%' }, 'salon', 'pur');
+/* jakość powietrza, roślina (Mi Flora), cena prądu (Nord Pool: today / tomorrow) */
+st('sensor.salon_co2', 742, { ...N('Salon CO2', 'Living room CO2'), device_class: 'carbon_dioxide', unit_of_measurement: 'ppm', state_class: 'measurement' }, 'salon');
+st('sensor.salon_pm10', 21, { ...N('Salon PM10', 'Living room PM10'), device_class: 'pm10', unit_of_measurement: 'µg/m³', state_class: 'measurement' }, 'salon');
+st('sensor.salon_lzo', 310, { ...N('Salon LZO', 'Living room VOC'), device_class: 'volatile_organic_compounds_parts', unit_of_measurement: 'ppb', state_class: 'measurement' }, 'salon');
+devices.flora = { id: 'flora', name: 'Monstera', area_id: 'salon' };
+st('sensor.monstera_wilgotnosc', 12, { ...N('Monstera Wilgotność', 'Monstera Moisture'), device_class: 'moisture', unit_of_measurement: '%' }, 'salon', 'flora');
+st('sensor.monstera_swiatlo', 8400, { ...N('Monstera Światło', 'Monstera Illuminance'), device_class: 'illuminance', unit_of_measurement: 'lx' }, 'salon', 'flora');
+st('sensor.monstera_temperatura', 22.4, { ...N('Monstera Temperatura', 'Monstera Temperature'), device_class: 'temperature', unit_of_measurement: '°C' }, 'salon', 'flora');
+st('sensor.monstera_nawozenie', 640, { ...N('Monstera Nawożenie', 'Monstera Conductivity'), device_class: 'conductivity', unit_of_measurement: 'µS/cm' }, 'salon', 'flora');
+st('sensor.monstera_bateria', 81, { ...N('Monstera Bateria', 'Monstera Battery'), device_class: 'battery', unit_of_measurement: '%' }, 'salon', 'flora');
+{ const td = [0.41, 0.38, 0.36, 0.35, 0.36, 0.44, 0.62, 0.78, 0.71, 0.55, 0.46, 0.39, 0.33, 0.31, 0.34, 0.47, 0.69, 0.88, 0.94, 0.81, 0.66, 0.57, 0.5, 0.45], tm = td.map((x, i) => +(x * (0.9 + ((i * 7) % 5) / 20)).toFixed(3));
+  st('sensor.cena_pradu', 0.46, { ...N('Cena prądu', 'Electricity price'), unit_of_measurement: 'zł/kWh', today: td, tomorrow: tm, tomorrow_valid: true, currency: 'PLN' }); }
+st('humidifier.nawilzacz', 'on', { ...N('Nawilżacz', 'Humidifier'), humidity: 55, current_humidity: 48, min_humidity: 30, max_humidity: 80, available_modes: ['normal', 'eco', 'sleep'], mode: 'normal', action: 'humidifying' }, 'sypialnia');
+/* klimat */
+st('climate.salon', 'cool', { ...N('Salon Klimatyzacja', 'Living room AC'), current_temperature: 23.5, temperature: 22, hvac_modes: ['off', 'cool', 'heat', 'dry', 'fan_only', 'auto'], hvac_action: 'cooling', min_temp: 16, max_temp: 30, target_temp_step: 0.5, fan_modes: ['auto', 'low', 'medium', 'high'], fan_mode: 'auto', swing_modes: ['off', 'vertical'], swing_mode: 'vertical', supported_features: 41 }, 'salon');
+st('climate.lazienka', 'heat', { ...N('Łazienka Grzejnik', 'Bathroom Radiator'), current_temperature: 21.5, temperature: 22, hvac_modes: ['off', 'heat'], hvac_action: 'heating', min_temp: 5, max_temp: 30, target_temp_step: 0.5, supported_features: 1 }, 'lazienka');
+st('water_heater.bojler', 'eco', { ...N('Bojler', 'Water heater'), current_temperature: 52, temperature: 55, min_temp: 30, max_temp: 70, operation_list: ['eco', 'performance', 'off'], operation_mode: 'eco' });
+st('binary_sensor.bojler_grzanie', 'on', { ...N('Bojler Grzanie', 'Water heater Heating'), device_class: 'heat' });
+st('sensor.bojler_moc', 1900, { ...N('Bojler Moc', 'Water heater Power'), device_class: 'power', unit_of_measurement: 'W' });
+/* czujniki */
+const sens = (e, s, pl, en, dc, u, area) => st(e, s, { ...N(pl, en), device_class: dc, unit_of_measurement: u, state_class: 'measurement' }, area);
+sens('sensor.salon_temperatura', 23.2, 'Salon Temperatura', 'Living room Temperature', 'temperature', '°C', 'salon'); sens('sensor.salon_wilgotnosc', 48, 'Salon Wilgotność', 'Living room Humidity', 'humidity', '%', 'salon');
+sens('sensor.sypialnia_temperatura', 20.4, 'Sypialnia Temperatura', 'Bedroom Temperature', 'temperature', '°C', 'sypialnia'); sens('sensor.sypialnia_wilgotnosc', 46, 'Sypialnia Wilgotność', 'Bedroom Humidity', 'humidity', '%', 'sypialnia');
+sens('sensor.kuchnia_temperatura', 21.8, 'Kuchnia Temperatura', 'Kitchen Temperature', 'temperature', '°C', 'kuchnia'); sens('sensor.lazienka_temperatura', 23.0, 'Łazienka Temperatura', 'Bathroom Temperature', 'temperature', '°C', 'lazienka');
+sens('sensor.zewnatrz_temperatura', 9.4, 'Na zewnątrz', 'Outside', 'temperature', '°C'); sens('sensor.salon_co2', 812, 'Salon CO2', 'Living room CO2', 'carbon_dioxide', 'ppm', 'salon');
+sens('sensor.dom_moc', 1840, 'Dom Moc', 'Home Power', 'power', 'W'); sens('sensor.siec_moc', 620, 'Sieć Moc', 'Grid Power', 'power', 'W'); sens('sensor.pv_moc', 4820, 'Falownik Moc', 'Inverter Power', 'power', 'W');
+sens('sensor.bateria_moc', -1200, 'Bateria Moc', 'Battery Power', 'power', 'W'); sens('sensor.bateria_soc', 76, 'Bateria Poziom', 'Battery Level', 'battery', '%');
+sens('sensor.pv_string1', 2510, 'Falownik String 1', 'Inverter String 1', 'power', 'W'); sens('sensor.pv_string2', 2310, 'Falownik String 2', 'Inverter String 2', 'power', 'W'); sens('sensor.pv_temperatura', 41, 'Falownik Temperatura', 'Inverter Temperature', 'temperature', '°C');
+for (const [i, p, u, c] of [[1, 1210, 231, 5.2], [2, 2140, 229, 9.3], [3, 690, 233, 3.0]]) { sens(`sensor.faza_l${i}_moc`, p, `Faza L${i} Moc`, `Phase L${i} Power`, 'power', 'W'); sens(`sensor.faza_l${i}_napiecie`, u, `Faza L${i} Napięcie`, `Phase L${i} Voltage`, 'voltage', 'V'); sens(`sensor.faza_l${i}_prad`, c, `Faza L${i} Prąd`, `Phase L${i} Current`, 'current', 'A'); }
+st('sensor.energia_pobor', 4211.5, { ...N('Energia pobór', 'Energy import'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
+st('sensor.energia_produkcja', 6120.2, { ...N('Energia produkcja', 'Energy production'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
+st('sensor.pv_dzis', 21.4, { ...N('Falownik Dziś', 'Inverter Today'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
+st('sensor.falownik_stan', 'Producing', N('Falownik Stan', 'Inverter State'));
+st('sensor.zuzycie_wody', 128, { ...N('Zużycie wody dziś', 'Water usage today'), unit_of_measurement: 'L', device_class: 'water' });
+st('sensor.pb95', 6.29, { ...N('Cena PB95', 'Price PB95'), unit_of_measurement: 'zł/l' }); st('sensor.on', 6.41, { ...N('Cena ON', 'Price Diesel'), unit_of_measurement: 'zł/l' }); st('sensor.lpg', 2.99, { ...N('Cena LPG', 'Price LPG'), unit_of_measurement: 'zł/l' });
+for (const [e, v, pl, en] of [['sensor.czujnik_ruchu_bateria', 12, 'Czujnik ruchu Bateria', 'Motion sensor Battery'], ['sensor.pilot_bateria', 38, 'Pilot Bateria', 'Remote Battery'], ['sensor.zamek_bateria', 86, 'Zamek Bateria', 'Lock Battery']]) st(e, v, { ...N(pl, en), device_class: 'battery', unit_of_measurement: '%' });
+st('binary_sensor.salon_ruch', 'on', { ...N('Salon Ruch', 'Living room Motion'), device_class: 'motion', _ago: 2 }, 'salon'); st('binary_sensor.korytarz_ruch', 'off', { ...N('Korytarz Ruch', 'Hall Motion'), device_class: 'motion', _ago: 18 });
+st('binary_sensor.schody_dol_ruch', 'on', { ...N('Schody dół Ruch', 'Stairs bottom Motion'), device_class: 'motion' }); st('binary_sensor.schody_gora_ruch', 'off', { ...N('Schody góra Ruch', 'Stairs top Motion'), device_class: 'motion' });
+st('binary_sensor.taras_drzwi', 'on', { ...N('Taras Drzwi', 'Patio Door'), device_class: 'door', _ago: 6 }); st('binary_sensor.kuchnia_okno', 'off', { ...N('Kuchnia Okno', 'Kitchen Window'), device_class: 'window', _ago: 50 }, 'kuchnia');
+st('binary_sensor.wejscie_drzwi', 'off', { ...N('Drzwi wejściowe', 'Front door'), device_class: 'door', _ago: 35 }); st('binary_sensor.lazienka_zalanie', 'off', { ...N('Łazienka Zalanie', 'Bathroom Leak'), device_class: 'moisture' }, 'lazienka');
+/* pozostałe domeny */
+st('cover.salon_roleta', 'open', { ...N('Salon Roleta', 'Living room Blind'), current_position: 40, supported_features: 15, device_class: 'shutter' }, 'salon');
+st('media_player.salon_tv', 'playing', { ...N('Salon TV', 'Living room TV'), media_title: T('Wiadomości', 'Evening news'), media_artist: 'TVP Info', volume_level: 0.3, is_volume_muted: false, media_duration: 1800, media_position: 610, media_position_updated_at: iso(now - 5000), source_list: ['HDMI 1', 'Netflix', 'YouTube'], source: 'Netflix', supported_features: 152461 }, 'salon');
+st('media_player.kuchnia_glosnik', 'paused', { ...N('Kuchnia Głośnik', 'Kitchen Speaker'), media_title: 'Blue in Green', media_artist: 'Miles Davis', volume_level: 0.45, supported_features: 152461 }, 'kuchnia');
+st('camera.wejscie', 'idle', { ...N('Wejście', 'Entrance'), access_token: 'x', entity_picture: '/x.jpg' }); st('camera.ogrod', 'idle', { ...N('Ogród', 'Garden'), access_token: 'x', entity_picture: '/x.jpg' });
+st('lock.drzwi', 'locked', { ...N('Drzwi wejściowe', 'Front door'), supported_features: 1 }); st('lock.furtka', 'locked', N('Furtka', 'Gate'));
+st('vacuum.odkurzacz', 'cleaning', { ...N('Odkurzacz', 'Vacuum'), battery_level: 82, fan_speed: 'Standard', fan_speed_list: ['Quiet', 'Standard', 'Turbo'], status: 'Cleaning', supported_features: 14204 });
+st('alarm_control_panel.dom', 'armed_away', { ...N('Alarm', 'Alarm'), code_format: 'number', code_arm_required: false, supported_features: 63 });
+st('person.anna', 'home', { ...N('Anna', 'Anna'), user_id: 'u2', latitude: 52.23, longitude: 21.01, _ago: 95 }); st('person.marek', 'not_home', { ...N('Marek', 'Mark'), latitude: 52.2, longitude: 20.95, _ago: 240 }); st('person.zosia', 'Szkoła', { ...N('Zosia', 'Zoe'), _ago: 130 });
+st('zone.home', 'zoning', { ...N('Dom', 'Home'), latitude: 52.23, longitude: 21.01, radius: 100, icon: 'mdi:home' });
+st('weather.dom', 'partlycloudy', { ...N('Dom', 'Home'), temperature: 9, apparent_temperature: 7, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, pressure_unit: 'hPa', temperature_unit: '°C', supported_features: 3 });
+st('sun.sun', 'above_horizon', { ...N('Słońce', 'Sun'), next_rising: iso(new Date('2026-10-16T07:02:00').getTime()), next_setting: iso(new Date('2026-10-15T17:53:00').getTime()), elevation: 24, azimuth: 160 });
+st('calendar.rodzina', 'off', N('Rodzina', 'Family')); st('calendar.praca', 'off', N('Praca', 'Work'));
+st('scene.dobranoc', iso(now - 864e5), { ...N('Dobranoc', 'Good night'), icon: 'mdi:weather-night' }); st('scene.film', iso(now - 864e5), { ...N('Film', 'Movie'), icon: 'mdi:movie-open' }); st('scene.poranek', iso(now - 864e5), { ...N('Poranek', 'Morning'), icon: 'mdi:weather-sunset-up' });
+st('script.wyjscie', 'off', { ...N('Wychodzę', 'Leaving'), icon: 'mdi:home-export-outline' }); st('script.kolacja', 'off', { ...N('Kolacja', 'Dinner'), icon: 'mdi:silverware-fork-knife' });
+st('input_select.tryb_domu', T('Komfort', 'Comfort'), { ...N('Tryb domu', 'Home mode'), options: [T('Komfort', 'Comfort'), 'Eco', T('Wyjazd', 'Away')] });
+st('counter.kawy', 12, { ...N('Kawy dziś', 'Coffees today'), step: 1, minimum: 0 }); st('input_number.zadana', 21.5, { ...N('Temperatura zadana', 'Target temperature'), min: 15, max: 28, step: 0.5, unit_of_measurement: '°C', mode: 'slider' });
+st('todo.zakupy', 2, N('Zakupy', 'Shopping')); st('timer.piekarnik', 'active', { ...N('Piekarnik', 'Oven'), duration: '0:20:00', remaining: '0:04:32', finishes_at: iso(now + 272e3) });
+st('update.home_assistant_core_update', 'on', { ...N('Home Assistant Core', 'Home Assistant Core'), installed_version: '2026.10.1', latest_version: '2026.10.2', title: 'Home Assistant Core' });
+st('update.hacs', 'on', { ...N('HACS', 'HACS'), installed_version: '2.0.5', latest_version: '2.1.0', title: 'HACS' });
+st('sensor.pralka_stan', 'running', { ...N('Pralka Stan', 'Washer State'), device_class: 'enum', options: ['idle', 'running', 'done'] }); st('sensor.pralka_pozostalo', 42, { ...N('Pralka Pozostało', 'Washer Remaining'), unit_of_measurement: 'min' });
+st('sensor.siec_pobieranie', 512, { ...N('Router Pobieranie', 'Router Download'), unit_of_measurement: 'Mbit/s', device_class: 'data_rate' }); st('sensor.siec_wysylanie', 98, { ...N('Router Wysyłanie', 'Router Upload'), unit_of_measurement: 'Mbit/s', device_class: 'data_rate' });
+/* historia i statystyki: łagodne fale, żeby wykresy wyglądały naturalnie */
+const wave = (e, hrs) => { const s = parseFloat(S[e] && S[e].state); if (!isFinite(s)) return []; const n = 96, out = [];
+  for (let i = 0; i <= n; i++) { const t = now - hrs * 3600e3 + (i / n) * hrs * 3600e3, k = i / n; out.push({ s: String(+(s * (0.86 + 0.14 * Math.sin(k * 6.3 + e.length) + 0.06 * Math.sin(k * 23))).toFixed(2)), lu: t / 1000 }); } out[out.length - 1].s = String(s); return out; };
+const callWS = async (m) => {
+  if (m.type === 'history/history_during_period') { const hrs = (now - Date.parse(m.start_time)) / 3600e3; return Object.fromEntries(m.entity_ids.map((e) => [e, wave(e, hrs)])); }
+  if (m.type === 'recorder/statistics_during_period') { const t0 = Date.parse(m.start_time); return Object.fromEntries(m.statistic_ids.map((id, j) => [id, Array.from({ length: Math.ceil((now - t0) / 864e5) }, (_, i) => ({ start: t0 + i * 864e5, change: +((j ? 16 : 11) + 6 * Math.sin(i * 1.7 + j)).toFixed(1) }))])); }
+  if (m.type === 'logbook/get_events') return m.entity_ids.slice(0, 5).map((e, i) => ({ entity_id: e, state: S[e] ? S[e].state : 'on', when: (now - (i * 7 + 2) * 60e3) / 1000 }));
+  if (m.type === 'todo/item/list') return { items: [{ uid: '1', summary: T('Kupić mleko', 'Buy milk'), status: 'needs_action' }, { uid: '2', summary: T('Podlać kwiaty', 'Water the plants'), status: 'needs_action' }, { uid: '3', summary: T('Odebrać paczkę', 'Pick up parcel'), status: 'completed' }] };
+  if (m.type === 'energy/get_prefs') return { energy_sources: [{ type: 'grid', flow_from: [{ stat_energy_from: 'sensor.energia_pobor' }], flow_to: [] }, { type: 'solar', stat_energy_from: 'sensor.energia_produkcja' }], device_consumption: [] };
+  return null; };
+const day = (h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
+const ev = { rodzina: [{ summary: T('Basen', 'Swimming'), start: { dateTime: day(17, 30) }, end: { dateTime: day(18, 30) } }, { summary: T('Odbiór paczki', 'Pick up parcel'), start: { dateTime: day(12, 0) }, end: { dateTime: day(12, 30) } }],
+  praca: [{ summary: T('Spotkanie zespołu', 'Team meeting'), start: { dateTime: day(9, 0) }, end: { dateTime: day(10, 0) } }, { summary: T('Przegląd projektu', 'Project review'), start: { dateTime: new Date(now + 864e5).toISOString() }, end: { dateTime: new Date(now + 864e5 + 36e5).toISOString() } }] };
+const fc = (n, step, f) => Array.from({ length: n }, (_, i) => f(i, new Date(Math.ceil(now / step) * step + i * step).toISOString()));
+const conds = ['sunny', 'partlycloudy', 'cloudy', 'rainy', 'partlycloudy', 'sunny', 'cloudy'];
+const hass = { states: S, entities, devices, areas, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true }, config: { location_name: T('Dom', 'Home'), latitude: 52.23, longitude: 21.01, unit_system: { temperature: '°C' }, time_zone: 'Europe/Warsaw' }, panels: {},
+  language: lang, locale: { language: lang, time_format: '24', number_format: 'language' }, themes: { darkMode: sch === 'dark' }, callService: async () => {}, callWS,
+  callApi: async (mth, p) => ev[((p.match(/^calendars\/calendar\.([^?]+)/) || [])[1])] || [], hassUrl: (p) => p,
+  connection: { subscribeMessage: async (cb, m) => { if (m.type === 'weather/subscribe_forecast') setTimeout(() => cb({ forecast: m.forecast_type === 'hourly' ? fc(24, 36e5, (i, d) => ({ datetime: d, temperature: 9 + Math.round(3 * Math.sin(i / 4)), condition: conds[i % 7], precipitation: i % 5 ? 0 : 0.4 })) : fc(7, 864e5, (i, d) => ({ datetime: d, temperature: 11 + (i % 3), templow: 4 + (i % 2), condition: conds[i], precipitation_probability: [0, 10, 40, 80, 20, 0, 30][i] })) }), 30); return () => {}; }, subscribeEvents: async () => () => {} } };
+window.__hgHass = window.__nuvioHass = hass;
+/* konfiguracja jak w galerii: domyślne encje slotów (_eCompDef strony) i hgCompCfg */
+const CT = window.__nuvioCompT || window.__hgCompT, P = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page');
+const def = (C) => P._eCompDef.call({ _hass: hass }, C) || {};
+/* lepsze encje do zrzutów niż „pierwsza pasująca” (np. moc domu zamiast baterii) */
+const pick = { power: { entities: ['sensor.dom_moc'] }, fuel: { prices: ['sensor.pb95', 'sensor.on', 'sensor.lpg'] }, chart: { e: 'sensor.salon_temperatura' }, chart2: { e: 'sensor.salon_temperatura' }, sensor: { e: 'sensor.salon_temperatura' },
+  gauge: { e: 'sensor.salon_wilgotnosc' }, progress: { e: 'sensor.oczyszczacz_filtr' }, stat: { e: 'sensor.salon_temperatura' }, value: { e: 'sensor.zuzycie_wody' }, history: { entities: ['sensor.salon_temperatura', 'sensor.sypialnia_temperatura'] },
+  arc: { e: 'light.salon_sufit' }, slider: { e: 'light.salon_sufit' }, light: { e: 'light.salon_sufit' }, thermo: { e: 'climate.lazienka' }, ac: { entity: 'climate.salon' }, acremote: { entity: 'climate.salon' }, climate: { e: 'climate.salon' },
+  pv: { power: 'sensor.pv_moc', today: 'sensor.pv_dzis', state: 'sensor.falownik_stan', temperature: 'sensor.pv_temperatura', strings: ['sensor.pv_string1', 'sensor.pv_string2'] },
+  flow: { grid: ['sensor.siec_moc'], solar: ['sensor.pv_moc'], battery: ['sensor.bateria_moc'], battery_soc: ['sensor.bateria_soc'], home: ['sensor.dom_moc'] },
+  phases: { power: [1, 2, 3].map((i) => `sensor.faza_l${i}_moc`), voltage: [1, 2, 3].map((i) => `sensor.faza_l${i}_napiecie`), current: [1, 2, 3].map((i) => `sensor.faza_l${i}_prad`) },
+  cwu: { heater: 'water_heater.bojler', heating: 'binary_sensor.bojler_grzanie', power: 'sensor.bojler_moc' }, appliance: { entity: 'sensor.pralka_stan' }, mediamini: { e: 'media_player.kuchnia_glosnik' }, media1: { e: 'media_player.salon_tv' },
+  energy: { consumption: 'sensor.energia_pobor', production: 'sensor.energia_produkcja' }, week: { consumption: ['sensor.energia_pobor'], production: ['sensor.energia_produkcja'] }, button: { e: 'script.wyjscie' },
+  glance: { entities: ['light.salon_sufit', 'lock.drzwi', 'binary_sensor.taras_drzwi', 'fan.wentylator'] }, logbook: { entities: ['binary_sensor.taras_drzwi', 'light.kuchnia', 'lock.drzwi', 'binary_sensor.salon_ruch'] },
+  openings: { entities: ['binary_sensor.taras_drzwi', 'binary_sensor.kuchnia_okno', 'binary_sensor.wejscie_drzwi'] }, toggle: { e: 'light.kuchnia' }, switch: { e: 'light.kuchnia' },
+  entities: { entities: ['light.kuchnia', 'switch.salon_choinka', 'fan.wentylator', 'sensor.salon_temperatura'] }, actions: { entities: ['scene.poranek', 'scene.film', 'scene.dobranoc', 'script.wyjscie'] },
+  roomc: { temperature: 'sensor.salon_temperatura', entity: 'light.salon_sufit' }, stairs: { bl: 'light.schody_dol', bm: 'binary_sensor.schody_dol_ruch', tl: 'light.schody_gora', tm: 'binary_sensor.schody_gora_ruch' },
+  hero: { e: 'weather.dom' }, smartlock: { e: 'lock.drzwi', door: 'binary_sensor.wejscie_drzwi', battery: 'sensor.zamek_bateria' }, purifier: { e: 'fan.oczyszczacz', pm: 'sensor.oczyszczacz_pm25' }, airq: { entities: ['sensor.salon_co2', 'sensor.oczyszczacz_pm25', 'sensor.salon_pm10', 'sensor.salon_lzo', 'sensor.salon_wilgotnosc'] }, plant: { moisture: 'sensor.monstera_wilgotnosc' }, eprice: { e: 'sensor.cena_pradu' }, fan: { e: 'fan.wentylator' },
+  scenes: { scripts: ['scene.poranek', 'scene.film', 'scene.dobranoc', 'script.wyjscie', 'script.kolacja'] }, battery: { entities: ['sensor.czujnik_ruchu_bateria', 'sensor.pilot_bateria', 'sensor.zamek_bateria', 'sensor.bateria_soc'] },
+  players: { entities: ['media_player.salon_tv', 'media_player.kuchnia_glosnik'] }, cover: { e: 'cover.salon_roleta' } };
+/* slot z obiektami ({ entity, name }) dostaje obiekty także z listy tekstów */
+const conv = (d, k, v) => (Array.isArray(v) && Array.isArray(d[k]) && d[k][0] && typeof d[k][0] === 'object' ? v.map((e) => ({ entity: e, name: S[e].attributes.friendly_name })) : v);
+/* zrzuty do dokumentacji: wysokie karty z mniejszą liczbą encji albo szersze (potem pomniejszone), żeby tekst był czytelny */
+const shotPick = { cameras: { entities: ['camera.ogrod'] }, players: { entities: ['media_player.salon_tv'] } }, shotW = { rooms: 640, sensors: 600, energy: 480, acremote: 440 };
+if (MODE !== 'sizes') for (const [id, o] of Object.entries(shotPick)) pick[id] = Object.assign({}, pick[id], o);
+const pk = (C, d) => { for (const [k, v] of Object.entries(pick[C.id] || {})) if (v != null) d[k] = conv(d, k, v); return d; };
+const extra = { webpage: { o: { url: 'about:blank' } }, image: { o: { image: '../dist/nuvio-bg-default-wide.webp' } }, note: { o: { text: T('**Na weekend**\n- podlać kwiaty\n- wynieść śmieci', '**For the weekend**\n- water the plants\n- take out the trash') } },
+  link: { o: { title: T('Ustawienia', 'Settings'), nav: '/config' } }, hero: { o: { title: T('Hej, Anna!', 'Hey, Anna!') } } };
+const only = (q.get('only') || '').split(',').filter(Boolean), skip = new Set(['cond', 'hacard', 'grid', 'vstack', 'hstack', 'child']);
+const list = CT.list.filter((C) => (only.length ? only.includes(C.id) : !skip.has(C.id)) && (!C.card || customElements.get(C.card.replace(/^hg-/, 'nuvio-')) || customElements.get(C.card)));
+const mk = (C) => { const R = { v: Object.assign(pk(C, def(C)), extra[C.id] || {}), t: C.tile || '' }; const cfg = CT.kid(C, R, hass); if (!cfg) return null; for (const k of Object.keys(cfg)) if (/^nv_/.test(k)) delete cfg[k]; if (MODE !== 'sizes' && C.id === 'players') cfg.discover = false;
+  const tag = cfg.type.replace('custom:', '').replace(/^hg-/, 'nuvio-'), el = document.createElement(customElements.get(tag) ? tag : cfg.type.replace('custom:', '')); el.setConfig(cfg); el.hass = hass; el.style.display = 'block'; return el; };
+const out = document.getElementById('out'); window.__ids = [];
+for (const C of list) {
+  if (MODE === 'sizes') { const row = document.createElement('div'); row.className = 'row'; row.dataset.id = C.id; row.innerHTML = `<h3>${C.n}<br><small style="opacity:.6">${C.id}</small></h3>`;
+    for (const z of ['s', 'm', 'l']) { const col = document.createElement('div'); col.innerHTML = `<span class="lab">${z.toUpperCase()}</span>`; const b = document.createElement('div'); b.className = 'box ' + z; const el = mk(C); if (el) b.appendChild(el); col.appendChild(b); row.appendChild(col); }
+    out.appendChild(row);
+  } else { const f = document.createElement('div'); f.className = 'frame'; f.dataset.id = C.id; const fit = document.createElement('div'); fit.className = 'fit'; if (shotW[C.id]) fit.style.setProperty('--cw', shotW[C.id] + 'px'); const b = document.createElement('div'); b.className = 'box'; const el = mk(C); if (el) b.appendChild(el); fit.appendChild(b); f.appendChild(fit); out.appendChild(f); }
+  window.__ids.push(C.id); }
+await new Promise((r) => setTimeout(r, 1800));
+/* ramka: karta wyższa niż ramka -> pomniejszenie (zoom), żeby każdy zrzut miał ten sam rozmiar */
+const fitAll = () => { for (const f of document.querySelectorAll('.frame')) { const fit = f.firstElementChild; fit.style.zoom = ''; const avail = f.clientHeight - 36, hh = fit.scrollHeight, z = Math.min(avail / hh, (f.clientWidth - 40) / fit.offsetWidth); if (z < 1) fit.style.zoom = z.toFixed(3); } };
+/* responsywność: element karty wystający poza kartę albo tekst ucięty bez wielokropka */
+const overflow = () => { const bad = []; for (const b of document.querySelectorAll('.row .box')) { const card = b.firstElementChild; if (!card || !card.shadowRoot) continue; const R = card.getBoundingClientRect(), id = b.closest('.row').dataset.id + ':' + [...b.classList].find((x) => x.length === 1);
+  for (const n of card.shadowRoot.querySelectorAll('*')) { const r = n.getBoundingClientRect(); if (!r.width || !r.height) continue; const cs = getComputedStyle(n); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;
+    if (r.right > R.right + 2 || r.left < R.left - 2) { bad.push(id + ' ' + n.tagName.toLowerCase() + '.' + [...n.classList].join('.') + ` x${Math.round(r.left - R.left)}..${Math.round(r.right - R.left)}/${Math.round(R.width)}`); b.classList.add('bad'); break; } } }
+  return bad; };
+window.__fit = fitAll; window.__overflow = overflow; fitAll();
+window.__ready = true;
+</script></body></html>

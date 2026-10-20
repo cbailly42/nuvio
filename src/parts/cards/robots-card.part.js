@@ -91,7 +91,8 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
   .list.two .cs, .list.two .kv div{ padding:5u var(--s1); }
 }
 @container (max-width: 560px){ .g{ grid-template-columns: minmax(0,1fr); } }
-.top{ display:flex; align-items:center; gap:var(--s1); min-width:0; }
+.top{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); min-width:0; }
+.top .nm{ flex:1 1 120px; }   /* wąsko: bateria i stan schodzą pod nazwę zamiast ją ściskać */
 .av{ width:34u; height:34u; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:#fff; color:#2A2D31; box-shadow:var(--hg-sh-sm); }
 .av ha-icon{ width:19u; height:19u; }
 .work .av{ background:var(--hg-accent); } .work .av ha-icon{ animation: var(--hg-loop, hgrb 2.4s ease-in-out infinite); }

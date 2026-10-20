@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/final/png/nuvio-horizontal-on-dark.png">
-    <img src="assets/brand/final/png/nuvio-horizontal.png" alt="Nuvio" width="280">
-  </picture>
+  <img src="assets/brand/final/png/nuvio-horizontal-badge.png" alt="Nuvio" width="300">
 </p>
 
 <p align="center"><strong>Twój dom, spokojnie poukładany.</strong></p>
@@ -10,7 +7,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.14.1-a3e635?style=flat-square" alt="v2.14.1">
+  <img src="https://img.shields.io/badge/version-v2.15.0-a3e635?style=flat-square" alt="v2.15.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -30,12 +27,29 @@ Nuvio to szklany pulpit Home Assistant: widoki, nawigacja, karty i edytor na mie
 - **Pulpit generowany automatycznie.** Panel, Pokoje, Multimedia, Kamery, Rodzina i Energia pojawiają się, gdy masz pasujące encje. Brakujące integracje są po prostu ukrywane.
 - **Kreator pierwszego uruchomienia.** Konfiguracja krok po kroku z podglądem na żywo: język, widoki, pokoje, kolor akcentu i tło.
 - **Edycja na miejscu.** Przeciąganie, rozmiary kafli, galeria komponentów, kolor akcentu i tło.
-- **Wiele kart, jeden styl.** Ponad 60 kart do świateł, klimatu, energii, multimediów, kamer, osób i nie tylko; każdej można użyć samodzielnie w zwykłym pulpicie. Zobacz [Komponenty](docs/pl/components.md).
+- **Wiele kart, jeden styl.** Ponad 70 kart do świateł, klimatu, energii, multimediów, kamer, osób i nie tylko; każdej można użyć samodzielnie w zwykłym pulpicie. Zobacz [Komponenty](docs/pl/components.md).
 - **Domyślnie wspólny.** Administrator ustawia jeden dashboard dla wszystkich, a wybrana osoba może dostać własny układ. Zobacz [Wspólny dashboard](docs/pl/features.md#wspólny-dashboard).
 - **Tryb tabletu ściennego.** Spokojny wygaszacz z zegarem, datą i zdjęciem, z opcjonalną blokadą PIN-em. Zobacz [Tryb tabletu ściennego](docs/pl/features.md#tryb-tabletu-ściennego).
 - **Kopia układu.** Eksport i import całego układu jako JSON z wersją. Zobacz [Kopia układu](docs/pl/features.md#kopia-układu).
 - **Po polsku i po angielsku.** Język zmienisz w każdej chwili, bez przeładowania. Zobacz [Język](docs/pl/configuration.md#język).
 - **Tryb jasny i ciemny**, obsługa dotyku i klawiatury w trybie edycji, szacunek dla „ogranicz ruch”.
+
+## Komponenty
+
+Kilka komponentów, wszystkie w tym samym rozmiarze. Pełna lista z opcjami jest w [Komponenty](docs/pl/components.md).
+
+<p align="center">
+  <img src="docs/components/weather.webp" alt="Pogoda" width="24%">
+  <img src="docs/components/ac.webp" alt="Klimatyzacja" width="24%">
+  <img src="docs/components/airq.webp" alt="Jakość powietrza" width="24%">
+  <img src="docs/components/eprice.webp" alt="Cena prądu" width="24%">
+</p>
+<p align="center">
+  <img src="docs/components/players.webp" alt="Multimedia" width="24%">
+  <img src="docs/components/rooms.webp" alt="Pokoje" width="24%">
+  <img src="docs/components/flow.webp" alt="Przepływ energii" width="24%">
+  <img src="docs/components/smartlock.webp" alt="Inteligentny zamek" width="24%">
+</p>
 
 ## Szybka instalacja
 

@@ -303,7 +303,7 @@ class HGPage extends HTMLElement {
     const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.toggleAttribute('touch', touch);
     if (mode === 'phone' || (mode === 'tablet' && touch)) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
-    if (this._built) this._placeInd();
+    if (this._built) { this._placeInd(); this._railClear(); }
     if (this._panelEl && this._config.panel.fit) {
       // panel dopasowany do treści (Kamery): dostępna wysokość dla kafli w trybie wide, żeby zmieścić się bez przewijania
       if (mode === 'wide') {
@@ -557,18 +557,42 @@ class HGPage extends HTMLElement {
     if (!a) return `${back}<h1>${hgTr('Pokój', 'Room')}</h1><p>${hgTr('Nie znaleziono pokoju', 'Room not found')}</p>`;
     const env = HGAreas.env(h, a), S = a.sec || {}, okS = (e) => H.ok(h.states[e]);
     // hero: duża temperatura + wilgotność; obok stan pokoju (obecność, włączone światła, otwarte drzwi/okna) – tylko z prawdziwych encji
-    const big = env.t != null ? `<span class="rt">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}<sup>°</sup></span>` : '';
-    const hum = env.u != null ? `<span class="ru">${H.icon('mdi:water-percent')}${H.fmt(env.u, 0)}%</span>` : '';
+    /* administrator: dotknięcie temperatury / wilgotności wybiera czujnik tego pokoju (Wygląd → Pokoje bez szukania); brak wartości -> mały przycisk „+ czujnik” */
+    const adm = !!(h.user && h.user.is_admin), ov = ((((HGL.data || {}).wiz || {}).areas || {}).sensors || {})[a.id] || {};
+    const sb = (k, cls, inner, lbl) => (adm ? `<button type="button" class="${cls} rsens" data-act="roomsens" data-k="${k}" aria-haspopup="menu" aria-label="${H.esc(lbl)}" title="${hgTr('Zmień czujnik', 'Change sensor')}">${inner}</button>` : `<span class="${cls}">${inner}</span>`);
+    const big = env.t != null ? sb('temperature', 'rt', `${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}<sup>°</sup>`, `${hgTr('Temperatura', 'Temperature')} ${H.fmt(env.t, 1)}°`) : '';
+    const hum = env.u != null ? sb('humidity', 'ru', `${H.icon('mdi:water-percent')}${H.fmt(env.u, 0)}%`, `${hgTr('Wilgotność', 'Humidity')} ${H.fmt(env.u, 0)}%`) : '';
+    const add = (k, ic, l) => (adm && ov[k] !== '-' && HGAreas.cands(h, a, k).length ? `<button type="button" class="rp rsadd" data-act="roomsens" data-k="${k}" aria-haspopup="menu">${H.icon(ic)}${l}</button>` : '');
+    const adds = (env.t == null ? add('temperature', 'mdi:thermometer-plus', hgTr('Temperatura', 'Temperature')) : '') + (env.u == null ? add('humidity', 'mdi:water-plus', hgTr('Wilgotność', 'Humidity')) : '');
     const occ = (S.mot || []).filter(okS), occOn = occ.some((e) => h.states[e].state === 'on');
     const lOn = (S.light || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
     const opn = (S.door || []).filter((e) => okS(e) && h.states[e].state === 'on').length;
     const en = hgCurLang() === 'en', pl = (n, one, few, many, eo, em) => (en ? `${n} ${n === 1 ? eo : em}` : hgPl(n, one, few, many));
     const pills = [occ.length ? `<span class="rp ${occOn ? 'on' : ''}"><i></i>${occOn ? hgTr('Ktoś jest', 'Occupied') : hgTr('Pusto', 'Clear')}</span>` : '',
       lOn ? `<span class="rp lt">${H.icon('mdi:lightbulb-on')}${pl(lOn, 'światło', 'światła', 'świateł', 'light on', 'lights on')}</span>` : '',
-      opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? hgTr('Otwarte', 'Open') : hgTr(`${opn} otwarte`, `${opn} open`)}</span>` : ''].join('');
+      opn ? `<span class="rp op">${H.icon('mdi:door-open')}${opn === 1 ? hgTr('Otwarte', 'Open') : hgTr(`${opn} otwarte`, `${opn} open`)}</span>` : '', adds].join('');
     const sub = big || hum || pills ? `${big}${hum}${pills ? `<span class="rps">${pills}</span>` : ''}` : `<span>${a.devN ? pl(a.devN, 'urządzenie', 'urządzenia', 'urządzeń', 'device', 'devices') : hgTr('Brak urządzeń', 'No devices')}</span>`;
     const ttl = this._headPick(hd, 't', a.name, a.name), ic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? hd.i : a.icon, st = this._headPick(hd, 's', '', a.name);
     return `${back}<h1 class="rh" title="${H.esc(ttl)}">${H.icon(ic, 'rhi')}<span>${H.esc(ttl)}</span></h1>${hd.nos ? '' : `<p class="renv">${st ? `<span>${H.esc(st)}</span>` : sub}</p>`}`;
+  }
+  /* wybór czujnika temperatury / wilgotności pokoju z nagłówka; zapis w wiz.areas.sensors (to samo co Wygląd → Pokoje, więc eksport i import działają bez zmian) */
+  async _roomSens(t) {
+    const h = this._hass, k = t.dataset.k, a = HGAreas.model(h, this._config.areas || HG_NO_AREAS).byId[HGAreas.areaFromUrl()]; if (!a || !h) return;
+    const cur = (((((HGL.data || {}).wiz || {}).areas || {}).sensors || {})[a.id] || {})[k] || '', inR = new Set(a.ents || []), T = k === 'temperature';
+    const fmt = (e) => { const v = parseFloat(h.states[e].state); return isFinite(v) ? `${H.fmt(v, T ? 1 : 0)}${T ? '°' : '%'}` : hgTr('niedostępny', 'unavailable'); };
+    const cs = HGAreas.cands(h, a, k), shown = cs.filter((e) => inR.has(e) || e === cur).concat(cs.filter((e) => !inR.has(e) && e !== cur).slice(0, 8));
+    const ic = T ? 'mdi:thermometer' : 'mdi:water-percent';
+    const items = [{ label: hgTr('Automatycznie', 'Automatic'), icon: 'mdi:auto-fix', value: '', checked: !cur }, '-',
+      ...shown.map((e) => ({ label: `${inR.has(e) ? HGAreas.name(h, e, a) : H.name(h, e)} · ${fmt(e)}`, icon: ic, value: e, checked: e === cur })), '-',
+      { label: hgTr('Nie pokazuj', 'Do not show'), icon: 'mdi:eye-off-outline', value: '-', checked: cur === '-' },
+      { label: hgTr('Wszystkie ustawienia pokoju…', 'All room settings…'), icon: 'mdi:cog-outline', value: '@set' }];
+    const v = await hgOverlay.menu(t, items); if (v == null || v === cur) return;
+    if (v === '@set') { if (window.HGRoomsX) { HGRoomsX.open = a.id; } this._lkTab = 'rooms'; return this._eLook && this._eLook(); }
+    const W = HGL.data.wiz = Object.assign({}, HGL.data.wiz || {}), A = W.areas = JSON.parse(JSON.stringify(W.areas || {})), S = A.sensors = A.sensors || {}, o = Object.assign({}, S[a.id]);
+    if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) S[a.id] = o; else delete S[a.id]; W.ts = Date.now();
+    if (window.HGRoomsX && !HGRoomsX.dirty) HGRoomsX.draft = null;
+    this._paintHead(); for (const el of this._cards || []) if (el._update) { el._entsC = null; el._update(true); }
+    const r = await HGL.save(h); if (r !== 'ha' && !window.__hgDryRun && hgOverlay.toast) hgOverlay.toast(hgTr('Zapisano tylko na tym urządzeniu', 'Saved on this device only'));
   }
   /* nagłówek widoku (tytuł, podtytuł, ikona, widoczność) z układu: zwykłe widoki pod kluczem widoku, Pokoje i Pokój pod '<widok>:head' (bez układu kart) */
   _headScope() { const v = this._config && this._config.view; return ['rooms', 'pokoj'].includes(v) ? v + ':head' : v; }
@@ -579,7 +603,7 @@ class HGPage extends HTMLElement {
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
     const c = this._config; if (!this._hass) return;
-    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); return; }
+    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
     const hd = this._headConf();
     const pick = (k, def) => this._headPick(hd, k, def);
     const ttl = pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')), hic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? H.icon(hd.i, 'hdi') : '';
@@ -802,6 +826,14 @@ class HGPage extends HTMLElement {
     if (!this._rfT) { this._rfT = true; for (const ms of [400, 1200, 3000]) setTimeout(() => { if (this.isConnected) this._paintRail(); }, ms); }
   }
   /* ile przycisków zmieści szyna nad przyciskiem wstecz (min. 12 px odstępu) */
+  /* układ szeroki: szyna stoi pod nagłówkiem (top 184u); wyższy nagłówek (długa nazwa pokoju, większa skala) przesuwa ją niżej zamiast na nią nachodzić */
+  _railClear() {
+    const r = this._railEl, hd = this._headEl; if (!r || !hd) return;
+    if (this._hdRO !== hd && typeof ResizeObserver !== 'undefined') { this._hdRO = hd; new ResizeObserver(() => this._railClear()).observe(hd); }   /* czcionki, edycja nagłówka, zmiana stanu */
+    if (this.getAttribute('mode') !== 'wide' || !hd.offsetParent) { if (r.style.top) { r.style.top = ''; } return; }
+    requestAnimationFrame(() => { r.style.top = ''; const hb = hd.getBoundingClientRect().bottom, rt = r.getBoundingClientRect().top, top0 = r.offsetTop;
+      if (hb + 12 > rt) r.style.top = Math.ceil(top0 + hb + 12 - rt) + 'px'; });
+  }
   _railFit(n) {
     const r = this._railEl; if (!r || !r.isConnected) return n;
     const mode = this.getAttribute('mode'); if (mode !== 'wide' && mode !== 'tablet') return n;
@@ -853,6 +885,7 @@ class HGPage extends HTMLElement {
       case 'sheetclose': return this._openSheet(false);
       case 'fuel': return H.fire(this, 'hass-more-info', { entityId: t.dataset.e });
       case 'roomback': return go({ navigate: c.room_back || HG_P('rooms') });
+      case 'roomsens': return this._roomSens(t);
       case 'sheetnav': { const m = (this._sheetItems || c.phone_nav.more)[i]; this._openSheet(false); return go(m.action); }
       case 'railmore': return this._openSheet(this._sheetOpen ? false : 'rail');
       case 'edit': return this._editing ? this._editExit(true) : this._editEnter();
@@ -1012,7 +1045,11 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .head .renv{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6u 16u; font-size:15u; font-weight:400; margin-top:6u; } .head .renv > span{ display:inline-flex; align-items:center; gap:3u; } .head .renv ha-icon{ width:16u; height:16u; }
 .head .renv .rt{ display:inline-flex; align-items:center; gap:2u; font-size:24u; font-weight:300; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; } .head .renv .rt sup{ font-size:.45em; font-weight:400; vertical-align:.95em; margin-left:1px; }
 .head .renv .rt ha-icon{ width:20u; height:20u; opacity:.85; } .head .renv .ru{ font-size:17u; opacity:.92; } .head .renv .ru ha-icon{ width:18u; height:18u; }
-.head .rps{ display:inline-flex; flex-wrap:wrap; gap:6u; align-self:center; }
+.head .rps{ display:inline-flex; flex-wrap:wrap; gap:6u; align-self:center; min-width:0; }
+.head .renv{ overflow-wrap:normal; } .head .rsens{ font:inherit; color:inherit; letter-spacing:inherit; background:none; border:0; margin:-2u -6u; padding:2u 6u; border-radius:var(--r-sm); cursor:pointer; text-shadow:inherit; transition:background-color var(--hg-t-fast) var(--hg-ease-out); -webkit-tap-highlight-color:transparent; }
+.head .rsens:hover{ background:color-mix(in srgb, currentColor 10%, transparent); } .head .rsens:focus-visible, .head .rsadd:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.head .rsadd{ font:inherit; font-size:13.5px; font-weight:600; border:0; cursor:pointer; opacity:.85; } .head .rsadd:hover{ opacity:1; } .head .renv .rt, .head .renv .ru{ flex:none; white-space:nowrap; } .head .rp{ white-space:nowrap; }
+:host([mode=wide]) .head .rh span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .head .rp{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:15px; font-size:13.5px; font-weight:600; color:#fff; background:rgba(0,0,0,.28); }
 .head .rp i{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.6); } .head .rp.on i{ background:var(--hg-accent); box-shadow:0 0 0 3px var(--hg-accent-soft); }
 .head .rp ha-icon{ width:15px; height:15px; } .head .rp.lt ha-icon{ color:var(--hg-accent-tx); } .head .rp.op ha-icon{ color:var(--hg-accent-tx); }
