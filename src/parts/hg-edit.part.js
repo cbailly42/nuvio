@@ -284,6 +284,9 @@ const HG_TILE_CSS = `
 .hgtl .cv button, .hgtl .mc button, .hgtl .rb{ width:40px; height:40px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; }
 .hgtl .mc .pw.on{ background:var(--hg-accent); color:var(--hg-on-accent); } .hgtl .cv em{ font-style:normal; font-size:12px; opacity:.66; }
 .hgtl .ma{ width:44px; height:44px; border-radius:12px; object-fit:cover; flex:none; }
+/* wąski kafel (S): przyciski rolety i odtwarzacza pod nazwą zamiast ją zasłaniać */
+@container (max-width: 330px){ .hgtl.k-cover, .hgtl.k-media{ flex-wrap:wrap; row-gap:8px; } .hgtl.k-cover .hgtb, .hgtl.k-media .hgtb{ flex:1 0 100%; }
+  .hgtl.k-cover .cv{ flex:1 0 100%; justify-content:space-between; } .hgtl.k-media .mc{ flex:1 0 100%; justify-content:flex-end; } }
 .hgtl button:disabled{ opacity:.45; cursor:default; }
 .hgtl.k-card{ padding:0; background:none; box-shadow:none; display:block; min-height:0; } .hgtl.k-card > .cmslot{ display:block; height:100%; container-type:inline-size; container-name:hgcm; } .hgtl.k-card > .cmslot > *{ display:block; height:100%; }
 `;
@@ -544,6 +547,8 @@ const hgKidToAdded = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp),
   return { e: key, c: 'hg-stack-card', comp: 'vstack', cfg, v: { cards: [kid], o: { flat: true, nodiv: true } } }; };
 const hgKidName = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_n || k.title || k.name || (C && C.n) || String(k.type || '').replace(/^custom:/, ''); };
 const hgKidIcon = (k) => { const C = HG_COMP.find((c) => c.id === k.nv_comp); return k.nv_i || k.icon || (C && C.i) || 'mdi:card-outline'; };
+/* testy i zrzuty (tests/cards-demo.html): lista komponentów i budowanie konfiguracji jak w galerii */
+window.__hgCompT = { list: HG_COMP, card: hgCompCard, cfg: hgCompCfg, kid: hgKidCfg, cands: (h, sl) => hgSlotCands(h, sl) };
 const HG_CM = window.__hgCm || (window.__hgCm = new Map());   /* klucz dodanego komponentu -> { c, cfg } (do montowania w slotach) */
 const hgCmHtml = (x, sz) => { HG_CM.set(x.e, { c: x.c, cfg: Object.assign({}, x.cfg, x.n ? { title: x.n, name: x.n } : {}, x.i ? { icon: x.i } : {}) });
   return `<div class="hgtl k-card ${HGL.szc(sz)}" data-hgk="${H.esc(x.e)}"><div class="cmslot" data-cm="${H.esc(x.e)}"></div></div>`; };

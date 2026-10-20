@@ -199,6 +199,7 @@ ha-card.stc{ container-type:inline-size; }
 ha-card.cwc{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); container-type:inline-size; }
 .cwm{ display:grid; grid-template-columns:auto minmax(200px,1fr) minmax(0,1.3fr); min-height:150px; gap:var(--s3); align-items:center; }
 @container (max-width: 560px){ .cwm{ grid-template-columns:auto 1fr; } .cwi{ grid-column:1 / -1; } }
+@container (max-width: 300px){ .cwm{ grid-template-columns:auto minmax(0, 1fr); gap:var(--s2); } .cwt{ width:44px; height:124px; } .cwn{ font-size:calc(var(--fs-md) * 3.2); } .cwt{ width:36px; } .cwa{ gap:2px; padding:3px; max-width:100%; } .cv2{ width:28px; height:28px; } .cwg{ min-width:34px; } .cwg small{ display:none; } .cws{ flex-wrap:wrap; } .cwi{ grid-template-columns:minmax(0, 1fr); } .cwi > div{ min-height:72px; padding:10px 12px; } }
 .cwt{ position:relative; width:56px; height:150px; border-radius:var(--r-lg); background:repeating-linear-gradient(-55deg, rgba(128,134,140,.22) 0 2px, transparent 2px 6px), var(--hg-tile-bg); overflow:hidden; }
 .cwt .fl{ position:absolute; left:0; right:0; bottom:0; height:calc(var(--f) * 100%); background:linear-gradient(0deg, var(--hg-accent), var(--hg-accent-hi)); border-radius:0 0 28px 28px; transition:height 1.2s cubic-bezier(.2,.8,.2,1); box-shadow:0 0 18px var(--hg-accent-glow); }
 .cwt .tg2{ position:absolute; left:8px; right:8px; bottom:calc(var(--tf) * 100%); height:2px; border-radius:1px; background:var(--hg-thumb, #fff); opacity:.9; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
@@ -320,6 +321,9 @@ ha-card.wmc{ gap:var(--s2); }
 .wsr ha-icon{ width:16px; height:16px; color:#6A6E74; }
 .wmb{ width:44px; height:44px; } .wmb:active{ transform:scale(.96); }
 @media (max-width:380px){ .wmr{ grid-template-columns:116px minmax(0, 1fr); gap:var(--s2); } }
+/* wąska karta (S): ilustracja nad czasem, napis zawsze w całości */
+@container (max-width: 300px){ .wmr{ grid-template-columns:minmax(0, 1fr); justify-items:center; gap:var(--s1); } .wmv{ width:min(132px, 72%); } .wmi{ align-items:center; text-align:center; } .wsr{ justify-content:center; } }
+.wmt{ overflow-wrap:anywhere; }
 /* ilustracja */
 .wm-dr, .wm-cl, .wm-wt, .wm-bb circle, .wm-str{ transform-box:view-box; transform-origin:60px 60px; }
 .wm-trk{ fill:none; stroke:rgba(0,0,0,.07); stroke-width:2.5; }

@@ -21,7 +21,7 @@ ha-card.np > *:not(.npbg){ position:relative; }
 .npic{ width:36px; height:36px; padding:0; justify-content:center; flex:none; }
 .npm{ margin-top:auto; display:flex; flex-direction:column; gap:4px; min-width:0; }
 .npk{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--np-mt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.npt{ font-size:clamp(22px, 7.5cqi, 40px); font-weight:700; line-height:1.08; letter-spacing:-.01em; color:${HG_NP_W}; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-align:left; }
+.npt{ font-size:clamp(17px, 7.5cqi, 40px); overflow-wrap:break-word; font-weight:700; line-height:1.08; letter-spacing:-.01em; color:${HG_NP_W}; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-align:left; }
 .npa{ font-size:clamp(14px, 3.6cqi, 18px); color:rgba(255,255,255,.88); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .npg{ display:flex; flex-direction:column; gap:6px; }
 .npr{ position:relative; height:4px; border-radius:2px; background:rgba(255,255,255,.28); }
@@ -45,6 +45,7 @@ ha-card.np .npv input[type=range]::-moz-range-track{ background:rgba(255,255,255
 .npx{ display:flex; gap:8px; flex-wrap:wrap; }
 ha-card.np.off .npbg{ filter:grayscale(1); opacity:.5; }
 ha-card.np.idle{ min-height:0; }
+@container (max-width: 240px){ .npv{ gap:4px; } .npv .npb{ width:30px; height:30px; } .npv input[type=range]{ min-width:36px; } .npv > :not(.npb):not(input){ display:none; } }
 @container (max-width: 420px){ .npb.sm.opt{ display:none; } .npx .npc span{ display:none; } .npx .npc{ width:36px; padding:0; justify-content:center; } .npv{ flex-basis:100%; } }
 @media (prefers-reduced-motion: reduce){ .npr i, .npbg{ transition:none; } }
 `;
