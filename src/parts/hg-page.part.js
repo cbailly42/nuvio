@@ -303,7 +303,7 @@ class HGPage extends HTMLElement {
     const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.toggleAttribute('touch', touch);
     if (mode === 'phone' || (mode === 'tablet' && touch)) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
-    if (this._built) this._placeInd();
+    if (this._built) { this._placeInd(); this._railClear(); }
     if (this._panelEl && this._config.panel.fit) {
       // panel dopasowany do treści (Kamery): dostępna wysokość dla kafli w trybie wide, żeby zmieścić się bez przewijania
       if (mode === 'wide') {
@@ -579,7 +579,7 @@ class HGPage extends HTMLElement {
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgTr('Nagłówek ukryty', 'Header hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
     const c = this._config; if (!this._hass) return;
-    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); return; }
+    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
     const hd = this._headConf();
     const pick = (k, def) => this._headPick(hd, k, def);
     const ttl = pick('t', c.title ?? hgTr('Witaj, {name}!', 'Welcome, {name}!')), hic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? H.icon(hd.i, 'hdi') : '';
@@ -802,6 +802,14 @@ class HGPage extends HTMLElement {
     if (!this._rfT) { this._rfT = true; for (const ms of [400, 1200, 3000]) setTimeout(() => { if (this.isConnected) this._paintRail(); }, ms); }
   }
   /* ile przycisków zmieści szyna nad przyciskiem wstecz (min. 12 px odstępu) */
+  /* układ szeroki: szyna stoi pod nagłówkiem (top 184u); wyższy nagłówek (długa nazwa pokoju, większa skala) przesuwa ją niżej zamiast na nią nachodzić */
+  _railClear() {
+    const r = this._railEl, hd = this._headEl; if (!r || !hd) return;
+    if (this._hdRO !== hd && typeof ResizeObserver !== 'undefined') { this._hdRO = hd; new ResizeObserver(() => this._railClear()).observe(hd); }   /* czcionki, edycja nagłówka, zmiana stanu */
+    if (this.getAttribute('mode') !== 'wide' || !hd.offsetParent) { if (r.style.top) { r.style.top = ''; } return; }
+    requestAnimationFrame(() => { r.style.top = ''; const hb = hd.getBoundingClientRect().bottom, rt = r.getBoundingClientRect().top, top0 = r.offsetTop;
+      if (hb + 12 > rt) r.style.top = Math.ceil(top0 + hb + 12 - rt) + 'px'; });
+  }
   _railFit(n) {
     const r = this._railEl; if (!r || !r.isConnected) return n;
     const mode = this.getAttribute('mode'); if (mode !== 'wide' && mode !== 'tablet') return n;
@@ -1012,7 +1020,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .head .renv{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6u 16u; font-size:15u; font-weight:400; margin-top:6u; } .head .renv > span{ display:inline-flex; align-items:center; gap:3u; } .head .renv ha-icon{ width:16u; height:16u; }
 .head .renv .rt{ display:inline-flex; align-items:center; gap:2u; font-size:24u; font-weight:300; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; } .head .renv .rt sup{ font-size:.45em; font-weight:400; vertical-align:.95em; margin-left:1px; }
 .head .renv .rt ha-icon{ width:20u; height:20u; opacity:.85; } .head .renv .ru{ font-size:17u; opacity:.92; } .head .renv .ru ha-icon{ width:18u; height:18u; }
-.head .rps{ display:inline-flex; flex-wrap:wrap; gap:6u; align-self:center; }
+.head .rps{ display:inline-flex; flex-wrap:wrap; gap:6u; align-self:center; min-width:0; }
+.head .renv{ overflow-wrap:normal; } .head .renv .rt, .head .renv .ru{ flex:none; white-space:nowrap; } .head .rp{ white-space:nowrap; }
+:host([mode=wide]) .head .rh span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .head .rp{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:15px; font-size:13.5px; font-weight:600; color:#fff; background:rgba(0,0,0,.28); }
 .head .rp i{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.6); } .head .rp.on i{ background:var(--hg-accent); box-shadow:0 0 0 3px var(--hg-accent-soft); }
 .head .rp ha-icon{ width:15px; height:15px; } .head .rp.lt ha-icon{ color:var(--hg-accent-tx); } .head .rp.op ha-icon{ color:var(--hg-accent-tx); }

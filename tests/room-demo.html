@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Widok pokoju na sztucznym hass (bez HA): nagłówek z temperaturą i wilgotnością, karty pokoju, ustawienia czujników.
+     Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem
+     http://localhost:8000/tests/room-demo.html?view=pokoj|rooms|dashboard[&area=salon][&lang=en][&scheme=light][&long=1][&sheet=sens] -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio pokój</title>
+<style>body{ margin:0; font-family:system-ui,sans-serif; background:#0d1218 url(../dist/nuvio-bg-default-wide.webp) center/cover fixed; color:#fff; }</style></head><body>
+<script type="module">
+const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
+const lang = q.get('lang') === 'en' ? 'en' : 'pl'; window.__hgLangOpt = window.__nuvioLangOpt = lang;
+window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true; window.__nuvioNoPause = true;
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const IC = {}; customElements.define('ha-icon', class extends HTMLElement { static get observedAttributes() { return ['icon']; }
+  connectedCallback() { this.attributeChangedCallback(); }
+  attributeChangedCallback() { const n = (this.getAttribute('icon') || '').replace(/^mdi:/, ''); if (!n || this._n === n) return; this._n = n;
+    const r = this.shadowRoot || this.attachShadow({ mode: 'open' });
+    (IC[n] = IC[n] || fetch('https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/' + n + '.svg').then((x) => (x.ok ? x.text() : ''))).then((t) => { r.innerHTML = '<style>:host{display:inline-flex;vertical-align:middle;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);flex:none}svg{width:100%;height:100%;fill:currentColor}</style>' + t; }); } });
+await import('../dist/' + v.core);
+const now = new Date().toISOString(), S = {}, entities = {}, devices = {};
+const st = (e, s, a, area) => { S[e] = { entity_id: e, state: String(s), attributes: a || {}, last_changed: now, last_updated: now }; entities[e] = { entity_id: e, area_id: area || null, platform: 'demo' }; };
+const areas = { salon: { area_id: 'salon', name: q.get('long') ? 'Salon z aneksem kuchennym i jadalnią' : 'Salon', icon: 'mdi:sofa-outline' }, sypialnia: { area_id: 'sypialnia', name: 'Sypialnia', icon: 'mdi:bed-outline' }, kuchnia: { area_id: 'kuchnia', name: 'Kuchnia', icon: 'mdi:countertop-outline' } };
+st('sensor.salon_temperatura', 23.2, { friendly_name: 'Salon Temperatura', device_class: 'temperature', unit_of_measurement: '°C', state_class: 'measurement' }, 'salon');
+st('sensor.salon_wilgotnosc', 58, { friendly_name: 'Salon Wilgotność', device_class: 'humidity', unit_of_measurement: '%', state_class: 'measurement' }, 'salon');
+st('sensor.oczyszczacz_temperatura', 24.9, { friendly_name: 'Oczyszczacz Temperatura', device_class: 'temperature', unit_of_measurement: '°C' }, 'salon');
+st('sensor.oczyszczacz_wilgotnosc', 51, { friendly_name: 'Oczyszczacz Wilgotność', device_class: 'humidity', unit_of_measurement: '%' }, 'salon');
+st('binary_sensor.salon_ruch', 'off', { friendly_name: 'Salon Ruch', device_class: 'motion' }, 'salon');
+st('light.salon_sufit', 'on', { friendly_name: 'Salon Sufit', brightness: 180, supported_color_modes: ['brightness'], color_mode: 'brightness' }, 'salon');
+st('light.salon_lampa', 'off', { friendly_name: 'Salon Lampa', supported_color_modes: ['brightness'] }, 'salon');
+st('switch.salon_choinka', 'off', { friendly_name: 'Salon Choinka' }, 'salon');
+st('media_player.salon_tv', 'playing', { friendly_name: 'Salon TV', media_title: 'Wiadomości', volume_level: 0.3, supported_features: 152461 }, 'salon');
+st('cover.salon_roleta', 'open', { friendly_name: 'Salon Roleta', current_position: 70, supported_features: 15 }, 'salon');
+st('climate.salon_klima', 'cool', { friendly_name: 'Salon Klimatyzacja', current_temperature: 23.5, temperature: 22, hvac_modes: ['off', 'cool', 'heat', 'auto'], min_temp: 16, max_temp: 30, target_temp_step: 0.5, supported_features: 1 }, 'salon');
+if (q.get('busy')) { st('binary_sensor.salon_okno', 'on', { friendly_name: 'Salon Okno', device_class: 'window' }, 'salon'); st('binary_sensor.salon_drzwi', 'on', { friendly_name: 'Salon Drzwi', device_class: 'door' }, 'salon'); S['light.salon_lampa'].state = 'on'; S['binary_sensor.salon_ruch'].state = 'on'; }
+st('sensor.sypialnia_temperatura', 20.4, { friendly_name: 'Sypialnia Temperatura', device_class: 'temperature', unit_of_measurement: '°C' }, 'sypialnia');
+st('sensor.sypialnia_wilgotnosc', 46, { friendly_name: 'Sypialnia Wilgotność', device_class: 'humidity', unit_of_measurement: '%' }, 'sypialnia');
+st('light.sypialnia', 'off', { friendly_name: 'Sypialnia Światło' }, 'sypialnia');
+st('sensor.kuchnia_temperatura', 21.8, { friendly_name: 'Kuchnia Temperatura', device_class: 'temperature', unit_of_measurement: '°C' }, 'kuchnia');
+st('light.kuchnia', 'on', { friendly_name: 'Kuchnia Światło' }, 'kuchnia');
+st('weather.dom', 'partlycloudy', { friendly_name: 'Dom', temperature: 14, humidity: 71, wind_speed: 12, wind_speed_unit: 'km/h', pressure: 1016, temperature_unit: '°C' });
+st('sun.sun', 'above_horizon', {}); st('person.krzysztof', 'home', { friendly_name: 'Krzysztof', user_id: 'u1' });
+const hass = { states: S, entities, devices, areas, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin: true }, config: { location_name: 'Dom' }, panels: {},
+  language: lang, locale: { language: lang, time_format: '24' }, themes: { darkMode: q.get('scheme') !== 'light' }, callService: async () => {},
+  callWS: async (m) => (m.type === 'call_service' ? { response: {} } : m.type === 'history/history_during_period' ? {} : null), callApi: async () => [],
+  connection: { subscribeMessage: async () => () => {}, subscribeEvents: async () => () => {} } };
+window.__hgHass = window.__nuvioHass = hass;
+const L = window.__nuvioL || window.__hgL; L.data = L.data || {}; L.data.wiz = Object.assign({ lang }, L.data.wiz || {});
+const view = q.get('view') || 'pokoj';
+const cfg = await (window.nuvioGenerate || window.hgGenerate)(hass, { _wiz: { lang, views: ['dashboard', 'rooms'] }, language: lang });
+const vw = cfg.views.find((x) => x.path === view) || cfg.views[0];
+history.replaceState(null, '', location.pathname.replace(/[^/]*$/, '') + '../nuvio/' + vw.path + '?area=' + (q.get('area') || 'salon') + '&' + q.toString());
+const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig(vw.cards[0]); document.body.appendChild(pg); pg.hass = hass;
+/* kreator pierwszego uruchomienia: dane układu ładują się asynchronicznie, więc wiz ustawiamy jeszcze raz i zamykamy kreator */
+const t0 = Date.now(); await new Promise((r) => { const iv = setInterval(() => { if (L.data && !L.data.wiz) L.data.wiz = { lang }; const w = document.getElementById('hg-wiz'); if (w) w.remove(); if (Date.now() - t0 > 1500) { clearInterval(iv); r(); } }, 50); });
+window.__pg = pg; window.__hass = hass; window.__ready = true;
+</script></body></html>
