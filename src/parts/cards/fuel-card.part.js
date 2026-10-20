@@ -9,7 +9,8 @@ class HGFuelCard extends HGBase {
   css() { return `.fu{ display:flex; flex-direction:column; gap:8px; padding:14px; height:100%; box-sizing:border-box; } .fh{ display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px; } .fh ha-icon{ --mdc-icon-size:20px; opacity:.8; }
 .fr{ all:unset; cursor:pointer; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; min-height:44px; padding:0 10px; border-radius:12px; background:color-mix(in srgb, currentColor 6%, transparent); }
 .fl{ font-weight:700; font-size:12px; letter-spacing:.04em; padding:3px 8px; border-radius:8px; background:color-mix(in srgb, var(--hg-accent, #63D71E) 22%, transparent); } .fr b{ font-size:16px; font-variant-numeric:tabular-nums; }
-.tr{ font-size:12px; opacity:.75; display:flex; align-items:center; gap:2px; } .tr.up{ color:#ff7a6b; opacity:1; } .tr.dn{ color:#58d68d; opacity:1; } .tr ha-icon{ --mdc-icon-size:14px; } .em{ opacity:.6; font-size:13px; }`; }
+.tr{ font-size:12px; opacity:.75; display:flex; align-items:center; gap:2px; } .tr.up{ color:#ff7a6b; opacity:1; } .tr.dn{ color:#58d68d; opacity:1; } .tr ha-icon{ --mdc-icon-size:14px; } .em{ opacity:.6; font-size:13px; } .fu{ container-type:inline-size; } .fr b{ white-space:nowrap; }
+@container (max-width: 230px){ .fr{ grid-template-columns:minmax(0,1fr) auto; column-gap:6px; padding:6px 10px; } .fl{ justify-self:start; font-size:11px; overflow-wrap:anywhere; } .fr b{ font-size:14px; } .tr{ grid-column:1 / -1; } .tr:empty{ display:none; } }`; }
   render() { const h = this._hass, c = this._config, L = this._list();
     const rows = L.map((f) => { const s = H.st(h, f.entity), v = s ? parseFloat(s.state) : NaN; if (!H.ok(s) || !isFinite(v)) return '';
       const ch = H.st(h, f.change), ca = (H.ok(ch) && ch.attributes) || {}, gr = Number(ca.roznica_gr), known = H.ok(ch) && isFinite(gr) && ca.cena_jutro != null, dir = !known || gr === 0 ? 'eq' : gr > 0 ? 'up' : 'dn';

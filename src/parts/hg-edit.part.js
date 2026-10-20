@@ -287,6 +287,8 @@ const HG_TILE_CSS = `
 /* wąski kafel (S): przyciski rolety i odtwarzacza pod nazwą zamiast ją zasłaniać */
 @container (max-width: 330px){ .hgtl.k-cover, .hgtl.k-media{ flex-wrap:wrap; row-gap:8px; } .hgtl.k-cover .hgtb, .hgtl.k-media .hgtb{ flex:1 0 100%; }
   .hgtl.k-cover .cv{ flex:1 0 100%; justify-content:space-between; } .hgtl.k-media .mc{ flex:1 0 100%; justify-content:flex-end; } }
+/* wąski kafel z wartością: mniejsza liczba i bez ikony, żeby nazwa się mieściła */
+@container (max-width: 210px){ .hgtl:has(.tv) .ti{ display:none; } .hgtl .tv{ font-size:22px; } .hgtl .tv em{ font-size:11px; } }
 .hgtl button:disabled{ opacity:.45; cursor:default; }
 .hgtl.k-card{ padding:0; background:none; box-shadow:none; display:block; min-height:0; } .hgtl.k-card > .cmslot{ display:block; height:100%; container-type:inline-size; container-name:hgcm; } .hgtl.k-card > .cmslot > *{ display:block; height:100%; }
 `;
