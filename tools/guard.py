@@ -16,8 +16,11 @@ for pat in [r"home-glass", r"\bhg-(?:page|[a-z]+-card)\b", r"/local/images/", r"
 for m in re.finditer(r"(?:import\s*\(|import\s+[^;]*from\s*|fetch\s*\()\s*['\"`][^'\"`]*(?:kiosk-mode|custom-sidebar|card-mod)", js): bad.append('optional package loaded directly: ' + m.group(0)[:80])
 # assets flat in dist/ (HACS downloads only files directly in dist/): no subfolders, no old asset paths
 dd = os.path.join(R, 'dist')
-for f in os.listdir(dd):
-    if os.path.isdir(os.path.join(dd, f)): bad.append(f'subfolder in dist/ (HACS skips it): {f}')
+# only files tracked by git ship; local untracked folders (e.g. .claude from an editor or agent) are ignored
+import subprocess
+try: tracked = subprocess.run(['git', 'ls-files', 'dist'], cwd=R, capture_output=True, text=True, check=True).stdout.split()
+except Exception: tracked = [os.path.join('dist', f, '') for f in os.listdir(dd) if os.path.isdir(os.path.join(dd, f))]
+for f in sorted({t.split('/')[1] for t in tracked if t.count('/') > 1}): bad.append(f'subfolder in dist/ (HACS skips it): {f}')
 if 'assets/' in js: bad.append('old assets/ path in dist/nuvio.js')
 for need in ('nuvio-version.json', 'nuvio-font-dmsans-latin.woff2', 'nuvio-font-dmsans-latin-ext.woff2', 'nuvio-bg-default-wide.webp', 'nuvio-bg-default-portrait.webp', 'nuvio-meteo-static-sunrise.svg', 'CREDITS.md'):
     if not os.path.exists(os.path.join(dd, need)): bad.append(f'missing dist/{need}')
