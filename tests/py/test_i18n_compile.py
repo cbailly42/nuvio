@@ -43,6 +43,7 @@ class Rewrite(unittest.TestCase):
 class Remaining(unittest.TestCase):
     def test_remaining(self):
         self.assertEqual(C.remaining_literals("hgT('a.b'); hgTLazy(\"c.d\", p); hgTO(o, { x: 'e.f', y: 3 })"), ['a.b', 'c.d', 'e.f'])
+    def test_ternary_key_flagged(self): self.assertEqual(C.remaining_literals("hgT(c ? 'a.b' : 'c.d')"), ['a.b', 'c.d'])
     def test_clean(self): self.assertEqual(C.remaining_literals("hgT(3); hgT('states.' + s); hgTD('states.x', 'y'); hgTO(o, { x: 4 }); const hgT = (k) => k"), [])
 
 class Locales(unittest.TestCase):
@@ -54,7 +55,7 @@ class Locales(unittest.TestCase):
     def test_manifest_and_hashed_files(self):
         man, en, idx = C.build_locales(self.src, self.out)
         self.assertEqual([m['code'] for m in man], ['en', 'fr']); self.assertIsNone(man[0]['file'])
-        self.assertRegex(man[1]['file'], r'^locales/fr\.[0-9a-f]{8}\.json$'); self.assertEqual(man[1]['locale'], 'fr-FR'); self.assertEqual(man[1]['name'], 'Français')
+        self.assertRegex(man[1]['file'], r'^nuvio-locale-fr\.[0-9a-f]{8}\.json$'); self.assertEqual(man[1]['locale'], 'fr-FR'); self.assertEqual(man[1]['name'], 'Français')
         with open(os.path.join(self.out, os.path.basename(man[1]['file'])), encoding='utf-8') as f: j = json.load(f)
         self.assertEqual(j['t'][idx['common.save']], 'Enregistrer')
         self.assertEqual(en['t'][idx['common.save']], 'Save'); self.assertEqual(en['m']['locale'], 'en')
@@ -63,6 +64,12 @@ class Locales(unittest.TestCase):
         self.w('fr', dict(FR, common={'save': 'Sauver'})); m3 = C.build_locales(self.src, self.out)[0]
         self.assertNotEqual(m1[1]['file'], m3[1]['file'])
         self.assertEqual(sorted(os.listdir(self.out)), [os.path.basename(m3[1]['file'])])
+    def test_cleanup_only_touches_catalog_files(self):
+        os.makedirs(self.out); keep = ['nuvio-core.deadbeef.js', 'nuvio-bg-x.webp', 'pl.12345678.json', 'nuvio-version.json']
+        for f in keep + ['nuvio-locale-fr.00000000.json', 'nuvio-locale-zz.11111111.json']: open(os.path.join(self.out, f), 'w').close()
+        C.build_locales(self.src, self.out); left = os.listdir(self.out)
+        for f in keep: self.assertIn(f, left)
+        self.assertNotIn('nuvio-locale-fr.00000000.json', left); self.assertNotIn('nuvio-locale-zz.11111111.json', left)
     def test_removed_language_deleted(self):
         C.build_locales(self.src, self.out); os.remove(os.path.join(self.src, 'fr.json')); C.build_locales(self.src, self.out); self.assertEqual(os.listdir(self.out), [])
 

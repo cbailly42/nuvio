@@ -20,8 +20,7 @@ dd = os.path.join(R, 'dist')
 import subprocess
 try: tracked = subprocess.run(['git', 'ls-files', 'dist'], cwd=R, capture_output=True, text=True, check=True).stdout.split()
 except Exception: tracked = [os.path.join('dist', f, '') for f in os.listdir(dd) if os.path.isdir(os.path.join(dd, f))]
-# dist/locales/ is the one deliberate exception: hashed i18n catalogs (spec 3.1), fetched at runtime through HG_ASSET + 'locales/<file>'
-for f in sorted({t.split('/')[1] for t in tracked if t.count('/') > 1} - {'locales'}): bad.append(f'subfolder in dist/ (HACS skips it): {f}')
+for f in sorted({t.split('/')[1] for t in tracked if t.count('/') > 1}): bad.append(f'subfolder in dist/ (HACS skips it): {f}')
 if 'assets/' in js: bad.append('old assets/ path in dist/nuvio.js')
 for need in ('nuvio-version.json', 'nuvio-font-dmsans-latin.woff2', 'nuvio-font-dmsans-latin-ext.woff2', 'nuvio-bg-default-wide.webp', 'nuvio-bg-default-portrait.webp', 'nuvio-meteo-static-sunrise.svg', 'CREDITS.md'):
     if not os.path.exists(os.path.join(dd, need)): bad.append(f'missing dist/{need}')

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""i18n build step (spec 3.1 bis): nested source catalogs -> compiled {m, t, d} with integer key indexes, hashed files in dist/locales,
+"""i18n build step (spec 3.1 bis): nested source catalogs -> compiled {m, t, d} with integer key indexes, hashed flat files dist/nuvio-locale-<code>.<hash8>.json,
 and the source keys in the bundle rewritten to those indexes. Keys exist only in the sources; the bundle carries integers."""
 import os, re, json, hashlib
 DYN_PREFIXES = ('states.', 'weather.')
 PLURAL_SUFFIXES = ('zero', 'one', 'two', 'few', 'many', 'other')
 _PL = re.compile(r'^(.+)_(%s)$' % '|'.join(PLURAL_SUFFIXES))
 _CALL = re.compile(r'\bhgT(?:Lazy)?\(\s*(?:(?P<lit>(?P<q>[\'"])(?P<k>[^\'"\\\n]*)(?P=q))\s*(?=[,)]))?')
+_CALL_OPEN = re.compile(r'\bhgT(?:Lazy)?\(')
 _CALLO = re.compile(r'\bhgTO\(')
 
 def flatten(nested):
@@ -82,6 +83,10 @@ def rewrite_keys(js, idx):
 def remaining_literals(js):
     """static key literals still present in hgT/hgTLazy/hgTO call shapes (must be empty after rewrite_keys)"""
     r = [m.group('k') for m in _CALL.finditer(js) if m.group('k') is not None]
+    for m in _CALL_OPEN.finditer(js):  # any dotted key-looking literal inside the arguments (ternary branches)
+        try: end = _close(js, m.end())
+        except ValueError: continue
+        r += [x.group(2) for x in re.finditer(r'([\'"])([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)\1', js[m.end():end]) if x.group(2) not in r]
     for m in _CALLO.finditer(js):
         try: end = _close(js, m.end())
         except ValueError: continue
@@ -90,7 +95,7 @@ def remaining_literals(js):
     return r
 
 def build_locales(src_dir, out_dir):
-    """-> (manifest, compiled en, idx). Writes out_dir/<code>.<hash8>.json (hash = md5 of the compiled JSON) and deletes stale hashed files."""
+    """-> (manifest, compiled en, idx). Writes out_dir/nuvio-locale-<code>.<hash8>.json (flat: HACS ships only top-level dist files) (hash = md5 of the compiled JSON) and deletes stale hashed files."""
     srcs = {}
     for f in sorted(os.listdir(src_dir)):
         if f.endswith('.json'):
@@ -103,9 +108,9 @@ def build_locales(src_dir, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     for c in sorted(k for k in srcs if k != 'en'):
         body = json.dumps(compile_catalog(flatten(srcs[c]), idx, srcs[c]['_meta']), ensure_ascii=False, separators=(',', ':'))
-        name = '%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); keep.add(name)
+        name = 'nuvio-locale-%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); keep.add(name)
         with open(os.path.join(out_dir, name), 'w', encoding='utf-8') as fh: fh.write(body)
-        manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': 'locales/' + name})
+        manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': name})
     for f in os.listdir(out_dir):
-        if re.fullmatch(r'[\w-]+\.[0-9a-f]{8}\.json', f) and f not in keep: os.remove(os.path.join(out_dir, f))
+        if re.fullmatch(r'nuvio-locale-[\w-]+\.[0-9a-f]{8}\.json', f) and f not in keep: os.remove(os.path.join(out_dir, f))
     return manifest, en, idx

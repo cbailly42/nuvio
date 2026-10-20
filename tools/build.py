@@ -190,7 +190,7 @@ def main():
         ver = json.load(open(os.path.join(R, 'package.json')))['version'] if os.path.exists(os.path.join(R, 'package.json')) else '0.0.0'
         js = brand(js)
         # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it
-        ld = os.path.join(R, 'dist', 'locales'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld)
+        ld = os.path.join(R, 'dist'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld)
         js = i18n_compile.rewrite_keys(js, idx)
         for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
             if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))

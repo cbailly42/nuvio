@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const CORE = 'nuvio-core.abc123.js', FILE = 'locales/fr.0123abcd.json';
+const CORE = 'nuvio-core.abc123.js', FILE = 'nuvio-locale-fr.0123abcd.json';
 const render = () => {
   const r = spawnSync('python3', ['-c', "import sys; import tools.build as b; sys.stdout.write(b.LOADER.replace('__V__','1.0.0+abc123').replace('__CORE__','" + CORE + "'))"], { cwd: ROOT, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr); return r.stdout;
@@ -37,7 +37,7 @@ async function run({ stored, languages, version = { build: 'x', core: CORE, loca
 test('stored fr: catalog fetched before core import, file from nuvio-version.json', async () => {
   const r = await run({ stored: 'fr', languages: ['en-US'] });
   assert.ok(r.pre, 'preload exposed'); assert.equal(r.pre.code, 'fr'); assert.equal(r.pre.file, FILE);
-  assert.ok(r.order.indexOf('fetch:fr.0123abcd.json') >= 0 && r.order.indexOf('fetch:fr.0123abcd.json') < r.order.indexOf('core'), r.order.join());
+  assert.ok(r.order.indexOf('fetch:nuvio-locale-fr.0123abcd.json') >= 0 && r.order.indexOf('fetch:nuvio-locale-fr.0123abcd.json') < r.order.indexOf('core'), r.order.join());
   assert.equal(r.preJson.m.locale, 'fr-FR');
 });
 test('no stored language, navigator en-US: no preload', async () => {
@@ -58,8 +58,8 @@ test('nuvio-version.json unavailable: no preload, own core still loads', async (
 });
 test('stale loader: newer core from nuvio-version.json, catalog from its file', async () => {
   const core2 = 'nuvio-core.def456.js';
-  const r = await run({ stored: 'fr', languages: ['en'], version: { build: 'y', core: core2, locales: { fr: 'locales/fr.ffffffff.json' } }, core: core2 });
-  assert.equal(r.pre.file, 'locales/fr.ffffffff.json'); assert.ok(r.urls.some((u) => u.endsWith('locales/fr.ffffffff.json')));
+  const r = await run({ stored: 'fr', languages: ['en'], version: { build: 'y', core: core2, locales: { fr: 'nuvio-locale-fr.ffffffff.json' } }, core: core2 });
+  assert.equal(r.pre.file, 'nuvio-locale-fr.ffffffff.json'); assert.ok(r.urls.some((u) => u.endsWith('nuvio-locale-fr.ffffffff.json')));
 });
 test('catalog fetch failure resolves p to null', async () => {
   const r = await run({ stored: 'fr', languages: ['fr'], catalogFails: true }); assert.equal(r.pre.file, FILE); assert.equal(r.preJson, null);

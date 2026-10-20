@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { loadParts, fixture } from './harness.mjs';
 
 const EN = fixture('en'), PL = fixture('pl'), XX = fixture('xx');
-const MAN = [{ code: 'en', name: 'English', locale: 'en', file: null }, { code: 'pl', name: 'Polski', locale: 'pl', file: 'locales/pl.aaaa.json' },
-  { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'locales/fr.aaaa.json' }, { code: 'pt', name: 'Português', locale: 'pt-PT', file: 'locales/pt.aaaa.json' },
-  { code: 'xx', name: 'Partial', locale: 'xx', file: 'locales/xx.aaaa.json' }];
+const MAN = [{ code: 'en', name: 'English', locale: 'en', file: null }, { code: 'pl', name: 'Polski', locale: 'pl', file: 'nuvio-locale-pl.aaaa.json' },
+  { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'nuvio-locale-fr.aaaa.json' }, { code: 'pt', name: 'Português', locale: 'pt-PT', file: 'nuvio-locale-pt.aaaa.json' },
+  { code: 'xx', name: 'Partial', locale: 'xx', file: 'nuvio-locale-xx.aaaa.json' }];
 const ok = (j) => Promise.resolve({ ok: true, json: () => Promise.resolve(j) });
 function mk({ fetch = () => ok(PL), manifest = MAN, window: w = {} } = {}) {
   const events = [], calls = [];
@@ -59,7 +59,7 @@ test('hgLangDetect', () => {
   const m = mk(); assert.equal(m.hgLangDetect(null, ['fr-FR', 'en']), 'fr');
   assert.equal(m.hgLangDetect(null, ['pt-BR']), 'pt'); assert.equal(m.hgLangDetect(null, ['de']), 'en'); assert.equal(m.hgLangDetect('gone', ['pl']), 'pl');
   assert.equal(m.hgLangDetect('fr', ['pl']), 'fr'); assert.equal(m.hgLangDetect(undefined, []), 'en');
-  const m2 = mk({ manifest: [...MAN, { code: 'pt-br', name: 'PT-BR', locale: 'pt-BR', file: 'locales/p.json' }] }); assert.equal(m2.hgLangDetect(null, ['pt-BR']), 'pt-br');
+  const m2 = mk({ manifest: [...MAN, { code: 'pt-br', name: 'PT-BR', locale: 'pt-BR', file: 'nuvio-locale-p.json' }] }); assert.equal(m2.hgLangDetect(null, ['pt-BR']), 'pt-br');
   assert.equal(mk({ manifest: [] }).hgLangDetect(null, ['fr']), 'en');
 });
 test('has / locale / list', () => {
@@ -67,7 +67,7 @@ test('has / locale / list', () => {
 });
 test('load: success caches, en needs no fetch', async () => {
   const m = mk(); assert.equal(await m.HGI18n.load('en'), true); assert.equal(m.calls.length, 0);
-  assert.equal(await m.HGI18n.load('pl'), true); assert.equal(await m.HGI18n.load('pl'), true); assert.deepEqual(m.calls, ['http://x/locales/pl.aaaa.json']);
+  assert.equal(await m.HGI18n.load('pl'), true); assert.equal(await m.HGI18n.load('pl'), true); assert.deepEqual(m.calls, ['http://x/nuvio-locale-pl.aaaa.json']);
 });
 test('load: failure remembered, warns once', async () => {
   const w = mock.method(console, 'warn', () => {});
@@ -99,8 +99,8 @@ test('ready: timeout then hg-lang when catalog arrives', async () => {
   } finally { mock.timers.reset(); }
 });
 test('preload reused only when code and file match manifest', async () => {
-  const pre = { code: 'fr', file: 'locales/fr.aaaa.json', p: Promise.resolve(PL) };
+  const pre = { code: 'fr', file: 'nuvio-locale-fr.aaaa.json', p: Promise.resolve(PL) };
   const a = mk({ window: { __hgI18nPre: pre } }); assert.equal(await a.HGI18n.load('fr'), true); assert.equal(a.calls.length, 0);
-  const man = MAN.map((x) => (x.code === 'fr' ? { ...x, file: 'locales/fr.bbbb.json' } : x));
-  const b = mk({ window: { __hgI18nPre: pre }, manifest: man }); assert.equal(await b.HGI18n.load('fr'), true); assert.deepEqual(b.calls, ['http://x/locales/fr.bbbb.json']);
+  const man = MAN.map((x) => (x.code === 'fr' ? { ...x, file: 'nuvio-locale-fr.bbbb.json' } : x));
+  const b = mk({ window: { __hgI18nPre: pre }, manifest: man }); assert.equal(await b.HGI18n.load('fr'), true); assert.deepEqual(b.calls, ['http://x/nuvio-locale-fr.bbbb.json']);
 });
