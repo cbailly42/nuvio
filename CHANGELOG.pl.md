@@ -2,6 +2,13 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.15.1
+- Ulepszenie: temperatura i wilgotność w nagłówku pokoju mają mały ołówek, gdy możesz zmienić ich czujnik. Najechanie nie podkłada już prostokąta pod liczbę; zamiast tego ołówek podświetla się kolorem akcentu.
+- Poprawka: stosów i siatek z konfiguracji pulpitu (np. `vertical-stack`, `horizontal-stack` lub `grid` z HA) nie dało się edytować. W trybie edycji dotknięcie stosu lub siatki otwiera teraz jego ustawienia z listą kart, gdzie można dodawać, usuwać, przestawiać i kopiować karty oraz zmieniać opcje stosu (np. **Każda karta we własnym szkle**). Dotknięcie karty w środku stosu lub siatki od razu otwiera ustawienia tej karty, jak w HA; **Wstecz** wraca do kontenera, a **Zapisz** w kontenerze zachowuje zmiany.
+- Poprawka: **Podgląd na żywo** w ustawieniach sekcji pokoju był pusty, gdy sekcja pokazywała kartę, np. klimatyzację. Podgląd pokazuje teraz tę kartę.
+- Usunięte: wybór **Tryb wyświetlania** (Normalny, Kompaktowy, Minimalny) dla pokoi, sekcji pokoju i kart z jednym stylem. Prawie nic nie zmieniał. Kafelki i karty, które mogą przejść w styl kafelka lub listy, zachowują wybór stylu.
+- Ulepszenie: komponent **Alarm** ma nowy, bardziej elegancki wygląd. Tarcza stanu świeci kolorem stanu, klawiatura PIN ma okrągłe klawisze i kropki zapalające się przy wpisywaniu, a przyciski trybów pokazują ikonę i nazwę obok siebie. Klawiatura pojawia się tylko wtedy, gdy w centrali ustawiono kod PIN (Home Assistant podaje format kodu). Wpisz kod, potem dotknij W domu, Poza domem, Noc lub Rozbrój; jeśli dotkniesz akcji wymagającej kodu przed jego wpisaniem, karta najpierw poprosi o kod. Centrale z kodem tekstowym mają zamiast tego pole hasła.
+
 ### 2.15.0
 - Poprawka: temperatura w nagłówku pokoju mogła łamać się na dwie linie („23,” i „2°”) i wchodzić pod boczną szynę na wąskich ekranach. Temperatura i wilgotność zawsze mieszczą się teraz w jednej linii, a szyna przesuwa się pod wyższy nagłówek.
 - Nowość: czujnik temperatury i wilgotności pokoju wybierzesz prosto z nagłówka. Jako administrator dotknij temperatury albo wilgotności w widoku pokoju (albo **+** obok, gdy nic nie jest pokazane) i wybierz Automatycznie, dowolny czujnik (najpierw czujniki tego pokoju, z bieżącymi wartościami) albo Nie pokazuj. Wybór zapisuje się w układzie i jest tym samym ustawieniem co w **Ustawienia > Pokoje**, które menu też otwiera.

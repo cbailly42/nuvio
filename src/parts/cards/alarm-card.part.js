@@ -15,42 +15,65 @@ const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home', '
   [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass', 'Custom']];
 const hgAlarmLbl = (a) => hgTr(a[2], a[5]);
 class HGAlarmCard extends HGBase {
-  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home') }; }
-  _extraSig() { return [this._pend || '', (this._code || '').length, Math.floor(Date.now() / 60000)]; }
+  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home'), keypad: null }; }
+  /* klawiatura na stałe, jak w HA: gdy centrala ma code_format albo keypad: true (keypad: false = tylko po wybraniu akcji) */
+  _pad(s) { return !!s && H.ok(s) && this._config.keypad !== false && !!s.attributes.code_format; }
+  _extraSig() { return [this._pend || '', (this._code || '').length, !!this._miss, Math.floor(Date.now() / 60000)]; }
   css() {
     return U(`
-ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3) var(--s3); overflow:auto; }
-.big{ display:flex; align-items:center; gap:var(--s3); padding:4u 0; }
-.ring{ position:relative; width:clamp(56px, calc(var(--k) * 46), 64px); height:clamp(56px, calc(var(--k) * 46), 64px); border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:#fff;
-  background:var(--c); box-shadow:var(--hg-sh); }
-.ring ha-icon{ width:28px; height:28px; --mdc-icon-size:28px; }
+ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3); overflow:hidden; container-type:inline-size; position:relative; isolation:isolate; }
+/* poświata w kolorze stanu za tarczą */
+ha-card.glass::before{ content:''; position:absolute; z-index:-1; left:-20%; top:-30%; width:90%; height:70%; pointer-events:none; background:radial-gradient(closest-side, color-mix(in srgb, var(--c) 28%, transparent), transparent); opacity:.9; transition:background .6s; }
+.big{ display:flex; align-items:center; gap:var(--s3); padding:2u 0 4u; min-width:0; }
+.ring{ position:relative; width:clamp(56px, calc(var(--k) * 46), 68px); aspect-ratio:1; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:#fff;
+  background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 62%, color-mix(in srgb, var(--c) 80%, #000));
+  box-shadow:0 0 0 6px color-mix(in srgb, var(--c) 16%, transparent), 0 12px 28px -6px color-mix(in srgb, var(--c) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.45); }
+.ring ha-icon{ width:30px; height:30px; --mdc-icon-size:30px; color:rgb(255 255 255); filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
 .ring::before, .ring::after{ content:''; position:absolute; inset:-6u; border-radius:50%; border:2u solid var(--c); opacity:0; pointer-events:none; }
 .anim .ring::before{ animation:var(--hg-loop, hgring 1.6s cubic-bezier(.2,.8,.2,1) infinite); }
 .anim .ring::after{ animation:var(--hg-loop, hgring 1.6s cubic-bezier(.2,.8,.2,1) .8s infinite); }
 .trig .ring{ animation:var(--hg-loop, hgpulse 1s infinite); }
 @keyframes hgring{ 0%{ transform:scale(.9); opacity:.7 } 100%{ transform:scale(1.45); opacity:0 } }
-.st{ min-width:0; } .st b{ display:block; font-size:clamp(20px, calc(var(--k) * 17), 24px); font-weight:600; letter-spacing:-.01em; color:#1E2023; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.st span{ display:block; font-size:var(--fs-sm); color:#5A5E64; margin-top:3u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.st{ min-width:0; } .st small{ display:block; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--c); margin-bottom:2u; }
+.st b{ display:block; font-size:clamp(20px, calc(var(--k) * 17), 26px); font-weight:600; letter-spacing:-.02em; color:#1E2023; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.st span{ display:block; font-size:var(--fs-sm); color:#5A5E64; margin-top:4u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bd{ display:flex; flex-direction:column; gap:var(--s2); min-width:0; }
+@container (min-width: 540px){ .bd.two{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.1fr); align-items:start; gap:var(--s3); } }
+/* akcje: kafle z ikoną, wybrany tryb w kolorze stanu z poświatą */
 .acts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap:var(--s1); }
-.ab{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:max(64px, var(--hg-tgt, 0px)); padding:var(--s1) var(--s1); border-radius:var(--r-sm); font-size:var(--fs-sm); font-weight:400;
-  background:var(--hg-inner-bg); border:0; box-shadow:var(--hg-inner-hi); color:#2A2D31; transition:background .2s, transform .15s; text-align:center; }
-.ab ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; flex:none; } .ab span{ max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ab:hover{ background:var(--hg-inner-bg-h); } .ab:active{ transform:scale(.97); }
-.ab.sel{ background:var(--c, var(--hg-accent)); color:#fff; border-color:transparent; }
-.ab.dis{ grid-column:1 / -1; flex-direction:row; min-height:max(48px, var(--hg-tgt, 0px)); gap:var(--s1); background:#1F2125; color:#fff; border-color:#1F2125; }
-.kp{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2); border-radius:var(--r-md); background:rgba(255,255,255,.5); }
-.kp .q{ display:flex; align-items:center; justify-content:space-between; font-size:var(--fs-sm); color:#4A4E54; }
-.dots{ display:flex; gap:var(--s1); justify-content:center; min-height:12u; }
-.dots i{ width:9u; height:9u; border-radius:50%; background:#2A2D31; }
-.dots em{ font-style:normal; font-size:var(--fs-sm); color:#8A8E94; }
-.keys{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s1); }
-.k{ position:relative; min-height:max(calc(var(--k) * 34), var(--hg-tgt, 0px)); border-radius:var(--r-sm); background:rgba(255,255,255,.75); font-size:var(--fs-md); font-weight:400; display:flex; align-items:center; justify-content:center; }
-.k:active{ background:#fff; transform:scale(.96); } .k ha-icon{ width:16u; height:16u; }
-.k.ok{ background:var(--hg-accent); color:var(--hg-on-accent); } .k.ok[disabled]{ opacity:.45; }
-.pw{ height:max(calc(var(--k) * 34), var(--hg-tgt, 0px)); border-radius:var(--r-sm); border:1px solid rgba(0,0,0,.1); padding:0 var(--s2); font:inherit; font-size:var(--fs-md); background:#fff; }
+.ab{ position:relative; display:flex; align-items:center; gap:10px; min-width:0; min-height:max(52px, var(--hg-tgt, 0px)); padding:0 14px; border-radius:16px; font-size:var(--fs-sm); font-weight:500;
+  background:color-mix(in srgb, currentColor 6%, transparent); border:1px solid color-mix(in srgb, currentColor 9%, transparent); color:inherit; transition:background-color .2s, box-shadow .25s, transform .15s; text-align:left; }
+.ab ha-icon{ width:20px; height:20px; --mdc-icon-size:20px; flex:none; opacity:.85; } .ab span{ min-width:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; }
+@media (hover:hover){ .ab:hover{ background:color-mix(in srgb, currentColor 10%, transparent); } } .ab:active{ transform:scale(.97); }
+.ab:focus-visible, .k:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.ab.sel{ background:var(--c); color:#fff; border-color:transparent; box-shadow:0 10px 24px -10px color-mix(in srgb, var(--c) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.3); } .ab.sel ha-icon{ opacity:1; }
+.ab.dis{ grid-column:1 / -1; justify-content:center; min-height:max(54px, var(--hg-tgt, 0px)); font-weight:600; background:#1F2125; color:#fff; border-color:transparent; box-shadow:0 10px 24px -12px rgba(0,0,0,.55); }
+/* klawiatura PIN: okrągłe klawisze jak na ekranie blokady */
+.kp{ display:flex; flex-direction:column; align-items:center; gap:var(--s2); padding:var(--s2) var(--s2) var(--s3); border-radius:22px; background:color-mix(in srgb, currentColor 4%, transparent); border:1px solid color-mix(in srgb, currentColor 8%, transparent); }
+.kp .q{ align-self:stretch; display:flex; align-items:center; justify-content:space-between; font-size:var(--fs-sm); color:#4A4E54; }
+.pin{ display:flex; flex-direction:column; align-items:center; gap:6px; min-height:14px; }
+.dots{ display:flex; gap:12px; justify-content:center; }
+.dots i{ width:12px; height:12px; border-radius:50%; border:1.5px solid color-mix(in srgb, currentColor 40%, transparent); transition:background-color .2s, border-color .2s, transform .2s; }
+.dots i.on{ background:var(--hg-accent); border-color:var(--hg-accent); box-shadow:0 0 10px color-mix(in srgb, var(--hg-accent) 70%, transparent); transform:scale(1.08); }
+.pin em:empty{ display:none; } .pin em{ font-style:normal; font-size:12px; opacity:.7; text-align:center; } .pin.miss em{ color:#FF5A4F; opacity:1; font-weight:600; } .pin.miss .dots i{ border-color:#FF5A4F; }
+@media (prefers-reduced-motion:no-preference){ .pin.miss .dots{ animation:hgshake .35s; } } @keyframes hgshake{ 25%{ transform:translateX(-6px) } 75%{ transform:translateX(6px) } }
+.keys{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:clamp(8px, 3cqi, 12px) clamp(10px, 5cqi, 18px); width:100%; max-width:228px; justify-items:center; }
+.k{ position:relative; width:100%; max-width:58px; aspect-ratio:1; border-radius:50%; font-size:clamp(19px, 6cqi, 23px); font-weight:300; font-variant-numeric:tabular-nums; display:flex; align-items:center; justify-content:center; color:inherit;
+  background:color-mix(in srgb, currentColor 8%, transparent); border:1px solid color-mix(in srgb, currentColor 10%, transparent); box-shadow:inset 0 1px 0 rgba(255,255,255,.12); transition:background-color .15s, transform .12s; }
+@media (hover:hover){ .k:hover{ background:color-mix(in srgb, currentColor 13%, transparent); } }
+.k:active{ background:color-mix(in srgb, var(--hg-accent) 35%, transparent); transform:scale(.94); } .k ha-icon{ width:22px; height:22px; --mdc-icon-size:22px; }
+.k.fn{ background:transparent; border-color:transparent; box-shadow:none; font-size:15px; font-weight:500; } .k[disabled]{ opacity:.3; }
+.k.ok{ background:var(--hg-accent); color:var(--hg-on-accent); border-color:transparent; } .k.ok[disabled]{ opacity:.4; }
+.pw{ width:100%; height:max(48px, var(--hg-tgt, 0px)); border-radius:14px; border:1px solid color-mix(in srgb, currentColor 14%, transparent); padding:0 var(--s2); font:inherit; font-size:var(--fs-md); letter-spacing:.2em; text-align:center; background:color-mix(in srgb, currentColor 5%, transparent); color:inherit; box-sizing:border-box; }
+.pw:focus{ outline:2px solid var(--hg-accent); outline-offset:1px; }
 .x{ font-size:var(--fs-sm); color:#5A5E64; padding:4u var(--s1); border-radius:var(--r-sm); position:relative; min-height:var(--hg-tgt, 0px); }
+@media (prefers-reduced-motion:reduce){ .ab, .k, .dots i, ha-card.glass::before{ transition:none; } }
 `);
   }
+  /* klawiatura tylko, gdy w centrali ustawiono kod (HA podaje wtedy code_format); keypad: false wyłącza stałą klawiaturę */
   _needCode(act) { const a = (H.st(this._hass, this._config.entity) || { attributes: {} }).attributes; return !!a.code_format && (act === 'disarm' || !!a.code_arm_required); }
+  _pinHtml(n, hint) { return `<div class="pin${this._miss ? ' miss' : ''}" aria-live="polite"><div class="dots" aria-hidden="true">${Array.from({ length: Math.max(4, n) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div><em>${n ? '' : hint}</em></div>`; }
+  _keys(last) { return `<div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}${last}</div>`; }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
     const stt = s ? s.state : 'unavailable', [lblPl, col, ic, lblEn] = HG_ALARM_ST[stt] || [H.stateLabel(stt), 'var(--hg-accent)', 'mdi:shield'], lbl = lblEn ? hgTr(lblPl, lblEn) : lblPl;
@@ -59,24 +82,24 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const by = s && s.attributes.changed_by ? ` · ${H.esc(s.attributes.changed_by)}` : '';
     const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}" title="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}">${H.icon(a[3])}<span>${hgAlarmLbl(a)}</span></button>`).join('')
       + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="${hgTr('Rozbrój', 'Disarm')}">${H.icon('mdi:shield-off-outline')}<span>${hgTr('Rozbrój', 'Disarm')}</span></button>` : '');
+    const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
+    const pwIn = `<input class="pw" type="password" autocomplete="off" aria-label="${hgTr('Kod alarmu', 'Alarm code')}" placeholder="${hgTr('Kod', 'Code')}">`;
     let kp = '';
-    if (this._pend) {
-      const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
+    if (!un && this._pad(s) && !this._pend) {
+      kp = `<div class="kp in">${txt ? pwIn : this._pinHtml(n, this._miss ? hgTr('Najpierw wpisz kod', 'Enter the code first') : hgTr('Wpisz kod, potem wybierz akcję', 'Enter the code, then pick an action')) + this._keys(`<button class="k fn" data-act="kclr" aria-label="${hgTr('Wyczyść kod', 'Clear code')}" ${n ? '' : 'disabled'}>${H.icon('mdi:close')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k fn" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}" ${n ? '' : 'disabled'}>${H.icon('mdi:backspace-outline')}</button>`)}</div>`; }
+    else if (this._pend) {
       const nm = this._pend === 'disarm' ? hgTr('Rozbrój', 'Disarm') : hgAlarmLbl(HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój', 0, 0, 'Arm']);
       kp = `<div class="kp"><div class="q"><span>${hgTr('Kod do', 'Code for')}: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="${hgTr('Anuluj', 'Cancel')}">${hgTr('Anuluj', 'Cancel')}</button></div>
-        ${txt ? `<input class="pw" type="password" autocomplete="off" aria-label="${hgTr('Kod alarmu', 'Alarm code')}" placeholder="${hgTr('Kod', 'Code')}">`
-        : `<div class="dots" aria-live="polite">${n ? '<i></i>'.repeat(n) : `<em>${hgTr('Wpisz kod', 'Enter code')}</em>`}</div>
-        <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}
-          <button class="k" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button>
-          <button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button></div>`}
-        ${txt ? `<button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}">${H.icon('mdi:check')}</button>` : ''}</div>`;
+        ${txt ? pwIn + `<button class="ab dis" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}">${H.icon('mdi:check')}<span>${hgTr('Zatwierdź', 'Confirm')}</span></button>`
+        : this._pinHtml(n, hgTr('Wpisz kod', 'Enter code')) + this._keys(`<button class="k fn" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button>`)}</div>`;
     }
+    const body = this._pend ? kp : kp + (acts ? `<div class="acts">${acts}</div>` : '');
     return `<ha-card class="glass ${anim ? 'anim' : ''} ${stt === 'triggered' ? 'trig' : ''}" style="--c:${col}">
       <div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
         <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły alarmu', 'Alarm details')}" title="${hgTr('Szczegóły i historia', 'Details and history')}">${H.icon('mdi:dots-vertical')}</button></div>
       <div class="big"><div class="ring">${H.icon(ic)}</div><div class="st"><b>${H.esc(lbl)}</b>
         <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), hgTr('zmiana ', 'changed ') + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : hgTr('Brak encji ', 'Entity not found: ') + H.esc(c.entity)}</span></div></div>
-      ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
+      ${body ? `<div class="bd${kp && !this._pend && acts ? ' two' : ''}">${body}</div>` : ''}</ha-card>`;
   }
   afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
     i.onblur = () => { if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }; } }
@@ -91,8 +114,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   onAct(a, t) {
     if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: this._config.entity });
-    if (a === 'arm') { const m = t.dataset.m; if (this._needCode(m)) { this._pend = m; this._code = ''; return this.rerender(); } return this._send(m); }
-    if (a === 'key') { if ((this._code || '').length < 12) this._code = (this._code || '') + t.dataset.k; return this.rerender(); }
+    if (a === 'arm') { const m = t.dataset.m, pw = this.$.querySelector('.kp.in .pw'); if (pw) this._code = pw.value;
+      if (this._pad(H.st(this._hass, this._config.entity))) { if (this._needCode(m) && !this._code) { this._miss = true; clearTimeout(this._missT); this._missT = setTimeout(() => { this._miss = false; this.rerender(); }, 2500); return this.rerender(); } return this._send(m, this._code); }
+      if (this._needCode(m)) { this._pend = m; this._code = ''; return this.rerender(); } return this._send(m); }
+    if (a === 'kclr') { this._code = ''; return this.rerender(); }
+    if (a === 'key') { this._miss = false; if ((this._code || '').length < 12) this._code = (this._code || '') + t.dataset.k; return this.rerender(); }
     if (a === 'kdel') { this._code = (this._code || '').slice(0, -1); return this.rerender(); }
     if (a === 'kcancel') { this._pend = null; this._code = ''; return this.rerender(); }
     if (a === 'kok') { if (this._pend && this._code) this._send(this._pend, this._code); }

@@ -47,6 +47,8 @@ const view = q.get('view') || 'pokoj';
 const cfg = await (window.nuvioGenerate || window.hgGenerate)(hass, { _wiz: { lang, views: ['dashboard', 'rooms'] }, language: lang });
 const vw = cfg.views.find((x) => x.path === view) || cfg.views[0];
 history.replaceState(null, '', location.pathname.replace(/[^/]*$/, '') + '../nuvio/' + vw.path + '?area=' + (q.get('area') || 'salon') + '&' + q.toString());
+/* &stack=1: stos z HA (vertical-stack) na panelu, do testów edycji kontenerów */
+if (q.get('stack')) vw.cards[0] = Object.assign({}, vw.cards[0], { cards: [...(vw.cards[0].cards || []), { type: 'vertical-stack', title: 'Stos', cards: [{ type: 'custom:nuvio-clock-card' }, { type: 'custom:nuvio-clock-card', title: 'Drugi' }] }] });
 const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig(vw.cards[0]); document.body.appendChild(pg); pg.hass = hass;
 /* kreator pierwszego uruchomienia: dane układu ładują się asynchronicznie, więc wiz ustawiamy jeszcze raz i zamykamy kreator */
 const t0 = Date.now(); await new Promise((r) => { const iv = setInterval(() => { if (L.data && !L.data.wiz) L.data.wiz = { lang }; const w = document.getElementById('hg-wiz'); if (w) w.remove(); if (Date.now() - t0 > 1500) { clearInterval(iv); r(); } }, 50); });
