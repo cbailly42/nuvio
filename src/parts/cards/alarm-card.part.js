@@ -15,8 +15,10 @@ const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home', '
   [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass', 'Custom']];
 const hgAlarmLbl = (a) => hgTr(a[2], a[5]);
 class HGAlarmCard extends HGBase {
-  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home') }; }
-  _extraSig() { return [this._pend || '', (this._code || '').length, Math.floor(Date.now() / 60000)]; }
+  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home'), keypad: null }; }
+  /* klawiatura na stałe, jak w HA: gdy centrala ma code_format albo keypad: true (keypad: false = tylko po wybraniu akcji) */
+  _pad(s) { const k = this._config.keypad; return !!s && H.ok(s) && (k === true || (k !== false && !!s.attributes.code_format)); }
+  _extraSig() { return [this._pend || '', (this._code || '').length, !!this._miss, Math.floor(Date.now() / 60000)]; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s3) var(--s3); overflow:auto; }
@@ -41,7 +43,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .kp .q{ display:flex; align-items:center; justify-content:space-between; font-size:var(--fs-sm); color:#4A4E54; }
 .dots{ display:flex; gap:var(--s1); justify-content:center; min-height:12u; }
 .dots i{ width:9u; height:9u; border-radius:50%; background:#2A2D31; }
-.dots em{ font-style:normal; font-size:var(--fs-sm); color:#8A8E94; }
+.dots em{ font-style:normal; font-size:var(--fs-sm); color:inherit; opacity:.78; text-align:center; } .dots.miss em{ opacity:1; }
+.kp.in{ padding:var(--s1) var(--s2) var(--s2); }
+.dots.miss em{ color:#E53935; font-weight:600; } @media (prefers-reduced-motion:no-preference){ .dots.miss{ animation:hgshake .35s; } } @keyframes hgshake{ 25%{ transform:translateX(-5px) } 75%{ transform:translateX(5px) } }
+.k[disabled]{ opacity:.4; }
 .keys{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s1); }
 .k{ position:relative; min-height:max(calc(var(--k) * 34), var(--hg-tgt, 0px)); border-radius:var(--r-sm); background:rgba(255,255,255,.75); font-size:var(--fs-md); font-weight:400; display:flex; align-items:center; justify-content:center; }
 .k:active{ background:#fff; transform:scale(.96); } .k ha-icon{ width:16u; height:16u; }
@@ -60,7 +65,13 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}" title="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}">${H.icon(a[3])}<span>${hgAlarmLbl(a)}</span></button>`).join('')
       + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="${hgTr('Rozbrój', 'Disarm')}">${H.icon('mdi:shield-off-outline')}<span>${hgTr('Rozbrój', 'Disarm')}</span></button>` : '');
     let kp = '';
-    if (this._pend) {
+    if (!un && this._pad(s) && !this._pend) { const txt = s.attributes.code_format === 'text', n = (this._code || '').length;
+      kp = `<div class="kp in">${txt ? `<input class="pw" type="password" autocomplete="off" aria-label="${hgTr('Kod alarmu', 'Alarm code')}" placeholder="${hgTr('Kod', 'Code')}">`
+        : `<div class="dots${this._miss ? ' miss' : ''}" aria-live="polite">${n ? '<i></i>'.repeat(n) : `<em>${this._miss ? hgTr('Najpierw wpisz kod', 'Enter the code first') : hgTr('Wpisz kod, potem wybierz akcję', 'Enter the code, then pick an action')}</em>`}</div>
+        <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}
+          <button class="k" data-act="kclr" aria-label="${hgTr('Wyczyść kod', 'Clear code')}" ${n ? '' : 'disabled'}>C</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button>
+          <button class="k" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}" ${n ? '' : 'disabled'}>${H.icon('mdi:backspace-outline')}</button></div>`}</div>`; }
+    else if (this._pend) {
       const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
       const nm = this._pend === 'disarm' ? hgTr('Rozbrój', 'Disarm') : hgAlarmLbl(HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój', 0, 0, 'Arm']);
       kp = `<div class="kp"><div class="q"><span>${hgTr('Kod do', 'Code for')}: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="${hgTr('Anuluj', 'Cancel')}">${hgTr('Anuluj', 'Cancel')}</button></div>
@@ -76,7 +87,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
         <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły alarmu', 'Alarm details')}" title="${hgTr('Szczegóły i historia', 'Details and history')}">${H.icon('mdi:dots-vertical')}</button></div>
       <div class="big"><div class="ring">${H.icon(ic)}</div><div class="st"><b>${H.esc(lbl)}</b>
         <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), hgTr('zmiana ', 'changed ') + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : hgTr('Brak encji ', 'Entity not found: ') + H.esc(c.entity)}</span></div></div>
-      ${kp || (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
+      ${this._pend ? kp : kp + (acts ? `<div class="acts">${acts}</div>` : '')}</ha-card>`;
   }
   afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
     i.onblur = () => { if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }; } }
@@ -91,8 +102,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   onAct(a, t) {
     if (a === 'more') return H.fire(this, 'hass-more-info', { entityId: this._config.entity });
-    if (a === 'arm') { const m = t.dataset.m; if (this._needCode(m)) { this._pend = m; this._code = ''; return this.rerender(); } return this._send(m); }
-    if (a === 'key') { if ((this._code || '').length < 12) this._code = (this._code || '') + t.dataset.k; return this.rerender(); }
+    if (a === 'arm') { const m = t.dataset.m, pw = this.$.querySelector('.kp.in .pw'); if (pw) this._code = pw.value;
+      if (this._pad(H.st(this._hass, this._config.entity))) { if (this._needCode(m) && !this._code) { this._miss = true; clearTimeout(this._missT); this._missT = setTimeout(() => { this._miss = false; this.rerender(); }, 2500); return this.rerender(); } return this._send(m, this._code); }
+      if (this._needCode(m)) { this._pend = m; this._code = ''; return this.rerender(); } return this._send(m); }
+    if (a === 'kclr') { this._code = ''; return this.rerender(); }
+    if (a === 'key') { this._miss = false; if ((this._code || '').length < 12) this._code = (this._code || '') + t.dataset.k; return this.rerender(); }
     if (a === 'kdel') { this._code = (this._code || '').slice(0, -1); return this.rerender(); }
     if (a === 'kcancel') { this._pend = null; this._code = ''; return this.rerender(); }
     if (a === 'kok') { if (this._pend && this._code) this._send(this._pend, this._code); }
