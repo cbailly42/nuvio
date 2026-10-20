@@ -2,6 +2,8 @@
 """Build dist/home-glass.js from src/parts (tokenizer -> concat). No Home Assistant access, no secrets."""
 import os, sys, shutil, subprocess, hashlib, tempfile, json
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import i18n_compile
 # Load order matters: one shared script scope, so a file may only use (at load time) what an earlier file defines.
 # shared/ = helpers used by more than one card; cards/ = one card per file, in this order (appliance, stairs and cwu extend room).
 CORE = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js', 'hg-styles.part.js']
@@ -138,14 +140,31 @@ const HG_BUILD = '__V__';
   const base = new URL('./', import.meta.url).href, own = '__CORE__';
   const ok = (c) => typeof c === 'string' && /^nuvio-core\\.[0-9a-f]+\\.js$/.test(c);
   const latest = () => Promise.race([
-    fetch(base + 'nuvio-version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => (j && ok(j.core) ? j.core : null)),
+    fetch(base + 'nuvio-version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => (j && ok(j.core) ? j : null)),
     new Promise((r) => setTimeout(() => r(null), 2500)),
   ]).catch(() => null);
+  /* language guess for the catalog preload: stored choice if the build has it, else browser languages (full code, then bare language) */
+  const has = (j, c) => c === 'en' || (!!j.locales && Object.prototype.hasOwnProperty.call(j.locales, c));
+  const lang = (j) => {
+    const n = (s) => String(s || '').toLowerCase().replace(/_/g, '-');
+    let pref = ''; try { pref = n(localStorage.getItem('nuvio:lang')); } catch (e) { /* storage blocked */ }
+    if (pref && has(j, pref)) return pref;
+    for (const l of (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language])) for (const c of [n(l), n(l).split('-')[0]]) if (c && has(j, c)) return c;
+    return 'en';
+  };
+  const preload = (j) => {
+    try {
+      const code = lang(j), file = code !== 'en' && j.locales[code];
+      if (file) window.__nuvioI18nPre = { code, file, p: fetch(base + file).then((r) => (r.ok ? r.json() : null)).catch(() => null) };
+    } catch (e) { /* the core loads the catalog itself */ }
+  };
   const load = (c) => import(base + c);
-  latest().then((c) => {
+  latest().then((j) => {
+    const c = j && j.core;
+    if (j) preload(j);
     const first = c || own;
     if (c && c !== own) console.info('Nuvio: cached loader', HG_BUILD, 'is stale, loading', c);
-    return load(first).catch((e) => (first !== own ? load(own) : latest().then((c2) => (c2 && c2 !== own ? load(c2) : Promise.reject(e)))));
+    return load(first).catch((e) => (first !== own ? load(own) : latest().then((j2) => (j2 && j2.core !== own ? load(j2.core) : Promise.reject(e)))));
   }).catch((e) => console.error('Nuvio: could not load the bundle', e));
 })();
 """
@@ -169,7 +188,16 @@ def main():
         subprocess.run([sys.executable, os.path.join(w, 'theme_tokens.py')], check=True, cwd=w)
         js = '\n'.join(open(os.path.join(w, 'www', p)).read() for p in PARTS)
         ver = json.load(open(os.path.join(R, 'package.json')))['version'] if os.path.exists(os.path.join(R, 'package.json')) else '0.0.0'
-        js = brand(js)   # hash after branding: a build-only change must also give a new content-hashed core name
+        js = brand(js)
+        # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it
+        ld = os.path.join(R, 'dist', 'locales'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld)
+        js = i18n_compile.rewrite_keys(js, idx)
+        for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
+            if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))
+            js = js.replace(ph, json.dumps(val, ensure_ascii=False, separators=(',', ':')))
+        left = i18n_compile.remaining_literals(js)
+        if left: sys.exit('i18n: literal keys left in the bundle after compaction: ' + ', '.join(sorted(set(left))[:20]))
+        # hash after branding: a build-only change must also give a new content-hashed core name
         # the version is part of the hash: a release that only bumps package.json must still get a new core file name,
         # or browsers and HA's service worker keep serving the previous build's core under the same immutable URL
         v = ver + '+' + hashlib.md5((ver + '\n' + js).encode()).hexdigest()[:8]
@@ -185,7 +213,7 @@ def main():
         core = 'nuvio-core.%s.js' % h
         js, mini = minify(js)
         open(os.path.join(dd, core), 'w').write(js)
-        json.dump({'build': v, 'core': core}, open(os.path.join(dd, 'nuvio-version.json'), 'w'))
+        json.dump({'build': v, 'core': core, 'locales': {m['code']: m['file'] for m in manifest if m['file']}}, open(os.path.join(dd, 'nuvio-version.json'), 'w'))
         open(os.path.join(dd, 'nuvio.js'), 'w').write(LOADER.replace('__V__', v).replace('__CORE__', core))
         print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB', '(minified)' if mini else '(NOT minified: run npm install for esbuild)')
     finally:
