@@ -122,7 +122,7 @@ Object.assign(HGWall, {
     const bk = {}; for (const [k] of HG_WB_BK) bk[k] = bk0[k] !== false;
     const ord = [...new Set(Array.isArray(w.ord) ? w.ord.filter((k) => ids.includes(k)) : [])]; ord.unshift(...ids.filter((k) => !ord.includes(k)));   /* starsza kolejność (cal, np, tmp): brakujące widżety na początek */
     const L = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^[a-z0-9_.]+$/.test(x)) : []);
-    return { style: w.style === 'board' || w.style === 'glass' ? w.style : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
+    return { style: w.style === 'board' || w.style === 'glass' || (this.XS && this.XS.some((x) => x[0] === w.style)) ? w.style : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
       wxE: typeof w.wxE === 'string' && /^weather\.[a-z0-9_]+$/.test(w.wxE) ? w.wxE : '', calX: L(w.calX), roomX: L(w.roomX) }; },
   board() { return this.bget().style === 'board'; },
   /* ---- nakładka ---- */

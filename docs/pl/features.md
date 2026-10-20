@@ -23,11 +23,16 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 - **Czujnik ruchu**: dowolny `binary_sensor`; czujniki ruchu, obecności i zajętości są na początku listy. Gdy przejdzie w stan `on` w czasie wygaszacza, ekran się wybudza. Bez czujnika budzi tylko dotyk.
 - **Wybudzanie**: dotyk, klawisz lub przewinięcie. Pierwszy dotyk tylko budzi ekran i nie naciska kafla pod spodem.
 - **Wygląd wygaszacza**: *Zegar na zdjęciu* (opis niżej) albo *Tablica*: jasna lub ciemna tablica z dużym dniem tygodnia albo godziną i datą, wschodem i zachodem słońca, odliczaniem do najbliższego wydarzenia całodniowego, pogodą z prognozą, najbliższymi wydarzeniami, tym, co teraz gra, zdjęciem i temperaturami w pokojach. W trybie Tablica wybierasz motyw (auto według słońca, jasny, ciemny), nagłówek, widoczne elementy, kolejność kart, encję pogody oraz kalendarze i pokoje.
+- Kolejne style (2.16.0), każdy z podglądem w galerii: *Zegar analogowy* (tarcza z matowego szkła na zdjęciu, wskazówka sekund w kolorze akcentu, data, pogoda), *Zegar klapkowy* (dwie przewracane karty z godzinami i minutami), *Zorza* (cienki zegar na powoli płynącym świetle w kolorze akcentu) i *Nocny* (przygaszony ciepły zegar na czerni do sypialni i ekranów OLED, co minutę przesuwa się mocniej). Pogoda pochodzi z encji wybranej dla Tablicy albo z pierwszej dostępnej.
 - **Podgląd wygaszacza** pokazuje go od razu; dotknij, aby zamknąć.
 - Układ: duży zegar pośrodku (bez panelu pod spodem), data na stałe w lewym dolnym rogu i, jeśli Home Assistant ma encję `weather`, aktualna pogoda (ikona, temperatura, stan) w prawym górnym. Zegar zgadza się z formatem czasu (12 / 24 h) i językiem HA, co minutę lekko zmienia położenie (ochrona paneli OLED), prosi przeglądarkę o niewygaszanie ekranu (Screen Wake Lock) i szanuje ograniczenie ruchu.
 - Startuje tylko na dashboardzie Nuvio (nie w trybie edycji i nie w karcie w tle) i jest rysowany nad oknami dialogowymi Home Assistanta.
 - **Blokada PIN-em (BETA)**: włącz *Blokadę PIN-em*, ustaw PIN z 4 do 8 cyfr i wybierz, kiedy wygaszacz się blokuje (od razu, po 1, 5, 15 lub 30 min). Zablokowany wygaszacz nie budzi się dotykiem ani czujnikiem ruchu: dotknięcie rozmywa zdjęcie i pokazuje okrągły szklany pinpad z kropkami PIN-u nad nim i przyciskiem **Zablokuj** pod spodem, który wraca do wygaszacza. Po 5 błędnych PIN-ach pinpad czeka 30 s (dłużej po kolejnych próbach), a po 20 s bez dotyku sam się zamyka. **Zablokuj ekran** w menu użytkownika blokuje od razu, a przeładowanie strony nie zdejmuje blokady. Zapisywany jest tylko skrót PIN-u. Blokada chroni tablet przed przypadkowym użyciem i nie zastępuje hasła do Home Assistant.
 - Ustawienia są częścią układu: na wspólnym dashboardzie dotyczą wszystkich, a osoba z własnym układem ma własne. Zobacz [Wspólny dashboard](#wspólny-dashboard).
+
+## Styl pulpitu
+
+**Ustawienia > Wygląd > Styl pulpitu** (2.16.0) ma osiem gotowych zestawów, każdy z miniaturą pulpitu: Nuvio (domyślny), Szron, Północ, Zachód, Las, Ocean, Pastel i Grafit. Styl ustawia akcent, tło, przyciemnienie i szkło (odcień kart, kafli i panelu, siłę rozmycia, a w Pastelu i Graficie zaokrąglenie rogów). Akcent i tło można potem zmienić. Przy wyłączonym *Rozmyciu szkła* zostaje gęste, czytelne wypełnienie. Wybór jest zapisany w układzie (`app.look`), więc trafia też do kopii zapasowej.
 
 ## Wydajność
 

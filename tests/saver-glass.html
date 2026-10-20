@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- Wygaszacz „Szkło” na sztucznym hass (bez HA). Uruchomienie: python3 tools/build.py && python3 -m http.server 8000,
-     potem http://localhost:8000/tests/saver-glass.html?v=carousel|minimal|bento[&ui=settings|editor][&sheet=1] -->
+     potem http://localhost:8000/tests/saver-glass.html?v=minimal[&style=glass|analog|flip|aurora|night][&ui=settings|editor][&sheet=1] -->
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio wygaszacz</title>
 <style>body{ margin:0; font-family:system-ui,sans-serif; background:#111; }</style></head><body>
 <script type="module">
@@ -37,11 +37,11 @@ const hass = { states: S, user: { id: 'u1', name: 'Krzysztof Czepiec', is_admin:
   callWS: async (m) => (m.type === 'call_service' ? { response: { 'weather.dom': { forecast: [0, 1, 2, 3, 4, 5].map((i) => ({ datetime: new Date(Date.now() + i * 864e5).toISOString(), temperature: 14 + i, templow: 6 + i, condition: ['sunny', 'partlycloudy', 'rainy', 'cloudy', 'sunny', 'lightning-rainy'][i % 6] })) } } } : null), callApi: async () => [] };
 window.__hgHass = window.__nuvioHass = hass;
 const L = window.__nuvioL || window.__hgL; L.data = L.data || {};
-L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel', bg: q.get('img') ? { img: '/dist/nuvio-bg-default-wide.webp' } : {} } };
+L.data.wall = { on: true, style: q.get('style') || 'glass', idle: 120, dim: Number(q.get('dim') || 0), gl: { v: q.get('v') || 'carousel', bg: q.get('img') ? { img: '/dist/nuvio-bg-default-wide.webp' } : {} } };
 const W = window.HGWall;
 if (q.get('ui')) {
   const pg = document.createElement(customElements.get('nuvio-page') ? 'nuvio-page' : 'hg-page'); pg.setConfig({}); document.body.appendChild(pg); pg.hass = hass;
-  await new Promise((r) => setTimeout(r, 600)); L.data.wall = { on: true, style: 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } }; pg._lkTab = 'wall';
+  await new Promise((r) => setTimeout(r, 600)); L.data.wall = { on: true, style: q.get('style') || 'glass', idle: 120, dim: 0, gl: { v: q.get('v') || 'carousel' } }; pg._lkTab = q.get('lk') || 'wall';
   if (q.get('ui') === 'editor') { W.hass = hass; W.gset({ cards: W.gauto(hass) }); W._ged = 'a1'; }
   pg._eLook();
   if (q.get('scroll')) setTimeout(() => { const S = pg._eSheetEl, w = S && S.querySelector(q.get('ui') === 'editor' ? '.wg-ed' : 'section.wl'); let n = w; while (n && n.scrollHeight <= n.clientHeight + 4) n = n.parentElement;

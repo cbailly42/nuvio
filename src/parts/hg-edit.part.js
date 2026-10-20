@@ -152,6 +152,10 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const D = Object.assign({}, T ? T.dark : {}, img ? { '--hg-bg-wide': img, '--hg-bg-portrait': img2 } : {}, dim != null ? { '--hg-night': 'rgb' + `a(6,8,12,${(1 - (1 - dim * 0.65) * (1 - dim * 0.45)).toFixed(3)})` } : {});   /* przyciemnienie tylko nakładką: filter na pełnoekranowym zdjęciu dzielił tło na kafle GPU i dawał szwy pod szkłem */
     if (Object.keys(L).length) css += `:root:root, hg-page:not([x]){ ${this.css(L)} }\n`;
     if (Object.keys(D).length) css += `:root:root[data-hg-scheme=dark], :root[data-hg-scheme=dark] hg-page:not([x]){ ${this.css(D)} }\n`;
+    /* styl pulpitu (HGLooks): kształt zawsze, szkło tylko z rozmyciem (bez rozmycia zostaje gęste wypełnienie z motywu) */
+    const X = window.HGLooks && a.look ? HGLooks.vars(a.look) : null;
+    if (X) { if (Object.keys(X.r).length) css += `:root:root, hg-page:not([x]){ ${this.css(X.r)} }\n`;
+      css += `:root:root:not([data-hg-blur=off]), :root:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(X.light)} }\n:root:root[data-hg-scheme=dark]:not([data-hg-blur=off]), :root[data-hg-scheme=dark]:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(X.dark)} }\n`; }
     if (st.textContent !== css) st.textContent = css;
   },
 });
@@ -1293,6 +1297,7 @@ const HG_EDIT = {
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
+    if (a === 'lk-look' && window.HGLooks) return HGLooks.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
@@ -1646,6 +1651,7 @@ const HG_EDIT = {
     const TB = [['look', 'mdi:palette-outline', hgTr('Wygląd', 'Appearance')], ['views', 'mdi:view-carousel-outline', hgTr('Widoki', 'Views')], ['rooms', 'mdi:sofa-outline', hgTr('Pokoje', 'Rooms')], ['head', 'mdi:page-layout-header', hgTr('Nagłówek i nawigacja', 'Header and navigation')], ['bg', 'mdi:image-multiple-outline', hgTr('Tła', 'Backgrounds')], ['wall', 'mdi:tablet-dashboard', hgTr('Wygaszacz', 'Screensaver')], ['users', 'mdi:account-multiple-outline', hgTr('Użytkownicy', 'Users')], ['bk', 'mdi:backup-restore', hgTr('Kopia zapasowa', 'Backup')]];
     if (!TB.some((t) => t[0] === this._lkTab)) this._lkTab = 'look'; const at = this._lkTab;
     const html0 = `<div class="hs-sc lk-sc">
+      ${window.HGLooks ? HGLooks.html(this) : ''}
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:palette-outline')}${hgTr('Akcent', 'Accent')}</h4>
         <div class="lk-sw">${HG_ACCENTS.map(([c, l0, l1]) => { const l = H.esc(hgTr(l0, l1)); return `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`; }).join('')}
         <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="${hgTr('Własny kolor akcentu', 'Custom accent colour')}"><small>${hgTr('Własny', 'Custom')}</small></label></div>

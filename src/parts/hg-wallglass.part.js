@@ -201,6 +201,8 @@ Object.assign(HGWall, {
       const el = document.createElement('div'); el.className = 'nw in'; el.style.setProperty('--nw-dim', this.get().dim); box.replaceChildren(el);
       try { this.el = el;
         if (k.startsWith('glass')) { el.innerHTML = this.glShell(); el.classList.add('gl'); this.glRender(el.querySelector('.ng'), Object.assign({}, G0, { v: k.slice(6), rm: 'on' }), h, {}); }
+        else if (this.XS && this.XS.some((x) => x[0] === k)) { el.innerHTML = this.xsShell(k); el.classList.add('xs'); el.dataset.xs = k; const bg = el.querySelector('.nw-bg'); if (bg) { bg.classList.add('on'); bg.style.backgroundImage = this.imgs()[0]; }
+          const q = this.hass; this.hass = h; this.xsDraw(); this.hass = q; }
         else if (k === 'board' && this.bdShell) { el.innerHTML = this.bdShell(); el.classList.add('bd'); this._bdk = {}; const q = this.hass; this.hass = h; this.bd(true); this.hass = q; }
         else { el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg on" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div><div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
           el.querySelector('.nw-bg').style.backgroundImage = this.imgs()[0]; const l = h && h.locale ? h.locale.time_format : null;
