@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.14.1-a3e635?style=flat-square" alt="v2.14.1">
+  <img src="https://img.shields.io/badge/version-v2.15.0-a3e635?style=flat-square" alt="v2.15.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
@@ -27,12 +27,29 @@ Nuvio is a glass-style dashboard for Home Assistant: pages, navigation, cards an
 - **A dashboard that builds itself.** Home, Rooms, Media, Cameras, Family and Energy appear when you have matching entities. Missing integrations are simply hidden.
 - **A guided first run.** A step-by-step wizard sets language, views, rooms, accent colour and background, with a live preview.
 - **Edit in place.** Drag and drop, resize tiles, add components from a gallery, change accent colour and background.
-- **Many cards, one look.** Over 60 cards for lights, climate, energy, media, cameras, people and more, each also usable on its own in a regular dashboard. See [Components](docs/components.md).
+- **Many cards, one look.** Over 70 cards for lights, climate, energy, media, cameras, people and more, each also usable on its own in a regular dashboard. See [Components](docs/components.md).
 - **Shared by default.** An administrator sets up one dashboard for everyone, and any person can be given their own layout. See [Features guide](docs/features.md#shared-dashboard).
 - **Wall tablet mode.** A calm screensaver with a clock, the date and a photo, with optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
 - **Layout backup.** Export and import the whole layout as versioned JSON. See [Layout backup](docs/features.md#layout-backup).
 - **Polish and English.** Switch language at any time, without reloading. See [Language](docs/configuration.md#language).
 - **Light and dark mode**, touch friendly, keyboard friendly in edit mode, and aware of reduced motion.
+
+## Components
+
+A few of the components, all shown at the same size. The full list with options is in [Components](docs/components.md).
+
+<p align="center">
+  <img src="docs/components/weather.webp" alt="Weather" width="24%">
+  <img src="docs/components/ac.webp" alt="Air conditioning" width="24%">
+  <img src="docs/components/airq.webp" alt="Air quality" width="24%">
+  <img src="docs/components/eprice.webp" alt="Electricity price" width="24%">
+</p>
+<p align="center">
+  <img src="docs/components/players.webp" alt="Media" width="24%">
+  <img src="docs/components/rooms.webp" alt="Rooms" width="24%">
+  <img src="docs/components/flow.webp" alt="Energy flow" width="24%">
+  <img src="docs/components/smartlock.webp" alt="Smart lock" width="24%">
+</p>
 
 ## Quick install
 

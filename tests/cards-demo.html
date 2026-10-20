@@ -153,23 +153,26 @@ const pick = { power: { entities: ['sensor.dom_moc'] }, fuel: { prices: ['sensor
   players: { entities: ['media_player.salon_tv', 'media_player.kuchnia_glosnik'] }, cover: { e: 'cover.salon_roleta' } };
 /* slot z obiektami ({ entity, name }) dostaje obiekty także z listy tekstów */
 const conv = (d, k, v) => (Array.isArray(v) && Array.isArray(d[k]) && d[k][0] && typeof d[k][0] === 'object' ? v.map((e) => ({ entity: e, name: S[e].attributes.friendly_name })) : v);
+/* zrzuty do dokumentacji: wysokie karty z mniejszą liczbą encji albo szersze (potem pomniejszone), żeby tekst był czytelny */
+const shotPick = { cameras: { entities: ['camera.ogrod'] }, players: { entities: ['media_player.salon_tv'] } }, shotW = { rooms: 640, sensors: 600, energy: 480, acremote: 440 };
+if (MODE !== 'sizes') for (const [id, o] of Object.entries(shotPick)) pick[id] = Object.assign({}, pick[id], o);
 const pk = (C, d) => { for (const [k, v] of Object.entries(pick[C.id] || {})) if (v != null) d[k] = conv(d, k, v); return d; };
 const extra = { webpage: { o: { url: 'about:blank' } }, image: { o: { image: '../dist/nuvio-bg-default-wide.webp' } }, note: { o: { text: T('**Na weekend**\n- podlać kwiaty\n- wynieść śmieci', '**For the weekend**\n- water the plants\n- take out the trash') } },
   link: { o: { title: T('Ustawienia', 'Settings'), nav: '/config' } }, hero: { o: { title: T('Hej, Anna!', 'Hey, Anna!') } } };
 const only = (q.get('only') || '').split(',').filter(Boolean), skip = new Set(['cond', 'hacard', 'grid', 'vstack', 'hstack', 'child']);
 const list = CT.list.filter((C) => (only.length ? only.includes(C.id) : !skip.has(C.id)) && (!C.card || customElements.get(C.card.replace(/^hg-/, 'nuvio-')) || customElements.get(C.card)));
-const mk = (C) => { const R = { v: Object.assign(pk(C, def(C)), extra[C.id] || {}), t: C.tile || '' }; const cfg = CT.kid(C, R, hass); if (!cfg) return null; for (const k of Object.keys(cfg)) if (/^nv_/.test(k)) delete cfg[k];
+const mk = (C) => { const R = { v: Object.assign(pk(C, def(C)), extra[C.id] || {}), t: C.tile || '' }; const cfg = CT.kid(C, R, hass); if (!cfg) return null; for (const k of Object.keys(cfg)) if (/^nv_/.test(k)) delete cfg[k]; if (MODE !== 'sizes' && C.id === 'players') cfg.discover = false;
   const tag = cfg.type.replace('custom:', '').replace(/^hg-/, 'nuvio-'), el = document.createElement(customElements.get(tag) ? tag : cfg.type.replace('custom:', '')); el.setConfig(cfg); el.hass = hass; el.style.display = 'block'; return el; };
 const out = document.getElementById('out'); window.__ids = [];
 for (const C of list) {
   if (MODE === 'sizes') { const row = document.createElement('div'); row.className = 'row'; row.dataset.id = C.id; row.innerHTML = `<h3>${C.n}<br><small style="opacity:.6">${C.id}</small></h3>`;
     for (const z of ['s', 'm', 'l']) { const col = document.createElement('div'); col.innerHTML = `<span class="lab">${z.toUpperCase()}</span>`; const b = document.createElement('div'); b.className = 'box ' + z; const el = mk(C); if (el) b.appendChild(el); col.appendChild(b); row.appendChild(col); }
     out.appendChild(row);
-  } else { const f = document.createElement('div'); f.className = 'frame'; f.dataset.id = C.id; const fit = document.createElement('div'); fit.className = 'fit'; const b = document.createElement('div'); b.className = 'box'; const el = mk(C); if (el) b.appendChild(el); fit.appendChild(b); f.appendChild(fit); out.appendChild(f); }
+  } else { const f = document.createElement('div'); f.className = 'frame'; f.dataset.id = C.id; const fit = document.createElement('div'); fit.className = 'fit'; if (shotW[C.id]) fit.style.setProperty('--cw', shotW[C.id] + 'px'); const b = document.createElement('div'); b.className = 'box'; const el = mk(C); if (el) b.appendChild(el); fit.appendChild(b); f.appendChild(fit); out.appendChild(f); }
   window.__ids.push(C.id); }
 await new Promise((r) => setTimeout(r, 1800));
 /* ramka: karta wyższa niż ramka -> pomniejszenie (zoom), żeby każdy zrzut miał ten sam rozmiar */
-const fitAll = () => { for (const f of document.querySelectorAll('.frame')) { const fit = f.firstElementChild; fit.style.zoom = ''; const avail = f.clientHeight - 36, hh = fit.scrollHeight; if (hh > avail) fit.style.zoom = (avail / hh).toFixed(3); } };
+const fitAll = () => { for (const f of document.querySelectorAll('.frame')) { const fit = f.firstElementChild; fit.style.zoom = ''; const avail = f.clientHeight - 36, hh = fit.scrollHeight, z = Math.min(avail / hh, (f.clientWidth - 40) / fit.offsetWidth); if (z < 1) fit.style.zoom = z.toFixed(3); } };
 /* responsywność: element karty wystający poza kartę albo tekst ucięty bez wielokropka */
 const overflow = () => { const bad = []; for (const b of document.querySelectorAll('.row .box')) { const card = b.firstElementChild; if (!card || !card.shadowRoot) continue; const R = card.getBoundingClientRect(), id = b.closest('.row').dataset.id + ':' + [...b.classList].find((x) => x.length === 1);
   for (const n of card.shadowRoot.querySelectorAll('*')) { const r = n.getBoundingClientRect(); if (!r.width || !r.height) continue; const cs = getComputedStyle(n); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;

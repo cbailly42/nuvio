@@ -5,23 +5,85 @@ Nuvio ships its cards as custom elements. This page lists every card, its entiti
 Every card can be used on its own as `custom:nuvio-<name>-card` (for example in a regular dashboard after *Take control*). Screenshots: dark theme, default background, demo data.
 
 <details open>
-<summary><b>Home & climate</b></summary>
+<summary><b>Climate and air</b></summary>
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/weather.png" alt="Weather" width="100%"><br><b>Weather</b> <code>custom:nuvio-weather-card</code><br>Current conditions, hourly forecast and sunrise/sunset; tap for daily details. <code>weather.*</code>, optional temperature sensor, <code>sun.sun</code>.</td>
-<td width="50%" valign="top"><img src="components/climate.png" alt="Climate" width="100%"><br><b>Climate</b> <code>custom:nuvio-ac-card</code><br>Large target temperature with a slider, HVAC modes, fan and swing. Swipe the slider sideways, hold the temperature for details. <code>climate.*</code>.</td>
+<td width="50%" valign="top"><img src="components/climate.webp" alt="Air conditioning" width="100%"><br><b>Air conditioning</b> <code>tile</code><br>Temperature, modes and fan.</td>
+<td width="50%" valign="top"><img src="components/ac.webp" alt="Air conditioning (card)" width="100%"><br><b>Air conditioning (card)</b> <code>custom:nuvio-ac-card</code><br>Large card: temperature, modes, fan, schedule.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/light.png" alt="Light" width="100%"><br><b>Light</b> <code>custom:nuvio-light-card</code><br>Brightness slider for one light. <code>light.*</code>.</td>
-<td width="50%" valign="top"><img src="components/switch.png" alt="Switch" width="100%"><br><b>Switch</b> <code>custom:nuvio-switch-card</code><br>Glass toggle as a row or a tile. <code>switch.*</code>, <code>input_boolean.*</code>, <code>fan.*</code> and other on/off entities.</td>
+<td width="50%" valign="top"><img src="components/acremote.webp" alt="AC remote" width="100%"><br><b>AC remote</b> <code>custom:nuvio-acremote-card</code><br>Live airflow, setpoint, mode, fan and sleep.</td>
+<td width="50%" valign="top"><img src="components/thermo.webp" alt="Thermostat" width="100%"><br><b>Thermostat</b> <code>custom:nuvio-thermo-card</code><br>Target temperature up and down and modes.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/scenes.png" alt="Scenes & scripts" width="100%"><br><b>Scenes & scripts</b> <code>custom:nuvio-scenes-card</code><br>Several scenes or scripts as buttons with a confirmation animation. <code>scene.*</code>, <code>script.*</code>.</td>
-<td width="50%" valign="top"><img src="components/script.png" alt="Script" width="100%"><br><b>Script</b> <code>custom:nuvio-script-card</code><br>A single tile that runs one script. <code>script.*</code>, <code>scene.*</code>.</td>
+<td width="50%" valign="top"><img src="components/humid.webp" alt="Humidifier" width="100%"><br><b>Humidifier</b> <code>custom:nuvio-humidifier-card</code><br>Target humidity on an arc and modes.</td>
+<td width="50%" valign="top"><img src="components/purifier.webp" alt="Air purifier" width="100%"><br><b>Air purifier</b> <code>custom:nuvio-purifier-card</code><br>PM2.5 with air waves, power and modes.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/sensors.png" alt="Sensors" width="100%"><br><b>Sensors</b> <code>custom:nuvio-sensors-card</code><br>Auto-discovered motion, occupancy, door, window, moisture and other binary sensors with filters. <code>binary_sensor.*</code>.</td>
+<td width="50%" valign="top"><img src="components/airq.webp" alt="Air quality" width="100%"><br><b>Air quality</b> <code>custom:nuvio-airq-card</code><br>CO₂, particulates, VOC and humidity with coloured thresholds.</td>
+<td width="50%" valign="top"><img src="components/fan.webp" alt="Fan" width="100%"><br><b>Fan</b> <code>custom:nuvio-fan-card</code><br>Speed on an arc and modes.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/plant.webp" alt="Plant" width="100%"><br><b>Plant</b> <code>custom:nuvio-plant-card</code><br>Soil moisture, light and fertility with ranges.</td>
+<td width="50%" valign="top"><img src="components/weather.webp" alt="Weather" width="100%"><br><b>Weather</b> <code>custom:nuvio-weather-card</code><br>Now, hourly forecast, sun.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/sun.webp" alt="Sun" width="100%"><br><b>Sun</b> <code>custom:nuvio-sun-card</code><br>Sunrise, sunset and sun position.</td>
+<td width="50%"></td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Lights and devices</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="components/switch.webp" alt="Light / switch" width="100%"><br><b>Light / switch</b> <code>tile</code><br>Turn on and off with one tap.</td>
+<td width="50%" valign="top"><img src="components/light.webp" alt="Light with brightness" width="100%"><br><b>Light with brightness</b> <code>custom:nuvio-lamp-card</code><br>Switch, brightness slider, quick levels and colour temperature.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/toggle.webp" alt="Toggle tile" width="100%"><br><b>Toggle tile</b> <code>custom:nuvio-toggle-card</code><br>Name, state and switch in a row.</td>
+<td width="50%" valign="top"><img src="components/slider.webp" alt="Slider" width="100%"><br><b>Slider</b> <code>custom:nuvio-slider-card</code><br>Brightness, volume, fan, cover, number.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/arc.webp" alt="Arc" width="100%"><br><b>Arc</b> <code>custom:nuvio-arc-card</code><br>Brightness or level on a draggable arc.</td>
+<td width="50%" valign="top"><img src="components/cover.webp" alt="Cover / gate" width="100%"><br><b>Cover / gate</b> <code>tile</code><br>Open, stop, close.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/cover2.webp" alt="Cover with position" width="100%"><br><b>Cover with position</b> <code>custom:nuvio-cover-card</code><br>Draggable bar and buttons.</td>
+<td width="50%" valign="top"><img src="components/lock.webp" alt="Lock" width="100%"><br><b>Lock</b> <code>custom:nuvio-lock-card</code><br>Unlock with confirmation.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/smartlock.webp" alt="Smart lock" width="100%"><br><b>Smart lock</b> <code>custom:nuvio-smartlock-card</code><br>Animated padlock, hold to unlock, battery and door.</td>
+<td width="50%" valign="top"><img src="components/vacuum.webp" alt="Vacuum" width="100%"><br><b>Vacuum</b> <code>custom:nuvio-vacuum-card</code><br>One robot: state, battery, start and dock.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/robots.webp" alt="Robots" width="100%"><br><b>Robots</b> <code>custom:nuvio-robots-card</code><br>Vacuums and mowers: status and control.</td>
+<td width="50%" valign="top"><img src="components/appliance.webp" alt="Appliance" width="100%"><br><b>Appliance</b> <code>custom:nuvio-appliance-card</code><br>Washer, dryer, dishwasher: state, program, time left, progress.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/cwu.webp" alt="Hot water" width="100%"><br><b>Hot water</b> <code>custom:nuvio-cwu-card</code><br>Temperature, heating, power, time and heater switches.</td>
+<td width="50%" valign="top"><img src="components/stairs.webp" alt="Stairs" width="100%"><br><b>Stairs</b> <code>custom:nuvio-stairs-card</code><br>Bottom and top light sequence with motion sensors.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Scenes and actions</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="components/run.webp" alt="Scene / script" width="100%"><br><b>Scene / script</b> <code>tile</code><br>One button to run it.</td>
+<td width="50%" valign="top"><img src="components/scenes.webp" alt="Scenes and scripts" width="100%"><br><b>Scenes and scripts</b> <code>custom:nuvio-scenes-card</code><br>Several buttons in one card.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/button.webp" alt="Button" width="100%"><br><b>Button</b> <code>custom:nuvio-button-card</code><br>Script, scene, button.press or action.</td>
+<td width="50%" valign="top"><img src="components/actions.webp" alt="Quick actions" width="100%"><br><b>Quick actions</b> <code>custom:nuvio-actions-card</code><br>A row of round buttons.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/link.webp" alt="Shortcut" width="100%"><br><b>Shortcut</b> <code>custom:nuvio-link-card</code><br>Tile with a title that opens a view or page.</td>
 <td width="50%"></td>
 </tr>
 </table>
@@ -32,110 +94,146 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/power.png" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current power with a sparkline of the last hours. <code>sensor.*</code> with <code>device_class: power</code>.</td>
-<td width="50%" valign="top"><img src="components/phases.png" alt="Phases" width="100%"><br><b>Phases</b> <code>custom:nuvio-phases-card</code><br>Power, voltage and current per phase with load bars. Power / voltage / current sensors per phase.</td>
+<td width="50%" valign="top"><img src="components/power.webp" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current power with a line for recent hours.</td>
+<td width="50%" valign="top"><img src="components/energy.webp" alt="Energy – statistics" width="100%"><br><b>Energy – statistics</b> <code>custom:nuvio-energy-stats-card</code><br>Consumption and production: today, week, month.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/energy-stats.png" alt="Energy statistics" width="100%"><br><b>Energy statistics</b> <code>custom:nuvio-energy-stats-card</code><br>Consumption vs production for today, this week and this month with a chart. Long-term statistics or the HA Energy dashboard settings.</td>
-<td width="50%" valign="top"><img src="components/week.png" alt="Energy week" width="100%"><br><b>Energy week</b> <code>custom:nuvio-week-card</code><br>Grid consumption and PV production for the last 7 days. Energy statistics.</td>
+<td width="50%" valign="top"><img src="components/week.webp" alt="Energy · week" width="100%"><br><b>Energy · week</b> <code>custom:nuvio-week-card</code><br>Consumption and production bars for recent days.</td>
+<td width="50%" valign="top"><img src="components/phases.webp" alt="Phases" width="100%"><br><b>Phases</b> <code>custom:nuvio-phases-card</code><br>Power, voltage and current per phase.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/solar.png" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-solar-card</code><br>PV production over the last days as an area chart. One energy statistic plus an optional today sensor.</td>
-<td width="50%" valign="top"><img src="components/pv.png" alt="Photovoltaics" width="100%"><br><b>Photovoltaics</b> <code>custom:nuvio-pv-card</code><br>Inverter state, power now, energy today, strings and temperature. Inverter sensors.</td>
+<td width="50%" valign="top"><img src="components/pv.webp" alt="Solar" width="100%"><br><b>Solar</b> <code>custom:nuvio-pv-card</code><br>Power, today, strings and inverter.</td>
+<td width="50%" valign="top"><img src="components/flow.webp" alt="Energy flow" width="100%"><br><b>Energy flow</b> <code>custom:nuvio-flow-card</code><br>Grid, solar, batteries and home with animated flow.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/flow.png" alt="Energy flow" width="100%"><br><b>Energy flow</b> <code>custom:nuvio-flow-card</code><br>Grid, solar, battery and home on one diagram. Glowing dots run along the lines, faster at higher power; the home ring shows where its power comes from and the battery ring shows the charge level. Power sensors (W or kW) for grid, solar and battery, battery level, optional home usage.</td>
-<td width="50%" valign="top"></td>
-</tr>
-</table>
-</details>
-
-<details open>
-<summary><b>Media & cameras</b></summary>
-
-<table>
-<tr>
-<td width="50%" valign="top"><img src="components/players.png" alt="Media players" width="100%"><br><b>Media players</b> <code>custom:nuvio-players-card</code><br>All players with artwork, title, progress, transport, volume and source. <code>media_player.*</code> (auto-discovered).</td>
-<td width="50%" valign="top"><img src="components/media.png" alt="Media player" width="100%"><br><b>Media player</b> <code>custom:nuvio-media-card</code><br>Compact card for a single player. <code>media_player.*</code>.</td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="components/camera.png" alt="Camera" width="100%"><br><b>Camera</b> <code>custom:nuvio-camera-card</code><br>Snapshot refreshed every few seconds, live view on tap. <code>camera.*</code>.</td>
-<td width="50%" valign="top"><img src="components/cameras.png" alt="Cameras" width="100%"><br><b>Cameras</b> <code>custom:nuvio-cameras-card</code><br>Working cameras as large tiles, unavailable ones collapsed into chips. <code>camera.*</code>.</td>
+<td width="50%" valign="top"><img src="components/eprice.webp" alt="Electricity price" width="100%"><br><b>Electricity price</b> <code>custom:nuvio-eprice-card</code><br>Hourly prices today and tomorrow, cheapest window.</td>
+<td width="50%" valign="top"><img src="components/fuel.webp" alt="Fuel prices" width="100%"><br><b>Fuel prices</b> <code>custom:nuvio-fuel-card</code><br>Prices from sensors with a trend for tomorrow.</td>
 </tr>
 </table>
 </details>
 
 <details open>
-<summary><b>People & calendar</b></summary>
+<summary><b>Media and cameras</b></summary>
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/people.png" alt="Household" width="100%"><br><b>Household</b> <code>custom:nuvio-people-card</code><br>Everyone with avatar, zone and time since the last change. <code>person.*</code>, optional <code>zone.*</code>.</td>
-<td width="50%" valign="top"><img src="components/person.png" alt="Person" width="100%"><br><b>Person</b> <code>custom:nuvio-person-card</code><br>One person with avatar and current zone. <code>person.*</code>.</td>
+<td width="50%" valign="top"><img src="components/media1.webp" alt="Media player" width="100%"><br><b>Media player</b> <code>tile</code><br>Artwork, title and controls.</td>
+<td width="50%" valign="top"><img src="components/players.webp" alt="Media" width="100%"><br><b>Media</b> <code>custom:nuvio-players-card</code><br>Player list with volume.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/agenda.png" alt="Agenda" width="100%"><br><b>Agenda</b> <code>custom:nuvio-agenda-card</code><br>Upcoming events grouped by day, colour per calendar. <code>calendar.*</code>.</td>
-<td width="50%" valign="top"><img src="components/month.png" alt="Month" width="100%"><br><b>Month</b> <code>custom:nuvio-month-card</code><br>Month grid with event dots and the selected day list. <code>calendar.*</code>.</td>
-</tr>
-</table>
-</details>
-
-<details open>
-<summary><b>Security & devices</b></summary>
-
-<table>
-<tr>
-<td width="50%" valign="top"><img src="components/alarm.png" alt="Alarm" width="100%"><br><b>Alarm</b> <code>custom:nuvio-alarm-card</code><br>Alarm state and arm/disarm modes based on supported features, with a code keypad. <code>alarm_control_panel.*</code>.</td>
-<td width="50%" valign="top"><img src="components/robots.png" alt="Robots" width="100%"><br><b>Robots</b> <code>custom:nuvio-robots-card</code><br>Vacuums and mowers: state, start/dock/locate, suction and last clean. <code>vacuum.*</code>, <code>lawn_mower.*</code>.</td>
+<td width="50%" valign="top"><img src="components/mediamini.webp" alt="Mini player" width="100%"><br><b>Mini player</b> <code>custom:nuvio-media-mini-card</code><br>Artwork, title and buttons in one row.</td>
+<td width="50%" valign="top"><img src="components/cam1.webp" alt="Camera" width="100%"><br><b>Camera</b> <code>tile</code><br>Snapshot and live view.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/net.png" alt="Network" width="100%"><br><b>Network</b> <code>custom:nuvio-net-card</code><br>Internet status, latency and speed; other sections cover gateway, access points, Wi-Fi and clients. UniFi entities.</td>
+<td width="50%" valign="top"><img src="components/cameras.webp" alt="Camera grid" width="100%"><br><b>Camera grid</b> <code>custom:nuvio-cameras-card</code><br>All selected cameras at once.</td>
 <td width="50%"></td>
 </tr>
 </table>
 </details>
 
 <details open>
-<summary><b>Rooms & navigation</b></summary>
+<summary><b>Rooms and people</b></summary>
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/areas.png" alt="Rooms" width="100%"><br><b>Rooms</b> <code>custom:nuvio-areas-card</code><br>Every HA area with temperature, humidity, lights, motion and climate. Area registry.</td>
-<td width="50%" valign="top"><img src="components/room.png" alt="Room" width="100%"><br><b>Room</b> <code>custom:nuvio-room-card</code><br>All entities of one area grouped by kind (lights, climate, covers, switches…). Opened as <code>?area=<id></code>. An empty room offers Import from area or Create custom layout.<br><img src="components/empty-room.png" alt="Empty room: import from area" width="100%"></td>
+<td width="50%" valign="top"><img src="components/rooms.webp" alt="Rooms" width="100%"><br><b>Rooms</b> <code>custom:nuvio-areas-card</code><br>Room tiles with temperature, humidity and active devices (Look → Rooms).</td>
+<td width="50%" valign="top"><img src="components/room.webp" alt="Room" width="100%"><br><b>Room</b> <code>custom:nuvio-room-card</code><br>All devices of one room in sections.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/link.png" alt="Link" width="100%"><br><b>Link</b> <code>custom:nuvio-link-card</code><br>Navigation or action tile. Any path or action.</td>
+<td width="50%" valign="top"><img src="components/roomc.webp" alt="Compact room" width="100%"><br><b>Compact room</b> <code>custom:nuvio-room-compact-card</code><br>Temperature, switch and brightness ruler.</td>
+<td width="50%" valign="top"><img src="components/people.webp" alt="People" width="100%"><br><b>People</b> <code>custom:nuvio-people-card</code><br>Who is home, zones and time.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/person.webp" alt="Person" width="100%"><br><b>Person</b> <code>custom:nuvio-person-card</code><br>Photo, zone and time since change.</td>
+<td width="50%" valign="top"><img src="components/family.webp" alt="Family (avatars)" width="100%"><br><b>Family (avatars)</b> <code>custom:nuvio-family-card</code><br>Avatars and who is home.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/hero.webp" alt="Greeting" width="100%"><br><b>Greeting</b> <code>custom:nuvio-hero-card</code><br>Large greeting with your name.</td>
 <td width="50%"></td>
 </tr>
 </table>
 </details>
 
 <details open>
-<summary><b>General controls</b></summary>
+<summary><b>Sensors and charts</b></summary>
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/slider.png" alt="Slider" width="100%"><br><b>Slider</b> <code>custom:nuvio-slider-card</code><br>Slider for brightness, volume, fan speed, cover position or a numeric value, horizontal or vertical. <code>light.*</code>, <code>media_player.*</code>, <code>fan.*</code>, <code>cover.*</code>, <code>valve.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
-<td width="50%" valign="top"><img src="components/button.png" alt="Button" width="100%"><br><b>Button</b> <code>custom:nuvio-button-card</code><br>Button that runs a script, scene, button or any action, as a tile or a pill, with a Done confirmation. <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>input_button.*</code>, <code>automation.*</code>, or any <code>tap_action</code>.</td>
+<td width="50%" valign="top"><img src="components/sensor.webp" alt="Sensor reading" width="100%"><br><b>Sensor reading</b> <code>tile</code><br>Value or state of any sensor.</td>
+<td width="50%" valign="top"><img src="components/chart.webp" alt="Sensor with chart" width="100%"><br><b>Sensor with chart</b> <code>tile</code><br>Value and chart for the last 24 h.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/entities.png" alt="Entities" width="100%"><br><b>Entities</b> <code>custom:nuvio-entities-card</code><br>Entity list where each row shows a switch, a Run button or a value. <code>light.*</code>, <code>switch.*</code>, <code>fan.*</code>, <code>input_boolean.*</code>, <code>script.*</code>, <code>scene.*</code>, <code>button.*</code>, <code>sensor.*</code>, <code>binary_sensor.*</code> and other read-only entities.</td>
-<td width="50%" valign="top"><img src="components/select.png" alt="Select" width="100%"><br><b>Select</b> <code>custom:nuvio-select-card</code><br>Option picker shown as chips or a list. <code>input_select.*</code>, <code>select.*</code>.</td>
+<td width="50%" valign="top"><img src="components/chart2.webp" alt="Chart" width="100%"><br><b>Chart</b> <code>custom:nuvio-chart-card</code><br>Line, area or bars from history.</td>
+<td width="50%" valign="top"><img src="components/history.webp" alt="History graph" width="100%"><br><b>History graph</b> <code>custom:nuvio-history-card</code><br>Several sensors on one chart.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="components/stepper.png" alt="Stepper" width="100%"><br><b>Stepper</b> <code>custom:nuvio-stepper-card</code><br>Counter with increment, decrement and reset, or step a numeric value up and down. <code>counter.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
-<td width="50%" valign="top"><img src="components/gauge.png" alt="Gauge" width="100%"><br><b>Gauge</b> <code>custom:nuvio-gauge-card</code><br>Arc gauge showing a sensor value, with a default range chosen by unit. <code>sensor.*</code>, <code>input_number.*</code>, <code>number.*</code>.</td>
+<td width="50%" valign="top"><img src="components/stat.webp" alt="Statistics" width="100%"><br><b>Statistics</b> <code>custom:nuvio-stat-card</code><br>Minimum, average, maximum and change.</td>
+<td width="50%" valign="top"><img src="components/gauge.webp" alt="Gauge" width="100%"><br><b>Gauge</b> <code>custom:nuvio-gauge-card</code><br>Sensor value on an arc.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/progress.webp" alt="Progress bar" width="100%"><br><b>Progress bar</b> <code>custom:nuvio-progress-card</code><br>A value on a thick bar with thresholds.</td>
+<td width="50%" valign="top"><img src="components/value.webp" alt="Big value" width="100%"><br><b>Big value</b> <code>custom:nuvio-value-card</code><br>One number with colour thresholds.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/sensors.webp" alt="Home sensors" width="100%"><br><b>Home sensors</b> <code>custom:nuvio-sensors-card</code><br>Motion, doors, windows, smoke, leaks: tabs and history.</td>
+<td width="50%" valign="top"><img src="components/openings.webp" alt="Doors and windows" width="100%"><br><b>Doors and windows</b> <code>custom:nuvio-openings-card</code><br>Opening sensors, open ones first.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/battery.webp" alt="Batteries" width="100%"><br><b>Batteries</b> <code>custom:nuvio-battery-card</code><br>Weakest batteries first.</td>
+<td width="50%" valign="top"><img src="components/alarm.webp" alt="Alarm" width="100%"><br><b>Alarm</b> <code>custom:nuvio-alarm-card</code><br>Arm and disarm with a code.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/net.webp" alt="Network" width="100%"><br><b>Network</b> <code>custom:nuvio-net-card</code><br>Internet, gateway, Wi-Fi, devices, clients (UniFi and others).</td>
+<td width="50%" valign="top"><img src="components/updates.webp" alt="Updates" width="100%"><br><b>Updates</b> <code>custom:nuvio-updates-card</code><br>Available Home Assistant updates.</td>
+</tr>
+</table>
+</details>
+
+<details open>
+<summary><b>Lists, time and notes</b></summary>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="components/entities.webp" alt="Entity list" width="100%"><br><b>Entity list</b> <code>custom:nuvio-entities-card</code><br>Rows with a toggle or value.</td>
+<td width="50%" valign="top"><img src="components/glance.webp" alt="Glance" width="100%"><br><b>Glance</b> <code>custom:nuvio-glance-card</code><br>Several entities in a row: icon, name, state.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/select.webp" alt="Select" width="100%"><br><b>Select</b> <code>custom:nuvio-select-card</code><br>input_select and select options.</td>
+<td width="50%" valign="top"><img src="components/stepper.webp" alt="Stepper" width="100%"><br><b>Stepper</b> <code>custom:nuvio-stepper-card</code><br>Plus and minus for counters and values.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/agenda.webp" alt="Calendar" width="100%"><br><b>Calendar</b> <code>custom:nuvio-agenda-card</code><br>Agenda or month view.</td>
+<td width="50%" valign="top"><img src="components/logbook.webp" alt="Logbook" width="100%"><br><b>Logbook</b> <code>custom:nuvio-logbook-card</code><br>Recent changes of chosen entities.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/todo.webp" alt="To-do list" width="100%"><br><b>To-do list</b> <code>custom:nuvio-todo-card</code><br>Add and tick off.</td>
+<td width="50%" valign="top"><img src="components/timer.webp" alt="Timer" width="100%"><br><b>Timer</b> <code>custom:nuvio-timer-card</code><br>Countdown on an arc, start and pause.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="components/clock.webp" alt="Clock" width="100%"><br><b>Clock</b> <code>custom:nuvio-clock-card</code><br>Time and date.</td>
+<td width="50%" valign="top"><img src="components/note.webp" alt="Note" width="100%"><br><b>Note</b> <code>custom:nuvio-note-card</code><br>Text with simple formatting.</td>
 </tr>
 </table>
 </details>
 
 **Other cards**
 
-- `custom:nuvio-map-card`: the native HA map in a glass frame (no screenshot: map tiles need internet access).
-- `custom:nuvio-energy-card`: load percentage of the total phase power against your maximum (no screenshot yet: it does not render correctly outside a fixed-height grid).
-- `custom:nuvio-bars-card`: daily consumption bars from statistics (no screenshot yet: same fixed-height issue).
-  - `custom:nuvio-gauge-card`: a numeric sensor on an arc.
-- `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel); every screenshot above uses it.
+Every screenshot above is the same size (dark theme, default background, demo data). These cards have no screenshot:
+
+- `custom:nuvio-map-card`: the native HA map in a glass frame (map tiles need internet access).
+- `custom:nuvio-image-card` and `custom:nuvio-webpage-card`: your own image, camera snapshot or page in a frame.
+- `custom:nuvio-kid-card`: child (LiveKid) presence, check-in, meals and balance; it needs the LiveKid integration.
+- `custom:nuvio-energy-card`: load percentage of the total phase power against your maximum.
+- `custom:nuvio-bars-card`: daily consumption bars from statistics.
+- `custom:nuvio-page`: the full-screen layout itself (top bar, rail, header, card panel).
+
+## Air, plants and electricity prices (2.15.0)
+
+| Card | What it does | Options |
+|---|---|---|
+| `custom:nuvio-airq-card` | CO₂, PM2.5, PM10, VOC, NO₂, AQI and humidity as tiles with good, moderate, poor or bad levels and an overall rating | `entities` (empty = one sensor of each kind, from one room when possible), `title` |
+| `custom:nuvio-plant-card` | Soil moisture, light, temperature and fertility with the good range as a band, what the plant needs, and the sensor battery | `entity` (`plant.*`, optional), `moisture`, `illuminance`, `temperature`, `conductivity`, `battery` (empty = same device as the moisture sensor), `name`, `image`, `min_*` / `max_*` per reading |
+| `custom:nuvio-eprice-card` | Current electricity price with a cheap, average or expensive label, hourly or 15 minute bars for today and tomorrow, and the cheapest window | `entity` (sensor with `today` / `tomorrow`, `raw_today`, `prices_today` or `prices` lists), `title`, `window` (hours, 3), `decimals` (2), `unit` |
 
 ## More cards and the form library (1.2.0)
 
