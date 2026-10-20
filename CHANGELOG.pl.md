@@ -2,6 +2,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.15.1
+- Ulepszenie: temperatura i wilgotność w nagłówku pokoju mają mały ołówek, gdy możesz zmienić ich czujnik. Najechanie nie podkłada już prostokąta pod liczbę; zamiast tego ołówek podświetla się kolorem akcentu.
+
 ### 2.15.0
 - Poprawka: temperatura w nagłówku pokoju mogła łamać się na dwie linie („23,” i „2°”) i wchodzić pod boczną szynę na wąskich ekranach. Temperatura i wilgotność zawsze mieszczą się teraz w jednej linii, a szyna przesuwa się pod wyższy nagłówek.
 - Nowość: czujnik temperatury i wilgotności pokoju wybierzesz prosto z nagłówka. Jako administrator dotknij temperatury albo wilgotności w widoku pokoju (albo **+** obok, gdy nic nie jest pokazane) i wybierz Automatycznie, dowolny czujnik (najpierw czujniki tego pokoju, z bieżącymi wartościami) albo Nie pokazuj. Wybór zapisuje się w układzie i jest tym samym ustawieniem co w **Ustawienia > Pokoje**, które menu też otwiera.

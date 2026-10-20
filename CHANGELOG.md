@@ -2,6 +2,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.15.1
+- Improved: the temperature and humidity in the room header show a small pen when you can change their sensor. Hovering no longer puts a box behind the number; the pen lights up in the accent colour instead.
+
 ### 2.15.0
 - Fixed: the room header temperature could break onto two lines ("23," and "2°") and slide under the side rail on narrow screens. The temperature and humidity now always stay on one line, and the side rail moves below a header that grows taller.
 - New: choose the temperature and humidity sensor of a room right from its header. As an admin, tap the temperature or humidity in the room view (or the **+** next to it when nothing is shown) and pick Automatic, any sensor (sensors of that room first, with their current values), or Do not show. The choice is saved with the layout and is the same setting as in **Settings > Rooms**, which the menu also opens.
