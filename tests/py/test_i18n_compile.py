@@ -32,6 +32,7 @@ class Rewrite(unittest.TestCase):
     def test_hgTLazy(self): self.assertEqual(C.rewrite_keys("hgTLazy('a.b', p)", self.idx), 'hgTLazy(7, p)')
     def test_hgTO(self): self.assertEqual(C.rewrite_keys("hgTO(o, { a: 'common.save', 'b': \"a.b\" })", self.idx), "hgTO(o, { a: 0, 'b': 7 })")
     def test_hgTO_object_first_arg(self): self.assertEqual(C.rewrite_keys("hgTO({ id: 'x' }, { a: 'common.save' })", self.idx), "hgTO({ id: 'x' }, { a: 0 })")
+    def test_hgTO_nested(self): self.assertEqual(C.rewrite_keys("hgTO({ s: [hgTO({ k: 'e' }, { l: 'a.b' })] }, { n: 'common.save' })", self.idx), "hgTO({ s: [hgTO({ k: 'e' }, { l: 7 })] }, { n: 0 })")
     def test_dynamic_intact(self):
         s = "hgT('states.' + s); hgTD('states.' + s, fb); hgT(`weather.${w}`)"; self.assertEqual(C.rewrite_keys(s, self.idx), s)
     def test_unknown_key(self):

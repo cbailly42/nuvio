@@ -78,12 +78,13 @@ def rewrite_keys(js, idx):
     def call(m):
         return m.group(0) if m.group('k') is None else m.group(0)[:m.start('lit') - m.start()] + one(m.group('k')) + m.group(0)[m.end('lit') - m.start():]
     js = _CALL.sub(call, js)
-    out, pos = [], 0
+    spans = []   # every hgTO( call's map, nested calls included (an hgTO inside the first argument of another one)
     for m in _CALLO.finditer(js):
-        if m.start() < pos: continue
         end = _close(js, m.end()); sp = _map_span(js[m.end():end - 1])
-        if not sp: continue
-        a, b = m.end() + sp[0], m.end() + sp[1]
+        if sp: spans.append((m.end() + sp[0], m.end() + sp[1]))
+    out, pos = [], 0
+    for a, b in sorted(spans):
+        if a < pos: continue   # a map inside a map already rewritten
         out.append(js[pos:a]); out.append(re.sub(r':\s*(([\'"])([^\'"\\\n]*)\2)', lambda x: x.group(0).replace(x.group(1), one(x.group(3))), js[a:b])); pos = b
     out.append(js[pos:]); return ''.join(out)
 
