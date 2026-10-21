@@ -552,6 +552,16 @@
       "picker_description": "Tekst z prostym formatowaniem",
       "picker_name": "Home Glass – Notatka"
     },
+    "people": {
+      "away": "Poza strefami",
+      "details": "szczegóły",
+      "last_changed": "Ostatnia zmiana",
+      "people": "os.",
+      "picker_description": "Lista osób z awatarem, strefą i czasem zmiany",
+      "picker_name": "Home Glass – Domownicy",
+      "unknown_location": "Nieznana lokalizacja",
+      "zones": "Strefy"
+    },
     "power": {
       "high": "Wysokie",
       "low": "Niskie",
@@ -726,6 +736,7 @@
     "air_conditioning": "Klimatyzacja",
     "air_quality": "Jakość powietrza",
     "at_facility": "W placówce",
+    "at_home": "W domu",
     "battery": "Bateria",
     "brightness": "Jasność",
     "calendar": "Kalendarz",

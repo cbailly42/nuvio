@@ -548,6 +548,16 @@
       "picker_description": "Text with simple formatting",
       "picker_name": "Home Glass – Note"
     },
+    "people": {
+      "away": "Away",
+      "details": "details",
+      "last_changed": "Last changed",
+      "people": "people",
+      "picker_description": "Lista osób z awatarem, strefą i czasem zmiany",
+      "picker_name": "Home Glass – Domownicy",
+      "unknown_location": "Unknown location",
+      "zones": "Zones"
+    },
     "power": {
       "high": "High",
       "low": "Low",
@@ -722,6 +732,7 @@
     "air_conditioning": "Air conditioning",
     "air_quality": "Air quality",
     "at_facility": "At facility",
+    "at_home": "Home",
     "battery": "Battery",
     "brightness": "Brightness",
     "calendar": "Calendar",
