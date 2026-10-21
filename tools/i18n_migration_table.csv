@@ -201,7 +201,7 @@ cards.button.done,parts/cards/button-card.part.js,16,hgTr,Done,Wykonano,,,auto
 cards.button.tap_to_run,parts/cards/button-card.part.js,16,hgTr,Tap to run,"Dotknij, aby uruchomić",,,auto
 cards.button.picker_name,parts/cards/button-card.part.js,23,hgTr,Home Glass – Button,Home Glass – Przycisk,,load-time,auto
 cards.button.picker_description,parts/cards/button-card.part.js,23,hgTr,"Button for a script, scene, button.press or any action","Przycisk dla skryptu, sceny, button.press lub dowolnej akcji",,load-time,auto
-cards.camera.camera_name_full_screen,parts/cards/camera-card.part.js,29,hgTr,'Camera ' + name + ' – full screen','Kamera ' + name + ' – pełny ekran',,concat,manual
+cards.camera.fullscreen_dialog_aria,parts/cards/camera-card.part.js,29,hgTr,Camera {name} – full screen,Kamera {name} – pełny ekran,name,concat,auto
 cards.camera.live,parts/cards/camera-card.part.js,31,hgTr,LIVE,NA ŻYWO,,,auto
 cards.camera.close_full_screen,parts/cards/camera-card.part.js,31,hgTr,Close full screen,Zamknij pełny ekran,,,auto
 cards.camera.close_esc,parts/cards/camera-card.part.js,31,hgTr,Close (Esc),Zamknij (Esc),,,auto
@@ -209,7 +209,7 @@ cards.camera.swipe_down_to_close,parts/cards/camera-card.part.js,31,hgTr,Swipe d
 cards.camera.preview,parts/cards/camera-card.part.js,54,hgTr,PREVIEW,PODGLĄD,,,auto
 cards.camera.unable_to_start_preview,parts/cards/camera-card.part.js,62,hgTr,Unable to start preview,Nie można uruchomić podglądu,,,auto
 cards.camera.unavailable,parts/cards/camera-card.part.js,144,hgTr,unavailable,niedostępna,,,auto
-cards.camera.live_2,parts/cards/camera-card.part.js,144,hgTr,live,na żywo,,,review
+cards.camera.state_live,parts/cards/camera-card.part.js,144,hgTr,live,na żywo,,,auto
 cards.camera.recording,parts/cards/camera-card.part.js,144,hgTr,recording,nagrywa,,,auto
 cards.camera.streaming,parts/cards/camera-card.part.js,144,hgTr,streaming,transmisja,,,auto
 cards.camera.idle,parts/cards/camera-card.part.js,144,hgTr,idle,bezczynna,,,auto
@@ -220,10 +220,10 @@ cards.camera.camera_unavailable,parts/cards/camera-card.part.js,160,hgTr,Camera 
 cards.camera.loading,parts/cards/camera-card.part.js,161,hgTr,Loading…,Ładowanie…,,,auto
 cards.camera.no_image,parts/cards/camera-card.part.js,161,hgTr,No image,Brak obrazu,,,auto
 cards.camera.live_view,parts/cards/camera-card.part.js,162,hgTr,Live view,Podgląd na żywo,,,auto
-cards.camera.live_3,parts/cards/camera-card.part.js,162,hgTr,Live,Na żywo,,,review
+cards.camera.live_button,parts/cards/camera-card.part.js,162,hgTr,Live,Na żywo,,,auto
 cards.camera.full_screen,parts/cards/camera-card.part.js,163,hgTr,Full screen,Pełny ekran,,,auto
 cards.camera.full_screen,parts/cards/camera-card.part.js,163,hgTr,Full screen,Pełny ekran,,,auto
-cards.camera.live_3,parts/cards/camera-card.part.js,214,hgTr,Live,Na żywo,,,review
+cards.camera.live_button,parts/cards/camera-card.part.js,214,hgTr,Live,Na żywo,,,auto
 cards.camera.stop_live_view,parts/cards/camera-card.part.js,214,hgTr,Stop live view,Zatrzymaj podgląd na żywo,,,auto
 cards.camera.live_view,parts/cards/camera-card.part.js,214,hgTr,Live view,Podgląd na żywo,,,auto
 cards.cameras.no_cameras_are_available,parts/cards/cameras-card.part.js,48,hgTr,No cameras are available right now,Żadna kamera nie jest teraz dostępna,,,auto

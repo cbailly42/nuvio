@@ -239,6 +239,29 @@
       "picker_name": "Home Glass – Przycisk",
       "script_scene_button_or": "Skrypt, scena, przycisk albo tap_action",
       "tap_to_run": "Dotknij, aby uruchomić"
+    },
+    "camera": {
+      "camera_details": "Szczegóły kamery",
+      "camera_unavailable": "Kamera niedostępna",
+      "close_esc": "Zamknij (Esc)",
+      "close_full_screen": "Zamknij pełny ekran",
+      "full_screen": "Pełny ekran",
+      "fullscreen_dialog_aria": "Kamera {name} – pełny ekran",
+      "idle": "bezczynna",
+      "live": "NA ŻYWO",
+      "live_button": "Na żywo",
+      "live_view": "Podgląd na żywo",
+      "loading": "Ładowanie…",
+      "no_connection_to_camera": "Brak połączenia z kamerą",
+      "no_image": "Brak obrazu",
+      "preview": "PODGLĄD",
+      "recording": "nagrywa",
+      "state_live": "na żywo",
+      "stop_live_view": "Zatrzymaj podgląd na żywo",
+      "streaming": "transmisja",
+      "swipe_down_to_close": "Przesuń w dół, aby zamknąć",
+      "unable_to_start_preview": "Nie można uruchomić podglądu",
+      "unavailable": "niedostępna"
     }
   },
   "common": {

@@ -235,6 +235,29 @@
       "picker_name": "Home Glass – Button",
       "script_scene_button_or": "Script, scene, button or tap_action",
       "tap_to_run": "Tap to run"
+    },
+    "camera": {
+      "camera_details": "Camera details",
+      "camera_unavailable": "Camera unavailable",
+      "close_esc": "Close (Esc)",
+      "close_full_screen": "Close full screen",
+      "full_screen": "Full screen",
+      "fullscreen_dialog_aria": "Camera {name} – full screen",
+      "idle": "idle",
+      "live": "LIVE",
+      "live_button": "Live",
+      "live_view": "Live view",
+      "loading": "Loading…",
+      "no_connection_to_camera": "No connection to camera",
+      "no_image": "No image",
+      "preview": "PREVIEW",
+      "recording": "recording",
+      "state_live": "live",
+      "stop_live_view": "Stop live view",
+      "streaming": "streaming",
+      "swipe_down_to_close": "Swipe down to close",
+      "unable_to_start_preview": "Unable to start preview",
+      "unavailable": "unavailable"
     }
   },
   "common": {
