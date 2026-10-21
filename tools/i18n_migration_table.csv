@@ -2697,7 +2697,7 @@ page.scroll_down,parts/hg-page.part.js,419,hgTr,Scroll down,Przewiń w dół,,,a
 page.more_below,parts/hg-page.part.js,419,hgTr,More below,Więcej poniżej,,,auto
 common.back,parts/hg-page.part.js,420,hgTr,Back,Wstecz,,,auto
 common.back,parts/hg-page.part.js,420,hgTr,Back,Wstecz,,,auto
-page.card_error,parts/hg-page.part.js,461,hgTr,Card error: ,Błąd karty: ,,concat,manual
+page.card_error,parts/hg-page.part.js,461,hgTr,Card error: {error},Błąd karty: {error},error,concat,auto
 page.user,parts/hg-page.part.js,548,hgTr,User,Użytkownik,,,auto
 page.back_to_rooms,parts/hg-page.part.js,556,hgTr,Back to rooms,Wróć do pokoi,,,auto
 common.rooms,parts/hg-page.part.js,556,hgTr,Rooms,Pokoje,,,auto
@@ -2710,8 +2710,6 @@ page.temperature,parts/hg-page.part.js,566,hgTr,Temperature,Temperatura,,,auto
 common.humidity,parts/hg-page.part.js,566,hgTr,Humidity,Wilgotność,,,auto
 page.occupied,parts/hg-page.part.js,571,hgTr,Occupied,Ktoś jest,,,auto
 page.clear,parts/hg-page.part.js,571,hgTr,Clear,Pusto,,,auto
-page.open,parts/hg-page.part.js,573,hgTr,Open,Otwarte,,plural,manual
-page.open_2,parts/hg-page.part.js,573,hgTr,{opn} open,{opn} otwarte,opn,plural,manual
 page.no_devices,parts/hg-page.part.js,574,hgTr,No devices,Brak urządzeń,,,auto
 common.state_unavailable_masc,parts/hg-page.part.js,582,hgTr,unavailable,niedostępny,,,auto
 common.automatic,parts/hg-page.part.js,585,hgTr,Automatic,Automatycznie,,,auto
@@ -2719,15 +2717,15 @@ page.do_not_show,parts/hg-page.part.js,587,hgTr,Do not show,Nie pokazuj,,,auto
 page.all_room_settings,parts/hg-page.part.js,588,hgTr,All room settings…,Wszystkie ustawienia pokoju…,,,auto
 page.saved_on_this_device,parts/hg-page.part.js,595,hgTr,Saved on this device only,Zapisano tylko na tym urządzeniu,,,auto
 page.header_hidden,parts/hg-page.part.js,603,hgTr,Header hidden,Nagłówek ukryty,,,auto
-common.welcome,parts/hg-page.part.js,609,hgTr,"Welcome, {name}!","Witaj, {name}!",,,auto
-page.control_your_home_in,parts/hg-page.part.js,611,hgTr,Control your home in one place,Steruj domem w jednym miejscu,,,auto
+common.welcome,parts/hg-page.part.js,609,hgTr,"Welcome, {name}!","Witaj, {name}!",name,expr,auto
+page.default_subtitle,parts/hg-page.part.js,611,hgTr,Control your home in one place,Steruj domem w jednym miejscu,,,auto
 common.fuel_prices,parts/hg-page.part.js,611,hgTr,Fuel prices,Ceny paliw,,,auto
 page.tomorrow_no_data,parts/hg-page.part.js,640,hgTr,tomorrow: no data,jutro: brak danych,,,auto
 page.no_change_tomorrow,parts/hg-page.part.js,640,hgTr,no change tomorrow,jutro bez zmian,,,auto
-page.tomorrow_gr_0_math,parts/hg-page.part.js,640,hgTr,tomorrow ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr,jutro ${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr,,expr,manual
-page.f_label_per_litre,parts/hg-page.part.js,641,hgTr,"${f.label} {price} per litre, {tom}","${f.label} {price} za litr, {tom}",,expr,manual
+page.fuel_tomorrow_change,parts/hg-page.part.js,640,hgTr,tomorrow {change} gr,jutro {change} gr,change,expr,auto
+page.fuel_aria,parts/hg-page.part.js,641,hgTr,"{label} {price} per litre, {tomorrow}","{label} {price} za litr, {tomorrow}","label,price,tomorrow",expr,auto
 page.home,parts/hg-page.part.js,649,hgTr,Home,Dom,,,auto
-page.t_b_active,parts/hg-page.part.js,665,hgTr,${t.b} active,${t.b} aktywne,,expr,manual
+page.active_count,parts/hg-page.part.js,665,hgTr,{count} active,{count} aktywne,count,expr,auto
 page.finish_editing_layout,parts/hg-page.part.js,667,hgTr,Finish editing layout,Zakończ edycję układu,,,auto
 page.edit_layout,parts/hg-page.part.js,667,hgTr,Edit layout,Edytuj układ,,,auto
 common.done,parts/hg-page.part.js,667,hgTr,Done,Gotowe,,,auto
@@ -2744,8 +2742,8 @@ page.menu_update_available,parts/hg-page.part.js,673,hgTr,"Menu, update availabl
 page.empty_view,parts/hg-page.part.js,713,hgTr,Empty view,Pusty widok,,,auto
 page.this_view_has_no,parts/hg-page.part.js,713,hgTr,This view has no widgets yet.,Ten widok nie ma jeszcze żadnych widżetów.,,,auto
 common.add_widget,parts/hg-page.part.js,713,hgTr,Add widget,Dodaj widżet,,,auto
-page.reload_to_load_v,parts/hg-page.part.js,718,hgTr,Reload to load v${H.esc(U.stale)},"Odśwież, aby wczytać v${H.esc(U.stale)}",,expr,manual
-page.update_available_v_h,parts/hg-page.part.js,719,hgTr,Update available v${H.esc(U.v)},Dostępna aktualizacja v${H.esc(U.v)},,expr,manual
+page.reload_to_load_version,parts/hg-page.part.js,718,hgTr,Reload to load v{version},"Odśwież, aby wczytać v{version}",version,expr,auto
+page.update_available_version,parts/hg-page.part.js,719,hgTr,Update available v{version},Dostępna aktualizacja v{version},version,expr,auto
 page.lock_screen,parts/hg-page.part.js,722,hgTr,Lock screen,Zablokuj ekran,,,auto
 page.turn_kiosk_mode_on,parts/hg-page.part.js,727,hgTr,Turn kiosk mode on,Włącz tryb kiosku,,,auto
 page.turn_kiosk_mode_off,parts/hg-page.part.js,727,hgTr,Turn kiosk mode off,Wyłącz tryb kiosku,,,auto
@@ -2767,7 +2765,8 @@ page.hide_panel,parts/hg-page.part.js,855,hgTr,Hide panel,Ukryj panel,,,auto
 common.household,parts/hg-page.part.js,861,hgTr,Household,Domownicy,,,auto
 page.who_is_home_right,parts/hg-page.part.js,861,hgTr,Who is home right now,Kto jest teraz w domu,,,auto
 page.family,parts/hg-page.part.js,866,hgTr,Family,Rodzina,,,auto
-page.full_screen_glass_layout,parts/hg-page.part.js,1453,hgTr,"Full-screen glass layout (bar, header, rail, card panel)","Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)",,load-time,manual
+page.picker_description,parts/hg-page.part.js,1453,hgTr,"Full-screen glass layout (bar, header, rail, card panel)","Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)",,load-time,auto
+page.picker_name,parts/hg-page.part.js,1453,hgTr,Home Glass – Page,Home Glass – Page,,load-time,auto
 roomx.no_devices_in_this,parts/hg-roomx.part.js,27,hgTr,No devices in this room,Brak urządzeń w tym pokoju,,,auto
 roomx.pick_the_entities_to,parts/hg-roomx.part.js,28,hgTr,"Pick the entities to show here, or build the room from scratch.","Wybierz encje, które mają się tu pojawić, albo ułóż pokój od zera.",,,auto
 roomx.import_area_hint,parts/hg-roomx.part.js,29,hgTr,"Import devices from the “{name}” area in Home Assistant, or build the room from scratch.",Zaimportuj urządzenia z obszaru „{name}” w Home Assistant albo ułóż pokój od zera.,name,expr,auto
