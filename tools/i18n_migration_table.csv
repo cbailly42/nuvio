@@ -475,8 +475,8 @@ common.previous_track,parts/cards/media-mini-card.part.js,11,hgTr,Previous,Poprz
 common.pause,parts/cards/media-mini-card.part.js,11,hgTr,Pause,Pauza,,,auto
 cards.media_mini.play,parts/cards/media-mini-card.part.js,11,hgTr,Play,Odtwórz,,,auto
 common.next_track,parts/cards/media-mini-card.part.js,11,hgTr,Next,Następny,,,auto
-cards.media_mini.home_glass_mini_player,parts/cards/media-mini-card.part.js,15,hgTr,Home Glass – Mini player,Home Glass – Mini odtwarzacz,,load-time,manual
-cards.media_mini.artwork_title_and_buttons,parts/cards/media-mini-card.part.js,15,hgTr,"Artwork, title and buttons in one row","Okładka, tytuł i przyciski w jednym wierszu",,load-time,manual
+cards.media_mini.picker_name,parts/cards/media-mini-card.part.js,15,hgTr,Home Glass – Mini player,Home Glass – Mini odtwarzacz,,load-time,auto
+cards.media_mini.picker_description,parts/cards/media-mini-card.part.js,15,hgTr,"Artwork, title and buttons in one row","Okładka, tytuł i przyciski w jednym wierszu",,load-time,auto
 cards.month.january_february_march_april,parts/cards/month-card.part.js,1,hgTr,"['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']","['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']",,array,manual
 common.calendar,parts/cards/month-card.part.js,6,hgTr,Calendar,Kalendarz,,,auto
 cards.month.mon_tue_wed_thu,parts/cards/month-card.part.js,51,hgTr,"['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']","['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd']",,array,manual

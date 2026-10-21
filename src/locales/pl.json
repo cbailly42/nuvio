@@ -526,6 +526,13 @@
       "picker_name": "Nuvio – Dziennik",
       "recent_activity": "Ostatnie zdarzenia"
     },
+    "media_mini": {
+      "any_media_player": "Dowolny media_player",
+      "choose_a_player": "Wybierz odtwarzacz",
+      "picker_description": "Okładka, tytuł i przyciski w jednym wierszu",
+      "picker_name": "Home Glass – Mini odtwarzacz",
+      "play": "Odtwórz"
+    },
     "note": {
       "add_text_in_the": "Dodaj treść w polu „Treść”",
       "empty_note": "Pusta notatka",

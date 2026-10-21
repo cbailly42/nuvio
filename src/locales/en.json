@@ -522,6 +522,13 @@
       "picker_name": "Nuvio – Logbook",
       "recent_activity": "Recent activity"
     },
+    "media_mini": {
+      "any_media_player": "Any media_player",
+      "choose_a_player": "Choose a player",
+      "picker_description": "Artwork, title and buttons in one row",
+      "picker_name": "Home Glass – Mini player",
+      "play": "Play"
+    },
     "note": {
       "add_text_in_the": "Add text in the \"Text\" field",
       "empty_note": "Empty note",
