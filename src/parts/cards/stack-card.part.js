@@ -64,7 +64,7 @@ ha-card:not(.h) .bd, ha-card.nw .bd{ flex:1 0 auto; }   /* Safari: podstawa 0% p
     this.$.querySelectorAll('.sl[data-own]').forEach((slot, i) => { const cfg = L[i]; if (!cfg) return; const sig = this.key() + i + JSON.stringify(cfg); const el = this._kids.get(sig);
       const put = (x) => { if (this._hgPv) x._hgPv = true;   /* podgląd w edytorze: dzieci też omijają wstrzymanie odświeżania */
         if (x.parentElement !== slot) { slot.textContent = ''; slot.appendChild(x); } if (x.localName.includes('-')) x.hass = this._hass; };
-      if (el) return put(el);
+      if (el) { if (el.className === 'deep') el.textContent = hgT('cards.stack.too_many_container_levels'); return put(el); }   /* komunikat w bieżącym języku */
       if (deep && hgIsCont(cfg)) { const d = document.createElement('div'); d.className = 'deep'; d.textContent = hgT('cards.stack.too_many_container_levels'); this._kids.set(sig, d); return put(d); }
       this._kids.set(sig, null); hgMakeCard(cfg, (x) => { this._kids.set(sig, x); if (this.$.contains(slot)) put(x); }); });
     for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) el.hass = h; }
