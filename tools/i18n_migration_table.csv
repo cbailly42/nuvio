@@ -445,11 +445,11 @@ common.code,parts/cards/lock-card.part.js,20,hgTr,Code,Kod,,,auto
 common.cancel,parts/cards/lock-card.part.js,21,hgTr,Cancel,Anuluj,,,auto
 cards.lock.unlock,parts/cards/lock-card.part.js,21,hgTr,Unlock,Odblokuj,,,auto
 cards.lock.lock,parts/cards/lock-card.part.js,21,hgTr,Lock,Zablokuj,,,auto
-cards.lock.unlock_2,parts/cards/lock-card.part.js,23,hgTr,Unlock {nm}?,Odblokować: {nm}?,nm,,review
+cards.lock.unlock_confirm_title,parts/cards/lock-card.part.js,23,hgTr,Unlock {nm}?,Odblokować: {nm}?,nm,,auto
 cards.lock.the_door_can_be,parts/cards/lock-card.part.js,23,hgTr,The door can be opened without a key.,Drzwi będzie można otworzyć bez klucza.,,,auto
 cards.lock.unlock,parts/cards/lock-card.part.js,23,hgTr,Unlock,Odblokuj,,,auto
-cards.lock.nuvio_lock,parts/cards/lock-card.part.js,27,hgTr,Nuvio – Lock,Nuvio – Zamek,,load-time,manual
-cards.lock.lock_state_and_unlock,parts/cards/lock-card.part.js,27,hgTr,Lock state and unlock with confirmation,Stan zamka i odblokowanie z potwierdzeniem,,load-time,manual
+cards.lock.picker_name,parts/cards/lock-card.part.js,27,hgTr,Nuvio – Lock,Nuvio – Zamek,,load-time,auto
+cards.lock.picker_description,parts/cards/lock-card.part.js,27,hgTr,Lock state and unlock with confirmation,Stan zamka i odblokowanie z potwierdzeniem,,load-time,auto
 cards.logbook.choose_entities_for_the,parts/cards/logbook-card.part.js,18,hgTr,Choose entities for the logbook,Wybierz encje do dziennika,,,auto
 cards.logbook.recent_activity,parts/cards/logbook-card.part.js,23,hgTr,Recent activity,Ostatnie zdarzenia,,,auto
 common.loading,parts/cards/logbook-card.part.js,23,hgTr,Loading…,Wczytywanie…,,,auto

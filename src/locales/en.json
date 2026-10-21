@@ -480,6 +480,16 @@
       "picker_name": "Home Glass – Light",
       "toggle": "Toggle",
       "unavailable": " – unavailable"
+    },
+    "lock": {
+      "choose_a_lock": "Choose a lock",
+      "enter_the_lock_code": "Enter the lock code.",
+      "lock": "Lock",
+      "picker_description": "Lock state and unlock with confirmation",
+      "picker_name": "Nuvio – Lock",
+      "the_door_can_be": "The door can be opened without a key.",
+      "unlock": "Unlock",
+      "unlock_confirm_title": "Unlock {nm}?"
     }
   },
   "common": {

@@ -484,6 +484,16 @@
       "picker_name": "Home Glass – Oświetlenie",
       "toggle": "Przełącz",
       "unavailable": " – niedostępne"
+    },
+    "lock": {
+      "choose_a_lock": "Wybierz zamek",
+      "enter_the_lock_code": "Podaj kod zamka.",
+      "lock": "Zablokuj",
+      "picker_description": "Stan zamka i odblokowanie z potwierdzeniem",
+      "picker_name": "Nuvio – Zamek",
+      "the_door_can_be": "Drzwi będzie można otworzyć bez klucza.",
+      "unlock": "Odblokuj",
+      "unlock_confirm_title": "Odblokować: {nm}?"
     }
   },
   "common": {
