@@ -209,9 +209,17 @@ const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObse
 const HG_LIVE = new Set();
 let hgLiveN = 0;
 const hgLivePurge = () => { for (const r of HG_LIVE) if (!r.deref()) HG_LIVE.delete(r); };
+/* teksty z defaults() liczone przed nadejściem katalogu (karta poza strategią) są w _config: gdy po zmianie kodu języka defaults() daje
+   inny tekst niż przy setConfig, karta dostaje swoją konfigurację jeszcze raz (hgReg zapamiętuje ją w _cfgRaw) zamiast samego przerysowania */
+const hgCfgDef = (c) => { try { return JSON.stringify(c.defaults()); } catch (e) { return null; } };
+const hgCfgFresh = (c) => {
+  if (c._cfgRaw === undefined || c._cfgLang === HGI18n.code) return false;
+  c._cfgLang = HGI18n.code; if (hgCfgDef(c) === c._cfgDef) return false;
+  c.setConfig(c._cfgRaw); return true;
+};
 window.addEventListener('hg-lang', () => queueMicrotask(() => {
   for (const r of HG_LIVE) { const c = r.deref(); if (!c) { HG_LIVE.delete(r); continue; }
-    if (c.isConnected) { try { c.rerender(); } catch (e) { /* karta bez konfiguracji */ } } else if (c._html != null) c._stale = true; }
+    if (c.isConnected) { try { if (!hgCfgFresh(c)) c.rerender(); } catch (e) { /* karta bez konfiguracji */ } } else if (c._html != null) c._stale = true; }
 }));
 class HGBase extends HTMLElement {
   constructor() {
@@ -274,7 +282,7 @@ class HGBase extends HTMLElement {
     }
     this._doUpdate(force);
   }
-  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); if (this._stale) { this._stale = false; this._update(true); } }
+  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); if (this._stale) { this._stale = false; let f = false; try { f = hgCfgFresh(this); } catch (e) { /* zła konfiguracja */ } if (!f) this._update(true); } }
   disconnectedCallback() { if (HG_VIS) HG_VIS.unobserve(this); }
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;
@@ -311,6 +319,16 @@ const hgReg = (tag, cls, name, desc) => {
   const dc = cls.prototype.disconnectedCallback;
   if (cls.prototype instanceof HGBase && dc && dc !== HGBase.prototype.disconnectedCallback && !dc.__hgVis) {
     const w = function () { if (HG_VIS) HG_VIS.unobserve(this); return dc.call(this); }; w.__hgVis = true; cls.prototype.disconnectedCallback = w;
+  }
+  /* zewnętrzne wywołanie setConfig (HA, karta-rodzic) zapamiętane z kodem języka – dla hgCfgFresh; wewnętrzne super.setConfig pomijane */
+  const sc = cls.prototype.setConfig;
+  if (cls.prototype instanceof HGBase && sc && !Object.prototype.hasOwnProperty.call(cls.prototype, '__hgCfgW')) {
+    cls.prototype.setConfig = function (c) {
+      if (this.__hgCfgIn) return sc.call(this, c);
+      this.__hgCfgIn = true; this._cfgRaw = c; this._cfgLang = HGI18n.code; this._cfgDef = hgCfgDef(this);
+      try { return sc.call(this, c); } finally { this.__hgCfgIn = false; }
+    };
+    Object.defineProperty(cls.prototype, '__hgCfgW', { value: true });
   }
   if (!customElements.get(tag)) customElements.define(tag, cls);
   /* name / desc: tekst albo hgTLazy (rozwiązywane przy odczycie, w bieżącym języku – lista kart HA czyta je później niż rejestracja) */

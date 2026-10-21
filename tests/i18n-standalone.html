@@ -24,7 +24,8 @@ window.fetch = (u, o) => {
 };
 window.addEventListener('hg-lang', () => R.hgLang.push(ms()));
 if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
-const hass = { states: { 'light.desk': { entity_id: 'light.desk', state: 'on', attributes: { friendly_name: 'Desk', brightness: 128, supported_color_modes: ['brightness'], color_mode: 'brightness' }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() } },
+const hass = { states: { 'light.desk': { entity_id: 'light.desk', state: 'on', attributes: { friendly_name: 'Desk', brightness: 128, supported_color_modes: ['brightness'], color_mode: 'brightness' }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() },
+    'climate.ac': { entity_id: 'climate.ac', state: 'cool', attributes: { friendly_name: 'AC', hvac_modes: ['off', 'cool'], temperature: 22, min_temp: 16, max_temp: 30 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() } },
   entities: {}, devices: {}, areas: {}, user: { id: 'u1', name: 'Test', is_admin: false }, config: { unit_system: { temperature: '°C' }, time_zone: 'Europe/Warsaw' }, panels: {},
   language: lang, locale: { language: lang, time_format: '24', number_format: 'language' }, themes: { darkMode: true }, callService: async () => {}, callWS: async () => { throw new Error('no ws'); },
   connection: { subscribeMessage: async () => () => {} } };
@@ -36,6 +37,10 @@ const save = () => { const c = R.cat; if (!c || !Array.isArray(c.t)) return 'Sav
 el.render = function () { const p = save(); R.renders.push({ at: ms(), probe: p }); return render.call(this) + `<span class="probe">${p}</span>`; };
 el.setConfig({ entity: 'light.desk' }); el.hass = hass; document.getElementById('card').appendChild(el);
 const text = () => (el.shadowRoot && el.shadowRoot.querySelector('.probe') || {}).textContent || '';
-R.first = { text: text(), at: ms() };
-setTimeout(() => { R.final = { text: text(), at: ms() }; R.done = true; document.getElementById('log').textContent = JSON.stringify(R, (k, v) => (k === 'cat' ? undefined : v), 1); }, delay + 1500);
+/* defaults() text (ac-card title, a real hgT key) computed by setConfig before the catalog: must follow the catalog without a new setConfig */
+await customElements.whenDefined('nuvio-ac-card');
+const ac = document.createElement('nuvio-ac-card'); ac.setConfig({ entity: 'climate.ac' }); ac.hass = hass; document.getElementById('card').appendChild(ac);
+const acTitle = () => (ac.shadowRoot && ac.shadowRoot.querySelector('.tt') || {}).textContent || '';
+R.first = { text: text(), at: ms(), ac: acTitle() };
+setTimeout(() => { R.final = { text: text(), at: ms(), ac: acTitle() }; R.done = true; document.getElementById('log').textContent = JSON.stringify(R, (k, v) => (k === 'cat' ? undefined : v), 1); }, delay + 1500);
 </script></body></html>

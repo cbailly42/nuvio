@@ -76,7 +76,7 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
     if (this._tgt === v && el.childElementCount) return; this._tgt = v; clearTimeout(this._nt);
     const put = (x, anim, hi) => { const old = [...el.children]; for (const o of old) { if (anim) { o.className = 'out'; setTimeout(() => o.remove(), 450); } else o.remove(); }
       const n = document.createElement('span'); n.textContent = x == null ? '–' : String(x); if (anim) n.className = 'in' + (hi ? ' hi' : ''); el.appendChild(n); return n; };
-    const shown = this._shown; if (shown == null || v == null || !this.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) { this._shown = v; put(v, shown != null && v != null && shown !== v, false); return; }
+    const shown = this._shown; if (shown == null || v == null || !el.childElementCount || !this.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) { this._shown = v; put(v, shown != null && v != null && shown !== v, false); return; }
     if (shown === v) return; const dir = v > shown ? 1 : -1, steps = Math.min(Math.abs(v - shown), 12), st = Math.abs(v - shown) > 12 ? (v - shown) / 12 : dir;
     let n = 0; const tick = () => { n++; const x = n >= steps ? v : Math.round(shown + st * n); this._shown = x; const s = put(x, true, n >= steps && v < shown);
       if (n < steps) this._nt = setTimeout(tick, 380); else this._nt = setTimeout(() => s.classList.remove('hi'), 1300); };

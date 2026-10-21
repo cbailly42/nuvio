@@ -145,6 +145,8 @@ def standalone(root, lang, delay=1000):
         ('hg-lang after the catalog arrived', any(t >= (arr or 1e9) for t in R['hgLang'])),
         ('card re-rendered after the catalog', bool(late) and late[-1]['probe'] != 'Save'),
         ('text changed on screen', R['final']['text'] not in ('', 'Save')),
+        # defaults() text set by setConfig before the catalog (ac-card title): refreshed on hg-lang (hgCfgFresh), not only re-rendered
+        ('defaults() text follows the catalog (ac-card title)', R['first'].get('ac') == 'Air conditioning' and R['final'].get('ac') not in ('', 'Air conditioning')),
         ('no page error', not errs),
     ]
     print(json.dumps({k: R[k] for k in ('lang', 'delay', 'loads', 'fetches', 'arrived', 'hgLang', 'first', 'final')}, ensure_ascii=False))
