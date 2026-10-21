@@ -335,7 +335,11 @@ const HG_COMP = [
     opts: [{ k: 'hours', t: 'num', l: ['Godziny na wykresie', 'Hours on the chart'], ph: '6' }, { k: 'max_power', t: 'num', l: ['Moc maksymalna (W, dla pasku mocy)', 'Maximum power (W, for the power bar)'], ph: '10000' },
       { k: 'max', t: 'num', l: ['Koniec skali paska w jednostce czujnika (puste = największa wartość z wykresu)', 'Bar scale end in the sensor unit (empty = highest value on the chart)'] },
       { k: 'chart_label', l: ['Podpis wykresu (np. Prognoza, -24 h)', 'Chart caption (e.g. Forecast, -24 h)'], ph: '-6 h' }, { k: 'hide_chart_label', t: 'bool', l: ['Ukryj podpisy pod wykresem', 'Hide the labels under the chart'] },
-      { k: 'show_level', t: 'bool', l: ['Pokaż poziom (Niskie, Średnie, Wysokie)', 'Show the level (Low, Medium, High)'] }],
+      { k: 'show_level', t: 'bool', l: ['Pokaż poziom (Niskie, Średnie, Wysokie)', 'Show the level (Low, Medium, High)'] },
+      { k: 'forecast', t: 'bool', l: ['Wykres z prognozy (atrybut) zamiast historii', 'Chart from a forecast (attribute) instead of history'] },
+      { k: 'forecast_entities', t: 'list', l: ['Encje z prognozą (po przecinku, puste = czujnik karty)', 'Forecast entities (comma separated, empty = the card sensor)'] },
+      { k: 'forecast_attribute', l: ['Atrybut prognozy', 'Forecast attribute'], ph: 'detailedForecast' }, { k: 'forecast_value', l: ['Pole wartości', 'Value field'], ph: 'pv_estimate' },
+      { k: 'forecast_days', t: 'num', l: ['Dni do przodu', 'Days ahead'], ph: '1' }, { k: 'forecast_hours', t: 'num', l: ['Godziny do przodu (zamiast dni)', 'Hours ahead (instead of days)'] }],
     cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) }, { n: ['Moc teraz', 'Power now'], d: ['Wartość z paskiem i linią z ostatnich godzin: moc, energia albo prognoza', 'Value with a bar and a line for recent hours: power, energy or a forecast'] }),
   hgTrO({ id: 'energy', i: 'mdi:lightning-bolt-outline', card: 'hg-energy-stats-card', slots: [hgTrO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], req: 1 }, { l: ['Zużycie (kWh)', 'Consumption (kWh)'] }), hgTrO({ k: 'production', dom: ['sensor'], dc: ['energy'] }, { l: ['Produkcja (kWh, opcjonalnie)', 'Production (kWh, optional)'] })],
     cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) }, { n: ['Energia – statystyki', 'Energy – statistics'], d: ['Zużycie i produkcja: dziś, tydzień, miesiąc', 'Consumption and production: today, week, month'] }),
@@ -1191,7 +1195,7 @@ const HG_EDIT = {
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); if (HGLang._pend) { HGLang._pend = 0; HGLang.refresh(this); } };
-    if (save) HGL.save(this._hass).then((w) => { this._eToast(w === 'ha' ? hgTr('Zapisano układ (synchronizacja przez Home Assistant)', 'Layout saved (synced via Home Assistant)') : hgTr('Zapisano układ na tym urządzeniu', 'Layout saved on this device')); fin(); }); else fin();
+    if (save) HGL.save(this._hass).then((w) => { try { this._eToast(w === 'ha' ? hgTr('Zapisano układ (synchronizacja przez Home Assistant)', 'Layout saved (synced via Home Assistant)') : hgTr('Zapisano układ na tym urządzeniu', 'Layout saved on this device')); } catch (e) { /* */ } fin(); }, fin); else fin();
   },
   /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
      rozwija się po najechaniu / dotknięciu, przesunięcie lub dotyk zamyka, auto-zamknięcie pauzowane, identyczne komunikaty łączone (×n) */
@@ -1203,7 +1207,7 @@ const HG_EDIT = {
     HGL.notify(); for (const c of this._cards || []) { try { c.rerender && c.rerender(); } catch (e) {} }
     const deep = (el, d) => { if (!el || !el.shadowRoot || d > 2) return; for (const x of el.shadowRoot.querySelectorAll('hg-areas-card, hg-room-card, hg-tiles-card')) { try { x.rerender(); } catch (e) {} deep(x, d + 1); } };
     for (const c of this._cards || []) deep(c, 0);
-    requestAnimationFrame(() => { HG_FREEZE.on = true; this._eDecorate(); });
+    requestAnimationFrame(() => { if (this._editing) HG_FREEZE.on = true; this._eDecorate(); });
   },
   _eDecorate() {
     if (!this._editing) return;

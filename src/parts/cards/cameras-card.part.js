@@ -29,7 +29,7 @@ ha-card.wrap{ container-type:inline-size; }
     const av = c.entities.filter((e) => !dn(e)), un = c.entities.filter(dn);
     const sig = av.join(',') + '|' + un.map((e) => e + H.name(h, e)).join(',');
     if (sig !== this._lsig) { this._lsig = sig; this._layoutCams(av, un); }
-    for (const t of this._tiles.values()) t.hass = h;
+    for (const t of this._tiles.values()) hgPass(t, h);
   }
   _layoutCams(av, un) {
     const c = this._config, h = this._hass;
