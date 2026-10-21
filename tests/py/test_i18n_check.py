@@ -60,6 +60,9 @@ class Code(Fix):
     def test_reintroduced_hgTr(self): self.add_js("const g = hgTr('Tak', 'Yes');"); self.one_error('hgTr')
     def test_reintroduced_hgTrLazy(self): self.add_js("const g = hgTrLazy('Tak', 'Yes');"); self.one_error('hgTrLazy')
     def test_reintroduced_lang_choice(self): self.add_js("const g = hgCurLang() === 'pl' ? x : y;"); self.one_error("hgCurLang() === 'pl'")
+    def test_reintroduced_lang_choice_double_quotes(self): self.add_js('const g = hgCurLang() === "en" ? x : y;'); self.one_error('hgCurLang() === "en"')
+    def test_reintroduced_lang_choice_reversed(self): self.add_js("const g = 'pl' !== hgCurLang() ? x : y;"); self.one_error("'pl' !== hgCurLang()")
+    def test_reintroduced_lang_choice_reversed_double(self): self.add_js('const g = "en" == hgCurLang() ? x : y;'); self.one_error('"en" == hgCurLang()')
     def test_runtime_file_is_skipped(self): self.assertEqual(self.run_check()['errors'], [])
 
 class Catalogs(Fix):
@@ -97,6 +100,45 @@ class Catalogs(Fix):
     def test_optional_language_still_checked_for_variables(self):
         self.put('de', {'_meta': {'name': 'Deutsch', 'locale': 'de-DE'}, 'demo': {'greet': 'Hallo!'}})
         self.one_error('{name}')
+
+class Markup(Fix):
+    """catalog text goes into innerHTML / attributes unescaped: no markup, no event handler, no straight double quote outside English"""
+    def test_tag_in_english(self):
+        en = self.cat('en'); en['demo']['title'] = '<b>Demo</b>'; self.put('en', en); self.one_error('en.json: demo.title')
+    def test_tag_in_translation(self):
+        pl = self.cat('pl'); pl['demo']['title'] = 'Demo <img src=x>'; self.put('pl', pl); self.one_error('pl.json: demo.title')
+    def test_closing_tag_and_comment(self):
+        pl = self.cat('pl'); pl['demo']['title'] = 'Demo</span>'; self.put('pl', pl); self.one_error('markup')
+        pl['demo']['title'] = 'Demo <!-- x -->'; self.put('pl', pl); self.one_error('markup')
+    def test_tag_in_plural_form(self):
+        pl = self.cat('pl'); pl['demo']['count_few'] = '{count} <i>elementy</i>'; self.put('pl', pl); self.one_error('pl.json: demo.count_few')
+    def test_tag_in_dynamic_table(self):
+        pl = self.cat('pl'); pl['states']['on'] = '<b>wł.</b>'; self.put('pl', pl); self.one_error('pl.json: states.on')
+    def test_event_handler(self):
+        pl = self.cat('pl'); pl['demo']['title'] = 'x" onmouseover = "alert(1)'; self.put('pl', pl)
+        r = self.run_check(); self.assertTrue(any('event handler' in e for e in r['errors']), r['errors'])
+        pl['demo']['title'] = 'Demo onload=go'; self.put('pl', pl); self.one_error('event handler')
+    def test_straight_double_quote_outside_english(self):
+        pl = self.cat('pl'); pl['demo']['title'] = 'Demo "x"'; self.put('pl', pl); self.one_error('straight double quote')
+    def test_straight_double_quote_in_english_is_fine(self):
+        en = self.cat('en'); en['demo']['title'] = 'Demo "x"'; self.put('en', en); self.assertEqual(self.run_check()['errors'], [])
+    def test_texts_that_are_not_markup(self):
+        en, pl = self.cat('en'), self.cat('pl')
+        en['demo']['title'] = 'for <1 min, < 0.1, a < b, url ?area=<id> or <name>'; en['demo']['close'] = 'Button on the left = close'
+        pl['demo']['title'] = '< 0,1 i <id> „cytat”'; self.put('en', en); self.put('pl', pl)
+        self.assertEqual(self.run_check()['errors'], [])
+    def test_placeholder_named_like_a_tag_is_markup(self):
+        pl = self.cat('pl'); pl['demo']['title'] = 'Demo <b>'; self.put('pl', pl); self.one_error('markup')
+
+class Codes(Fix):
+    """language code = file name: lowercase BCP 47 style (fr, pt-br), the runtime and the loader compare lowercase codes"""
+    def test_uppercase_code(self):
+        self.put('pt-BR', {'_meta': {'name': 'Português', 'locale': 'pt-BR'}, 'common': {'save': 'Salvar'}}); self.one_error('pt-BR.json')
+    def test_underscore_code(self):
+        self.put('pt_br', {'_meta': {'name': 'Português', 'locale': 'pt-BR'}, 'common': {'save': 'Salvar'}}); self.one_error('pt_br.json')
+    def test_valid_region_code(self):
+        self.put('pt-br', {'_meta': {'name': 'Português', 'locale': 'pt-BR'}, 'common': {'save': 'Salvar'}})
+        r = self.run_check(); self.assertEqual(r['errors'], []); self.assertEqual(len(r['warnings']), 1)
 
 class Cli(Fix):
     """the CLI checks the module's REQUIRED languages (en, pl, fr): the fixture root gets a complete fr catalog"""

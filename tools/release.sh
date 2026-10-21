@@ -27,7 +27,8 @@ if ! gh release view "v$V" >/dev/null 2>&1; then gh release create "v$V" --title
 T=$(mktemp -d); sleep 3
 git show "v$V:dist/nuvio.js" > "$T/t.js"
 grep -q "HG_BUILD = '$V+" "$T/t.js" || { echo "BŁĄD: dist/nuvio.js w v$V nie ma wersji $V"; exit 1; }
-for f in nuvio-version.json $(python3 -c "import json;print(json.load(open('dist/nuvio-version.json'))['core'])") nuvio-font-dmsans-latin.woff2 nuvio-bg-default-wide.webp nuvio-meteo-static-sunrise.svg CREDITS.md; do git cat-file -e "v$V:dist/$f" 2>/dev/null || { echo "BŁĄD: brak dist/$f w v$V"; exit 1; }; done
+# rdzeń i skompilowane katalogi językowe (nuvio-locale-*.json) wymienione w nuvio-version.json muszą być w tagu
+for f in nuvio-version.json $(git show "v$V:dist/nuvio-version.json" | python3 -c "import json,sys;j=json.load(sys.stdin);print(' '.join([j['core'], *j.get('locales', {}).values()]))") nuvio-font-dmsans-latin.woff2 nuvio-bg-default-wide.webp nuvio-meteo-static-sunrise.svg CREDITS.md; do git cat-file -e "v$V:dist/$f" 2>/dev/null || { echo "BŁĄD: brak dist/$f w v$V"; exit 1; }; done
 git ls-tree -d --name-only "v$V" dist/ | grep -q . && { echo "BŁĄD: podfolder w dist/ w v$V (HACS go pominie)"; exit 1; }
 N=$(gh release view "v$V" --json assets -q '.assets | length'); [ "$N" = "0" ] || { echo "BŁĄD: wydanie v$V ma $N załączników (HACS pominie dist/)"; exit 1; }
 echo "OK: v$V: dist/nuvio.js ma HG_BUILD $V, płaskie zasoby są, brak załączników"

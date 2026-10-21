@@ -194,8 +194,11 @@ def main():
         tags = brand_tags(js); js = brand(js, tags)
         # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it.
         # Catalog texts are branded like the code (same tags), before their own hash is taken.
-        ld = os.path.join(R, 'dist'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld, text=lambda t: brand(t, tags))
-        js = i18n_compile.rewrite_keys(js, idx)
+        # Nothing is written to dist/ before every check below has passed (catalogs, core, version file and loader are written together at the end).
+        try:
+            manifest, en, idx, cats = i18n_compile.compile_locales(os.path.join(R, 'src', 'locales'), text=lambda t: brand(t, tags))
+            js = i18n_compile.rewrite_keys(js, idx)
+        except ValueError as e: sys.exit('i18n: %s – see python3 tools/i18n_check.py (dist/ left unchanged)' % e)
         for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
             if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))
             js = js.replace(ph, json.dumps(val, ensure_ascii=False, separators=(',', ':')))
@@ -206,17 +209,19 @@ def main():
         # or browsers and HA's service worker keep serving the previous build's core under the same immutable URL
         v = ver + '+' + hashlib.md5((ver + '\n' + js).encode()).hexdigest()[:8]
         js = js.replace("'__HG_BUILD__'", "'%s'" % v, 1)
-        dd = os.path.join(R, 'dist'); os.makedirs(dd, exist_ok=True)
+        dd = os.path.join(R, 'dist')
         # The bundle goes to a content-hashed file (immutable URL, safe to cache forever).
         # dist/nuvio.js is a tiny loader: HACS registers it under one ?hacstag= per version, and HA's
         # service worker (stale-while-revalidate) plus /hacsfiles/ Cache-Control max-age=31 days can keep
         # serving an old copy. The loader asks nuvio-version.json (no-store, unique URL) which core is current.
         h = v.split('+')[1]
-        for f in os.listdir(dd):
-            if re.fullmatch(r'nuvio-core\.[0-9a-f]+\.js', f): os.remove(os.path.join(dd, f))
         core = 'nuvio-core.%s.js' % h
-        js, mini = minify(js)
+        js, mini = minify(js)   # may still fail (syntax error): before anything is written
+        os.makedirs(dd, exist_ok=True)
+        i18n_compile.write_locales(dd, cats)
         open(os.path.join(dd, core), 'w').write(js)
+        for f in os.listdir(dd):
+            if re.fullmatch(r'nuvio-core\.[0-9a-f]+\.js', f) and f != core: os.remove(os.path.join(dd, f))
         json.dump({'build': v, 'core': core, 'locales': {m['code']: m['file'] for m in manifest if m['file']}}, open(os.path.join(dd, 'nuvio-version.json'), 'w'))
         open(os.path.join(dd, 'nuvio.js'), 'w').write(LOADER.replace('__V__', v).replace('__CORE__', core))
         print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB', '(minified)' if mini else '(NOT minified: run npm install for esbuild)')

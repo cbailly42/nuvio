@@ -11,12 +11,16 @@ Catalogs:
   - same {variables} as English; plural forms required by the language (Intl.PluralRules categories, from Node)
   - English: a plain string using {count} must be split into plural forms
   - REQUIRED languages complete and without obsolete keys (error); other languages: warning with coverage
+  - file name = lowercase language code (LANG_CODE: fr, pt-br)
+  - no markup in any text (catalog text reaches innerHTML and attributes unescaped): no '<' followed by a letter, '/' or '!'
+    (except <word> placeholders that are not HTML element names, e.g. ?area=<id>), no on…= event handler; outside English no straight
+    double quote (use the language's typographic quotes), except the v2.16.0 texts in ALLOW_QUOTE
 Usage: i18n_check.py [--list] [--json] [--lang <code>] [--root <dir>]   exit 1 on errors (--lang: exit 1 when keys are missing or obsolete)"""
 import os, re, sys, json, shutil, subprocess
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 R = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
-from i18n_compile import DYN_PREFIXES, flatten, _close, _map_span   # single source for prefixes and plural handling (R3)
+from i18n_compile import DYN_PREFIXES, LANG_CODE, flatten, _close, _map_span   # single source for prefixes, language codes and plural handling (R3)
 
 REQUIRED = ('en', 'pl', 'fr')
 # runtime definitions take non-literal keys by design
@@ -34,6 +38,18 @@ ALLOW_LANG_CHOICE = (
     # H.t: English keeps HA's own formatted value instead of the states.* dictionary
     ('hg-core.part.js', "const en = hgCurLang() === 'en';"),
 )
+# straight double quotes kept outside English: (code, key) of v2.16.0 texts, shown escaped (PL display stays identical to v2.16.0)
+ALLOW_QUOTE = {
+    ('pl', 'edit.options.note_text'),   # 'Treść (… listy "- ")': hgForm.field label, H.esc
+}
+HTML_TAGS = frozenset('''a abbr address area article aside audio b base bdi bdo blockquote body br button canvas caption center cite code col colgroup data
+    datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure font footer form frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html
+    i iframe img input ins kbd label legend li link main map mark marquee math menu meta meter nav noscript object ol optgroup option output p param picture
+    plaintext pre progress q rp rt ruby s samp script search section select slot small source span strike strong style sub summary sup svg table tbody td
+    template textarea tfoot th thead time title tr track tt u ul var video wbr xmp'''.split())
+MARKUP = re.compile(r"<[A-Za-z/!]")
+PLACEHOLDER = re.compile(r"<([a-z]+)>")
+HANDLER = re.compile(r"\bon[a-z]+\s*=", re.I)
 NODE = shutil.which('node') or '/opt/node22/bin/node'
 
 PL = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]|\b(nie|jest|się|oraz|lub|dla|zapisz|usuń|dodaj|wybierz|brak|włącz|wyłącz|edytuj|zamknij|anuluj|gotowe|ustawienia|widok|karta|kafel|tło|pokój|pokoje|zmień|pokaż|ukryj|domyślny|domyślne|szukaj|wróć|dalej|nazwa|ikona|tytuł|kolor|rozmiar|tylko|wszystko|wszyscy|teraz|dzisiaj|jutro|wczoraj|godz|minut|sekund|dni|temperatura|wilgotność|zużycie|moc)\b", re.I)
@@ -42,7 +58,7 @@ WORD = re.compile(r"[A-Za-z]{3,}")
 NOTPROSE = re.compile(r"^(?:[\w.\-:/#%?&=+@*]+|mdi:[\w-]+|\s*)$")
 TECH = re.compile(r"^[\d.,\s~+\-]*(?:min|h|s|kWh(?: PV)?|kW|W|Wh|V|A|Hz|CPU|RAM|BETA|LIVE|PV|EV|AC|DC|UV|PM2\.5|PM10|CO2|VOC|Wi-?Fi|LAN|WAN|IP|MAC|DNS|SSID|Home Assistant|Assist|Nuvio|HACS|Zigbee|Matter|Bluetooth|zł|°C|°F|%|lx|ppm|mdi:…|OK|ID|URL|HTTP|API|alarm|Auto|Turbo|Smart|Standard|Max|Mop|Start|Stop|Eco|Eko)$")
 VARS = re.compile(r"\{(\w+)\}")
-CHOICE = re.compile(r"\bhgTr(?:Lazy|O)?\s*\(|hgCurLang\(\)\s*[!=]==?\s*'(?:pl|en)'")
+CHOICE = re.compile(r"\bhgTr(?:Lazy|O)?\s*\(|hgCurLang\(\)\s*[!=]==?\s*(['\"])(?:pl|en)\1|(['\"])(?:pl|en)\2\s*[!=]==?\s*hgCurLang\(\)")
 
 # ---------- JavaScript ----------
 def lex(src):
@@ -230,6 +246,18 @@ def compare(code, flat, en, cats):
                 for x in sorted(need - set(VARS.findall(s))): errs.append('%s: %s_%s misses variable {%s}' % (f, k, form, x))
     return errs
 
+def unsafe(code, flat):
+    """markup, event handlers and (outside English) straight double quotes in the texts of a flattened catalog (all keys, dynamic tables included)"""
+    errs, f = [], code + '.json'
+    for k, v in sorted(flat.items()):
+        for name, s in ([(k, v)] if isinstance(v, str) else [('%s_%s' % (k, form), x) for form, x in sorted(v.items())] if isinstance(v, dict) else []):
+            if not isinstance(s, str): continue
+            tags = [m for m in MARKUP.finditer(s) if not (PLACEHOLDER.match(s, m.start()) and PLACEHOLDER.match(s, m.start()).group(1) not in HTML_TAGS)]
+            if tags: errs.append('%s: %s contains markup (%r): catalog text is inserted as HTML, write plain text' % (f, name, s[tags[0].start():tags[0].start() + 12]))
+            if HANDLER.search(s): errs.append('%s: %s contains an event handler attribute (%r)' % (f, name, HANDLER.search(s).group(0)))
+            if code != 'en' and '"' in s and (code, k) not in ALLOW_QUOTE: errs.append('%s: %s contains a straight double quote: use typographic quotes (« », „ ”, “ ”)' % (f, name))
+    return errs
+
 def diff_keys(flat, en):
     return sorted(k for k in en if k not in flat), sorted(k for k in flat if k not in en)
 
@@ -240,6 +268,8 @@ def check(root=R, required=REQUIRED):
     codes = sorted(f[:-5] for f in os.listdir(ld) if f.endswith('.json')) if os.path.isdir(ld) else []
     for c in required:
         if c not in codes: errors.append('%s.json is missing (required language)' % c)
+    for c in codes:
+        if not LANG_CODE.match(c): errors.append('%s.json: invalid language code %r: file names are lowercase codes such as fr or pt-br (the build refuses it)' % (c, c))
     data = {}
     for c in codes:
         d, e = load_catalog(os.path.join(ld, c + '.json')); errors += e
@@ -247,6 +277,7 @@ def check(root=R, required=REQUIRED):
     used, ce = scan_code(root); errors += ce
     if 'en' not in data: return {'errors': errors, 'warnings': warnings, 'coverage': coverage}
     en = flatten(data['en'])
+    for c in sorted(data): errors += unsafe(c, en if c == 'en' else flatten(data[c]))
     for k, where in sorted(used.items()):
         if k not in en: errors.append('%s: key %r is missing from en.json' % (where[0], k))
     for k in sorted(en):

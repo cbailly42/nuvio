@@ -78,6 +78,55 @@ class Locales(unittest.TestCase):
     def test_removed_language_deleted(self):
         C.build_locales(self.src, self.out); os.remove(os.path.join(self.src, 'fr.json')); C.build_locales(self.src, self.out); self.assertEqual(os.listdir(self.out), [])
 
+    def test_invalid_language_code_rejected(self):
+        for bad in ('FR', 'pt_BR', 'pt-BR', 'f', 'fr-'):
+            d = tempfile.mkdtemp(); src = os.path.join(d, 'src'); os.makedirs(src)
+            for c, o in (('en', EN), (bad, FR)):
+                with open(os.path.join(src, c + '.json'), 'w', encoding='utf-8') as f: json.dump(o, f)
+            with self.assertRaisesRegex(ValueError, 'language code'): C.build_locales(src, os.path.join(d, 'out'))
+            self.assertFalse(os.path.exists(os.path.join(d, 'out')), bad)
+    def test_compile_writes_nothing(self):
+        os.makedirs(self.out); open(os.path.join(self.out, 'nuvio-locale-fr.00000000.json'), 'w').close()
+        man, en, idx, files = C.compile_locales(self.src)
+        self.assertEqual(os.listdir(self.out), ['nuvio-locale-fr.00000000.json'])
+        self.assertEqual(list(files), [man[1]['file']]); self.assertEqual(json.loads(files[man[1]['file']])['t'][idx['common.save']], 'Enregistrer')
+        C.write_locales(self.out, files); self.assertEqual(os.listdir(self.out), [man[1]['file']])
+
+class BuildAtomic(unittest.TestCase):
+    """a failing build leaves dist/ as it was (catalogs, core, version file, loader) and says why"""
+    def setUp(self):
+        import shutil
+        R = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+        self.d = tempfile.mkdtemp(); self.r = os.path.join(self.d, 'r')
+        for x in ('tools', 'src'): shutil.copytree(os.path.join(R, x), os.path.join(self.r, x), ignore=shutil.ignore_patterns('__pycache__'))
+        shutil.copy(os.path.join(R, 'package.json'), self.r)
+        self.dist = os.path.join(self.r, 'dist'); os.makedirs(self.dist)
+        self.old = {'nuvio-core.0123abcd.js': 'old core', 'nuvio-locale-pl.00000000.json': '{}', 'nuvio-version.json': '{"core": "nuvio-core.0123abcd.js"}', 'nuvio.js': 'old loader'}
+        for f, t in self.old.items():
+            with open(os.path.join(self.dist, f), 'w') as fh: fh.write(t)
+    def tearDown(self):
+        import shutil; shutil.rmtree(self.d)
+    def state(self):
+        out = {}
+        for f in sorted(os.listdir(self.dist)):
+            with open(os.path.join(self.dist, f)) as fh: out[f] = fh.read()
+        return out
+    def run_build(self):
+        import subprocess
+        return subprocess.run([sys.executable, os.path.join(self.r, 'tools', 'build.py')], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=300)
+    def test_unknown_key_fails_cleanly_and_dist_untouched(self):
+        p = os.path.join(self.r, 'src', 'parts', 'hg-users.part.js')
+        with open(p, 'a', encoding='utf-8') as f: f.write("\nconst hgBuildProbe = () => hgT('nope.missing_key');\n")
+        r = self.run_build()
+        self.assertEqual(r.returncode, 1, r.stderr); self.assertIn("unknown i18n key: 'nope.missing_key'", r.stderr); self.assertNotIn('Traceback', r.stderr)
+        self.assertEqual(self.state(), self.old)
+    def test_invalid_language_code_fails_cleanly_and_dist_untouched(self):
+        import shutil
+        shutil.copy(os.path.join(self.r, 'src', 'locales', 'fr.json'), os.path.join(self.r, 'src', 'locales', 'fr_FR.json'))
+        r = self.run_build()
+        self.assertEqual(r.returncode, 1, r.stderr); self.assertIn('fr_FR', r.stderr); self.assertNotIn('Traceback', r.stderr)
+        self.assertEqual(self.state(), self.old)
+
 class Branding(unittest.TestCase):
     """R11: catalog texts are branded like the bundle (sources say Home Glass, dist says Nuvio), and the hash covers the branded text"""
     SRC = {'_meta': {'name': 'English', 'locale': 'en'}, 'a': {'t': 'Home Glass – Hint', 'n_one': '{count} Home Glass card', 'n_other': '{count} home-glass cards'},

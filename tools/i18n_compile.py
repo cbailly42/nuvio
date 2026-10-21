@@ -106,13 +106,19 @@ def map_texts(flat, fn):
     """every text of a flattened catalog through fn: plain entries and each plural form (keys untouched)"""
     return {k: ({f: fn(x) for f, x in v.items()} if isinstance(v, dict) else fn(v) if isinstance(v, str) else v) for k, v in flat.items()}
 
-def build_locales(src_dir, out_dir, text=None):
-    """-> (manifest, compiled en, idx). Writes out_dir/nuvio-locale-<code>.<hash8>.json (flat: HACS ships only top-level dist files) (hash = md5 of the compiled JSON) and deletes stale hashed files.
+# language code = catalog file name: lowercase, BCP 47 style (fr, pt-br); the runtime, the loader and the manifest compare lowercase codes
+LANG_CODE = re.compile(r'^[a-z]{2,3}(-[a-z0-9]+)*$')
+_LOCALE_FILE = re.compile(r'nuvio-locale-[\w-]+\.[0-9a-f]{8}\.json')
+
+def compile_locales(src_dir, text=None):
+    """-> (manifest, compiled en, idx, files {name: JSON body}); writes nothing (write_locales does, once the whole build has succeeded).
+    Compiled catalogs are flat nuvio-locale-<code>.<hash8>.json (HACS ships only top-level dist files) (hash = md5 of the compiled JSON).
     text: optional str -> str applied to every catalog text (t entries, plural forms, d values) before compiling, so the hash covers the result
     (build.py passes its brand(): sources say "Home Glass", the bundle and its catalogs say "Nuvio")."""
     srcs = {}
     for f in sorted(os.listdir(src_dir)):
         if f.endswith('.json'):
+            if not LANG_CODE.match(f[:-5]): raise ValueError('src/locales/%s: invalid language code %r (file names are lowercase codes such as fr or pt-br)' % (f, f[:-5]))
             with open(os.path.join(src_dir, f), encoding='utf-8') as fh: srcs[f[:-5]] = json.load(fh)
     if 'en' not in srcs: raise ValueError('src/locales/en.json is required (reference language)')
     for c, s in srcs.items():
@@ -121,13 +127,23 @@ def build_locales(src_dir, out_dir, text=None):
     idx = assign_indices(flatten(srcs['en'])); en = compile_catalog(fl('en'), idx, srcs['en']['_meta'])
     # optional _meta.flag / _meta.intro (the language presenting itself, e.g. in the setup wizard) travel in the manifest
     ext = lambda m: {k: m[k] for k in ('flag', 'intro') if isinstance(m.get(k), str) and m[k]}
-    manifest, keep = [{'code': 'en', 'name': en['m']['name'], 'locale': en['m']['locale'], 'file': None, **ext(srcs['en']['_meta'])}], set()
-    os.makedirs(out_dir, exist_ok=True)
+    manifest, files = [{'code': 'en', 'name': en['m']['name'], 'locale': en['m']['locale'], 'file': None, **ext(srcs['en']['_meta'])}], {}
     for c in sorted(k for k in srcs if k != 'en'):
         body = json.dumps(compile_catalog(fl(c), idx, srcs[c]['_meta']), ensure_ascii=False, separators=(',', ':'))
-        name = 'nuvio-locale-%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); keep.add(name)
-        with open(os.path.join(out_dir, name), 'w', encoding='utf-8') as fh: fh.write(body)
+        name = 'nuvio-locale-%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); files[name] = body
         manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': name, **ext(srcs[c]['_meta'])})
+    return manifest, en, idx, files
+
+def write_locales(out_dir, files):
+    """writes the compiled catalogs and deletes the stale hashed ones (other files of out_dir untouched)"""
+    os.makedirs(out_dir, exist_ok=True)
+    for name, body in files.items():
+        with open(os.path.join(out_dir, name), 'w', encoding='utf-8') as fh: fh.write(body)
     for f in os.listdir(out_dir):
-        if re.fullmatch(r'nuvio-locale-[\w-]+\.[0-9a-f]{8}\.json', f) and f not in keep: os.remove(os.path.join(out_dir, f))
+        if _LOCALE_FILE.fullmatch(f) and f not in files: os.remove(os.path.join(out_dir, f))
+
+def build_locales(src_dir, out_dir, text=None):
+    """compile_locales + write_locales -> (manifest, compiled en, idx)"""
+    manifest, en, idx, files = compile_locales(src_dir, text)
+    write_locales(out_dir, files)
     return manifest, en, idx
