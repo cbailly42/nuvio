@@ -727,11 +727,11 @@ cards.pv.no_entity,parts/cards/pv-card.part.js,63,hgTr,no entity,brak encji,,,au
 cards.pv.picker_name,parts/cards/pv-card.part.js,69,hgTr,Home Glass – Solar,Home Glass – Fotowoltaika,,load-time,auto
 cards.pv.picker_description,parts/cards/pv-card.part.js,69,hgTr,"Inverter state, production now and today","Stan falownika, produkcja teraz i dziś",,load-time,auto
 cards.remote.air_conditioner,parts/cards/remote-card.part.js,13,hgTr,Air conditioner,Klimatyzator,,,auto
-cards.remote.position,parts/cards/remote-card.part.js,111,hgTr,Position {v},Pozycja {v},v,,auto
+cards.remote.position,parts/cards/remote-card.part.js,109,hgTr,Position {position},Pozycja {position},position,,auto
 common.off_masc,parts/cards/remote-card.part.js,116,hgTr,Off,Wyłączony,,,auto
-cards.remote.to_h_fmt_t,parts/cards/remote-card.part.js,116,hgTr,{l} to ${H.fmt(t)}°,{l} do ${H.fmt(t)}°,,expr,manual
+cards.remote.mode_to_temp,parts/cards/remote-card.part.js,116,hgTr,{mode} to {temp}°,{mode} do {temp}°,"mode,temp",expr,auto
 common.unavailable_masc,parts/cards/remote-card.part.js,119,hgTr,Unavailable,Niedostępny,,,auto
-cards.remote.indoor_h_fmt_cur,parts/cards/remote-card.part.js,126,hgTr,indoor ${H.fmt(cur)}°,w pokoju ${H.fmt(cur)}°,,expr,manual
+cards.remote.indoor_temp,parts/cards/remote-card.part.js,126,hgTr,indoor {temp}°,w pokoju {temp}°,temp,expr,auto
 cards.remote.eco_mode,parts/cards/remote-card.part.js,128,hgTr,Eco mode,Tryb ekonomiczny,,,auto
 cards.remote.eco,parts/cards/remote-card.part.js,128,hgTr,Eco,Eko,,,auto
 common.turn_off,parts/cards/remote-card.part.js,129,hgTr,Turn off,Wyłącz,,,auto
@@ -754,8 +754,8 @@ cards.remote.mode,parts/cards/remote-card.part.js,186,hgTr,Mode,Tryb pracy,,,aut
 cards.remote.fan_speed,parts/cards/remote-card.part.js,186,hgTr,Fan speed,Prędkość wentylatora,,,auto
 cards.remote.airflow_direction,parts/cards/remote-card.part.js,186,hgTr,Airflow direction,Kierunek nawiewu,,,auto
 cards.remote.preset,parts/cards/remote-card.part.js,186,hgTr,Preset,Program,,,auto
-cards.remote.home_glass_ac_remote,parts/cards/remote-card.part.js,257,hgTr,Home Glass – AC remote,Home Glass – Pilot klimatyzacji,,load-time,manual
-cards.remote.ac_remote_airflow_setpoint,parts/cards/remote-card.part.js,257,hgTr,"AC remote: airflow, setpoint, mode, fan, sleep, direction","Pilot klimatyzatora: nawiew, nastawa, tryb, wentylator, sen, kierunek",,load-time,manual
+cards.remote.picker_name,parts/cards/remote-card.part.js,257,hgTr,Home Glass – AC remote,Home Glass – Pilot klimatyzacji,,load-time,auto
+cards.remote.picker_description,parts/cards/remote-card.part.js,257,hgTr,"AC remote: airflow, setpoint, mode, fan, sleep, direction","Pilot klimatyzatora: nawiew, nastawa, tryb, wentylator, sen, kierunek",,load-time,auto
 cards.robots.mowing,parts/cards/robots-card.part.js,17,hgTr,Mowing,Kosi,,,auto
 common.cleaning,parts/cards/robots-card.part.js,17,hgTr,Cleaning,Sprząta,,,auto
 cards.robots.returning_to_dock,parts/cards/robots-card.part.js,18,hgTr,Returning to dock,Wraca do stacji,,,auto

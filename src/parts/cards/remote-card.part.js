@@ -1,8 +1,7 @@
 /* cards/remote-card: Pilot klimatyzacji w stylu aplikacji producenta: jednostka z animowanym nawiewem (kolor i prędkość z trybu i wentylatora),
    duża nastawa, suwak zimno–ciepło z −/+, kafle Tryb / Wentylator / Sen / Nawiew otwierające dolny arkusz z opcjami.
    Pokazuje tylko to, co encja climate zgłasza (hvac_modes, fan_modes, swing_modes, preset_modes). Zmiany od razu (optymistycznie). */
-const HG_PRESET_PL = { none: 'Brak', eco: 'Eko', sleep: 'Sen', boost: 'Turbo', comfort: 'Komfort', away: 'Poza domem', home: 'Dom', activity: 'Aktywność' };
-const HG_PRESET_EN = { none: 'None', eco: 'Eco', sleep: 'Sleep', boost: 'Boost', comfort: 'Comfort', away: 'Away', home: 'Home', activity: 'Activity' };
+/* etykiety programów (preset): hgTD('cards.remote.presets.' + program) */
 const HG_FAN_IC = { auto: 'mdi:fan-auto', low: 'mdi:fan-speed-1', quiet: 'mdi:fan-minus', silent: 'mdi:fan-minus', medium: 'mdi:fan-speed-2', middle: 'mdi:fan-speed-2', mid: 'mdi:fan-speed-2', high: 'mdi:fan-speed-3', strong: 'mdi:fan-speed-3', turbo: 'mdi:fan-plus', on: 'mdi:fan', off: 'mdi:fan-off', diffuse: 'mdi:weather-windy', focus: 'mdi:target' };
 const HG_SWING_IC = { off: 'mdi:arrow-collapse-down', on: 'mdi:arrow-oscillating', swing: 'mdi:arrow-oscillating', vertical: 'mdi:arrow-up-down', horizontal: 'mdi:arrow-left-right', both: 'mdi:arrow-all' };
 const HG_PRESET_IC = { none: 'mdi:circle-off-outline', eco: 'mdi:leaf', sleep: 'mdi:power-sleep', boost: 'mdi:rocket-launch', comfort: 'mdi:sofa', away: 'mdi:home-export-outline', home: 'mdi:home', activity: 'mdi:run' };
@@ -10,7 +9,7 @@ const HG_FAN_SP = { quiet: 3, silent: 3, low: 2.6, auto: 1.6, medium: 1.6, middl
 /* --rca jako zarejestrowany kolor: zmiana trybu płynnie przechodzi w nowy kolor (tło, nawiew, kafle) */
 try { CSS.registerProperty({ name: '--rca', syntax: '<color>', inherits: true, initialValue: '#' + '4C8DF6' }); } catch (e) { /* już zarejestrowany albo brak API */ }
 class HGACRemoteCard extends HGBase {
-  defaults() { return { title: hgTr('Klimatyzator', 'Air conditioner') }; }
+  defaults() { return { title: hgT('cards.remote.air_conditioner') }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; container-type:inline-size; gap:10px; padding:14px var(--s2) var(--s2); min-height:0; user-select:none; -webkit-user-select:none;
@@ -105,45 +104,44 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
   _lab(k, v) {
-    const en = hgCurLang() === 'en';
     if (k === 'mode') return (HG_AC_MODE[v] || {}).l || v;
-    const M = k === 'fan' ? hgFanL : k === 'swing' ? hgSwingL : (x) => (en ? HG_PRESET_EN : HG_PRESET_PL)[x];
-    if (k === 'swing' && /^\d+$/.test(v)) return hgTr(`Pozycja ${v}`, `Position ${v}`);
+    const M = k === 'fan' ? hgFanL : k === 'swing' ? hgSwingL : (x) => hgTD('cards.remote.presets.' + x, null);
+    if (k === 'swing' && /^\d+$/.test(v)) return hgT('cards.remote.position', { position: v });
     if (!M(v) && /_/.test(v) && String(v).split('_').every((x) => M(x))) return String(v).split('_').map((x) => M(x)).join(' · ');
     return M(v) || String(v).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase());
   }
   _ic(k, v) { return k === 'mode' ? (HG_AC_MODE[v] || {}).i || 'mdi:thermostat' : k === 'fan' ? HG_FAN_IC[v] || (/high/.test(v) ? 'mdi:fan-speed-3' : /low/.test(v) ? 'mdi:fan-speed-1' : 'mdi:fan') : k === 'swing' ? HG_SWING_IC[v] || (/^\d+$/.test(v) ? `mdi:numeric-${v}-circle-outline` : 'mdi:arrow-oscillating') : HG_PRESET_IC[v] || 'mdi:tune-variant'; }
-  _stat(st, t) { if (st === 'off') return hgTr('Wyłączony', 'Off'); const l = this._lab('mode', st); return (st === 'fan_only' || st === 'dry' || t == null) ? l : hgTr(`${l} do ${H.fmt(t)}°`, `${l} to ${H.fmt(t)}°`); }
+  _stat(st, t) { if (st === 'off') return hgT('common.off_masc'); const l = this._lab('mode', st); return (st === 'fan_only' || st === 'dry' || t == null) ? l : hgT('cards.remote.mode_to_temp', { mode: l, temp: H.fmt(t) }); }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!H.ok(s)) return `<ha-card class="glass off" style="--rca:#8A9099"><div class="hd"><div class="ht"><b>${H.esc(c.title)}</b></div></div><div class="ph"><b>${hgTr('Niedostępny', 'Unavailable')}</b></div></ha-card>`;
+    if (!H.ok(s)) return `<ha-card class="glass off" style="--rca:#8A9099"><div class="hd"><div class="ht"><b>${H.esc(c.title)}</b></div></div><div class="ph"><b>${hgT('common.unavailable_masc')}</b></div></ha-card>`;
     const a = s.attributes, e = this._eff(s), on = e.st !== 'off', { mn, mx, step, u } = this._lim(s);
     if (s.state !== 'off') this._last = s.state;
     if (this._pm !== undefined && this._pm !== e.st) { this._mcT = Date.now() + 1500; clearTimeout(this._mcR); this._mcR = setTimeout(() => this.isConnected && this.rerender(), 1550); }
     this._pm = e.st;
     const fz = String(e.fan || ''), col = this._col(e.st, e.t, mn, mx), sp = HG_FAN_SP[fz] || (/high|turbo|strong|max/.test(fz) ? 1 : /low|quiet|silent|min/.test(fz) ? 2.6 : 1.6), swing = on && /^(on|auto|both|vertical|horizontal)$|swing/.test(e.swing || '');
     const cur = a.current_temperature != null ? Number(a.current_temperature) : null, room = this._room();
-    const sub = [room, cur != null ? hgTr(`w pokoju ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ');
+    const sub = [room, cur != null ? hgT('cards.remote.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ');
     const pr = a.preset_modes || [], hasEco = pr.includes('eco'), hasSleep = pr.includes('sleep'), other = pr.filter((x) => !['eco', 'sleep', 'none'].includes(x));
-    const eco = hasEco ? `<button class="eco ${e.preset === 'eco' ? 'act' : ''}" data-act="preset" data-v="eco" aria-pressed="${e.preset === 'eco'}" title="${hgTr('Tryb ekonomiczny', 'Eco mode')}">${H.icon('mdi:leaf')}<span>${hgTr('Eko', 'Eco')}</span></button>` : '';
-    const pw = `<button class="pw" data-act="power" aria-pressed="${on}" aria-label="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}" title="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}">${H.icon('mdi:power')}</button>`;
+    const eco = hasEco ? `<button class="eco ${e.preset === 'eco' ? 'act' : ''}" data-act="preset" data-v="eco" aria-pressed="${e.preset === 'eco'}" title="${hgT('cards.remote.eco_mode')}">${H.icon('mdi:leaf')}<span>${hgT('cards.remote.eco')}</span></button>` : '';
+    const pw = `<button class="pw" data-act="power" aria-pressed="${on}" aria-label="${on ? hgT('common.turn_off') : hgT('common.turn_on')}" title="${on ? hgT('common.turn_off') : hgT('common.turn_on')}">${H.icon('mdi:power')}</button>`;
     /* jednostka (neutralna, bez marki) i sześć strug powietrza rozchodzących się w dół */
     const str = [0, 1, 2, 3, 4, 5].map((i) => { const x = 50 + i * 28, x2 = Math.round(x + (x - 120) * .45); return `<path d="M${x} 62 C${x - 5} 88 ${x2 + 6} 112 ${x2} 146"/>`; }).join('');
     const W = '#' + 'fff', unit = `<svg viewBox="0 0 240 150" aria-hidden="true"><defs><linearGradient id="rf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${W}"/><stop offset=".25" stop-color="${W}"/><stop offset="1" stop-color="${W}" stop-opacity="0"/></linearGradient><mask id="rm"><rect x="0" y="56" width="240" height="94" fill="url(#rf)"/></mask></defs>
       <g class="str" mask="url(#rm)">${str}</g><ellipse class="sh" cx="120" cy="64" rx="96" ry="6"/><rect class="bd" x="16" y="6" width="208" height="58" rx="16"/><rect class="vt" x="32" y="48" width="176" height="9" rx="4.5"/><line class="lv" x1="40" y1="52.5" x2="200" y2="52.5"/><circle class="led" cx="204" cy="20" r="3"/></svg>`;
     const dis = !on || e.t == null;
     const cv = (d, ic, l) => `<button class="cv" data-act="step" data-d="${d}" ${dis || (d < 0 ? e.t <= mn : e.t >= mx) ? 'disabled' : ''} aria-label="${l}" title="${l}">${H.icon(ic)}</button>`;
-    const sl = `<div class="sl">${cv(-1, 'mdi:minus', hgTr('Obniż temperaturę', 'Lower temperature'))}<input class="tsl" type="range" min="${mn}" max="${mx}" step="${step}" value="${e.t ?? (mn + mx) / 2}" ${dis ? 'disabled' : ''} aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuetext="${e.t != null ? H.fmt(e.t) + '°' : ''}">${cv(1, 'mdi:plus', hgTr('Podwyższ temperaturę', 'Raise temperature'))}</div>`;
+    const sl = `<div class="sl">${cv(-1, 'mdi:minus', hgT('cards.remote.lower_temperature'))}<input class="tsl" type="range" min="${mn}" max="${mx}" step="${step}" value="${e.t ?? (mn + mx) / 2}" ${dis ? 'disabled' : ''} aria-label="${hgT('cards.remote.target_temperature')}" aria-valuetext="${e.t != null ? H.fmt(e.t) + '°' : ''}">${cv(1, 'mdi:plus', hgT('cards.remote.raise_temperature'))}</div>`;
     const ti = (k, l, v, act) => `<button class="ti ${act ? 'act' : ''}" data-act="${k === 'sleep' ? 'preset' : 'pick'}" data-k="${k}"${k === 'sleep' ? ' data-v="sleep"' : ''} aria-label="${H.esc(`${l}: ${v}`)}"><i>${H.icon(k === 'sleep' ? 'mdi:power-sleep' : this._ic(k, k === 'mode' ? e.st : e[k]))}</i><span><small>${H.esc(l)}</small><b>${H.esc(v)}</b></span>${k === 'sleep' ? '' : `<em class="dd">${H.icon('mdi:chevron-down')}</em>`}</button>`;
     const hv = (a.hvac_modes || []).filter((x) => x !== 'off');
     const tiles = [
-      hv.length > 1 ? ti('mode', hgTr('Tryb', 'Mode'), on ? this._lab('mode', e.st) : hgTr('Wyłączony', 'Off')) : '',
-      (a.fan_modes || []).length > 1 && e.fan ? ti('fan', hgTr('Wentylator', 'Fan'), this._lab('fan', e.fan)) : '',
-      hasSleep ? ti('sleep', hgTr('Sen', 'Sleep'), e.preset === 'sleep' ? hgTr('Włączony', 'On') : hgTr('Wyłączony', 'Off'), e.preset === 'sleep') : '',
-      (a.swing_modes || []).length > 1 && e.swing ? ti('swing', hgTr('Nawiew', 'Airflow'), this._lab('swing', e.swing)) : '',
-      other.length ? ti('preset', hgTr('Program', 'Preset'), this._lab('preset', e.preset && !['eco', 'sleep'].includes(e.preset) ? e.preset : 'none')) : '',
+      hv.length > 1 ? ti('mode', hgT('common.mode'), on ? this._lab('mode', e.st) : hgT('common.off_masc')) : '',
+      (a.fan_modes || []).length > 1 && e.fan ? ti('fan', hgT('common.fan'), this._lab('fan', e.fan)) : '',
+      hasSleep ? ti('sleep', hgT('cards.remote.sleep'), e.preset === 'sleep' ? hgT('common.on_masc') : hgT('common.off_masc'), e.preset === 'sleep') : '',
+      (a.swing_modes || []).length > 1 && e.swing ? ti('swing', hgT('cards.remote.airflow'), this._lab('swing', e.swing)) : '',
+      other.length ? ti('preset', hgT('cards.remote.preset'), this._lab('preset', e.preset && !['eco', 'sleep'].includes(e.preset) ? e.preset : 'none')) : '',
     ].join('');
-    const tv = `<div class="tv"><div class="num" data-act="more" aria-live="polite" title="${hgTr('Szczegóły', 'Details')}">${e.t != null ? H.fmt(e.t) : a.target_temp_low != null ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>${u}</sup></div><div class="st" role="status">${H.esc(this._stat(e.st, e.t))}</div></div>`;
+    const tv = `<div class="tv"><div class="num" data-act="more" aria-live="polite" title="${hgT('common.details')}">${e.t != null ? H.fmt(e.t) : a.target_temp_low != null ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>${u}</sup></div><div class="st" role="status">${H.esc(this._stat(e.st, e.t))}</div></div>`;
     return `<ha-card class="glass ${on ? 'on' : 'off'}${swing ? ' sw' : ''}${this._mcT > Date.now() ? ' mc' : ''}" style="--rca:${col};--sp:${sp}s">
       <div class="hd"><div class="ht"><b>${H.esc(c.title)}</b>${sub ? `<span>${H.esc(sub)}</span>` : ''}</div>${eco}${pw}</div>
       <div class="un">${unit}</div>${tv}${sl}${tiles ? `<div class="tl">${tiles}</div>` : ''}</ha-card>`;
@@ -183,7 +181,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
     const a = s.attributes, e = this._eff(s), { mn, mx } = this._lim(s);
     const L = k === 'mode' ? (a.hvac_modes || []).filter((x) => x !== 'off') : k === 'fan' ? a.fan_modes || [] : k === 'swing' ? a.swing_modes || [] : (a.preset_modes || []).filter((x) => !['eco', 'sleep'].includes(x));
     const curV = k === 'mode' ? e.st : e[k];
-    const T = { mode: hgTr('Tryb pracy', 'Mode'), fan: hgTr('Prędkość wentylatora', 'Fan speed'), swing: hgTr('Kierunek nawiewu', 'Airflow direction'), preset: hgTr('Program', 'Preset') }[k];
+    const T = { mode: hgT('cards.remote.mode'), fan: hgT('cards.remote.fan_speed'), swing: hgT('cards.remote.airflow_direction'), preset: hgT('cards.remote.preset') }[k];
     const btn = (v) => { const sel = v === curV, col = k === 'mode' ? this._col(v, e.t, mn, mx) : this._col(e.st, e.t, mn, mx);
       return `<button class="o${sel ? ' on' : ''}" data-v="${H.esc(v)}" style="--ac:${col}" aria-pressed="${sel}"><i>${H.icon(this._ic(k, v))}</i><span>${H.esc(this._lab(k, v))}</span>${sel ? `<em>${H.icon('mdi:check')}</em>` : ''}</button>`; };
     const css = `<style>.nvrc{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; padding-top:4px; }
@@ -254,4 +252,4 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
   }
   getGridOptions() { return { columns: 6, rows: 'auto', min_rows: 6 }; }
 }
-hgReg('hg-acremote-card', HGACRemoteCard, hgTr('Home Glass – Pilot klimatyzacji', 'Home Glass – AC remote'), hgTr('Pilot klimatyzatora: nawiew, nastawa, tryb, wentylator, sen, kierunek', 'AC remote: airflow, setpoint, mode, fan, sleep, direction'));
+hgReg('hg-acremote-card', HGACRemoteCard, hgTLazy('cards.remote.picker_name'), hgTLazy('cards.remote.picker_description'));
