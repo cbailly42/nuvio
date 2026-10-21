@@ -533,6 +533,12 @@
       "picker_name": "Home Glass – Mapa",
       "zones": "strefy"
     },
+    "media": {
+      "entity_not_found": "brak encji",
+      "picker_description": "Odtwarzacz w stylu glass",
+      "picker_name": "Home Glass – Media",
+      "play_pause": "Odtwórz/pauza"
+    },
     "media_mini": {
       "any_media_player": "Dowolny media_player",
       "choose_a_player": "Wybierz odtwarzacz",
