@@ -87,6 +87,15 @@
       "picker_description": "A row of round buttons: scenes, scripts, services",
       "picker_name": "Nuvio – Quick actions"
     },
+    "agenda": {
+      "all_day": "all day",
+      "days_count": "{count} days",
+      "no_calendar_entities_found": "No calendar.* entities found",
+      "no_calendars": "No calendars",
+      "no_events_days": "No events in the next {count} days.",
+      "tomorrow": "Tomorrow",
+      "upcoming": "Upcoming"
+    },
     "appliance": {
       "no_device": "No device",
       "pick_an_entity_of": "Pick an entity of the device in the widget settings.",
@@ -144,8 +153,10 @@
     "save": "Save",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
+    "today": "Today",
     "turn_off": "Turn off",
     "turn_on": "Turn on",
+    "unavailable": "Unavailable",
     "weather": "Weather"
   },
   "core": {

@@ -56,11 +56,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
       cells += `<button class="d ${d.getMonth() !== m ? 'o' : ''} ${k === today ? 't' : ''} ${k === sel ? 's' : ''}" data-act="day" data-k="${k}" aria-label="${d.toLocaleDateString(HG_LOC(), { day: 'numeric', month: 'long' })}${ev.length ? hgTr(`, wydarzenia: ${ev.length}`, `, events: ${ev.length}`) : ''}">
         <span>${d.getDate()}</span><div class="ds">${cols.map((cl) => `<i style="background:${cl}"></i>`).join('')}</div></button>`;
     }
-    const leg = (res || HGCal.cals(this._hass, c.calendars).map((cal) => ({ cal }))).map((r) => `<span class="${r.err ? 'x' : ''}" title="${H.esc(r.cal.entity)}${r.err ? ' – ' + r.err : ''}"><i style="background:${r.err ? '#C9CCD0' : r.cal.color}"></i>${H.esc(r.cal.name)}</span>`).join('');
+    const leg = (res || HGCal.cals(this._hass, c.calendars).map((cal) => ({ cal }))).map((r) => `<span class="${r.err ? 'x' : ''}" title="${H.esc(r.cal.entity)}${r.err ? ' – ' + H.esc(HGCal.errText(r)) : ''}"><i style="background:${r.err ? '#C9CCD0' : r.cal.color}"></i>${H.esc(r.cal.name)}</span>`).join('');
     const sd = new Date(sel + 'T00:00:00'), sev = (byDay[sel] || []).slice().sort((a, b) => a.start - b.start);
     const inMonth = sd.getMonth() === m && sd.getFullYear() === y;
     const dl = inMonth ? `<div class="dl"><h4>${H.esc(sd.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>
-      ${sev.length ? sev.map((e) => `<div class="ev"><i style="background:${e.cal.color}"></i><small>${e.allDay ? hgTr('cały dzień', 'all day') : hgTime(e.start)}</small><span>${H.esc(e.title)}</span></div>`).join('') : `<div class="none">${res ? hgTr('Brak wydarzeń', 'No events') : hgTr('Wczytywanie…', 'Loading…')}</div>`}</div>` : '';
+      ${sev.length ? sev.map((e) => `<div class="ev"><i style="background:${e.cal.color}"></i><small>${e.allDay ? hgTr('cały dzień', 'all day') : hgTime(e.start)}</small><span>${H.esc(HGCal.title(e))}</span></div>`).join('') : `<div class="none">${res ? hgTr('Brak wydarzeń', 'No events') : hgTr('Wczytywanie…', 'Loading…')}</div>`}</div>` : '';
     if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Brak kalendarzy', 'No calendars')}</b>${hgTr('Dodaj integrację kalendarza w Home Assistant.', 'Add a calendar integration in Home Assistant.')}</div></ha-card>`;
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
         <button class="ib" data-act="open" aria-label="${hgTr('Otwórz kalendarz HA', 'Open HA calendar')}" title="${hgTr('Otwórz kalendarz Home Assistant', 'Open Home Assistant calendar')}">${H.icon('mdi:arrow-expand')}</button></div>

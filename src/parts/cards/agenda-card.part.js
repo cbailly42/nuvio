@@ -1,6 +1,6 @@
 /* --- agenda: najbliższe wydarzenia pogrupowane po dniach --- */
 class HGAgendaCard extends HGBase {
-  defaults() { return { title: hgTr('Nadchodzące', 'Upcoming'), icon: 'mdi:format-list-bulleted', calendars: [], days: 60 }; }
+  defaults() { return { title: hgT('cards.agenda.upcoming'), icon: 'mdi:format-list-bulleted', calendars: [], days: 60 }; }
   ents() { return this._config.calendars.map((c) => (typeof c === 'string' ? c : c.entity)); }
   _extraSig() { return [this._n || 0, hgDayKey(new Date())]; }
   css() {
@@ -24,22 +24,22 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
   }
   render() {
     const c = this._config;
-    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Brak kalendarzy', 'No calendars')}</b>${hgTr('Nie znaleziono encji calendar.*', 'No calendar.* entities found')}</div></ha-card>`;
+    if (!c.calendars.length) return `<ha-card class="glass"><div class="ph"><b>${hgT('cards.agenda.no_calendars')}</b>${hgT('cards.agenda.no_calendar_entities_found')}</div></ha-card>`;
     this._load();
-    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><small class="note" style="margin-left:4u">${hgTr(`${c.days} dni`, `${c.days} days`)}</small></div>`;
-    if (!this._res) return `<ha-card class="glass">${hd}<div class="none">${hgTr('Wczytywanie…', 'Loading…')}</div></ha-card>`;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><small class="note" style="margin-left:4u">${hgT('cards.agenda.days_count', { count: c.days })}</small></div>`;
+    if (!this._res) return `<ha-card class="glass">${hd}<div class="none">${hgT('common.loading')}</div></ha-card>`;
     const now = new Date(), t0 = new Date(now); t0.setHours(0, 0, 0, 0);
     const ev = this._res.flatMap((r) => r.ev).filter((e) => (e.allDay ? e.end > t0 : e.end >= now)).sort((a, b) => a.start - b.start);
     const groups = {};
     for (const e of ev) { const d = e.start < t0 ? t0 : e.start; (groups[hgDayKey(d)] = groups[hgDayKey(d)] || []).push(e); }
     const tom = new Date(t0); tom.setDate(tom.getDate() + 1);
-    const lbl = (k) => { const d = new Date(k + 'T00:00:00'); const pre = k === hgDayKey(t0) ? hgTr('Dziś', 'Today') : k === hgDayKey(tom) ? hgTr('Jutro', 'Tomorrow') : '';
+    const lbl = (k) => { const d = new Date(k + 'T00:00:00'); const pre = k === hgDayKey(t0) ? hgT('common.today') : k === hgDayKey(tom) ? hgT('cards.agenda.tomorrow') : '';
       return `${pre ? `<em>${pre}</em>` : ''}${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}`; };
     const body = Object.keys(groups).map((k) => `<div class="day"><h4>${lbl(k)}</h4>${groups[k].map((e) => `<div class="ev lr" title="${H.esc(e.cal.name)}"><i style="background:${e.cal.color}"></i>
-      <span class="tm">${e.allDay ? hgTr('cały dzień', 'all day') : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(e.title)}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
+      <span class="tm">${e.allDay ? hgT('cards.agenda.all_day') : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(HGCal.title(e))}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
     const errs = this._res.filter((r) => r.err).map((r) => r.cal.name);
-    return `<ha-card class="glass">${hd}${body || `<div class="none">${hgTr(`Brak wydarzeń w najbliższych ${c.days} dniach.`, `No events in the next ${c.days} days.`)}</div>`}
-      ${errs.length ? `<div class="note" style="margin-top:8u">${hgTr('Niedostępne', 'Unavailable')}: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
+    return `<ha-card class="glass">${hd}${body || `<div class="none">${hgT('cards.agenda.no_events_days', { count: c.days })}</div>`}
+      ${errs.length ? `<div class="note" style="margin-top:8u">${hgT('common.unavailable')}: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
   }
 }
 hgReg('hg-agenda-card', HGAgendaCard, 'Home Glass – Agenda', 'Nadchodzące wydarzenia pogrupowane po dniach');

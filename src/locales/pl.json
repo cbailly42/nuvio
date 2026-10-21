@@ -87,6 +87,15 @@
       "picker_description": "Rząd okrągłych przycisków: sceny, skrypty, usługi",
       "picker_name": "Nuvio – Szybkie akcje"
     },
+    "agenda": {
+      "all_day": "cały dzień",
+      "days_count": "{count} dni",
+      "no_calendar_entities_found": "Nie znaleziono encji calendar.*",
+      "no_calendars": "Brak kalendarzy",
+      "no_events_days": "Brak wydarzeń w najbliższych {count} dniach.",
+      "tomorrow": "Jutro",
+      "upcoming": "Nadchodzące"
+    },
     "appliance": {
       "no_device": "Brak urządzenia",
       "pick_an_entity_of": "Wybierz encję urządzenia w ustawieniach widżetu.",
@@ -144,8 +153,10 @@
     "save": "Zapisz",
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
+    "today": "Dziś",
     "turn_off": "Wyłącz",
     "turn_on": "Włącz",
+    "unavailable": "Niedostępne",
     "weather": "Pogoda"
   },
   "core": {

@@ -51,12 +51,12 @@ cards.actions.picker_description,parts/cards/actions-card.part.js,25,hgTr,"A row
 cards.agenda.upcoming,parts/cards/agenda-card.part.js,3,hgTr,Upcoming,Nadchodzące,,,auto
 cards.agenda.no_calendars,parts/cards/agenda-card.part.js,27,hgTr,No calendars,Brak kalendarzy,,,auto
 cards.agenda.no_calendar_entities_found,parts/cards/agenda-card.part.js,27,hgTr,No calendar.* entities found,Nie znaleziono encji calendar.*,,,auto
-cards.agenda.c_days_days,parts/cards/agenda-card.part.js,29,hgTr,${c.days} days,${c.days} dni,,expr,manual
+cards.agenda.days_count,parts/cards/agenda-card.part.js,29,hgTr,{count} days,{count} dni,count,expr,auto
 common.loading,parts/cards/agenda-card.part.js,30,hgTr,Loading…,Wczytywanie…,,,auto
 common.today,parts/cards/agenda-card.part.js,36,hgTr,Today,Dziś,,,auto
 cards.agenda.tomorrow,parts/cards/agenda-card.part.js,36,hgTr,Tomorrow,Jutro,,,auto
 cards.agenda.all_day,parts/cards/agenda-card.part.js,39,hgTr,all day,cały dzień,,,auto
-cards.agenda.no_events_in_the,parts/cards/agenda-card.part.js,41,hgTr,No events in the next ${c.days} days.,Brak wydarzeń w najbliższych ${c.days} dniach.,,expr,manual
+cards.agenda.no_events_days,parts/cards/agenda-card.part.js,41,hgTr,No events in the next {count} days.,Brak wydarzeń w najbliższych {count} dniach.,count,expr,auto
 common.unavailable,parts/cards/agenda-card.part.js,42,hgTr,Unavailable,Niedostępne,,,auto
 cards.airq.no_air_quality_sensors,parts/cards/airq-card.part.js,41,hgTr,No air quality sensors,Brak czujników jakości powietrza,,,auto
 cards.airq.pick_co2_pm2_5,parts/cards/airq-card.part.js,41,hgTr,"Pick CO₂, PM2.5, PM10 or VOC sensors, or leave empty to detect automatically","Wybierz czujniki CO₂, PM2.5, PM10 lub LZO albo zostaw puste, by wykryć automatycznie",,,auto
