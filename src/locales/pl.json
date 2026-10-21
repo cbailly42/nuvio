@@ -736,6 +736,84 @@
       "picker_description": "Opcje input_select i select jako przyciski lub lista",
       "picker_name": "Home Glass – Wybór"
     },
+    "sensors": {
+      "active_label_few": "aktywne",
+      "active_label_many": "aktywne",
+      "active_label_one": "aktywny",
+      "active_label_other": "aktywne",
+      "alarm_label": "alarm",
+      "bright": "jasno",
+      "dark": "ciemno",
+      "dim": "ciemno",
+      "history": "historia",
+      "no_available_sensors_in": "Brak dostępnych czujników w tej grupie",
+      "open_label_few": "otwarte",
+      "open_label_many": "otwartych",
+      "open_label_one": "otwarte",
+      "open_label_other": "otwartych",
+      "picker_description": "Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne",
+      "picker_name": "Home Glass – Czujniki",
+      "sensor_filter": "Filtr czujników",
+      "sensors": "Czujniki",
+      "show": "Pokaż",
+      "states": {
+        "door": {
+          "off": "Zamknięte",
+          "on": "Otwarte"
+        },
+        "garage_door": {
+          "off": "Zamknięta",
+          "on": "Otwarta"
+        },
+        "gas": {
+          "off": "OK",
+          "on": "Gaz!"
+        },
+        "moisture": {
+          "off": "Sucho",
+          "on": "Zalanie!"
+        },
+        "motion": {
+          "off": "Brak",
+          "on": "Wykryto"
+        },
+        "occupancy": {
+          "off": "Brak",
+          "on": "Wykryto"
+        },
+        "opening": {
+          "off": "Zamknięte",
+          "on": "Otwarte"
+        },
+        "presence": {
+          "off": "Brak",
+          "on": "Obecny"
+        },
+        "smoke": {
+          "off": "OK",
+          "on": "Dym!"
+        },
+        "tamper": {
+          "off": "OK",
+          "on": "Sabotaż!"
+        },
+        "vibration": {
+          "off": "Spokój",
+          "on": "Wibracje"
+        },
+        "window": {
+          "off": "Zamknięte",
+          "on": "Otwarte"
+        }
+      },
+      "tabs": {
+        "all": "Wszystkie",
+        "motion": "Ruch / obecność",
+        "openings": "Drzwi / okna",
+        "other": "Inne"
+      },
+      "unavailable": "niedostępnych"
+    },
     "slider": {
       "mute": "Wycisz",
       "picker_description": "Suwak dla jasności, głośności, wentylatora, rolety i input_number",

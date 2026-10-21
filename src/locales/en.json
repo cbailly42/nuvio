@@ -730,6 +730,80 @@
       "picker_description": "input_select and select options as buttons or a list",
       "picker_name": "Home Glass – Select"
     },
+    "sensors": {
+      "active_label_one": "active",
+      "active_label_other": "active",
+      "alarm_label": "alarm",
+      "bright": "bright",
+      "dark": "dark",
+      "dim": "dim",
+      "history": "history",
+      "no_available_sensors_in": "No available sensors in this group",
+      "open_label_one": "open",
+      "open_label_other": "open",
+      "picker_description": "Auto-discovered motion, presence, door, window and other sensors",
+      "picker_name": "Home Glass – Sensors",
+      "sensor_filter": "Sensor filter",
+      "sensors": "Sensors",
+      "show": "Show",
+      "states": {
+        "door": {
+          "off": "Closed",
+          "on": "Open"
+        },
+        "garage_door": {
+          "off": "Closed",
+          "on": "Open"
+        },
+        "gas": {
+          "off": "OK",
+          "on": "Gas!"
+        },
+        "moisture": {
+          "off": "Dry",
+          "on": "Leak!"
+        },
+        "motion": {
+          "off": "Clear",
+          "on": "Detected"
+        },
+        "occupancy": {
+          "off": "Clear",
+          "on": "Detected"
+        },
+        "opening": {
+          "off": "Closed",
+          "on": "Open"
+        },
+        "presence": {
+          "off": "Away",
+          "on": "Present"
+        },
+        "smoke": {
+          "off": "OK",
+          "on": "Smoke!"
+        },
+        "tamper": {
+          "off": "OK",
+          "on": "Tampering!"
+        },
+        "vibration": {
+          "off": "Still",
+          "on": "Vibration"
+        },
+        "window": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "tabs": {
+        "all": "All",
+        "motion": "Motion / presence",
+        "openings": "Doors / windows",
+        "other": "Other"
+      },
+      "unavailable": "unavailable"
+    },
     "slider": {
       "mute": "Mute",
       "picker_description": "Slider for brightness, volume, fan, cover and input_number",

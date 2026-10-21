@@ -970,19 +970,44 @@ cards.sensors.bright,parts/cards/sensors-card.part.js,103,hgTr,bright,jasno,,,au
 cards.sensors.dim,parts/cards/sensors-card.part.js,103,hgTr,dim,ciemno,,,auto
 cards.sensors.dark,parts/cards/sensors-card.part.js,103,hgTr,dark,ciemno,,,auto
 common.unavailable_masc,parts/cards/sensors-card.part.js,104,hgTr,Unavailable,Niedostępny,,,auto
-cards.sensors.d_5,parts/cards/sensors-card.part.js,104,hgTr,d[5],d[3],,expr,manual
-cards.sensors.d_6,parts/cards/sensors-card.part.js,104,hgTr,d[6],d[4],,expr,manual
+cards.sensors.states.motion.on,parts/cards/sensors-card.part.js,104,hgTr,Detected,Wykryto,,expr,auto
+cards.sensors.states.occupancy.on,parts/cards/sensors-card.part.js,104,hgTr,Detected,Wykryto,,expr,auto
+cards.sensors.states.presence.on,parts/cards/sensors-card.part.js,104,hgTr,Present,Obecny,,expr,auto
+cards.sensors.states.door.on,parts/cards/sensors-card.part.js,104,hgTr,Open,Otwarte,,expr,auto
+cards.sensors.states.window.on,parts/cards/sensors-card.part.js,104,hgTr,Open,Otwarte,,expr,auto
+cards.sensors.states.opening.on,parts/cards/sensors-card.part.js,104,hgTr,Open,Otwarte,,expr,auto
+cards.sensors.states.garage_door.on,parts/cards/sensors-card.part.js,104,hgTr,Open,Otwarta,,expr,auto
+cards.sensors.states.smoke.on,parts/cards/sensors-card.part.js,104,hgTr,Smoke!,Dym!,,expr,auto
+cards.sensors.states.gas.on,parts/cards/sensors-card.part.js,104,hgTr,Gas!,Gaz!,,expr,auto
+cards.sensors.states.moisture.on,parts/cards/sensors-card.part.js,104,hgTr,Leak!,Zalanie!,,expr,auto
+cards.sensors.states.tamper.on,parts/cards/sensors-card.part.js,104,hgTr,Tampering!,Sabotaż!,,expr,auto
+cards.sensors.states.vibration.on,parts/cards/sensors-card.part.js,104,hgTr,Vibration,Wibracje,,expr,auto
+cards.sensors.states.motion.off,parts/cards/sensors-card.part.js,104,hgTr,Clear,Brak,,expr,auto
+cards.sensors.states.occupancy.off,parts/cards/sensors-card.part.js,104,hgTr,Clear,Brak,,expr,auto
+cards.sensors.states.presence.off,parts/cards/sensors-card.part.js,104,hgTr,Away,Brak,,expr,auto
+cards.sensors.states.door.off,parts/cards/sensors-card.part.js,104,hgTr,Closed,Zamknięte,,expr,auto
+cards.sensors.states.window.off,parts/cards/sensors-card.part.js,104,hgTr,Closed,Zamknięte,,expr,auto
+cards.sensors.states.opening.off,parts/cards/sensors-card.part.js,104,hgTr,Closed,Zamknięte,,expr,auto
+cards.sensors.states.garage_door.off,parts/cards/sensors-card.part.js,104,hgTr,Closed,Zamknięta,,expr,auto
+cards.sensors.states.smoke.off,parts/cards/sensors-card.part.js,104,hgTr,OK,OK,,expr,auto
+cards.sensors.states.gas.off,parts/cards/sensors-card.part.js,104,hgTr,OK,OK,,expr,auto
+cards.sensors.states.moisture.off,parts/cards/sensors-card.part.js,104,hgTr,Dry,Sucho,,expr,auto
+cards.sensors.states.tamper.off,parts/cards/sensors-card.part.js,104,hgTr,OK,OK,,expr,auto
+cards.sensors.states.vibration.off,parts/cards/sensors-card.part.js,104,hgTr,Still,Spokój,,expr,auto
 cards.sensors.history,parts/cards/sensors-card.part.js,106,hgTr,history,historia,,,auto
 common.state_motion,parts/cards/sensors-card.part.js,111,hgTr,motion,ruch,,,auto
 cards.sensors.unavailable,parts/cards/sensors-card.part.js,113,hgTr,unavailable,niedostępnych,,,auto
-cards.sensors.le,parts/cards/sensors-card.part.js,114,hgTr,le,l,,expr,manual
+cards.sensors.tabs.all,parts/cards/sensors-card.part.js,114,hgTr,All,Wszystkie,,expr,auto
+cards.sensors.tabs.motion,parts/cards/sensors-card.part.js,114,hgTr,Motion / presence,Ruch / obecność,,expr,auto
+cards.sensors.tabs.openings,parts/cards/sensors-card.part.js,114,hgTr,Doors / windows,Drzwi / okna,,expr,auto
+cards.sensors.tabs.other,parts/cards/sensors-card.part.js,114,hgTr,Other,Inne,,expr,auto
 cards.sensors.sensor_filter,parts/cards/sensors-card.part.js,116,hgTr,Sensor filter,Filtr czujników,,,auto
 cards.sensors.no_available_sensors_in,parts/cards/sensors-card.part.js,117,hgTr,No available sensors in this group,Brak dostępnych czujników w tej grupie,,,auto
 common.unavailable,parts/cards/sensors-card.part.js,118,hgTr,Unavailable,Niedostępne,,,auto
 common.hide,parts/cards/sensors-card.part.js,118,hgTr,Hide,Ukryj,,,auto
 cards.sensors.show,parts/cards/sensors-card.part.js,118,hgTr,Show,Pokaż,,,auto
-cards.sensors.home_glass_sensors,parts/cards/sensors-card.part.js,128,hgTr,Home Glass – Sensors,Home Glass – Czujniki,,load-time,manual
-cards.sensors.auto_discovered_motion_presence,parts/cards/sensors-card.part.js,128,hgTr,"Auto-discovered motion, presence, door, window and other sensors","Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne",,load-time,manual
+cards.sensors.picker_name,parts/cards/sensors-card.part.js,128,hgTr,Home Glass – Sensors,Home Glass – Czujniki,,load-time,auto
+cards.sensors.picker_description,parts/cards/sensors-card.part.js,128,hgTr,"Auto-discovered motion, presence, door, window and other sensors","Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne",,load-time,auto
 common.choose_entity,parts/cards/slider-card.part.js,17,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.slider.the_slider_works_with,parts/cards/slider-card.part.js,17,hgTr,"The slider works with lights, media players, fans, covers and input_number","Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number",,,auto
 cards.slider.mute,parts/cards/slider-card.part.js,21,hgTr,Mute,Wycisz,,,auto

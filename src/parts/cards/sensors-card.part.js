@@ -1,18 +1,17 @@
 /* --- czujniki: automatyczne wykrywanie (reguły w CFG['security'] w build.py, opis w README) --- */
-/* [kategoria, ikona wł., ikona wył., stan wł. PL, stan wył. PL, stan wł. EN, stan wył. EN] */
+/* [kategoria, ikona wł., ikona wył., stan wł. (hgTLazy), stan wył. (hgTLazy)] */
 const HG_SENS = {
-  motion: ['ruch', 'mdi:motion-sensor', 'mdi:motion-sensor-off', 'Wykryto', 'Brak', 'Detected', 'Clear'], occupancy: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Wykryto', 'Brak', 'Detected', 'Clear'],
-  presence: ['ruch', 'mdi:account-eye', 'mdi:account-outline', 'Obecny', 'Brak', 'Present', 'Away'],
-  door: ['otw', 'mdi:door-open', 'mdi:door-closed', 'Otwarte', 'Zamknięte', 'Open', 'Closed'], window: ['otw', 'mdi:window-open-variant', 'mdi:window-closed-variant', 'Otwarte', 'Zamknięte', 'Open', 'Closed'],
-  opening: ['otw', 'mdi:square-rounded-outline', 'mdi:square-rounded', 'Otwarte', 'Zamknięte', 'Open', 'Closed'], garage_door: ['otw', 'mdi:garage-open-variant', 'mdi:garage-variant', 'Otwarta', 'Zamknięta', 'Open', 'Closed'],
-  smoke: ['inne', 'mdi:smoke-detector-variant-alert', 'mdi:smoke-detector-variant', 'Dym!', 'OK', 'Smoke!', 'OK'], gas: ['inne', 'mdi:meter-gas', 'mdi:meter-gas-outline', 'Gaz!', 'OK', 'Gas!', 'OK'],
-  moisture: ['inne', 'mdi:water-alert', 'mdi:water-off-outline', 'Zalanie!', 'Sucho', 'Leak!', 'Dry'], tamper: ['inne', 'mdi:shield-alert', 'mdi:shield-check-outline', 'Sabotaż!', 'OK', 'Tampering!', 'OK'],
-  vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', 'Wibracje', 'Spokój', 'Vibration', 'Still'],
+  motion: ['ruch', 'mdi:motion-sensor', 'mdi:motion-sensor-off', hgTLazy('cards.sensors.states.motion.on'), hgTLazy('cards.sensors.states.motion.off')], occupancy: ['ruch', 'mdi:account-eye', 'mdi:account-outline', hgTLazy('cards.sensors.states.occupancy.on'), hgTLazy('cards.sensors.states.occupancy.off')],
+  presence: ['ruch', 'mdi:account-eye', 'mdi:account-outline', hgTLazy('cards.sensors.states.presence.on'), hgTLazy('cards.sensors.states.presence.off')], door: ['otw', 'mdi:door-open', 'mdi:door-closed', hgTLazy('cards.sensors.states.door.on'), hgTLazy('cards.sensors.states.door.off')],
+  window: ['otw', 'mdi:window-open-variant', 'mdi:window-closed-variant', hgTLazy('cards.sensors.states.window.on'), hgTLazy('cards.sensors.states.window.off')], opening: ['otw', 'mdi:square-rounded-outline', 'mdi:square-rounded', hgTLazy('cards.sensors.states.opening.on'), hgTLazy('cards.sensors.states.opening.off')],
+  garage_door: ['otw', 'mdi:garage-open-variant', 'mdi:garage-variant', hgTLazy('cards.sensors.states.garage_door.on'), hgTLazy('cards.sensors.states.garage_door.off')], smoke: ['inne', 'mdi:smoke-detector-variant-alert', 'mdi:smoke-detector-variant', hgTLazy('cards.sensors.states.smoke.on'), hgTLazy('cards.sensors.states.smoke.off')],
+  gas: ['inne', 'mdi:meter-gas', 'mdi:meter-gas-outline', hgTLazy('cards.sensors.states.gas.on'), hgTLazy('cards.sensors.states.gas.off')], moisture: ['inne', 'mdi:water-alert', 'mdi:water-off-outline', hgTLazy('cards.sensors.states.moisture.on'), hgTLazy('cards.sensors.states.moisture.off')],
+  tamper: ['inne', 'mdi:shield-alert', 'mdi:shield-check-outline', hgTLazy('cards.sensors.states.tamper.on'), hgTLazy('cards.sensors.states.tamper.off')], vibration: ['inne', 'mdi:vibrate', 'mdi:vibrate-off', hgTLazy('cards.sensors.states.vibration.on'), hgTLazy('cards.sensors.states.vibration.off')],
 };
-const HG_SENS_TABS = [['all', 'Wszystkie', 'All'], ['ruch', 'Ruch / obecność', 'Motion / presence'], ['otw', 'Drzwi / okna', 'Doors / windows'], ['inne', 'Inne', 'Other']];
+const HG_SENS_TABS = [['all', hgTLazy('cards.sensors.tabs.all')], ['ruch', hgTLazy('cards.sensors.tabs.motion')], ['otw', hgTLazy('cards.sensors.tabs.openings')], ['inne', hgTLazy('cards.sensors.tabs.other')]];
 class HGSensorsCard extends HGBase {
   defaults() {
-    return { title: hgTr('Czujniki', 'Sensors'), icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
+    return { title: hgT('cards.sensors.sensors'), icon: 'mdi:motion-sensor', device_classes: Object.keys(HG_SENS), exclude_platforms: ['browser_mod', 'mobile_app', 'group'],
       exclude: [], include: [], names: {}, name_strip: [' Zajętość', ' occupancy'], extras: true };
   }
   _extraSig() { return [this._tab || 'all', !!this._showUn, Math.floor(Date.now() / 60000), this._disc && this._disc.key]; }
@@ -100,22 +99,21 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const sel = it.filter((x) => tab === 'all' || x.cat === tab).sort((a, b) => (b.on - a.on) || (a.un - b.un) || (b.t - a.t));
     const tile = (x) => {
       const d = HG_SENS[x.dc], lux = x.lux && H.st(h, x.lux);
-      const luxT = lux && H.ok(lux) ? ({ bright: hgTr('jasno', 'bright'), dim: hgTr('ciemno', 'dim'), dark: hgTr('ciemno', 'dark') }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
-      const st = x.un ? hgTr('Niedostępny', 'Unavailable') : x.on ? hgTr(d[3], d[5]) : hgTr(d[4], d[6]);
+      const luxT = lux && H.ok(lux) ? ({ bright: hgT('cards.sensors.bright'), dim: hgT('cards.sensors.dim'), dark: hgT('cards.sensors.dark') }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
+      const st = x.un ? hgT('common.unavailable_masc') : x.on ? String(d[3]) : String(d[4]);
       const sub = [`<em>${H.esc(st)}</em>`, x.s && !x.un ? hgRel(new Date(x.s.last_changed)) : '', x.area ? H.esc(x.area) : '', luxT ? H.esc(luxT) : ''].filter(Boolean).join(' · ');
-      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – ${hgTr('historia', 'history')}" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
+      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – ${hgT('cards.sensors.history')}" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
         <span class="ic">${H.icon(x.on ? d[1] : d[2])}</span><span class="tx"><b>${H.esc(this._nm(x.e))}</b><span>${sub}</span></span></button>`;
     };
     const ok = sel.filter((x) => !x.un), un = sel.filter((x) => x.un);
-    const en = hgCurLang() === 'en';
-    const sum = [`<span class="a"><b>${act.length}</b> ${en ? 'active' : act.length === 1 ? 'aktywny' : 'aktywne'}</span>`, mot ? `<span><b>${mot}</b> ${hgTr('ruch', 'motion')}</span>` : '',
-      `<span class="o"><b>${opn}</b> ${en ? 'open' : opn === 1 || (opn > 1 && opn < 5) ? 'otwarte' : 'otwartych'}</span>`, alr ? `<span class="a"><b>${alr}</b> alarm</span>` : '',
-      unN ? `<span><b>${unN}</b> ${hgTr('niedostępnych', 'unavailable')}</span>` : ''].join('');
-    const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l, le]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${hgTr(l, le)}<i>${cnt(k)}</i></button>`).join('');
+    const sum = [`<span class="a"><b>${act.length}</b> ${hgT('cards.sensors.active_label', { count: act.length })}</span>`, mot ? `<span><b>${mot}</b> ${hgT('common.state_motion')}</span>` : '',
+      `<span class="o"><b>${opn}</b> ${hgT('cards.sensors.open_label', { count: opn })}</span>`, alr ? `<span class="a"><b>${alr}</b> ${hgT('cards.sensors.alarm_label')}</span>` : '',
+      unN ? `<span><b>${unN}</b> ${hgT('cards.sensors.unavailable')}</span>` : ''].join('');
+    const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${l}<i>${cnt(k)}</i></button>`).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
-      <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="${hgTr('Filtr czujników', 'Sensor filter')}">${tabs}</div>
-      ${ok.length ? `<div class="grid">${ok.map(tile).join('')}</div>` : `<div class="none">${hgTr('Brak dostępnych czujników w tej grupie', 'No available sensors in this group')}</div>`}
-      ${un.length ? `<div class="sec">${hgTr('Niedostępne', 'Unavailable')} · ${un.length}<button data-act="unv" aria-expanded="${!!this._showUn}">${this._showUn ? hgTr('Ukryj', 'Hide') : hgTr('Pokaż', 'Show')}</button></div>${this._showUn ? `<div class="grid">${un.map(tile).join('')}</div>` : ''}` : ''}
+      <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="${hgT('cards.sensors.sensor_filter')}">${tabs}</div>
+      ${ok.length ? `<div class="grid">${ok.map(tile).join('')}</div>` : `<div class="none">${hgT('cards.sensors.no_available_sensors_in')}</div>`}
+      ${un.length ? `<div class="sec">${hgT('common.unavailable')} · ${un.length}<button data-act="unv" aria-expanded="${!!this._showUn}">${this._showUn ? hgT('common.hide') : hgT('cards.sensors.show')}</button></div>${this._showUn ? `<div class="grid">${un.map(tile).join('')}</div>` : ''}` : ''}
     </ha-card>`;
   }
   onAct(a, t) {
@@ -125,4 +123,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   }
   getCardSize() { return 8; }
 }
-hgReg('hg-sensors-card', HGSensorsCard, hgTr('Home Glass – Czujniki', 'Home Glass – Sensors'), hgTr('Automatycznie wykryte czujniki ruchu, obecności, drzwi, okien i inne', 'Auto-discovered motion, presence, door, window and other sensors'));
+hgReg('hg-sensors-card', HGSensorsCard, hgTLazy('cards.sensors.picker_name'), hgTLazy('cards.sensors.picker_description'));
