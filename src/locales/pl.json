@@ -262,6 +262,9 @@
       "swipe_down_to_close": "Przesuń w dół, aby zamknąć",
       "unable_to_start_preview": "Nie można uruchomić podglądu",
       "unavailable": "niedostępna"
+    },
+    "cameras": {
+      "no_cameras_are_available": "Żadna kamera nie jest teraz dostępna"
     }
   },
   "common": {

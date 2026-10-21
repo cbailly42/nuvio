@@ -258,6 +258,9 @@
       "swipe_down_to_close": "Swipe down to close",
       "unable_to_start_preview": "Unable to start preview",
       "unavailable": "unavailable"
+    },
+    "cameras": {
+      "no_cameras_are_available": "No cameras are available right now"
     }
   },
   "common": {
