@@ -435,6 +435,15 @@
       "picker_description": "Duże powitanie z imieniem i hasłem",
       "picker_name": "Nuvio – Powitanie",
       "your_whole_home_in": "Cały dom w jednym miejscu"
+    },
+    "history": {
+      "choose_sensors": "Wybierz czujniki",
+      "history": "Historia",
+      "history_chart": "Wykres historii",
+      "last_h": "Ostatnie {hrs} h",
+      "one_or_more_numeric": "Jeden lub kilka czujników liczbowych",
+      "picker_description": "Kilka czujników na jednym wykresie",
+      "picker_name": "Home Glass – Historia"
     }
   },
   "common": {

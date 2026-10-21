@@ -431,6 +431,15 @@
       "picker_description": "Large greeting with your name and a tagline",
       "picker_name": "Nuvio – Greeting",
       "your_whole_home_in": "Your whole home in one place"
+    },
+    "history": {
+      "choose_sensors": "Choose sensors",
+      "history": "History",
+      "history_chart": "History chart",
+      "last_h": "Last {hrs} h",
+      "one_or_more_numeric": "One or more numeric sensors",
+      "picker_description": "Several sensors on one chart",
+      "picker_name": "Home Glass – History"
     }
   },
   "common": {

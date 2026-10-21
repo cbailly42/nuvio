@@ -392,8 +392,8 @@ cards.history.history,parts/cards/history-card.part.js,17,hgTr,History,Historia,
 cards.history.last_h,parts/cards/history-card.part.js,17,hgTr,Last {hrs} h,Ostatnie {hrs} h,hrs,,auto
 cards.history.history_chart,parts/cards/history-card.part.js,18,hgTr,History chart,Wykres historii,,,auto
 common.now,parts/cards/history-card.part.js,19,hgTr,now,teraz,,,auto
-cards.history.home_glass_history,parts/cards/history-card.part.js,23,hgTr,Home Glass – History,Home Glass – Historia,,load-time,manual
-cards.history.several_sensors_on_one_text,parts/cards/history-card.part.js,23,hgTr,Several sensors on one chart,Kilka czujników na jednym wykresie,,load-time,manual
+cards.history.picker_name,parts/cards/history-card.part.js,23,hgTr,Home Glass – History,Home Glass – Historia,,load-time,auto
+cards.history.picker_description,parts/cards/history-card.part.js,23,hgTr,Several sensors on one chart,Kilka czujników na jednym wykresie,,load-time,auto
 common.now_cap,parts/cards/humidifier-card.part.js,7,hgTr,Now,Teraz,,,auto
 cards.humidifier.nuvio_humidifier,parts/cards/humidifier-card.part.js,10,hgTr,Nuvio – Humidifier,Nuvio – Nawilżacz,,load-time,manual
 cards.humidifier.target_humidity_on_an,parts/cards/humidifier-card.part.js,10,hgTr,Target humidity on an arc and modes,Docelowa wilgotność na łuku i tryby,,load-time,manual
