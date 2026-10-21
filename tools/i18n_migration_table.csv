@@ -2760,21 +2760,20 @@ page.family,parts/hg-page.part.js,866,hgTr,Family,Rodzina,,,auto
 page.full_screen_glass_layout,parts/hg-page.part.js,1453,hgTr,"Full-screen glass layout (bar, header, rail, card panel)","Pełnoekranowy układ glass (pasek, nagłówek, szyna, panel kart)",,load-time,manual
 roomx.no_devices_in_this,parts/hg-roomx.part.js,27,hgTr,No devices in this room,Brak urządzeń w tym pokoju,,,auto
 roomx.pick_the_entities_to,parts/hg-roomx.part.js,28,hgTr,"Pick the entities to show here, or build the room from scratch.","Wybierz encje, które mają się tu pojawić, albo ułóż pokój od zera.",,,auto
-roomx.import_devices_from_the,parts/hg-roomx.part.js,29,hgTr,"Import devices from the “${H.esc(a.name)}” area in Home Assistant, or build the room from scratch.",Zaimportuj urządzenia z obszaru „${H.esc(a.name)}” w Home Assistant albo ułóż pokój od zera.,,expr,manual
+roomx.import_area_hint,parts/hg-roomx.part.js,29,hgTr,"Import devices from the “{name}” area in Home Assistant, or build the room from scratch.",Zaimportuj urządzenia z obszaru „{name}” w Home Assistant albo ułóż pokój od zera.,name,expr,auto
 roomx.pick_entities,parts/hg-roomx.part.js,30,hgTr,Pick entities,Wybierz encje,,,auto
 roomx.import_from_area,parts/hg-roomx.part.js,30,hgTr,Import from area,Importuj z obszaru,,,auto
 roomx.create_custom_layout,parts/hg-roomx.part.js,31,hgTr,Create custom layout,Utwórz własny układ,,,auto
 roomx.area_settings,parts/hg-roomx.part.js,32,hgTr,Area settings,Ustawienia obszaru,,,auto
-roomx.auxiliary,parts/hg-roomx.part.js,58,hgTr,auxiliary,pomocnicza,,concat,manual
+roomx.auxiliary,parts/hg-roomx.part.js,58,hgTr,auxiliary,pomocnicza,,concat,auto
 roomx.assigned_to_the_area,parts/hg-roomx.part.js,62,hgTr,Assigned to the area,Przypisane do obszaru,,,auto
 roomx.matching_by_name,parts/hg-roomx.part.js,62,hgTr,Matching by name,Pasujące po nazwie,,,auto
-roomx.showing_150_of_hit,parts/hg-roomx.part.js,65,hgTr,Showing 150 of ${hit.length}. Narrow the search.,Pokazano 150 z ${hit.length}. Zawęź wyszukiwanie.,,expr,manual
+roomx.showing_first,parts/hg-roomx.part.js,65,hgTr,Showing {shown} of {count}. Narrow the search.,Pokazano {shown} z {count}. Zawęź wyszukiwanie.,"shown,count",expr,auto
 roomx.no_results,parts/hg-roomx.part.js,66,hgTr,No results.,Brak wyników.,,,auto
-roomx.add_n_1_tile,parts/hg-roomx.part.js,68,hgTr,Add {n} ${n === 1 ? 'tile' : 'tiles'},Dodaj {n} ${n === 1 ? 'kafelek' : n < 5 ? 'kafelki' : 'kafelków'},,plural,manual
 roomx.select_entities,parts/hg-roomx.part.js,68,hgTr,Select entities,Zaznacz encje,,,auto
 roomx.selected,parts/hg-roomx.part.js,69,hgTr,Selected: {n},Zaznaczono: {n},n,,auto
 roomx.pick_entities,parts/hg-roomx.part.js,72,hgTr,Pick entities,Wybierz encje,,,auto
-roomx.import_from_the_h,parts/hg-roomx.part.js,72,hgTr,Import from the “${H.esc(a.name)}” area,Importuj z obszaru „${H.esc(a.name)}”,,expr,manual
+roomx.import_from_named_area,parts/hg-roomx.part.js,72,hgTr,Import from the “{name}” area,Importuj z obszaru „{name}”,name,expr,auto
 roomx.choose_what_to_show,parts/hg-roomx.part.js,72,hgTr,Choose what to show in this room. Tiles are arranged by type.,"Zaznacz, co ma się pojawić w tym pokoju. Kafelki ułożymy według rodzaju.",,,auto
 common.close,parts/hg-roomx.part.js,73,hgTr,Close,Zamknij,,,auto
 roomx.from_area,parts/hg-roomx.part.js,74,hgTr,From area,Z obszaru,,,auto
@@ -2783,9 +2782,9 @@ roomx.search_entities,parts/hg-roomx.part.js,75,hgTr,Search entities,Szukaj encj
 roomx.search_entities,parts/hg-roomx.part.js,75,hgTr,Search entities,Szukaj encji,,,auto
 roomx.this_area_has_no,parts/hg-roomx.part.js,77,hgTr,This area has no entities yet.,W tym obszarze nie ma jeszcze encji.,,,auto
 roomx.also_assign_to_the,parts/hg-roomx.part.js,78,hgTr,Also assign to the area in Home Assistant,Przypisz też do obszaru w Home Assistant,,,auto
-roomx.entities_without_an_area,parts/hg-roomx.part.js,78,hgTr,'Entities without an area move to “' + H.esc(a.name) + '”.','Encje bez obszaru trafią do „' + H.esc(a.name) + '”.',,concat,manual
+roomx.unassigned_move_hint,parts/hg-roomx.part.js,78,hgTr,Entities without an area move to “{name}”.,Encje bez obszaru trafią do „{name}”.,name,concat,auto
 common.cancel,parts/hg-roomx.part.js,79,hgTr,Cancel,Anuluj,,,auto
-roomx.added_sel_length_to,parts/hg-roomx.part.js,94,hgTr,Added ${sel.length} to ${this._a.name},Dodano ${sel.length} do pokoju ${this._a.name},,expr,manual
+roomx.added_count_to,parts/hg-roomx.part.js,94,hgTr,Added {count} to {name},Dodano {count} do pokoju {name},"count,name",expr,auto
 users.shared_dashboard,parts/hg-users.part.js,10,hgTr,Shared dashboard,Wspólny dashboard,,,auto
 users.intro,parts/hg-users.part.js,11,hgTr,"By default everyone sees the same dashboard, set up by an administrator. Turn a person off to give them their own layout: it starts as a copy of the shared one and they can edit it themselves.","Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. Odznacz osobę, żeby miała własny układ: zaczyna od kopii wspólnego i może go sama edytować.",,,auto
 common.loading,parts/hg-users.part.js,14,hgTr,Loading…,Wczytywanie…,,,auto

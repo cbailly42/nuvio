@@ -2402,6 +2402,34 @@
       "you": "Ty"
     }
   },
+  "roomx": {
+    "add_tiles_few": "Dodaj {count} kafelki",
+    "add_tiles_many": "Dodaj {count} kafelków",
+    "add_tiles_one": "Dodaj {count} kafelek",
+    "add_tiles_other": "Dodaj {count} kafelka",
+    "added_count_to": "Dodano {count} do pokoju {name}",
+    "also_assign_to_the": "Przypisz też do obszaru w Home Assistant",
+    "area_settings": "Ustawienia obszaru",
+    "assigned_to_the_area": "Przypisane do obszaru",
+    "auxiliary": "pomocnicza",
+    "choose_what_to_show": "Zaznacz, co ma się pojawić w tym pokoju. Kafelki ułożymy według rodzaju.",
+    "create_custom_layout": "Utwórz własny układ",
+    "from_area": "Z obszaru",
+    "import_area_hint": "Zaimportuj urządzenia z obszaru „{name}” w Home Assistant albo ułóż pokój od zera.",
+    "import_from_area": "Importuj z obszaru",
+    "import_from_named_area": "Importuj z obszaru „{name}”",
+    "matching_by_name": "Pasujące po nazwie",
+    "no_devices_in_this": "Brak urządzeń w tym pokoju",
+    "no_results": "Brak wyników.",
+    "pick_entities": "Wybierz encje",
+    "pick_the_entities_to": "Wybierz encje, które mają się tu pojawić, albo ułóż pokój od zera.",
+    "search_entities": "Szukaj encji",
+    "select_entities": "Zaznacz encje",
+    "selected": "Zaznaczono: {n}",
+    "showing_first": "Pokazano {shown} z {count}. Zawęź wyszukiwanie.",
+    "this_area_has_no": "W tym obszarze nie ma jeszcze encji.",
+    "unassigned_move_hint": "Encje bez obszaru trafią do „{name}”."
+  },
   "shared": {
     "areas": {
       "no_room": "Bez pokoju",

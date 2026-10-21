@@ -2384,6 +2384,32 @@
       "you": "You"
     }
   },
+  "roomx": {
+    "add_tiles_one": "Add {count} tile",
+    "add_tiles_other": "Add {count} tiles",
+    "added_count_to": "Added {count} to {name}",
+    "also_assign_to_the": "Also assign to the area in Home Assistant",
+    "area_settings": "Area settings",
+    "assigned_to_the_area": "Assigned to the area",
+    "auxiliary": "auxiliary",
+    "choose_what_to_show": "Choose what to show in this room. Tiles are arranged by type.",
+    "create_custom_layout": "Create custom layout",
+    "from_area": "From area",
+    "import_area_hint": "Import devices from the “{name}” area in Home Assistant, or build the room from scratch.",
+    "import_from_area": "Import from area",
+    "import_from_named_area": "Import from the “{name}” area",
+    "matching_by_name": "Matching by name",
+    "no_devices_in_this": "No devices in this room",
+    "no_results": "No results.",
+    "pick_entities": "Pick entities",
+    "pick_the_entities_to": "Pick the entities to show here, or build the room from scratch.",
+    "search_entities": "Search entities",
+    "select_entities": "Select entities",
+    "selected": "Selected: {n}",
+    "showing_first": "Showing {shown} of {count}. Narrow the search.",
+    "this_area_has_no": "This area has no entities yet.",
+    "unassigned_move_hint": "Entities without an area move to “{name}”."
+  },
   "shared": {
     "areas": {
       "no_room": "No room",
