@@ -574,6 +574,18 @@
       "unknown_location": "Nieznana lokalizacja",
       "zones": "Strefy"
     },
+    "person": {
+      "away": "Poza domem",
+      "days_count_few": "{count} dni",
+      "days_count_many": "{count} dni",
+      "days_count_one": "{count} dnia",
+      "days_count_other": "{count} dni",
+      "entity_not_found": "brak encji",
+      "for": "od",
+      "hours_count": "{count} godz.",
+      "picker_description": "Osoba z awatarem i strefą",
+      "picker_name": "Home Glass – Person"
+    },
     "power": {
       "high": "Wysokie",
       "low": "Niskie",

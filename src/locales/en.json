@@ -570,6 +570,16 @@
       "unknown_location": "Unknown location",
       "zones": "Zones"
     },
+    "person": {
+      "away": "Away",
+      "days_count_one": "{count} day",
+      "days_count_other": "{count} days",
+      "entity_not_found": "entity not found",
+      "for": "for",
+      "hours_count": "{count} h",
+      "picker_description": "Osoba z awatarem i strefą",
+      "picker_name": "Home Glass – Person"
+    },
     "power": {
       "high": "High",
       "low": "Low",

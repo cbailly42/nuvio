@@ -591,9 +591,7 @@ cards.people.zones,parts/cards/people-card.part.js,43,hgTr,Zones,Strefy,,,auto
 common.at_home,parts/cards/person-card.part.js,2,hgTr,Home,W domu,,,auto
 cards.person.away,parts/cards/person-card.part.js,2,hgTr,Away,Poza domem,,,auto
 cards.person.entity_not_found,parts/cards/person-card.part.js,15,hgTr,entity not found,brak encji,,,auto
-cards.person.math_round_mins_60,parts/cards/person-card.part.js,20,hgTr,${Math.round(mins / 60)} h,${Math.round(mins / 60)} godz.,,expr,manual
-cards.person.1_day,parts/cards/person-card.part.js,20,hgTr,1 day,1 dnia,,plural,manual
-cards.person.math_round_mins_1440,parts/cards/person-card.part.js,20,hgTr,${Math.round(mins / 1440)} days,${Math.round(mins / 1440)} dni,,plural,manual
+cards.person.hours_count,parts/cards/person-card.part.js,20,hgTr,{count} h,{count} godz.,count,expr,auto
 cards.person.for,parts/cards/person-card.part.js,22,hgTr,for,od,,,auto
 common.power_now,parts/cards/phases-card.part.js,4,hgTr,Power now,Moc teraz,,,auto
 cards.phases.unavailable,parts/cards/phases-card.part.js,27,hgTr,unavailable,niedostępna,,,auto
