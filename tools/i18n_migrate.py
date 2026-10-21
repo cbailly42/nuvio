@@ -22,8 +22,10 @@ extract() raises if a hgTr( / hgTrLazy( / hgTrO( in the source is neither an Occ
   v2.16.0 showed an untranslated state in English (H.t), the reference text for the other languages (EN itself never reads it).
   For HG_WX_SHORT (dict-dynamic) pl is the dictionary key (the PL index text) and en its short value: not a language pair.
 A hand-resolved manual row (manual reason set, status no longer manual) survives propose: matched by file + kind + line (in order),
-it keeps its key, texts, parameters and status.
-Key status: manual (any manual reason) | review (key may be clumsy: promoted to common.*, collision suffix _2.., slug cut at
+it keeps its key, texts, parameters and status; extra rows on that file + kind + line (an array / object resolved as one key per
+element: more rows than calls) are kept after it.
+Key status: manual (any manual reason) | unused (set by hand: a dictionary entry nothing reads any more; never migrated, kept by
+propose) | review (key may be clumsy: promoted to common.*, collision suffix _2.., slug cut at
 40 chars, slug under 3 chars or empty, accented/non-ASCII letters in the first words, dictionary key that had to be rewritten) | auto.
 """
 import os, re, sys, csv, json, subprocess, shutil, unicodedata
@@ -464,11 +466,12 @@ def propose(occs, existing=None):
     kept_l = {}   # hand-resolved manual rows (their en/pl may be the resolved text): file + kind + line, in table order
     for r in existing:
         if r.get('manual') and r.get('status') != 'manual': kept_l.setdefault((r['file'], r['kind'], int(r['line'])), []).append(r)
-    ident = {}; rows = []; cnt = {}; seen = {}
+    ident = {}; rows = []; cnt = {}; seen = {}; last = {}
     for o in occs:
         lst = o['manual'] and kept_l.get((o['file'], o['kind'], o['line']))
         if lst:
-            k = lst.pop(0); r = dict(o); r.update(key=k['key'], en=k['en'], pl=k['pl'], params=list(k['params']), status=k['status'], why=['resolved']); rows.append(r); continue
+            k = lst.pop(0); r = dict(o); r.update(key=k['key'], en=k['en'], pl=k['pl'], params=list(k['params']), status=k['status'], why=['resolved']); rows.append(r)
+            last[(o['file'], o['kind'], o['line'])] = r; continue
         r = dict(o); why = []; key = None
         if o['kind'] == 'dict':
             ns = DICTS[o['name']]
@@ -499,9 +502,12 @@ def propose(occs, existing=None):
             reg(key); ident[idn] = (key, why)
         r['key'] = key; r['why'] = why
         if o['manual']: r['status'] = 'manual'
-        elif why == ['kept']: r['status'] = kst if kst in ('auto', 'review') else 'review'   # a hand-edited status survives; manual -> no longer manual: look again
+        elif why == ['kept']: r['status'] = kst if kst in ('auto', 'review', 'unused') else 'review'   # a hand-edited status survives; manual -> no longer manual: look again
         else: r['status'] = 'review' if why else 'auto'
         rows.append(r)
+    for g, r0 in last.items():      # leftover resolved rows of a consumed group (one key per array / object element) go right after it
+        extra = [dict(x, manual=r0['manual'], why=['resolved']) for x in kept_l.get(g, [])]
+        if extra: i = next(i for i, x in enumerate(rows) if x is r0); rows[i + 1:i + 1] = extra
     return rows
 
 # ---------------------------------------------------------------- csv
@@ -552,7 +558,7 @@ def join_rows(occs, rows):
         j.update(src_pl=o['pl'], src_en=o['en'], src_params=list(o['params'])); joined.append(j)
     return joined, lost, [r for r in rows if id(r) not in used]
 
-def migrates(j): return j['status'] != 'manual'              # unresolved manual rows are skipped
+def migrates(j): return j['status'] not in ('manual', 'unused')   # unresolved manual rows and unused dictionary entries are skipped
 def rewrites(j): return migrates(j) and not j['manual'] and j['kind'] != 'dict'   # hand-resolved manual rows and dictionaries: catalogs only
 
 def tokens(text, names):

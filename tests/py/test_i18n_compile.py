@@ -70,6 +70,10 @@ class Locales(unittest.TestCase):
         C.build_locales(self.src, self.out); left = os.listdir(self.out)
         for f in keep: self.assertIn(f, left)
         self.assertNotIn('nuvio-locale-fr.00000000.json', left); self.assertNotIn('nuvio-locale-zz.11111111.json', left)
+    def test_manifest_carries_optional_flag_and_intro(self):
+        self.w('fr', dict(FR, _meta={'name': 'Français', 'locale': 'fr-FR', 'flag': '🇫🇷', 'intro': 'Interface en français'}))
+        man = C.build_locales(self.src, self.out)[0]
+        self.assertEqual((man[1]['flag'], man[1]['intro']), ('🇫🇷', 'Interface en français')); self.assertNotIn('flag', man[0])
     def test_removed_language_deleted(self):
         C.build_locales(self.src, self.out); os.remove(os.path.join(self.src, 'fr.json')); C.build_locales(self.src, self.out); self.assertEqual(os.listdir(self.out), [])
 

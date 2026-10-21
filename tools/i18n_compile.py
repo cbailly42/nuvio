@@ -111,13 +111,15 @@ def build_locales(src_dir, out_dir, text=None):
         if not isinstance(s.get('_meta'), dict) or not s['_meta'].get('name') or not s['_meta'].get('locale'): raise ValueError('%s.json: _meta needs name and locale' % c)
     fl = lambda c: map_texts(flatten(srcs[c]), text) if text else flatten(srcs[c])
     idx = assign_indices(flatten(srcs['en'])); en = compile_catalog(fl('en'), idx, srcs['en']['_meta'])
-    manifest, keep = [{'code': 'en', 'name': en['m']['name'], 'locale': en['m']['locale'], 'file': None}], set()
+    # optional _meta.flag / _meta.intro (the language presenting itself, e.g. in the setup wizard) travel in the manifest
+    ext = lambda m: {k: m[k] for k in ('flag', 'intro') if isinstance(m.get(k), str) and m[k]}
+    manifest, keep = [{'code': 'en', 'name': en['m']['name'], 'locale': en['m']['locale'], 'file': None, **ext(srcs['en']['_meta'])}], set()
     os.makedirs(out_dir, exist_ok=True)
     for c in sorted(k for k in srcs if k != 'en'):
         body = json.dumps(compile_catalog(fl(c), idx, srcs[c]['_meta']), ensure_ascii=False, separators=(',', ':'))
         name = 'nuvio-locale-%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); keep.add(name)
         with open(os.path.join(out_dir, name), 'w', encoding='utf-8') as fh: fh.write(body)
-        manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': name})
+        manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': name, **ext(srcs[c]['_meta'])})
     for f in os.listdir(out_dir):
         if re.fullmatch(r'nuvio-locale-[\w-]+\.[0-9a-f]{8}\.json', f) and f not in keep: os.remove(os.path.join(out_dir, f))
     return manifest, en, idx

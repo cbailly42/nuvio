@@ -136,8 +136,23 @@ class Csv(unittest.TestCase):
             self.assertEqual(got, [('weather.short.partlycloudy', 'Partly cloudy', 'Częś. zachm.', 'auto', 'dict-dynamic'), ('weather.short.lightning', 'Storm', 'Burza', 'auto', 'dict-dynamic')])
             r = [r for r in again if r['key'] == 'cards.alarm.language'][0]; self.assertEqual((r['en'], r['params'], r['status']), ('Language: {name}', ['name'], 'auto'))
             self.assertEqual(len(again), len(ROWS))
+            # an array resolved as one key per element: the extra rows (no call of their own) stay right after the first one
+            arr = [r for r in again if r['manual'] == 'array' and r['file'].endswith('hg-oss.part.js')]; self.assertTrue(arr)
+            rows2 = [dict(r) for r in again]; i = next(i for i, r in enumerate(rows2) if r['manual'] == 'array' and r['file'].endswith('hg-oss.part.js'))
+            rows2[i].update(key='wizard.steps.lang', en='Language', pl='Język', status='auto')
+            rows2.insert(i + 1, dict(rows2[i], key='wizard.steps.views', en='Views', pl='Widoki'))
+            M.write_csv(rows2, p); third = M.propose(M.extract(FIX), existing=M.read_csv(p)); j = next(i for i, r in enumerate(third) if r['key'] == 'wizard.steps.lang')
+            self.assertEqual([(r['key'], r['status'], r['manual']) for r in third[j:j + 2]], [('wizard.steps.lang', 'auto', 'array'), ('wizard.steps.views', 'auto', 'array')])
+            self.assertEqual(len(third), len(ROWS) + 1)
             # an unresolved manual row is proposed again as manual
             self.assertEqual({r['status'] for r in again if r['manual'] and r['key'] not in ('cards.alarm.language',) and not r['key'].startswith('weather.short.')}, {'manual'})
+
+    def test_unused_status_kept_and_not_migrated(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, 't.csv'); rows = [dict(r) for r in ROWS]; r = [r for r in rows if r['key'] == 'nav.map'][0]; r['status'] = 'unused'
+            M.write_csv(rows, p); again = M.propose(M.extract(FIX), existing=M.read_csv(p))
+            self.assertEqual([r['status'] for r in again if r['key'] == 'nav.map'], ['unused'])
+            self.assertFalse(M.migrates({'status': 'unused'})); self.assertTrue(M.migrates({'status': 'review'}))
 
 def workdir():
     """a writable copy of the fixture tree with seeded catalogs; returns (tmp TemporaryDirectory, root)"""
