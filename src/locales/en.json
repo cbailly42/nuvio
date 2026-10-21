@@ -1,4 +1,19 @@
 {
-  "_meta": { "name": "English", "locale": "en-GB" },
-  "common": { "save": "Save" }
+  "_meta": {
+    "name": "English",
+    "locale": "en-GB"
+  },
+  "common": {
+    "save": "Save"
+  },
+  "weather": {
+    "short": {
+      "exceptional": "Exceptional",
+      "lightning": "Storm",
+      "lightning_rainy": "Storm, rain",
+      "partlycloudy": "Partly cloudy",
+      "snowy_rainy": "Sleet",
+      "windy_variant": "Windy"
+    }
+  }
 }

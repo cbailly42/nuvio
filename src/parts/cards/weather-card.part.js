@@ -181,7 +181,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (!H.ok(w)) return '';
     const t = parseFloat(w.attributes.temperature), cond = HGWx.cn(w.state), mm = this._minmax(), night = this._night(new Date());
     const lbl = hgTr(`Na zewnątrz: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, maks ${H.fmt(mm[0], 0)}°, min ${H.fmt(mm[1], 0)}°` : ''} – prognoza szczegółowa`, `Outside: ${isFinite(t) ? H.fmt(t, 0) + '°' : ''}, ${cond}${mm ? `, high ${H.fmt(mm[0], 0)}°, low ${H.fmt(mm[1], 0)}°` : ''} – detailed forecast`);
-    const chip = `<button class="chip" data-act="expand" aria-label="${H.esc(lbl)}" title="${H.esc(cond)}"><img src="${HGWx.icon(c, w.state, night, false)}" alt=""><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''}</b><span class="f">${H.esc(cond)}</span><span class="s">${H.esc(HG_WX_SHORT[cond] || cond)}</span></button>`;
+    const chip = `<button class="chip" data-act="expand" aria-label="${H.esc(lbl)}" title="${H.esc(cond)}"><img src="${HGWx.icon(c, w.state, night, false)}" alt=""><b>${isFinite(t) ? H.fmt(t, 0) + '°' : ''}</b><span class="f">${H.esc(cond)}</span><span class="s">${H.esc(hgTD('weather.short.' + hgStN(w.state), cond))}</span></button>`;
     if (this.hasAttribute('compact')) return chip;
     const first = !this._shown, pu = this._pu(); this._shown = true;
     const nx = this._hrs().slice(1, 6).map((f) => { const d = new Date(f.datetime);

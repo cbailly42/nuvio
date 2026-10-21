@@ -1072,14 +1072,14 @@ common.choose_entity,parts/cards/value-card.part.js,6,hgTr,Choose an entity,Wybi
 cards.value.a_sensor_or_any,parts/cards/value-card.part.js,6,hgTr,A sensor or any entity with a state,Czujnik lub dowolna encja ze stanem,,,auto
 cards.value.home_glass_big_value,parts/cards/value-card.part.js,12,hgTr,Home Glass – Big value,Home Glass – Duża wartość,,load-time,manual
 cards.value.one_number_with_warning,parts/cards/value-card.part.js,12,hgTr,One number with warning thresholds,Jedna liczba z progami ostrzeżeń,,load-time,manual
-weather.czesciowe_zachmurzenie,parts/cards/weather-card.part.js,1,dict,Częś. zachm.,Częściowe zachmurzenie,,dict-dynamic,manual
-weather.deszcz_ze_sniegiem,parts/cards/weather-card.part.js,1,dict,Deszcz/śnieg,Deszcz ze śniegiem,,dict-dynamic,manual
-weather.burza_z_deszczem,parts/cards/weather-card.part.js,1,dict,"Burza, deszcz",Burza z deszczem,,dict-dynamic,manual
-weather.wietrznie_pochmurno,parts/cards/weather-card.part.js,1,dict,Wietrznie,"Wietrznie, pochmurno",,dict-dynamic,manual
-weather.zjawisko_wyjatkowe,parts/cards/weather-card.part.js,1,dict,Wyjątkowe,Zjawisko wyjątkowe,,dict-dynamic,manual
-weather.thunderstorm_rain,parts/cards/weather-card.part.js,2,dict,"Storm, rain","Thunderstorm, rain",,dict-dynamic,manual
-weather.windy_cloudy,parts/cards/weather-card.part.js,2,dict,Windy,"Windy, cloudy",,dict-dynamic,manual
-weather.thunderstorm,parts/cards/weather-card.part.js,2,dict,Storm,Thunderstorm,,dict-dynamic,manual
+weather.short.partlycloudy,parts/cards/weather-card.part.js,1,dict,Partly cloudy,Częś. zachm.,,dict-dynamic,auto
+weather.short.snowy_rainy,parts/cards/weather-card.part.js,1,dict,Sleet,Deszcz/śnieg,,dict-dynamic,auto
+weather.short.lightning_rainy,parts/cards/weather-card.part.js,1,dict,"Storm, rain","Burza, deszcz",,dict-dynamic,auto
+weather.short.windy_variant,parts/cards/weather-card.part.js,1,dict,Windy,Wietrznie,,dict-dynamic,auto
+weather.short.exceptional,parts/cards/weather-card.part.js,1,dict,Exceptional,Wyjątkowe,,dict-dynamic,auto
+weather.short.lightning_rainy,parts/cards/weather-card.part.js,2,dict,"Storm, rain","Burza, deszcz",,dict-dynamic,auto
+weather.short.windy_variant,parts/cards/weather-card.part.js,2,dict,Windy,Wietrznie,,dict-dynamic,auto
+weather.short.lightning,parts/cards/weather-card.part.js,2,dict,Storm,Burza,,dict-dynamic,auto
 cards.weather.outside,parts/cards/weather-card.part.js,4,hgTr,Outside,Na zewnątrz,,,auto
 common.now_cap,parts/cards/weather-card.part.js,128,hgTr,Now,Teraz,,,auto
 cards.weather.hour,parts/cards/weather-card.part.js,128,hgTr,Hour ,Godz. ,,concat,manual

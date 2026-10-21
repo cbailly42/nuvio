@@ -1,4 +1,19 @@
 {
-  "_meta": { "name": "Polski", "locale": "pl-PL" },
-  "common": { "save": "Zapisz" }
+  "_meta": {
+    "name": "Polski",
+    "locale": "pl-PL"
+  },
+  "common": {
+    "save": "Zapisz"
+  },
+  "weather": {
+    "short": {
+      "exceptional": "Wyjątkowe",
+      "lightning": "Burza",
+      "lightning_rainy": "Burza, deszcz",
+      "partlycloudy": "Częś. zachm.",
+      "snowy_rainy": "Deszcz/śnieg",
+      "windy_variant": "Wietrznie"
+    }
+  }
 }
