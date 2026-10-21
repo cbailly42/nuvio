@@ -1,3 +1,5 @@
+[English](../components.md) · **Polski** · [Français](../fr/components.md)
+
 # Komponenty
 
 Nuvio dostarcza karty jako elementy niestandardowe. Ta strona wymienia każdą kartę, jej encje i opcje. Wróć do [README](../../README.pl.md).

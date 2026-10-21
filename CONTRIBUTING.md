@@ -30,7 +30,7 @@ Every new feature has to meet the UI rules in [DESIGN.md](DESIGN.md).
 ## Rules for changes
 
 - No hard coded entities. Nuvio reads areas, devices and entities from Home Assistant, and `tools/guard.py` rejects ids from a real house.
-- Every visible text is written in Polish and English with `hgTr('Polski', 'English')`.
+- No visible text is written in the code. Every text is a key in `src/locales/en.json` read with `hgT('ns.key')`, translated in every required language (`pl.json`, `fr.json`); `python3 tools/i18n_check.py` must pass. Key naming, plurals and variables are described in [Translations](docs/development.md#translations).
 - Colors come from the theme tokens, so light and dark mode both work.
 - Animations respect `prefers-reduced-motion`.
 - Keep a change focused on one thing.
@@ -41,6 +41,11 @@ Every new feature has to meet the UI rules in [DESIGN.md](DESIGN.md).
 - Commit messages follow Conventional Commits, for example `feat: Air purifier card` or `fix: Stack height in Safari`.
 - Versions follow semantic versioning. A new feature raises the minor number and a fix raises the patch number.
 - Describe the change in `CHANGELOG.md` and `CHANGELOG.pl.md`, in the component lists (`docs/components.md` and `docs/pl/components.md`) and in `docs/STATUS.md`, and update the version in `package.json`.
+- The author keeps writing the changelog in English and Polish. `CHANGELOG.fr.md` and the French documentation (`README.fr.md`, `docs/fr/`) may lag behind: a contributor catches up the missing French entries in a separate pull request.
+
+## Translations
+
+The interface is translated with JSON catalogs in `src/locales/`, one file per language. To improve a translation, edit that file and run `python3 tools/i18n_check.py --lang <code>`. To add a language, follow [Adding a language](docs/configuration.md#adding-a-language): one new `src/locales/<code>.json` file, no code change. A new language may start partial; English, Polish and French must stay complete.
 
 ## Pull requests
 

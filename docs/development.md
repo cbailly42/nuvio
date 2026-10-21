@@ -1,3 +1,5 @@
+**English** · [Polski](pl/development.md) · [Français](fr/development.md)
+
 # Development
 
 How to build, structure and release Nuvio. For the contribution workflow see [CONTRIBUTING.md](../CONTRIBUTING.md). Back to the [README](../README.md).
@@ -8,7 +10,7 @@ See [DESIGN.md](../DESIGN.md) for the UI rules every new feature must meet.
 ```bash
 npm install              # once: esbuild, used to minify the bundle
 python3 tools/build.py   # -> dist/nuvio.js
-python3 tools/guard.py   # fails if any house-specific id slipped into dist
+python3 tools/guard.py   # fails if any house-specific id slipped into dist, runs the i18n check
 ```
 
 ## Source layout
@@ -24,12 +26,47 @@ The source is plain JavaScript files that `tools/build.py` joins, in a fixed ord
 
 A new card goes into `src/parts/cards/<name>-card.part.js` and is added to the `CARDS` list in `tools/build.py`. Load order matters: code that runs when the bundle loads (for example `class X extends Y`) may only use what an earlier file defines.
 
+## Translations
+
+Every visible text lives in a JSON catalog, never in the code. `src/locales/en.json` is the reference and source language; `pl.json`, `fr.json` and any added language follow the same keys. Adding a language is described in [Configuration](configuration.md#adding-a-language).
+
+**Keys.** Nested JSON, every segment in `snake_case`. A key describes the role of the text, not its words (`cards.smartlock.default_title`, not `cards.smartlock.lock`). One namespace per area:
+
+| Namespace | Content |
+|---|---|
+| `common.*` | texts shared by at least three modules (`common.save`, `common.cancel`) |
+| `nav.*` | navigation and view titles |
+| `wizard.*` | first-run wizard |
+| `edit.*`, `wall.*`, `backup.*`, `users.*`, `assist.*` … | one namespace per `hg-*.part.js` module |
+| `ui.*`, `shared.*` | the `ui/` and `shared/` blocks |
+| `cards.<card>.*` | one card (`cards.smartlock.hours_ago_one`) |
+| `states.*` | raw Home Assistant states |
+| `weather.*` | weather conditions |
+| `accents.*`, `backgrounds.*` | names of the accent colours and of the bundled backgrounds |
+
+**Messages.** Variables are named: `"Welcome, {name}!"`. A translation keeps exactly the variables of the English text. Plurals use suffixes on the key (`entities_one`, `entities_few`, `entities_many`, `entities_other`, also `_zero` and `_two`): the form is chosen by `Intl.PluralRules(locale)` from the `count` parameter, so each language gives the forms its rules need (English `_one` / `_other`, Polish `_one` / `_few` / `_many` / `_other`, French `_one` / `_many` / `_other`). In English, a text that uses `{count}` must be split into plural forms.
+
+**API** (`src/parts/hg-i18n.part.js`, all synchronous):
+
+| Call | Use |
+|---|---|
+| `hgT('ns.key', params?)` | the text in the current language |
+| `hgTLazy('ns.key', params?)` | an object resolved when it is turned into a string, for texts defined before the language is known |
+| `hgTO(obj, { prop: 'ns.key' })` | adds getters to `obj` that call `hgT` |
+| `hgTD('states.' + state, fallback)` | dynamic key, built at run time; `fallback` when the key does not exist |
+
+Keys passed to `hgT`, `hgTLazy` and `hgTO` are string literals. Only `hgTD` builds keys, and only under the prefixes declared in `DYN_PREFIXES` in `tools/i18n_compile.py` (`states.`, `weather.` and a few per-card option tables); a new dynamic table needs its prefix added there. Missing text falls back to English, then to the raw key (visible on purpose); `hgTD` falls back to its `fallback`.
+
+**Build.** Keys exist only in the sources. `tools/build.py` gives every static key an integer index (sorted keys of `en.json`), rewrites `hgT('ns.key')` to `hgT(842)` in the bundle (plural forms share one index), compiles each catalog to an indexed array (`dist/nuvio-locale-<code>.<hash8>.json`, hash of its content), and embeds English and the language manifest (`code`, `name`, `locale`, `file`, optional `flag` and `intro`) in the core. Other languages are loaded on demand. A compiled catalog only fits the core of the same build. Texts in the sources may say *Home Glass*; the build turns it into *Nuvio* in the bundle and the catalogs.
+
+**Checks.** `python3 tools/i18n_check.py` fails (exit code 1) when a key is not a literal, a used key is missing from `en.json`, a key of `en.json` is unused, a visible text is written in the code, a catalog has invalid JSON, a duplicate key, incomplete `_meta`, different variables or missing plural forms, or a required language (`en`, `pl`, `fr`) is incomplete. Other languages may be partial and only get a coverage warning. Options: `--lang <code>` lists the missing and obsolete keys of one language, `--list` prints every error, `--json` prints the result as JSON. `tools/guard.py` runs it as part of its checks.
+
 There is no CI/CD: releases and tags are built locally. `tools/release.sh X.Y.Z` bumps the version (`package.json`, README), builds, checks `dist/nuvio.js` (`node --check`) and runs the hardcode guard, commits `chore: release X.Y.Z`, creates the annotated tag `vX.Y.Z`, pushes `main` and the tag, and creates a GitHub release without attached files (HACS then installs the full flat `dist/`):
 
 ```bash
 ./tools/release.sh 0.3.21   # needs a clean tree, gh CLI logged in
 ```
 
-Add the changelog entry to `CHANGELOG.md` and `CHANGELOG.pl.md` before you release: the script only updates the version in `package.json` and the version badge in the README files.
+Add the changelog entry to `CHANGELOG.md` and `CHANGELOG.pl.md` before you release (`CHANGELOG.fr.md` is caught up by a contributor, see [CONTRIBUTING.md](../CONTRIBUTING.md)): the script only updates the version in `package.json` and the version badge in the README files.
 
 Only tagging by hand: `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.

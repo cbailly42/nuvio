@@ -1,0 +1,72 @@
+[English](../development.md) · [Polski](../pl/development.md) · **Français**
+
+# Développement
+
+Comment compiler, organiser et publier Nuvio. Pour la façon de contribuer, voir [CONTRIBUTING.md](../../CONTRIBUTING.md). Retour au [README](../../README.fr.md).
+
+Les règles d’interface que toute nouvelle fonctionnalité doit respecter sont dans [DESIGN.md](../../DESIGN.md).
+
+
+```bash
+npm install              # une fois : esbuild, pour minifier le bundle
+python3 tools/build.py   # -> dist/nuvio.js
+python3 tools/guard.py   # échoue si un identifiant propre à une maison s’est glissé dans dist ; lance le contrôle i18n
+```
+
+## Organisation des sources
+
+Les sources sont des fichiers JavaScript ordinaires que `tools/build.py` assemble, dans un ordre fixe, en un seul bundle (une seule portée partagée, sans imports) :
+
+| Dossier | Contenu |
+|---|---|
+| `src/parts/hg-core`, `hg-styles`, `hg-select`, `hg-oss` | classe de base `HGBase`, jetons du thème, liste déroulante en verre, fonctions partagées |
+| `src/parts/shared/` | fonctions utilisées par plusieurs cartes (météo, calendrier, modèle des pièces, contrôles génériques…) |
+| `src/parts/cards/` | une carte par fichier, par exemple `cards/light-card.part.js` |
+| `src/parts/hg-page`, `hg-edit`, `hg-wall`, `hg-users`… | page du tableau de bord, mode édition, mode tablette murale, utilisateurs du tableau de bord partagé, sauvegarde, Assist |
+
+Une nouvelle carte va dans `src/parts/cards/<nom>-card.part.js` et s’ajoute à la liste `CARDS` de `tools/build.py`. L’ordre de chargement compte : le code exécuté au chargement du bundle (par exemple `class X extends Y`) ne peut utiliser que ce qu’un fichier précédent définit.
+
+## Traductions
+
+Chaque texte visible se trouve dans un catalogue JSON, jamais dans le code. `src/locales/en.json` est le catalogue de référence et la langue source ; `pl.json`, `fr.json` et toute langue ajoutée reprennent les mêmes clés. L’ajout d’une langue est décrit dans [Configuration](configuration.md#ajouter-une-langue).
+
+**Clés.** JSON imbriqué, chaque segment en `snake_case`. Une clé décrit le rôle du texte, pas ses mots (`cards.smartlock.default_title`, et non `cards.smartlock.lock`). Un espace de noms par domaine :
+
+| Espace de noms | Contenu |
+|---|---|
+| `common.*` | textes partagés par au moins trois modules (`common.save`, `common.cancel`) |
+| `nav.*` | navigation et titres des vues |
+| `wizard.*` | assistant de première configuration |
+| `edit.*`, `wall.*`, `backup.*`, `users.*`, `assist.*` … | un espace par module `hg-*.part.js` |
+| `ui.*`, `shared.*` | les blocs `ui/` et `shared/` |
+| `cards.<carte>.*` | une carte (`cards.smartlock.hours_ago_one`) |
+| `states.*` | états bruts de Home Assistant |
+| `weather.*` | conditions météo |
+| `accents.*`, `backgrounds.*` | noms des couleurs d’accent et des fonds d’écran fournis |
+
+**Messages.** Les variables sont nommées : `"Bienvenue, {name} !"`. Une traduction garde exactement les variables du texte anglais. Les pluriels utilisent des suffixes de clé (`entities_one`, `entities_few`, `entities_many`, `entities_other`, ainsi que `_zero` et `_two`) : la forme est choisie par `Intl.PluralRules(locale)` à partir du paramètre `count`, si bien que chaque langue fournit les formes exigées par ses règles (anglais `_one` / `_other`, polonais `_one` / `_few` / `_many` / `_other`, français `_one` / `_many` / `_other`). En anglais, un texte qui utilise `{count}` doit être découpé en formes de pluriel.
+
+**API** (`src/parts/hg-i18n.part.js`, entièrement synchrone) :
+
+| Appel | Usage |
+|---|---|
+| `hgT('ns.key', params?)` | le texte dans la langue courante |
+| `hgTLazy('ns.key', params?)` | un objet résolu au moment de sa conversion en texte, pour les textes définis avant que la langue soit connue |
+| `hgTO(obj, { prop: 'ns.key' })` | ajoute à `obj` des accesseurs qui appellent `hgT` |
+| `hgTD('states.' + state, fallback)` | clé dynamique, construite à l’exécution ; `fallback` si la clé n’existe pas |
+
+Les clés passées à `hgT`, `hgTLazy` et `hgTO` sont des chaînes littérales. Seul `hgTD` construit des clés, et uniquement sous les préfixes déclarés dans `DYN_PREFIXES` de `tools/i18n_compile.py` (`states.`, `weather.` et quelques tables d’options de cartes) ; une nouvelle table dynamique impose d’y ajouter son préfixe. Un texte manquant se replie sur l’anglais, puis sur la clé brute (volontairement visible) ; `hgTD` renvoie alors son `fallback`.
+
+**Compilation.** Les clés n’existent que dans les sources. `tools/build.py` attribue à chaque clé statique un numéro (clés de `en.json` triées), réécrit `hgT('ns.key')` en `hgT(842)` dans le bundle (les formes de pluriel partagent un numéro), compile chaque catalogue en tableau indexé (`dist/nuvio-locale-<code>.<hash8>.json`, hash de son contenu) et intègre dans le core l’anglais et le manifeste des langues (`code`, `name`, `locale`, `file`, et facultativement `flag` et `intro`). Les autres langues se chargent à la demande. Un catalogue compilé ne vaut que pour le core de la même compilation. Les textes des sources peuvent dire *Home Glass* ; la compilation le remplace par *Nuvio* dans le bundle et les catalogues.
+
+**Contrôles.** `python3 tools/i18n_check.py` échoue (code de sortie 1) quand une clé n’est pas littérale, qu’une clé utilisée manque dans `en.json`, qu’une clé de `en.json` est inutilisée, qu’un texte visible est écrit dans le code, qu’un catalogue contient du JSON invalide, une clé en double, un `_meta` incomplet, des variables différentes ou des formes de pluriel manquantes, ou qu’une langue obligatoire (`en`, `pl`, `fr`) est incomplète. Les autres langues peuvent être partielles et ne reçoivent qu’un avertissement avec leur couverture. Options : `--lang <code>` liste les clés manquantes et obsolètes d’une langue, `--list` affiche toutes les erreurs, `--json` renvoie le résultat en JSON. `tools/guard.py` le lance avec ses autres contrôles.
+
+Il n’y a pas de CI/CD : les versions et les étiquettes se construisent en local. `tools/release.sh X.Y.Z` augmente la version (`package.json`, README), compile, vérifie `dist/nuvio.js` (`node --check`) et lance la protection contre les valeurs codées en dur, crée le commit `chore: release X.Y.Z` et l’étiquette annotée `vX.Y.Z`, pousse `main` et l’étiquette, puis crée une publication GitHub sans fichiers joints (HACS installe alors tout le `dist/` à plat) :
+
+```bash
+./tools/release.sh 0.3.21   # arbre propre requis, gh CLI connecté
+```
+
+Ajoutez l’entrée du journal des modifications dans `CHANGELOG.md` et `CHANGELOG.pl.md` avant de publier (`CHANGELOG.fr.md` est rattrapé par un contributeur, voir [CONTRIBUTING.md](../../CONTRIBUTING.md)) : le script ne met à jour que la version dans `package.json` et le badge de version dans les fichiers README.
+
+Étiquette seule, à la main : `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.

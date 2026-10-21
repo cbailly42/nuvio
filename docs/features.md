@@ -1,3 +1,5 @@
+**English** · [Polski](pl/features.md) · [Français](fr/features.md)
+
 # Features guide
 
 How the shared dashboard, wall tablet mode and layout backup work. Back to the [README](../README.md).
@@ -10,7 +12,7 @@ Everyone sees the same Nuvio dashboard by default: the layout, appearance, views
 - **Own layout**: in **Settings → Users** (edit mode, admins only) every Home Assistant user has a switch. Turn a person off and they get their own layout: it starts as a copy of the shared one, the edit button appears for them, and their changes affect only them. Turn them back on to return them to the shared dashboard. Your own account stays on the shared dashboard.
 - **Who sees a view**: in **Settings → Views** each view (except Home) has a people button. Every view is visible to everyone by default; turn a person off to hide the view from them, including from their own layout. Their screen reloads on its own to drop the view.
 - **Live**: changes to the shared dashboard and to the list reach open screens without a reload.
-- **Storage**: the shared layout lives in a hidden storage dashboard `nuvio-shared` (*Nuvio (wspólny układ)*, admins only, not in the sidebar). Only admins can write it; do not edit it by hand. Own layouts stay in Home Assistant user data (`frontend/set_user_data`, key `nuvio_layout`), with a local copy per user. Assist settings are always personal.
+- **Storage**: the shared layout lives in a hidden storage dashboard `nuvio-shared` (*Nuvio (shared layout)*, named in the language of the admin who created it, admins only, not in the sidebar). Only admins can write it; do not edit it by hand. Own layouts stay in Home Assistant user data (`frontend/set_user_data`, key `nuvio_layout`), with a local copy per user. Assist settings are always personal.
 - **Upgrading from 1.3.x**: the first time an admin opens Nuvio 1.4.0, their current layout becomes the shared dashboard. Until then everyone keeps their own layout as before.
 
 ## Wall tablet mode

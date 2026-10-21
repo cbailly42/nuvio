@@ -1,3 +1,5 @@
+**English** · [Polski](pl/roadmap.md) · [Français](fr/roadmap.md)
+
 # Roadmap
 
 Roadmap of next features; the source of truth is [STATUS.md](STATUS.md). Back to the [README](../README.md).

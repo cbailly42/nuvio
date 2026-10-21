@@ -11,7 +11,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
-<p align="center"><a href="README.md">English</a> · <b>Polski</b></p>
+<p align="center"><a href="README.md">English</a> · <b>Polski</b> · <a href="README.fr.md">Français</a></p>
 
 <p align="center">
   <img src="docs/screenshots/demo_dashboard_dark_1440.png" alt="Widok Panel w ciemnym motywie" width="49%">
@@ -31,7 +31,7 @@ Nuvio to szklany pulpit Home Assistant: widoki, nawigacja, karty i edytor na mie
 - **Domyślnie wspólny.** Administrator ustawia jeden dashboard dla wszystkich, a wybrana osoba może dostać własny układ. Zobacz [Wspólny dashboard](docs/pl/features.md#wspólny-dashboard).
 - **Tryb tabletu ściennego.** Siedem wygaszaczy (zegar na zdjęciu, tablica, minimal, analogowy, klapkowy, zorza i nocny) z podglądami i opcjonalną blokadą PIN-em. Zobacz [Tryb tabletu ściennego](docs/pl/features.md#tryb-tabletu-ściennego).
 - **Kopia układu.** Eksport i import całego układu jako JSON z wersją. Zobacz [Kopia układu](docs/pl/features.md#kopia-układu).
-- **Po polsku i po angielsku.** Język zmienisz w każdej chwili, bez przeładowania. Zobacz [Język](docs/pl/configuration.md#język).
+- **Po polsku, angielsku i francusku.** Język zmienisz w każdej chwili, bez przeładowania; kolejny język to jeden plik JSON. Zobacz [Język](docs/pl/configuration.md#język).
 - **Tryb jasny i ciemny**, obsługa dotyku i klawiatury w trybie edycji, szacunek dla „ogranicz ruch”.
 
 ## Komponenty
@@ -72,7 +72,7 @@ Nuvio działa bez opcji. Jedno opcjonalne ustawienie wybiera domyślny język pu
 ```yaml
 strategy:
   type: custom:nuvio
-  language: pl        # pl | en
+  language: pl        # pl | en | fr …
 ```
 
 Więcej w [docs/pl/configuration.md](docs/pl/configuration.md).
