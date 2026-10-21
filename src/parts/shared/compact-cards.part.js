@@ -25,6 +25,6 @@ input[type=range].rg:focus-visible{ outline:2px solid var(--hg-accent); outline-
 `);
 const hgEnts = (h, dom, dc) => Object.keys(h.states).filter((e) => (!dom || dom.includes(hgDom(e))) && (!dc || dc.includes(h.states[e].attributes.device_class)) && !((h.entities || {})[e] || {}).hidden);
 const hgAgo14 = (iso) => { const t = Date.parse(iso); if (!isFinite(t)) return ''; const m = Math.round((Date.now() - t) / 60000);
-  return m < 1 ? hgTr('przed chwilą', 'just now') : m < 60 ? hgTr(`${m} min temu`, `${m} min ago`) : m < 1440 ? hgTr(`${Math.round(m / 60)} godz. temu`, `${Math.round(m / 60)} h ago`) : hgTr(`${Math.round(m / 1440)} dni temu`, `${Math.round(m / 1440)} d ago`); };
+  return m < 1 ? hgT('common.just_now') : m < 60 ? hgT('common.ago_minutes', { m }) : m < 1440 ? hgT('common.ago_hours', { h: Math.round(m / 60) }) : hgT('common.ago_days_short', { d: Math.round(m / 1440) }); };
 const hgMore = (n, e) => { if (e) H.fire(n, 'hass-more-info', { entityId: e }); };
 const hgHead = (ic, nm, sub, on, right = '') => `<div class="gh"><span class="gic${on ? ' on' : ''}">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${right}</div>`;

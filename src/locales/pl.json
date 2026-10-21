@@ -29,6 +29,9 @@
   },
   "common": {
     "add_widget": "Dodaj widżet",
+    "ago_days_short": "{d} dni temu",
+    "ago_hours": "{h} godz. temu",
+    "ago_minutes": "{m} min temu",
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
     "close": "Zamknij",
@@ -38,6 +41,7 @@
     "hidden_suffix": " · ukryty",
     "hide": "Ukryj",
     "household": "Domownicy",
+    "just_now": "przed chwilą",
     "loading": "Wczytywanie…",
     "map": "Mapa",
     "media": "Multimedia",

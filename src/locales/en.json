@@ -29,6 +29,9 @@
   },
   "common": {
     "add_widget": "Add widget",
+    "ago_days_short": "{d} d ago",
+    "ago_hours": "{h} h ago",
+    "ago_minutes": "{m} min ago",
     "calendar": "Calendar",
     "cancel": "Cancel",
     "close": "Close",
@@ -38,6 +41,7 @@
     "hidden_suffix": " · hidden",
     "hide": "Hide",
     "household": "Household",
+    "just_now": "just now",
     "loading": "Loading…",
     "map": "Map",
     "media": "Media",
