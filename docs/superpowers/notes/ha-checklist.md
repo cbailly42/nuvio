@@ -6,11 +6,10 @@ Pour Corentin. Cette validation ne peut pas être faite hors de votre Home Assis
 
 Le build de référence est celui de la branche `ccr-20154da5-ss5q37` du fork `cbailly42/nuvio` (ou d'une release du fork, si vous en créez une).
 
-- [ ] HACS → ⋮ → *Custom repositories* → `https://github.com/cbailly42/nuvio`, catégorie **Dashboard**.
-- [ ] Installer **Nuvio** en choisissant la branche `ccr-20154da5-ss5q37` (HACS propose les branches dans « Redownload » / le sélecteur de version) ou une release du fork. HACS ajoute la ressource `/hacsfiles/nuvio/nuvio.js`.
-- [ ] Si une ancienne version est déjà installée : la mettre à jour (Redownload), puis vider le cache du navigateur / de l'application mobile (rechargement forcé).
-- [ ] Dans le dossier `/config/www/community/nuvio/` (HACS), vérifier la présence de **`nuvio.js`** et des fichiers **`nuvio-locale-fr.<hash>.json`** et **`nuvio-locale-pl.<hash>.json`** (l'anglais est embarqué dans `nuvio.js` ; tous à plat, comme les `nuvio-bg-*`). Sans eux, l'interface reste en anglais et la console affiche un `console.warn`.
-- [ ] Installation manuelle (alternative) : copier tout le contenu de `dist/` (dont `nuvio-locale-*`) dans `/config/www/nuvio/` et ajouter la ressource `/local/nuvio/nuvio.js` (module JavaScript).
+- [ ] **Voie principale : installation manuelle depuis un checkout de la branche** `ccr-20154da5-ss5q37` du fork (`git clone -b ccr-20154da5-ss5q37 https://github.com/cbailly42/nuvio`). Copier tout le contenu de `dist/` (`nuvio.js`, `nuvio-core.<hash>.js`, `nuvio-locale-*`, `nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`, tous à plat) dans `/config/www/nuvio/` et ajouter la ressource `/local/nuvio/nuvio.js` (type : **module JavaScript**), comme dans `docs/installation.md` (section *Manual*). Si Nuvio est déjà installé via HACS, désactiver d'abord l'ancienne ressource `/hacsfiles/nuvio/nuvio.js` pour ne pas charger deux builds.
+- [ ] **Voie HACS (décision de Corentin, rien n'est fait ici)** : HACS ne propose que la branche par défaut tant que le dépôt n'a pas de release, et télécharge la dernière release s'il y en a une. La branche par défaut du fork (`main`) ne contient pas ce travail. Pour tester via HACS, il faut donc d'abord soit fusionner la branche dans `main` du fork, soit publier une release / un tag du fork. Ensuite : HACS → ⋮ → *Custom repositories* → `https://github.com/cbailly42/nuvio`, catégorie **Dashboard**, installer **Nuvio** (ressource `/hacsfiles/nuvio/nuvio.js`).
+- [ ] Fichiers attendus (HACS : `/config/www/community/nuvio/`, manuel : `/config/www/nuvio/`) : **`nuvio.js`**, **`nuvio-core.<hash>.js`**, **`nuvio-locale-fr.<hash>.json`** et **`nuvio-locale-pl.<hash>.json`** (l'anglais est embarqué dans le core ; tous à plat, comme les `nuvio-bg-*`). Sans les catalogues, l'interface reste en anglais et la console affiche un `console.warn`.
+- [ ] **Confirmer le build chargé** : onglet Réseau du navigateur, le fichier `nuvio-core.<hash>.js` doit porter le hash du build testé (hash du `dist/nuvio-core.*.js` du checkout) ; en mode édition, la fenêtre « Ajouter un composant » affiche la version du bundle chargé (`v…`, infobulle « version du bundle chargé »). Vider le cache / recharger en forçant après chaque mise à jour.
 - [ ] Tableau de bord : Paramètres → Tableaux de bord → *Ajouter* → *Nouveau tableau de bord à partir de zéro*, éditeur de configuration brute :
 
   ```yaml
@@ -22,7 +21,7 @@ Le build de référence est celui de la branche `ccr-20154da5-ss5q37` du fork `c
 
 ## 1. Assistant de premier lancement (wizard)
 
-Utiliser un profil / navigateur neuf (ou effacer `home-glass:lang` et la configuration Nuvio) pour relancer l'assistant.
+Utiliser un profil / navigateur neuf (ou réinitialiser le choix de langue : le choix est stocké dans `localStorage` (`nuvio:lang`) et dans les données utilisateur HA (même clé), donc le remettre sur *Automatique* dans les réglages Nuvio, ou utiliser un nouvel utilisateur HA) pour relancer l'assistant.
 
 - [ ] Étape de choix de la langue : EN, PL et FR proposés avec leur nom (Français) et leur drapeau.
 - [ ] Choisir Français : l'assistant passe en français immédiatement, sans rechargement.
@@ -82,7 +81,7 @@ Pour chaque vue générée (accueil, pièces, lumières, climat, sécurité, mé
 
 ## 9. Carte seule hors stratégie (tableau de bord classique)
 
-- [ ] Dans un tableau de bord Lovelace classique (sans la stratégie Nuvio), ajouter une carte Nuvio (par ex. `custom:nuvio-…`) via YAML ou le sélecteur.
+- [ ] Dans un tableau de bord Lovelace classique (sans la stratégie Nuvio), ajouter une carte Nuvio (par ex. `type: custom:nuvio-light-card`) via YAML ou le sélecteur.
 - [ ] Avec un navigateur ou un choix en français : la carte peut s'afficher brièvement en anglais, puis **passe en français à l'arrivée du catalogue**, sans rechargement (comportement attendu, voir description de PR).
 - [ ] Même test avec le choix PL.
 

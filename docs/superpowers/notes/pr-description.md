@@ -24,7 +24,7 @@ The rule was that Polish and English display must not change, other than the lis
 
 - **Migration script** `tools/i18n_migrate.py` (re-runnable to catch up with upstream commits): extracts every call and dictionary entry, proposes keys into a review table (`tools/i18n_migration_table.csv`), applies one namespace at a time, and has a built-in **equivalence proof**: for every replaced call, the rendering of `en.json[key]` and `pl.json[key]` with the variables substituted must equal the old text, otherwise the script fails.
 - **Text snapshot against v2.16.0**: `tests/i18n_snapshot.py` renders `tests/cards-demo.html` and `tests/ui-gallery.html` (PL and EN, frozen clock) and collects text nodes, `aria-label`, `title`, `placeholder` and `alt` across shadow roots, per component. The baseline was built from the v2.16.0 commit and compared after each migration lot. Only the accepted differences below remain.
-- **Before/after probes** (wizard, edit mode, overlays and other states the static snapshot does not reach) were run through the harness and Playwright against a local Home Assistant (`tests/local_ha.py --locale pl-PL|en-US|fr-FR`).
+- **Before/after probes** (wizard, edit mode, overlays and other states the static snapshot does not reach) were run through scripted Playwright probes (`tests/i18n_snapshot.py`, the JS harness in `tests/js/` and `tests/local_ha.py`) against a local Home Assistant (`tests/local_ha.py --locale pl-PL|en-US|fr-FR`).
 - **Static checks**: `tools/i18n_check.py` (keys, variables, plural forms, `_meta`, coverage; flags untranslated literals in code) and `tools/guard.py`.
 
 ## Bundle size
@@ -34,10 +34,11 @@ One-off measurement (`stat` for raw size, `gzip -9` for gzip), no threshold in t
 | File | Raw | gzip |
 |---|---:|---:|
 | `nuvio-core` v2.16.0 | 1 413 609 | 415 975 |
-| `nuvio-core` after this PR | 1 370 975 (-3.0 %) | 390 274 (-6.2 %) |
-| `nuvio-locale-pl` | 70 401 | 22 099 |
+| `nuvio-core` after this PR (final) | 1 372 248 (-2.9 %) | 390 674 (-6.1 %) |
+| `nuvio-locale-pl` | 71 274 | 22 271 |
+| `nuvio-locale-fr` | 78 625 | 22 626 |
 
-An English user downloads 25 701 fewer gzip bytes than before; a Polish user 390 274 + 22 099 = 412 373, still 3 602 fewer. The compiled PL catalog is larger than first estimated because it also holds the dynamic tables and plural forms. The numbers come from `docs/superpowers/notes/bundle-size.md`.
+An English user downloads 25 301 fewer gzip bytes than before; a Polish user 390 674 + 22 271 = 412 945, still 3 030 fewer; a French user 390 674 + 22 626 = 413 300, 2 675 fewer. The compiled PL catalog is larger than first estimated because it also holds the dynamic tables and plural forms. The numbers come from `docs/superpowers/notes/bundle-size.md`.
 
 ## Adding a language
 

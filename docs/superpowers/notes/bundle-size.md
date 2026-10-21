@@ -13,6 +13,9 @@ stocké dans l'en-tête gzip). Cette méthode redonne exactement la référence 
 | `nuvio-core.0cdae8ae.js` (Task 8) | **1 370 975** | **390 274** | **−42 634 (−3,0 %)** | **−25 701 (−6,2 %)** |
 | `nuvio-locale-pl.05001990.json` (avant Task 8) | 67 475 | 21 657 | | |
 | `nuvio-locale-pl.4ea2f8ad.json` (Task 8) | **70 401** | **22 099** | | |
+| `nuvio-core.697db6c8.js` (HEAD final, après Task 9–10) | **1 372 248** | **390 674** | **−41 361 (−2,9 %)** | **−25 301 (−6,1 %)** |
+| `nuvio-locale-pl.e4db2715.json` (HEAD final) | **71 274** | **22 271** | | |
+| `nuvio-locale-fr.83148e1b.json` (HEAD final) | **78 625** | **22 626** | | |
 
 Le core embarque toujours l'anglais compilé (`HG_I18N_EN`) et le manifeste ; le polonais n'est téléchargé que si la langue
 active est `pl`. Un utilisateur polonais charge donc 390 274 + 22 099 = 412 373 octets gzip (−3 602 par rapport à la v2.16.0),
@@ -22,3 +25,5 @@ Le catalogue PL compilé (70 Ko brut / 22 Ko gzip) dépasse l'estimation de la s
 tables dynamiques `d` (états HA, météo, options des cartes) et les formes plurielles `one/few/many/other` ; la passe R17 de la
 Task 8 (clés à `{count}` passées en pluriel, texte identique dans chaque forme pour ne rien changer à l'affichage) ajoute
 ~2,9 Ko brut / ~0,4 Ko gzip.
+
+Mesure finale (HEAD) : un utilisateur polonais charge 390 674 + 22 271 = 412 945 octets gzip (−3 030 vs v2.16.0), un français 390 674 + 22 626 = 413 300 (−2 675), un anglais 390 674 (−25 301).
