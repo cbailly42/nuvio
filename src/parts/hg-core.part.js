@@ -114,12 +114,19 @@ const HGPerf = window.__hgPerf || (window.__hgPerf = {
 HGPerf.apply();
 if (window.matchMedia && !window.__hgPerfMq) { window.__hgPerfMq = 1; try { matchMedia('(prefers-reduced-transparency: reduce)').addEventListener('change', () => HGPerf.apply()); } catch (e) { /* stary Safari: bez nasłuchu */ } }
 
-/* język interfejsu kart (pl / en): osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej język przeglądarki (domyślnie angielski).
-   hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang)); };
-/* argumenty w kolejności HGLang.LIST (pl, en, …); brak tłumaczenia -> angielski */
-const hgTr = (...t) => { const i = HGLang.LIST.findIndex((x) => x[0] === hgCurLang()); return t[i] != null ? t[i] : t[1] != null ? t[1] : t[0]; };
-const HG_LOC = () => { const l = hgCurLang(); return { pl: 'pl-PL', en: 'en-GB' }[l] || l; };
+/* język interfejsu kart: osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej języki przeglądarki (domyślnie angielski).
+   Język bez katalogu w pamięci: pierwsze użycie go pobiera, a gdy dotrze – hg-lang (karty poza strategią przerysowują się same, bez przeładowania).
+   hgTr('tekst PL', 'text EN') – tymczasowa brama do migracji na hgT (inne języki: angielski); HG_LOC() – locale do liczb i dat z manifestu */
+const hgI18nWant = (l) => {
+  if (l === 'en' || HGI18n.cache[l]) { HGI18n.code = l; return; }
+  if (HGI18n.pend[l] || HGI18n.bad[l] || !HGI18n.has(l)) return;
+  /* po mikrozadaniu: HGI18n.ready (strategia) na tej samej obietnicy ustawia kod pierwszy i sam powiadamia, gdy spóźniony */
+  HGI18n.load(l).then((ok) => Promise.resolve().then(() => { if (ok && HGI18n.code !== l && hgCurLang() === l) { HGI18n.code = l; window.dispatchEvent(new CustomEvent('hg-lang')); } }));
+};
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz, l = hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang));
+  if (l !== HGI18n.code) hgI18nWant(l); return l; };
+const hgTr = (pl, en) => (hgCurLang() === 'pl' ? (pl != null ? pl : en) : en != null ? en : pl);
+const HG_LOC = () => HGI18n.locale(hgCurLang());
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
 const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };
 const hgKmPath = (p) => { if (!hgKmOff() || typeof p !== 'string' || !p.startsWith('/') || /[?&]disable_km\b/.test(p)) return p; const [a, hs] = p.split('#'); return a + (a.includes('?') ? '&' : '?') + 'disable_km' + (hs !== undefined ? '#' + hs : ''); };
@@ -204,9 +211,20 @@ const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q
 const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => {
   for (const e of es) { const c = e.target; c._off = !e.isIntersecting; c.toggleAttribute('hg-off', c._off);   /* karty z animacjami zatrzymują je poza ekranem */ if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
 }, { rootMargin: '300px' }));
+/* żywe karty (WeakRef, bez trzymania odłączonych w pamięci): jedno nasłuchiwanie hg-lang przerysowuje podłączone.
+   Po mikrozadaniu, więc strona Nuvio najpierw przebudowuje się sama (jej stare karty są już odłączone, bez podwójnego rysowania);
+   odłączona karta (ukryty widok HA) jest oznaczana jako zaległa i przerysowuje się przy ponownym podłączeniu. */
+const HG_LIVE = new Set();
+let hgLiveN = 0;
+const hgLivePurge = () => { for (const r of HG_LIVE) if (!r.deref()) HG_LIVE.delete(r); };
+window.addEventListener('hg-lang', () => queueMicrotask(() => {
+  for (const r of HG_LIVE) { const c = r.deref(); if (!c) { HG_LIVE.delete(r); continue; }
+    if (c.isConnected) { try { c.rerender(); } catch (e) { /* karta bez konfiguracji */ } } else if (c._html != null) c._stale = true; }
+}));
 class HGBase extends HTMLElement {
   constructor() {
     super();
+    if (typeof WeakRef === 'function') { HG_LIVE.add(new WeakRef(this)); if (++hgLiveN % 256 === 0) hgLivePurge(); }
     this.attachShadow({ mode: 'open' });
     hgSelWatch(this.shadowRoot);
     this._sig = null;
@@ -273,6 +291,7 @@ class HGBase extends HTMLElement {
     if (!force && !this._changed()) return;
     // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
     if (this._touching) { this._pendingUpd = true; return; }
+    hgCurLang();   /* katalog bieżącego języka: aktywny albo pobierany (hgT czyta HGI18n.code) */
     const html = this.render();
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
     const first = this._html == null; this._html = html;

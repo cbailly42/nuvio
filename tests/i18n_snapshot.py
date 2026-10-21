@@ -3,6 +3,8 @@
 Usage:
   python3 tests/i18n_snapshot.py --lang pl --out tests/out/snap-pl.json [--root <dépôt>]
   python3 tests/i18n_snapshot.py --diff a.json b.json      (code de sortie 1 si différence)
+  python3 tests/i18n_snapshot.py --standalone [--lang pl]  (Review Focus 1 : carte seule hors stratégie, catalogue retardé de 1 s ->
+                                                            rerendu sans rechargement ; code de sortie 1 sinon)
 
 Sert tests/cards-demo.html?lang=<l>&mode=shots et tests/ui-gallery.html?lang=<l> depuis --root (défaut : racine du dépôt),
 horloge figée (page.clock.install), puis relève par composant, dans tous les shadow roots : nœuds texte non vides,
@@ -106,6 +108,52 @@ def snapshot(root, lang):
     return dict(sorted(out.items()))
 
 
+def browser(p):
+    kw = {'args': ['--no-sandbox']}
+    exe = CHROME if os.path.exists(CHROME) else next(iter(sorted(glob.glob(os.path.join(os.environ.get('PLAYWRIGHT_BROWSERS_PATH', ''), 'chromium-*', 'chrome-linux', 'chrome')))), None)
+    if exe: kw['executable_path'] = exe
+    return p.chromium.launch(**kw)
+
+
+def standalone(root, lang, delay=1000):
+    """tests/i18n-standalone.html : une nuvio-light-card hors stratégie, fetch du catalogue retardé de `delay` ms (dans la page).
+    Vérifie : premier rendu avant l'arrivée du catalogue (sonde « Save »), hg-lang après l'arrivée, nouveau rendu après l'arrivée avec le texte
+    du catalogue, sans rechargement (un seul chargement de page) ni erreur. Horloge réelle (les délais doivent s'écouler)."""
+    from playwright.sync_api import sync_playwright
+    port = free_port()
+    srv = ThreadingHTTPServer(('127.0.0.1', port), partial(Quiet, directory=root))
+    Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        with sync_playwright() as p:
+            b = browser(p)
+            c = b.new_context(service_workers='block', viewport={'width': 800, 'height': 600}, locale='en-GB')
+            c.route('**/*', lambda r: r.continue_() if r.request.url.startswith(f'http://127.0.0.1:{port}/') else r.abort())
+            pg = c.new_page(); errs = []
+            pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+            pg.goto(f'http://127.0.0.1:{port}/tests/i18n-standalone.html?lang={lang}&delay={delay}', wait_until='load')
+            pg.wait_for_function('window.__standalone && window.__standalone.done === true', timeout=20000)
+            R = pg.evaluate('JSON.parse(JSON.stringify(window.__standalone, (k, v) => (k === "cat" ? undefined : v)))')
+            b.close()
+    finally:
+        srv.shutdown()
+    arr = R.get('arrived'); late = [r for r in R['renders'] if arr is not None and r['at'] >= arr]
+    checks = [
+        ('one page load (no reload)', R['loads'] == 1),
+        ('catalog requested', len(R['fetches']) >= 1),
+        ('catalog arrived after the delay', arr is not None and arr >= delay),
+        ('first render before the catalog, English probe', bool(R['renders']) and R['renders'][0]['at'] < (arr or 0) and R['first']['text'] == 'Save'),
+        ('hg-lang after the catalog arrived', any(t >= (arr or 1e9) for t in R['hgLang'])),
+        ('card re-rendered after the catalog', bool(late) and late[-1]['probe'] != 'Save'),
+        ('text changed on screen', R['final']['text'] not in ('', 'Save')),
+        ('no page error', not errs),
+    ]
+    print(json.dumps({k: R[k] for k in ('lang', 'delay', 'loads', 'fetches', 'arrived', 'hgLang', 'first', 'final')}, ensure_ascii=False))
+    print(f"renders: {[(r['at'], r['probe']) for r in R['renders']]}")
+    if errs: print('page errors:', errs[:5])
+    for n, ok in checks: print(('PASS ' if ok else 'FAIL ') + n)
+    return 0 if all(ok for _, ok in checks) else 1
+
+
 def flat(d):
     return [f'{k} | {e}' for k, v in sorted(d.items()) for e in v]
 
@@ -120,9 +168,10 @@ def diff(a, b):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--lang', choices=('pl', 'en', 'fr')); ap.add_argument('--out'); ap.add_argument('--root', default=os.path.dirname(HERE))
-    ap.add_argument('--diff', nargs=2, metavar=('A', 'B'))
+    ap.add_argument('--diff', nargs=2, metavar=('A', 'B')); ap.add_argument('--standalone', action='store_true')
     a = ap.parse_args()
     if a.diff: sys.exit(diff(*a.diff))
+    if a.standalone: sys.exit(standalone(os.path.abspath(a.root), a.lang or 'pl'))
     if not a.lang or not a.out: ap.error('--lang et --out requis (ou --diff A B)')
     snap = snapshot(os.path.abspath(a.root), a.lang)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

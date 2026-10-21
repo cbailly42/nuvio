@@ -1627,7 +1627,7 @@ const HG_EDIT = {
     const sel = HGLang.get(), w = (HGL.data && HGL.data.wiz) || {}, src = window.__hgLangOpt ? hgTr('ustawienie pulpitu', 'dashboard setting') : w.lang ? hgTr('kreator', 'setup wizard') : hgTr('język przeglądarki', 'browser language');
     const auto = hgLang(null, window.__hgLangOpt || w.lang || ''), nm = (l) => (HGLang.LIST.find((x) => x[0] === l) || [l, l])[1];
     return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgTr('Język', 'Language')}</h4><small class="lk-hn">${hgTr('Zapisywany na Twoim koncie. Automatycznie: ', 'Saved to your account. Automatic: ')}${H.esc(nm(auto))} (${src})</small>
-      <div class="lk-seg lk-lng" role="group" aria-label="${hgTr('Język', 'Language')}">${[['', hgTr('Automatycznie', 'Automatic')], ...HGLang.LIST].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
+      <div class="lk-seg lk-lng" role="group" aria-label="${hgTr('Język', 'Language')}">${[['', hgTr('Automatycznie', 'Automatic')], ...[...HGLang.LIST].sort((a, b) => (a[0] === 'en') - (b[0] === 'en'))].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },
   /* Wydajność (osobno na tym urządzeniu, HGPerf): rozmycie szkła i oszczędzanie baterii; „Automatycznie” pokazuje, co wybrano */
   _ePerfHtml() {

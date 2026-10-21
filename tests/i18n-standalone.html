@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- Review Focus 1 (i18n): one Nuvio card on its own, in a classic HA dashboard (no Nuvio strategy, no nuvio-page), language chosen (here pl: fr has no
+     catalog yet, pl exercises the same path). The catalog fetch is delayed 1 s: the card renders first, then must re-render by itself when the catalog
+     arrives (hg-lang), without a page reload.
+     Run: python3 tools/build.py && python3 -m http.server 8000, then http://localhost:8000/tests/i18n-standalone.html[?lang=pl&delay=1000]
+     Automated: python3 tests/i18n_snapshot.py --standalone (reads window.__standalone).
+     No call site uses hgT yet (migration comes later) and hgT is not reachable from outside the bundle, so the page wraps the card's render()
+     to count renders and to append a probe that stands in for an hgT text: "Save" until the catalog has arrived, then the catalog's common.save.
+     That text can only change on screen if the card is rendered again after the catalog arrives. -->
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio i18n standalone card</title>
+<style>body{ margin:0; padding:24px; font-family:system-ui,sans-serif; background:#0d1218; color:#fff; } #card{ width:360px; } pre{ font-size:12px; opacity:.8; }</style>
+</head><body><div id="card"></div><pre id="log"></pre>
+<script type="module">
+const q = new URLSearchParams(location.search), lang = q.get('lang') || 'pl', delay = +(q.get('delay') || 1000), t0 = performance.now(), ms = () => Math.round(performance.now() - t0);
+const R = window.__standalone = { lang, delay, loads: 0, renders: [], fetches: [], arrived: null, hgLang: [], cat: null, done: false };
+try { R.loads = +(sessionStorage.getItem('nuvio-standalone-loads') || 0) + 1; sessionStorage.setItem('nuvio-standalone-loads', String(R.loads)); } catch (e) { R.loads = -1; }
+try { localStorage.setItem('nuvio:lang', lang); } catch (e) { /* storage blocked */ }
+/* catalog requests (loader preload or core) answered after `delay` ms; the parsed catalog is kept for the probe */
+const F = window.fetch.bind(window);
+window.fetch = (u, o) => {
+  const s = String(u && u.url || u); if (!/nuvio-locale-/.test(s)) return F(u, o);
+  R.fetches.push({ url: s.split('/').pop(), at: ms() });
+  return new Promise((r) => setTimeout(r, delay)).then(() => F(u, o)).then((res) => res.clone().json().then((j) => { R.cat = j; R.arrived = ms(); return res; }, () => res));   /* recorded before the bundle sees it */
+};
+window.addEventListener('hg-lang', () => R.hgLang.push(ms()));
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+const hass = { states: { 'light.desk': { entity_id: 'light.desk', state: 'on', attributes: { friendly_name: 'Desk', brightness: 128, supported_color_modes: ['brightness'], color_mode: 'brightness' }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() } },
+  entities: {}, devices: {}, areas: {}, user: { id: 'u1', name: 'Test', is_admin: false }, config: { unit_system: { temperature: '°C' }, time_zone: 'Europe/Warsaw' }, panels: {},
+  language: lang, locale: { language: lang, time_format: '24', number_format: 'language' }, themes: { darkMode: true }, callService: async () => {}, callWS: async () => { throw new Error('no ws'); },
+  connection: { subscribeMessage: async () => () => {} } };
+await import('../dist/nuvio.js');   /* the real loader (as a Lovelace resource): version file, catalog preload, core */
+await customElements.whenDefined('nuvio-light-card');
+const el = document.createElement('nuvio-light-card'), render = el.render;
+/* probe = hgT('common.save') stand-in: the English source value until the catalog is in, then the value the catalog holds for it */
+const save = () => { const c = R.cat; if (!c || !Array.isArray(c.t)) return 'Save'; const v = c.t.find((x) => typeof x === 'string' && x !== 'Save'); return v || 'Save'; };
+el.render = function () { const p = save(); R.renders.push({ at: ms(), probe: p }); return render.call(this) + `<span class="probe">${p}</span>`; };
+el.setConfig({ entity: 'light.desk' }); el.hass = hass; document.getElementById('card').appendChild(el);
+const text = () => (el.shadowRoot && el.shadowRoot.querySelector('.probe') || {}).textContent || '';
+R.first = { text: text(), at: ms() };
+setTimeout(() => { R.final = { text: text(), at: ms() }; R.done = true; document.getElementById('log').textContent = JSON.stringify(R, (k, v) => (k === 'cat' ? undefined : v), 1); }, delay + 1500);
+</script></body></html>

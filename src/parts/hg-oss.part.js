@@ -61,22 +61,25 @@ const HG_I18N = {
     hub: 'Household', hub_sub: 'Who is home right now', na_req: 'No entities, needs {x}', req_rooms: 'areas (Settings → Areas)', req_media: 'a media player (media_player)', req_cams: 'a camera (camera)', req_family: 'people (person)',
     req_energy: 'a power sensor (sensor, W/kW)', req_map: 'a person or a device with location', req_cal: 'a calendar (calendar)' },
 };
-/* język: pref (wybór) albo język przeglądarki; nieobsługiwany -> angielski. h zostaje w podpisie dla zgodności wywołań */
-const hgLang = (h, pref) => { const l = String(pref || navigator.language || 'en').toLowerCase().split(/[-_]/)[0]; return HG_I18N[l] ? l : 'en'; };
+/* język: pref (wybór) albo języki przeglądarki (każdy język z manifestu: pełny kod, sam język); nieobsługiwany -> angielski. h zostaje w podpisie dla zgodności wywołań */
+const hgLang = (h, pref) => { const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+  return hgLangDetect(pref, pref ? [pref, ...nav] : nav); };   /* pref jak dotąd także w postaci pl-PL / PL_pl (sam język) */
 const hgI = (lang, k) => (HG_I18N[lang] || HG_I18N.en)[k] || HG_I18N.en[k] || k;
 /* osobisty wybór języka (Ustawienia → Język, menu użytkownika): '' = automatycznie. Kolejność: ten wybór, opcja language strategii, kreator, przeglądarka.
-   Zapis w localStorage (od razu przy starcie) i w danych użytkownika HA (inne urządzenia). Nowy język: wpis w LIST, słownik w HG_I18N i pary hgTr. */
+   Zapis w localStorage (od razu przy starcie) i w danych użytkownika HA (inne urządzenia). Lista języków = manifest katalogów (src/locales). */
 const HGLang = window.__hgLangSel || (window.__hgLangSel = {
   KEY: 'home-glass:lang',
-  LIST: [['pl', 'Polski'], ['en', 'English']],
+  get LIST() { return HGI18n.list(); },
   ok(v) { return this.LIST.some((x) => x[0] === v); },
   /* czytane przy każdym hgTr: kopia w pamięci, localStorage tylko raz */
   get() { if (this._v === undefined) { let v = ''; try { v = localStorage.getItem(this.KEY); } catch (e) { v = ''; } this._v = this.ok(v) ? v : ''; } return this._v; },
   _w(v) { this._v = v; try { if (v) localStorage.setItem(this.KEY, v); else localStorage.removeItem(this.KEY); } catch (e) { /* tryb prywatny */ } },
   /* raz na sesję: wybór z innego urządzenia (dane użytkownika HA) wygrywa z kopią lokalną */
   sync(h, el) { if (this._s || !h || !h.callWS) return; this._s = 1;
-    h.callWS({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { if (!r || !('value' in r) || r.value === undefined) return; const v = this.ok(r.value) ? r.value : ''; if (v !== this.get()) { this._w(v); this.refresh(el); } }, () => {}); },
-  set(h, v, el) { v = this.ok(v) ? v : ''; this._w(v); if (h && h.callWS) h.callWS({ type: 'frontend/set_user_data', key: this.KEY, value: v || null }).catch(() => {}); this.refresh(el); },
+    h.callWS({ type: 'frontend/get_user_data', key: this.KEY }).then((r) => { if (!r || !('value' in r) || r.value === undefined) return; const v = this.ok(r.value) ? r.value : ''; if (v !== this.get()) { this._w(v); this._apply(el); } }, () => {}); },
+  set(h, v, el) { v = this.ok(v) ? v : ''; this._w(v); if (h && h.callWS) h.callWS({ type: 'frontend/set_user_data', key: this.KEY, value: v || null }).catch(() => {}); return this._apply(el); },
+  /* najpierw katalog języka (bez mieszanego wyświetlania), potem odświeżenie; błąd katalogu -> angielski */
+  _apply(el) { const c = hgCurLang(); return HGI18n.load(c).then((ok) => { HGI18n.code = ok ? c : 'en'; this.refresh(el); }); },
   /* bez przeładowania strony: HA generuje dashboard od nowa (etykiety nawigacji i widoków ze strategii), karty rysują się w nowym języku */
   refresh(el) { window.dispatchEvent(new CustomEvent('hg-lang')); if (el && el.isConnected) el.dispatchEvent(new Event('config-refresh', { bubbles: true, composed: true })); },
 });
@@ -114,7 +117,8 @@ async function hgGenerate(hass, opt) {
   let E = null; if (!wiz) try { E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
   /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */
   const vOff = hgViewOff(hass, (E && E.doc && E.doc.data && E.doc.data.wiz) || wiz);
-  const lang = hgLang(hass, HGLang.get() || opt.language || (wiz && wiz.lang)), t = (k) => hgI(lang, k), M0 = await HGModel.load(hass);
+  /* nawigacja i tytuły widoków dopiero z katalogiem języka (maks. 3 s, potem angielski i hg-lang, gdy dotrze); model wczytywany równolegle */
+  const lang = hgLang(hass, HGLang.get() || opt.language || (wiz && wiz.lang)), t = (k) => hgI(lang, k), [M0] = await Promise.all([HGModel.load(hass), HGI18n.ready(lang)]);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
   const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);

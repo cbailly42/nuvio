@@ -1,0 +1,114 @@
+/* Task 4: language from the manifest, waiting for the catalog (HGLang.set, strategy, standalone cards), card rerender, HG_LOC, hgTr gateway */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { loadParts, fixture } from './harness.mjs';
+
+const EN = fixture('en'), PL = fixture('pl');
+const meta = (c) => JSON.parse(readFileSync(new URL('../../src/locales/' + c + '.json', import.meta.url), 'utf8'))._meta;
+/* manifest as tools/build.py builds it from src/locales (en first, then the others sorted), plus a fake fr for the generic paths */
+const MAN = [{ code: 'en', name: meta('en').name, locale: meta('en').locale, file: null }, { code: 'pl', name: meta('pl').name, locale: meta('pl').locale, file: 'nuvio-locale-pl.aaaa.json' }];
+const MAN_FR = [...MAN, { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'nuvio-locale-fr.aaaa.json' }];
+const FILES = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js'];
+const NAMES = ['HGI18n', 'HGLang', 'HGStrategy', 'HGBase', 'hgLang', 'hgCurLang', 'hgTr', 'HG_LOC', 'HG_LIVE'];
+const tick = (n = 5) => new Promise((r) => { const s = () => (n-- ? setImmediate(s) : r()); s(); });
+const stub = () => new Proxy(function () {}, { get: (t, k) => (k === Symbol.iterator ? function* () {} : k === 'length' ? 0 : k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : stub()), apply: () => stub(), construct: () => stub() });
+/* deferred fetch: each call waits until release() */
+function deferred(cat = PL) {
+  const calls = []; let rel; const gate = new Promise((r) => { rel = r; });
+  const fetch = (u) => { calls.push(u); return gate.then(() => ({ ok: true, json: () => Promise.resolve(cat) })); };
+  return { fetch, calls, release: () => rel() };
+}
+function mk({ lang = null, nav = ['en-GB'], fetch = deferred().fetch, manifest = MAN, parts = [], names = [] } = {}) {
+  const store = {}; if (lang) store['home-glass:lang'] = lang;
+  const events = [], window = new EventTarget();   /* events: only hg-lang (hg-perf etc. are not under test) */
+  const disp = window.dispatchEvent.bind(window); window.dispatchEvent = (e) => { if (e.type === 'hg-lang') events.push(e.type); return disp(e); };
+  class El { constructor() { this.isConnected = false; } attachShadow() { return (this.shadowRoot = { addEventListener() {}, appendChild() {}, querySelectorAll: () => [] }); } dispatchEvent() {} }
+  const g = { window, document: stub(), navigator: { languages: nav, language: nav[0] }, location: { pathname: '/nuvio/x', search: '' },
+    localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    HTMLElement: El, customElements: { get() {}, define() {} }, matchMedia: stub(), requestAnimationFrame: () => 0, setInterval: () => 0, MutationObserver: class { observe() {} },
+    CustomEvent, Event, fetch, getComputedStyle: stub() };
+  const api = loadParts([...FILES, ...parts], g, [...NAMES, ...names], { EN, MANIFEST: manifest, text: [['import.meta.url', 'undefined']] });
+  return { ...api, events, window, store };
+}
+
+test('HG_LOC from the manifest locale: pl-PL / en-GB (and any manifest language)', () => {
+  assert.equal(mk({ lang: 'pl' }).HG_LOC(), 'pl-PL');
+  assert.equal(mk({ lang: 'en' }).HG_LOC(), 'en-GB');
+  assert.equal(mk({ lang: 'fr', manifest: MAN_FR }).HG_LOC(), 'fr-FR');
+});
+
+test('HGLang.LIST is the manifest list (getter), ok() follows it', () => {
+  const m = mk({ manifest: MAN_FR });
+  assert.deepEqual(m.HGLang.LIST, m.HGI18n.list());
+  assert.deepEqual(m.HGLang.LIST.map((x) => x[0]), ['en', 'pl', 'fr']);
+  assert.equal(m.HGLang.ok('fr'), true); assert.equal(m.HGLang.ok('de'), false);
+});
+
+test('hgTr gateway: pl -> first, any other language -> second, whatever the LIST order; objects and arrays', () => {
+  assert.equal(mk({ lang: 'pl' }).hgTr('a', 'b'), 'a');
+  assert.equal(mk({ lang: 'en' }).hgTr('a', 'b'), 'b');
+  const fr = mk({ lang: 'fr', manifest: MAN_FR }); assert.equal(fr.hgTr('a', 'b'), 'b');
+  const rev = mk({ lang: 'pl', manifest: [MAN[1], MAN[0]] }); assert.deepEqual(rev.HGLang.LIST.map((x) => x[0]), ['pl', 'en']); assert.equal(rev.hgTr('a', 'b'), 'a');
+  const pl = mk({ lang: 'pl' }); assert.deepEqual(pl.hgTr(['x'], ['y']), ['x']); assert.deepEqual(pl.hgTr({ k: 1 }, { k: 2 }), { k: 1 });
+  assert.deepEqual(mk({ lang: 'en' }).hgTr({ k: 1 }, { k: 2 }), { k: 2 });
+});
+
+test('hgLang: personal choice first, then generic browser detection (navigator.languages)', () => {
+  const m = mk({ nav: ['de-DE', 'fr-CA'], manifest: MAN_FR });
+  assert.equal(m.hgLang(null, ''), 'fr'); assert.equal(m.hgLang(null, 'pl'), 'pl'); assert.equal(m.hgLang(null, 'gone'), 'fr');
+  assert.equal(mk({ nav: ['de-DE'] }).hgLang(null, null), 'en');
+});
+
+test('HGLang.set waits for the catalog, then refresh (hg-lang) with the catalog active', async () => {
+  const d = deferred(), m = mk({ fetch: d.fetch });
+  const p = m.HGLang.set(null, 'pl');
+  await tick();
+  assert.equal(m.HGLang.get(), 'pl'); assert.deepEqual(m.events, [], 'no hg-lang before the catalog arrives'); assert.equal(d.calls.length, 1);
+  d.release(); await p; await tick();
+  assert.deepEqual(m.events, ['hg-lang']); assert.equal(m.HGI18n.code, 'pl');
+  /* back to English: nothing to fetch, refresh right away (after a microtask) */
+  await m.HGLang.set(null, 'en'); assert.equal(m.HGI18n.code, 'en'); assert.equal(m.events.filter((x) => x === 'hg-lang').length, 2);
+});
+
+test('HGStrategy.generate waits for HGI18n.ready(lang) before handing over (generation ends after the catalog)', async () => {
+  const d = deferred(), m = mk({ fetch: d.fetch });
+  let done = false, codeAtEnd = null;
+  const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'u', is_admin: true }, callWS: () => Promise.reject(new Error('no ws')) };
+  const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass).then((c) => { done = true; codeAtEnd = m.HGI18n.code; return c; }, (e) => { done = true; codeAtEnd = m.HGI18n.code; throw e; });
+  await tick(20);
+  assert.equal(done, false, 'generation must wait for the pl catalog'); assert.equal(d.calls.length, 1);
+  d.release(); const cfg = await p;
+  assert.equal(codeAtEnd, 'pl'); assert.ok(cfg && Array.isArray(cfg.views));
+});
+
+test('HGBase: one hg-lang listener rerenders the connected instances, marks the detached ones, purges dead refs', async () => {
+  const m = mk({ lang: 'en' });
+  let n = 0; class C extends m.HGBase { render() { n++; return '<b>' + n + '</b>'; } }
+  const a = new C(), b = new C();
+  for (const c of [a, b]) { c._config = {}; c._hass = { states: {} }; c.$ = { innerHTML: '' }; c._html = 'old'; }
+  a.isConnected = true; b.isConnected = false;
+  const dead = { deref: () => undefined }; m.HG_LIVE.add(dead); assert.equal(m.HG_LIVE.size, 3);
+  m.window.dispatchEvent(new CustomEvent('hg-lang')); await tick();
+  assert.equal(m.HG_LIVE.has(dead), false); assert.equal(m.HG_LIVE.size, 2);
+  assert.equal(n, 1, 'only the connected card rerenders'); assert.equal(a._html, '<b>1</b>'); assert.equal(b._stale, true);
+});
+
+test('standalone card (no strategy): first render triggers the catalog, its arrival rerenders the card without reload', async () => {
+  const d = deferred(), m = mk({ lang: 'pl', fetch: d.fetch });
+  let n = 0; class C extends m.HGBase { render() { n++; return '<b>' + n + ' ' + m.HGI18n.code + '</b>'; } }
+  const c = new C(); c.isConnected = true; c.$ = { innerHTML: '' }; c._config = {}; c.hass = { states: {} };
+  assert.equal(n, 1); assert.equal(c.$.innerHTML, '<b>1 en</b>'); assert.equal(d.calls.length, 1);
+  await tick(); assert.deepEqual(m.events, []);
+  d.release(); await tick(10);
+  assert.deepEqual(m.events, ['hg-lang']); assert.equal(m.HGI18n.code, 'pl'); assert.equal(n, 2); assert.equal(c._html, '<b>2 pl</b>');
+  /* once loaded: no further fetch nor event */
+  c.rerender(); await tick(); assert.equal(d.calls.length, 1); assert.deepEqual(m.events, ['hg-lang']);
+});
+
+test('hgAgoRel formats with HG_LOC()', () => {
+  const m = mk({ lang: 'fr', manifest: MAN_FR, parts: ['cards/logbook-card.part.js'], names: ['hgAgoRel'] });
+  assert.equal(m.hgAgoRel(Date.now() - 2 * 3600e3), new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' }).format(-2, 'hour'));
+  assert.equal(mk({ lang: 'pl', parts: ['cards/logbook-card.part.js'], names: ['hgAgoRel'] }).hgAgoRel(Date.now() - 5 * 60e3), '5 minut temu');
+});
