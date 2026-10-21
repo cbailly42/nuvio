@@ -2772,18 +2772,18 @@ roomx.entities_without_an_area,parts/hg-roomx.part.js,78,hgTr,'Entities without 
 common.cancel,parts/hg-roomx.part.js,79,hgTr,Cancel,Anuluj,,,auto
 roomx.added_sel_length_to,parts/hg-roomx.part.js,94,hgTr,Added ${sel.length} to ${this._a.name},Dodano ${sel.length} do pokoju ${this._a.name},,expr,manual
 users.shared_dashboard,parts/hg-users.part.js,10,hgTr,Shared dashboard,Wspólny dashboard,,,auto
-users.by_default_everyone_sees,parts/hg-users.part.js,11,hgTr,"By default everyone sees the same dashboard, set up by an administrator. Turn a person off to give them their own layout: it starts as a copy of the shared one and they can edit it themselves.","Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. Odznacz osobę, żeby miała własny układ: zaczyna od kopii wspólnego i może go sama edytować.",,,auto
+users.intro,parts/hg-users.part.js,11,hgTr,"By default everyone sees the same dashboard, set up by an administrator. Turn a person off to give them their own layout: it starts as a copy of the shared one and they can edit it themselves.","Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. Odznacz osobę, żeby miała własny układ: zaczyna od kopii wspólnego i może go sama edytować.",,,auto
 common.loading,parts/hg-users.part.js,14,hgTr,Loading…,Wczytywanie…,,,auto
-users.the_shared_dashboard_has,parts/hg-users.part.js,15,hgTr,The shared dashboard has not been created yet. Reload the page and Nuvio will create it from your layout.,"Wspólny dashboard jeszcze nie powstał. Odśwież stronę, a Nuvio utworzy go z Twojego układu.",,,auto
+users.shared_missing,parts/hg-users.part.js,15,hgTr,The shared dashboard has not been created yet. Reload the page and Nuvio will create it from your layout.,"Wspólny dashboard jeszcze nie powstał. Odśwież stronę, a Nuvio utworzy go z Twojego układu.",,,auto
 users.you,parts/hg-users.part.js,19,hgTr,You,Ty,,,auto
 users.administrator,parts/hg-users.part.js,19,hgTr,Administrator,Administrator,,,auto
 users.you_set_up_the,parts/hg-users.part.js,20,hgTr,You set up the shared dashboard,Ustawiasz wspólny dashboard,,,auto
 users.sees_the_shared_dashboard,parts/hg-users.part.js,20,hgTr,Sees the shared dashboard,Widzi wspólny dashboard,,,auto
 users.own_layout_edits_it,parts/hg-users.part.js,20,hgTr,"Own layout, edits it themselves","Własny układ, edytuje sam",,,auto
-users.shared_dashboard_of_this,parts/hg-users.part.js,25,hgTr,Shared dashboard: {n} of ${this.list.length},Wspólny dashboard: {n} z ${this.list.length},,expr,manual
-users.now_sees_the_shared,parts/hg-users.part.js,33,hgTr,{nm} now sees the shared dashboard,{nm} widzi teraz wspólny dashboard,nm,,auto
-users.now_has_their_own,parts/hg-users.part.js,33,hgTr,{nm} now has their own layout,{nm} ma teraz własny układ,nm,,auto
-users.could_not_save,parts/hg-users.part.js,34,hgTr,Could not save (,Nie udało się zapisać (,,concat,manual
+users.shared_count,parts/hg-users.part.js,25,hgTr,Shared dashboard: {count} of {total},Wspólny dashboard: {count} z {total},"count,total",expr,auto
+users.name_sees_shared,parts/hg-users.part.js,33,hgTr,{name} now sees the shared dashboard,{name} widzi teraz wspólny dashboard,name,,auto
+users.name_has_own_layout,parts/hg-users.part.js,33,hgTr,{name} now has their own layout,{name} ma teraz własny układ,name,,auto
+users.save_failed,parts/hg-users.part.js,34,hgTr,Could not save ({error}),Nie udało się zapisać ({error}),error,concat,auto
 wall.touch_to_unlock,parts/hg-wall.part.js,149,hgTr,Touch the screen to unlock,"Dotknij ekranu, aby odblokować",,,auto
 wall.unlock_the_dashboard,parts/hg-wall.part.js,155,hgTr,Unlock the dashboard,Odblokuj panel,,,auto
 wall.enter_pin,parts/hg-wall.part.js,157,hgTr,Enter PIN,Wpisz PIN,,,auto

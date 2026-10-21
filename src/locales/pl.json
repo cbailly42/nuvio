@@ -2642,6 +2642,20 @@
       "undo": "Cofnij"
     }
   },
+  "users": {
+    "administrator": "Administrator",
+    "intro": "Domyślnie wszyscy widzą ten sam dashboard, który ustawia administrator. Odznacz osobę, żeby miała własny układ: zaczyna od kopii wspólnego i może go sama edytować.",
+    "name_has_own_layout": "{name} ma teraz własny układ",
+    "name_sees_shared": "{name} widzi teraz wspólny dashboard",
+    "own_layout_edits_it": "Własny układ, edytuje sam",
+    "save_failed": "Nie udało się zapisać ({error})",
+    "sees_the_shared_dashboard": "Widzi wspólny dashboard",
+    "shared_count": "Wspólny dashboard: {count} z {total}",
+    "shared_dashboard": "Wspólny dashboard",
+    "shared_missing": "Wspólny dashboard jeszcze nie powstał. Odśwież stronę, a Nuvio utworzy go z Twojego układu.",
+    "you": "Ty",
+    "you_set_up_the": "Ustawiasz wspólny dashboard"
+  },
   "wall": {
     "activity": "Zajęcia",
     "all_day": "Cały dzień",

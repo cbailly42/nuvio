@@ -2624,6 +2624,20 @@
       "undo": "Undo"
     }
   },
+  "users": {
+    "administrator": "Administrator",
+    "intro": "By default everyone sees the same dashboard, set up by an administrator. Turn a person off to give them their own layout: it starts as a copy of the shared one and they can edit it themselves.",
+    "name_has_own_layout": "{name} now has their own layout",
+    "name_sees_shared": "{name} now sees the shared dashboard",
+    "own_layout_edits_it": "Own layout, edits it themselves",
+    "save_failed": "Could not save ({error})",
+    "sees_the_shared_dashboard": "Sees the shared dashboard",
+    "shared_count": "Shared dashboard: {count} of {total}",
+    "shared_dashboard": "Shared dashboard",
+    "shared_missing": "The shared dashboard has not been created yet. Reload the page and Nuvio will create it from your layout.",
+    "you": "You",
+    "you_set_up_the": "You set up the shared dashboard"
+  },
   "wall": {
     "activity": "Activity",
     "all_day": "All day",
