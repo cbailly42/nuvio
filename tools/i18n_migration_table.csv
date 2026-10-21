@@ -1007,8 +1007,8 @@ cards.stack.picker_name,parts/cards/stack-card.part.js,76,hgTr,Nuvio – Stack,N
 cards.stack.picker_description,parts/cards/stack-card.part.js,76,hgTr,"Several cards in one glass, vertical or horizontal","Kilka kart w jednym szkle, pionowo albo poziomo",,load-time,auto
 cards.stairs.stairs,parts/cards/stairs-card.part.js,7,hgTr,Stairs,Schody,,,auto
 cards.stairs.set_the_bottom_and,parts/cards/stairs-card.part.js,7,hgTr,Set the bottom and top lights and sensors.,Ustaw światła i czujniki dołu i góry.,,,auto
-cards.stairs.home_glass_stairs,parts/cards/stairs-card.part.js,9,hgTr,Home Glass – Stairs,Home Glass – Schody,,load-time,manual
-cards.stairs.stair_light_sequence_with,parts/cards/stairs-card.part.js,9,hgTr,Stair light sequence with bottom and top sensors,Sekwencja świateł schodów z czujnikami dołu i góry,,load-time,manual
+cards.stairs.picker_name,parts/cards/stairs-card.part.js,9,hgTr,Home Glass – Stairs,Home Glass – Schody,,load-time,auto
+cards.stairs.picker_description,parts/cards/stairs-card.part.js,9,hgTr,Stair light sequence with bottom and top sensors,Sekwencja świateł schodów z czujnikami dołu i góry,,load-time,auto
 cards.stat.choose_a_numeric_sensor,parts/cards/stat-card.part.js,15,hgTr,Choose a numeric sensor,Wybierz czujnik liczbowy,,,auto
 cards.stat.7_days,parts/cards/stat-card.part.js,17,hgTr,7 days,7 dni,,,auto
 cards.stat.30_days,parts/cards/stat-card.part.js,17,hgTr,30 days,30 dni,,,auto

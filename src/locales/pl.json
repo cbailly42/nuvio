@@ -586,6 +586,12 @@
       "picker_description": "Kilka kart w jednym szkle, pionowo albo poziomo",
       "picker_name": "Nuvio – Stos",
       "too_many_container_levels": "Za dużo poziomów kontenerów (najwyżej 3)"
+    },
+    "stairs": {
+      "picker_description": "Sekwencja świateł schodów z czujnikami dołu i góry",
+      "picker_name": "Home Glass – Schody",
+      "set_the_bottom_and": "Ustaw światła i czujniki dołu i góry.",
+      "stairs": "Schody"
     }
   },
   "common": {

@@ -582,6 +582,12 @@
       "picker_description": "Several cards in one glass, vertical or horizontal",
       "picker_name": "Nuvio – Stack",
       "too_many_container_levels": "Too many container levels (3 at most)"
+    },
+    "stairs": {
+      "picker_description": "Stair light sequence with bottom and top sensors",
+      "picker_name": "Home Glass – Stairs",
+      "set_the_bottom_and": "Set the bottom and top lights and sensors.",
+      "stairs": "Stairs"
     }
   },
   "common": {
