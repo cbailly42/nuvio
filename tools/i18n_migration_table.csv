@@ -1272,12 +1272,12 @@ cards.weather.hour_label,parts/cards/weather-card.part.js,128,hgTr,Hour {hour},G
 cards.weather.precipitation_percent,parts/cards/weather-card.part.js,128,hgTr,precipitation {value}%,opady {value}%,value,expr,auto
 cards.weather.precipitation_amount,parts/cards/weather-card.part.js,128,hgTr,precipitation {value} {unit},opady {value} {unit},"value,unit",expr,auto
 common.now_cap,parts/cards/weather-card.part.js,129,hgTr,Now,Teraz,,,auto
-cards.weather.tomorrow,parts/cards/weather-card.part.js,156,hgTr, tomorrow, jutro,,,auto
+cards.weather.tomorrow,parts/cards/weather-card.part.js,156,hgTr,tomorrow,jutro,,,auto
 cards.weather.sun_aria,parts/cards/weather-card.part.js,157,hgTr,"Sunrise {sunrise}, sunset {sunset}","Wschód słońca {sunrise}, zachód {sunset}","sunrise,sunset",expr,auto
 cards.weather.sunrise,parts/cards/weather-card.part.js,157,hgTr,sunrise,wschód,,,auto
-cards.weather.tomorrow,parts/cards/weather-card.part.js,157,hgTr, tomorrow, jutro,,,auto
+cards.weather.tomorrow,parts/cards/weather-card.part.js,157,hgTr,tomorrow,jutro,,,auto
 cards.weather.sunset,parts/cards/weather-card.part.js,157,hgTr,sunset,zachód,,,auto
-cards.weather.tomorrow,parts/cards/weather-card.part.js,157,hgTr, tomorrow, jutro,,,auto
+cards.weather.tomorrow,parts/cards/weather-card.part.js,157,hgTr,tomorrow,jutro,,,auto
 cards.weather.title_details_aria,parts/cards/weather-card.part.js,168,hgTr,{title} – weather details,{title} – szczegóły pogody,title,concat,auto
 cards.weather.weather_unavailable,parts/cards/weather-card.part.js,169,hgTr,Weather unavailable,Pogoda niedostępna,,,auto
 cards.weather.detailed_forecast,parts/cards/weather-card.part.js,172,hgTr,Detailed forecast,Prognoza szczegółowa,,,auto
@@ -1306,7 +1306,7 @@ cards.weather.pressure,parts/cards/weather-card.part.js,299,hgTr,Pressure,Ciśni
 common.now_cap,parts/cards/weather-card.part.js,305,hgTr,Now,Teraz,,,auto
 cards.weather.temp_range_to,parts/cards/weather-card.part.js,312,hgTr,to,do,,,auto
 cards.weather.precipitation,parts/cards/weather-card.part.js,312,hgTr,precipitation,opady,,,auto
-cards.weather.tomorrow,parts/cards/weather-card.part.js,317,hgTr, tomorrow, jutro,,,auto
+cards.weather.tomorrow,parts/cards/weather-card.part.js,317,hgTr,tomorrow,jutro,,,auto
 common.close,parts/cards/weather-card.part.js,319,hgTr,Close,Zamknij,,,auto
 cards.weather.next_hours,parts/cards/weather-card.part.js,321,hgTr,Next {count} h,Najbliższe {count} h,count,expr,auto
 cards.weather.hourly_forecast,parts/cards/weather-card.part.js,321,hgTr,Hourly forecast,Prognoza godzinowa,,,auto
