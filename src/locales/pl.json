@@ -303,6 +303,14 @@
       "picker_name": "Home Glass – Energia",
       "power_sensors_unavailable": "Czujniki mocy niedostępne",
       "sum_of_phases_vs": "Suma faz względem mocy maksymalnej"
+    },
+    "entities": {
+      "a_list_with_toggles": "Lista z przełącznikami i wartościami",
+      "add_entities": "Dodaj encje",
+      "entities": "Encje",
+      "picker_description": "Wiersze encji z przełącznikiem, przyciskiem lub wartością",
+      "picker_name": "Home Glass – Lista encji",
+      "run": "Uruchom"
     }
   },
   "common": {

@@ -299,6 +299,14 @@
       "picker_name": "Home Glass – Energy",
       "power_sensors_unavailable": "Power sensors unavailable",
       "sum_of_phases_vs": "Sum of phases vs. maximum power"
+    },
+    "entities": {
+      "a_list_with_toggles": "A list with toggles and values",
+      "add_entities": "Add entities",
+      "entities": "Entities",
+      "picker_description": "Entity rows with a toggle, button or value",
+      "picker_name": "Home Glass – Entities",
+      "run": "Run"
     }
   },
   "common": {

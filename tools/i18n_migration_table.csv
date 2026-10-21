@@ -297,8 +297,8 @@ cards.entities.entities,parts/cards/entities-card.part.js,3,hgTr,Entities,Encje,
 cards.entities.add_entities,parts/cards/entities-card.part.js,12,hgTr,Add entities,Dodaj encje,,,auto
 cards.entities.a_list_with_toggles,parts/cards/entities-card.part.js,12,hgTr,A list with toggles and values,Lista z przełącznikami i wartościami,,,auto
 cards.entities.run,parts/cards/entities-card.part.js,16,hgTr,Run,Uruchom,,,auto
-cards.entities.home_glass_entities,parts/cards/entities-card.part.js,27,hgTr,Home Glass – Entities,Home Glass – Lista encji,,load-time,manual
-cards.entities.entity_rows_with_a,parts/cards/entities-card.part.js,27,hgTr,"Entity rows with a toggle, button or value","Wiersze encji z przełącznikiem, przyciskiem lub wartością",,load-time,manual
+cards.entities.picker_name,parts/cards/entities-card.part.js,27,hgTr,Home Glass – Entities,Home Glass – Lista encji,,load-time,auto
+cards.entities.picker_description,parts/cards/entities-card.part.js,27,hgTr,"Entity rows with a toggle, button or value","Wiersze encji z przełącznikiem, przyciskiem lub wartością",,load-time,auto
 cards.eprice.choose_an_electricity_price,parts/cards/eprice-card.part.js,34,hgTr,Choose an electricity price sensor,Wybierz czujnik ceny prądu,,,auto
 cards.eprice.nord_pool_entso_e,parts/cards/eprice-card.part.js,34,hgTr,"Nord Pool, ENTSO-e, Energi Data Service or similar with hourly prices","Nord Pool, ENTSO-e, Energi Data Service, Pstryk lub podobny z cenami godzinowymi",,,auto
 cards.eprice.prices_tomorrow,parts/cards/eprice-card.part.js,47,hgTr,Prices tomorrow,Ceny jutro,,,auto

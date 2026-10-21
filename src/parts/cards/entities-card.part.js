@@ -1,6 +1,6 @@
 /* --- lista encji: wiersze z przełącznikiem, przyciskiem lub wartością --- */
 class HGEntitiesCard extends HGBase {
-  defaults() { return { title: hgTr('Encje', 'Entities'), icon: 'mdi:format-list-bulleted', entities: [] }; }
+  defaults() { return { title: hgT('cards.entities.entities'), icon: 'mdi:format-list-bulleted', entities: [] }; }
   ents() { return this._config.entities.map((x) => (typeof x === 'string' ? x : x.entity)); }
   css() { return HG_GEN_CSS + U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overflow:auto; }
@@ -9,11 +9,11 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
 .gr .gn{ cursor:pointer; } .gr .gn:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; border-radius:8px; }
 `); }
   render() { const c = this._config, h = this._hass;
-    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Dodaj encje', 'Add entities')}</b>${hgTr('Lista z przełącznikami i wartościami', 'A list with toggles and values')}</div></ha-card>`;
+    if (!c.entities.length) return `<ha-card class="glass"><div class="ph"><b>${hgT('cards.entities.add_entities')}</b>${hgT('cards.entities.a_list_with_toggles')}</div></ha-card>`;
     const rows = c.entities.map((x) => { const o = typeof x === 'string' ? { entity: x } : x, e = o.entity, s = H.st(h, e), d = hgDom(e), ok = H.ok(s), nm = o.name || H.name(h, e);
       const on = s && ['on', 'open', 'unlocked', 'playing', 'home'].includes(s.state), ic = o.icon || (s && s.attributes.icon) || HG_DOM_ICON2[d] || 'mdi:circle-outline';
       const num = s && isFinite(parseFloat(s.state)) && s.attributes.unit_of_measurement, val = num ? `${H.fmt(parseFloat(s.state), 1)}<small>${H.esc(s.attributes.unit_of_measurement)}</small>` : H.esc(H.t(h, s));
-      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}${hgTr('Uruchom', 'Run')}</button>`
+      const ctl = HG_PRESS_DOM.includes(d) ? `<button class="gb" data-act="press" data-e="${H.esc(e)}" ${s && s.state !== 'unavailable' ? '' : 'disabled'}>${H.icon('mdi:play')}${hgT('cards.entities.run')}</button>`
         : ['light', 'switch', 'fan', 'input_boolean', 'siren', 'humidifier'].includes(d) ? `<button class="gsw" role="switch" data-act="tog" data-e="${H.esc(e)}" aria-checked="${!!on}" aria-label="${H.esc(nm)}" ${ok ? '' : 'disabled'}><span class="gkn"></span></button>`
         : `<span class="gv">${val}</span>`;
       return `<div class="gr ${ok || (HG_PRESS_DOM.includes(d) && s && s.state !== 'unavailable') ? '' : 'un'}"><span class="gic ${on ? 'on' : ''}">${H.icon(ic)}</span><span class="gn" role="button" tabindex="0" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b>${HG_PRESS_DOM.includes(d) || /gsw/.test(ctl) ? `<small>${H.esc(H.t(h, s))}</small>` : ''}</span>${ctl}</div>`; }).join('');
@@ -24,4 +24,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:4px; padding:16px; overf
     if (a === 'press') return hgPress(this, h, e); }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }
 }
-hgReg('hg-entities-card', HGEntitiesCard, hgTr('Home Glass – Lista encji', 'Home Glass – Entities'), hgTr('Wiersze encji z przełącznikiem, przyciskiem lub wartością', 'Entity rows with a toggle, button or value'));
+hgReg('hg-entities-card', HGEntitiesCard, hgTLazy('cards.entities.picker_name'), hgTLazy('cards.entities.picker_description'));
