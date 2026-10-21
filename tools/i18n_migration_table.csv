@@ -185,7 +185,7 @@ cards.bars.grid_consumption,parts/cards/bars-card.part.js,3,hgTr,Grid consumptio
 common.no_data_source,parts/cards/bars-card.part.js,3,hgTr,No data source,Brak źródła danych,,,auto
 common.expand,parts/cards/bars-card.part.js,31,hgTr,Expand,Rozwiń,,,auto
 common.details,parts/cards/bars-card.part.js,31,hgTr,Details,Szczegóły,,,auto
-cards.bars.c_days_days,parts/cards/bars-card.part.js,39,hgTr,${c.days} days,${c.days} dni,,expr,manual
+cards.bars.days_count,parts/cards/bars-card.part.js,39,hgTr,{count} days,{count} dni,count,expr,auto
 cards.battery.no_battery_sensors,parts/cards/battery-card.part.js,10,hgTr,No battery sensors,Brak czujników baterii,,,auto
 cards.battery.pick_sensors_or_leave,parts/cards/battery-card.part.js,10,hgTr,Pick sensors or leave empty to detect automatically,"Wybierz czujniki lub zostaw puste, by wykryć automatycznie",,,auto
 cards.battery.batteries,parts/cards/battery-card.part.js,11,hgTr,Batteries,Baterie,,,auto

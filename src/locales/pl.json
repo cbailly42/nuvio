@@ -218,6 +218,10 @@
       "what_will_the_weather": "Jaka będzie pogoda jutro?",
       "which_lights_are_on": "Które światła są włączone?"
     },
+    "bars": {
+      "days_count": "{count} dni",
+      "grid_consumption": "Zużycie z sieci"
+    },
     "battery": {
       "all_good": "Wszystkie w porządku",
       "batteries": "Baterie",
@@ -244,6 +248,7 @@
     "cooling": "Chłodzenie",
     "details": "Szczegóły",
     "done": "Gotowe",
+    "expand": "Rozwiń",
     "fuel_prices": "Ceny paliw",
     "heating": "Grzanie",
     "hidden_suffix": " · ukryty",
@@ -257,6 +262,7 @@
     "motion": "Ruch",
     "name": "Nazwa",
     "next_track": "Następny",
+    "no_data_source": "Brak źródła danych",
     "notifications": "Powiadomienia",
     "off_fem": "Wyłączona",
     "off_short": "Wył.",

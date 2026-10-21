@@ -1,6 +1,6 @@
 /* ===================== BARS (raport zużycia) ===================== */
 class HGBarsCard extends HGBase {
-  defaults() { return { title: hgTr('Zużycie z sieci', 'Grid consumption'), icon: 'mdi:transmission-tower', statistics: [], labels: [], colors: ['var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)'], days: 7, unit: 'kWh', locale: null, expand: null, no_data: hgTr('Brak źródła danych', 'No data source') }; }
+  defaults() { return { title: hgT('cards.bars.grid_consumption'), icon: 'mdi:transmission-tower', statistics: [], labels: [], colors: ['var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)', 'var(--hg-accent)'], days: 7, unit: 'kWh', locale: null, expand: null, no_data: hgT('common.no_data_source') }; }
   ents() { return []; }
   _extraSig() { return [this._data ? this._data.t : 0]; }
   connectedCallback() { super.connectedCallback(); this._load(); this._iv = setInterval(() => this._load(), 15 * 60 * 1000); }
@@ -28,7 +28,7 @@ ha-card.glass{ display:flex; flex-direction:column; }
   render() {
     const c = this._config;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgT('common.expand')}" title="${hgT('common.details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     if (this._err || (this._data && !this._data.v.has)) return `<ha-card class="glass">${hd}<div class="ph"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || '')}</div></ha-card>`;
     if (!this._data) return `<ha-card class="glass">${hd}</ha-card>`;
     const { days, byId } = this._data.v;
@@ -36,7 +36,7 @@ ha-card.glass{ display:flex; flex-direction:column; }
     const tot = rows.map((r) => r.reduce((a, b) => a + b, 0)); const mx = Math.max(...tot, 0.001);
     const week = tot.reduce((a, b) => a + b, 0);
     return `<ha-card class="glass">${hd}
-      <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${hgTr(`${c.days} dni`, `${c.days} days`)}</span></div>
+      <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${hgT('cards.bars.days_count', { count: c.days })}</span></div>
       <div class="lg">${c.statistics.map((id, i) => `<span><i style="background:${c.colors[i % c.colors.length]}"></i>${H.esc(c.labels[i] || id)}</span>`).join('')}</div>
       <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.esc(days[i].toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(tot[i], 1)} ${c.unit}"><em>${H.fmt(tot[i], 1)}</em>
         <div class="st" style="height:${Math.max(3, (tot[i] / mx) * 100)}%">${r.map((v, j) => `<div style="height:${tot[i] ? (v / tot[i]) * 100 : 0}%;background:${c.colors[j % c.colors.length]}"></div>`).join('')}</div>

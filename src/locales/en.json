@@ -214,6 +214,10 @@
       "what_will_the_weather": "What will the weather be tomorrow?",
       "which_lights_are_on": "Which lights are on?"
     },
+    "bars": {
+      "days_count": "{count} days",
+      "grid_consumption": "Grid consumption"
+    },
     "battery": {
       "all_good": "All good",
       "batteries": "Batteries",
@@ -240,6 +244,7 @@
     "cooling": "Cooling",
     "details": "Details",
     "done": "Done",
+    "expand": "Expand",
     "fuel_prices": "Fuel prices",
     "heating": "Heating",
     "hidden_suffix": " · hidden",
@@ -253,6 +258,7 @@
     "motion": "Motion",
     "name": "Name",
     "next_track": "Next",
+    "no_data_source": "No data source",
     "notifications": "Notifications",
     "off_fem": "Off",
     "off_short": "Off",
