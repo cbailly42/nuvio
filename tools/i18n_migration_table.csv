@@ -2784,40 +2784,42 @@ users.shared_dashboard_of_this,parts/hg-users.part.js,25,hgTr,Shared dashboard: 
 users.now_sees_the_shared,parts/hg-users.part.js,33,hgTr,{nm} now sees the shared dashboard,{nm} widzi teraz wspólny dashboard,nm,,auto
 users.now_has_their_own,parts/hg-users.part.js,33,hgTr,{nm} now has their own layout,{nm} ma teraz własny układ,nm,,auto
 users.could_not_save,parts/hg-users.part.js,34,hgTr,Could not save (,Nie udało się zapisać (,,concat,manual
-wall.touch_the_screen_to,parts/hg-wall.part.js,149,hgTr,Touch the screen to unlock,"Dotknij ekranu, aby odblokować",,,auto
+wall.touch_to_unlock,parts/hg-wall.part.js,149,hgTr,Touch the screen to unlock,"Dotknij ekranu, aby odblokować",,,auto
 wall.unlock_the_dashboard,parts/hg-wall.part.js,155,hgTr,Unlock the dashboard,Odblokuj panel,,,auto
 wall.enter_pin,parts/hg-wall.part.js,157,hgTr,Enter PIN,Wpisz PIN,,,auto
 wall.delete,parts/hg-wall.part.js,158,hgTr,Delete,Usuń,,,auto
 wall.lock,parts/hg-wall.part.js,159,hgTr,Lock,Zablokuj,,,auto
-wall.this_pin_length_of,parts/hg-wall.part.js,164,hgTr,${this._pin.length} of {N} entered,Wpisano ${this._pin.length} z {N},,expr,manual
-wall.try_again_in_math,parts/hg-wall.part.js,176,hgTr,Try again in ${Math.ceil(wait / 1000)} s,Spróbuj za ${Math.ceil(wait / 1000)} s,,expr,manual
-wall.too_many_attempts_try,parts/hg-wall.part.js,183,hgTr,Too many attempts. Try again in {s} s,Za dużo prób. Spróbuj za {s} s,s,,auto
+wall.pin_entered,parts/hg-wall.part.js,164,hgTr,{count} of {total} entered,Wpisano {count} z {total},"count,total",expr,auto
+wall.try_again_in,parts/hg-wall.part.js,176,hgTr,Try again in {seconds} s,Spróbuj za {seconds} s,seconds,expr,auto
+wall.too_many_attempts,parts/hg-wall.part.js,183,hgTr,Too many attempts. Try again in {seconds} s,Za dużo prób. Spróbuj za {seconds} s,seconds,,auto
 wall.wrong_pin,parts/hg-wall.part.js,184,hgTr,Wrong PIN,Nieprawidłowy PIN,,,auto
 wall.screensaver,parts/hg-wall.part.js,223,hgTr,Screensaver,Wygaszacz ekranu,,,auto
 common.touch_to_wake,parts/hg-wall.part.js,227,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,,auto
-wall.touch_the_screen_to,parts/hg-wall.part.js,228,hgTr,Touch the screen to unlock,"Dotknij ekranu, aby odblokować",,,auto
-wall.h,parts/hg-wall.part.js,262,hgTr,H,Maks.,,,review
-wall.l,parts/hg-wall.part.js,262,hgTr,L,Min.,,,review
+wall.touch_to_unlock,parts/hg-wall.part.js,228,hgTr,Touch the screen to unlock,"Dotknij ekranu, aby odblokować",,,auto
+wall.temp_high,parts/hg-wall.part.js,262,hgTr,H,Maks.,,,auto
+wall.temp_low,parts/hg-wall.part.js,262,hgTr,L,Min.,,,auto
 wall.event,parts/hg-wall.part.js,278,hgTr,Event,Wydarzenie,,,auto
 common.now_cap,parts/hg-wall.part.js,284,hgTr,Now,Teraz,,,auto
-wall.in_min,parts/hg-wall.part.js,284,hgTr,in {m} min,za {m} min,m,,auto
-wall.in_math_round_m,parts/hg-wall.part.js,284,hgTr,in ${Math.round(m / 60)} h,za ${Math.round(m / 60)} h,,expr,manual
+wall.in_min,parts/hg-wall.part.js,284,hgTr,in {minutes} min,za {minutes} min,minutes,,auto
+wall.in_hours,parts/hg-wall.part.js,284,hgTr,in {hours} h,za {hours} h,hours,expr,auto
 wall.today,parts/hg-wall.part.js,285,hgTr,Today,Dzisiaj,,,auto
 wall.all_day,parts/hg-wall.part.js,286,hgTr,All day,Cały dzień,,,auto
 wall.activity,parts/hg-wall.part.js,295,hgTr,Activity,Zajęcia,,,auto
-wall.now_until_x_te,parts/hg-wall.part.js,297,hgTr,"now, until ${x.te}","teraz, do ${x.te}",,expr,manual
+wall.now_until,parts/hg-wall.part.js,297,hgTr,"now, until {time}","teraz, do {time}",time,expr,auto
 common.now,parts/hg-wall.part.js,297,hgTr,now,teraz,,,auto
-wall.in_min,parts/hg-wall.part.js,298,hgTr,in {m} min,za {m} min,m,,auto
-wall.in_math_floor_m,parts/hg-wall.part.js,298,hgTr,in ${Math.floor(m / 60)} h ${m % 60} min,za ${Math.floor(m / 60)} h ${m % 60} min,,expr,manual
-wall.in_m_60_h,parts/hg-wall.part.js,298,hgTr,in ${m / 60} h,za ${m / 60} h,,expr,manual
+wall.in_min,parts/hg-wall.part.js,298,hgTr,in {minutes} min,za {minutes} min,minutes,,auto
+wall.in_hours_minutes,parts/hg-wall.part.js,298,hgTr,in {hours} h {minutes} min,za {hours} h {minutes} min,"hours,minutes",expr,auto
+wall.in_hours,parts/hg-wall.part.js,298,hgTr,in {hours} h,za {hours} h,hours,expr,auto
 wall.child,parts/hg-wall.part.js,299,hgTr,Child,Dziecko,,,auto
 common.at_facility,parts/hg-wall.part.js,299,hgTr,At facility,W placówce,,,auto
 wall.away,parts/hg-wall.part.js,299,hgTr,Away,Poza placówką,,,auto
 wall.all_done_for_today,parts/hg-wall.part.js,301,hgTr,All done for today,Na dziś to wszystko,,,auto
 wall.no_activities_planned,parts/hg-wall.part.js,301,hgTr,No activities planned,Brak zajęć w planie,,,auto
 wall.not_detected,parts/hg-wall.part.js,304,hgTr,Not detected,Nie wykryto,,,auto
-wall.detected_nm_nm_on,parts/hg-wall.part.js,304,hgTr,"Detected${nm ? ': ' + nm : ''}. On weekdays the day plan, check-in and check-out on the screensaver","Wykryto${nm ? ': ' + nm : ''}. W dni robocze plan dnia, przyjście i wyjście na wygaszaczu",,expr,manual
-wall.detected_nm_nm_off,parts/hg-wall.part.js,304,hgTr,Detected${nm ? ': ' + nm : ''}. Off,Wykryto${nm ? ': ' + nm : ''}. Wyłączone,,expr,manual
+wall.kid_on_hint,parts/hg-wall.part.js,304,hgTr,"{detected}. On weekdays the day plan, check-in and check-out on the screensaver","{detected}. W dni robocze plan dnia, przyjście i wyjście na wygaszaczu",detected,expr,auto
+wall.detected_names,parts/hg-wall.part.js,304,hgTr,Detected: {names},Wykryto: {names},names,expr,auto
+wall.detected,parts/hg-wall.part.js,304,hgTr,Detected,Wykryto,,expr,auto
+wall.kid_off_hint,parts/hg-wall.part.js,304,hgTr,{detected}. Off,{detected}. Wyłączone,detected,expr,auto
 wall.livekid_child,parts/hg-wall.part.js,305,hgTr,LiveKid (child),LiveKid (dziecko),,,auto
 common.check_in,parts/hg-wall.part.js,313,hgTr,Check-in,Przyjście,,,auto
 common.check_out,parts/hg-wall.part.js,313,hgTr,Check-out,Wyjście,,,auto
@@ -2825,8 +2827,7 @@ wall.start_after_inactivity,parts/hg-wall.part.js,344,hgTr,Start after inactivit
 wall.dimming,parts/hg-wall.part.js,345,hgTr,Dimming,Przyciemnienie,,,auto
 wall.screensaver_dimming,parts/hg-wall.part.js,345,hgTr,Screensaver dimming,Przyciemnienie wygaszacza,,,auto
 wall.photo,parts/hg-wall.part.js,346,hgTr,Photo,Zdjęcie,,,auto
-wall.en,parts/hg-wall.part.js,346,hgTr,en,pl,,expr,manual
-wall.image_url_https_or,parts/hg-wall.part.js,347,hgTr,Image URL: https://… or /local/…,Adres zdjęcia: https://… lub /local/…,,,auto
+wall.image_url_hint,parts/hg-wall.part.js,347,hgTr,Image URL: https://… or /local/…,Adres zdjęcia: https://… lub /local/…,,,auto
 wall.screensaver_image_url,parts/hg-wall.part.js,347,hgTr,Screensaver image URL,Adres zdjęcia wygaszacza,,,auto
 wall.motion_sensor_wake,parts/hg-wall.part.js,348,hgTr,Motion sensor (wake),Czujnik ruchu (wybudzanie),,,auto
 wall.none_touch_only,parts/hg-wall.part.js,348,hgTr,"None, touch only","Brak, tylko dotyk",,,auto
@@ -2834,25 +2835,30 @@ common.change,parts/hg-wall.part.js,349,hgTr,Change,Zmień,,,auto
 wall.choose_sensor,parts/hg-wall.part.js,349,hgTr,Choose sensor,Wybierz czujnik,,,auto
 wall.preview_screensaver,parts/hg-wall.part.js,352,hgTr,Preview screensaver,Podgląd wygaszacza,,,auto
 wall.wall_tablet_mode,parts/hg-wall.part.js,353,hgTr,Wall tablet mode,Tryb tabletu ściennego,,,auto
-wall.after_inactivity_a_clock,parts/hg-wall.part.js,354,hgTr,'After inactivity: a clock over a dimmed photo; touch or a motion sensor wakes the screen. ' + (HGL.mode === 'shared' ? 'Applies to everyone on the shared dashboard.' : 'Applies to this Home Assistant user.'),'Po bezczynności zegar ze zdjęciem i przyciemnieniem; dotyk lub czujnik ruchu budzi ekran. ' + (HGL.mode === 'shared' ? 'Ustawienie dotyczy wszystkich osób ze wspólnym dashboardem.' : 'Ustawienie dotyczy konta użytkownika HA.'),,concat,manual
-wall.screensaver_2,parts/hg-wall.part.js,355,hgTr,Screensaver,Wygaszacz,,,review
+wall.intro,parts/hg-wall.part.js,354,hgTr,After inactivity: a clock over a dimmed photo; touch or a motion sensor wakes the screen.,Po bezczynności zegar ze zdjęciem i przyciemnieniem; dotyk lub czujnik ruchu budzi ekran.,,concat,auto
+wall.applies_shared,parts/hg-wall.part.js,354,hgTr,Applies to everyone on the shared dashboard.,Ustawienie dotyczy wszystkich osób ze wspólnym dashboardem.,,concat,auto
+wall.applies_user,parts/hg-wall.part.js,354,hgTr,Applies to this Home Assistant user.,Ustawienie dotyczy konta użytkownika HA.,,concat,auto
+wall.screensaver_switch,parts/hg-wall.part.js,355,hgTr,Screensaver,Wygaszacz,,,auto
 common.on_masc,parts/hg-wall.part.js,355,hgTr,On,Włączony,,,auto
 common.off_masc,parts/hg-wall.part.js,355,hgTr,Off,Wyłączony,,,auto
 wall.at_once,parts/hg-wall.part.js,356,hgTr,At once,Od razu,,,auto
 wall.pin_lock,parts/hg-wall.part.js,357,hgTr,PIN lock,Blokada PIN-em,,,auto
-wall.on_touching_the_screensaver,parts/hg-wall.part.js,357,hgTr,On: touching the screensaver shows a PIN pad,Włączona: dotknięcie wygaszacza pokazuje pinpad,,,auto
-wall.set_a_pin_to,parts/hg-wall.part.js,357,hgTr,Set a PIN to turn the lock on,"Ustaw PIN, aby blokada działała",,,auto
+wall.pin_lock_on_hint,parts/hg-wall.part.js,357,hgTr,On: touching the screensaver shows a PIN pad,Włączona: dotknięcie wygaszacza pokazuje pinpad,,,auto
+wall.pin_lock_needs_pin,parts/hg-wall.part.js,357,hgTr,Set a PIN to turn the lock on,"Ustaw PIN, aby blokada działała",,,auto
 common.off_fem,parts/hg-wall.part.js,357,hgTr,Off,Wyłączona,,,auto
-wall.change_pin_4_8,parts/hg-wall.part.js,360,hgTr,Change PIN (4–8 digits),Zmień PIN (4–8 cyfr),,,auto
-wall.pin_4_8_digits,parts/hg-wall.part.js,360,hgTr,PIN (4–8 digits),PIN (4–8 cyfr),,,auto
+wall.change_pin_digits,parts/hg-wall.part.js,360,hgTr,Change PIN (4–8 digits),Zmień PIN (4–8 cyfr),,,auto
+wall.pin_digits,parts/hg-wall.part.js,360,hgTr,PIN (4–8 digits),PIN (4–8 cyfr),,,auto
 wall.pin_set,parts/hg-wall.part.js,360,hgTr,PIN set,PIN ustawiony,,,auto
 wall.new_pin,parts/hg-wall.part.js,361,hgTr,New PIN,Nowy PIN,,,auto
 common.save,parts/hg-wall.part.js,361,hgTr,Save,Zapisz,,,auto
-wall.lock_after_the_screensaver,parts/hg-wall.part.js,362,hgTr,Lock after the screensaver starts,Zablokuj po starcie wygaszacza,,,auto
-wall.the_lock_keeps_the,parts/hg-wall.part.js,363,hgTr,The lock keeps the tablet dashboard from casual use; it does not replace the Home Assistant password. Only a hash of the PIN is stored. You can also lock right away from the user menu.,Blokada chroni panel na tablecie przed przypadkowym użyciem; nie zastępuje hasła do Home Assistant. Zapisywany jest tylko skrót PIN-u. Zablokujesz też od razu z menu użytkownika.,,,auto
-wall.the_pin_is_4,parts/hg-wall.part.js,365,hgTr,The PIN is 4 to 8 digits,PIN to od 4 do 8 cyfr,,,auto
+wall.lock_after_screensaver,parts/hg-wall.part.js,362,hgTr,Lock after the screensaver starts,Zablokuj po starcie wygaszacza,,,auto
+wall.pin_lock_note,parts/hg-wall.part.js,363,hgTr,The lock keeps the tablet dashboard from casual use; it does not replace the Home Assistant password. Only a hash of the PIN is stored. You can also lock right away from the user menu.,Blokada chroni panel na tablecie przed przypadkowym użyciem; nie zastępuje hasła do Home Assistant. Zapisywany jest tylko skrót PIN-u. Zablokujesz też od razu z menu użytkownika.,,,auto
+wall.pin_invalid,parts/hg-wall.part.js,365,hgTr,The PIN is 4 to 8 digits,PIN to od 4 do 8 cyfr,,,auto
 wall.pin_saved,parts/hg-wall.part.js,366,hgTr,PIN saved,PIN zapisany,,,auto
-wall.enter_an_https_or,parts/hg-wall.part.js,374,hgTr,Enter an https:// or /local/… address,Podaj adres https:// lub /local/…,,,auto
+wall.image_url_invalid,parts/hg-wall.part.js,374,hgTr,Enter an https:// or /local/… address,Podaj adres https:// lub /local/…,,,auto
+wall.photo_sources.bg,parts/hg-wall.part.js,133,hgTr,Dashboard background,Tło dashboardu,,expr,auto
+wall.photo_sources.slides,parts/hg-wall.part.js,133,hgTr,Slideshow,Pokaz slajdów,,expr,auto
+wall.photo_sources.url,parts/hg-wall.part.js,133,hgTr,Custom URL,Własny adres,,expr,auto
 common.touch_to_wake,parts/hg-wallboard.part.js,131,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,,auto
 common.check_in,parts/hg-wallboard.part.js,162,hgTr,Check-in,Przyjście,,,auto
 common.check_out,parts/hg-wallboard.part.js,162,hgTr,Check-out,Wyjście,,,auto
