@@ -517,6 +517,23 @@
     "yes": "yes"
   },
   "weather": {
+    "condition": {
+      "clear_night": "Clear",
+      "cloudy": "Cloudy",
+      "exceptional": "Exceptional",
+      "fog": "Fog",
+      "hail": "Hail",
+      "lightning": "Thunderstorm",
+      "lightning_rainy": "Thunderstorm, rain",
+      "partlycloudy": "Partly cloudy",
+      "pouring": "Pouring",
+      "rainy": "Rain",
+      "snowy": "Snow",
+      "snowy_rainy": "Sleet",
+      "sunny": "Sunny",
+      "windy": "Windy",
+      "windy_variant": "Windy, cloudy"
+    },
     "short": {
       "exceptional": "Exceptional",
       "lightning": "Storm",

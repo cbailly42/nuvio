@@ -517,6 +517,23 @@
     "yes": "tak"
   },
   "weather": {
+    "condition": {
+      "clear_night": "Bezchmurnie",
+      "cloudy": "Pochmurno",
+      "exceptional": "Zjawisko wyjątkowe",
+      "fog": "Mgła",
+      "hail": "Grad",
+      "lightning": "Burza",
+      "lightning_rainy": "Burza z deszczem",
+      "partlycloudy": "Częściowe zachmurzenie",
+      "pouring": "Ulewa",
+      "rainy": "Deszcz",
+      "snowy": "Śnieg",
+      "snowy_rainy": "Deszcz ze śniegiem",
+      "sunny": "Słonecznie",
+      "windy": "Wietrznie",
+      "windy_variant": "Wietrznie, pochmurno"
+    },
     "short": {
       "exceptional": "Wyjątkowe",
       "lightning": "Burza",
