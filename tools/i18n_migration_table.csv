@@ -160,8 +160,8 @@ cards.battery.pick_sensors_or_leave,parts/cards/battery-card.part.js,10,hgTr,Pic
 cards.battery.batteries,parts/cards/battery-card.part.js,11,hgTr,Batteries,Baterie,,,auto
 cards.battery.low,parts/cards/battery-card.part.js,11,hgTr,{nLo} low,{nLo} do wymiany,nLo,,auto
 cards.battery.all_good,parts/cards/battery-card.part.js,11,hgTr,All good,Wszystkie w porządku,,,auto
-cards.battery.home_glass_batteries,parts/cards/battery-card.part.js,17,hgTr,Home Glass – Batteries,Home Glass – Baterie,,load-time,manual
-cards.battery.sensor_battery_levels_weakest,parts/cards/battery-card.part.js,17,hgTr,"Sensor battery levels, weakest first","Poziom baterii czujników, najsłabsze na górze",,load-time,manual
+cards.battery.picker_name,parts/cards/battery-card.part.js,17,hgTr,Home Glass – Batteries,Home Glass – Baterie,,load-time,auto
+cards.battery.picker_description,parts/cards/battery-card.part.js,17,hgTr,"Sensor battery levels, weakest first","Poziom baterii czujników, najsłabsze na górze",,load-time,auto
 cards.button.button,parts/cards/button-card.part.js,13,hgTr,Button,Przycisk,,,auto
 cards.button.choose_an_entity_or,parts/cards/button-card.part.js,14,hgTr,Choose an entity or action,Wybierz encję lub akcję,,,auto
 cards.button.script_scene_button_or,parts/cards/button-card.part.js,14,hgTr,"Script, scene, button or tap_action","Skrypt, scena, przycisk albo tap_action",,,auto

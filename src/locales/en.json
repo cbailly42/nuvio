@@ -92,6 +92,15 @@
       "pick_an_entity_of": "Pick an entity of the device in the widget settings.",
       "picker_description": "Washer, dryer, kettle and other devices: state, program, time left, progress",
       "picker_name": "Home Glass – Appliance"
+    },
+    "battery": {
+      "all_good": "All good",
+      "batteries": "Batteries",
+      "low": "{nLo} low",
+      "no_battery_sensors": "No battery sensors",
+      "pick_sensors_or_leave": "Pick sensors or leave empty to detect automatically",
+      "picker_description": "Sensor battery levels, weakest first",
+      "picker_name": "Home Glass – Batteries"
     }
   },
   "common": {

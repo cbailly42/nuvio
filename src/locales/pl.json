@@ -92,6 +92,15 @@
       "pick_an_entity_of": "Wybierz encję urządzenia w ustawieniach widżetu.",
       "picker_description": "Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp",
       "picker_name": "Home Glass – Urządzenie AGD"
+    },
+    "battery": {
+      "all_good": "Wszystkie w porządku",
+      "batteries": "Baterie",
+      "low": "{nLo} do wymiany",
+      "no_battery_sensors": "Brak czujników baterii",
+      "pick_sensors_or_leave": "Wybierz czujniki lub zostaw puste, by wykryć automatycznie",
+      "picker_description": "Poziom baterii czujników, najsłabsze na górze",
+      "picker_name": "Home Glass – Baterie"
     }
   },
   "common": {
