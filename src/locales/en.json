@@ -288,6 +288,17 @@
       "hot_water": "Hot water",
       "picker_description": "Water heater: temperature, heating, power, time, switches",
       "picker_name": "Home Glass – Hot water"
+    },
+    "energy": {
+      "energy": "Energy",
+      "high_usage": "High usage",
+      "load": "Load",
+      "low_usage": "Low usage",
+      "medium_usage": "Medium usage",
+      "picker_description": "Power load percentage (sum of phases / max power)",
+      "picker_name": "Home Glass – Energy",
+      "power_sensors_unavailable": "Power sensors unavailable",
+      "sum_of_phases_vs": "Sum of phases vs. maximum power"
     }
   },
   "common": {
@@ -323,6 +334,7 @@
     "no_data_source": "No data source",
     "notifications": "Notifications",
     "now": "now",
+    "of": "of",
     "off_fem": "Off",
     "off_short": "Off",
     "on_short": "On",

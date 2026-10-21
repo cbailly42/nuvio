@@ -263,8 +263,8 @@ common.of,parts/cards/energy-card.part.js,42,hgTr,of,z,,,auto
 cards.energy.load,parts/cards/energy-card.part.js,44,hgTr,Load,Obciążenie,,,auto
 common.of,parts/cards/energy-card.part.js,46,hgTr,of,z,,,auto
 cards.energy.load,parts/cards/energy-card.part.js,50,hgTr,Load,Obciążenie,,,auto
-cards.energy.home_glass_energy,parts/cards/energy-card.part.js,54,hgTr,Home Glass – Energy,Home Glass – Energia,,load-time,manual
-cards.energy.power_load_percentage_sum,parts/cards/energy-card.part.js,54,hgTr,Power load percentage (sum of phases / max power),Procent obciążenia mocy (suma faz / moc maks.),,load-time,manual
+cards.energy.picker_name,parts/cards/energy-card.part.js,54,hgTr,Home Glass – Energy,Home Glass – Energia,,load-time,auto
+cards.energy.picker_description,parts/cards/energy-card.part.js,54,hgTr,Power load percentage (sum of phases / max power),Procent obciążenia mocy (suma faz / moc maks.),,load-time,auto
 cards.energy_stats.consumption_and_production,parts/cards/energy-stats-card.part.js,4,hgTr,Consumption and production,Zużycie i produkcja,,,auto
 common.no_data_source,parts/cards/energy-stats-card.part.js,101,hgTr,No data source,Brak źródła danych,,,auto
 cards.energy_stats.loading_statistics,parts/cards/energy-stats-card.part.js,102,hgTr,Loading statistics…,Wczytywanie statystyk…,,,auto

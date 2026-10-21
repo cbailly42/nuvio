@@ -292,6 +292,17 @@
       "hot_water": "Ciepła woda",
       "picker_description": "Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki",
       "picker_name": "Home Glass – Ciepła woda"
+    },
+    "energy": {
+      "energy": "Energia",
+      "high_usage": "Wysokie zużycie",
+      "load": "Obciążenie",
+      "low_usage": "Niskie zużycie",
+      "medium_usage": "Średnie zużycie",
+      "picker_description": "Procent obciążenia mocy (suma faz / moc maks.)",
+      "picker_name": "Home Glass – Energia",
+      "power_sensors_unavailable": "Czujniki mocy niedostępne",
+      "sum_of_phases_vs": "Suma faz względem mocy maksymalnej"
     }
   },
   "common": {
@@ -327,6 +338,7 @@
     "no_data_source": "Brak źródła danych",
     "notifications": "Powiadomienia",
     "now": "teraz",
+    "of": "z",
     "off_fem": "Wyłączona",
     "off_short": "Wył.",
     "on_short": "Wł.",
