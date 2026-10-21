@@ -178,9 +178,9 @@ cards.assist.send,parts/cards/assist-card.part.js,68,hgTr,Send,Wyślij,,,auto
 cards.assist.preview_home_assistant_assist,parts/cards/assist-card.part.js,90,hgTr,(preview) Home Assistant Assist replies here.,(podgląd) Tak odpowie Assist z Home Assistant.,,,auto
 cards.assist.no_reply,parts/cards/assist-card.part.js,105,hgTr,No reply,Brak odpowiedzi,,,auto
 cards.assist.no_reply,parts/cards/assist-card.part.js,107,hgTr,No reply,Brak odpowiedzi,,,auto
-cards.assist.could_not_reach_assist,parts/cards/assist-card.part.js,108,hgTr,Could not reach Assist: ,Nie udało się połączyć z Assist: ,,concat,manual
-cards.assist.home_glass_assist,parts/cards/assist-card.part.js,111,hgTr,Home Glass – Assist,Home Glass – Assist,,load-time,manual
-cards.assist.talk_to_assist_with,parts/cards/assist-card.part.js,111,hgTr,Talk to Assist with the reply inline,Rozmowa z Assist z odpowiedzią na miejscu,,load-time,manual
+cards.assist.connect_error,parts/cards/assist-card.part.js,108,hgTr,Could not reach Assist: {error},Nie udało się połączyć z Assist: {error},error,concat,auto
+cards.assist.picker_name,parts/cards/assist-card.part.js,111,hgTr,Home Glass – Assist,Home Glass – Assist,,load-time,auto
+cards.assist.picker_description,parts/cards/assist-card.part.js,111,hgTr,Talk to Assist with the reply inline,Rozmowa z Assist z odpowiedzią na miejscu,,load-time,auto
 cards.bars.grid_consumption,parts/cards/bars-card.part.js,3,hgTr,Grid consumption,Zużycie z sieci,,,auto
 common.no_data_source,parts/cards/bars-card.part.js,3,hgTr,No data source,Brak źródła danych,,,auto
 common.expand,parts/cards/bars-card.part.js,31,hgTr,Expand,Rozwiń,,,auto

@@ -50,22 +50,22 @@ ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:12px; bac
 @container (max-width: 360px){ .inp .ps{ max-width:96px; } .b{ max-width:92%; font-size:13px; } }`); }
   setConfig(c) { super.setConfig(c); this._msgs = this._msgs || []; }
   _sugg() { const s = this._config.suggestions; return Array.isArray(s) && s.length ? s : typeof s === 'string' && s.trim() ? s.split(',').map((x) => x.trim()).filter(Boolean)
-    : [hgTr('Jaka jest temperatura w salonie?', 'What is the temperature in the living room?'), hgTr('Które światła są włączone?', 'Which lights are on?'), hgTr('Jaka będzie pogoda jutro?', 'What will the weather be tomorrow?'), hgTr('Która godzina?', 'What time is it?')]; }
+    : [hgT('cards.assist.what_is_the_temperature'), hgT('cards.assist.which_lights_are_on'), hgT('cards.assist.what_will_the_weather'), hgT('cards.assist.what_time_is_it')]; }
   async _pipes() { const h = this._hass; if (this._pl || this._plL || !h || !h.callWS) return; this._plL = true;
     try { const r = await h.callWS({ type: 'assist_pipeline/pipeline/list' }); this._pl = r.pipelines || []; this._pref = r.preferred_pipeline; } catch (e) { this._pl = []; } this._plL = false; this.rerender(); }
   render() { const c = this._config, h = this._hass, M = this._msgs || [];
-    if (!c.embedded) return `<ha-card class="glass"><button class="lg" data-act="open" aria-haspopup="dialog" aria-label="${hgTr('Otwórz Assist', 'Open Assist')}"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b id="as-t">${H.esc(c.title || c.name || 'Assist')}</b><small>${hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${H.icon('mdi:chevron-right')}</button></ha-card>`;
+    if (!c.embedded) return `<ha-card class="glass"><button class="lg" data-act="open" aria-haspopup="dialog" aria-label="${hgT('common.open_assist')}"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b id="as-t">${H.esc(c.title || c.name || 'Assist')}</b><small>${hgT('cards.assist.ask_or_give_a')}</small></span>${H.icon('mdi:chevron-right')}</button></ha-card>`;
     if (!this._pl) setTimeout(() => this._pipes(), 0);
     if (this._pipe == null && this._pl) { const m = hgAssistPipe(); this._pipe = m && this._pl.some((p) => p.id === m) ? m : ''; }   // zapamiętany model (to urządzenie)
     const cur = this._pipe || c.pipeline || this._pref || '', SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps" title="${H.esc((this._pl.find((p) => p.id === cur) || {}).name || '')}"><select data-k="pipe" aria-label="${hgTr('Model asystenta', 'Assistant model')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
-    const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgTr('Asystent pisze', 'Assistant is typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgTr('Odtwórz odpowiedź', 'Play reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
-    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgTr('Myślę…', 'Thinking…') : hgTr('Zapytaj albo wydaj polecenie', 'Ask or give a command')}</small></span>${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgTr('Nowa rozmowa', 'New conversation')}" title="${hgTr('Nowa rozmowa', 'New conversation')}">${H.icon('mdi:restore')}</button>` : ''}<button class="gb r x" data-act="close" aria-label="${hgTr('Zamknij', 'Close')}" title="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
-      <div class="cv" role="log" aria-label="${hgTr('Rozmowa z asystentem', 'Conversation with the assistant')}">${bub || `<div class="em"><span class="gic on">${H.icon('mdi:chat-processing-outline')}</span><b>${hgTr('Porozmawiaj z domem', 'Talk to your home')}</b><span>${hgTr('Napisz pytanie albo wybierz podpowiedź poniżej', 'Type a question or pick a suggestion below')}</span></div>`}</div>
+    const sel = c.show_pipeline !== false && this._pl && this._pl.length > 1 ? `<span class="ps" title="${H.esc((this._pl.find((p) => p.id === cur) || {}).name || '')}"><select data-k="pipe" aria-label="${hgT('cards.assist.assistant_model')}">${this._pl.map((p) => `<option value="${H.esc(p.id)}"${p.id === cur ? ' selected' : ''}>${H.esc(p.name)}</option>`).join('')}</select></span>` : '';
+    const bub = M.map((m, i) => `<div class="b ${m.r}${m.err ? ' e' : ''}"${m.r === 'a' && i === M.length - 1 ? ' aria-live="polite"' : ''}>${m.wait ? `<span class="ty" aria-label="${hgT('cards.assist.assistant_is_typing')}"><i></i><i></i><i></i></span>` : H.esc(m.t)}${m.tts ? `<button class="pl" data-act="play" data-i="${i}" aria-label="${hgT('cards.assist.play_reply')}">${H.icon('mdi:volume-high')}</button>` : ''}</div>`).join('');
+    return `<ha-card class="glass"><div class="hd2"><span class="gic on">${H.icon('mdi:microphone-message')}</span><span class="gn"><b>${H.esc(c.title || c.name || 'Assist')}</b><small>${this._busy2 ? hgT('cards.assist.thinking') : hgT('cards.assist.ask_or_give_a')}</small></span>${M.length ? `<button class="gb r" data-act="clr" aria-label="${hgT('cards.assist.new_conversation')}" title="${hgT('cards.assist.new_conversation')}">${H.icon('mdi:restore')}</button>` : ''}<button class="gb r x" data-act="close" aria-label="${hgT('common.close')}" title="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
+      <div class="cv" role="log" aria-label="${hgT('cards.assist.conversation_with_the_assistant')}">${bub || `<div class="em"><span class="gic on">${H.icon('mdi:chat-processing-outline')}</span><b>${hgT('cards.assist.talk_to_your_home')}</b><span>${hgT('cards.assist.type_a_question_or')}</span></div>`}</div>
       <div class="sg" role="list">${this._sugg().map((s, i) => `<button role="listitem" data-act="sug" data-t="${H.esc(s)}" style="--i:${i}">${H.esc(s)}</button>`).join('')}</div>
-      <form class="inp" data-k="f"><input data-k="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="${H.esc(c.placeholder || hgTr('Napisz do asystenta…', 'Message the assistant…'))}" aria-label="${hgTr('Wiadomość', 'Message')}" value="${H.esc(this._draft || '')}">${sel}
-        ${c.mic !== false && SR ? `<button type="button" class="gb r mic${this._rec ? ' on' : ''}" data-act="mic" aria-pressed="${!!this._rec}" aria-label="${hgTr('Mów', 'Speak')}">${H.icon('mdi:microphone')}</button>` : ''}
-        <button type="submit" class="gb r ok" data-act="send" aria-label="${hgTr('Wyślij', 'Send')}"${this._busy2 ? ' disabled' : ''}>${H.icon('mdi:send')}</button></form></ha-card>`; }
+      <form class="inp" data-k="f"><input data-k="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="${H.esc(c.placeholder || hgT('cards.assist.message_the_assistant'))}" aria-label="${hgT('cards.assist.message')}" value="${H.esc(this._draft || '')}">${sel}
+        ${c.mic !== false && SR ? `<button type="button" class="gb r mic${this._rec ? ' on' : ''}" data-act="mic" aria-pressed="${!!this._rec}" aria-label="${hgT('cards.assist.speak')}">${H.icon('mdi:microphone')}</button>` : ''}
+        <button type="submit" class="gb r ok" data-act="send" aria-label="${hgT('cards.assist.send')}"${this._busy2 ? ' disabled' : ''}>${H.icon('mdi:send')}</button></form></ha-card>`; }
   afterRender() { const q = this.$.querySelector('[data-k=q]'), f = this.$.querySelector('[data-k=f]'), s = this.$.querySelector('[data-k=pipe]'), cv = this.$.querySelector('.cv');
     if (q) { if (this._once(q)) q.addEventListener('input', () => { this._draft = q.value; }); if (this._focusQ) { this._focusQ = false; q.focus({ preventScroll: true }); } }
     if (f && this._once(f)) f.addEventListener('submit', (e) => { e.preventDefault(); const qq = this.$.querySelector('[data-k=q]'); this._send(qq ? qq.value : ''); });
@@ -87,7 +87,7 @@ ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:12px; bac
   async _send(txt) { txt = String(txt || '').trim(); const h = this._hass, c = this._config; if (!txt || this._busy2 || !h) return;
     this._draft = ''; this._busy2 = true; this._msgs = [...this._msgs, { r: 'u', t: txt }, { r: 'a', wait: true }]; this._focusQ = true; this.rerender();
     const done = (t, o = {}) => { this._msgs = [...this._msgs.slice(0, -1), Object.assign({ r: 'a', t }, o)]; this._busy2 = false; this.rerender(); };
-    if (window.__hgDryRun && !window.__hgAssistLive) { setTimeout(() => done(hgTr('(podgląd) Tak odpowie Assist z Home Assistant.', '(preview) Home Assistant Assist replies here.')), 500); return; }
+    if (window.__hgDryRun && !window.__hgAssistLive) { setTimeout(() => done(hgT('cards.assist.preview_home_assistant_assist')), 500); return; }
     const pipe = this._pipe || c.pipeline || undefined, lang = h.language;
     try {
       if (h.connection && h.connection.subscribeMessage) {
@@ -102,10 +102,10 @@ ha-card.glass{ height:100%; min-height:0 !important; padding:16px; gap:12px; bac
         if (unsub) try { unsub(); } catch (e) {}
         if (err && reply == null) throw new Error(err);
         if (url && !/^https?:/.test(url)) url = h.hassUrl ? h.hassUrl(url) : url;
-        done(reply || hgTr('Brak odpowiedzi', 'No reply'), url ? { tts: url } : {}); if (url) this._play(url); return; }
+        done(reply || hgT('cards.assist.no_reply'), url ? { tts: url } : {}); if (url) this._play(url); return; }
       const r = await h.callWS(Object.assign({ type: 'conversation/process', text: txt, conversation_id: this._cid || null, language: lang }, c.agent_id ? { agent_id: c.agent_id } : {}));
-      if (r.conversation_id) this._cid = r.conversation_id; done(((((r.response || {}).speech || {}).plain || {}).speech) || hgTr('Brak odpowiedzi', 'No reply'));
-    } catch (e) { done(hgTr('Nie udało się połączyć z Assist: ', 'Could not reach Assist: ') + (e && e.message ? e.message : e), { err: true }); } }
+      if (r.conversation_id) this._cid = r.conversation_id; done(((((r.response || {}).speech || {}).plain || {}).speech) || hgT('cards.assist.no_reply'));
+    } catch (e) { done(hgT('cards.assist.connect_error', { error: String(e && e.message ? e.message : e) }), { err: true }); } }
   getGridOptions() { return this._config && this._config.embedded ? { columns: 12, rows: 5 } : { columns: 6, rows: 1 }; }
 }
-hgReg('hg-assist-card', HGAssistCard, hgTr('Home Glass – Assist', 'Home Glass – Assist'), hgTr('Rozmowa z Assist z odpowiedzią na miejscu', 'Talk to Assist with the reply inline'));
+hgReg('hg-assist-card', HGAssistCard, hgTLazy('cards.assist.picker_name'), hgTLazy('cards.assist.picker_description'));
