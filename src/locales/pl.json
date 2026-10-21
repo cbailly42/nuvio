@@ -597,6 +597,32 @@
       "picker_name": "Home Glass – Fazy",
       "unavailable": "niedostępna"
     },
+    "plant": {
+      "a_plant_entity_or": "Encja plant albo czujnik wilgotności gleby (np. Mi Flora)",
+      "alerts": {
+        "conductivity_high": "Za dużo nawozu",
+        "conductivity_low": "Nawieź",
+        "illuminance_high": "Za jasno",
+        "illuminance_low": "Za ciemno",
+        "moisture_high": "Za mokro",
+        "moisture_low": "Podlej",
+        "temperature_high": "Za gorąco",
+        "temperature_low": "Za zimno"
+      },
+      "all_good": "Wszystko w porządku",
+      "choose_a_plant_or": "Wybierz roślinę lub czujnik",
+      "metrics": {
+        "conductivity": "Nawożenie",
+        "illuminance": "Światło",
+        "moisture": "Wilgotność gleby",
+        "temperature": "Temperatura"
+      },
+      "picker_description": "Wilgotność gleby, światło, temperatura i nawożenie z zakresami",
+      "picker_name": "Home Glass – Roślina",
+      "plant": "Roślina",
+      "range": "zakres",
+      "sensor_battery": "Bateria czujnika"
+    },
     "power": {
       "high": "Wysokie",
       "low": "Niskie",

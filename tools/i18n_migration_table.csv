@@ -608,15 +608,24 @@ cards.phases.picker_name,parts/cards/phases-card.part.js,42,hgTr,Home Glass – 
 cards.phases.picker_description,parts/cards/phases-card.part.js,42,hgTr,"Power, voltage and current per phase","Moc, napięcie i prąd na fazach",,load-time,auto
 cards.plant.choose_a_plant_or,parts/cards/plant-card.part.js,43,hgTr,Choose a plant or sensor,Wybierz roślinę lub czujnik,,,auto
 cards.plant.a_plant_entity_or,parts/cards/plant-card.part.js,43,hgTr,A plant entity or a soil moisture sensor (e.g. Mi Flora),Encja plant albo czujnik wilgotności gleby (np. Mi Flora),,,auto
-cards.plant.g_1,parts/cards/plant-card.part.js,46,hgTr,g[1],g[0],,expr,manual
-cards.plant.m_4,parts/cards/plant-card.part.js,48,hgTr,m[4],m[3],,expr,manual
+cards.plant.alerts.moisture_low,parts/cards/plant-card.part.js,46,hgTr,Water me,Podlej,,expr,auto
+cards.plant.alerts.moisture_high,parts/cards/plant-card.part.js,46,hgTr,Too wet,Za mokro,,expr,auto
+cards.plant.alerts.illuminance_low,parts/cards/plant-card.part.js,46,hgTr,Too dark,Za ciemno,,expr,auto
+cards.plant.alerts.illuminance_high,parts/cards/plant-card.part.js,46,hgTr,Too bright,Za jasno,,expr,auto
+cards.plant.alerts.temperature_low,parts/cards/plant-card.part.js,46,hgTr,Too cold,Za zimno,,expr,auto
+cards.plant.alerts.temperature_high,parts/cards/plant-card.part.js,46,hgTr,Too hot,Za gorąco,,expr,auto
+cards.plant.alerts.conductivity_low,parts/cards/plant-card.part.js,46,hgTr,Fertilise,Nawieź,,expr,auto
+cards.plant.alerts.conductivity_high,parts/cards/plant-card.part.js,46,hgTr,Too much fertiliser,Za dużo nawozu,,expr,auto
+cards.plant.metrics.moisture,parts/cards/plant-card.part.js,48,hgTr,Soil moisture,Wilgotność gleby,,expr,auto
+cards.plant.metrics.illuminance,parts/cards/plant-card.part.js,48,hgTr,Light,Światło,,expr,auto
+cards.plant.metrics.temperature,parts/cards/plant-card.part.js,48,hgTr,Temperature,Temperatura,,expr,auto
+cards.plant.metrics.conductivity,parts/cards/plant-card.part.js,48,hgTr,Fertility,Nawożenie,,expr,auto
 cards.plant.range,parts/cards/plant-card.part.js,48,hgTr,range,zakres,,,auto
-cards.plant.m_4,parts/cards/plant-card.part.js,48,hgTr,m[4],m[3],,expr,manual
 cards.plant.sensor_battery,parts/cards/plant-card.part.js,51,hgTr,Sensor battery,Bateria czujnika,,,auto
 cards.plant.plant,parts/cards/plant-card.part.js,52,hgTr,Plant,Roślina,,,auto
 cards.plant.all_good,parts/cards/plant-card.part.js,53,hgTr,All good,Wszystko w porządku,,,auto
-cards.plant.home_glass_plant,parts/cards/plant-card.part.js,59,hgTr,Home Glass – Plant,Home Glass – Roślina,,load-time,manual
-cards.plant.soil_moisture_light_temperature,parts/cards/plant-card.part.js,59,hgTr,"Soil moisture, light, temperature and fertility with ranges","Wilgotność gleby, światło, temperatura i nawożenie z zakresami",,load-time,manual
+cards.plant.picker_name,parts/cards/plant-card.part.js,59,hgTr,Home Glass – Plant,Home Glass – Roślina,,load-time,auto
+cards.plant.picker_description,parts/cards/plant-card.part.js,59,hgTr,"Soil moisture, light, temperature and fertility with ranges","Wilgotność gleby, światło, temperatura i nawożenie z zakresami",,load-time,auto
 common.media,parts/cards/players-card.part.js,9,hgTr,Media,Multimedia,,,auto
 common.previous_track,parts/cards/players-card.part.js,105,hgTr,Previous,Poprzedni,,,auto
 common.pause,parts/cards/players-card.part.js,107,hgTr,Pause,Pauza,,,auto

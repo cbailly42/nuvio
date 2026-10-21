@@ -591,6 +591,32 @@
       "picker_name": "Home Glass – Phases",
       "unavailable": "unavailable"
     },
+    "plant": {
+      "a_plant_entity_or": "A plant entity or a soil moisture sensor (e.g. Mi Flora)",
+      "alerts": {
+        "conductivity_high": "Too much fertiliser",
+        "conductivity_low": "Fertilise",
+        "illuminance_high": "Too bright",
+        "illuminance_low": "Too dark",
+        "moisture_high": "Too wet",
+        "moisture_low": "Water me",
+        "temperature_high": "Too hot",
+        "temperature_low": "Too cold"
+      },
+      "all_good": "All good",
+      "choose_a_plant_or": "Choose a plant or sensor",
+      "metrics": {
+        "conductivity": "Fertility",
+        "illuminance": "Light",
+        "moisture": "Soil moisture",
+        "temperature": "Temperature"
+      },
+      "picker_description": "Soil moisture, light, temperature and fertility with ranges",
+      "picker_name": "Home Glass – Plant",
+      "plant": "Plant",
+      "range": "range",
+      "sensor_battery": "Sensor battery"
+    },
     "power": {
       "high": "High",
       "low": "Low",
