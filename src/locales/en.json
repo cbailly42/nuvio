@@ -39,6 +39,7 @@
     "close": "Close",
     "cooling": "Cooling",
     "details": "Details",
+    "done": "Done",
     "fuel_prices": "Fuel prices",
     "heating": "Heating",
     "hidden_suffix": " · hidden",
@@ -516,6 +517,17 @@
     "waiting": "waiting",
     "working": "working",
     "yes": "yes"
+  },
+  "ui": {
+    "color": {
+      "colour": "Colour",
+      "hex_colour_code": "HEX colour code",
+      "hue": "Hue",
+      "nuvio_lime": "Nuvio lime",
+      "nuvio_lime_title": "Nuvio lime {hex}",
+      "saturation_and_brightness": "Saturation and brightness",
+      "swatches": "Swatches"
+    }
   },
   "weather": {
     "condition": {

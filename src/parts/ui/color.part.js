@@ -41,14 +41,14 @@ const hgColor = window.__hgColor || (window.__hgColor = {
   open(inp) {
     if (this.cur) this.cur.close(); if (typeof hgOverlay === 'undefined') return;
     const v0 = hgColorHex(inp.value) || '#63D71E'; let [h, s, v] = hgColorHsv(v0), val = v0;
-    const lab = inp.getAttribute('aria-label') || (inp.closest('label') && inp.closest('label').textContent.trim()) || hgTr('Kolor', 'Colour');
+    const lab = inp.getAttribute('aria-label') || (inp.closest('label') && inp.closest('label').textContent.trim()) || hgT('ui.color.colour');
     const html = `<style>${HG_COLOR_CSS}</style><div class="hgc" aria-label="${H.esc(lab)}">
-      <div class="hgc-sv" role="slider" tabindex="0" aria-label="${H.esc(hgTr('Nasycenie i jasność', 'Saturation and brightness'))}"><i></i></div>
-      <input class="hgc-hue" type="range" min="0" max="359" step="1" aria-label="${H.esc(hgTr('Odcień', 'Hue'))}">
-      <div class="hgc-row"><span class="hgc-pv" aria-hidden="true"></span><label class="hgc-hx"><span>#</span><input class="hgc-in" maxlength="7" spellcheck="false" autocomplete="off" inputmode="text" aria-label="${H.esc(hgTr('Kod koloru HEX', 'HEX colour code'))}"></label></div>
-      <div class="hgc-sl">${H.esc(hgTr('Szybkie kolory', 'Swatches'))}</div>
-      <div class="hgc-sws" role="group" aria-label="${H.esc(hgTr('Szybkie kolory', 'Swatches'))}">${HG_COLOR_SW.map((c) => `<button type="button" class="hgc-sw" data-c="${c}" style="--c:${c}" aria-pressed="false" aria-label="${H.esc(c === '#63D71E' ? hgTr('Limonka Nuvio', 'Nuvio lime') : c)}" title="${H.esc(c === '#63D71E' ? hgTr('Limonka Nuvio', 'Nuvio lime') + ' ' + c : c)}"></button>`).join('')}</div>
-      <div class="acts"><button type="button" class="btn primary hgc-ok">${H.esc(hgTr('Gotowe', 'Done'))}</button></div></div>`;
+      <div class="hgc-sv" role="slider" tabindex="0" aria-label="${H.esc(hgT('ui.color.saturation_and_brightness'))}"><i></i></div>
+      <input class="hgc-hue" type="range" min="0" max="359" step="1" aria-label="${H.esc(hgT('ui.color.hue'))}">
+      <div class="hgc-row"><span class="hgc-pv" aria-hidden="true"></span><label class="hgc-hx"><span>#</span><input class="hgc-in" maxlength="7" spellcheck="false" autocomplete="off" inputmode="text" aria-label="${H.esc(hgT('ui.color.hex_colour_code'))}"></label></div>
+      <div class="hgc-sl">${H.esc(hgT('ui.color.swatches'))}</div>
+      <div class="hgc-sws" role="group" aria-label="${H.esc(hgT('ui.color.swatches'))}">${HG_COLOR_SW.map((c) => `<button type="button" class="hgc-sw" data-c="${c}" style="--c:${c}" aria-pressed="false" aria-label="${H.esc(c === '#63D71E' ? hgT('ui.color.nuvio_lime') : c)}" title="${H.esc(c === '#63D71E' ? hgT('ui.color.nuvio_lime_title', { hex: c }) : c)}"></button>`).join('')}</div>
+      <div class="acts"><button type="button" class="btn primary hgc-ok">${H.esc(hgT('common.done'))}</button></div></div>`;
     const P = hgOverlay.popover(this.anchor(inp), html, { onClose: () => { this.cur = null; if (val !== v0) inp.dispatchEvent(new Event('change', { bubbles: true, composed: true })); try { inp.focus({ preventScroll: true }); } catch (e) { /* bez fokusu */ } } });
     const el = P.el, sv = el.querySelector('.hgc-sv'), hue = el.querySelector('.hgc-hue'), hx = el.querySelector('.hgc-in');
     const paint = (from) => { el.querySelector('.hgc').style.cssText = `--h:${Math.round(h)};--c:${val};--x:${(s * 100).toFixed(1)}%;--y:${((1 - v) * 100).toFixed(1)}%`;

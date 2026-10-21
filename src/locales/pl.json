@@ -39,6 +39,7 @@
     "close": "Zamknij",
     "cooling": "Chłodzenie",
     "details": "Szczegóły",
+    "done": "Gotowe",
     "fuel_prices": "Ceny paliw",
     "heating": "Grzanie",
     "hidden_suffix": " · ukryty",
@@ -516,6 +517,17 @@
     "waiting": "oczekiwanie",
     "working": "pracuje",
     "yes": "tak"
+  },
+  "ui": {
+    "color": {
+      "colour": "Kolor",
+      "hex_colour_code": "Kod koloru HEX",
+      "hue": "Odcień",
+      "nuvio_lime": "Limonka Nuvio",
+      "nuvio_lime_title": "Limonka Nuvio {hex}",
+      "saturation_and_brightness": "Nasycenie i jasność",
+      "swatches": "Szybkie kolory"
+    }
   },
   "weather": {
     "condition": {
