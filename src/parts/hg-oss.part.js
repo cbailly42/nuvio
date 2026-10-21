@@ -63,7 +63,11 @@ const HGLang = window.__hgLangSel || (window.__hgLangSel = {
   /* najpierw katalog języka (bez mieszanego wyświetlania), potem odświeżenie; błąd katalogu -> angielski */
   _apply(el) { const c = hgCurLang(); return HGI18n.load(c).then((ok) => { HGI18n.code = ok ? c : 'en'; this.refresh(el); }); },
   /* bez przeładowania strony: HA generuje dashboard od nowa (etykiety nawigacji i widoków ze strategii), karty rysują się w nowym języku */
-  refresh(el) { window.dispatchEvent(new CustomEvent('hg-lang')); if (el && el.isConnected) el.dispatchEvent(new Event('config-refresh', { bubbles: true, composed: true })); },
+  refresh(el) { window.dispatchEvent(new CustomEvent('hg-lang')); if (!el || !el.isConnected) return; if (el._config && el._config._hgAuto) this.stale(el); else this._cr(el); },
+  /* strona strategii z konfiguracją wygenerowaną w innym języku niż aktywny (_hgCode: katalog spóźniony > 3 s, zmiana języka): HA generuje ją od nowa.
+     Jedno config-refresh na kod języka (kilka stron i refresh(el) w tej samej zmianie) */
+  stale(el) { const c = el && el.isConnected && el._config; if (c && c._hgAuto && c._hgCode !== HGI18n.code && this._crc !== HGI18n.code) { this._crc = HGI18n.code; this._cr(el); } },
+  _cr(el) { el.dispatchEvent(new Event('config-refresh', { bubbles: true, composed: true })); },
 });
 
 /* --- model domu z rejestrów HA (bez żadnych encji „na sztywno”) --- */
@@ -130,7 +134,7 @@ async function hgGenerate(hass, opt) {
   const base = (view, title, sub, cards, panel, extra) => ({ type: 'custom:hg-page', view, brand, title, subtitle: sub, user: {}, tabs, rail, phone_nav: phone, rail_overflow: V.slice(5).map((v) => v[1]),
     menu: [{ label: hgT('nav.profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: hgT('nav.settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
     hub: HUB === false ? null : HUB && typeof HUB === 'object' && (HUB.persons || M.persons).length ? { title: HUB.title || hgT('nav.hub'), subtitle: HUB.subtitle ?? hgT('nav.hub_sub'), persons: HUB.persons || M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : M.persons.length ? { title: hgT('nav.hub'), subtitle: hgT('nav.hub_sub'), persons: M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : null,
-    back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, _hgLangOpt: opt.language || '', ...(extra || {}) });
+    back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, _hgCode: HGI18n.code, _hgLangOpt: opt.language || '', ...(extra || {}) });
   const scroll = { scroll: true, columns: '1fr 1fr', auto_rows: 'auto', phone_columns: '1fr', tablet: { columns: '1fr 1fr' } };
   const one = (a) => ({ wide: true, scroll: true, columns: '1fr', auto_rows: 'auto', areas: `"${a}"`, phone_areas: `"${a}"`, phone_columns: '1fr', tablet: { columns: '1fr' } });
   const dash = [];

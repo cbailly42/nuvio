@@ -271,7 +271,9 @@ class HGBase extends HTMLElement {
     }
     this._doUpdate(force);
   }
-  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); if (this._stale) { this._stale = false; let f = false; try { f = hgCfgFresh(this); } catch (e) { /* zła konfiguracja */ } if (!f) this._update(true); } }
+  /* hgCfgFresh zawsze (najpierw porównuje _cfgLang): karta skonfigurowana przed katalogiem, a podłączona po nim, nawet nigdy nie rysowana */
+  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); let f = false; try { f = hgCfgFresh(this); } catch (e) { /* zła konfiguracja */ }
+    if (this._stale) { this._stale = false; if (!f) this._update(true); } }
   disconnectedCallback() { if (HG_VIS) HG_VIS.unobserve(this); }
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;

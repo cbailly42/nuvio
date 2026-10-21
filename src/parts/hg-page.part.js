@@ -243,8 +243,7 @@ class HGPage extends HTMLElement {
     this._syncPlay();
     this._hglSub = this._hglSub || (() => { if (!this._editing && this._built && this._hass) this._paintTop(); if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
     HGL.subs.add(this._hglSub);
-    /* zmiana języka bez przeładowania: strona przerysowana od razu (karty, pasek); HA i tak generuje dashboard od nowa (config-refresh) */
-    this._onLang = this._onLang || (() => { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; this._build(); });
+    this._onLang = this._onLang || (() => this._langChanged());
     window.addEventListener('hg-lang', this._onLang);
     hgBmPassThrough(true);
     this.toggleAttribute('lite', hgLite());
@@ -255,6 +254,9 @@ class HGPage extends HTMLElement {
     this._layout();
     if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
   }
+  /* zmiana języka bez przeładowania: strona przerysowana od razu (karty, pasek); konfiguracja strategii w innym języku (etykiety nawigacji,
+     tytuły widoków: katalog spóźniony) -> HA generuje dashboard od nowa (config-refresh, HGLang.stale) */
+  _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */

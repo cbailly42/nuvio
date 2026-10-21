@@ -7,11 +7,11 @@ const MAN = [{ code: 'en', name: 'English', locale: 'en', file: null }, { code: 
   { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'nuvio-locale-fr.aaaa.json' }, { code: 'pt', name: 'Português', locale: 'pt-PT', file: 'nuvio-locale-pt.aaaa.json' },
   { code: 'xx', name: 'Partial', locale: 'xx', file: 'nuvio-locale-xx.aaaa.json' }];
 const ok = (j) => Promise.resolve({ ok: true, json: () => Promise.resolve(j) });
-function mk({ fetch = () => ok(PL), manifest = MAN, window: w = {} } = {}) {
+function mk({ fetch = () => ok(PL), manifest = MAN, window: w = {}, globals = {} } = {}) {
   const events = [], calls = [];
   const window = Object.assign({ dispatchEvent: (e) => events.push(e.type) }, w);
   const f = (u) => { calls.push(u); return fetch(u); };
-  const api = loadParts(['hg-i18n.part.js'], { window, navigator: {}, localStorage: {}, fetch: f, HG_ASSET: 'http://x/', CustomEvent: class { constructor(t) { this.type = t; } } },
+  const api = loadParts(['hg-i18n.part.js'], { window, navigator: {}, localStorage: {}, fetch: f, HG_ASSET: 'http://x/', CustomEvent: class { constructor(t) { this.type = t; } }, ...globals },
     ['HGI18n', 'hgT', 'hgTLazy', 'hgTD', 'hgTO', 'hgLangDetect'], { EN, MANIFEST: manifest });
   return { ...api, events, calls, window };
 }
@@ -96,6 +96,16 @@ test('ready: timeout then hg-lang when catalog arrives', async () => {
     mock.timers.tick(1); await p; assert.equal(done, true); assert.equal(m.HGI18n.code, 'en'); assert.deepEqual(m.events, []);
     res({ ok: true, json: () => Promise.resolve(PL) }); await new Promise((r) => setImmediate(r));
     assert.equal(m.HGI18n.code, 'pl'); assert.deepEqual(m.events, ['hg-lang']); assert.equal(m.hgT(0), 'Zapisz');
+  } finally { mock.timers.reset(); }
+});
+test('ready: late catalog ignored when the language changed meanwhile (no code switch, no hg-lang)', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    let res, cur = 'pl'; const m = mk({ fetch: () => new Promise((r) => { res = r; }), globals: { hgCurLang: () => cur } });
+    const p = m.HGI18n.ready('pl'); await Promise.resolve(); mock.timers.tick(3000); await p; assert.equal(m.HGI18n.code, 'en');
+    cur = 'en';   /* the person picked English while the Polish catalog was still on its way */
+    res({ ok: true, json: () => Promise.resolve(PL) }); await new Promise((r) => setImmediate(r));
+    assert.equal(m.HGI18n.code, 'en'); assert.deepEqual(m.events, []); assert.ok(m.HGI18n.cache.pl, 'catalog kept for later');
   } finally { mock.timers.reset(); }
 });
 test('preload reused only when code and file match manifest', async () => {

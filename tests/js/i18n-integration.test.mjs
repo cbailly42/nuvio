@@ -1,5 +1,5 @@
 /* Task 4: language from the manifest, waiting for the catalog (HGLang.set, strategy, standalone cards), card rerender, HG_LOC, no PL/EN gateway left */
-import { test } from 'node:test';
+import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadParts, fixture } from './harness.mjs';
@@ -78,6 +78,55 @@ test('HGStrategy.generate waits for HGI18n.ready(lang) before handing over (gene
   assert.equal(done, false, 'generation must wait for the pl catalog'); assert.equal(d.calls.length, 1);
   d.release(); const cfg = await p;
   assert.equal(codeAtEnd, 'pl'); assert.ok(cfg && Array.isArray(cfg.views));
+});
+
+test('late catalog (after 3 s): strategy renders English, the arrival rebuilds the page and asks HA to regenerate the dashboard once (spec 4)', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const d = deferred(), m = mk({ lang: 'pl', fetch: d.fetch, parts: ['hg-page.part.js'], names: ['HGPage'] });
+    const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'u', is_admin: true }, callWS: () => Promise.reject(new Error('no ws')) };
+    const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass);
+    await tick(20); mock.timers.tick(3000); const cfg = await p;
+    const pc = cfg.views[0].cards[0]; assert.equal(pc.type, 'custom:hg-page'); assert.equal(pc._hgAuto, true);
+    assert.equal(pc._hgCode, 'en', 'config built while English was active'); assert.equal(m.HGI18n.code, 'en');
+    /* two connected strategy pages of that config: catalog arrival -> each rebuilds, a single config-refresh goes to HA */
+    const sent = [], built = [];
+    const page = () => { const g = Object.create(m.HGPage.prototype); Object.assign(g, { isConnected: true, _hass: hass, _config: pc, _build() { built.push(m.HGI18n.code); }, dispatchEvent: (e) => { sent.push(e.type + ':' + m.HGI18n.code); return true; } }); return g; };
+    const a = page(), b = page(); for (const g of [a, b]) m.window.addEventListener('hg-lang', () => g._langChanged());
+    d.release(); await tick(10);
+    assert.equal(m.HGI18n.code, 'pl'); assert.deepEqual(m.events, ['hg-lang']); assert.deepEqual(built, ['pl', 'pl']); assert.deepEqual(sent, ['config-refresh:pl']);
+    /* the regenerated config carries the active code: no further refresh */
+    const cfg2 = await m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass); assert.equal(cfg2.views[0].cards[0]._hgCode, 'pl');
+    const c = page(); c._config = cfg2.views[0].cards[0]; c._langChanged(); assert.deepEqual(sent, ['config-refresh:pl']);
+    /* manual hg-page (no strategy): no config-refresh from the page itself */
+    const n = page(); n._config = { ...pc, _hgAuto: false }; m.HGI18n.code = 'en'; n._langChanged(); assert.deepEqual(sent, ['config-refresh:pl']);
+  } finally { mock.timers.reset(); }
+});
+
+test('HGLang.set with a strategy page: one config-refresh (page handler and refresh(el) do not both send it)', async () => {
+  const d = deferred(), m = mk({ fetch: d.fetch, parts: ['hg-page.part.js'], names: ['HGPage'] });
+  const sent = [], g = Object.create(m.HGPage.prototype);
+  Object.assign(g, { isConnected: true, _hass: {}, _config: { _hgAuto: true, _hgCode: 'en' }, _build() {}, dispatchEvent: (e) => { sent.push(e.type); return true; } });
+  m.window.addEventListener('hg-lang', () => g._langChanged());
+  const p = m.HGLang.set(null, 'pl', g); d.release(); await p; await tick();
+  assert.equal(m.HGI18n.code, 'pl'); assert.deepEqual(sent, ['config-refresh']);
+  /* a manual page passed to refresh() still gets its config-refresh, as before */
+  const sent2 = [], el = { isConnected: true, _config: { _hgAuto: false }, dispatchEvent: (e) => { sent2.push(e.type); return true; } };
+  m.HGLang.refresh(el); assert.deepEqual(sent2, ['config-refresh']);
+});
+
+test('card configured before the catalog, catalog arrives while it is detached and never rendered: connecting re-applies its config', async () => {
+  const m = mk({ lang: 'en', names: ['hgReg'] });
+  let set = 0; class C extends m.HGBase { defaults() { return { title: m.HGI18n.code === 'pl' ? 'Tytuł' : 'Title' }; } setConfig(c) { set++; this._config = Object.assign(this.defaults(), c); } }
+  m.hgReg('hg-t-card', C, 'T');
+  const c = new C(); c.$ = { innerHTML: '' }; c.setConfig({});
+  assert.equal(set, 1); assert.equal(c._config.title, 'Title');
+  m.HGI18n.cache.pl = PL; m.HGI18n.code = 'pl'; m.window.dispatchEvent(new CustomEvent('hg-lang')); await tick();
+  assert.equal(c._stale, undefined, 'never rendered: not marked stale');
+  c.isConnected = true; c.connectedCallback();
+  assert.equal(set, 2); assert.equal(c._config.title, 'Tytuł');
+  /* already fresh: connecting again does not re-apply */
+  c.isConnected = false; c.isConnected = true; c.connectedCallback(); assert.equal(set, 2);
 });
 
 test('HGBase: one hg-lang listener rerenders the connected instances, marks the detached ones, purges dead refs', async () => {

@@ -17,11 +17,14 @@ const HGI18n = {
       if (!j || !Array.isArray(j.t)) throw new Error('bad catalog'); this.cache[c] = j; delete this.pend[c]; return true;
     }).catch((x) => { delete this.pend[c]; this.bad[c] = 1; try { console.warn('[nuvio] i18n: cannot load "' + c + '" catalog, using English', x); } catch (e2) { /* brak */ } return false; });
   },
-  /* czeka na katalog (maks. ms); po terminie renderuje po angielsku, a gdy katalog dotrze: kod + zdarzenie hg-lang */
+  /* czeka na katalog (maks. ms); po terminie renderuje po angielsku, a gdy katalog dotrze: kod + zdarzenie hg-lang (strona strategii prosi wtedy HA
+     o nową konfigurację, HGLang.stale) – tylko gdy to wciąż wybrany język (w międzyczasie można było wybrać inny) */
   ready(c, ms = 3000) {
     if (!this.has(c)) return Promise.resolve();
     let late = false, t;
-    const p = this.load(c).then((ok) => { if (ok) { this.code = c; if (late) window.dispatchEvent(new CustomEvent('hg-lang')); } });
+    const p = this.load(c).then((ok) => { if (!ok) return; if (!late) { this.code = c; return; }
+      const was = this.code; if (was === c || (typeof hgCurLang === 'function' && hgCurLang() !== c)) return;   /* hgCurLang może sam ustawić kod (bez zdarzenia) */
+      this.code = c; window.dispatchEvent(new CustomEvent('hg-lang')); });
     return Promise.race([p, new Promise((r) => { t = setTimeout(() => { late = true; r(); }, ms); })]).then(() => clearTimeout(t));
   },
 };
