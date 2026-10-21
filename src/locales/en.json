@@ -226,6 +226,15 @@
       "pick_sensors_or_leave": "Pick sensors or leave empty to detect automatically",
       "picker_description": "Sensor battery levels, weakest first",
       "picker_name": "Home Glass – Batteries"
+    },
+    "button": {
+      "button": "Button",
+      "choose_an_entity_or": "Choose an entity or action",
+      "done": "Done",
+      "picker_description": "Button for a script, scene, button.press or any action",
+      "picker_name": "Home Glass – Button",
+      "script_scene_button_or": "Script, scene, button or tap_action",
+      "tap_to_run": "Tap to run"
     }
   },
   "common": {

@@ -230,6 +230,15 @@
       "pick_sensors_or_leave": "Wybierz czujniki lub zostaw puste, by wykryć automatycznie",
       "picker_description": "Poziom baterii czujników, najsłabsze na górze",
       "picker_name": "Home Glass – Baterie"
+    },
+    "button": {
+      "button": "Przycisk",
+      "choose_an_entity_or": "Wybierz encję lub akcję",
+      "done": "Wykonano",
+      "picker_description": "Przycisk dla skryptu, sceny, button.press lub dowolnej akcji",
+      "picker_name": "Home Glass – Przycisk",
+      "script_scene_button_or": "Skrypt, scena, przycisk albo tap_action",
+      "tap_to_run": "Dotknij, aby uruchomić"
     }
   },
   "common": {

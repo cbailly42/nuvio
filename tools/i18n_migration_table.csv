@@ -199,8 +199,8 @@ cards.button.script_scene_button_or,parts/cards/button-card.part.js,14,hgTr,"Scr
 common.state_unavailable,parts/cards/button-card.part.js,16,hgTr,unavailable,niedostępne,,,auto
 cards.button.done,parts/cards/button-card.part.js,16,hgTr,Done,Wykonano,,,auto
 cards.button.tap_to_run,parts/cards/button-card.part.js,16,hgTr,Tap to run,"Dotknij, aby uruchomić",,,auto
-cards.button.home_glass_button,parts/cards/button-card.part.js,23,hgTr,Home Glass – Button,Home Glass – Przycisk,,load-time,manual
-cards.button.button_for_a_script,parts/cards/button-card.part.js,23,hgTr,"Button for a script, scene, button.press or any action","Przycisk dla skryptu, sceny, button.press lub dowolnej akcji",,load-time,manual
+cards.button.picker_name,parts/cards/button-card.part.js,23,hgTr,Home Glass – Button,Home Glass – Przycisk,,load-time,auto
+cards.button.picker_description,parts/cards/button-card.part.js,23,hgTr,"Button for a script, scene, button.press or any action","Przycisk dla skryptu, sceny, button.press lub dowolnej akcji",,load-time,auto
 cards.camera.camera_name_full_screen,parts/cards/camera-card.part.js,29,hgTr,'Camera ' + name + ' – full screen','Kamera ' + name + ' – pełny ekran',,concat,manual
 cards.camera.live,parts/cards/camera-card.part.js,31,hgTr,LIVE,NA ŻYWO,,,auto
 cards.camera.close_full_screen,parts/cards/camera-card.part.js,31,hgTr,Close full screen,Zamknij pełny ekran,,,auto
