@@ -5,6 +5,16 @@
     "flag": "🇵🇱",
     "intro": "Interfejs po polsku"
   },
+  "accents": {
+    "gold": "Złoto",
+    "lime": "Limonka",
+    "mint": "Mięta",
+    "orange": "Pomarańcz",
+    "pink": "Róż",
+    "sky_blue": "Błękit",
+    "teal": "Turkus",
+    "violet": "Fiolet"
+  },
   "backgrounds": {
     "dom_w_lesie": "Dom w lesie",
     "domek_nad_woda": "Domek nad wodą",

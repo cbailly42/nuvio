@@ -1991,7 +1991,6 @@ edit.screensaver,parts/hg-edit.part.js,1654,hgTr,Screensaver,Wygaszacz,,,auto
 edit.users,parts/hg-edit.part.js,1654,hgTr,Users,Użytkownicy,,,auto
 edit.backup,parts/hg-edit.part.js,1654,hgTr,Backup,Kopia zapasowa,,,auto
 edit.accent,parts/hg-edit.part.js,1658,hgTr,Accent,Akcent,,,auto
-edit.l1,parts/hg-edit.part.js,1659,hgTr,l1,l0,,expr,manual
 edit.custom_accent_colour,parts/hg-edit.part.js,1660,hgTr,Custom accent colour,Własny kolor akcentu,,,auto
 edit.custom_2,parts/hg-edit.part.js,1660,hgTr,Custom,Własny,,,review
 edit.preview,parts/hg-edit.part.js,1661,hgTr,Preview,Podgląd,,,auto

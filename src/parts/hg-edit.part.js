@@ -98,7 +98,7 @@ const HGL = window.__hgL || (window.__hgL = {
   szc(sz) { return sz === 'm' ? 'hgsz-m' : sz === 'l' ? 'hgsz-l' : ''; },
 });
 /* ===== Wygląd: akcent (tinty i tekst na akcencie liczone wg WCAG) + tło (zdjęcie / URL / przesłane / kolor / gradient) + przyciemnienie ===== */
-const HG_ACCENTS = [[('#' + '63D71E'), 'Limonka', 'Lime'], [('#' + '3DDC97'), 'Mięta', 'Mint'], [('#' + '2EC4D6'), 'Turkus', 'Teal'], [('#' + '4C9BFF'), 'Błękit', 'Sky blue'], [('#' + 'A78BFA'), 'Fiolet', 'Violet'], [('#' + 'FF6FAE'), 'Róż', 'Pink'], [('#' + 'FF9F43'), 'Pomarańcz', 'Orange'], [('#' + 'F5C542'), 'Złoto', 'Gold']];   /* [kolor, nazwa PL, nazwa EN] – nazwa wybierana przy użyciu */
+const HG_ACCENTS = [[('#' + '63D71E'), hgTLazy('accents.lime')], [('#' + '3DDC97'), hgTLazy('accents.mint')], [('#' + '2EC4D6'), hgTLazy('accents.teal')], [('#' + '4C9BFF'), hgTLazy('accents.sky_blue')], [('#' + 'A78BFA'), hgTLazy('accents.violet')], [('#' + 'FF6FAE'), hgTLazy('accents.pink')], [('#' + 'FF9F43'), hgTLazy('accents.orange')], [('#' + 'F5C542'), hgTLazy('accents.gold')]];   /* [kolor, nazwa (hgTLazy, rozwiązywana przy użyciu)] */
 const HG_BGS = [...(window.HG_BG_SET || [['', hgTrLazy('Domyślne', 'Default')]]), ...(window.HG_USER_BGS || [])];   /* [url, nazwa, url pionowy, miniatura]; pierwszy = domyślny (bg = null) */   /* własne zdjęcia: URL / przesłanie; gradienty w sekcji „Kolor lub gradient” */
 /* tła: wbudowane + galeria użytkownika zapisana w układzie (app.gallery: [{u, n, p, t}]) */
 const hgBgList = () => { let g = []; try { g = (HGApp.get() || {}).gallery || []; } catch (e) { g = []; } return [...HG_BGS, ...g.filter((x) => x && x.u).map((x) => [x.u, x.n || hgTr('Własne', 'Custom'), x.p || '', x.t || ''])]; };
@@ -1656,7 +1656,7 @@ const HG_EDIT = {
     const html0 = `<div class="hs-sc lk-sc">
       ${window.HGLooks ? HGLooks.html(this) : ''}
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:palette-outline')}${hgTr('Akcent', 'Accent')}</h4>
-        <div class="lk-sw">${HG_ACCENTS.map(([c, l0, l1]) => { const l = H.esc(hgTr(l0, l1)); return `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`; }).join('')}
+        <div class="lk-sw">${HG_ACCENTS.map(([c, l0]) => { const l = H.esc(String(l0)); return `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`; }).join('')}
         <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="${hgTr('Własny kolor akcentu', 'Custom accent colour')}"><small>${hgTr('Własny', 'Custom')}</small></label></div>
         <div class="lk-pv" aria-label="${hgTr('Podgląd', 'Preview')}"><div class="lk-pc"><span class="lk-pi" style="background:${acc};color:${T.light['--hg-on-accent']}">${H.icon('mdi:lightbulb-on')}</span><span class="lk-pt"><b>${hgTr('Lampa', 'Lamp')}</b><small style="color:var(--hg-accent-tx)">${hgTr('Włączone', 'On')} · 80%</small></span></div><span class="lk-pb" style="background:${acc};color:${T.light['--hg-on-accent']}">${ck} ${hgTr('Aktywny', 'Active')}</span></div></section>
       <section class="lk-g" data-tab="bg"><h4>${H.icon('mdi:image-outline')}${hgTr('Tło', 'Background')}</h4>

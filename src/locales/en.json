@@ -5,6 +5,16 @@
     "flag": "🇬🇧",
     "intro": "English interface"
   },
+  "accents": {
+    "gold": "Gold",
+    "lime": "Lime",
+    "mint": "Mint",
+    "orange": "Orange",
+    "pink": "Pink",
+    "sky_blue": "Sky blue",
+    "teal": "Teal",
+    "violet": "Violet"
+  },
   "backgrounds": {
     "dom_w_lesie": "House in the woods",
     "domek_nad_woda": "Lakeside cabin",
