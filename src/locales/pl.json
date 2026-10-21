@@ -530,6 +530,9 @@
     },
     "overlay": {
       "confirm": "Potwierdź"
+    },
+    "switch": {
+      "toggle": "przełącz"
     }
   },
   "weather": {
