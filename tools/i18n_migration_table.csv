@@ -1003,8 +1003,8 @@ common.expand,parts/cards/solar-card.part.js,55,hgTr,Expand,Rozwiń,,,auto
 common.details,parts/cards/solar-card.part.js,55,hgTr,Details,Szczegóły,,,auto
 cards.stack.add_cards_to_the,parts/cards/stack-card.part.js,61,hgTr,Add cards to the container,Dodaj karty do kontenera,,,auto
 cards.stack.too_many_container_levels,parts/cards/stack-card.part.js,68,hgTr,Too many container levels (3 at most),Za dużo poziomów kontenerów (najwyżej 3),,,auto
-cards.stack.nuvio_stack,parts/cards/stack-card.part.js,76,hgTr,Nuvio – Stack,Nuvio – Stos,,load-time,manual
-cards.stack.several_cards_in_one_text,parts/cards/stack-card.part.js,76,hgTr,"Several cards in one glass, vertical or horizontal","Kilka kart w jednym szkle, pionowo albo poziomo",,load-time,manual
+cards.stack.picker_name,parts/cards/stack-card.part.js,76,hgTr,Nuvio – Stack,Nuvio – Stos,,load-time,auto
+cards.stack.picker_description,parts/cards/stack-card.part.js,76,hgTr,"Several cards in one glass, vertical or horizontal","Kilka kart w jednym szkle, pionowo albo poziomo",,load-time,auto
 cards.stairs.stairs,parts/cards/stairs-card.part.js,7,hgTr,Stairs,Schody,,,auto
 cards.stairs.set_the_bottom_and,parts/cards/stairs-card.part.js,7,hgTr,Set the bottom and top lights and sensors.,Ustaw światła i czujniki dołu i góry.,,,auto
 cards.stairs.home_glass_stairs,parts/cards/stairs-card.part.js,9,hgTr,Home Glass – Stairs,Home Glass – Schody,,load-time,manual

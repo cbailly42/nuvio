@@ -576,6 +576,12 @@
       "input_select_or_select": "input_select or select",
       "picker_description": "input_select and select options as buttons or a list",
       "picker_name": "Home Glass – Select"
+    },
+    "stack": {
+      "add_cards_to_the": "Add cards to the container",
+      "picker_description": "Several cards in one glass, vertical or horizontal",
+      "picker_name": "Nuvio – Stack",
+      "too_many_container_levels": "Too many container levels (3 at most)"
     }
   },
   "common": {

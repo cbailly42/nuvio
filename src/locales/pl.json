@@ -580,6 +580,12 @@
       "input_select_or_select": "input_select lub select",
       "picker_description": "Opcje input_select i select jako przyciski lub lista",
       "picker_name": "Home Glass – Wybór"
+    },
+    "stack": {
+      "add_cards_to_the": "Dodaj karty do kontenera",
+      "picker_description": "Kilka kart w jednym szkle, pionowo albo poziomo",
+      "picker_name": "Nuvio – Stos",
+      "too_many_container_levels": "Za dużo poziomów kontenerów (najwyżej 3)"
     }
   },
   "common": {

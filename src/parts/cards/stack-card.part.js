@@ -58,14 +58,14 @@ ha-card:not(.h) .bd, ha-card.nw .bd{ flex:1 0 auto; }   /* Safari: podstawa 0% p
   bodyCls() { return ''; }
   render() { const c = this._config, L = this.cards(), anim = this._anim || this._animNext; this._animNext = false;
     const cls = [c.glass === false ? 'flat' : '', c.direction === 'horizontal' ? 'h' : '', this._nw ? 'nw' : '', c.divider !== false ? 'dv' : ''].filter(Boolean).join(' ');
-    return `<ha-card class="glass ${cls}">${this.head()}<div class="bd ${this.bodyCls()} ${anim ? 'nv-in' : ''}" data-key="bd-${this.key()}" style="${this.styleVars()}">${L.map((x, i) => this.slot(x, i)).join('')}${L.length ? '' : `<span class="nv-empty" style="padding:var(--s3)">${hgTr('Dodaj karty do kontenera', 'Add cards to the container')}</span>`}</div></ha-card>`; }
+    return `<ha-card class="glass ${cls}">${this.head()}<div class="bd ${this.bodyCls()} ${anim ? 'nv-in' : ''}" data-key="bd-${this.key()}" style="${this.styleVars()}">${L.map((x, i) => this.slot(x, i)).join('')}${L.length ? '' : `<span class="nv-empty" style="padding:var(--s3)">${hgT('cards.stack.add_cards_to_the')}</span>`}</div></ha-card>`; }
   /* karty potomne żyją między aktualizacjami (morph zostawia gniazda data-own), tworzone raz na konfigurację */
   afterRender() { this._kids = this._kids || new Map(); const L = this.cards(), h = this._hass, deep = this.depth() >= HG_CONT_MAX;
     this.$.querySelectorAll('.sl[data-own]').forEach((slot, i) => { const cfg = L[i]; if (!cfg) return; const sig = this.key() + i + JSON.stringify(cfg); const el = this._kids.get(sig);
       const put = (x) => { if (this._hgPv) x._hgPv = true;   /* podgląd w edytorze: dzieci też omijają wstrzymanie odświeżania */
         if (x.parentElement !== slot) { slot.textContent = ''; slot.appendChild(x); } if (x.localName.includes('-')) x.hass = this._hass; };
       if (el) return put(el);
-      if (deep && hgIsCont(cfg)) { const d = document.createElement('div'); d.className = 'deep'; d.textContent = hgTr('Za dużo poziomów kontenerów (najwyżej 3)', 'Too many container levels (3 at most)'); this._kids.set(sig, d); return put(d); }
+      if (deep && hgIsCont(cfg)) { const d = document.createElement('div'); d.className = 'deep'; d.textContent = hgT('cards.stack.too_many_container_levels'); this._kids.set(sig, d); return put(d); }
       this._kids.set(sig, null); hgMakeCard(cfg, (x) => { this._kids.set(sig, x); if (this.$.contains(slot)) put(x); }); });
     for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) el.hass = h; }
   set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); if (this._kids) for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) el.hass = h; }
@@ -73,4 +73,4 @@ ha-card:not(.h) .bd, ha-card.nw .bd{ flex:1 0 auto; }   /* Safari: podstawa 0% p
   getCardSize() { return this.cards().length * 2 || 1; }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }
 }
-hgReg('hg-stack-card', HGStackCard, hgTr('Nuvio – Stos', 'Nuvio – Stack'), hgTr('Kilka kart w jednym szkle, pionowo albo poziomo', 'Several cards in one glass, vertical or horizontal'));
+hgReg('hg-stack-card', HGStackCard, hgTLazy('cards.stack.picker_name'), hgTLazy('cards.stack.picker_description'));
