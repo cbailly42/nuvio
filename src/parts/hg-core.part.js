@@ -3,12 +3,6 @@
  * Karty: hg-page, hg-energy-card, hg-ac-card, hg-light-card, hg-switch-card,
  *        hg-solar-card, hg-bars-card, hg-media-card, hg-person-card, hg-link-card
  */
-/* binary_sensor: stany wg device_class (zapas, gdy HA nie zwróci tłumaczenia) */
-const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowanie', 'nie ładuje'], carbon_monoxide: ['wykryto', 'brak'], cold: ['zimno', 'normalnie'], connectivity: ['połączono', 'rozłączono'],
-  door: ['otwarte', 'zamknięte'], garage_door: ['otwarte', 'zamknięte'], gas: ['wykryto', 'brak'], heat: ['gorąco', 'normalnie'], light: ['wykryto światło', 'brak światła'], lock: ['otwarte', 'zamknięte'],
-  moisture: ['mokro', 'sucho'], motion: ['wykryto', 'brak'], moving: ['w ruchu', 'nieruchome'], occupancy: ['wykryto', 'brak'], opening: ['otwarte', 'zamknięte'], plug: ['podłączono', 'odłączono'],
-  power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
-  sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
 const HG_BUILD = '__HG_BUILD__';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
@@ -188,7 +182,7 @@ const H = {
     if (en) return (r === String(raw) ? r.replace(/_/g, ' ') : r).replace(/^[A-Z][a-z]+$/, (x) => x.toLowerCase());   // EN: tłumaczenie HA, bez słownika PL
     if (!attr && so.entity_id && so.entity_id.startsWith('binary_sensor.') && (raw === 'on' || raw === 'off')) {
       if (r !== raw) return r.toLowerCase();                                    // tłumaczenie HA zależne od device_class
-      const bm = HG_BIN_PL[so.attributes.device_class]; if (bm) return bm[raw === 'on' ? 0 : 1];
+      const bm = hgTD('states.binary.' + so.attributes.device_class + '.' + raw); if (bm) return bm;   /* zapas wg device_class (katalog), gdy HA nie zwróci tłumaczenia */
     }
     const tr = hgTD('states.' + hgStN(raw)) || hgTD('states.' + hgStN(r));
     if (tr) return tr;

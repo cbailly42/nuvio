@@ -220,6 +220,120 @@
     "auto": "auto",
     "away": "poza domem",
     "below_horizon": "pod horyzontem",
+    "binary": {
+      "battery": {
+        "off": "normalny",
+        "on": "niski"
+      },
+      "battery_charging": {
+        "off": "nie ładuje",
+        "on": "ładowanie"
+      },
+      "carbon_monoxide": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "cold": {
+        "off": "normalnie",
+        "on": "zimno"
+      },
+      "connectivity": {
+        "off": "rozłączono",
+        "on": "połączono"
+      },
+      "door": {
+        "off": "zamknięte",
+        "on": "otwarte"
+      },
+      "garage_door": {
+        "off": "zamknięte",
+        "on": "otwarte"
+      },
+      "gas": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "heat": {
+        "off": "normalnie",
+        "on": "gorąco"
+      },
+      "light": {
+        "off": "brak światła",
+        "on": "wykryto światło"
+      },
+      "lock": {
+        "off": "zamknięte",
+        "on": "otwarte"
+      },
+      "moisture": {
+        "off": "sucho",
+        "on": "mokro"
+      },
+      "motion": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "moving": {
+        "off": "nieruchome",
+        "on": "w ruchu"
+      },
+      "occupancy": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "opening": {
+        "off": "zamknięte",
+        "on": "otwarte"
+      },
+      "plug": {
+        "off": "odłączono",
+        "on": "podłączono"
+      },
+      "power": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "presence": {
+        "off": "poza domem",
+        "on": "w domu"
+      },
+      "problem": {
+        "off": "ok",
+        "on": "problem"
+      },
+      "running": {
+        "off": "nie działa",
+        "on": "działa"
+      },
+      "safety": {
+        "off": "bezpiecznie",
+        "on": "niebezpiecznie"
+      },
+      "smoke": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "sound": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "tamper": {
+        "off": "brak",
+        "on": "naruszenie"
+      },
+      "update": {
+        "off": "aktualne",
+        "on": "dostępna aktualizacja"
+      },
+      "vibration": {
+        "off": "brak",
+        "on": "wykryto"
+      },
+      "window": {
+        "off": "zamknięte",
+        "on": "otwarte"
+      }
+    },
     "buffering": "buforowanie",
     "busy": "zajęty",
     "charged": "naładowany",

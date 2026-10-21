@@ -220,6 +220,120 @@
     "auto": "auto",
     "away": "away",
     "below_horizon": "below horizon",
+    "binary": {
+      "battery": {
+        "off": "normal",
+        "on": "low"
+      },
+      "battery_charging": {
+        "off": "not charging",
+        "on": "charging"
+      },
+      "carbon_monoxide": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "cold": {
+        "off": "normal",
+        "on": "cold"
+      },
+      "connectivity": {
+        "off": "disconnected",
+        "on": "connected"
+      },
+      "door": {
+        "off": "closed",
+        "on": "open"
+      },
+      "garage_door": {
+        "off": "closed",
+        "on": "open"
+      },
+      "gas": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "heat": {
+        "off": "normal",
+        "on": "hot"
+      },
+      "light": {
+        "off": "no light",
+        "on": "light detected"
+      },
+      "lock": {
+        "off": "locked",
+        "on": "unlocked"
+      },
+      "moisture": {
+        "off": "dry",
+        "on": "wet"
+      },
+      "motion": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "moving": {
+        "off": "not moving",
+        "on": "moving"
+      },
+      "occupancy": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "opening": {
+        "off": "closed",
+        "on": "open"
+      },
+      "plug": {
+        "off": "unplugged",
+        "on": "plugged in"
+      },
+      "power": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "presence": {
+        "off": "away",
+        "on": "home"
+      },
+      "problem": {
+        "off": "OK",
+        "on": "problem"
+      },
+      "running": {
+        "off": "not running",
+        "on": "running"
+      },
+      "safety": {
+        "off": "safe",
+        "on": "unsafe"
+      },
+      "smoke": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "sound": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "tamper": {
+        "off": "clear",
+        "on": "tampering detected"
+      },
+      "update": {
+        "off": "up-to-date",
+        "on": "update available"
+      },
+      "vibration": {
+        "off": "clear",
+        "on": "detected"
+      },
+      "window": {
+        "off": "closed",
+        "on": "open"
+      }
+    },
     "buffering": "buffering",
     "busy": "busy",
     "charged": "charged",

@@ -152,3 +152,16 @@ test('setup wizard languages come from the manifest (flag / intro from _meta), E
   const f = mk({ manifest: [...man, { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'f.json' }], names: ['hgWzLangs'] });
   assert.deepEqual(f.hgWzLangs().map((x) => x[0]), ['pl', 'fr', 'en']); assert.deepEqual(f.hgWzLangs()[1], ['fr', 'Français', '🌐', 'Français']);
 });
+
+test('H.t: binary_sensor fallback by device_class comes from the catalog (states.binary.<dc>.on|off), any language', () => {
+  const m = mk({ lang: 'pl', names: ['H'] });
+  m.HGI18n.cache.pl = { m: { name: 'Polski', locale: 'pl' }, t: [], d: { 'states.binary.door.on': 'otwarte', 'states.binary.door.off': 'zamknięte' } }; m.HGI18n.code = 'pl';
+  const so = (s, dc) => ({ entity_id: 'binary_sensor.x', state: s, attributes: { device_class: dc } });
+  assert.equal(m.H.t({}, so('on', 'door')), 'otwarte'); assert.equal(m.H.t({}, so('off', 'door')), 'zamknięte');
+  /* HA translation wins; unknown device_class falls through to the states dictionary / raw state */
+  assert.equal(m.H.t({ formatEntityState: () => 'Otwarte' }, so('on', 'door')), 'otwarte');
+  assert.equal(m.H.t({}, so('on', 'nope')), 'on');
+  /* another language without the entry: English catalog text, then the raw state */
+  const f = mk({ lang: 'fr', manifest: MAN_FR, names: ['H'] }); f.HGI18n.cache.fr = { m: { name: 'Français', locale: 'fr-FR' }, t: [], d: {} }; f.HGI18n.code = 'fr';
+  assert.equal(f.H.t({}, so('on', 'door')), 'on');
+});
