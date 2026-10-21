@@ -580,6 +580,17 @@
       "picker_description": "Osoba z awatarem i strefą",
       "picker_name": "Home Glass – Person"
     },
+    "phases": {
+      "high": "high",
+      "level_load": "{level} load",
+      "load": "Load",
+      "load_suffix": "load",
+      "low": "low",
+      "medium": "medium",
+      "picker_description": "Power, voltage and current per phase",
+      "picker_name": "Home Glass – Phases",
+      "unavailable": "unavailable"
+    },
     "power": {
       "high": "High",
       "low": "Low",

@@ -597,15 +597,15 @@ common.power_now,parts/cards/phases-card.part.js,4,hgTr,Power now,Moc teraz,,,au
 cards.phases.unavailable,parts/cards/phases-card.part.js,27,hgTr,unavailable,niedostępna,,,auto
 common.of,parts/cards/phases-card.part.js,30,hgTr,of,z,,,auto
 cards.phases.load,parts/cards/phases-card.part.js,31,hgTr,Load,Obciążenie,,,auto
-cards.phases.load_2,parts/cards/phases-card.part.js,32,hgTr,load,obciążenia,,,review
+cards.phases.load_suffix,parts/cards/phases-card.part.js,32,hgTr,load,obciążenia,,,auto
 cards.phases.low,parts/cards/phases-card.part.js,34,hgTr,low,niskie,,,auto
 cards.phases.medium,parts/cards/phases-card.part.js,34,hgTr,medium,średnie,,,auto
 cards.phases.high,parts/cards/phases-card.part.js,34,hgTr,high,wysokie,,,auto
-cards.phases.load_3,parts/cards/phases-card.part.js,36,hgTr,{lvl} load,obciążenie {lvl},lvl,,review
+cards.phases.level_load,parts/cards/phases-card.part.js,36,hgTr,{level} load,obciążenie {level},level,,auto
 common.of,parts/cards/phases-card.part.js,37,hgTr,of,z,,,auto
 common.no_data_source,parts/cards/phases-card.part.js,37,hgTr,No data source,Brak źródła danych,,,auto
-cards.phases.home_glass_phases,parts/cards/phases-card.part.js,42,hgTr,Home Glass – Phases,Home Glass – Fazy,,load-time,manual
-cards.phases.power_voltage_and_current,parts/cards/phases-card.part.js,42,hgTr,"Power, voltage and current per phase","Moc, napięcie i prąd na fazach",,load-time,manual
+cards.phases.picker_name,parts/cards/phases-card.part.js,42,hgTr,Home Glass – Phases,Home Glass – Fazy,,load-time,auto
+cards.phases.picker_description,parts/cards/phases-card.part.js,42,hgTr,"Power, voltage and current per phase","Moc, napięcie i prąd na fazach",,load-time,auto
 cards.plant.choose_a_plant_or,parts/cards/plant-card.part.js,43,hgTr,Choose a plant or sensor,Wybierz roślinę lub czujnik,,,auto
 cards.plant.a_plant_entity_or,parts/cards/plant-card.part.js,43,hgTr,A plant entity or a soil moisture sensor (e.g. Mi Flora),Encja plant albo czujnik wilgotności gleby (np. Mi Flora),,,auto
 cards.plant.g_1,parts/cards/plant-card.part.js,46,hgTr,g[1],g[0],,expr,manual

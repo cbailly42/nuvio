@@ -586,6 +586,17 @@
       "picker_description": "Osoba z awatarem i strefą",
       "picker_name": "Home Glass – Person"
     },
+    "phases": {
+      "high": "wysokie",
+      "level_load": "obciążenie {level}",
+      "load": "Obciążenie",
+      "load_suffix": "obciążenia",
+      "low": "niskie",
+      "medium": "średnie",
+      "picker_description": "Moc, napięcie i prąd na fazach",
+      "picker_name": "Home Glass – Fazy",
+      "unavailable": "niedostępna"
+    },
     "power": {
       "high": "Wysokie",
       "low": "Niskie",
