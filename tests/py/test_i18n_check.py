@@ -30,6 +30,7 @@ class Clean(Fix):
         r = self.run_check()
         self.assertEqual(r['errors'], []); self.assertEqual(r['warnings'], [])
         self.assertEqual(r['coverage'], {'en': 100.0, 'pl': 100.0})
+    def test_required_languages(self): self.assertEqual(K.REQUIRED, ('en', 'pl', 'fr'))
 
 class Code(Fix):
     def test_non_literal_key(self): self.add_js('const g = hgT(k);'); self.one_error('non-literal')
@@ -98,6 +99,13 @@ class Catalogs(Fix):
         self.one_error('{name}')
 
 class Cli(Fix):
+    """the CLI checks the module's REQUIRED languages (en, pl, fr): the fixture root gets a complete fr catalog"""
+    def setUp(self):
+        super().setUp()
+        self.put('fr', {'_meta': {'name': 'Français', 'locale': 'fr-FR'}, 'common': {'save': 'Enregistrer'},
+                        'demo': {'title': 'Démo', 'count_one': '{count} élément', 'count_many': '{count} éléments', 'count_other': '{count} éléments',
+                                 'close': 'Fermer', 'greet': 'Bonjour, {name}\u00a0!'},
+                        'cards': {'demo': {'title': 'Carte de démo'}}, 'states': {'on': 'activé', 'off': 'désactivé', 'label': {'on': 'Activé'}}})
     def cli(self, *a):
         return subprocess.run([sys.executable, os.path.join(TOOLS, 'i18n_check.py'), '--root', self.root, *a], capture_output=True, text=True)
     def test_exit_code(self):

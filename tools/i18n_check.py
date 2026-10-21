@@ -18,7 +18,7 @@ R = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 from i18n_compile import DYN_PREFIXES, flatten, _close, _map_span   # single source for prefixes and plural handling (R3)
 
-REQUIRED = ('en', 'pl')
+REQUIRED = ('en', 'pl', 'fr')
 # runtime definitions take non-literal keys by design
 RUNTIME_FILES = ('hg-i18n.part.js',)
 # literals the heuristic flags but that are data, never displayed: {(file name, exact literal)}. Brand names, units and technical
