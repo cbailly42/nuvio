@@ -704,11 +704,11 @@ cards.pv.days_without_inverter_data,parts/cards/pv-card.part.js,59,hgTr,Days wit
 cards.pv.inverter_state,parts/cards/pv-card.part.js,60,hgTr,Inverter state,Stan falownika,,,auto
 cards.pv.inverter_details,parts/cards/pv-card.part.js,62,hgTr,Inverter details,Szczegóły falownika,,,auto
 cards.pv.details_and_history,parts/cards/pv-card.part.js,62,hgTr,Details and history,Szczegóły i historia,,,auto
-cards.pv.updated,parts/cards/pv-card.part.js,63,hgTr,updated ,aktualizacja ,,concat,manual
-cards.pv.last_data,parts/cards/pv-card.part.js,63,hgTr,last data ,brak danych od ,,concat,manual
+cards.pv.updated_ago,parts/cards/pv-card.part.js,63,hgTr,updated {time},aktualizacja {time},time,concat,auto
+cards.pv.last_data_since,parts/cards/pv-card.part.js,63,hgTr,last data {time},brak danych od {time},time,concat,auto
 cards.pv.no_entity,parts/cards/pv-card.part.js,63,hgTr,no entity,brak encji,,,auto
-cards.pv.home_glass_solar,parts/cards/pv-card.part.js,69,hgTr,Home Glass – Solar,Home Glass – Fotowoltaika,,load-time,manual
-cards.pv.inverter_state_production_now,parts/cards/pv-card.part.js,69,hgTr,"Inverter state, production now and today","Stan falownika, produkcja teraz i dziś",,load-time,manual
+cards.pv.picker_name,parts/cards/pv-card.part.js,69,hgTr,Home Glass – Solar,Home Glass – Fotowoltaika,,load-time,auto
+cards.pv.picker_description,parts/cards/pv-card.part.js,69,hgTr,"Inverter state, production now and today","Stan falownika, produkcja teraz i dziś",,load-time,auto
 cards.remote.air_conditioner,parts/cards/remote-card.part.js,13,hgTr,Air conditioner,Klimatyzator,,,auto
 cards.remote.position,parts/cards/remote-card.part.js,111,hgTr,Position {v},Pozycja {v},v,,auto
 common.off_masc,parts/cards/remote-card.part.js,116,hgTr,Off,Wyłączony,,,auto

@@ -684,6 +684,25 @@
       "picker_description": "PM2.5 with air waves, power and modes",
       "picker_name": "Nuvio – Air purifier"
     },
+    "pv": {
+      "0_1": "< 0.1",
+      "days_without_inverter_data": "Days without inverter data are shown on charts as a grey dot (not zero).",
+      "details_and_history": "Details and history",
+      "inverter_details": "Inverter details",
+      "inverter_offline": "Inverter offline",
+      "inverter_state": "Inverter state",
+      "inverter_temperature": "Inverter temperature",
+      "last_data_since": "last data {time}",
+      "last_production": "Last production",
+      "no_entity": "no entity",
+      "no_production_in_statistics": "No production in statistics for the last 30 days.",
+      "no_production_night_clouds": "No production (night / clouds)",
+      "picker_description": "Inverter state, production now and today",
+      "picker_name": "Home Glass – Solar",
+      "producing": "Producing",
+      "solar": "Solar",
+      "updated_ago": "updated {time}"
+    },
     "room_compact": {
       "hum": "hum.",
       "living_room": "Living room",

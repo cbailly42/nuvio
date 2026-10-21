@@ -690,6 +690,25 @@
       "picker_description": "PM2.5 z falami powietrza, włącznik i tryby",
       "picker_name": "Nuvio – Oczyszczacz powietrza"
     },
+    "pv": {
+      "0_1": "< 0,1",
+      "days_without_inverter_data": "Dni bez danych z falownika są na wykresach szarą kropką (nie zerem).",
+      "details_and_history": "Szczegóły i historia",
+      "inverter_details": "Szczegóły falownika",
+      "inverter_offline": "Falownik offline",
+      "inverter_state": "Stan falownika",
+      "inverter_temperature": "Temperatura falownika",
+      "last_data_since": "brak danych od {time}",
+      "last_production": "Ostatnia produkcja",
+      "no_entity": "brak encji",
+      "no_production_in_statistics": "Brak produkcji w statystykach z ostatnich 30 dni.",
+      "no_production_night_clouds": "Brak produkcji (noc / zachmurzenie)",
+      "picker_description": "Stan falownika, produkcja teraz i dziś",
+      "picker_name": "Home Glass – Fotowoltaika",
+      "producing": "Produkuje",
+      "solar": "Fotowoltaika",
+      "updated_ago": "aktualizacja {time}"
+    },
     "room_compact": {
       "hum": "wilg.",
       "living_room": "Salon",
