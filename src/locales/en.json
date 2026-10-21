@@ -619,6 +619,15 @@
       "remaining": "Remaining",
       "running": "Running",
       "start": "Start"
+    },
+    "todo": {
+      "add_a_task": "Add a task",
+      "choose_a_to_do": "Choose a to-do list",
+      "done": "Done",
+      "new_task": "New task",
+      "nothing_to_do": "Nothing to do",
+      "picker_description": "Add and tick off tasks",
+      "picker_name": "Nuvio – To-do list"
     }
   },
   "common": {

@@ -15,12 +15,12 @@ class HGTodoCard extends HGBase {
 @keyframes nvTd{ from{ opacity:0; transform: translateY(4px); } } @media (prefers-reduced-motion: reduce){ .it{ animation:none; } }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz listę zadań', 'Choose a to-do list')}</span></ha-card>`;
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.todo.choose_a_to_do')}</span></ha-card>`;
     this._load(); const L = this._items || [], open = L.filter((x) => x.status !== 'completed'), done = L.filter((x) => x.status === 'completed').slice(0, +c.show_done || 0);
     const row = (x) => `<button class="it ${x.status === 'completed' ? 'done' : ''}" data-act="tick" data-uid="${H.esc(x.uid)}" data-key="td-${H.esc(x.uid)}" role="checkbox" aria-checked="${x.status === 'completed'}"><span class="ck">${H.icon('mdi:check')}</span><span>${H.esc(x.summary)}</span></button>`;
     return `<ha-card class="glass">${hgUI.header(c.name || H.name(h, c.entity), { sub: this._items ? String(open.length) : '' })}
-      <form class="add"><input name="t" placeholder="${hgTr('Dodaj zadanie', 'Add a task')}" aria-label="${hgTr('Nowe zadanie', 'New task')}" autocomplete="off" enterkeyhint="done">${hgUI.iconBtn('mdi:plus', 'add', hgTr('Dodaj', 'Add'))}</form>
-      <div class="ls">${!this._items ? `<span class="nv-empty">${hgTr('Wczytywanie…', 'Loading…')}</span>` : !L.length ? `<span class="nv-empty">${hgTr('Brak zadań', 'Nothing to do')}</span>` : open.map(row).join('') + (done.length ? `<div class="sec">${hgTr('Zrobione', 'Done')}</div>` + done.map(row).join('') : '')}</div></ha-card>`; }
+      <form class="add"><input name="t" placeholder="${hgT('cards.todo.add_a_task')}" aria-label="${hgT('cards.todo.new_task')}" autocomplete="off" enterkeyhint="done">${hgUI.iconBtn('mdi:plus', 'add', hgT('common.add'))}</form>
+      <div class="ls">${!this._items ? `<span class="nv-empty">${hgT('common.loading')}</span>` : !L.length ? `<span class="nv-empty">${hgT('cards.todo.nothing_to_do')}</span>` : open.map(row).join('') + (done.length ? `<div class="sec">${hgT('cards.todo.done')}</div>` + done.map(row).join('') : '')}</div></ha-card>`; }
   /* lista z WebSocket todo/item/list; ponownie po każdej zmianie stanu encji (stan = liczba otwartych) */
   _load() { const c = this._config, s = H.st(this._hass, c.entity), k = s ? s.last_updated + c.entity : ''; if (this._lk === k) return; this._lk = k;
     if (!this._hass.callWS) return; this._hass.callWS({ type: 'todo/item/list', entity_id: c.entity }).then((r) => { this._items = (r && r.items) || []; this.rerender(); }).catch(() => { this._items = []; this.rerender(); }); }
@@ -31,4 +31,4 @@ class HGTodoCard extends HGBase {
     x.status = x.status === 'completed' ? 'needs_action' : 'completed'; H.haptic(); this.rerender(); H.call(this._hass, 'todo', 'update_item', { entity_id: this._config.entity, item: x.uid, status: x.status }); }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-todo-card', HGTodoCard, hgTr('Nuvio – Lista zadań', 'Nuvio – To-do list'), hgTr('Dodawanie i odhaczanie zadań', 'Add and tick off tasks'));
+hgReg('hg-todo-card', HGTodoCard, hgTLazy('cards.todo.picker_name'), hgTLazy('cards.todo.picker_description'));

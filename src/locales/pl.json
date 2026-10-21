@@ -623,6 +623,15 @@
       "remaining": "Pozostało",
       "running": "Odlicza",
       "start": "Start"
+    },
+    "todo": {
+      "add_a_task": "Dodaj zadanie",
+      "choose_a_to_do": "Wybierz listę zadań",
+      "done": "Zrobione",
+      "new_task": "Nowe zadanie",
+      "nothing_to_do": "Brak zadań",
+      "picker_description": "Dodawanie i odhaczanie zadań",
+      "picker_name": "Nuvio – Lista zadań"
     }
   },
   "common": {

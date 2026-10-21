@@ -1087,8 +1087,8 @@ common.add,parts/cards/todo-card.part.js,22,hgTr,Add,Dodaj,,,auto
 common.loading,parts/cards/todo-card.part.js,23,hgTr,Loading…,Wczytywanie…,,,auto
 cards.todo.nothing_to_do,parts/cards/todo-card.part.js,23,hgTr,Nothing to do,Brak zadań,,,auto
 cards.todo.done,parts/cards/todo-card.part.js,23,hgTr,Done,Zrobione,,,auto
-cards.todo.nuvio_to_do_list,parts/cards/todo-card.part.js,34,hgTr,Nuvio – To-do list,Nuvio – Lista zadań,,load-time,manual
-cards.todo.add_and_tick_off,parts/cards/todo-card.part.js,34,hgTr,Add and tick off tasks,Dodawanie i odhaczanie zadań,,load-time,manual
+cards.todo.picker_name,parts/cards/todo-card.part.js,34,hgTr,Nuvio – To-do list,Nuvio – Lista zadań,,load-time,auto
+cards.todo.picker_description,parts/cards/todo-card.part.js,34,hgTr,Add and tick off tasks,Dodawanie i odhaczanie zadań,,load-time,auto
 cards.toggle.choose_a_device,parts/cards/toggle-card.part.js,7,hgTr,Choose a device,Wybierz urządzenie,,,auto
 common.more,parts/cards/toggle-card.part.js,11,hgTr,More,Więcej,,,auto
 cards.toggle.nuvio_toggle_tile,parts/cards/toggle-card.part.js,18,hgTr,Nuvio – Toggle tile,Nuvio – Kafelek przełącznika,,load-time,manual
