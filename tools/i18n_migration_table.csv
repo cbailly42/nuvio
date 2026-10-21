@@ -511,20 +511,20 @@ common.today,parts/cards/month-card.part.js,68,hgTr,Today,Dziś,,,auto
 common.today,parts/cards/month-card.part.js,68,hgTr,Today,Dziś,,,auto
 cards.month.next_month,parts/cards/month-card.part.js,69,hgTr,Next month,Następny miesiąc,,,auto
 cards.month.next_month,parts/cards/month-card.part.js,69,hgTr,Next month,Następny miesiąc,,,auto
-cards.net.math_round_hh_h,parts/cards/net-card.part.js,5,hgTr,${Math.round(hh)} h,${Math.round(hh)} godz.,,expr,manual
-cards.net.math_round_hh_24,parts/cards/net-card.part.js,5,hgTr,${Math.round(hh / 24)} days,${Math.round(hh / 24)} dni,,expr,manual
+cards.net.hours_count,parts/cards/net-card.part.js,5,hgTr,{count} h,{count} godz.,count,expr,auto
+cards.net.days_count,parts/cards/net-card.part.js,5,hgTr,{count} days,{count} dni,count,expr,auto
 cards.net.update_available,parts/cards/net-card.part.js,108,hgTr,Update available,Dostępna aktualizacja,,,auto
 cards.net.firmware_up_to_date,parts/cards/net-card.part.js,108,hgTr,Firmware up to date,Oprogramowanie aktualne,,,auto
 cards.net.ports,parts/cards/net-card.part.js,114,hgTr,Ports,Porty,,,auto
-cards.net.on,parts/cards/net-card.part.js,115,hgTr,on,włączony,,,review
+cards.net.state_on,parts/cards/net-card.part.js,115,hgTr,on,włączony,,,auto
 cards.net.off,parts/cards/net-card.part.js,115,hgTr,off,wyłączony,,,auto
-cards.net.protected_do_not_turn,parts/cards/net-card.part.js,115,hgTr, · protected (do not turn off), · chroniony (nie wyłączaj),,,auto
+cards.net.port_locked_note,parts/cards/net-card.part.js,115,hgTr,protected (do not turn off),chroniony (nie wyłączaj),,,auto
 cards.net.download,parts/cards/net-card.part.js,125,hgTr,Download,Pobieranie,,,auto
 cards.net.upload,parts/cards/net-card.part.js,125,hgTr,Upload,Wysyłanie,,,auto
 cards.net.connected,parts/cards/net-card.part.js,129,hgTr,Connected,Połączono,,,auto
 cards.net.disconnected,parts/cards/net-card.part.js,129,hgTr,Disconnected,Brak połączenia,,,auto
 cards.net.unknown_state,parts/cards/net-card.part.js,129,hgTr,Unknown state,Stan nieznany,,,auto
-cards.net.gateway_up_for,parts/cards/net-card.part.js,129,hgTr,gateway up for ,bramka działa od ,,concat,manual
+cards.net.gateway_up_for,parts/cards/net-card.part.js,129,hgTr,gateway up for {time},bramka działa od {time},time,concat,auto
 cards.net.wan_latency_last_24,parts/cards/net-card.part.js,131,hgTr,"WAN latency, last 24 h","Opóźnienie WAN, ostatnie 24 h",,,auto
 cards.net.latency,parts/cards/net-card.part.js,131,hgTr,latency,opóźnienie,,,auto
 common.now,parts/cards/net-card.part.js,131,hgTr,now,teraz,,,auto
@@ -538,37 +538,37 @@ cards.net.gateway,parts/cards/net-card.part.js,140,hgTr,Gateway,Bramka,,,auto
 cards.net.restart,parts/cards/net-card.part.js,140,hgTr,Restart,Uruchom ponownie,,,auto
 cards.net.restart,parts/cards/net-card.part.js,151,hgTr,Restart,Uruchom ponownie,,,auto
 cards.net.restart,parts/cards/net-card.part.js,151,hgTr,Restart,Uruchom ponownie,,,auto
-cards.net.memory_2,parts/cards/net-card.part.js,153,hgTr,memory,pamięć,,,review
+cards.net.memory_label,parts/cards/net-card.part.js,153,hgTr,memory,pamięć,,,auto
 cards.net.up_for,parts/cards/net-card.part.js,154,hgTr,up for,działa od,,,auto
 cards.net.access_points_and_switches,parts/cards/net-card.part.js,156,hgTr,Access points and switches,Punkty dostępowe i przełączniki,,,auto
-cards.net.l_length_devices,parts/cards/net-card.part.js,156,hgTr,${L.length} devices,${L.length} urządz.,,expr,manual
+cards.net.devices_count,parts/cards/net-card.part.js,156,hgTr,{count} devices,{count} urządz.,count,expr,auto
 cards.net.qr_code_for_network,parts/cards/net-card.part.js,163,hgTr,QR code for network,Kod QR sieci,,,auto
 cards.net.qr_code,parts/cards/net-card.part.js,163,hgTr,QR code,Kod QR,,,auto
 cards.net.network,parts/cards/net-card.part.js,164,hgTr,Network,Sieć,,,auto
 cards.net.wi_fi_networks,parts/cards/net-card.part.js,166,hgTr,Wi‑Fi networks,Sieci Wi‑Fi,,,auto
 cards.net.no_wi_fi_networks,parts/cards/net-card.part.js,166,hgTr,No Wi‑Fi networks configured,Brak sieci Wi‑Fi w konfiguracji,,,auto
 cards.net.online,parts/cards/net-card.part.js,190,hgTr,online,w sieci,,,auto
-cards.net.offline,parts/cards/net-card.part.js,190,hgTr,offline · ,poza siecią · ,,concat,manual
+cards.net.offline_since,parts/cards/net-card.part.js,190,hgTr,offline · {time},poza siecią · {time},time,concat,auto
 cards.net.wired,parts/cards/net-card.part.js,194,hgTr,wired,przewodowo,,,auto
-cards.net.connected_2,parts/cards/net-card.part.js,195,hgTr,connected,połączony,,,review
-cards.net.disconnected_2,parts/cards/net-card.part.js,195,hgTr,disconnected · ,rozłączony · ,,concat,manual
+cards.net.state_connected,parts/cards/net-card.part.js,195,hgTr,connected,połączony,,,auto
+cards.net.disconnected_since,parts/cards/net-card.part.js,195,hgTr,disconnected · {time},rozłączony · {time},time,concat,auto
 cards.net.clients,parts/cards/net-card.part.js,197,hgTr,Clients,Klienci,,,auto
 cards.net.household_phones,parts/cards/net-card.part.js,198,hgTr,Household phones,Telefony domowników,,,auto
 cards.net.devices_on_wi_fi,parts/cards/net-card.part.js,199,hgTr,devices on Wi‑Fi now,urządzeń w sieciach Wi‑Fi teraz,,,auto
 cards.net.tracked_online,parts/cards/net-card.part.js,199,hgTr,tracked online,śledzonych online,,,auto
 cards.net.all,parts/cards/net-card.part.js,200,hgTr,All,Wszyscy,,,auto
-cards.net.connected_3,parts/cards/net-card.part.js,200,hgTr,Connected,Połączone,,,review
-cards.net.disconnected_3,parts/cards/net-card.part.js,200,hgTr,Disconnected,Rozłączone,,,review
+cards.net.filter_connected,parts/cards/net-card.part.js,200,hgTr,Connected,Połączone,,,auto
+cards.net.filter_disconnected,parts/cards/net-card.part.js,200,hgTr,Disconnected,Rozłączone,,,auto
 common.name,parts/cards/net-card.part.js,201,hgTr,Name,Nazwa,,,auto
 cards.net.no_tracked_clients,parts/cards/net-card.part.js,202,hgTr,No tracked clients,Brak śledzonych klientów,,,auto
 cards.net.qr_code_for_network,parts/cards/net-card.part.js,217,hgTr,QR code for network,Kod QR sieci,,,auto
 common.close,parts/cards/net-card.part.js,217,hgTr,Close,Zamknij,,,auto
 cards.net.qr_code_for_network,parts/cards/net-card.part.js,218,hgTr,QR code for network,Kod QR sieci,,,auto
 cards.net.scan_with_your_phone,parts/cards/net-card.part.js,218,hgTr,Scan with your phone camera to join,"Zeskanuj aparatem telefonu, aby połączyć się z siecią",,,auto
-cards.net.restart_t_dataset_n,parts/cards/net-card.part.js,230,hgTr,Restart ${t.dataset.n}?,Uruchomić ponownie: ${t.dataset.n}?,,expr,manual
+cards.net.restart_confirm,parts/cards/net-card.part.js,230,hgTr,Restart {name}?,Uruchomić ponownie: {name}?,name,expr,auto
 cards.net.the_device_will_be,parts/cards/net-card.part.js,230,hgTr,The device will be unavailable for 1–3 minutes; connected clients will lose network access.,Urządzenie będzie niedostępne przez 1–3 minuty; połączeni klienci stracą sieć.,,,auto
 cards.net.restart,parts/cards/net-card.part.js,230,hgTr,Restart,Uruchom ponownie,,,auto
-cards.net.port_t_dataset_n,parts/cards/net-card.part.js,231,hgTr,Port ${t.dataset.n} is protected,Port ${t.dataset.n} jest chroniony,,expr,manual
+cards.net.port_protected,parts/cards/net-card.part.js,231,hgTr,Port {port} is protected,Port {port} jest chroniony,port,expr,auto
 cards.net.this_is_the_internet,parts/cards/net-card.part.js,231,hgTr,"this is the internet connection or a network uplink. Turning it off from the panel would cut off the network and Home Assistant, so it is locked.","to połączenie z internetem lub łącze do sieci. Wyłączenie go z panelu odcięłoby sieć i Home Assistant, dlatego jest zablokowane.",,,auto
 cards.net.got_it,parts/cards/net-card.part.js,231,hgTr,Got it,Rozumiem,,,auto
 cards.net.turn_off,parts/cards/net-card.part.js,233,hgTr,Turn off {nm}?,Wyłączyć {nm}?,nm,,auto
@@ -577,11 +577,11 @@ cards.net.the_device_connected_to,parts/cards/net-card.part.js,233,hgTr,The devi
 cards.net.the_port_will_be,parts/cards/net-card.part.js,233,hgTr,The port will be turned back on.,Port zostanie ponownie włączony.,,,auto
 common.turn_off,parts/cards/net-card.part.js,233,hgTr,Turn off,Wyłącz,,,auto
 common.turn_on,parts/cards/net-card.part.js,233,hgTr,Turn on,Włącz,,,auto
-cards.net.turn_off_network_t,parts/cards/net-card.part.js,236,hgTr,Turn off network ${t.dataset.n}?,Wyłączyć sieć ${t.dataset.n}?,,expr,manual
+cards.net.turn_off_network_confirm,parts/cards/net-card.part.js,236,hgTr,Turn off network {name}?,Wyłączyć sieć {name}?,name,expr,auto
 cards.net.devices_connected_to_this,parts/cards/net-card.part.js,236,hgTr,Devices connected to this Wi‑Fi network will lose their connection.,Urządzenia połączone z tą siecią Wi‑Fi stracą połączenie.,,,auto
 common.turn_off,parts/cards/net-card.part.js,236,hgTr,Turn off,Wyłącz,,,auto
-cards.net.home_glass_network,parts/cards/net-card.part.js,241,hgTr,Home Glass – Network,Home Glass – Sieć,,load-time,manual
-cards.net.unifi_internet_gateway_access,parts/cards/net-card.part.js,241,hgTr,"UniFi: internet, gateway, access points, Wi‑Fi and clients","UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci",,load-time,manual
+cards.net.picker_name,parts/cards/net-card.part.js,241,hgTr,Home Glass – Network,Home Glass – Sieć,,load-time,auto
+cards.net.picker_description,parts/cards/net-card.part.js,241,hgTr,"UniFi: internet, gateway, access points, Wi‑Fi and clients","UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci",,load-time,auto
 cards.note.empty_note,parts/cards/note-card.part.js,13,hgTr,Empty note,Pusta notatka,,,auto
 cards.note.add_text_in_the,parts/cards/note-card.part.js,13,hgTr,"Add text in the ""Text"" field",Dodaj treść w polu „Treść”,,,auto
 cards.note.picker_name,parts/cards/note-card.part.js,16,hgTr,Home Glass – Note,Home Glass – Notatka,,load-time,auto
