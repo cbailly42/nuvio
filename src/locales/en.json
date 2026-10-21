@@ -393,6 +393,11 @@
       "solar_sub": "solar",
       "solar_title": "Solar",
       "where_the_home_power": "Where the home power comes from"
+    },
+    "fuel": {
+      "add_fuel_price_sensors": "Add fuel price sensors.",
+      "no_change_tomorrow": "no change tomorrow",
+      "tomorrow_no_data": "tomorrow: no data"
     }
   },
   "common": {

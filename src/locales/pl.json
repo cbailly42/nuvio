@@ -397,6 +397,11 @@
       "solar_sub": "panele",
       "solar_title": "Panele",
       "where_the_home_power": "Skąd dom bierze prąd"
+    },
+    "fuel": {
+      "add_fuel_price_sensors": "Dodaj czujniki cen paliw.",
+      "no_change_tomorrow": "jutro bez zmian",
+      "tomorrow_no_data": "jutro: brak danych"
     }
   },
   "common": {
