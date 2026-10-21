@@ -235,6 +235,9 @@
     "climate_modes": {
       "drying": "Drying",
       "fan_only": "Fan only"
+    },
+    "confirm": {
+      "ok_button": "Confirm"
     }
   },
   "states": {

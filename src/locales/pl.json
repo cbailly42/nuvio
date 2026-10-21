@@ -235,6 +235,9 @@
     "climate_modes": {
       "drying": "Osuszanie",
       "fan_only": "Wentylacja"
+    },
+    "confirm": {
+      "ok_button": "Potwierdź"
     }
   },
   "states": {
