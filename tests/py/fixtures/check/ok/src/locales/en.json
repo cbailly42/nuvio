@@ -1,0 +1,13 @@
+{
+  "_meta": { "name": "English", "locale": "en-GB" },
+  "common": { "save": "Save" },
+  "demo": {
+    "title": "Demo",
+    "count_one": "{count} item",
+    "count_other": "{count} items",
+    "close": "Close",
+    "greet": "Hello, {name}!"
+  },
+  "cards": { "demo": { "title": "Demo card" } },
+  "states": { "on": "on", "off": "off", "label": { "on": "On" } }
+}

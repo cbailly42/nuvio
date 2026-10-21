@@ -1,5 +1,3 @@
-const HG_WX_SHORT = { 'Częściowe zachmurzenie': 'Częś. zachm.', 'Deszcz ze śniegiem': 'Deszcz/śnieg', 'Burza z deszczem': 'Burza, deszcz', 'Wietrznie, pochmurno': 'Wietrznie', 'Zjawisko wyjątkowe': 'Wyjątkowe',
-  'Thunderstorm, rain': 'Storm, rain', 'Windy, cloudy': 'Windy', Thunderstorm: 'Storm' };
 class HGWeatherCard extends HGBase {
   defaults() { return { entity: '', temp_sensor: null, sun: 'sun.sun', hours: 24, title: hgT('cards.weather.outside'), icon_base: HG_ASSET + 'nuvio-meteo-', icon_v: '1', variant: 'card' }; }
   ents() { const c = this._config; return [c.entity, c.temp_sensor, c.sun, c.forecast_sensor].filter(Boolean); }

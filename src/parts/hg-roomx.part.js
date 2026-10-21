@@ -66,7 +66,7 @@ class HGRoomImport extends HTMLElement {
       : `<p class="mo">${hgT('roomx.no_results')}</p>`; }
   _list() { const l = this.shadowRoot.querySelector('.rl'); if (l) l.innerHTML = this._items(); this._foot(); }
   _foot() { const n = this._sel.size, b = this.shadowRoot.querySelector('[data-a="ok"]'); if (b) { b.disabled = !n || this._busy; b.lastChild.textContent = n ? hgT('roomx.add_tiles', { count: n }) : hgT('roomx.select_entities'); }
-    const c = this.shadowRoot.querySelector('.cnt'); if (c) c.textContent = hgT('roomx.selected', { n }); }
+    const c = this.shadowRoot.querySelector('.cnt'); if (c) c.textContent = hgT('roomx.selected', { count: n }); }
   _paint() { const a = this._a, imp = this._mode === 'imp', adm = !!(this._h.user && this._h.user.is_admin), hasC = this._c.length;
     this.shadowRoot.innerHTML = `<style>${HG_RX_CSS}</style><div class="scr" data-a="x"></div><div class="rxd" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="rxh">
       <div class="hd"><span class="hi">${H.icon('mdi:import')}</span><div><b id="rxh">${a.virtual ? hgT('roomx.pick_entities') : hgT('roomx.import_from_named_area', { name: H.esc(a.name) })}</b><small>${hgT('roomx.choose_what_to_show')}</small></div>

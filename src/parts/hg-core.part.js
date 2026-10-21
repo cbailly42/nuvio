@@ -48,22 +48,9 @@ window.__hgVer = HGVer;
   document.head.appendChild(s);
 })();
 
-/* "12u" -> calc(var(--k) * 12): jednostka skalowana względem referencji (912x597) */
-/* słownik zapasowy stanów (surowe wartości i angielskie formy z HA bez tłumaczenia) */
+/* surowy stan HA -> segment klucza states.* (małe litery, spacje i myślniki jako _) */
 const hgStN = (v) => String(v).trim().toLowerCase().replace(/[\s-]+/g, '_');
-const HG_PL = {
-  normal: 'normalny', fault: 'błąd', standby: 'czuwanie', waiting: 'oczekiwanie', idle: 'bezczynny', charging: 'ładowanie', charged: 'naładowany', discharging: 'rozładowanie',
-  cleaning: 'sprzątanie', docked: 'w stacji', returning: 'powrót do stacji', returning_home: 'powrót do stacji', paused: 'wstrzymany', error: 'błąd', mowing: 'koszenie',
-  online: 'online', offline: 'offline', connected: 'połączony', disconnected: 'rozłączony', home: 'w domu', not_home: 'poza domem', away: 'poza domem',
-  on: 'wł.', off: 'wył.', open: 'otwarte', closed: 'zamknięte', opening: 'otwieranie', closing: 'zamykanie', locked: 'zamknięty', unlocked: 'otwarty', jammed: 'zablokowany',
-  unavailable: 'niedostępne', unknown: 'nieznany', playing: 'odtwarza', buffering: 'buforowanie', heating: 'grzanie', cooling: 'chłodzenie', drying: 'osuszanie',
-  fan: 'wentylator', fan_only: 'wentylator', heat: 'grzanie', cool: 'chłodzenie', dry: 'osuszanie', auto: 'auto', heat_cool: 'grzanie/chłodzenie', preheating: 'podgrzewanie',
-  detected: 'wykryto', clear: 'brak', running: 'pracuje', stopped: 'zatrzymany', sleeping: 'uśpiony', sleep: 'uśpiony', ok: 'OK', low: 'niski', medium: 'średni', high: 'wysoki',
-  above_horizon: 'nad horyzontem', below_horizon: 'pod horyzontem', recording: 'nagrywa', streaming: 'transmisja', armed: 'uzbrojony', disarmed: 'rozbrojony',
-  pending: 'oczekiwanie', starting: 'uruchamianie', finished: 'zakończono', completed: 'zakończono', ready: 'gotowy', working: 'pracuje', busy: 'zajęty',
-  upgrading: 'aktualizacja', provisioning: 'konfiguracja', heartbeat_missed: 'brak odpowiedzi', adopting: 'adopcja', firmware_mismatch: 'niezgodne oprogramowanie', isolated: 'odizolowany',
-  sunny: 'słonecznie', cloudy: 'pochmurno', partlycloudy: 'częściowe zachmurzenie', rainy: 'deszcz', clear_night: 'pogodna noc', none: 'brak', true: 'tak', false: 'nie', yes: 'tak', no: 'nie',
-};
+/* "12u" -> calc(var(--k) * 12): jednostka skalowana względem referencji (912x597) */
 const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k) * ${n})`);
 
 /* ukryta karta przeglądarki: wstrzymaj animacje ciągłe (zmienna dziedziczona przez wszystkie shadow DOM) */
@@ -110,7 +97,7 @@ if (window.matchMedia && !window.__hgPerfMq) { window.__hgPerfMq = 1; try { matc
 
 /* język interfejsu kart: osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej języki przeglądarki (domyślnie angielski).
    Język bez katalogu w pamięci: pierwsze użycie go pobiera, a gdy dotrze – hg-lang (karty poza strategią przerysowują się same, bez przeładowania).
-   hgTr('tekst PL', 'text EN') – tymczasowa brama do migracji na hgT (inne języki: angielski); HG_LOC() – locale do liczb i dat z manifestu */
+   Teksty: hgT / hgTLazy / hgTO / hgTD (hg-i18n); HG_LOC() – locale do liczb i dat z manifestu */
 const hgI18nWant = (l) => {
   if (l === 'en' || HGI18n.cache[l]) { HGI18n.code = l; return; }
   if (HGI18n.pend[l] || HGI18n.bad[l] || !HGI18n.has(l)) return;
@@ -119,7 +106,6 @@ const hgI18nWant = (l) => {
 };
 const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz, l = hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang));
   if (l !== HGI18n.code) hgI18nWant(l); return l; };
-const hgTr = (pl, en) => (hgCurLang() === 'pl' ? (pl != null ? pl : en) : en != null ? en : pl);
 const HG_LOC = () => HGI18n.locale(hgCurLang());
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
 const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };

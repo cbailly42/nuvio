@@ -31,10 +31,9 @@ for f in sorted(os.listdir(dd)):
     i, kind = f[len('nuvio-bg-'):-5].rsplit('-', 1); kb = os.path.getsize(os.path.join(dd, f)) / 1024
     if f'`{i}`' not in cr: bad.append(f'background {f} missing from CREDITS.md')
     if kb > {'wide': 350, 'portrait': 320, 'thumb': 16}.get(kind, 0): bad.append(f'background {f} too large ({kb:.0f} KB)')
-# i18n: every UI string in src/ must exist in PL and EN (tools/i18n_check.py)
-import subprocess
+# i18n: keyed catalogs and their use in src/ (tools/i18n_check.py: literal keys, en.json complete and used, no hard-coded text, required languages complete)
 _i = subprocess.run([sys.executable, os.path.join(R, 'tools', 'i18n_check.py'), '--list'], capture_output=True, text=True)
-if _i.returncode: print(_i.stdout.strip()); sys.exit(1)
+if _i.returncode: print('I18N CHECK FAILED:'); print((_i.stdout + _i.stderr).strip()); sys.exit(1)
 if bad:
     print('HARDCODED CONTENT FOUND:'); [print('  ', b) for b in bad[:40]]; sys.exit(1)
-print('guard OK – no house-specific ids in dist/nuvio.js, i18n complete (PL/EN)')
+print('guard OK – no house-specific ids in dist/nuvio.js; ' + (_i.stdout.strip().splitlines() or [''])[-1])

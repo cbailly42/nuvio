@@ -82,7 +82,7 @@ const hgNP = {
     const grp = (at.group_members || []).length > 1;
     const chips = off ? '' : [
       (f & F.SOURCE) && (at.source_list || []).length ? C('npsrc', tv ? 'mdi:import' : 'mdi:music-box-multiple-outline', at.source || hgT('shared.media.source')) : '',
-      (f & F.GROUP) ? C('npgrp', 'mdi:speaker-multiple', grp ? hgT('shared.media.rooms_count', { n: at.group_members.length }) : hgT('common.rooms'), grp) : '',
+      (f & F.GROUP) ? C('npgrp', 'mdi:speaker-multiple', grp ? hgT('shared.media.rooms_count', { count: at.group_members.length }) : hgT('common.rooms'), grp) : '',
       (f & F.SOUND) && (at.sound_mode_list || []).length ? C('npsnd', 'mdi:tune-vertical', at.sound_mode || hgT('shared.media.sound')) : '',
     ].join('');
     const pw = f & (off ? F.ON : F.OFF) ? `<button class="npc npic" data-act="npw" data-e="${E}" aria-label="${off ? hgT('common.turn_on') : hgT('common.turn_off')}" title="${off ? hgT('common.turn_on') : hgT('common.turn_off')}">${H.icon('mdi:power')}</button>` : '';

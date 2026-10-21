@@ -38,41 +38,22 @@ const HGShared = window.__hgShared || (window.__hgShared = {
 /* domyślne tło: zdjęcie CC0 dostarczane z pakietem (dist/nuvio-bg-default-*.webp, CREDITS.md); gdy się nie wczyta – gradient */
 const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + '2E4257', v2: '#' + '0C1117' };
 /* 10 teł do wyboru (CC0, dist/CREDITS.md); pierwsze = domyślne. Miniatury ~5 KB, pełne zdjęcia wczytywane dopiero po wyborze */
-/* brama hgTrLazy(pl, en) dla modułów jeszcze nie przeniesionych na hgTLazy – hgTr powstaje dopiero w hg-core */
-const hgTrLazy = (pl, en) => ({ toString: () => (typeof hgTr === 'function' ? hgTr(pl, en) : pl) });
 /* [id pliku, nazwa: hgTLazy (rozwiązywana przy użyciu, String(l) / szablon)] */
 const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', hgTLazy('backgrounds.dom_w_lesie')], ['domek-nad-woda', hgTLazy('backgrounds.domek_nad_woda')], ['gwiazdzista-noc', hgTLazy('backgrounds.gwiazdzista_noc')], ['zachod-slonca', hgTLazy('backgrounds.zachod_slonca')], ['las-o-zmierzchu', hgTLazy('backgrounds.las_o_zmierzchu')],
   ['jasny-salon', hgTLazy('backgrounds.jasny_salon')], ['drewniane-wnetrze', hgTLazy('backgrounds.drewniane_wnetrze')], ['kuchnia', hgTLazy('backgrounds.kuchnia')], ['mglisty-las', hgTLazy('backgrounds.mglisty_las')], ['nad-mgla', hgTLazy('backgrounds.nad_mgla')]]
   .map(([id, l], i) => { const b = HG_ASSET + 'nuvio-bg-' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
 const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'nuvio-bg-default-wide.webp', v2p: HG_ASSET + 'nuvio-bg-default-portrait.webp' };
 
-const HG_I18N = {
-  pl: { map: 'Mapa', map_sub: 'Gdzie są domownicy', calendar: 'Kalendarz', cal_sub: 'Wydarzenia z Twoich kalendarzy', panel: 'Panel', rooms: 'Pokoje', room: 'Pokój', media: 'Multimedia', cams: 'Kamery', family: 'Rodzina', energy: 'Energia', settings: 'Ustawienia', profile: 'Profil',
-    hello: 'Witaj, {name}!', hello_sub: 'Steruj domem w jednym miejscu', rooms_sub: 'Każdy pokój w zasięgu ręki', media_sub: 'Co gra w domu', cams_sub: 'Podgląd na żywo po dotknięciu',
-    family_sub: 'Kto jest teraz w domu', energy_sub: 'Moc na żywo', scenes: 'Sceny', power: 'Moc teraz', outside: 'Na zewnątrz', more: 'Więcej', home: 'Dom', climate: 'Klimatyzacja',
-    wiz_t: 'Witaj w home-glass', wiz_s: 'Zbudujemy pulpit z Twoich obszarów, urządzeń i encji. Wszystko zmienisz później w trybie edycji.', wiz_lang: 'Język', wiz_views: 'Widoki', wiz_rooms: 'Pokoje',
-    wiz_go: 'Utwórz pulpit', wiz_skip: 'Pomiń', wiz_none: 'Nie znaleziono obszarów – pokoje dodasz w Ustawieniach HA → Obszary.', ents: 'encji',
-    hub: 'Domownicy', hub_sub: 'Kto jest teraz w domu', na_req: 'Brak encji, wymaga {x}', req_rooms: 'obszarów (Ustawienia → Obszary)', req_media: 'odtwarzacza (media_player)', req_cams: 'kamery (camera)', req_family: 'osób (person)',
-    req_energy: 'czujnika mocy (sensor, W/kW)', req_map: 'osoby lub urządzenia z lokalizacją', req_cal: 'kalendarza (calendar)' },
-  en: { map: 'Map', map_sub: 'Where everyone is', calendar: 'Calendar', cal_sub: 'Events from your calendars', panel: 'Home', rooms: 'Rooms', room: 'Room', media: 'Media', cams: 'Cameras', family: 'Family', energy: 'Energy', settings: 'Settings', profile: 'Profile',
-    hello: 'Welcome, {name}!', hello_sub: 'Your whole home in one place', rooms_sub: 'Every room at your fingertips', media_sub: 'What is playing', cams_sub: 'Tap for live view',
-    family_sub: 'Who is home right now', energy_sub: 'Live power', scenes: 'Scenes', power: 'Power now', outside: 'Outside', more: 'More', home: 'Home', climate: 'Climate',
-    wiz_t: 'Welcome to home-glass', wiz_s: 'We will build a dashboard from your areas, devices and entities. You can change everything later in edit mode.', wiz_lang: 'Language', wiz_views: 'Views', wiz_rooms: 'Rooms',
-    wiz_go: 'Create dashboard', wiz_skip: 'Skip', wiz_none: 'No areas found – add rooms in HA Settings → Areas.', ents: 'entities',
-    hub: 'Household', hub_sub: 'Who is home right now', na_req: 'No entities, needs {x}', req_rooms: 'areas (Settings → Areas)', req_media: 'a media player (media_player)', req_cams: 'a camera (camera)', req_family: 'people (person)',
-    req_energy: 'a power sensor (sensor, W/kW)', req_map: 'a person or a device with location', req_cal: 'a calendar (calendar)' },
-};
 /* język: pref (wybór) albo języki przeglądarki (każdy język z manifestu: pełny kod, sam język); nieobsługiwany -> angielski. h zostaje w podpisie dla zgodności wywołań */
 const hgLang = (h, pref) => { const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
   return hgLangDetect(pref, pref ? [pref, ...nav] : nav); };   /* pref jak dotąd także w postaci pl-PL / PL_pl (sam język) */
-const hgI = (lang, k) => (HG_I18N[lang] || HG_I18N.en)[k] || HG_I18N.en[k] || k;
 /* osobisty wybór języka (Ustawienia → Język, menu użytkownika): '' = automatycznie. Kolejność: ten wybór, opcja language strategii, kreator, przeglądarka.
    Zapis w localStorage (od razu przy starcie) i w danych użytkownika HA (inne urządzenia). Lista języków = manifest katalogów (src/locales). */
 const HGLang = window.__hgLangSel || (window.__hgLangSel = {
   KEY: 'home-glass:lang',
   get LIST() { return HGI18n.list(); },
   ok(v) { return this.LIST.some((x) => x[0] === v); },
-  /* czytane przy każdym hgTr: kopia w pamięci, localStorage tylko raz */
+  /* czytane przy każdym wyborze języka (hgCurLang): kopia w pamięci, localStorage tylko raz */
   get() { if (this._v === undefined) { let v = ''; try { v = localStorage.getItem(this.KEY); } catch (e) { v = ''; } this._v = this.ok(v) ? v : ''; } return this._v; },
   _w(v) { this._v = v; try { if (v) localStorage.setItem(this.KEY, v); else localStorage.removeItem(this.KEY); } catch (e) { /* tryb prywatny */ } },
   /* raz na sesję: wybór z innego urządzenia (dane użytkownika HA) wygrywa z kopią lokalną */
@@ -237,17 +218,6 @@ if (!customElements.get('ll-strategy-dashboard-home-glass')) customElements.defi
 window.hgGenerate = hgGenerate;
 
 /* --- kreator pierwszego uruchomienia (widoczny, gdy pulpit z strategii i brak zapisanych wyborów) --- */
-const HG_WZ_T = {
-  pl: { hero: 'Witaj w Nuvio', heroS: 'Szklany pulpit dla Home Assistant – zbudujemy go z Twoich obszarów, urządzeń i encji w mniej niż minutę.', start: 'Zaczynamy', skip: 'Pomiń kreator', back: 'Wstecz', next: 'Dalej', go: 'Utwórz pulpit',
-    s: ['Język', 'Widoki', 'Pokoje', 'Wygląd', 'Podsumowanie'], langS: 'W jakim języku ma mówić pulpit?', viewsS: 'Wybierz widoki w menu. Panel jest zawsze włączony.', roomsS: 'Które pokoje pokazać? Ukryte możesz przywrócić później.',
-    lookS: 'Kolor akcentu i tło – podgląd zmienia się na żywo.', sumS: 'Wszystko gotowe. Każdy wybór zmienisz później w trybie edycji.', acc: 'Akcent', bg: 'Tło', none: 'Nie znaleziono obszarów – pokoje dodasz w Ustawieniach HA → Obszary.',
-    ents: 'encji', rooms: 'pokoi', na: 'brak encji', always: 'zawsze', shown: 'widocznych', step: 'Krok', of: 'z', pv: 'Podgląd', views: 'Widoki', look: 'Wygląd', pvRoom: 'Salon', pvMusic: 'Muzyka',
-    later: 'Każdy wybór zmienisz później w trybie edycji.', selAll: 'Zaznacz wszystkie', selNone: 'Odznacz wszystkie', eb: 'Pierwsza konfiguracja', min: '~1 min' },
-  en: { hero: 'Welcome to Nuvio', heroS: 'A glass dashboard for Home Assistant – built from your areas, devices and entities in under a minute.', start: 'Get started', skip: 'Skip setup', back: 'Back', next: 'Next', go: 'Create dashboard',
-    s: ['Language', 'Views', 'Rooms', 'Appearance', 'Summary'], langS: 'Which language should the dashboard speak?', viewsS: 'Pick the views in the menu. Home is always on.', roomsS: 'Which rooms should be shown? Hidden ones can be restored later.',
-    lookS: 'Accent colour and background – the preview updates live.', sumS: 'All set. You can change every choice later in edit mode.', acc: 'Accent', bg: 'Background', none: 'No areas found – add rooms in HA Settings → Areas.',
-    ents: 'entities', rooms: 'rooms', na: 'no entities', always: 'always', shown: 'shown', step: 'Step', of: 'of', pv: 'Preview', views: 'Views', look: 'Appearance', pvRoom: 'Living room', pvMusic: 'Music',
-    later: 'You can change every choice later in edit mode.', selAll: 'Select all', selNone: 'Clear all', eb: 'First-time setup', min: '~1 min' } };
 const HG_WZ_AREA_IC = [[/salon|living|dzienn/i, 'mdi:sofa'], [/kuch|kitchen/i, 'mdi:stove'], [/sypial|bed/i, 'mdi:bed'], [/łaz|lazien|bath/i, 'mdi:shower'], [/biur|office|gabinet/i, 'mdi:desk'], [/gara/i, 'mdi:garage'], [/ogr|garden|taras/i, 'mdi:flower'], [/dzieci|kid|pok[oó]j/i, 'mdi:teddy-bear'], [/korytarz|hall|przedpok|schod/i, 'mdi:door'], [/kot[lł]own|piwn|basement/i, 'mdi:water-boiler']];
 /* style kreatora: szkło jak w reszcie pulpitu (tło użytkownika + rozmycie), tokeny --fg/--gl/--ln przełączane klasą .lt (motyw jasny) */
 const HG_WZ_CSS = `<style>
@@ -452,7 +422,7 @@ const HGLookX = {
     const me = page._hass.user.id, n = L.filter((u) => !off.includes(u.id)).length;
     const rows = [...L].sort((a, b) => (a.id === me ? -1 : b.id === me ? 1 : 0) || String(a.name || '').localeCompare(String(b.name || ''), HG_LOC())).map((u) => { const vis = !off.includes(u.id), self = u.id === me, nm = String(u.name || u.username || '?');
       return `<button type="button" class="wl-sw us-r" role="switch" data-hge="lx-vut" data-v="${H.esc(v)}" data-u="${H.esc(u.id)}" aria-checked="${vis}" ${self ? 'disabled' : ''}><span class="us-av" aria-hidden="true">${H.esc((Array.from(nm.trim())[0] || '?').toUpperCase())}</span><span>${H.esc(nm)}${self ? `<em class="us-tg">${hgT('oss.views.you')}</em>` : ''}<small>${vis ? hgT('oss.views.user_sees') : hgT('oss.views.user_hidden')}</small></span><i aria-hidden="true"></i></button>`; }).join('');
-    return `<div class="lx-vu" role="group" aria-label="${hgT('oss.views.who_sees')}"><style>${typeof HG_WALL_CSS === 'string' ? HG_WALL_CSS : ''}${typeof HG_US_CSS === 'string' ? HG_US_CSS : ''}</style><small>${hgT('oss.views.who_sees_count', { n, total: L.length })}</small>${rows}</div>`; },
+    return `<div class="lx-vu" role="group" aria-label="${hgT('oss.views.who_sees')}"><style>${typeof HG_WALL_CSS === 'string' ? HG_WALL_CSS : ''}${typeof HG_US_CSS === 'string' ? HG_US_CSS : ''}</style><small>${hgT('oss.views.who_sees_count', { count: n, total: L.length })}</small>${rows}</div>`; },
   async prep(page) { if (this.busy) return; this.busy = true; const h = page._hass;
     try { this.M = await HGModel.load(h); } catch (e) { this.M = null; }
     try { this.res = (await h.callWS({ type: 'lovelace/resources' })).map((r) => r.url || ''); } catch (e) { this.res = []; }

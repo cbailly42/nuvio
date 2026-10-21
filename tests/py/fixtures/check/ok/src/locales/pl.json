@@ -1,0 +1,15 @@
+{
+  "_meta": { "name": "Polski", "locale": "pl-PL" },
+  "common": { "save": "Zapisz" },
+  "demo": {
+    "title": "Demo",
+    "count_one": "{count} element",
+    "count_few": "{count} elementy",
+    "count_many": "{count} elementów",
+    "count_other": "{count} elementu",
+    "close": "Zamknij",
+    "greet": "Witaj, {name}!"
+  },
+  "cards": { "demo": { "title": "Karta demo" } },
+  "states": { "on": "wł.", "off": "wył.", "label": { "on": "Wł." } }
+}

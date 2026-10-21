@@ -35,7 +35,7 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
     return o; },
   parse(t) { const ob = (x) => !!x && typeof x === 'object' && !Array.isArray(x), ar = (x) => x == null || Array.isArray(x);
     if (typeof t !== 'string' || !t.trim()) this.fail(hgT('backup.errors.empty'));
-    if (t.length > 4e6) this.fail(hgT('backup.the_file_is_too'));
+    if (t.length > 4e6) this.fail(hgT('backup.errors.too_large'));
     let o; try { o = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) { this.fail(hgT('backup.errors.invalid_json')); }
     if (!ob(o)) this.fail(hgT('backup.errors.unknown_format'));
     o = this.migrate(o); const d = o.data;
@@ -99,7 +99,7 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
   load(p, t, name) { const st = this.st; try { st.o = this.parse(t); st.err = null; st.name = name || null; st.sel = new Set(this.CATS.filter(([, k]) => st.o.data[k] != null).map((c) => c[0])); }
     catch (e) { st.o = null; st.err = e && e.hg ? e.message : hgT('backup.could_not_read_the'); }
     this.imp(p); requestAnimationFrame(() => { const f = p._eSheetEl && p._eSheetEl.querySelector(st.err ? '.bk-err' : '.bk-file'); if (f) { f.tabIndex = -1; f.focus({ preventScroll: true }); } }); },
-  readFile(p, f) { if (!f) return; if (f.size > 4e6) { this.st.err = hgT('backup.the_file_is_too'); this.st.o = null; return this.imp(p); }
+  readFile(p, f) { if (!f) return; if (f.size > 4e6) { this.st.err = hgT('backup.errors.too_large'); this.st.o = null; return this.imp(p); }
     f.text().then((t) => this.load(p, t, f.name), () => this.load(p, '', f.name)); },
   wire(p, S) { const fi = S.querySelector('.bk-f'), dz = S.querySelector('.bk-drop'), ta = S.querySelector('.bk-ta');
     if (fi) fi.addEventListener('change', () => this.readFile(p, fi.files && fi.files[0]));

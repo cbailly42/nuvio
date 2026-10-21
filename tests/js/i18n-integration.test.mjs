@@ -1,4 +1,4 @@
-/* Task 4: language from the manifest, waiting for the catalog (HGLang.set, strategy, standalone cards), card rerender, HG_LOC, hgTr gateway */
+/* Task 4: language from the manifest, waiting for the catalog (HGLang.set, strategy, standalone cards), card rerender, HG_LOC, no PL/EN gateway left */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ const meta = (c) => JSON.parse(readFileSync(new URL('../../src/locales/' + c + '
 const MAN = [{ code: 'en', name: meta('en').name, locale: meta('en').locale, file: null }, { code: 'pl', name: meta('pl').name, locale: meta('pl').locale, file: 'nuvio-locale-pl.aaaa.json' }];
 const MAN_FR = [...MAN, { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'nuvio-locale-fr.aaaa.json' }];
 const FILES = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js'];
-const NAMES = ['HGI18n', 'HGLang', 'HGStrategy', 'HGBase', 'hgLang', 'hgCurLang', 'hgTr', 'HG_LOC', 'HG_LIVE'];
+const NAMES = ['HGI18n', 'HGLang', 'HGStrategy', 'HGBase', 'hgLang', 'hgCurLang', 'HG_LOC', 'HG_LIVE'];
 const tick = (n = 5) => new Promise((r) => { const s = () => (n-- ? setImmediate(s) : r()); s(); });
 const stub = () => new Proxy(function () {}, { get: (t, k) => (k === Symbol.iterator ? function* () {} : k === 'length' ? 0 : k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : stub()), apply: () => stub(), construct: () => stub() });
 /* deferred fetch: each call waits until release() */
@@ -46,13 +46,10 @@ test('HGLang.LIST is the manifest list (getter), ok() follows it', () => {
   assert.equal(m.HGLang.ok('fr'), true); assert.equal(m.HGLang.ok('de'), false);
 });
 
-test('hgTr gateway: pl -> first, any other language -> second, whatever the LIST order; objects and arrays', () => {
-  assert.equal(mk({ lang: 'pl' }).hgTr('a', 'b'), 'a');
-  assert.equal(mk({ lang: 'en' }).hgTr('a', 'b'), 'b');
-  const fr = mk({ lang: 'fr', manifest: MAN_FR }); assert.equal(fr.hgTr('a', 'b'), 'b');
-  const rev = mk({ lang: 'pl', manifest: [MAN[1], MAN[0]] }); assert.deepEqual(rev.HGLang.LIST.map((x) => x[0]), ['pl', 'en']); assert.equal(rev.hgTr('a', 'b'), 'a');
-  const pl = mk({ lang: 'pl' }); assert.deepEqual(pl.hgTr(['x'], ['y']), ['x']); assert.deepEqual(pl.hgTr({ k: 1 }, { k: 2 }), { k: 1 });
-  assert.deepEqual(mk({ lang: 'en' }).hgTr({ k: 1 }, { k: 2 }), { k: 2 });
+test('hgCurLang follows the choice whatever the LIST order; the hgTr / hgTrLazy / hgI gateways are gone', () => {
+  const rev = mk({ lang: 'pl', manifest: [MAN[1], MAN[0]] }); assert.deepEqual(rev.HGLang.LIST.map((x) => x[0]), ['pl', 'en']); assert.equal(rev.hgCurLang(), 'pl');
+  assert.equal(mk({ lang: 'fr', manifest: MAN_FR }).hgCurLang(), 'fr');
+  for (const n of ['hgTr', 'hgTrLazy', 'hgTrO', 'hgI', 'HG_I18N', 'HG_WZ_T', 'HG_PL']) assert.throws(() => mk({ names: [n] }), ReferenceError, n);
 });
 
 test('hgLang: personal choice first, then generic browser detection (navigator.languages)', () => {

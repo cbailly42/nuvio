@@ -53,7 +53,7 @@ const hgTD = (k, fb) => {
     const r = c && c.d && c.d[k] != null ? hgI18nPick(c.d[k], null, loc) : null; if (r != null) return typeof r === 'string' ? r : r[0];
   } return fb;
 };
-/* obiekt z getterami hgT (zamiast hgTrO): map { właściwość: klucz } */
+/* obiekt z getterami hgT: map { właściwość: klucz } */
 const hgTO = (o, map) => { for (const [k, key] of Object.entries(map)) Object.defineProperty(o, k, { get: () => hgT(key), enumerable: true, configurable: true }); return o; };
 /* wybór języka: zapisany (jeśli istnieje w manifeście), potem języki przeglądarki: pełny kod (pt-br), sama język (pt), na końcu en */
 const hgLangDetect = (pref, nav) => {

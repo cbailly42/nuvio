@@ -30,8 +30,25 @@ propose) | review (key may be clumsy: promoted to common.*, collision suffix _2.
 """
 import os, re, sys, csv, json, subprocess, shutil, unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from i18n_check import lex, tr_spans
-from i18n_compile import PLURAL_SUFFIXES, flatten   # reused as-is (note: tr_spans also reports L(...); we drop those)
+from i18n_compile import PLURAL_SUFFIXES, flatten   # reused as-is
+
+def tr_spans(src):
+    """character ranges covered by hgTr(...), hgTrLazy(...), hgTrO(...) calls (moved here from the old PL/EN i18n_check.py;
+    it also reports L(...), which extract_file drops)"""
+    sp = []
+    for m in re.finditer(r"\b(hgTr|hgTrLazy|hgTrO|L)\s*\(", src):
+        i = m.end(); d = 1; n = len(src); q = None
+        while i < n and d:
+            c = src[i]
+            if q:
+                if c == '\\': i += 2; continue
+                if c == q: q = None
+            elif c in '\'"`': q = c
+            elif c == '(': d += 1
+            elif c == ')': d -= 1
+            i += 1
+        sp.append((m.start(), i))
+    return sp
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COLUMNS = ['key', 'file', 'line', 'kind', 'en', 'pl', 'params', 'manual', 'status']
@@ -228,7 +245,7 @@ def extract_dicts(file, s):
 
 def scan_regions(s):
     """(comments, text): character ranges of comments and of string / template text (not ${} code). Same lexical rules as
-    i18n_check.lex, which drops comments without reporting where they were, so the ranges are recomputed here."""
+    i18n_check.lex (kept independent here: the migration tool must not depend on the checker)."""
     comments = []; text = []; n = len(s)
     def tpl(i):
         st = i
