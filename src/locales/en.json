@@ -267,6 +267,10 @@
       "not_enough_history_yet": "Not enough history yet",
       "picker_description": "Line, area or bars from sensor history",
       "picker_name": "Nuvio – Chart"
+    },
+    "clock": {
+      "picker_description": "Time and date",
+      "picker_name": "Home Glass – Clock"
     }
   },
   "common": {

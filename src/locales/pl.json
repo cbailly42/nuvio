@@ -271,6 +271,10 @@
       "not_enough_history_yet": "Za mało danych w historii",
       "picker_description": "Linia, obszar albo słupki z historii czujnika",
       "picker_name": "Nuvio – Wykres"
+    },
+    "clock": {
+      "picker_description": "Godzina i data",
+      "picker_name": "Home Glass – Zegar"
     }
   },
   "common": {
