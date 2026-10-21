@@ -86,6 +86,12 @@
       "add_actions_in_the": "Add actions in the card settings",
       "picker_description": "A row of round buttons: scenes, scripts, services",
       "picker_name": "Nuvio – Quick actions"
+    },
+    "appliance": {
+      "no_device": "No device",
+      "pick_an_entity_of": "Pick an entity of the device in the widget settings.",
+      "picker_description": "Washer, dryer, kettle and other devices: state, program, time left, progress",
+      "picker_name": "Home Glass – Appliance"
     }
   },
   "common": {

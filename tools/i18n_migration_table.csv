@@ -97,8 +97,8 @@ cards.alarm.entity_not_found,parts/cards/alarm-card.part.js,101,hgTr,Entity not 
 cards.alarm.alarm_state_arm_disarm,parts/cards/alarm-card.part.js,128,hgTr,"Alarm state, arm/disarm per supported_features, code keypad","Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu",,load-time,manual
 cards.appliance.no_device,parts/cards/appliance-card.part.js,13,hgTr,No device,Brak urządzenia,,,auto
 cards.appliance.pick_an_entity_of,parts/cards/appliance-card.part.js,13,hgTr,Pick an entity of the device in the widget settings.,Wybierz encję urządzenia w ustawieniach widżetu.,,,auto
-cards.appliance.home_glass_appliance,parts/cards/appliance-card.part.js,15,hgTr,Home Glass – Appliance,Home Glass – Urządzenie AGD,,load-time,manual
-cards.appliance.washer_dryer_kettle_and,parts/cards/appliance-card.part.js,15,hgTr,"Washer, dryer, kettle and other devices: state, program, time left, progress","Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp",,load-time,manual
+cards.appliance.picker_name,parts/cards/appliance-card.part.js,15,hgTr,Home Glass – Appliance,Home Glass – Urządzenie AGD,,load-time,auto
+cards.appliance.picker_description,parts/cards/appliance-card.part.js,15,hgTr,"Washer, dryer, kettle and other devices: state, program, time left, progress","Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp",,load-time,auto
 cards.arc.choose_a_light_fan,parts/cards/arc-card.part.js,18,hgTr,"Choose a light, fan or number","Wybierz światło, wentylator albo liczbę",,,auto
 cards.arc.nuvio_arc,parts/cards/arc-card.part.js,38,hgTr,Nuvio – Arc,Nuvio – Łuk,,load-time,manual
 cards.arc.brightness_speed_or_level,parts/cards/arc-card.part.js,38,hgTr,"Brightness, speed or level on a draggable arc","Jasność, prędkość albo poziom na przeciąganym łuku",,load-time,manual
