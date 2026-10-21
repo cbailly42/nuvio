@@ -201,6 +201,12 @@ const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q
   release() { this.on = false; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) c._doUpdate(false); } });
 /* karty poza ekranem nie przerysowują się: zmiana stanu tylko oznacza kartę jako zaległą, a odświeżenie przychodzi, gdy karta wjedzie
    w widok (z zapasem 300 px, więc przy przewijaniu jest już gotowa). Pierwsze malowanie i zmiana konfiguracji zawsze od razu. */
+/* czy karta naprawdę leży w oknie (z zapasem jak w HG_VIS); 0x0 = ukryta */
+const hgOnScreen = (el) => { const r = el.getBoundingClientRect(), m = 300; return r.width > 0 && r.height > 0 && r.bottom > -m && r.right > -m && r.top < innerHeight + m && r.left < innerWidth + m; };
+/* karty zaległe poza ekranem: po pokazaniu widoku (hgOffFlush) te, które są już widoczne, rysują się od razu */
+const HG_OFFQ = window.__hgOffQ || (window.__hgOffQ = new Set());
+const hgOffFlush = () => { for (const c of [...HG_OFFQ]) { if (!c.isConnected) { HG_OFFQ.delete(c); continue; } if (!c._offDirty) { HG_OFFQ.delete(c); continue; } if (hgOnScreen(c)) { HG_OFFQ.delete(c); c._off = false; c.removeAttribute('hg-off'); c._offDirty = false; c._doUpdate(true); } } };
+if (!window.__hgOffVis) { window.__hgOffVis = 1; document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => hgOffFlush(), 60); }); }
 const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => {
   for (const e of es) { const c = e.target; c._off = !e.isIntersecting; c.toggleAttribute('hg-off', c._off);   /* karty z animacjami zatrzymują je poza ekranem */ if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
 }, { rootMargin: '300px' }));
@@ -244,6 +250,8 @@ class HGBase extends HTMLElement {
   ents() { return [this._config.entity].filter(Boolean); }
   /* szybka ścieżka: HA podmienia obiekt stanu tylko dla zmienionej encji -> porównanie referencji, bez JSON */
   _changed() {
+    /* lista encji zależna od rejestru (pokoje, obszary): po zmianie rejestru liczona od nowa */
+    const hr = this._hass, rk = this._regK; if (!rk || rk[0] !== hr.entities || rk[1] !== hr.devices || rk[2] !== hr.areas) { this._regK = [hr.entities, hr.devices, hr.areas]; if (rk) { this._entsC = null; this._prevStates = null; } }
     const ents = this._entsC || (this._entsC = this.ents());
     const st = this._hass.states, prev = this._prevStates;
     const ex = JSON.stringify(this._extraSig ? this._extraSig() : '');
@@ -269,7 +277,9 @@ class HGBase extends HTMLElement {
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;
     if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); return; }
-    if (this._off && this._html != null && !window.__hgNoPause) { this._offDirty = true; return; }   // poza ekranem: nadrobi po pokazaniu           // panel w trakcie animacji: przerysuj po jej końcu
+    if (this._off && this._html != null && !window.__hgNoPause) {
+      /* IntersectionObserver bywa nieaktualny (Safari / aplikacja HA po pokazaniu ukrytego widoku): karta widoczna na ekranie rysuje się od razu */
+      if (hgOnScreen(this)) { this._off = false; this.removeAttribute('hg-off'); } else { this._offDirty = true; HG_OFFQ.add(this); return; } }   // poza ekranem: nadrobi po pokazaniu           // panel w trakcie animacji: przerysuj po jej końcu
     if (!force && !this._changed()) return;
     // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
     if (this._touching) { this._pendingUpd = true; return; }
