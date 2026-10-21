@@ -29,7 +29,7 @@ Teksty, których brakuje w wybranym języku, wyświetlają się po angielsku.
 
 Język to jeden plik JSON. Nie trzeba zmieniać kodu.
 
-1. Utwórz `src/locales/<kod>.json`, gdzie `<kod>` to kod języka małymi literami (`de`, `pt-br` …). Najprościej zacząć od kopii `src/locales/en.json`, katalogu wzorcowego.
+1. Utwórz `src/locales/<kod>.json`, gdzie `<kod>` to kod języka małymi literami (`de`, `pt-br` …); kontrola i budowanie odrzucają każdą inną nazwę pliku. Najprościej zacząć od kopii `src/locales/en.json`, katalogu wzorcowego.
 2. Uzupełnij blok `_meta`:
 
    ```json
@@ -42,7 +42,7 @@ Język to jeden plik JSON. Nie trzeba zmieniać kodu.
    ```
 
    `name` (nazwa języka w tym języku, widoczna przy wyborze języka) i `locale` (daty, liczby i reguły liczby mnogiej) są wymagane. `flag` i `intro` są opcjonalne: kreator pierwszego uruchomienia pokazuje je na kroku wyboru języka (w przeciwnym razie globus i nazwę).
-3. Przetłumacz wartości. Zostaw bez zmian klucze, `{zmienne}` i przyrostki liczby mnogiej, i podaj wszystkie formy liczby mnogiej, których potrzebuje Twój język (zobacz [Rozwój](development.md#tłumaczenia)). Brakujący klucz wyświetla się po angielsku.
+3. Przetłumacz wartości. Zostaw bez zmian klucze, `{zmienne}` i przyrostki liczby mnogiej, i podaj wszystkie formy liczby mnogiej, których potrzebuje Twój język (zobacz [Rozwój](development.md#tłumaczenia)). Brakujący klucz wyświetla się po angielsku. Pisz zwykły tekst: bez znaczników HTML, a poza angielskim bez prostego cudzysłowu `"` (użyj cudzysłowów typograficznych swojego języka); kontrola je odrzuca, bo tekst katalogu trafia na stronę jako HTML.
 4. Sprawdź katalog: `python3 tools/i18n_check.py --lang <kod>` wypisuje brakujące i przestarzałe klucze, a `python3 tools/i18n_check.py` sprawdza zmienne, formy liczby mnogiej i `_meta`.
 5. Zbuduj: `python3 tools/build.py`. Katalog trafia do `dist/nuvio-locale-<kod>.<hash>.json`, a język do manifestu wbudowanego w bundle: pojawia się w Ustawieniach, w menu użytkownika i w kreatorze, a `language: <kod>` i wykrywanie języka przeglądarki go rozpoznają.
 

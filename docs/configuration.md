@@ -29,7 +29,7 @@ Texts that are not translated in the chosen language are shown in English.
 
 A language is one JSON file. No code change is needed.
 
-1. Create `src/locales/<code>.json`, where `<code>` is the lowercase language code (`de`, `pt-br` …). The easiest start is a copy of `src/locales/en.json`, the reference catalog.
+1. Create `src/locales/<code>.json`, where `<code>` is the lowercase language code (`de`, `pt-br` …); the check and the build refuse any other file name. The easiest start is a copy of `src/locales/en.json`, the reference catalog.
 2. Fill in its `_meta` block:
 
    ```json
@@ -42,7 +42,7 @@ A language is one JSON file. No code change is needed.
    ```
 
    `name` (the language name in that language, shown in the language pickers) and `locale` (used for dates, numbers and plural rules) are required. `flag` and `intro` are optional: the first-run wizard shows them on the language step (a globe and the name otherwise).
-3. Translate the values. Keep the keys, the `{variables}` and the plural suffixes as they are, and give every plural form your language needs (see [Development](development.md#translations)). A key you leave out is shown in English.
+3. Translate the values. Keep the keys, the `{variables}` and the plural suffixes as they are, and give every plural form your language needs (see [Development](development.md#translations)). A key you leave out is shown in English. Write plain text: no HTML tags, and outside English no straight double quote `"` (use your language's typographic quotes); the check refuses them because catalog text is inserted into the page as HTML.
 4. Check the catalog: `python3 tools/i18n_check.py --lang <code>` lists the missing and obsolete keys, and `python3 tools/i18n_check.py` checks variables, plural forms and `_meta`.
 5. Build with `python3 tools/build.py`. The catalog is compiled to `dist/nuvio-locale-<code>.<hash>.json` and the language is added to the manifest embedded in the bundle: it appears in Settings, in the user menu and in the wizard, and `language: <code>` and browser detection accept it.
 

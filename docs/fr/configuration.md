@@ -29,7 +29,7 @@ Les textes non traduits dans la langue choisie s’affichent en anglais.
 
 Une langue tient dans un seul fichier JSON. Aucune modification du code n’est nécessaire.
 
-1. Créez `src/locales/<code>.json`, où `<code>` est le code de la langue en minuscules (`de`, `pt-br` …). Le plus simple est de partir d’une copie de `src/locales/en.json`, le catalogue de référence.
+1. Créez `src/locales/<code>.json`, où `<code>` est le code de la langue en minuscules (`de`, `pt-br` …) ; le contrôle et la compilation refusent tout autre nom de fichier. Le plus simple est de partir d’une copie de `src/locales/en.json`, le catalogue de référence.
 2. Complétez son bloc `_meta` :
 
    ```json
@@ -42,7 +42,7 @@ Une langue tient dans un seul fichier JSON. Aucune modification du code n’est 
    ```
 
    `name` (le nom de la langue dans cette langue, affiché dans les sélecteurs de langue) et `locale` (dates, nombres et règles du pluriel) sont obligatoires. `flag` et `intro` sont facultatifs : l’assistant de première configuration les affiche à l’étape de la langue (sinon, un globe et le nom).
-3. Traduisez les valeurs. Gardez tels quels les clés, les `{variables}` et les suffixes de pluriel, et fournissez toutes les formes de pluriel dont votre langue a besoin (voir [Développement](development.md#traductions)). Une clé absente s’affiche en anglais.
+3. Traduisez les valeurs. Gardez tels quels les clés, les `{variables}` et les suffixes de pluriel, et fournissez toutes les formes de pluriel dont votre langue a besoin (voir [Développement](development.md#traductions)). Une clé absente s’affiche en anglais. Écrivez du texte brut : pas de balises HTML et, hors de l’anglais, pas de guillemet droit `"` (utilisez les guillemets typographiques de votre langue) ; le contrôle les refuse, car le texte des catalogues est inséré dans la page en HTML.
 4. Vérifiez le catalogue : `python3 tools/i18n_check.py --lang <code>` liste les clés manquantes et obsolètes, et `python3 tools/i18n_check.py` contrôle les variables, les formes de pluriel et `_meta`.
 5. Compilez avec `python3 tools/build.py`. Le catalogue est compilé dans `dist/nuvio-locale-<code>.<hash>.json` et la langue est ajoutée au manifeste intégré au bundle : elle apparaît dans les Paramètres, le menu utilisateur et l’assistant, et `language: <code>` comme la détection du navigateur la reconnaissent.
 
