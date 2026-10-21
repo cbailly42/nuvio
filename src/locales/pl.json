@@ -613,6 +613,16 @@
       "no_sun_sun_entity": "Brak encji sun.sun",
       "picker_description": "Wschód i zachód słońca",
       "picker_name": "Home Glass – Słońce"
+    },
+    "timer": {
+      "choose_a_timer": "Wybierz minutnik (timer)",
+      "paused": "Wstrzymany",
+      "picker_description": "Pozostały czas na łuku, start i pauza",
+      "picker_name": "Nuvio – Minutnik",
+      "ready": "Gotowy",
+      "remaining": "Pozostało",
+      "running": "Odlicza",
+      "start": "Start"
     }
   },
   "common": {
@@ -667,6 +677,7 @@
     "pause": "Pauza",
     "power_now": "Moc teraz",
     "previous_track": "Poprzedni",
+    "resume": "Wznów",
     "room": "Pokój",
     "rooms": "Pokoje",
     "save": "Zapisz",

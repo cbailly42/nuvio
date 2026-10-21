@@ -609,6 +609,16 @@
       "no_sun_sun_entity": "No sun.sun entity",
       "picker_description": "Sunrise and sunset",
       "picker_name": "Home Glass – Sun"
+    },
+    "timer": {
+      "choose_a_timer": "Choose a timer",
+      "paused": "Paused",
+      "picker_description": "Remaining time on an arc, start and pause",
+      "picker_name": "Nuvio – Timer",
+      "ready": "Ready",
+      "remaining": "Remaining",
+      "running": "Running",
+      "start": "Start"
     }
   },
   "common": {
@@ -663,6 +673,7 @@
     "pause": "Pause",
     "power_now": "Power now",
     "previous_track": "Previous",
+    "resume": "Resume",
     "room": "Room",
     "rooms": "Rooms",
     "save": "Save",

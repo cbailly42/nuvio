@@ -1078,8 +1078,8 @@ common.pause,parts/cards/timer-card.part.js,18,hgTr,Pause,Pauza,,,auto
 common.resume,parts/cards/timer-card.part.js,18,hgTr,Resume,Wznów,,,auto
 cards.timer.start,parts/cards/timer-card.part.js,18,hgTr,Start,Start,,,auto
 common.cancel,parts/cards/timer-card.part.js,18,hgTr,Cancel,Anuluj,,,auto
-cards.timer.nuvio_timer,parts/cards/timer-card.part.js,28,hgTr,Nuvio – Timer,Nuvio – Minutnik,,load-time,manual
-cards.timer.remaining_time_on_an,parts/cards/timer-card.part.js,28,hgTr,"Remaining time on an arc, start and pause","Pozostały czas na łuku, start i pauza",,load-time,manual
+cards.timer.picker_name,parts/cards/timer-card.part.js,28,hgTr,Nuvio – Timer,Nuvio – Minutnik,,load-time,auto
+cards.timer.picker_description,parts/cards/timer-card.part.js,28,hgTr,"Remaining time on an arc, start and pause","Pozostały czas na łuku, start i pauza",,load-time,auto
 cards.todo.choose_a_to_do,parts/cards/todo-card.part.js,18,hgTr,Choose a to-do list,Wybierz listę zadań,,,auto
 cards.todo.add_a_task,parts/cards/todo-card.part.js,22,hgTr,Add a task,Dodaj zadanie,,,auto
 cards.todo.new_task,parts/cards/todo-card.part.js,22,hgTr,New task,Nowe zadanie,,,auto
