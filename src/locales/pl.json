@@ -15,6 +15,24 @@
     "teal": "Turkus",
     "violet": "Fiolet"
   },
+  "assist": {
+    "assist": "Assist",
+    "default_assistant": "Domyślny asystent",
+    "dictation_in_the_browser": "Dyktowanie w przeglądarce",
+    "empty_default_suggestions": "Puste = podpowiedzi domyślne",
+    "header_button": "Przycisk w nagłówku",
+    "keyboard_shortcut_a": "Skrót klawiszowy A",
+    "microphone": "Mikrofon",
+    "microphone_icon_next_to": "Ikona mikrofonu obok wiadomości",
+    "opens_the_dialog_when": "Otwiera okno, gdy nie piszesz w polu",
+    "preferred": "Preferowany w Home Assistant",
+    "preferred_named": "Preferowany w Home Assistant ({name})",
+    "read_replies_aloud": "Czytaj odpowiedzi na głos",
+    "suggestions": "Podpowiedzi",
+    "suggestions_comma_separated": "Podpowiedzi (oddzielone przecinkami)",
+    "talk_to_the_home": "Rozmowa z asystentem Home Assistant w oknie: przycisk w nagłówku albo klawisz A. Ustawienie dotyczy konta użytkownika HA.",
+    "the_voice_set_in": "Głos wybrany w asystencie"
+  },
   "backgrounds": {
     "dom_w_lesie": "Dom w lesie",
     "domek_nad_woda": "Domek nad wodą",

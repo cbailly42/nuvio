@@ -82,15 +82,15 @@ const HGAssistUI = window.__hgAssistUI || (window.__hgAssistUI = {
   sw(k, l, d, on) { return `<button type="button" class="wl-sw" role="switch" data-hge="as-tg" data-k="${k}" aria-checked="${on}"><span>${l}<small>${d}</small></span><i aria-hidden="true"></i></button>`; },
   html(p) { const c = this.get(); this.pipes(p); const pl = this._pl || [], pref = pl.find((x) => x.id === this._pref);
     const cur = c.pipeline && !pl.some((x) => x.id === c.pipeline) ? [{ id: c.pipeline, name: c.pipeline }] : [];
-    return `<section class="lk-g wl as-s" data-tab="head" aria-labelledby="as-h"><style>${typeof HG_WALL_CSS !== 'undefined' ? HG_WALL_CSS : ''}</style><h4 id="as-h">${H.icon('mdi:microphone-message')}${hgTr('Assist', 'Assist')}</h4>
-      <small class="lk-hn">${hgTr('Rozmowa z asystentem Home Assistant w oknie: przycisk w nagłówku albo klawisz A. Ustawienie dotyczy konta użytkownika HA.', 'Talk to the Home Assistant assistant in a dialog: the header button or the A key. Applies to this Home Assistant user.')}</small>
-      ${this.sw('button', hgTr('Przycisk w nagłówku', 'Header button'), hgTr('Ikona mikrofonu obok wiadomości', 'Microphone icon next to messages'), c.button)}
-      ${this.sw('key', hgTr('Skrót klawiszowy A', 'Keyboard shortcut A'), hgTr('Otwiera okno, gdy nie piszesz w polu', 'Opens the dialog when you are not typing in a field'), c.key)}
-      <label class="wl-f"><span>${hgTr('Domyślny asystent', 'Default assistant')}</span><select class="hs-in" name="as-pipe"><option value="">${H.esc(hgTr('Preferowany w Home Assistant', 'Preferred in Home Assistant') + (pref ? ` (${pref.name})` : ''))}</option>${[...cur, ...pl].map((x) => `<option value="${H.esc(x.id)}"${x.id === c.pipeline ? ' selected' : ''}>${H.esc(x.name)}</option>`).join('')}</select></label>
-      ${this.sw('tts', hgTr('Czytaj odpowiedzi na głos', 'Read replies aloud'), hgTr('Głos wybrany w asystencie', 'The voice set in the assistant'), c.tts)}
-      ${this.sw('mic', hgTr('Mikrofon', 'Microphone'), hgTr('Dyktowanie w przeglądarce', 'Dictation in the browser'), c.mic)}
-      <label class="wl-f"><span>${hgTr('Podpowiedzi (oddzielone przecinkami)', 'Suggestions (comma separated)')}</span><span class="hs-s lk-url">${H.icon('mdi:lightbulb-on-outline')}<input class="hs-in" name="as-sug" placeholder="${hgTr('Puste = podpowiedzi domyślne', 'Empty = default suggestions')}" value="${H.esc((c.suggestions || []).join(', '))}" autocomplete="off" aria-label="${hgTr('Podpowiedzi', 'Suggestions')}"></span></label>
-      <button type="button" class="wl-tb" data-hge="as-open">${H.icon('mdi:microphone-message')}<span>${hgTr('Otwórz Assist', 'Open Assist')}</span></button></section>`; },
+    return `<section class="lk-g wl as-s" data-tab="head" aria-labelledby="as-h"><style>${typeof HG_WALL_CSS !== 'undefined' ? HG_WALL_CSS : ''}</style><h4 id="as-h">${H.icon('mdi:microphone-message')}${hgT('assist.assist')}</h4>
+      <small class="lk-hn">${hgT('assist.talk_to_the_home')}</small>
+      ${this.sw('button', hgT('assist.header_button'), hgT('assist.microphone_icon_next_to'), c.button)}
+      ${this.sw('key', hgT('assist.keyboard_shortcut_a'), hgT('assist.opens_the_dialog_when'), c.key)}
+      <label class="wl-f"><span>${hgT('assist.default_assistant')}</span><select class="hs-in" name="as-pipe"><option value="">${H.esc(pref ? hgT('assist.preferred_named', { name: pref.name }) : hgT('assist.preferred'))}</option>${[...cur, ...pl].map((x) => `<option value="${H.esc(x.id)}"${x.id === c.pipeline ? ' selected' : ''}>${H.esc(x.name)}</option>`).join('')}</select></label>
+      ${this.sw('tts', hgT('assist.read_replies_aloud'), hgT('assist.the_voice_set_in'), c.tts)}
+      ${this.sw('mic', hgT('assist.microphone'), hgT('assist.dictation_in_the_browser'), c.mic)}
+      <label class="wl-f"><span>${hgT('assist.suggestions_comma_separated')}</span><span class="hs-s lk-url">${H.icon('mdi:lightbulb-on-outline')}<input class="hs-in" name="as-sug" placeholder="${hgT('assist.empty_default_suggestions')}" value="${H.esc((c.suggestions || []).join(', '))}" autocomplete="off" aria-label="${hgT('assist.suggestions')}"></span></label>
+      <button type="button" class="wl-tb" data-hge="as-open">${H.icon('mdi:microphone-message')}<span>${hgT('common.open_assist')}</span></button></section>`; },
   wire(p, S) { const s = S.querySelector('[name=as-pipe]'); if (s) s.addEventListener('change', () => this.set({ pipeline: s.value }));
     const u = S.querySelector('[name=as-sug]'); if (u) u.addEventListener('change', () => this.set({ suggestions: u.value.split(',').map((x) => x.trim()).filter(Boolean) })); },
   act(p, b, a) { if (a === 'as-tg') { const k = b.dataset.k; this.set({ [k]: !this.get()[k] }); return p._eLook(); }

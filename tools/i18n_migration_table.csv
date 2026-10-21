@@ -1346,7 +1346,8 @@ assist.microphone_icon_next_to,parts/hg-assist.part.js,87,hgTr,Microphone icon n
 assist.keyboard_shortcut_a,parts/hg-assist.part.js,88,hgTr,Keyboard shortcut A,Skrót klawiszowy A,,,auto
 assist.opens_the_dialog_when,parts/hg-assist.part.js,88,hgTr,Opens the dialog when you are not typing in a field,"Otwiera okno, gdy nie piszesz w polu",,,auto
 assist.default_assistant,parts/hg-assist.part.js,89,hgTr,Default assistant,Domyślny asystent,,,auto
-assist.preferred_in_home_assistant,parts/hg-assist.part.js,89,hgTr,Preferred in Home Assistant,Preferowany w Home Assistant,,concat,manual
+assist.preferred,parts/hg-assist.part.js,89,hgTr,Preferred in Home Assistant,Preferowany w Home Assistant,,concat,auto
+assist.preferred_named,parts/hg-assist.part.js,89,hgTr,Preferred in Home Assistant ({name}),Preferowany w Home Assistant ({name}),name,concat,auto
 assist.read_replies_aloud,parts/hg-assist.part.js,90,hgTr,Read replies aloud,Czytaj odpowiedzi na głos,,,auto
 assist.the_voice_set_in,parts/hg-assist.part.js,90,hgTr,The voice set in the assistant,Głos wybrany w asystencie,,,auto
 assist.microphone,parts/hg-assist.part.js,91,hgTr,Microphone,Mikrofon,,,auto

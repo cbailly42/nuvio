@@ -15,6 +15,24 @@
     "teal": "Teal",
     "violet": "Violet"
   },
+  "assist": {
+    "assist": "Assist",
+    "default_assistant": "Default assistant",
+    "dictation_in_the_browser": "Dictation in the browser",
+    "empty_default_suggestions": "Empty = default suggestions",
+    "header_button": "Header button",
+    "keyboard_shortcut_a": "Keyboard shortcut A",
+    "microphone": "Microphone",
+    "microphone_icon_next_to": "Microphone icon next to messages",
+    "opens_the_dialog_when": "Opens the dialog when you are not typing in a field",
+    "preferred": "Preferred in Home Assistant",
+    "preferred_named": "Preferred in Home Assistant ({name})",
+    "read_replies_aloud": "Read replies aloud",
+    "suggestions": "Suggestions",
+    "suggestions_comma_separated": "Suggestions (comma separated)",
+    "talk_to_the_home": "Talk to the Home Assistant assistant in a dialog: the header button or the A key. Applies to this Home Assistant user.",
+    "the_voice_set_in": "The voice set in the assistant"
+  },
   "backgrounds": {
     "dom_w_lesie": "House in the woods",
     "domek_nad_woda": "Lakeside cabin",
