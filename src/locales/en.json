@@ -2183,6 +2183,45 @@
     "your_whole_home_in": "Your whole home in one place",
     "zoe": "Zoe"
   },
+  "looks": {
+    "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",
+    "dashboard_style": "Dashboard style",
+    "style_toast": "Style: {name}",
+    "styles": {
+      "forest": {
+        "description": "Greens and mist",
+        "name": "Forest"
+      },
+      "frost": {
+        "description": "Deep frosted glass",
+        "name": "Frost"
+      },
+      "graphite": {
+        "description": "Flat, sharper corners",
+        "name": "Graphite"
+      },
+      "midnight": {
+        "description": "Navy and violet",
+        "name": "Midnight"
+      },
+      "nuvio": {
+        "description": "Default",
+        "name": "Nuvio"
+      },
+      "ocean": {
+        "description": "Water and teal",
+        "name": "Ocean"
+      },
+      "pastel": {
+        "description": "Bright and soft",
+        "name": "Pastel"
+      },
+      "sunset": {
+        "description": "Warm light",
+        "name": "Sunset"
+      }
+    }
+  },
   "nav": {
     "cal_sub": "Events from your calendars",
     "calendar": "Calendar",

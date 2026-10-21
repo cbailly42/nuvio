@@ -2441,12 +2441,26 @@ lookr.saved_on_this_device,parts/hg-lookr.part.js,132,hgTr,Saved on this device 
 lookr.header_saved,parts/hg-lookr.part.js,134,hgTr,Header saved,Zapisano nagłówek,,,auto
 lookr.header_saved_reloading,parts/hg-lookr.part.js,135,hgTr,Header saved – reloading…,Zapisano nagłówek – odświeżanie…,,,auto
 lookr.enter_a_local_or,parts/hg-lookr.part.js,136,hgTr,Enter a /local/… or https://… URL,Podaj adres /local/… lub https://…,,,auto
-looks.l_n,parts/hg-looks.part.js,62,hgTr,,...L.n,,expr,manual
-looks.l_d,parts/hg-looks.part.js,62,hgTr,,...L.d,,expr,manual
 looks.dashboard_style,parts/hg-looks.part.js,63,hgTr,Dashboard style,Styl pulpitu,,,auto
 looks.a_ready_made_set,parts/hg-looks.part.js,64,hgTr,"A ready-made set: accent, background and glass. You can change the accent and background below afterwards.","Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",,,auto
 looks.dashboard_style,parts/hg-looks.part.js,65,hgTr,Dashboard style,Styl pulpitu,,,auto
-looks.style_l_n_1,parts/hg-looks.part.js,68,hgTr,Style: ${L.n[1]},Styl: ${L.n[0]},,expr,manual
+looks.style_toast,parts/hg-looks.part.js,68,hgTr,Style: {name},Styl: {name},name,expr,auto
+looks.styles.nuvio.description,parts/hg-looks.part.js,11,hgTr,Default,Domyślny,,expr,auto
+looks.styles.frost.description,parts/hg-looks.part.js,13,hgTr,Deep frosted glass,Mocno zmrożone szkło,,expr,auto
+looks.styles.midnight.description,parts/hg-looks.part.js,14,hgTr,Navy and violet,Granat i fiolet,,expr,auto
+looks.styles.sunset.description,parts/hg-looks.part.js,16,hgTr,Warm light,Ciepłe światło,,expr,auto
+looks.styles.forest.description,parts/hg-looks.part.js,18,hgTr,Greens and mist,Zieleń i mgła,,expr,auto
+looks.styles.ocean.description,parts/hg-looks.part.js,20,hgTr,Water and teal,Woda i turkus,,expr,auto
+looks.styles.pastel.description,parts/hg-looks.part.js,22,hgTr,Bright and soft,Jasny i miękki,,expr,auto
+looks.styles.graphite.description,parts/hg-looks.part.js,24,hgTr,"Flat, sharper corners","Płaski, ostrzejsze rogi",,expr,auto
+looks.styles.nuvio.name,parts/hg-looks.part.js,11,hgTr,Nuvio,Nuvio,,expr,auto
+looks.styles.frost.name,parts/hg-looks.part.js,12,hgTr,Frost,Szron,,expr,auto
+looks.styles.midnight.name,parts/hg-looks.part.js,14,hgTr,Midnight,Północ,,expr,auto
+looks.styles.sunset.name,parts/hg-looks.part.js,16,hgTr,Sunset,Zachód,,expr,auto
+looks.styles.forest.name,parts/hg-looks.part.js,18,hgTr,Forest,Las,,expr,auto
+looks.styles.ocean.name,parts/hg-looks.part.js,20,hgTr,Ocean,Ocean,,expr,auto
+looks.styles.pastel.name,parts/hg-looks.part.js,22,hgTr,Pastel,Pastel,,expr,auto
+looks.styles.graphite.name,parts/hg-looks.part.js,24,hgTr,Graphite,Grafit,,expr,auto
 oss.shared.dashboard_title,parts/hg-oss.part.js,33,hgTrLazy,Nuvio (shared layout),Nuvio (wspólny układ),,,auto
 oss.shared.dashboard_note,parts/hg-oss.part.js,35,hgTrLazy,"Shared Nuvio layout. Do not edit this dashboard by hand, change the layout in Nuvio.","Wspólny układ Nuvio. Nie edytuj tego pulpitu ręcznie, zmieniaj układ w Nuvio.",,,auto
 backgrounds.dom_w_lesie,parts/hg-oss.part.js,43,dict,House in the woods,Dom w lesie,,,auto

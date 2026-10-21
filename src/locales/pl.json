@@ -2201,6 +2201,45 @@
     "your_whole_home_in": "Cały dom w jednym miejscu",
     "zoe": "Zosia"
   },
+  "looks": {
+    "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",
+    "dashboard_style": "Styl pulpitu",
+    "style_toast": "Styl: {name}",
+    "styles": {
+      "forest": {
+        "description": "Zieleń i mgła",
+        "name": "Las"
+      },
+      "frost": {
+        "description": "Mocno zmrożone szkło",
+        "name": "Szron"
+      },
+      "graphite": {
+        "description": "Płaski, ostrzejsze rogi",
+        "name": "Grafit"
+      },
+      "midnight": {
+        "description": "Granat i fiolet",
+        "name": "Północ"
+      },
+      "nuvio": {
+        "description": "Domyślny",
+        "name": "Nuvio"
+      },
+      "ocean": {
+        "description": "Woda i turkus",
+        "name": "Ocean"
+      },
+      "pastel": {
+        "description": "Jasny i miękki",
+        "name": "Pastel"
+      },
+      "sunset": {
+        "description": "Ciepłe światło",
+        "name": "Zachód"
+      }
+    }
+  },
   "nav": {
     "cal_sub": "Wydarzenia z Twoich kalendarzy",
     "calendar": "Kalendarz",
