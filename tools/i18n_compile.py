@@ -94,8 +94,14 @@ def remaining_literals(js):
         if sp: r += [x.group(2) for x in re.finditer(r':\s*([\'"])([^\'"\\\n]*)\1', js[m.end() + sp[0]:m.end() + sp[1]])]
     return r
 
-def build_locales(src_dir, out_dir):
-    """-> (manifest, compiled en, idx). Writes out_dir/nuvio-locale-<code>.<hash8>.json (flat: HACS ships only top-level dist files) (hash = md5 of the compiled JSON) and deletes stale hashed files."""
+def map_texts(flat, fn):
+    """every text of a flattened catalog through fn: plain entries and each plural form (keys untouched)"""
+    return {k: ({f: fn(x) for f, x in v.items()} if isinstance(v, dict) else fn(v) if isinstance(v, str) else v) for k, v in flat.items()}
+
+def build_locales(src_dir, out_dir, text=None):
+    """-> (manifest, compiled en, idx). Writes out_dir/nuvio-locale-<code>.<hash8>.json (flat: HACS ships only top-level dist files) (hash = md5 of the compiled JSON) and deletes stale hashed files.
+    text: optional str -> str applied to every catalog text (t entries, plural forms, d values) before compiling, so the hash covers the result
+    (build.py passes its brand(): sources say "Home Glass", the bundle and its catalogs say "Nuvio")."""
     srcs = {}
     for f in sorted(os.listdir(src_dir)):
         if f.endswith('.json'):
@@ -103,11 +109,12 @@ def build_locales(src_dir, out_dir):
     if 'en' not in srcs: raise ValueError('src/locales/en.json is required (reference language)')
     for c, s in srcs.items():
         if not isinstance(s.get('_meta'), dict) or not s['_meta'].get('name') or not s['_meta'].get('locale'): raise ValueError('%s.json: _meta needs name and locale' % c)
-    idx = assign_indices(flatten(srcs['en'])); en = compile_catalog(flatten(srcs['en']), idx, srcs['en']['_meta'])
+    fl = lambda c: map_texts(flatten(srcs[c]), text) if text else flatten(srcs[c])
+    idx = assign_indices(flatten(srcs['en'])); en = compile_catalog(fl('en'), idx, srcs['en']['_meta'])
     manifest, keep = [{'code': 'en', 'name': en['m']['name'], 'locale': en['m']['locale'], 'file': None}], set()
     os.makedirs(out_dir, exist_ok=True)
     for c in sorted(k for k in srcs if k != 'en'):
-        body = json.dumps(compile_catalog(flatten(srcs[c]), idx, srcs[c]['_meta']), ensure_ascii=False, separators=(',', ':'))
+        body = json.dumps(compile_catalog(fl(c), idx, srcs[c]['_meta']), ensure_ascii=False, separators=(',', ':'))
         name = 'nuvio-locale-%s.%s.json' % (c, hashlib.md5(body.encode('utf-8')).hexdigest()[:8]); keep.add(name)
         with open(os.path.join(out_dir, name), 'w', encoding='utf-8') as fh: fh.write(body)
         manifest.append({'code': c, 'name': srcs[c]['_meta']['name'], 'locale': srcs[c]['_meta']['locale'], 'file': name})

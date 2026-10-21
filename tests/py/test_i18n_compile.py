@@ -73,4 +73,30 @@ class Locales(unittest.TestCase):
     def test_removed_language_deleted(self):
         C.build_locales(self.src, self.out); os.remove(os.path.join(self.src, 'fr.json')); C.build_locales(self.src, self.out); self.assertEqual(os.listdir(self.out), [])
 
+class Branding(unittest.TestCase):
+    """R11: catalog texts are branded like the bundle (sources say Home Glass, dist says Nuvio), and the hash covers the branded text"""
+    SRC = {'_meta': {'name': 'English', 'locale': 'en'}, 'a': {'t': 'Home Glass – Hint', 'n_one': '{count} Home Glass card', 'n_other': '{count} home-glass cards'},
+           'states': {'x': 'Open hg-light-card'}}
+    def setUp(self):
+        self.d = tempfile.mkdtemp(); self.src = os.path.join(self.d, 'src'); self.out = os.path.join(self.d, 'out'); os.makedirs(self.src)
+        for c, o in (('en', self.SRC), ('pl', dict(self.SRC, _meta={'name': 'Polski', 'locale': 'pl-PL'}))):
+            with open(os.path.join(self.src, c + '.json'), 'w', encoding='utf-8') as f: json.dump(o, f, ensure_ascii=False)
+    def test_text_hook_reaches_t_forms_and_d_and_the_hash(self):
+        import hashlib, build
+        js = "hgReg('hg-light-card', X, 'n', 'd')"; tags = build.brand_tags(js)
+        man, en, idx = C.build_locales(self.src, self.out, text=lambda t: build.brand(t, tags))
+        self.assertEqual(en['t'][idx['a.t']], 'Nuvio – Hint')
+        self.assertEqual(en['t'][idx['a.n']], {'one': '{count} Nuvio card', 'other': '{count} nuvio cards'})
+        self.assertEqual(en['d'], {'states.x': 'Open nuvio-light-card'})
+        f = man[1]['file']; body = open(os.path.join(self.out, f), encoding='utf-8').read()
+        self.assertEqual(json.loads(body)['t'][idx['a.t']], 'Nuvio – Hint'); self.assertNotIn('Home Glass', body)
+        self.assertEqual(f, 'nuvio-locale-pl.%s.json' % hashlib.md5(body.encode('utf-8')).hexdigest()[:8])
+        plain = C.build_locales(self.src, os.path.join(self.d, 'o2'))[0][1]['file']; self.assertNotEqual(plain, f)
+    def test_brand_same_on_code_and_text(self):
+        import build
+        js = "hgReg('hg-light-card', X, hgTLazy('k'), 'Home Glass – Light'); const t = 'home-glass:lang';"; tags = build.brand_tags(js)
+        self.assertEqual(tags, ['hg-light-card', 'hg-page'])
+        self.assertEqual(build.brand(js), build.brand(js, tags))
+        self.assertEqual(build.brand('Home Glass – Light', tags), 'Nuvio – Light'); self.assertEqual(build.brand('Welcome to home-glass', tags), 'Welcome to Nuvio')
+
 if __name__ == '__main__': unittest.main()

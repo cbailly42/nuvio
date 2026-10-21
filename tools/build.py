@@ -117,10 +117,13 @@ CARDS = [
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-users.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
-def brand(js):
-    """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build."""
-    tags = sorted(set(re.findall(r"hgReg\('(hg-[a-z-]+)'", js)) | {'hg-page'}, key=len, reverse=True)
-    for t in tags:
+def brand_tags(js):
+    """element tags to rename: every hgReg('hg-…') of the (unbranded) bundle, plus hg-page"""
+    return sorted(set(re.findall(r"hgReg\('(hg-[a-z-]+)'", js)) | {'hg-page'}, key=len, reverse=True)
+def brand(js, tags=None):
+    """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build.
+    Also applied to every catalog text (tags = those of the bundle), so a text reads the same whether it sits in the code or in a catalog."""
+    for t in (brand_tags(js) if tags is None else tags):
         n = 'nuvio-' + t[3:]
         js = re.sub(r'(?<![-\w])' + re.escape(t) + r'(?![-\w])', n, js)
         js = re.sub(r'(?<![-\w])' + re.escape(t.upper()) + r'(?![-\w])', n.upper(), js)
@@ -188,9 +191,10 @@ def main():
         subprocess.run([sys.executable, os.path.join(w, 'theme_tokens.py')], check=True, cwd=w)
         js = '\n'.join(open(os.path.join(w, 'www', p)).read() for p in PARTS)
         ver = json.load(open(os.path.join(R, 'package.json')))['version'] if os.path.exists(os.path.join(R, 'package.json')) else '0.0.0'
-        js = brand(js)
-        # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it
-        ld = os.path.join(R, 'dist'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld)
+        tags = brand_tags(js); js = brand(js, tags)
+        # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it.
+        # Catalog texts are branded like the code (same tags), before their own hash is taken.
+        ld = os.path.join(R, 'dist'); manifest, en, idx = i18n_compile.build_locales(os.path.join(R, 'src', 'locales'), ld, text=lambda t: brand(t, tags))
         js = i18n_compile.rewrite_keys(js, idx)
         for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
             if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))
