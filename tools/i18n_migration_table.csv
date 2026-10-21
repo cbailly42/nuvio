@@ -236,8 +236,8 @@ cards.chart.picker_name,parts/cards/chart-card.part.js,31,hgTr,Nuvio – Chart,N
 cards.chart.picker_description,parts/cards/chart-card.part.js,31,hgTr,"Line, area or bars from sensor history","Linia, obszar albo słupki z historii czujnika",,load-time,auto
 cards.clock.picker_name,parts/cards/clock-card.part.js,13,hgTr,Home Glass – Clock,Home Glass – Zegar,,load-time,auto
 cards.clock.picker_description,parts/cards/clock-card.part.js,13,hgTr,Time and date,Godzina i data,,load-time,auto
-cards.conditional.nuvio_conditional,parts/cards/conditional-card.part.js,26,hgTr,Nuvio – Conditional,Nuvio – Warunek,,load-time,manual
-cards.conditional.cards_shown_only_when,parts/cards/conditional-card.part.js,26,hgTr,Cards shown only when a condition is met,Karty widoczne tylko przy spełnionym warunku,,load-time,manual
+cards.conditional.picker_name,parts/cards/conditional-card.part.js,26,hgTr,Nuvio – Conditional,Nuvio – Warunek,,load-time,auto
+cards.conditional.picker_description,parts/cards/conditional-card.part.js,26,hgTr,Cards shown only when a condition is met,Karty widoczne tylko przy spełnionym warunku,,load-time,auto
 cards.cover.choose_a_cover_or,parts/cards/cover-card.part.js,9,hgTr,Choose a cover or gate,Wybierz roletę albo bramę,,,auto
 cards.cover.open,parts/cards/cover-card.part.js,14,hgTr,open,otwarcie,,,auto
 cards.cover.position,parts/cards/cover-card.part.js,15,hgTr,Position,Pozycja,,,auto

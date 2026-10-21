@@ -271,6 +271,10 @@
     "clock": {
       "picker_description": "Time and date",
       "picker_name": "Home Glass – Clock"
+    },
+    "conditional": {
+      "picker_description": "Cards shown only when a condition is met",
+      "picker_name": "Nuvio – Conditional"
     }
   },
   "common": {

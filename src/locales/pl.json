@@ -275,6 +275,10 @@
     "clock": {
       "picker_description": "Godzina i data",
       "picker_name": "Home Glass – Zegar"
+    },
+    "conditional": {
+      "picker_description": "Karty widoczne tylko przy spełnionym warunku",
+      "picker_name": "Nuvio – Warunek"
     }
   },
   "common": {
