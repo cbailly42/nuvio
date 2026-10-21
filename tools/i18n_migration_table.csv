@@ -2900,16 +2900,65 @@ wallglass.family,parts/hg-wallglass.part.js,115,hgTr,Family,Rodzina,,,auto
 common.touch_to_wake,parts/hg-wallglass.part.js,117,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,,auto
 common.check_in,parts/hg-wallglass.part.js,126,hgTr,Check-in,Przyjście,,,auto
 common.check_out,parts/hg-wallglass.part.js,126,hgTr,Check-out,Wyjście,,,auto
-wallglass.then,parts/hg-wallglass.part.js,127,hgTr,Then ,Potem ,,concat,manual
-wallglass.en,parts/hg-wallglass.part.js,166,hgTr,en,pl,,expr,manual
+wallglass.then_items,parts/hg-wallglass.part.js,127,hgTr,Then {items},Potem {items},items,concat,auto
 wallglass.add_person,parts/hg-wallglass.part.js,185,hgTr,Add person,Dodaj osobę,,,auto
 wallglass.screensavers,parts/hg-wallglass.part.js,194,hgTr,Screensavers,Wygaszacze,,,auto
-wallglass.en,parts/hg-wallglass.part.js,195,hgTr,en,pl,,expr,manual
 common.touch_to_wake,parts/hg-wallglass.part.js,207,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,,auto
 wallglass.no_session_cannot_upload,parts/hg-wallglass.part.js,228,hgTr,"No session, cannot upload","Brak sesji, nie można przesłać",,,auto
 wallglass.uploading,parts/hg-wallglass.part.js,229,hgTr,Uploading…,Przesyłanie…,,,auto
 wallglass.image_saved,parts/hg-wallglass.part.js,231,hgTr,Image saved,Obraz zapisany,,,auto
-wallglass.upload_failed,parts/hg-wallglass.part.js,231,hgTr,Upload failed (,Nie udało się przesłać (,,concat,manual
+wallglass.upload_failed,parts/hg-wallglass.part.js,231,hgTr,Upload failed ({error}),Nie udało się przesłać ({error}),error,concat,auto
+wallglass.gallery.photo,parts/hg-wallglass.part.js,192,hgTr,Clock on photo,Zegar na zdjęciu,,expr,auto
+wallglass.gallery.board,parts/hg-wallglass.part.js,192,hgTr,Board,Tablica,,expr,auto
+wallglass.gallery.minimal,parts/hg-wallglass.part.js,192,hgTr,Minimal,Minimal,,expr,auto
+wallglass.live_preview,parts/hg-wallglass.part.js,170,hgTr,Live preview,Podgląd na żywo,,expr,auto
+wallglass.live_preview,parts/hg-wallglass.part.js,171,hgTr,Live preview,Podgląd na żywo,,expr,auto
+wallglass.clock,parts/hg-wallglass.part.js,172,hgTr,Clock,Zegar,,expr,auto
+wallglass.clock_format,parts/hg-wallglass.part.js,172,hgTr,Format,Format,,expr,auto
+wallglass.clock_format_as_in_ha,parts/hg-wallglass.part.js,172,hgTr,As in HA,Jak w HA,,expr,auto
+wallglass.clock_size,parts/hg-wallglass.part.js,173,hgTr,Clock size,Wielkość zegara,,expr,auto
+wallglass.position,parts/hg-wallglass.part.js,173,hgTr,Position,Położenie,,expr,auto
+wallglass.position_left,parts/hg-wallglass.part.js,173,hgTr,Left,Z lewej,,expr,auto
+wallglass.position_centre,parts/hg-wallglass.part.js,173,hgTr,Centre,Na środku,,expr,auto
+wallglass.show_date,parts/hg-wallglass.part.js,174,hgTr,Date,Data,,expr,auto
+common.weather,parts/hg-wallglass.part.js,174,hgTr,Weather,Pogoda,,expr,auto
+wallglass.now_playing,parts/hg-wallglass.part.js,174,hgTr,Now playing,Teraz gra,,expr,auto
+wallglass.background,parts/hg-wallglass.part.js,176,hgTr,Background,Tło,,expr,auto
+wallglass.background_gradient,parts/hg-wallglass.part.js,176,hgTr,Gradient,Gradient,,expr,auto
+wallglass.gradient_top,parts/hg-wallglass.part.js,176,hgTr,Top,Góra,,expr,auto
+wallglass.gradient_bottom,parts/hg-wallglass.part.js,176,hgTr,Bottom,Dół,,expr,auto
+wallglass.gradient_glow,parts/hg-wallglass.part.js,176,hgTr,Glow,Poświata,,expr,auto
+wallglass.assistant_orb,parts/hg-wallglass.part.js,176,hgTr,Assistant orb,Kula asystenta,,expr,auto
+wallglass.orb_opens_assist,parts/hg-wallglass.part.js,177,hgTr,Tapping the orb opens Assist,Dotknięcie kuli otwiera Assist,,expr,auto
+wallglass.orb_opens_assist_hint,parts/hg-wallglass.part.js,177,hgTr,Wakes the screen and opens the Assist dialog,Wybudza ekran i od razu pokazuje okno Assist,,expr,auto
+wallglass.orb_colours,parts/hg-wallglass.part.js,177,hgTr,Orb colours,Kolory kuli,,expr,auto
+wallglass.intensity,parts/hg-wallglass.part.js,177,hgTr,Intensity,Intensywność,,expr,auto
+wallglass.background_sphere,parts/hg-wallglass.part.js,179,hgTr,Background sphere,Sfera w tle,,expr,auto
+wallglass.own_image,parts/hg-wallglass.part.js,179,hgTr,Own image,Własne zdjęcie,,expr,auto
+wallglass.background_gradient,parts/hg-wallglass.part.js,179,hgTr,Gradient,Gradient,,expr,auto
+wallglass.upload,parts/hg-wallglass.part.js,180,hgTr,Upload,Prześlij,,expr,auto
+wallglass.dimmer_at_night,parts/hg-wallglass.part.js,181,hgTr,Dimmer at night,Ciemniej w nocy,,expr,auto
+wallglass.after_sunset,parts/hg-wallglass.part.js,181,hgTr,After sunset,Po zachodzie słońca,,expr,auto
+wallglass.night_dimming,parts/hg-wallglass.part.js,181,hgTr,Night dimming,Przyciemnienie nocne,,expr,auto
+wallglass.top_bar,parts/hg-wallglass.part.js,182,hgTr,Top bar,Górny pasek,,expr,auto
+wallglass.date_format,parts/hg-wallglass.part.js,182,hgTr,Date format,Format daty,,expr,auto
+wallglass.date_long,parts/hg-wallglass.part.js,182,hgTr,Long,Długi,,expr,auto
+wallglass.date_short,parts/hg-wallglass.part.js,182,hgTr,Short,Krótki,,expr,auto
+wallglass.date_numeric,parts/hg-wallglass.part.js,183,hgTr,Numeric,Liczbowy,,expr,auto
+wallglass.avatar,parts/hg-wallglass.part.js,184,hgTr,Avatar,Awatar,,expr,auto
+wallglass.family,parts/hg-wallglass.part.js,185,hgTr,Family,Rodzina,,expr,auto
+wallglass.show_household,parts/hg-wallglass.part.js,185,hgTr,Show household,Pokaż domowników,,expr,auto
+wallglass.everyone,parts/hg-wallglass.part.js,186,hgTr,Everyone,Wszyscy,,expr,auto
+wallglass.choose_people,parts/hg-wallglass.part.js,186,hgTr,Choose people,Wybierz osoby,,expr,auto
+wallglass.grey_when_away,parts/hg-wallglass.part.js,186,hgTr,Grey when away,Szare poza domem,,expr,auto
+wallglass.hint_and_motion,parts/hg-wallglass.part.js,187,hgTr,Hint and motion,Napis i ruch,,expr,auto
+wallglass.bottom_hint,parts/hg-wallglass.part.js,187,hgTr,Bottom hint,Napis na dole,,expr,auto
+common.touch_to_wake,parts/hg-wallglass.part.js,187,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,expr,auto
+wallglass.hint_text,parts/hg-wallglass.part.js,188,hgTr,Hint text,Tekst napisu,,expr,auto
+wallglass.motion,parts/hg-wallglass.part.js,188,hgTr,Motion,Animacje,,expr,auto
+wallglass.motion_as_system,parts/hg-wallglass.part.js,188,hgTr,As system,Jak w systemie,,expr,auto
+wallglass.motion_reduced,parts/hg-wallglass.part.js,188,hgTr,Reduced,Ograniczone,,expr,auto
+wallglass.start_delay_hint,parts/hg-wallglass.part.js,189,hgTr,Set the start delay above: “Start after inactivity”.,Opóźnienie startu ustawisz wyżej: „Włącz po bezczynności”.,,expr,auto
 common.now,parts/hg-wallnotify.part.js,63,hgTr,now,teraz,,,auto
 common.ago_minutes,parts/hg-wallnotify.part.js,63,hgTr,{m} min ago,{m} min temu,m,,auto
 common.notifications,parts/hg-wallnotify.part.js,69,hgTr,Notifications,Powiadomienia,,,auto
