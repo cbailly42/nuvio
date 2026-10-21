@@ -141,7 +141,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
     if (!this._sk || this._skUn !== un || this._skL !== HGI18n.code) this._skeleton(un);   // też po zmianie języka (teksty szkieletu)
     const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
     const live = !!this._liveOn;
-    const stl = un ? (this._nl() || c.cover ? 'offline' : hgT('cards.camera.unavailable')) : live ? hgT('cards.camera.state_live') : { recording: hgT('cards.camera.recording'), streaming: hgT('cards.camera.streaming'), idle: hgT('cards.camera.idle') }[s.state] || H.stateLabel(s.state);
+    const stl = un ? (this._nl() || c.cover ? hgT('cards.camera.state_offline') : hgT('cards.camera.unavailable')) : live ? hgT('cards.camera.state_live') : { recording: hgT('cards.camera.recording'), streaming: hgT('cards.camera.streaming'), idle: hgT('cards.camera.idle') }[s.state] || H.stateLabel(s.state);
     const cls = 'st ' + (un ? '' : live ? 'live' : s.state === 'recording' ? 'rec' : 'ok');
     if (this._ttl.textContent !== nm) this._ttl.textContent = nm;
     if (this._st.textContent !== stl) this._st.textContent = stl;
@@ -211,7 +211,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   }
   _paintLive() {
     if (this._fr) this._fr.classList.toggle('on', !!this._liveOn);
-    if (this._lb) { this._lb.innerHTML = `${H.icon(this._liveOn ? 'mdi:stop' : 'mdi:play')}<span>${this._liveOn ? 'Stop' : hgT('cards.camera.live_button')}</span>`; this._lb.setAttribute('aria-label', this._liveOn ? hgT('cards.camera.stop_live_view') : hgT('cards.camera.live_view')); }
+    if (this._lb) { this._lb.innerHTML = `${H.icon(this._liveOn ? 'mdi:stop' : 'mdi:play')}<span>${this._liveOn ? hgT('cards.camera.stop_live') : hgT('cards.camera.live_button')}</span>`; this._lb.setAttribute('aria-label', this._liveOn ? hgT('cards.camera.stop_live_view') : hgT('cards.camera.live_view')); }
     this._update();
   }
   async _startLive() {
@@ -265,4 +265,4 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-camera-card', HGCameraCard, 'Home Glass – Kamera', 'Migawka odświeżana co kilka sekund, podgląd na żywo po dotknięciu');
+hgReg('hg-camera-card', HGCameraCard, hgTLazy('cards.camera.picker_name'), hgTLazy('cards.camera.picker_description'));

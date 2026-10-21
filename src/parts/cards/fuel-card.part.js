@@ -20,4 +20,4 @@ class HGFuelCard extends HGBase {
     return `<ha-card class="glass"><div class="fu"><div class="fh">${H.icon(c.icon || 'mdi:gas-station-outline')}<span>${H.esc(c.title || c.name || hgT('common.fuel_prices'))}</span></div>${rows || `<div class="em">${hgT('cards.fuel.add_fuel_price_sensors')}</div>`}</div></ha-card>`; }
   onAct(a, t) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: t.dataset.e }); }
 }
-hgReg('hg-fuel-card', HGFuelCard, 'Home Glass – Ceny paliw', 'Ceny paliw z czujników (np. ceny maksymalne gov.pl) z trendem na jutro');
+hgReg('hg-fuel-card', HGFuelCard, hgTLazy('cards.fuel.picker_name'), hgTLazy('cards.fuel.picker_description'));

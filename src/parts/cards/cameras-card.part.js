@@ -56,4 +56,4 @@ ha-card.wrap{ container-type:inline-size; }
   getCardSize() { return 6; }
   getGridOptions() { return { columns: 12, rows: 6 }; }
 }
-hgReg('hg-cameras-card', HGCamerasCard, 'Home Glass – Kamery', 'Działające kamery jako duże kafle, niedostępne jako chipy');
+hgReg('hg-cameras-card', HGCamerasCard, hgTLazy('cards.cameras.picker_name'), hgTLazy('cards.cameras.picker_description'));

@@ -17,4 +17,4 @@ b{ display:block; font-size:var(--fs-md); font-weight:400; } span{ display:block
   }
   onAct() { H.action(this, this._hass, this._config.action); }
 }
-hgReg('hg-link-card', HGLinkCard, 'Home Glass – Link', 'Kafel nawigacji / akcji');
+hgReg('hg-link-card', HGLinkCard, hgTLazy('cards.link.picker_name'), hgTLazy('cards.link.picker_description'));

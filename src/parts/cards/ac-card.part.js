@@ -5,7 +5,7 @@ const hgSwingL = (k) => hgTD('cards.ac.swing_modes.' + k, null);
 class HGACCard extends HGBase {
   defaults() {
     return { title: hgT('common.air_conditioning'), compact: false,
-      modes: [{ mode: 'heat_cool', label: 'Auto' }, { mode: 'auto', label: 'Auto' }, { mode: 'cool', label: hgT('common.cooling'), short: hgT('cards.ac.cool') }, { mode: 'heat', label: hgT('common.heating') },
+      modes: [{ mode: 'heat_cool', label: hgT('cards.ac.mode_auto') }, { mode: 'auto', label: hgT('cards.ac.mode_auto') }, { mode: 'cool', label: hgT('common.cooling'), short: hgT('cards.ac.cool') }, { mode: 'heat', label: hgT('common.heating') },
         { mode: 'dry', label: hgT('cards.ac.drying'), short: hgT('cards.ac.dry') }, { mode: 'fan_only', label: hgT('cards.ac.fan') }],
       compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: hgT('cards.ac.indoor') };
   }

@@ -44,4 +44,4 @@ ha-card.glass{ display:flex; flex-direction:column; }
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('hg-bars-card', HGBarsCard, 'Home Glass – Bars', 'Dzienne zużycie z statystyk (słupki)');
+hgReg('hg-bars-card', HGBarsCard, hgTLazy('cards.bars.picker_name'), hgTLazy('cards.bars.picker_description'));

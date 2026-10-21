@@ -58,6 +58,7 @@
       "indoor": "Indoor",
       "indoor_temp": "indoor {temp}°",
       "lower_temperature": "Lower temperature",
+      "mode_auto": "Auto",
       "mode_to_temp": "{mode} to {temp}°",
       "modes": "Modes",
       "on_fem": "On",
@@ -93,6 +94,8 @@
       "no_calendar_entities_found": "No calendar.* entities found",
       "no_calendars": "No calendars",
       "no_events_days": "No events in the next {count} days.",
+      "picker_description": "Nadchodzące wydarzenia pogrupowane po dniach",
+      "picker_name": "Home Glass – Agenda",
       "tomorrow": "Tomorrow",
       "upcoming": "Upcoming"
     },
@@ -129,6 +132,7 @@
       "clear_code": "Clear code",
       "code_for": "Code for",
       "confirm": "Confirm",
+      "default_title": "Alarm",
       "delete_digit": "Delete digit",
       "details_and_history": "Details and history",
       "disarm": "Disarm",
@@ -137,6 +141,7 @@
       "enter_the_code_then": "Enter the code, then pick an action",
       "entity_not_found": "Entity not found: {entity}",
       "picker_description": "Alarm state, arm/disarm per supported_features, code keypad",
+      "picker_name": "Home Glass – Alarm",
       "states": {
         "armed_away": "Armed · away",
         "armed_custom_bypass": "Armed · custom",
@@ -182,6 +187,8 @@
       "no_motion": "No motion",
       "no_presence": "No presence",
       "other": "Other",
+      "picker_description": "Wszystkie obszary HA: temperatura, wilgotność, światła, ruch, klimatyzacja",
+      "picker_name": "Home Glass – Pokoje",
       "presence": "Presence",
       "someone_is_in_the": "Someone is in the room",
       "state_presence": "presence",
@@ -196,6 +203,7 @@
       "assistant_model": "Assistant model",
       "connect_error": "Could not reach Assist: {error}",
       "conversation_with_the_assistant": "Conversation with the assistant",
+      "default_title": "Assist",
       "message": "Message",
       "message_the_assistant": "Message the assistant…",
       "new_conversation": "New conversation",
@@ -216,12 +224,14 @@
     },
     "bars": {
       "days_count": "{count} days",
-      "grid_consumption": "Grid consumption"
+      "grid_consumption": "Grid consumption",
+      "picker_description": "Dzienne zużycie z statystyk (słupki)",
+      "picker_name": "Home Glass – Bars"
     },
     "battery": {
       "all_good": "All good",
       "batteries": "Batteries",
-      "low": "{nLo} low",
+      "low": "{count} low",
       "no_battery_sensors": "No battery sensors",
       "pick_sensors_or_leave": "Pick sensors or leave empty to detect automatically",
       "picker_description": "Sensor battery levels, weakest first",
@@ -250,9 +260,13 @@
       "loading": "Loading…",
       "no_connection_to_camera": "No connection to camera",
       "no_image": "No image",
+      "picker_description": "Migawka odświeżana co kilka sekund, podgląd na żywo po dotknięciu",
+      "picker_name": "Home Glass – Kamera",
       "preview": "PREVIEW",
       "recording": "recording",
       "state_live": "live",
+      "state_offline": "offline",
+      "stop_live": "Stop",
       "stop_live_view": "Stop live view",
       "streaming": "streaming",
       "swipe_down_to_close": "Swipe down to close",
@@ -260,7 +274,9 @@
       "unavailable": "unavailable"
     },
     "cameras": {
-      "no_cameras_are_available": "No cameras are available right now"
+      "no_cameras_are_available": "No cameras are available right now",
+      "picker_description": "Działające kamery jako duże kafle, niedostępne jako chipy",
+      "picker_name": "Home Glass – Kamery"
     },
     "chart": {
       "choose_a_numeric_sensor": "Choose a numeric sensor",
@@ -342,6 +358,8 @@
         "cheap": "Cheap",
         "expensive": "Expensive"
       },
+      "max": "max",
+      "min": "min",
       "nord_pool_entso_e": "Nord Pool, ENTSO-e, Energi Data Service or similar with hourly prices",
       "now": {
         "average": "Average now",
@@ -397,6 +415,8 @@
     "fuel": {
       "add_fuel_price_sensors": "Add fuel price sensors.",
       "no_change_tomorrow": "no change tomorrow",
+      "picker_description": "Ceny paliw z czujników (np. ceny maksymalne gov.pl) z trendem na jutro",
+      "picker_name": "Home Glass – Ceny paliw",
       "tomorrow_no_data": "tomorrow: no data"
     },
     "gauge": {
@@ -480,6 +500,10 @@
       "picker_name": "Home Glass – Light",
       "toggle": "Toggle",
       "unavailable": " – unavailable"
+    },
+    "link": {
+      "picker_description": "Kafel nawigacji / akcji",
+      "picker_name": "Home Glass – Link"
     },
     "lock": {
       "choose_a_lock": "Choose a lock",

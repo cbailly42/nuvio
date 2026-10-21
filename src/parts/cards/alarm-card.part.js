@@ -15,7 +15,7 @@ const HG_ALARM_ACT = [[1, 'arm_home', hgTLazy('cards.alarm.arm_modes.home'), 'md
   [16, 'arm_custom_bypass', hgTLazy('cards.alarm.arm_modes.custom_bypass'), 'mdi:shield-edit-outline', 'armed_custom_bypass']];
 const hgAlarmLbl = (a) => String(a[2]);
 class HGAlarmCard extends HGBase {
-  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgT('cards.alarm.alarm_home'), keypad: null }; }
+  defaults() { return { title: hgT('cards.alarm.default_title'), icon: 'mdi:shield-home-outline', name: hgT('cards.alarm.alarm_home'), keypad: null }; }
   /* klawiatura na stałe, jak w HA: gdy centrala ma code_format albo keypad: true (keypad: false = tylko po wybraniu akcji) */
   _pad(s) { return !!s && H.ok(s) && this._config.keypad !== false && !!s.attributes.code_format; }
   _extraSig() { return [this._pend || '', (this._code || '').length, !!this._miss, Math.floor(Date.now() / 60000)]; }
@@ -125,4 +125,4 @@ ha-card.glass::before{ content:''; position:absolute; z-index:-1; left:-20%; top
   }
   getCardSize() { return 5; }
 }
-hgReg('hg-alarm-card', HGAlarmCard, 'Home Glass – Alarm', hgTLazy('cards.alarm.picker_description'));
+hgReg('hg-alarm-card', HGAlarmCard, hgTLazy('cards.alarm.picker_name'), hgTLazy('cards.alarm.picker_description'));

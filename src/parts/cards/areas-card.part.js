@@ -110,4 +110,4 @@ class HGAreasCard extends HGBase {
   }
   getCardSize() { return 8; }
 }
-hgReg('hg-areas-card', HGAreasCard, 'Home Glass – Pokoje', 'Wszystkie obszary HA: temperatura, wilgotność, światła, ruch, klimatyzacja');
+hgReg('hg-areas-card', HGAreasCard, hgTLazy('cards.areas.picker_name'), hgTLazy('cards.areas.picker_description'));

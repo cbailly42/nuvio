@@ -42,4 +42,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
       ${errs.length ? `<div class="note" style="margin-top:8u">${hgT('common.unavailable')}: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
   }
 }
-hgReg('hg-agenda-card', HGAgendaCard, 'Home Glass – Agenda', 'Nadchodzące wydarzenia pogrupowane po dniach');
+hgReg('hg-agenda-card', HGAgendaCard, hgTLazy('cards.agenda.picker_name'), hgTLazy('cards.agenda.picker_description'));
