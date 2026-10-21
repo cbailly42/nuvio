@@ -684,6 +684,20 @@
       "open_in_a_new": "Open in a new tab",
       "picker_description": "Any address in a frame",
       "picker_name": "Nuvio – Web page"
+    },
+    "week": {
+      "consumption": "Consumption",
+      "days": "days",
+      "energy_dashboard": "Energy dashboard",
+      "energy_week": "Energy · week",
+      "loading_statistics": "Loading statistics…",
+      "no_inverter_data": "no inverter data",
+      "picker_description": "Grid consumption and PV production over 7 days (statistics)",
+      "picker_name": "Home Glass – Energy week",
+      "production": "Production",
+      "show_hide_on_chart": "show/hide on chart",
+      "so_far": "(so far)",
+      "the_inverter_sent_no": "The inverter sent no data to HA on these days"
     }
   },
   "common": {

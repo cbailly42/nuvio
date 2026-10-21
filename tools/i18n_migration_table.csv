@@ -1184,13 +1184,13 @@ cards.week.days,parts/cards/week-card.part.js,83,hgTr,days,dni,,,auto
 common.today_lower,parts/cards/week-card.part.js,83,hgTr,today,dziś,,,auto
 common.today_lower,parts/cards/week-card.part.js,84,hgTr,today,dziś,,,auto
 common.no_data,parts/cards/week-card.part.js,87,hgTr,no data,brak danych,,,auto
-cards.week.so_far,parts/cards/week-card.part.js,88,hgTr, (so far), (do teraz),,,auto
+cards.week.so_far,parts/cards/week-card.part.js,88,hgTr,(so far),(do teraz),,,auto
 common.no_data,parts/cards/week-card.part.js,88,hgTr,no data,brak danych,,,auto
 common.no_data,parts/cards/week-card.part.js,91,hgTr,no data,brak danych,,,auto
 cards.week.the_inverter_sent_no,parts/cards/week-card.part.js,95,hgTr,The inverter sent no data to HA on these days,W te dni falownik nie przesłał danych do HA,,,auto
 cards.week.no_inverter_data,parts/cards/week-card.part.js,95,hgTr,no inverter data,brak danych z falownika,,,auto
-cards.week.home_glass_energy_week,parts/cards/week-card.part.js,105,hgTr,Home Glass – Energy week,Home Glass – Energia tydzień,,load-time,manual
-cards.week.grid_consumption_and_pv,parts/cards/week-card.part.js,105,hgTr,Grid consumption and PV production over 7 days (statistics),Zużycie z sieci i produkcja PV z 7 dni (statystyki),,load-time,manual
+cards.week.picker_name,parts/cards/week-card.part.js,105,hgTr,Home Glass – Energy week,Home Glass – Energia tydzień,,load-time,auto
+cards.week.picker_description,parts/cards/week-card.part.js,105,hgTr,Grid consumption and PV production over 7 days (statistics),Zużycie z sieci i produkcja PV z 7 dni (statystyki),,load-time,auto
 assist.assist,parts/hg-assist.part.js,85,hgTr,Assist,Assist,,,auto
 assist.talk_to_the_home,parts/hg-assist.part.js,86,hgTr,Talk to the Home Assistant assistant in a dialog: the header button or the A key. Applies to this Home Assistant user.,Rozmowa z asystentem Home Assistant w oknie: przycisk w nagłówku albo klawisz A. Ustawienie dotyczy konta użytkownika HA.,,,auto
 assist.header_button,parts/hg-assist.part.js,87,hgTr,Header button,Przycisk w nagłówku,,,auto

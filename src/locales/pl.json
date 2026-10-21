@@ -688,6 +688,20 @@
       "open_in_a_new": "Otwórz w nowej karcie",
       "picker_description": "Dowolny adres w ramce",
       "picker_name": "Nuvio – Strona WWW"
+    },
+    "week": {
+      "consumption": "Zużycie",
+      "days": "dni",
+      "energy_dashboard": "Panel energii",
+      "energy_week": "Energia · tydzień",
+      "loading_statistics": "Wczytywanie statystyk…",
+      "no_inverter_data": "brak danych z falownika",
+      "picker_description": "Zużycie z sieci i produkcja PV z 7 dni (statystyki)",
+      "picker_name": "Home Glass – Energia tydzień",
+      "production": "Produkcja",
+      "show_hide_on_chart": "pokaż/ukryj na wykresie",
+      "so_far": "(do teraz)",
+      "the_inverter_sent_no": "W te dni falownik nie przesłał danych do HA"
     }
   },
   "common": {
