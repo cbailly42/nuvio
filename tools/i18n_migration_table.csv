@@ -1518,7 +1518,7 @@ common.media,parts/hg-edit.part.js,169,hgTrO,Media,Multimedia,,,auto
 edit.camera,parts/hg-edit.part.js,169,hgTrO,Camera,Kamera,,,auto
 edit.cover,parts/hg-edit.part.js,169,hgTrO,Cover,Roleta,,,auto
 edit.action,parts/hg-edit.part.js,169,hgTrO,Action,Akcja,,,auto
-edit.default_2,parts/hg-edit.part.js,174,hgTr,Default,Normalny,,,review
+edit.tile_type_default,parts/hg-edit.part.js,174,hgTr,Default,Normalny,,,auto
 edit.switch,parts/hg-edit.part.js,196,hgTrO,Switch,Przełącznik,,,auto
 edit.climate,parts/hg-edit.part.js,196,hgTrO,Climate,Klimat,,,auto
 common.media,parts/hg-edit.part.js,196,hgTrO,Media,Multimedia,,,auto
@@ -1530,7 +1530,7 @@ common.unavailable,parts/hg-edit.part.js,205,hgTr,Unavailable,Niedostępne,,,aut
 common.unavailable,parts/hg-edit.part.js,207,hgTr,Unavailable,Niedostępne,,,auto
 common.unavailable,parts/hg-edit.part.js,210,hgTr,Unavailable,Niedostępne,,,auto
 edit.last_24_h,parts/hg-edit.part.js,212,hgTr,Last 24 h,Ostatnie 24 h,,,auto
-edit.run,parts/hg-edit.part.js,217,hgTr,Run: ,Uruchom: ,,concat,manual
+edit.run_aria,parts/hg-edit.part.js,217,hgTr,Run: ,Uruchom: ,,concat,manual
 common.open,parts/hg-edit.part.js,219,hgTr,Open,Otwórz,,,auto
 common.stop,parts/hg-edit.part.js,219,hgTr,Stop,Zatrzymaj,,,auto
 common.close,parts/hg-edit.part.js,219,hgTr,Close,Zamknij,,,auto
@@ -1575,7 +1575,7 @@ edit.camera,parts/hg-edit.part.js,329,hgTrO,Camera,Kamera,,,auto
 edit.snapshot_and_live_view,parts/hg-edit.part.js,329,hgTrO,Snapshot and live view,Migawka i podgląd na żywo,,,auto
 edit.scenes_scripts,parts/hg-edit.part.js,330,hgTrO,Scenes / scripts,Sceny / skrypty,,,auto
 edit.scenes_and_scripts,parts/hg-edit.part.js,331,hgTrO,Scenes and scripts,Sceny i skrypty,,,auto
-edit.several_buttons_in_one_text,parts/hg-edit.part.js,331,hgTrO,Several buttons in one card,Kilka przycisków w jednej karcie,,,review
+edit.several_buttons_in_one_card,parts/hg-edit.part.js,331,hgTrO,Several buttons in one card,Kilka przycisków w jednej karcie,,,auto
 edit.cameras,parts/hg-edit.part.js,332,hgTrO,Cameras,Kamery,,,auto
 edit.camera_grid,parts/hg-edit.part.js,332,hgTrO,Camera grid,Siatka kamer,,,auto
 edit.all_selected_cameras_at,parts/hg-edit.part.js,332,hgTrO,All selected cameras at once,Wszystkie wybrane kamery naraz,,,auto
@@ -1593,7 +1593,7 @@ edit.forecast,parts/hg-edit.part.js,337,hgTrO,Forecast,Prognoza,,,auto
 common.weather,parts/hg-edit.part.js,337,hgTrO,Weather,Pogoda,,,auto
 edit.now_hourly_forecast_sun,parts/hg-edit.part.js,337,hgTrO,"Now, hourly forecast, sun","Teraz, prognoza godzinowa, słońce",,,auto
 edit.people,parts/hg-edit.part.js,338,hgTrO,People,Osoby,,,auto
-edit.people_2,parts/hg-edit.part.js,338,hgTrO,People,Domownicy,,,review
+edit.household,parts/hg-edit.part.js,338,hgTrO,People,Domownicy,,,auto
 edit.who_is_home_zones,parts/hg-edit.part.js,338,hgTrO,"Who is home, zones and time","Kto jest w domu, strefy i czas",,,auto
 edit.alarm_panel,parts/hg-edit.part.js,339,hgTrO,Alarm panel,Centrala alarmu,,,auto
 edit.alarm,parts/hg-edit.part.js,339,hgTrO,Alarm,Alarm,,,auto
@@ -1670,7 +1670,7 @@ edit.photo_zone_and_time,parts/hg-edit.part.js,393,hgTrO,"Photo, zone and time s
 common.rooms,parts/hg-edit.part.js,395,hgTrO,Rooms,Pokoje,,,auto
 edit.room_tiles_with_temperature,parts/hg-edit.part.js,395,hgTrO,"Room tiles with temperature, humidity and active devices (Look → Rooms)","Kafle pokoi z temperaturą, wilgotnością i aktywnymi urządzeniami (Wygląd → Pokoje)",,,auto
 common.room,parts/hg-edit.part.js,397,hgTrO,Room,Pokój,,,auto
-edit.all_devices_of_one_text,parts/hg-edit.part.js,397,hgTrO,All devices of one room in sections,Wszystkie urządzenia jednego pokoju w sekcjach,,,review
+edit.all_devices_of_one_room,parts/hg-edit.part.js,397,hgTrO,All devices of one room in sections,Wszystkie urządzenia jednego pokoju w sekcjach,,,auto
 edit.any_entity_of_the,parts/hg-edit.part.js,398,hgTrO,Any entity of the device,Dowolna encja urządzenia,,,auto
 edit.appliance,parts/hg-edit.part.js,399,hgTrO,Appliance,Urządzenie AGD,,,auto
 edit.washer_dryer_dishwasher_state,parts/hg-edit.part.js,399,hgTrO,"Washer, dryer, dishwasher: state, program, time left, progress","Pralka, suszarka, zmywarka: stan, program, czas do końca, postęp",,,auto
@@ -1705,7 +1705,7 @@ edit.big_value,parts/hg-edit.part.js,409,hgTrO,Big value,Duża wartość,,,auto
 edit.one_number_with_colour,parts/hg-edit.part.js,409,hgTrO,One number with colour thresholds,Jedna liczba z progami kolorów,,,auto
 edit.numeric_sensors,parts/hg-edit.part.js,410,hgTrO,Numeric sensors,Czujniki liczbowe,,,auto
 edit.history_graph,parts/hg-edit.part.js,410,hgTrO,History graph,Wykres historii,,,auto
-edit.several_sensors_on_one_text,parts/hg-edit.part.js,410,hgTrO,Several sensors on one chart,Kilka czujników na jednym wykresie,,,review
+edit.several_sensors_on_one_chart,parts/hg-edit.part.js,410,hgTrO,Several sensors on one chart,Kilka czujników na jednym wykresie,,,auto
 edit.sensors_empty_all_doors,parts/hg-edit.part.js,411,hgTrO,Sensors (empty = all doors and windows),Czujniki (puste = wszystkie drzwi i okna),,,auto
 edit.doors_and_windows,parts/hg-edit.part.js,411,hgTrO,Doors and windows,Drzwi i okna,,,auto
 edit.opening_sensors_open_ones,parts/hg-edit.part.js,411,hgTrO,"Opening sensors, open ones first","Czujniki otwarcia, otwarte na górze",,,auto
@@ -1800,7 +1800,7 @@ edit.price_sensor_with_hourly,parts/hg-edit.part.js,455,hgTrO,Price sensor with 
 edit.electricity_price,parts/hg-edit.part.js,456,hgTrO,Electricity price,Cena prądu,,,auto
 edit.hourly_prices_today_and,parts/hg-edit.part.js,456,hgTrO,"Hourly prices today and tomorrow, cheapest window","Ceny godzinowe na dziś i jutro, najtańsze okno",,,auto
 edit.timer,parts/hg-edit.part.js,457,hgTrO,Timer,Minutnik (timer),,,auto
-edit.timer_2,parts/hg-edit.part.js,457,hgTrO,Timer,Minutnik,,,review
+edit.timer_card,parts/hg-edit.part.js,457,hgTrO,Timer,Minutnik,,,auto
 edit.countdown_on_an_arc,parts/hg-edit.part.js,457,hgTrO,"Countdown on an arc, start and pause","Odliczanie na łuku, start i pauza",,,auto
 edit.entities,parts/hg-edit.part.js,458,hgTrO,Entities,Encje,,,auto
 edit.logbook,parts/hg-edit.part.js,459,hgTrO,Logbook,Dziennik,,,auto
@@ -1847,7 +1847,7 @@ edit.locked,parts/hg-edit.part.js,637,hgTr,Locked,Zamknięte,,,auto
 edit.buy_milk,parts/hg-edit.part.js,639,hgTr,Buy milk,Kupić mleko,,,auto
 edit.water_plants,parts/hg-edit.part.js,639,hgTr,Water plants,Podlać kwiaty,,,auto
 edit.living_room_brightness,parts/hg-edit.part.js,640,hgTr,Living room · brightness,Salon · jasność,,,auto
-edit.run_2,parts/hg-edit.part.js,641,hgTr,Run,Uruchom,,,review
+edit.run,parts/hg-edit.part.js,641,hgTr,Run,Uruchom,,,auto
 edit.lamp,parts/hg-edit.part.js,642,hgTr,Lamp,Lampa,,,auto
 common.fan,parts/hg-edit.part.js,642,hgTr,Fan,Wentylator,,,auto
 common.mode,parts/hg-edit.part.js,643,hgTr,Mode,Tryb,,,auto
@@ -1932,7 +1932,7 @@ edit.temperature_humidity_and_room,parts/hg-edit.part.js,746,hgTr,"Temperature, 
 edit.living_room,parts/hg-edit.part.js,746,hgTr,Living room,Salon,,,auto
 edit.room_icon,parts/hg-edit.part.js,746,hgTr,room icon,ikona pokoju,,,auto
 edit.temperature_and_room_status,parts/hg-edit.part.js,746,hgTr,Temperature and room status (live),Temperatura i stan pokoju (na żywo),,,auto
-common.welcome,parts/hg-edit.part.js,747,hgTr,"Welcome, {name}!","Witaj, {name}!",,,auto
+common.welcome,parts/hg-edit.part.js,747,hgTr,"Welcome, {name}!","Witaj, {name}!",name,expr,auto
 edit.control_your_home_in,parts/hg-edit.part.js,747,hgTr,Control your home in one place,Steruj domem w jednym miejscu,,,auto
 edit.view_header,parts/hg-edit.part.js,750,hgTr,View header,Nagłówek widoku,,,auto
 edit.view_header,parts/hg-edit.part.js,760,hgTr,View header,Nagłówek widoku,,,auto
@@ -1989,7 +1989,7 @@ edit.remove,parts/hg-edit.part.js,819,hgTr,Remove,Usuń,,,auto
 edit.drag_or_use_arrow,parts/hg-edit.part.js,821,hgTr,Drag or use arrow keys to reorder,"Przeciągnij lub użyj strzałek, aby zmienić kolejność",,,auto
 edit.remove,parts/hg-edit.part.js,821,hgTr,Remove,Usuń,,,auto
 edit.add_entity,parts/hg-edit.part.js,822,hgTr,Add entity,Dodaj encję,,,auto
-edit.default_2,parts/hg-edit.part.js,823,hgTr,Default,Normalny,,,review
+edit.tile_type_default,parts/hg-edit.part.js,823,hgTr,Default,Normalny,,,auto
 edit.cards_in_the_container,parts/hg-edit.part.js,827,hgTr,Cards in the container,Karty w kontenerze,,,auto
 edit.empty_container_add_the,parts/hg-edit.part.js,827,hgTr,Empty container. Add the first card.,Pusty kontener. Dodaj pierwszą kartę.,,,auto
 edit.drag_or_use_arrow,parts/hg-edit.part.js,828,hgTr,Drag or use arrow keys to reorder,"Przeciągnij lub użyj strzałek, aby zmienić kolejność",,,auto
@@ -2042,8 +2042,8 @@ edit.tiles_added_in_edit,parts/hg-edit.part.js,960,hgTr,Tiles added in edit mode
 common.media,parts/hg-edit.part.js,1074,hgTrO,Media,Multimedia,,,auto
 edit.cameras,parts/hg-edit.part.js,1074,hgTrO,Cameras,Kamery,,,auto
 edit.scenes,parts/hg-edit.part.js,1074,hgTrO,Scenes,Sceny,,,auto
-edit.people_2,parts/hg-edit.part.js,1074,hgTrO,People,Domownicy,,,review
-edit.people_2,parts/hg-edit.part.js,1074,hgTrO,People,Domownicy,,,review
+edit.household,parts/hg-edit.part.js,1074,hgTrO,People,Domownicy,,,auto
+edit.household,parts/hg-edit.part.js,1074,hgTrO,People,Domownicy,,,auto
 edit.lights,parts/hg-edit.part.js,1074,hgTrO,Lights,Światła,,,auto
 edit.robots,parts/hg-edit.part.js,1074,hgTrO,Robots,Roboty,,,auto
 edit.power,parts/hg-edit.part.js,1074,hgTrO,Power,Moc,,,auto
@@ -2070,7 +2070,7 @@ common.done,parts/hg-edit.part.js,1244,hgTr,Done,Gotowe,,,auto
 edit.section,parts/hg-edit.part.js,1255,hgTr,Section: ,Sekcja: ,,,auto
 edit.discard_unsaved_layout_changes,parts/hg-edit.part.js,1264,hgTr,Discard unsaved layout changes?,Odrzucić niezapisane zmiany układu?,,,auto
 edit.view_layout_reset_to,parts/hg-edit.part.js,1288,hgTr,View layout reset to default (save with “Done”),Przywrócono domyślny układ widoku (zapisz „Gotowe”),,,auto
-edit.language,parts/hg-edit.part.js,1295,hgTr,Language: ,Język: ,,concat,manual
+edit.language_toast,parts/hg-edit.part.js,1295,hgTr,Language: ,Język: ,,concat,manual
 edit.automatic,parts/hg-edit.part.js,1295,hgTr,automatic,automatycznie,,,auto
 edit.enter_an_https_or,parts/hg-edit.part.js,1310,hgTr,Enter an https:// or /local/… address,Podaj adres https:// lub /local/…,,,auto
 edit.appearance_reset_to_default,parts/hg-edit.part.js,1314,hgTr,Appearance reset to default,Przywrócono domyślny wygląd,,,auto
@@ -2083,7 +2083,7 @@ edit.entity_removed,parts/hg-edit.part.js,1344,hgTr,Entity removed,Usunięto enc
 edit.this_item,parts/hg-edit.part.js,1351,hgTr,this item,ten element,,,auto
 edit.remove_h_esc_nm,parts/hg-edit.part.js,1352,hgTr,"Remove “${H.esc(nm.trim().slice(0, 40))}”?","Usunąć „${H.esc(nm.trim().slice(0, 40))}”?",,expr,manual
 edit.remove,parts/hg-edit.part.js,1352,hgTr,Remove,Usuń,,,auto
-edit.no,parts/hg-edit.part.js,1352,hgTr,No,Nie,,,review
+edit.answer_no,parts/hg-edit.part.js,1352,hgTr,No,Nie,,,auto
 edit.tile_removed,parts/hg-edit.part.js,1362,hgTr,Tile removed,Usunięto kafelek,,,auto
 edit.removed_bring_it_back,parts/hg-edit.part.js,1362,hgTr,Removed – bring it back with “Restore hidden”,Usunięto – przywrócisz w „Przywróć ukryte”,,,auto
 edit.main_entity,parts/hg-edit.part.js,1473,hgTr,Main entity,Główna encja,,,auto
@@ -2104,16 +2104,16 @@ edit.media_player,parts/hg-edit.part.js,1473,hgTr,Media player,Odtwarzacz,,,auto
 edit.light,parts/hg-edit.part.js,1473,hgTr,Light,Światło,,,auto
 common.sensor,parts/hg-edit.part.js,1473,hgTr,Sensor,Czujnik,,,auto
 edit.entity,parts/hg-edit.part.js,1474,hgTr,Entity,Encja,,,auto
-edit.default_2,parts/hg-edit.part.js,1487,hgTr,Default,Normalny,,,review
+edit.tile_type_default,parts/hg-edit.part.js,1487,hgTr,Default,Normalny,,,auto
 edit.temperature,parts/hg-edit.part.js,1489,hgTr,Temperature,Temperatura,,,auto
 common.humidity,parts/hg-edit.part.js,1489,hgTr,Humidity,Wilgotność,,,auto
-edit.default_2,parts/hg-edit.part.js,1490,hgTr,Default,Normalny,,,review
+edit.tile_type_default,parts/hg-edit.part.js,1490,hgTr,Default,Normalny,,,auto
 edit.entity,parts/hg-edit.part.js,1492,hgTr,Entity,Encja,,,auto
 edit.main_entity,parts/hg-edit.part.js,1492,hgTr,Main entity,Główna encja,,,auto
 edit.entity,parts/hg-edit.part.js,1497,hgTr,Entity,Encja,,,auto
 edit.main_entity,parts/hg-edit.part.js,1497,hgTr,Main entity,Główna encja,,,auto
-edit.default_2,parts/hg-edit.part.js,1499,hgTr,Default,Normalny,,,review
-edit.default_2,parts/hg-edit.part.js,1500,hgTr,Default,Normalny,,,review
+edit.tile_type_default,parts/hg-edit.part.js,1499,hgTr,Default,Normalny,,,auto
+edit.tile_type_default,parts/hg-edit.part.js,1500,hgTr,Default,Normalny,,,auto
 edit.tile_settings,parts/hg-edit.part.js,1516,hgTr,Tile settings,Ustawienia kafelka,,,auto
 edit.card_settings,parts/hg-edit.part.js,1516,hgTr,Card settings,Ustawienia karty,,,auto
 edit.room_settings,parts/hg-edit.part.js,1516,hgTr,Room settings,Ustawienia pokoju,,,auto
@@ -2136,7 +2136,7 @@ common.name,parts/hg-edit.part.js,1524,hgTr,Name,Nazwa,,,auto
 edit.icon_e_g_mdi,parts/hg-edit.part.js,1525,hgTr,Icon (e.g. mdi:sofa),Ikona (np. mdi:sofa),,,auto
 edit.width,parts/hg-edit.part.js,1527,hgTr,Width,Szerokość,,,auto
 edit.width,parts/hg-edit.part.js,1527,hgTr,Width,Szerokość,,,auto
-edit.automatic_2,parts/hg-edit.part.js,1527,hgTr,Automatic,Automatyczna,,,review
+edit.width_automatic,parts/hg-edit.part.js,1527,hgTr,Automatic,Automatyczna,,,auto
 edit.full_width,parts/hg-edit.part.js,1527,hgTr,Full width,Pełna szerokość,,,auto
 edit.half,parts/hg-edit.part.js,1527,hgTr,Half,Połowa,,,auto
 edit.on_phones_every_section,parts/hg-edit.part.js,1527,hgTr,On phones every section is full width.,Na telefonie każda sekcja ma pełną szerokość.,,,auto
@@ -2156,12 +2156,12 @@ common.add,parts/hg-edit.part.js,1622,hgTr,Add,Dodaj,,,auto
 edit.dashboard_setting,parts/hg-edit.part.js,1630,hgTr,dashboard setting,ustawienie pulpitu,,,auto
 edit.setup_wizard,parts/hg-edit.part.js,1630,hgTr,setup wizard,kreator,,,auto
 edit.browser_language,parts/hg-edit.part.js,1630,hgTr,browser language,język przeglądarki,,,auto
-edit.language_2,parts/hg-edit.part.js,1632,hgTr,Language,Język,,,review
+edit.language,parts/hg-edit.part.js,1632,hgTr,Language,Język,,,auto
 edit.saved_to_your_account,parts/hg-edit.part.js,1632,hgTr,Saved to your account. Automatic: ,Zapisywany na Twoim koncie. Automatycznie: ,,,auto
-edit.language_2,parts/hg-edit.part.js,1633,hgTr,Language,Język,,,review
+edit.language,parts/hg-edit.part.js,1633,hgTr,Language,Język,,,auto
 common.automatic,parts/hg-edit.part.js,1633,hgTr,Automatic,Automatycznie,,,auto
 edit.full,parts/hg-edit.part.js,1638,hgTr,Full,Pełne,,,auto
-edit.light_2,parts/hg-edit.part.js,1638,hgTr,Light,Lekkie,,,review
+edit.blur_light,parts/hg-edit.part.js,1638,hgTr,Light,Lekkie,,,auto
 common.off_neut,parts/hg-edit.part.js,1638,hgTr,Off,Wyłączone,,,auto
 edit.performance,parts/hg-edit.part.js,1640,hgTr,Performance,Wydajność,,,auto
 edit.saved_on_this_device,parts/hg-edit.part.js,1640,hgTr,"Saved on this device only. On an older tablet, turning blur off and power saving on noticeably reduce battery drain.",Zapisywane tylko na tym urządzeniu. Na starszym tablecie wyłączone rozmycie i oszczędzanie baterii wyraźnie zmniejszają zużycie energii.,,,auto
@@ -2170,8 +2170,8 @@ common.now,parts/hg-edit.part.js,1641,hgTr,now,teraz,,,auto
 edit.glass_blur,parts/hg-edit.part.js,1642,hgTr,Glass blur,Rozmycie szkła,,,auto
 edit.power_saving_stops_looping,parts/hg-edit.part.js,1643,hgTr,"Power saving (stops looping animations, refreshes cameras less often)","Oszczędzanie baterii (zatrzymuje animacje w pętli, rzadziej odświeża kamery)",,,auto
 common.now,parts/hg-edit.part.js,1643,hgTr,now,teraz,,,auto
-edit.on,parts/hg-edit.part.js,1643,hgTr,on,włączone,,,review
-edit.off,parts/hg-edit.part.js,1643,hgTr,off,wyłączone,,,auto
+edit.state_on_lower,parts/hg-edit.part.js,1643,hgTr,on,włączone,,,auto
+edit.state_off_lower,parts/hg-edit.part.js,1643,hgTr,off,wyłączone,,,auto
 common.on_neut,parts/hg-edit.part.js,1644,hgTr,On,Włączone,,,auto
 common.off_neut,parts/hg-edit.part.js,1644,hgTr,Off,Wyłączone,,,auto
 edit.power_saving,parts/hg-edit.part.js,1644,hgTr,Power saving,Oszczędzanie baterii,,,auto
@@ -2185,7 +2185,7 @@ edit.users,parts/hg-edit.part.js,1654,hgTr,Users,Użytkownicy,,,auto
 edit.backup,parts/hg-edit.part.js,1654,hgTr,Backup,Kopia zapasowa,,,auto
 edit.accent,parts/hg-edit.part.js,1658,hgTr,Accent,Akcent,,,auto
 edit.custom_accent_colour,parts/hg-edit.part.js,1660,hgTr,Custom accent colour,Własny kolor akcentu,,,auto
-edit.custom_2,parts/hg-edit.part.js,1660,hgTr,Custom,Własny,,,review
+edit.accent_custom,parts/hg-edit.part.js,1660,hgTr,Custom,Własny,,,auto
 edit.preview,parts/hg-edit.part.js,1661,hgTr,Preview,Podgląd,,,auto
 edit.lamp,parts/hg-edit.part.js,1661,hgTr,Lamp,Lampa,,,auto
 common.on_neut,parts/hg-edit.part.js,1661,hgTr,On,Włączone,,,auto
