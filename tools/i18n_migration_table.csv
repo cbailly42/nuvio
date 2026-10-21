@@ -454,8 +454,8 @@ cards.logbook.choose_entities_for_the,parts/cards/logbook-card.part.js,18,hgTr,C
 cards.logbook.recent_activity,parts/cards/logbook-card.part.js,23,hgTr,Recent activity,Ostatnie zdarzenia,,,auto
 common.loading,parts/cards/logbook-card.part.js,23,hgTr,Loading…,Wczytywanie…,,,auto
 cards.logbook.no_activity_in_this,parts/cards/logbook-card.part.js,23,hgTr,No activity in this period,Brak zdarzeń w tym okresie,,,auto
-cards.logbook.nuvio_logbook,parts/cards/logbook-card.part.js,30,hgTr,Nuvio – Logbook,Nuvio – Dziennik,,load-time,manual
-cards.logbook.recent_changes_of_chosen,parts/cards/logbook-card.part.js,30,hgTr,Recent changes of chosen entities,Ostatnie zmiany wybranych encji,,load-time,manual
+cards.logbook.picker_name,parts/cards/logbook-card.part.js,30,hgTr,Nuvio – Logbook,Nuvio – Dziennik,,load-time,auto
+cards.logbook.picker_description,parts/cards/logbook-card.part.js,30,hgTr,Recent changes of chosen entities,Ostatnie zmiany wybranych encji,,load-time,auto
 common.map,parts/cards/map-card.part.js,5,hgTr,Map,Mapa,,,auto
 cards.map.people,parts/cards/map-card.part.js,13,hgTr,people,os.,,,auto
 cards.map.zones,parts/cards/map-card.part.js,13,hgTr,zones,strefy,,,auto

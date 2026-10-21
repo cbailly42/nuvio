@@ -490,6 +490,13 @@
       "the_door_can_be": "The door can be opened without a key.",
       "unlock": "Unlock",
       "unlock_confirm_title": "Unlock {nm}?"
+    },
+    "logbook": {
+      "choose_entities_for_the": "Choose entities for the logbook",
+      "no_activity_in_this": "No activity in this period",
+      "picker_description": "Recent changes of chosen entities",
+      "picker_name": "Nuvio – Logbook",
+      "recent_activity": "Recent activity"
     }
   },
   "common": {
