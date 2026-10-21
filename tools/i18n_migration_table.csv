@@ -1038,8 +1038,8 @@ cards.sun.enable_the_sun_integration,parts/cards/sun-card.part.js,7,hgTr,Enable 
 common.sun,parts/cards/sun-card.part.js,11,hgTr,Sun,Słońce,,,auto
 cards.sun.above_the_horizon,parts/cards/sun-card.part.js,11,hgTr,Above the horizon,Nad horyzontem,,,auto
 cards.sun.below_the_horizon,parts/cards/sun-card.part.js,11,hgTr,Below the horizon,Pod horyzontem,,,auto
-cards.sun.home_glass_sun,parts/cards/sun-card.part.js,16,hgTr,Home Glass – Sun,Home Glass – Słońce,,load-time,manual
-cards.sun.sunrise_and_sunset,parts/cards/sun-card.part.js,16,hgTr,Sunrise and sunset,Wschód i zachód słońca,,load-time,manual
+cards.sun.picker_name,parts/cards/sun-card.part.js,16,hgTr,Home Glass – Sun,Home Glass – Słońce,,load-time,auto
+cards.sun.picker_description,parts/cards/sun-card.part.js,16,hgTr,Sunrise and sunset,Wschód i zachód słońca,,load-time,auto
 common.state_unavailable,parts/cards/switch-card.part.js,27,hgTr,unavailable,niedostępne,,,auto
 cards.switch.connected,parts/cards/switch-card.part.js,28,hgTr,connected,połączony,,,auto
 cards.switch.disconnected,parts/cards/switch-card.part.js,28,hgTr,disconnected,brak,,,auto

@@ -601,6 +601,14 @@
       "period": "Period",
       "picker_description": "Minimum, average, maximum and change of a sensor",
       "picker_name": "Nuvio – Statistics"
+    },
+    "sun": {
+      "above_the_horizon": "Above the horizon",
+      "below_the_horizon": "Below the horizon",
+      "enable_the_sun_integration": "Enable the Sun integration in HA",
+      "no_sun_sun_entity": "No sun.sun entity",
+      "picker_description": "Sunrise and sunset",
+      "picker_name": "Home Glass – Sun"
     }
   },
   "common": {
@@ -663,6 +671,7 @@
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
     "stop": "Stop",
+    "sun": "Sun",
     "today": "Today",
     "today_lower": "today",
     "turn_off": "Turn off",

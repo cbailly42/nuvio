@@ -605,6 +605,14 @@
       "period": "Okres",
       "picker_description": "Minimum, średnia, maksimum i zmiana czujnika",
       "picker_name": "Nuvio – Statystyka"
+    },
+    "sun": {
+      "above_the_horizon": "Nad horyzontem",
+      "below_the_horizon": "Pod horyzontem",
+      "enable_the_sun_integration": "Włącz integrację Słońce w HA",
+      "no_sun_sun_entity": "Brak encji sun.sun",
+      "picker_description": "Wschód i zachód słońca",
+      "picker_name": "Home Glass – Słońce"
     }
   },
   "common": {
@@ -667,6 +675,7 @@
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
     "stop": "Zatrzymaj",
+    "sun": "Słońce",
     "today": "Dziś",
     "today_lower": "dziś",
     "turn_off": "Wyłącz",
