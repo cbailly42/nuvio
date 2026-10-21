@@ -46,8 +46,8 @@ cards.ac.all_modes,parts/cards/ac-card.part.js,238,hgTr,All modes,Wszystkie tryb
 cards.ac.picker_name,parts/cards/ac-card.part.js,266,hgTr,Home Glass – Climate,Home Glass – Klimatyzacja,,load-time,auto
 cards.ac.picker_description,parts/cards/ac-card.part.js,266,hgTr,"Tesla-style climate control: temperature, bar, modes","Klimatyzacja w stylu Tesli: temperatura, pasek, tryby",,load-time,auto
 cards.actions.add_actions_in_the,parts/cards/actions-card.part.js,14,hgTr,Add actions in the card settings,Dodaj akcje w ustawieniach karty,,,auto
-cards.actions.nuvio_quick_actions,parts/cards/actions-card.part.js,25,hgTr,Nuvio – Quick actions,Nuvio – Szybkie akcje,,load-time,manual
-cards.actions.a_row_of_round,parts/cards/actions-card.part.js,25,hgTr,"A row of round buttons: scenes, scripts, services","Rząd okrągłych przycisków: sceny, skrypty, usługi",,load-time,manual
+cards.actions.picker_name,parts/cards/actions-card.part.js,25,hgTr,Nuvio – Quick actions,Nuvio – Szybkie akcje,,load-time,auto
+cards.actions.picker_description,parts/cards/actions-card.part.js,25,hgTr,"A row of round buttons: scenes, scripts, services","Rząd okrągłych przycisków: sceny, skrypty, usługi",,load-time,auto
 cards.agenda.upcoming,parts/cards/agenda-card.part.js,3,hgTr,Upcoming,Nadchodzące,,,auto
 cards.agenda.no_calendars,parts/cards/agenda-card.part.js,27,hgTr,No calendars,Brak kalendarzy,,,auto
 cards.agenda.no_calendar_entities_found,parts/cards/agenda-card.part.js,27,hgTr,No calendar.* entities found,Nie znaleziono encji calendar.*,,,auto

@@ -81,6 +81,11 @@
       "turn_off_air_conditioning": "Wyłącz klimatyzację",
       "turn_on_air_conditioning": "Włącz klimatyzację",
       "unavailable": "Niedostępna"
+    },
+    "actions": {
+      "add_actions_in_the": "Dodaj akcje w ustawieniach karty",
+      "picker_description": "Rząd okrągłych przycisków: sceny, skrypty, usługi",
+      "picker_name": "Nuvio – Szybkie akcje"
     }
   },
   "common": {

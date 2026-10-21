@@ -11,7 +11,7 @@ ha-card.glass.tt{ border-radius:var(--r-lg); flex-direction:column; align-items:
 @container (max-width: 220px){ .it small{ display:none; } .nv-ib.lg{ --nv-ib: 26u; } }
 `); }
   render() { const c = this._config, h = this._hass, A = c.actions || [];
-    if (!A.length) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Dodaj akcje w ustawieniach karty', 'Add actions in the card settings')}</span></ha-card>`;
+    if (!A.length) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.actions.add_actions_in_the')}</span></ha-card>`;
     const lab = A.some((a) => a.name);
     const btns = A.map((a, i) => { const s = a.entity ? H.st(h, a.entity) : null, on = s && ['on', 'playing', 'open', 'home'].includes(s.state), nm = a.name || (a.entity ? H.name(h, a.entity) : a.service || '');
       const ic = a.icon || (s && s.attributes.icon) || ({ scene: 'mdi:palette-outline', script: 'mdi:play', light: 'mdi:lightbulb', switch: 'mdi:power' }[hgDom(a.entity)] || 'mdi:gesture-tap');
@@ -22,4 +22,4 @@ ha-card.glass.tt{ border-radius:var(--r-lg); flex-direction:column; align-items:
     if (x.entity) return hgPress(this, this._hass, x.entity, x.tap_action); }
   getGridOptions() { return { columns: 6, rows: 1 }; }
 }
-hgReg('hg-actions-card', HGActionsCard, hgTr('Nuvio – Szybkie akcje', 'Nuvio – Quick actions'), hgTr('Rząd okrągłych przycisków: sceny, skrypty, usługi', 'A row of round buttons: scenes, scripts, services'));
+hgReg('hg-actions-card', HGActionsCard, hgTLazy('cards.actions.picker_name'), hgTLazy('cards.actions.picker_description'));

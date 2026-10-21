@@ -81,6 +81,11 @@
       "turn_off_air_conditioning": "Turn off air conditioning",
       "turn_on_air_conditioning": "Turn on air conditioning",
       "unavailable": "Unavailable"
+    },
+    "actions": {
+      "add_actions_in_the": "Add actions in the card settings",
+      "picker_description": "A row of round buttons: scenes, scripts, services",
+      "picker_name": "Nuvio – Quick actions"
     }
   },
   "common": {
