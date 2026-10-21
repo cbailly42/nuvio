@@ -2365,7 +2365,7 @@ lookr.search_entity,parts/hg-lookr.part.js,14,hgTr,Search entity…,Szukaj encji
 common.add,parts/hg-lookr.part.js,14,hgTr,Add,Dodaj,,,auto
 lookr.custom_room,parts/hg-lookr.part.js,16,hgTr,Custom room,Pokój własny,,,auto
 lookr.ha_area,parts/hg-lookr.part.js,16,hgTr,HA area,Obszar HA,,,auto
-lookr.entities,parts/hg-lookr.part.js,16,hgTr,entities,encji,,,auto
+lookr.entities_count,parts/hg-lookr.part.js,16,hgTr,{count} entities,{count} encji,count,concat,auto
 common.hidden_suffix,parts/hg-lookr.part.js,16,hgTr, · hidden, · ukryty,,,auto
 lookr.move_up,parts/hg-lookr.part.js,17,hgTr,Move up,W górę,,,auto
 lookr.move_down,parts/hg-lookr.part.js,17,hgTr,Move down,W dół,,,auto
@@ -2389,14 +2389,14 @@ common.household,parts/hg-lookr.part.js,41,hgTr,Household,Domownicy,,,auto
 lookr.household_strip_subtitle,parts/hg-lookr.part.js,41,hgTr,Household strip subtitle,Podtytuł paska domowników,,,auto
 lookr.who_is_home_right,parts/hg-lookr.part.js,41,hgTr,Who is home right now,Kto jest teraz w domu,,,auto
 lookr.this_view_s_header,parts/hg-lookr.part.js,42,hgTr,This view’s header,Nagłówek tego widoku,,,auto
-common.welcome,parts/hg-lookr.part.js,42,hgTr,"Welcome, {name}!","Witaj, {name}!",,,auto
+common.welcome,parts/hg-lookr.part.js,42,hgTr,"Welcome, {name}!","Witaj, {name}!",name,expr,auto
 lookr.edit,parts/hg-lookr.part.js,42,hgTr,Edit,Edytuj,,,auto
 lookr.fuel_prices_in_the,parts/hg-lookr.part.js,43,hgTr,Fuel prices in the header,Ceny paliw w nagłówku,,,auto
 lookr.label_price_sensor_and,parts/hg-lookr.part.js,43,hgTr,"Label, price sensor and optional tomorrow change sensor","Etykieta, czujnik ceny i opcjonalnie czujnik zmiany ceny jutro",,,auto
 lookr.fuel_prices_in_the,parts/hg-lookr.part.js,43,hgTr,Fuel prices in the header,Ceny paliw w nagłówku,,,auto
 lookr.fuel_prices_are_hidden,parts/hg-lookr.part.js,44,hgTr,Fuel prices are hidden in the header. The fuel list stays saved and comes back when you turn this on.,Ceny paliw są ukryte w nagłówku. Lista paliw zostaje zapisana i wróci po włączeniu.,,,auto
 lookr.label,parts/hg-lookr.part.js,46,hgTr,Label,Etykieta,,,auto
-lookr.show_in_the_header,parts/hg-lookr.part.js,46,hgTr,Show {fn} in the header,Pokaż {fn} w nagłówku,fn,,auto
+lookr.show_name_in_header,parts/hg-lookr.part.js,46,hgTr,Show {name} in the header,Pokaż {name} w nagłówku,name,,auto
 lookr.hidden_in_the_header,parts/hg-lookr.part.js,46,hgTr,Hidden in the header,Ukryte w nagłówku,,,auto
 lookr.shown_in_the_header,parts/hg-lookr.part.js,46,hgTr,Shown in the header,Widoczne w nagłówku,,,auto
 lookr.remove,parts/hg-lookr.part.js,46,hgTr,Remove,Usuń,,,auto
@@ -2410,7 +2410,7 @@ lookr.left,parts/hg-lookr.part.js,49,hgTr,Left,Po lewej,,,auto
 lookr.next_to_the_panel,parts/hg-lookr.part.js,49,hgTr,Next to the panel (right),Przy panelu (po prawej),,,auto
 lookr.weather_in_the_header,parts/hg-lookr.part.js,50,hgTr,Weather in the header,Pogoda w nagłówku,,,auto
 lookr.automatic_with_forecast,parts/hg-lookr.part.js,50,hgTr,Automatic (with forecast),Automatycznie (z prognozą),,,auto
-lookr.no_forecast,parts/hg-lookr.part.js,50,hgTr, (no forecast), (bez prognozy),,,auto
+lookr.no_forecast,parts/hg-lookr.part.js,50,hgTr,(no forecast),(bez prognozy),,concat,auto
 lookr.hourly_forecast_from_the,parts/hg-lookr.part.js,51,hgTr,Hourly forecast: from the weather entity,Prognoza godzinowa: z encji pogody,,,auto
 lookr.save_header,parts/hg-lookr.part.js,52,hgTr,Save header,Zapisz nagłówek,,,auto
 lookr.view_settings,parts/hg-lookr.part.js,53,hgTr,View settings,Ustawienia widoków,,,auto
@@ -2425,7 +2425,7 @@ lookr.order,parts/hg-lookr.part.js,54,hgTr,Order,Kolejność,,,auto
 lookr.auto,parts/hg-lookr.part.js,54,hgTr,Auto,Auto,,,auto
 lookr.icon,parts/hg-lookr.part.js,55,hgTr,Icon,Ikona,,,auto
 lookr.phone_label,parts/hg-lookr.part.js,55,hgTr,Phone label,Etykieta na telefonie,,,auto
-lookr.default_2,parts/hg-lookr.part.js,55,hgTr,default,domyślna,,,review
+lookr.phone_label_default,parts/hg-lookr.part.js,55,hgTr,default,domyślna,,,auto
 lookr.columns_desktop,parts/hg-lookr.part.js,55,hgTr,Columns: desktop,Kolumny: komputer,,,auto
 lookr.columns_tablet,parts/hg-lookr.part.js,55,hgTr,Columns: tablet,Kolumny: tablet,,,auto
 lookr.sidebar,parts/hg-lookr.part.js,55,hgTr,Sidebar,Pasek boczny,,,auto
@@ -2437,7 +2437,7 @@ lookr.background_gallery,parts/hg-lookr.part.js,58,hgTr,Background gallery,Galer
 lookr.your_own_images_saved,parts/hg-lookr.part.js,58,hgTr,Your own images saved in the layout: they show up under Background and in the screensaver,Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu,,,auto
 lookr.focal_point_of_the,parts/hg-lookr.part.js,60,hgTr,Focal point of the current background,Punkt ostrości bieżącego tła,,,auto
 lookr.remove,parts/hg-lookr.part.js,61,hgTr,Remove,Usuń,,,auto
-lookr.or,parts/hg-lookr.part.js,62,hgTr,or,lub,,,review
+lookr.image_url_placeholder,parts/hg-lookr.part.js,62,hgTr,/local/… or https://…,/local/… lub https://…,,concat,auto
 common.name,parts/hg-lookr.part.js,62,hgTr,Name,Nazwa,,,auto
 common.add,parts/hg-lookr.part.js,62,hgTr,Add,Dodaj,,,auto
 common.household,parts/hg-lookr.part.js,91,hgTr,Household,Domownicy,,,auto
