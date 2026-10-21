@@ -326,8 +326,8 @@ cards.family.home_of_total,parts/cards/family-card.part.js,19,hgTr,{home} of {to
 cards.family.no_people_in_home,parts/cards/family-card.part.js,19,hgTr,No people in Home Assistant,Brak osób w Home Assistant,,,auto
 cards.family.picker_name,parts/cards/family-card.part.js,26,hgTr,Nuvio – Family,Nuvio – Domownicy,,load-time,auto
 cards.family.picker_description,parts/cards/family-card.part.js,26,hgTr,Avatars and who is home right now,Awatary i kto jest teraz w domu,,load-time,auto
-cards.fan.nuvio_fan,parts/cards/fan-card.part.js,10,hgTr,Nuvio – Fan,Nuvio – Wentylator,,load-time,manual
-cards.fan.speed_on_an_arc,parts/cards/fan-card.part.js,10,hgTr,Speed on an arc and preset modes,Prędkość na łuku i tryby,,load-time,manual
+cards.fan.picker_name,parts/cards/fan-card.part.js,10,hgTr,Nuvio – Fan,Nuvio – Wentylator,,load-time,auto
+cards.fan.picker_description,parts/cards/fan-card.part.js,10,hgTr,Speed on an arc and preset modes,Prędkość na łuku i tryby,,load-time,auto
 cards.flow.energy_flow,parts/cards/flow-card.part.js,77,hgTr,Energy flow,Przepływ energii,,,auto
 cards.flow.no_power_sensors,parts/cards/flow-card.part.js,78,hgTr,No power sensors,Brak czujników mocy,,,auto
 cards.flow.pick_grid_solar_or,parts/cards/flow-card.part.js,78,hgTr,"Pick grid, solar or battery power","Wybierz moc sieci, paneli albo baterii",,,auto

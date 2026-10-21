@@ -366,6 +366,10 @@
       "no_people_in_home": "Brak osób w Home Assistant",
       "picker_description": "Awatary i kto jest teraz w domu",
       "picker_name": "Nuvio – Domownicy"
+    },
+    "fan": {
+      "picker_description": "Prędkość na łuku i tryby",
+      "picker_name": "Nuvio – Wentylator"
     }
   },
   "common": {

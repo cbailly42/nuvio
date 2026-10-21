@@ -362,6 +362,10 @@
       "no_people_in_home": "No people in Home Assistant",
       "picker_description": "Avatars and who is home right now",
       "picker_name": "Nuvio – Family"
+    },
+    "fan": {
+      "picker_description": "Speed on an arc and preset modes",
+      "picker_name": "Nuvio – Fan"
     }
   },
   "common": {
