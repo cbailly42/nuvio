@@ -637,6 +637,20 @@
       "choose_a_device": "Wybierz urządzenie",
       "picker_description": "Nazwa, stan i przełącznik w jednym wierszu",
       "picker_name": "Nuvio – Kafelek przełącznika"
+    },
+    "vacuum": {
+      "a_vacuum_or_lawn": "Encja vacuum lub lawn_mower",
+      "choose_a_vacuum": "Wybierz odkurzacz",
+      "dock": "Do stacji",
+      "docked": "W stacji",
+      "error": "Błąd",
+      "idle": "Bezczynny",
+      "mowing": "Kosi",
+      "paused": "Wstrzymany",
+      "picker_description": "Stan, bateria i sterowanie robotem",
+      "picker_name": "Home Glass – Odkurzacz",
+      "returning": "Wraca do stacji",
+      "start": "Start"
     }
   },
   "common": {
@@ -655,6 +669,7 @@
     "check_in": "Przyjście",
     "check_out": "Wyjście",
     "choose_entity": "Wybierz encję",
+    "cleaning": "Sprząta",
     "close": "Zamknij",
     "code": "Kod",
     "cooling": "Chłodzenie",

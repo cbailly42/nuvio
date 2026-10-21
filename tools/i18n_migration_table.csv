@@ -1111,8 +1111,8 @@ common.pause,parts/cards/vacuum-card.part.js,10,hgTr,Pause,Pauza,,,auto
 cards.vacuum.start,parts/cards/vacuum-card.part.js,10,hgTr,Start,Start,,,auto
 cards.vacuum.dock,parts/cards/vacuum-card.part.js,10,hgTr,Dock,Do stacji,,,auto
 common.more,parts/cards/vacuum-card.part.js,10,hgTr,More,Więcej,,,auto
-cards.vacuum.home_glass_vacuum,parts/cards/vacuum-card.part.js,15,hgTr,Home Glass – Vacuum,Home Glass – Odkurzacz,,load-time,manual
-cards.vacuum.robot_state_battery_and,parts/cards/vacuum-card.part.js,15,hgTr,"Robot state, battery and controls","Stan, bateria i sterowanie robotem",,load-time,manual
+cards.vacuum.picker_name,parts/cards/vacuum-card.part.js,15,hgTr,Home Glass – Vacuum,Home Glass – Odkurzacz,,load-time,auto
+cards.vacuum.picker_description,parts/cards/vacuum-card.part.js,15,hgTr,"Robot state, battery and controls","Stan, bateria i sterowanie robotem",,load-time,auto
 common.choose_entity,parts/cards/value-card.part.js,6,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.value.a_sensor_or_any,parts/cards/value-card.part.js,6,hgTr,A sensor or any entity with a state,Czujnik lub dowolna encja ze stanem,,,auto
 cards.value.home_glass_big_value,parts/cards/value-card.part.js,12,hgTr,Home Glass – Big value,Home Glass – Duża wartość,,load-time,manual
