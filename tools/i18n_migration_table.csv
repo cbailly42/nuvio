@@ -331,32 +331,32 @@ cards.fan.picker_description,parts/cards/fan-card.part.js,10,hgTr,Speed on an ar
 cards.flow.energy_flow,parts/cards/flow-card.part.js,77,hgTr,Energy flow,Przepływ energii,,,auto
 cards.flow.no_power_sensors,parts/cards/flow-card.part.js,78,hgTr,No power sensors,Brak czujników mocy,,,auto
 cards.flow.pick_grid_solar_or,parts/cards/flow-card.part.js,78,hgTr,"Pick grid, solar or battery power","Wybierz moc sieci, paneli albo baterii",,,auto
-cards.flow.solar,parts/cards/flow-card.part.js,103,hgTr,solar · {ns},panele · {ns},ns,plural,manual
-cards.flow.solar_2,parts/cards/flow-card.part.js,103,hgTr,solar,panele,,plural,manual
-cards.flow.solar_3,parts/cards/flow-card.part.js,103,hgTr,Solar,Panele,,,review
+cards.flow.solar_count_sub,parts/cards/flow-card.part.js,103,hgTr,solar · {count},panele · {count},count,plural,auto
+cards.flow.solar_sub,parts/cards/flow-card.part.js,103,hgTr,solar,panele,,plural,auto
+cards.flow.solar_title,parts/cards/flow-card.part.js,103,hgTr,Solar,Panele,,,auto
 cards.flow.export,parts/cards/flow-card.part.js,106,hgTr,export,oddaje,,,auto
 cards.flow.import,parts/cards/flow-card.part.js,106,hgTr,import,pobiera,,,auto
 cards.flow.grid,parts/cards/flow-card.part.js,106,hgTr,grid,sieć,,,auto
-cards.flow.grid_2,parts/cards/flow-card.part.js,106,hgTr,Grid,Sieć,,,review
+cards.flow.grid_title,parts/cards/flow-card.part.js,106,hgTr,Grid,Sieć,,,auto
 cards.flow.charging,parts/cards/flow-card.part.js,109,hgTr,charging,ładuje,,,auto
 cards.flow.discharging,parts/cards/flow-card.part.js,109,hgTr,discharging,rozładowuje,,,auto
 cards.flow.battery,parts/cards/flow-card.part.js,109,hgTr,battery,bateria,,,auto
-cards.flow.battery_i_1,parts/cards/flow-card.part.js,110,hgTr,Battery ${i + 1},Bateria ${i + 1},,expr,manual
+cards.flow.battery_n,parts/cards/flow-card.part.js,110,hgTr,Battery {n},Bateria {n},n,expr,auto
 common.battery,parts/cards/flow-card.part.js,110,hgTr,Battery,Bateria,,,auto
-cards.flow.charging_2,parts/cards/flow-card.part.js,112,hgTr, (charging), (ładuje),,,review
-cards.flow.discharging_2,parts/cards/flow-card.part.js,112,hgTr, (discharging), (rozładowuje),,,review
-cards.flow.solar_3,parts/cards/flow-card.part.js,115,hgTr,Solar,Panele,,,review
-cards.flow.grid_2,parts/cards/flow-card.part.js,115,hgTr,Grid,Sieć,,,review
-cards.flow.batteries,parts/cards/flow-card.part.js,115,hgTr,Batteries,Baterie,,plural,manual
-cards.flow.battery_2,parts/cards/flow-card.part.js,115,hgTr,Battery,Bateria,,plural,manual
+cards.flow.charging_suffix,parts/cards/flow-card.part.js,112,hgTr, (charging), (ładuje),,,auto
+cards.flow.discharging_suffix,parts/cards/flow-card.part.js,112,hgTr, (discharging), (rozładowuje),,,auto
+cards.flow.solar_title,parts/cards/flow-card.part.js,115,hgTr,Solar,Panele,,,auto
+cards.flow.grid_title,parts/cards/flow-card.part.js,115,hgTr,Grid,Sieć,,,auto
+cards.flow.batteries_title,parts/cards/flow-card.part.js,115,hgTr,Batteries,Baterie,,plural,auto
+cards.flow.battery_title,parts/cards/flow-card.part.js,115,hgTr,Battery,Bateria,,plural,auto
 cards.flow.home,parts/cards/flow-card.part.js,117,hgTr,home,dom,,,auto
-cards.flow.home_2,parts/cards/flow-card.part.js,117,hgTr,Home,Dom,,,review
+cards.flow.home_title,parts/cards/flow-card.part.js,117,hgTr,Home,Dom,,,auto
 cards.flow.where_the_home_power,parts/cards/flow-card.part.js,119,hgTr,Where the home power comes from,Skąd dom bierze prąd,,,auto
-cards.flow.home_2,parts/cards/flow-card.part.js,121,hgTr,Home,Dom,,,review
-cards.flow.self_powered,parts/cards/flow-card.part.js,121,hgTr,self powered,z własnej energii,,concat,manual
-cards.flow.self_powered_2,parts/cards/flow-card.part.js,122,hgTr,{own}% self powered,{own}% z własnej energii,own,,review
-cards.flow.nuvio_energy_flow,parts/cards/flow-card.part.js,140,hgTr,Nuvio – Energy flow,Nuvio – Przepływ energii,,load-time,manual
-cards.flow.grid_solar_battery_and,parts/cards/flow-card.part.js,140,hgTr,"Grid, solar, battery and home with flowing dots","Sieć, panele, bateria i dom z płynącymi kropkami",,load-time,manual
+cards.flow.home_title,parts/cards/flow-card.part.js,121,hgTr,Home,Dom,,,auto
+cards.flow.self_powered_suffix,parts/cards/flow-card.part.js,121,hgTr,self powered {own}%,z własnej energii {own}%,own,concat,auto
+cards.flow.self_powered_percent,parts/cards/flow-card.part.js,122,hgTr,{own}% self powered,{own}% z własnej energii,own,,auto
+cards.flow.picker_name,parts/cards/flow-card.part.js,140,hgTr,Nuvio – Energy flow,Nuvio – Przepływ energii,,load-time,auto
+cards.flow.picker_description,parts/cards/flow-card.part.js,140,hgTr,"Grid, solar, battery and home with flowing dots","Sieć, panele, bateria i dom z płynącymi kropkami",,load-time,auto
 cards.fuel.tomorrow_no_data,parts/cards/fuel-card.part.js,18,hgTr,tomorrow: no data,jutro: brak danych,,,auto
 cards.fuel.no_change_tomorrow,parts/cards/fuel-card.part.js,18,hgTr,no change tomorrow,jutro bez zmian,,,auto
 common.fuel_prices,parts/cards/fuel-card.part.js,20,hgTr,Fuel prices,Ceny paliw,,,auto

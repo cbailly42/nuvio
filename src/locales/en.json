@@ -366,6 +366,33 @@
     "fan": {
       "picker_description": "Speed on an arc and preset modes",
       "picker_name": "Nuvio – Fan"
+    },
+    "flow": {
+      "batteries_title": "Batteries",
+      "battery": "battery",
+      "battery_n": "Battery {n}",
+      "battery_title": "Battery",
+      "charging": "charging",
+      "charging_suffix": " (charging)",
+      "discharging": "discharging",
+      "discharging_suffix": " (discharging)",
+      "energy_flow": "Energy flow",
+      "export": "export",
+      "grid": "grid",
+      "grid_title": "Grid",
+      "home": "home",
+      "home_title": "Home",
+      "import": "import",
+      "no_power_sensors": "No power sensors",
+      "pick_grid_solar_or": "Pick grid, solar or battery power",
+      "picker_description": "Grid, solar, battery and home with flowing dots",
+      "picker_name": "Nuvio – Energy flow",
+      "self_powered_percent": "{own}% self powered",
+      "self_powered_suffix": "self powered {own}%",
+      "solar_count_sub": "solar · {count}",
+      "solar_sub": "solar",
+      "solar_title": "Solar",
+      "where_the_home_power": "Where the home power comes from"
     }
   },
   "common": {
@@ -376,6 +403,7 @@
     "ago_minutes": "{m} min ago",
     "air_conditioning": "Air conditioning",
     "air_quality": "Air quality",
+    "battery": "Battery",
     "brightness": "Brightness",
     "calendar": "Calendar",
     "cancel": "Cancel",

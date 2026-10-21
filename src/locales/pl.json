@@ -370,6 +370,33 @@
     "fan": {
       "picker_description": "Prędkość na łuku i tryby",
       "picker_name": "Nuvio – Wentylator"
+    },
+    "flow": {
+      "batteries_title": "Baterie",
+      "battery": "bateria",
+      "battery_n": "Bateria {n}",
+      "battery_title": "Bateria",
+      "charging": "ładuje",
+      "charging_suffix": " (ładuje)",
+      "discharging": "rozładowuje",
+      "discharging_suffix": " (rozładowuje)",
+      "energy_flow": "Przepływ energii",
+      "export": "oddaje",
+      "grid": "sieć",
+      "grid_title": "Sieć",
+      "home": "dom",
+      "home_title": "Dom",
+      "import": "pobiera",
+      "no_power_sensors": "Brak czujników mocy",
+      "pick_grid_solar_or": "Wybierz moc sieci, paneli albo baterii",
+      "picker_description": "Sieć, panele, bateria i dom z płynącymi kropkami",
+      "picker_name": "Nuvio – Przepływ energii",
+      "self_powered_percent": "{own}% z własnej energii",
+      "self_powered_suffix": "z własnej energii {own}%",
+      "solar_count_sub": "panele · {count}",
+      "solar_sub": "panele",
+      "solar_title": "Panele",
+      "where_the_home_power": "Skąd dom bierze prąd"
     }
   },
   "common": {
@@ -380,6 +407,7 @@
     "ago_minutes": "{m} min temu",
     "air_conditioning": "Klimatyzacja",
     "air_quality": "Jakość powietrza",
+    "battery": "Bateria",
     "brightness": "Jasność",
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
