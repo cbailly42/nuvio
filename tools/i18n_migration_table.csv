@@ -413,11 +413,11 @@ cards.kid.meals_today,parts/cards/kid-card.part.js,19,hgTr,Meals today,Posiłki 
 cards.kid.unread,parts/cards/kid-card.part.js,20,hgTr,Unread,Nieprzeczytane,,,auto
 cards.kid.bill,parts/cards/kid-card.part.js,21,hgTr,Bill,Rachunek,,,auto
 cards.kid.paid,parts/cards/kid-card.part.js,21,hgTr,Paid,Opłacony,,,auto
-cards.kid.overdue_since_k_due,parts/cards/kid-card.part.js,22,hgTr,overdue since ${k.due},po terminie ${k.due},,expr,manual
-cards.kid.due_k_due,parts/cards/kid-card.part.js,22,hgTr,due ${k.due},termin ${k.due},,expr,manual
+cards.kid.overdue_since,parts/cards/kid-card.part.js,22,hgTr,overdue since {date},po terminie {date},date,expr,auto
+cards.kid.due_date,parts/cards/kid-card.part.js,22,hgTr,due {date},termin {date},date,expr,auto
 cards.kid.child,parts/cards/kid-card.part.js,23,hgTr,Child,Dziecko,,,auto
-cards.kid.nuvio_child_livekid,parts/cards/kid-card.part.js,28,hgTr,Nuvio – Child (LiveKid),Nuvio – Dziecko (LiveKid),,load-time,manual
-cards.kid.presence_at_nursery_or,parts/cards/kid-card.part.js,28,hgTr,"Presence at nursery or kindergarten, check-in, check-out, meals, news and bill","Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek",,load-time,manual
+cards.kid.picker_name,parts/cards/kid-card.part.js,28,hgTr,Nuvio – Child (LiveKid),Nuvio – Dziecko (LiveKid),,load-time,auto
+cards.kid.picker_description,parts/cards/kid-card.part.js,28,hgTr,"Presence at nursery or kindergarten, check-in, check-out, meals, news and bill","Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek",,load-time,auto
 cards.lamp.choose_a_light,parts/cards/lamp-card.part.js,6,hgTr,Choose a light,Wybierz światło,,,auto
 cards.lamp.any_light_entity,parts/cards/lamp-card.part.js,6,hgTr,Any light entity,Dowolna encja light,,,auto
 common.on_neut,parts/cards/lamp-card.part.js,9,hgTr,On,Włączone,,,auto

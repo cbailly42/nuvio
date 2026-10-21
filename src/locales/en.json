@@ -451,6 +451,20 @@
       "page": "Page",
       "picker_description": "Picture, chart from a URL or a page in a frame",
       "picker_name": "Home Glass – Image or page"
+    },
+    "kid": {
+      "away": "Away",
+      "bill": "Bill",
+      "child": "Child",
+      "due_date": "due {date}",
+      "meals_today": "Meals today",
+      "no_child_data": "No child data.",
+      "none": "None",
+      "overdue_since": "overdue since {date}",
+      "paid": "Paid",
+      "picker_description": "Presence at nursery or kindergarten, check-in, check-out, meals, news and bill",
+      "picker_name": "Nuvio – Child (LiveKid)",
+      "unread": "Unread"
     }
   },
   "common": {
@@ -461,10 +475,13 @@
     "ago_minutes": "{m} min ago",
     "air_conditioning": "Air conditioning",
     "air_quality": "Air quality",
+    "at_facility": "At facility",
     "battery": "Battery",
     "brightness": "Brightness",
     "calendar": "Calendar",
     "cancel": "Cancel",
+    "check_in": "Check-in",
+    "check_out": "Check-out",
     "close": "Close",
     "code": "Code",
     "cooling": "Cooling",

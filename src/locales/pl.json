@@ -455,6 +455,20 @@
       "page": "Strona",
       "picker_description": "Zdjęcie, wykres z adresu albo strona w ramce",
       "picker_name": "Home Glass – Obraz lub strona"
+    },
+    "kid": {
+      "away": "Poza placówką",
+      "bill": "Rachunek",
+      "child": "Dziecko",
+      "due_date": "termin {date}",
+      "meals_today": "Posiłki dziś",
+      "no_child_data": "Brak danych dziecka.",
+      "none": "Brak",
+      "overdue_since": "po terminie {date}",
+      "paid": "Opłacony",
+      "picker_description": "Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek",
+      "picker_name": "Nuvio – Dziecko (LiveKid)",
+      "unread": "Nieprzeczytane"
     }
   },
   "common": {
@@ -465,10 +479,13 @@
     "ago_minutes": "{m} min temu",
     "air_conditioning": "Klimatyzacja",
     "air_quality": "Jakość powietrza",
+    "at_facility": "W placówce",
     "battery": "Bateria",
     "brightness": "Jasność",
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
+    "check_in": "Przyjście",
+    "check_out": "Wyjście",
     "close": "Zamknij",
     "code": "Kod",
     "cooling": "Chłodzenie",
