@@ -48,10 +48,16 @@
     "map": "Mapa",
     "media": "Multimedia",
     "name": "Nazwa",
+    "next_track": "Następny",
     "off_fem": "Wyłączona",
+    "pause": "Pauza",
+    "previous_track": "Poprzedni",
+    "rooms": "Pokoje",
     "save": "Zapisz",
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
+    "turn_off": "Wyłącz",
+    "turn_on": "Włącz",
     "weather": "Pogoda"
   },
   "core": {
@@ -268,6 +274,20 @@
       "target_humidity": "Wilgotność docelowa",
       "value": "Wartość",
       "volume": "Głośność"
+    },
+    "media": {
+      "mute": "Wycisz",
+      "play": "Odtwarzaj",
+      "repeat": "Powtarzanie",
+      "rooms_count": "Pokoje · {n}",
+      "shuffle": "Losowo",
+      "sound": "Dźwięk",
+      "source": "Źródło",
+      "unmute": "Wyłącz wyciszenie",
+      "volume_aria": "Głośność: {name}",
+      "volume_down": "Ciszej",
+      "volume_label": "Głośność",
+      "volume_up": "Głośniej"
     }
   },
   "states": {

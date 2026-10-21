@@ -48,10 +48,16 @@
     "map": "Map",
     "media": "Media",
     "name": "Name",
+    "next_track": "Next",
     "off_fem": "Off",
+    "pause": "Pause",
+    "previous_track": "Previous",
+    "rooms": "Rooms",
     "save": "Save",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
+    "turn_off": "Turn off",
+    "turn_on": "Turn on",
     "weather": "Weather"
   },
   "core": {
@@ -268,6 +274,20 @@
       "target_humidity": "Target humidity",
       "value": "Value",
       "volume": "Volume"
+    },
+    "media": {
+      "mute": "Mute",
+      "play": "Play",
+      "repeat": "Repeat",
+      "rooms_count": "Rooms · {n}",
+      "shuffle": "Shuffle",
+      "sound": "Sound",
+      "source": "Source",
+      "unmute": "Unmute",
+      "volume_aria": "Volume: {name}",
+      "volume_down": "Volume down",
+      "volume_label": "Volume",
+      "volume_up": "Volume up"
     }
   },
   "states": {
