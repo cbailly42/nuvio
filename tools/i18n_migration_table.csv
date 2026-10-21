@@ -2660,9 +2660,9 @@ shared.climate_modes.fan_only,parts/shared/climate-modes.part.js,9,hgTr,Fan only
 common.off_fem,parts/shared/climate-modes.part.js,11,hgTr,Off,Wyłączona,,,auto
 common.just_now,parts/shared/compact-cards.part.js,28,hgTr,just now,przed chwilą,,,auto
 common.ago_minutes,parts/shared/compact-cards.part.js,28,hgTr,{m} min ago,{m} min temu,m,,auto
-shared.compact_cards.math_round_m_60,parts/shared/compact-cards.part.js,28,hgTr,${Math.round(m / 60)} h ago,${Math.round(m / 60)} godz. temu,,expr,manual
-shared.compact_cards.math_round_m_1440,parts/shared/compact-cards.part.js,28,hgTr,${Math.round(m / 1440)} d ago,${Math.round(m / 1440)} dni temu,,expr,manual
-shared.confirm.confirm,parts/shared/confirm.part.js,3,hgTr,Confirm,Potwierdź,,,review
+common.ago_hours,parts/shared/compact-cards.part.js,28,hgTr,{h} h ago,{h} godz. temu,h,expr,auto
+common.ago_days_short,parts/shared/compact-cards.part.js,28,hgTr,{d} d ago,{d} dni temu,d,expr,auto
+shared.confirm.ok_button,parts/shared/confirm.part.js,3,hgTr,Confirm,Potwierdź,,,auto
 shared.generic_controls.level,parts/shared/generic-controls.part.js,34,hgTr,Level,Poziom,,,auto
 common.brightness,parts/shared/generic-controls.part.js,36,hgTr,Brightness,Jasność,,,auto
 shared.generic_controls.volume,parts/shared/generic-controls.part.js,38,hgTr,Volume,Głośność,,,auto
@@ -2679,13 +2679,13 @@ shared.media.repeat,parts/shared/media.part.js,74,hgTr,Repeat,Powtarzanie,,,auto
 shared.media.unmute,parts/shared/media.part.js,77,hgTr,Unmute,Wyłącz wyciszenie,,,auto
 shared.media.mute,parts/shared/media.part.js,77,hgTr,Mute,Wycisz,,,auto
 shared.media.volume_down,parts/shared/media.part.js,77,hgTr,Volume down,Ciszej,,,auto
-shared.media.volume,parts/shared/media.part.js,78,hgTr,Volume: ,Głośność: ,,concat,manual
+shared.media.volume_aria,parts/shared/media.part.js,78,hgTr,Volume: {name},Głośność: {name},name,concat,auto
 shared.media.volume_up,parts/shared/media.part.js,78,hgTr,Volume up,Głośniej,,,auto
-shared.media.volume_2,parts/shared/media.part.js,79,hgTr,Volume,Głośność,,,review
+shared.media.volume_label,parts/shared/media.part.js,79,hgTr,Volume,Głośność,,,auto
 shared.media.volume_down,parts/shared/media.part.js,80,hgTr,Volume down,Ciszej,,,auto
 shared.media.volume_up,parts/shared/media.part.js,80,hgTr,Volume up,Głośniej,,,auto
 shared.media.source,parts/shared/media.part.js,84,hgTr,Source,Źródło,,,auto
-shared.media.rooms_at_group_members,parts/shared/media.part.js,85,hgTr,Rooms · ${at.group_members.length},Pokoje · ${at.group_members.length},,expr,manual
+shared.media.rooms_count,parts/shared/media.part.js,85,hgTr,Rooms · {n},Pokoje · {n},n,expr,auto
 common.rooms,parts/shared/media.part.js,85,hgTr,Rooms,Pokoje,,,auto
 shared.media.sound,parts/shared/media.part.js,86,hgTr,Sound,Dźwięk,,,auto
 common.turn_on,parts/shared/media.part.js,88,hgTr,Turn on,Włącz,,,auto
@@ -2697,10 +2697,9 @@ common.details,parts/shared/media.part.js,91,hgTr,Details,Szczegóły,,,auto
 common.details,parts/shared/nv-card.part.js,22,hgTr,Details,Szczegóły,,,auto
 common.just_now,parts/shared/relative-time.part.js,4,hgTr,just now,przed chwilą,,,auto
 common.ago_minutes,parts/shared/relative-time.part.js,4,hgTr,{m} min ago,{m} min temu,m,,auto
-shared.relative_time.h_ago,parts/shared/relative-time.part.js,5,hgTr,{h} h ago,{h} godz. temu,h,,auto
-shared.relative_time.yesterday,parts/shared/relative-time.part.js,6,hgTr,yesterday,wczoraj,,plural,manual
-shared.relative_time.days_ago,parts/shared/relative-time.part.js,6,hgTr,{dd} days ago,{dd} dni temu,dd,plural,manual
-shared.weather.hg_wx_cond_en,parts/shared/weather.part.js,31,hgTr,HG_WX_COND_EN[k],HG_WX_COND[k][0],,expr,manual
+common.ago_hours,parts/shared/relative-time.part.js,5,hgTr,{h} h ago,{h} godz. temu,h,,auto
+shared.relative_time.yesterday,parts/shared/relative-time.part.js,6,hgTr,yesterday,wczoraj,,plural,auto
+shared.relative_time.days_ago,parts/shared/relative-time.part.js,6,hgTr,{days} days ago,{days} dni temu,days,plural,auto
 common.add,parts/ui/avatar-stack.part.js,12,hgTr,Add,Dodaj,,,auto
 ui.color.colour,parts/ui/color.part.js,44,hgTr,Colour,Kolor,,,auto
 ui.color.saturation_and_brightness,parts/ui/color.part.js,46,hgTr,Saturation and brightness,Nasycenie i jasność,,,auto
@@ -2709,7 +2708,7 @@ ui.color.hex_colour_code,parts/ui/color.part.js,48,hgTr,HEX colour code,Kod kolo
 ui.color.swatches,parts/ui/color.part.js,49,hgTr,Swatches,Szybkie kolory,,,auto
 ui.color.swatches,parts/ui/color.part.js,50,hgTr,Swatches,Szybkie kolory,,,auto
 ui.color.nuvio_lime,parts/ui/color.part.js,50,hgTr,Nuvio lime,Limonka Nuvio,,,auto
-ui.color.nuvio_lime,parts/ui/color.part.js,50,hgTr,Nuvio lime,Limonka Nuvio,,concat,manual
+ui.color.nuvio_lime_title,parts/ui/color.part.js,50,hgTr,Nuvio lime {hex},Limonka Nuvio {hex},hex,concat,auto
 common.done,parts/ui/color.part.js,51,hgTr,Done,Gotowe,,,auto
 common.close,parts/ui/overlay.part.js,111,hgTr,Close,Zamknij,,,auto
 ui.overlay.confirm,parts/ui/overlay.part.js,123,hgTr,Confirm,Potwierdź,,,auto
