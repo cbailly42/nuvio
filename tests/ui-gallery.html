@@ -16,6 +16,8 @@
 const v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
 const LANG = ['pl', 'en', 'fr'].includes(new URLSearchParams(location.search).get('lang')) ? new URLSearchParams(location.search).get('lang') : 'pl';
 window.__hgLangOpt = window.__nuvioLangOpt = LANG; window.__hgDryRun = true;
+/* karty poza ekranem też przerysowują się od razu (np. po dotarciu katalogu języka), jak w cards-demo – zrzut tekstu bez przewijania */
+window.__nuvioNoPause = window.__hgNoPause = true;
 for (const t of ['ha-card', 'ha-icon']) if (!customElements.get(t)) customElements.define(t, class extends HTMLElement {});
 await import('../dist/' + v.core);
 const ui = window.__nuvioUI || window.__hgUI;
