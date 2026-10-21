@@ -232,6 +232,22 @@
     }
   },
   "shared": {
+    "areas": {
+      "no_room": "Bez pokoju",
+      "sections": {
+        "cam": "Kamery",
+        "clim": "Klimatyzacja",
+        "cover": "Rolety",
+        "door": "Drzwi i okna",
+        "light": "Światła",
+        "media": "Media",
+        "misc": "Inne",
+        "mot": "Ruch i obecność",
+        "rob": "Roboty",
+        "sens": "Czujniki",
+        "sw": "Przełączniki"
+      }
+    },
     "calendar": {
       "fetch_error": "błąd pobierania",
       "untitled": "(bez tytułu)"

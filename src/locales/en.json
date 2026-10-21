@@ -232,6 +232,22 @@
     }
   },
   "shared": {
+    "areas": {
+      "no_room": "No room",
+      "sections": {
+        "cam": "Cameras",
+        "clim": "Climate",
+        "cover": "Covers",
+        "door": "Doors & windows",
+        "light": "Lights",
+        "media": "Media",
+        "misc": "Other",
+        "mot": "Motion & presence",
+        "rob": "Robots",
+        "sens": "Sensors",
+        "sw": "Switches"
+      }
+    },
     "calendar": {
       "fetch_error": "fetch error",
       "untitled": "(untitled)"
