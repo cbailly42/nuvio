@@ -2980,7 +2980,6 @@ common.ago_minutes,parts/hg-wallnotify.part.js,63,hgTr,{m} min ago,{m} min temu,
 common.notifications,parts/hg-wallnotify.part.js,69,hgTr,Notifications,Powiadomienia,,,auto
 wallnotify.show_less,parts/hg-wallnotify.part.js,69,hgTr,Show less,Pokaż mniej,,,auto
 wallnotify.clear,parts/hg-wallnotify.part.js,69,hgTr,Clear,Wyczyść,,,auto
-wallnotify.notifications_tap_to_expand,parts/hg-wallnotify.part.js,71,hgTr,{n} notifications · tap to expand,"{n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'powiadomienia' : 'powiadomień'} · dotknij, aby rozwinąć",,plural,manual
 wallnotify.add_service,parts/hg-wallnotify.part.js,84,hgTr,Add service,Dodaj usługę,,,auto
 wallnotify.no_notify_services_in,parts/hg-wallnotify.part.js,85,hgTr,No notify services in Home Assistant.,Brak usług notify w Home Assistant.,,,auto
 wallnotify.notifications_on_this_device,parts/hg-wallnotify.part.js,86,hgTr,Notifications on this device,Powiadomienia na tym urządzeniu,,,auto

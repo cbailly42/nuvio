@@ -2814,6 +2814,18 @@
     "upload_failed": "Nie udało się przesłać ({error})",
     "uploading": "Przesyłanie…"
   },
+  "wallnotify": {
+    "add_service": "Dodaj usługę",
+    "clear": "Wyczyść",
+    "messages_sent_through_the": "Wiadomości wysłane przez wybraną usługę notify pokażą się na wygaszaczu. Wybór dotyczy tylko tego urządzenia.",
+    "more_count_few": "{count} powiadomienia · dotknij, aby rozwinąć",
+    "more_count_many": "{count} powiadomień · dotknij, aby rozwinąć",
+    "more_count_one": "{count} powiadomienie · dotknij, aby rozwinąć",
+    "more_count_other": "{count} powiadomienia · dotknij, aby rozwinąć",
+    "no_notify_services_in": "Brak usług notify w Home Assistant.",
+    "notifications_on_this_device": "Powiadomienia na tym urządzeniu",
+    "show_less": "Pokaż mniej"
+  },
   "wallx": {
     "styles": {
       "analog": "Zegar analogowy",

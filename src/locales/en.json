@@ -2794,6 +2794,16 @@
     "upload_failed": "Upload failed ({error})",
     "uploading": "Uploading…"
   },
+  "wallnotify": {
+    "add_service": "Add service",
+    "clear": "Clear",
+    "messages_sent_through_the": "Messages sent through the selected notify service appear on the screensaver. The choice applies to this device only.",
+    "more_count_one": "{count} notification · tap to expand",
+    "more_count_other": "{count} notifications · tap to expand",
+    "no_notify_services_in": "No notify services in Home Assistant.",
+    "notifications_on_this_device": "Notifications on this device",
+    "show_less": "Show less"
+  },
   "wallx": {
     "styles": {
       "analog": "Analog clock",
