@@ -522,6 +522,13 @@
       "picker_name": "Nuvio – Logbook",
       "recent_activity": "Recent activity"
     },
+    "map": {
+      "map_unavailable": "Map unavailable",
+      "people": "people",
+      "picker_description": "Natywna mapa HA w szklanej ramce",
+      "picker_name": "Home Glass – Mapa",
+      "zones": "zones"
+    },
     "media_mini": {
       "any_media_player": "Any media_player",
       "choose_a_player": "Choose a player",

@@ -526,6 +526,13 @@
       "picker_name": "Nuvio – Dziennik",
       "recent_activity": "Ostatnie zdarzenia"
     },
+    "map": {
+      "map_unavailable": "Mapa niedostępna",
+      "people": "os.",
+      "picker_description": "Natywna mapa HA w szklanej ramce",
+      "picker_name": "Home Glass – Mapa",
+      "zones": "strefy"
+    },
     "media_mini": {
       "any_media_player": "Dowolny media_player",
       "choose_a_player": "Wybierz odtwarzacz",
