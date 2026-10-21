@@ -527,6 +527,9 @@
       "nuvio_lime_title": "Nuvio lime {hex}",
       "saturation_and_brightness": "Saturation and brightness",
       "swatches": "Swatches"
+    },
+    "overlay": {
+      "confirm": "Confirm"
     }
   },
   "weather": {
