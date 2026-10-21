@@ -96,6 +96,23 @@
       "tomorrow": "Jutro",
       "upcoming": "Nadchodzące"
     },
+    "airq": {
+      "levels": {
+        "bad": "Zła",
+        "good": "Dobra",
+        "moderate": "Umiarkowana",
+        "poor": "Słaba"
+      },
+      "metrics": {
+        "humidity": "Wilgotność",
+        "voc": "LZO"
+      },
+      "no_air_quality_sensors": "Brak czujników jakości powietrza",
+      "overall_level": "Ogólnie: {level}",
+      "pick_co2_pm2_5": "Wybierz czujniki CO₂, PM2.5, PM10 lub LZO albo zostaw puste, by wykryć automatycznie",
+      "picker_description": "CO₂, pyły, LZO i wilgotność z kolorowymi progami",
+      "picker_name": "Home Glass – Jakość powietrza"
+    },
     "appliance": {
       "no_device": "Brak urządzenia",
       "pick_an_entity_of": "Wybierz encję urządzenia w ustawieniach widżetu.",
@@ -124,6 +141,7 @@
     "ago_hours": "{h} godz. temu",
     "ago_minutes": "{m} min temu",
     "air_conditioning": "Klimatyzacja",
+    "air_quality": "Jakość powietrza",
     "brightness": "Jasność",
     "calendar": "Kalendarz",
     "cancel": "Anuluj",

@@ -96,6 +96,23 @@
       "tomorrow": "Tomorrow",
       "upcoming": "Upcoming"
     },
+    "airq": {
+      "levels": {
+        "bad": "Bad",
+        "good": "Good",
+        "moderate": "Moderate",
+        "poor": "Poor"
+      },
+      "metrics": {
+        "humidity": "Humidity",
+        "voc": "VOC"
+      },
+      "no_air_quality_sensors": "No air quality sensors",
+      "overall_level": "Overall: {level}",
+      "pick_co2_pm2_5": "Pick CO₂, PM2.5, PM10 or VOC sensors, or leave empty to detect automatically",
+      "picker_description": "CO₂, particulates, VOC and humidity with coloured thresholds",
+      "picker_name": "Home Glass – Air quality"
+    },
     "appliance": {
       "no_device": "No device",
       "pick_an_entity_of": "Pick an entity of the device in the widget settings.",
@@ -124,6 +141,7 @@
     "ago_hours": "{h} h ago",
     "ago_minutes": "{m} min ago",
     "air_conditioning": "Air conditioning",
+    "air_quality": "Air quality",
     "brightness": "Brightness",
     "calendar": "Calendar",
     "cancel": "Cancel",
