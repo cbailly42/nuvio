@@ -1,7 +1,7 @@
 /* --- hg-energy-stats-card: dziś / ten tydzień / ten miesiąc (jak panel Energia HA) + wykres z przełącznikiem dzień/tydzień/miesiąc --- */
 class HGEnergyStatsCard extends HGBase {
   defaults() {
-    return { title: hgTr('Zużycie i produkcja', 'Consumption and production'), icon: 'mdi:chart-bar', consumption: null, production: null, price: null, currency: 'zł',
+    return { title: hgT('cards.energy_stats.consumption_and_production'), icon: 'mdi:chart-bar', consumption: null, production: null, price: null, currency: 'zł',
       colors: { consumption: 'var(--hg-accent)', production: 'var(--hg-accent)' }, link: '/energy' };
   }
   setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
@@ -98,14 +98,14 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   render() {
     const c = this._config, col = c.colors;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>`;
-    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${H.esc(this._err)}</div></ha-card>`;
-    if (!this._d) return `<ha-card class="glass">${hd}<div class="ph">${hgTr('Wczytywanie statystyk…', 'Loading statistics…')}</div></ha-card>`;
+    if (this._err) return `<ha-card class="glass">${hd}<div class="ph"><b>${hgT('common.no_data_source')}</b>${H.esc(this._err)}</div></ha-card>`;
+    if (!this._d) return `<ha-card class="glass">${hd}<div class="ph">${hgT('cards.energy_stats.loading_statistics')}</div></ha-card>`;
     const d = this._d, m = this._mode || 'week', price = d.price;
-    const T = [['day', hgTr('Dziś', 'Today')], ['week', hgTr('Ten tydzień', 'This week')], ['month', hgTr('Ten miesiąc', 'This month')]];
+    const T = [['day', hgT('common.today')], ['week', hgT('cards.energy_stats.this_week')], ['month', hgT('cards.energy_stats.this_month')]];
     const tiles = T.map(([k, l]) => { const [cv, pv] = d.tot[k];
-      return `<button class="tl ${m === k ? 'sel' : ''}" data-act="mode" data-m="${k}" aria-pressed="${m === k}" aria-label="${l}: ${hgTr('zużycie', 'consumption')} ${H.fmt(cv, 1)} kWh, ${hgTr('produkcja', 'production')} ${H.fmt(pv, 1)} kWh">
+      return `<button class="tl ${m === k ? 'sel' : ''}" data-act="mode" data-m="${k}" aria-pressed="${m === k}" aria-label="${l}: ${hgT('cards.energy_stats.consumption')} ${H.fmt(cv, 1)} kWh, ${hgT('cards.energy_stats.production')} ${H.fmt(pv, 1)} kWh">
         <small>${l}</small><span class="r" style="--c:${col.consumption}"><i></i><b>${H.fmt(cv, cv < 10 ? 2 : 1)}</b><span>kWh</span></span>
-        <span class="r p" style="--c:${col.production}"><i></i>${d.hasP[k] ? `<b>${H.fmt(pv, pv < 10 ? 2 : 1)}</b><span>kWh PV</span>` : `<b>–</b><span>${hgTr('PV brak danych', 'PV no data')}</span>`}</span>
+        <span class="r p" style="--c:${col.production}"><i></i>${d.hasP[k] ? `<b>${H.fmt(pv, pv < 10 ? 2 : 1)}</b><span>kWh PV</span>` : `<b>–</b><span>${hgT('cards.energy_stats.pv_no_data')}</span>`}</span>
         ${price != null ? `<span class="cost">≈ ${H.fmt(cv * price, 2)} ${H.esc(c.currency)}</span>` : ''}</button>`; }).join('');
     const bars = this._bars(), n = bars.length;
     const mx = Math.max(0.001, ...bars.map((b) => Math.max(b.c, b.p)));
@@ -113,17 +113,17 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const sel = this._sel;
     const cols = bars.map((b, i) => {
       const bar = (v, hasV, cc) => (b.fut ? '' : !hasV ? `<i class="nd"></i>` : `<i class="${v <= 0 ? 'z' : ''}" style="--c:${cc};--h:${((v / mx) * 100).toFixed(1)}%;animation-delay:${Math.min(i * 15, 300)}ms"></i>`);
-      const tip = sel === i && !b.fut ? `<span class="tip">${H.esc(b.name)}<br><i style="background:${col.consumption}"></i>${hgTr('Zużycie', 'Consumption')}: <b>${b.hc ? H.fmt(b.c, 2) + ' kWh' : hgTr('brak danych', 'no data')}</b><br><i style="background:${col.production}"></i>${hgTr('Produkcja', 'Production')}: <b>${b.hp ? H.fmt(b.p, 2) + ' kWh' : hgTr('brak danych', 'no data')}</b>${price != null && b.hc ? `<br>${hgTr('Koszt', 'Cost')} ≈ <b>${H.fmt(b.c * price, 2)} ${H.esc(c.currency)}</b>` : ''}</span>` : '';
+      const tip = sel === i && !b.fut ? `<span class="tip">${H.esc(b.name)}<br><i style="background:${col.consumption}"></i>${hgT('cards.energy_stats.consumption_title')}: <b>${b.hc ? H.fmt(b.c, 2) + ' kWh' : hgT('common.no_data')}</b><br><i style="background:${col.production}"></i>${hgT('cards.energy_stats.production_title')}: <b>${b.hp ? H.fmt(b.p, 2) + ' kWh' : hgT('common.no_data')}</b>${price != null && b.hc ? `<br>${hgT('cards.energy_stats.cost')} ≈ <b>${H.fmt(b.c * price, 2)} ${H.esc(c.currency)}</b>` : ''}</span>` : '';
       const side = i < n * 0.2 ? 'l' : i > n * 0.8 ? 'r' : '';
-      return `<button class="d ${side} ${b.today ? 'today' : ''} ${b.fut ? 'fut' : ''} ${b.skip ? 'lbl-skip' : ''} ${sel === i ? 'sel' : ''}" data-act="bar" data-i="${i}" ${b.fut ? 'disabled tabindex="-1"' : ''} aria-label="${H.esc(b.name || b.lbl)}${b.fut ? '' : `: ${hgTr('zużycie', 'consumption')} ${H.fmt(b.c, 2)} kWh, ${hgTr('produkcja', 'production')} ${b.hp ? H.fmt(b.p, 2) + ' kWh' : hgTr('brak danych', 'no data')}`}">${tip}<span class="bs"><span class="bw">${bar(b.c, b.hc, col.consumption)}${bar(b.p, b.hp, col.production)}</span></span><small>${b.today ? (m === 'day' ? hgTr('teraz', 'now') : hgTr('dziś', 'today')) : b.lbl}</small></button>`;
+      return `<button class="d ${side} ${b.today ? 'today' : ''} ${b.fut ? 'fut' : ''} ${b.skip ? 'lbl-skip' : ''} ${sel === i ? 'sel' : ''}" data-act="bar" data-i="${i}" ${b.fut ? 'disabled tabindex="-1"' : ''} aria-label="${H.esc(b.name || b.lbl)}${b.fut ? '' : `: ${hgT('cards.energy_stats.consumption')} ${H.fmt(b.c, 2)} kWh, ${hgT('cards.energy_stats.production')} ${b.hp ? H.fmt(b.p, 2) + ' kWh' : hgT('common.no_data')}`}">${tip}<span class="bs"><span class="bw">${bar(b.c, b.hc, col.consumption)}${bar(b.p, b.hp, col.production)}</span></span><small>${b.today ? (m === 'day' ? hgT('common.now') : hgT('common.today_lower')) : b.lbl}</small></button>`;
     }).join('');
-    const sw = `<div class="sw" role="tablist">${T.map(([k, l]) => `<button role="tab" class="${m === k ? 'act' : ''}" data-act="mode" data-m="${k}" aria-selected="${m === k}">${hgTr(['Dzień', 'Tydzień', 'Miesiąc'], ['Day', 'Week', 'Month'])[T.findIndex((x) => x[0] === k)]}</button>`).join('')}</div>`;
+    const sw = `<div class="sw" role="tablist">${T.map(([k, l]) => `<button role="tab" class="${m === k ? 'act' : ''}" data-act="mode" data-m="${k}" aria-selected="${m === k}">${{ day: hgT('cards.energy_stats.tab_day'), week: hgT('cards.energy_stats.tab_week'), month: hgT('cards.energy_stats.tab_month') }[k]}</button>`).join('')}</div>`;
     const anyNd = bars.some((b) => !b.fut && !b.hp);
     return `<ha-card class="glass">${hd}<div class="tiles">${tiles}</div>
-      <div class="ctl">${sw}<span class="lg"><span><i style="background:${col.consumption}"></i>${hgTr('Zużycie z sieci', 'Grid consumption')}</span><span><i style="background:${col.production}"></i>${hgTr('Produkcja PV', 'PV production')}</span></span></div>
+      <div class="ctl">${sw}<span class="lg"><span><i style="background:${col.consumption}"></i>${hgT('cards.energy_stats.grid_consumption')}</span><span><i style="background:${col.production}"></i>${hgT('cards.energy_stats.pv_production')}</span></span></div>
       <div class="ch" style="--n:${n};--g:${m === 'week' ? 'calc(var(--k) * 6)' : '1px'};--bw:${bw};--bg:${m === 'week' ? 'calc(var(--k) * 3)' : '1px'}">${cols}</div>
-      <div class="ft">${anyNd ? `<span>● ${hgTr('szara kropka = brak danych z falownika', 'grey dot = no inverter data')}</span>` : ''}${price != null ? `<span>${hgTr('cena', 'price')} ${H.fmt(price, 2)} ${H.esc(c.currency)}/kWh ${hgTr('(z ustawień Energii)', '(from Energy settings)')}</span>` : ''}
-        <a href="${H.esc(c.link)}" data-act="link">${hgTr('Panel Energia HA', 'HA Energy dashboard')} ${H.icon('mdi:arrow-top-right')}</a></div></ha-card>`;
+      <div class="ft">${anyNd ? `<span>● ${hgT('cards.energy_stats.grey_dot_no_inverter')}</span>` : ''}${price != null ? `<span>${hgT('cards.energy_stats.price')} ${H.fmt(price, 2)} ${H.esc(c.currency)}/kWh ${hgT('cards.energy_stats.from_energy_settings')}</span>` : ''}
+        <a href="${H.esc(c.link)}" data-act="link">${hgT('cards.energy_stats.ha_energy_dashboard')} ${H.icon('mdi:arrow-top-right')}</a></div></ha-card>`;
   }
   onAct(a, t, e) {
     if (a === 'mode') { this._mode = t.dataset.m; this._sel = null; return this.rerender(); }
@@ -132,4 +132,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
   }
   getCardSize() { return 7; }
 }
-hgReg('hg-energy-stats-card', HGEnergyStatsCard, hgTr('Home Glass – Energia (statystyki)', 'Home Glass – Energy (statistics)'), hgTr('Dziś / tydzień / miesiąc i wykres zużycia vs produkcji', 'Today / week / month and a consumption vs production chart'));
+hgReg('hg-energy-stats-card', HGEnergyStatsCard, hgTLazy('cards.energy_stats.picker_name'), hgTLazy('cards.energy_stats.picker_description'));

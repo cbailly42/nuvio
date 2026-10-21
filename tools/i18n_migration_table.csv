@@ -274,9 +274,9 @@ cards.energy_stats.this_month,parts/cards/energy-stats-card.part.js,104,hgTr,Thi
 cards.energy_stats.consumption,parts/cards/energy-stats-card.part.js,106,hgTr,consumption,zużycie,,,auto
 cards.energy_stats.production,parts/cards/energy-stats-card.part.js,106,hgTr,production,produkcja,,,auto
 cards.energy_stats.pv_no_data,parts/cards/energy-stats-card.part.js,108,hgTr,PV no data,PV brak danych,,,auto
-cards.energy_stats.consumption_2,parts/cards/energy-stats-card.part.js,116,hgTr,Consumption,Zużycie,,,review
+cards.energy_stats.consumption_title,parts/cards/energy-stats-card.part.js,116,hgTr,Consumption,Zużycie,,,auto
 common.no_data,parts/cards/energy-stats-card.part.js,116,hgTr,no data,brak danych,,,auto
-cards.energy_stats.production_2,parts/cards/energy-stats-card.part.js,116,hgTr,Production,Produkcja,,,review
+cards.energy_stats.production_title,parts/cards/energy-stats-card.part.js,116,hgTr,Production,Produkcja,,,auto
 common.no_data,parts/cards/energy-stats-card.part.js,116,hgTr,no data,brak danych,,,auto
 cards.energy_stats.cost,parts/cards/energy-stats-card.part.js,116,hgTr,Cost,Koszt,,,auto
 cards.energy_stats.consumption,parts/cards/energy-stats-card.part.js,118,hgTr,consumption,zużycie,,,auto
@@ -284,15 +284,17 @@ cards.energy_stats.production,parts/cards/energy-stats-card.part.js,118,hgTr,pro
 common.no_data,parts/cards/energy-stats-card.part.js,118,hgTr,no data,brak danych,,,auto
 common.now,parts/cards/energy-stats-card.part.js,118,hgTr,now,teraz,,,auto
 common.today_lower,parts/cards/energy-stats-card.part.js,118,hgTr,today,dziś,,,auto
-cards.energy_stats.day_week_month,parts/cards/energy-stats-card.part.js,120,hgTr,"['Day', 'Week', 'Month']","['Dzień', 'Tydzień', 'Miesiąc']",,array,manual
+cards.energy_stats.tab_day,parts/cards/energy-stats-card.part.js,120,hgTr,Day,Dzień,,array,auto
+cards.energy_stats.tab_week,parts/cards/energy-stats-card.part.js,120,hgTr,Week,Tydzień,,array,auto
+cards.energy_stats.tab_month,parts/cards/energy-stats-card.part.js,120,hgTr,Month,Miesiąc,,array,auto
 cards.energy_stats.grid_consumption,parts/cards/energy-stats-card.part.js,123,hgTr,Grid consumption,Zużycie z sieci,,,auto
 cards.energy_stats.pv_production,parts/cards/energy-stats-card.part.js,123,hgTr,PV production,Produkcja PV,,,auto
 cards.energy_stats.grey_dot_no_inverter,parts/cards/energy-stats-card.part.js,125,hgTr,grey dot = no inverter data,szara kropka = brak danych z falownika,,,auto
 cards.energy_stats.price,parts/cards/energy-stats-card.part.js,125,hgTr,price,cena,,,auto
 cards.energy_stats.from_energy_settings,parts/cards/energy-stats-card.part.js,125,hgTr,(from Energy settings),(z ustawień Energii),,,auto
 cards.energy_stats.ha_energy_dashboard,parts/cards/energy-stats-card.part.js,126,hgTr,HA Energy dashboard,Panel Energia HA,,,auto
-cards.energy_stats.home_glass_energy_statistics,parts/cards/energy-stats-card.part.js,135,hgTr,Home Glass – Energy (statistics),Home Glass – Energia (statystyki),,load-time,manual
-cards.energy_stats.today_week_month_and,parts/cards/energy-stats-card.part.js,135,hgTr,Today / week / month and a consumption vs production chart,Dziś / tydzień / miesiąc i wykres zużycia vs produkcji,,load-time,manual
+cards.energy_stats.picker_name,parts/cards/energy-stats-card.part.js,135,hgTr,Home Glass – Energy (statistics),Home Glass – Energia (statystyki),,load-time,auto
+cards.energy_stats.picker_description,parts/cards/energy-stats-card.part.js,135,hgTr,Today / week / month and a consumption vs production chart,Dziś / tydzień / miesiąc i wykres zużycia vs produkcji,,load-time,auto
 cards.entities.entities,parts/cards/entities-card.part.js,3,hgTr,Entities,Encje,,,auto
 cards.entities.add_entities,parts/cards/entities-card.part.js,12,hgTr,Add entities,Dodaj encje,,,auto
 cards.entities.a_list_with_toggles,parts/cards/entities-card.part.js,12,hgTr,A list with toggles and values,Lista z przełącznikami i wartościami,,,auto
