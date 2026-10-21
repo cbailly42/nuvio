@@ -737,6 +737,32 @@
       "the_slider_works_with": "The slider works with lights, media players, fans, covers and input_number",
       "toggle": "Toggle"
     },
+    "smartlock": {
+      "check_the_door_and": "Check the door and try again",
+      "choose_a_lock": "Choose a lock",
+      "default_title": "Lock",
+      "door_closed": "Door closed",
+      "door_open": "Door open",
+      "enter_the_lock_code": "Enter the lock code.",
+      "hold_to_unlock": "Hold to unlock",
+      "hours_ago": "{count} h ago",
+      "jammed": "Jammed",
+      "lock_button": "Lock",
+      "lock_confirm": "Lock",
+      "locked": "Locked",
+      "locking": "Locking…",
+      "open": "Open",
+      "open_door": "Open door",
+      "opening": "Opening…",
+      "picker_description": "Animated padlock, hold to unlock, battery and door",
+      "picker_name": "Nuvio – Smart lock",
+      "tap_to_lock": "Tap to lock",
+      "tap_to_unlock": "Tap to unlock",
+      "unlock_button": "Unlock",
+      "unlock_confirm": "Unlock",
+      "unlocked": "Unlocked",
+      "unlocking": "Unlocking…"
+    },
     "solar": {
       "inverter_offline": "inverter offline",
       "kwh_of_clean_energy": "kWh of clean energy",
@@ -940,6 +966,7 @@
     "turn_off": "Turn off",
     "turn_on": "Turn on",
     "unavailable": "Unavailable",
+    "unavailable_masc": "Unavailable",
     "weather": "Weather"
   },
   "core": {

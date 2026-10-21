@@ -990,7 +990,7 @@ cards.slider.toggle,parts/cards/slider-card.part.js,21,hgTr,Toggle,Przełącz,,,
 common.state_unavailable,parts/cards/slider-card.part.js,22,hgTr,unavailable,niedostępne,,,auto
 cards.slider.picker_name,parts/cards/slider-card.part.js,42,hgTr,Home Glass – Slider,Home Glass – Suwak,,load-time,auto
 cards.slider.picker_description,parts/cards/slider-card.part.js,42,hgTr,"Slider for brightness, volume, fan, cover and input_number","Suwak dla jasności, głośności, wentylatora, rolety i input_number",,load-time,auto
-cards.smartlock.lock,parts/cards/smartlock-card.part.js,6,hgTr,Lock,Zamek,,,auto
+cards.smartlock.default_title,parts/cards/smartlock-card.part.js,6,hgTr,Lock,Zamek,,,auto
 common.unavailable_masc,parts/cards/smartlock-card.part.js,57,hgTr,Unavailable,Niedostępny,,,auto
 cards.smartlock.jammed,parts/cards/smartlock-card.part.js,58,hgTr,Jammed,Zacięty,,,auto
 cards.smartlock.locking,parts/cards/smartlock-card.part.js,59,hgTr,Locking…,Zamykanie…,,,auto
@@ -1001,25 +1001,25 @@ cards.smartlock.open,parts/cards/smartlock-card.part.js,61,hgTr,Open,Drzwi otwar
 cards.smartlock.unlocked,parts/cards/smartlock-card.part.js,62,hgTr,Unlocked,Otwarty,,,auto
 common.just_now,parts/cards/smartlock-card.part.js,64,hgTr,just now,przed chwilą,,,auto
 common.ago_minutes,parts/cards/smartlock-card.part.js,64,hgTr,{m} min ago,{m} min temu,m,,auto
-cards.smartlock.math_floor_m_60,parts/cards/smartlock-card.part.js,64,hgTr,${Math.floor(m / 60)} h ago,${Math.floor(m / 60)} h temu,,expr,manual
+cards.smartlock.hours_ago,parts/cards/smartlock-card.part.js,64,hgTr,{count} h ago,{count} h temu,count,expr,auto
 cards.smartlock.choose_a_lock,parts/cards/smartlock-card.part.js,66,hgTr,Choose a lock,Wybierz zamek,,,auto
 common.battery,parts/cards/smartlock-card.part.js,70,hgTr,Battery,Bateria,,,auto
 cards.smartlock.hold_to_unlock,parts/cards/smartlock-card.part.js,72,hgTr,Hold to unlock,"Przytrzymaj, aby otworzyć",,,auto
 cards.smartlock.tap_to_unlock,parts/cards/smartlock-card.part.js,72,hgTr,Tap to unlock,"Dotknij, aby otworzyć",,,auto
 cards.smartlock.check_the_door_and,parts/cards/smartlock-card.part.js,72,hgTr,Check the door and try again,Sprawdź drzwi i spróbuj ponownie,,,auto
 cards.smartlock.tap_to_lock,parts/cards/smartlock-card.part.js,72,hgTr,Tap to lock,"Dotknij, aby zamknąć",,,auto
-cards.smartlock.unlock,parts/cards/smartlock-card.part.js,74,hgTr,Unlock,Otwórz zamek,,,auto
-cards.smartlock.lock_2,parts/cards/smartlock-card.part.js,74,hgTr,Lock,Zamknij zamek,,,review
+cards.smartlock.unlock_button,parts/cards/smartlock-card.part.js,74,hgTr,Unlock,Otwórz zamek,,,auto
+cards.smartlock.lock_button,parts/cards/smartlock-card.part.js,74,hgTr,Lock,Zamknij zamek,,,auto
 cards.smartlock.door_open,parts/cards/smartlock-card.part.js,81,hgTr,Door open,Drzwi otwarte,,,auto
 cards.smartlock.door_closed,parts/cards/smartlock-card.part.js,81,hgTr,Door closed,Drzwi zamknięte,,,auto
 cards.smartlock.open_door,parts/cards/smartlock-card.part.js,81,hgTr,Open door,Otwórz drzwi,,,auto
 cards.smartlock.enter_the_lock_code,parts/cards/smartlock-card.part.js,97,hgTr,Enter the lock code.,Podaj kod zamka.,,,auto
 common.code,parts/cards/smartlock-card.part.js,98,hgTr,Code,Kod,,,auto
 common.cancel,parts/cards/smartlock-card.part.js,99,hgTr,Cancel,Anuluj,,,auto
-cards.smartlock.lock_3,parts/cards/smartlock-card.part.js,99,hgTr,Lock,Zamknij,,,review
-cards.smartlock.unlock_2,parts/cards/smartlock-card.part.js,99,hgTr,Unlock,Otwórz,,,review
-cards.smartlock.nuvio_smart_lock,parts/cards/smartlock-card.part.js,108,hgTr,Nuvio – Smart lock,Nuvio – Inteligentny zamek,,load-time,manual
-cards.smartlock.animated_padlock_hold_to,parts/cards/smartlock-card.part.js,108,hgTr,"Animated padlock, hold to unlock, battery and door","Animowana kłódka, przytrzymanie do otwarcia, bateria i drzwi",,load-time,manual
+cards.smartlock.lock_confirm,parts/cards/smartlock-card.part.js,99,hgTr,Lock,Zamknij,,,auto
+cards.smartlock.unlock_confirm,parts/cards/smartlock-card.part.js,99,hgTr,Unlock,Otwórz,,,auto
+cards.smartlock.picker_name,parts/cards/smartlock-card.part.js,108,hgTr,Nuvio – Smart lock,Nuvio – Inteligentny zamek,,load-time,auto
+cards.smartlock.picker_description,parts/cards/smartlock-card.part.js,108,hgTr,"Animated padlock, hold to unlock, battery and door","Animowana kłódka, przytrzymanie do otwarcia, bateria i drzwi",,load-time,auto
 cards.solar.solar_energy_today,parts/cards/solar-card.part.js,4,hgTr,Solar energy today,Energia słoneczna dziś,,,auto
 cards.solar.kwh_of_clean_energy,parts/cards/solar-card.part.js,5,hgTr,kWh of clean energy,kWh czystej energii,,,auto
 cards.solar.inverter_offline,parts/cards/solar-card.part.js,5,hgTr,inverter offline,falownik offline,,,auto

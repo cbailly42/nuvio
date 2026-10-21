@@ -3,7 +3,7 @@
 const HG_SL_C = { locked: '#13A89E', unlocked: '#FF9F43', open: '#FF9F43', jammed: '#FF4D4F', move: '#0A84FF', un: '#8E8E93' };
 class HGSmartLockCard extends HGBase {
   static getStubConfig(h) { return { entity: hgStub(h, ['lock']) || null }; }
-  defaults() { return { entity: null, name: null, title: hgTr('Zamek', 'Lock'), battery: null, door: null, hold: true }; }
+  defaults() { return { entity: null, name: null, title: hgT('cards.smartlock.default_title'), battery: null, door: null, hold: true }; }
   /* encja z tego samego urządzenia co zamek (rejestr HA), inaczej ten sam początek nazwy */
   static near(h, lock, f) { const S = (h && h.states) || {}, R = (h && h.entities) || {}, dev = lock && R[lock] && R[lock].device_id, L = Object.keys(S).filter((e) => e !== lock && f(e, S[e]));
     const base = lock ? lock.split('.')[1] : ''; return (dev && L.find((e) => R[e] && R[e].device_id === dev)) || (base && L.find((e) => e.split('.')[1].startsWith(base))) || null; }
@@ -54,31 +54,31 @@ button.lc:focus-visible{ outline:2px solid var(--lk); outline-offset:2px; }
 @media (prefers-reduced-motion:reduce){ .pl .sh, .pl .kh, .kb, .rg .pg{ transition:none; } .mv .rg .pg, .jam .pl, .kb.pls::after, .st b.in{ animation:none; } }
 `); }
   _view(s) { const st = this._pend || s.state;
-    if (!H.ok(s)) return { k: 'un', c: HG_SL_C.un, t: hgTr('Niedostępny', 'Unavailable') };
-    if (st === 'jammed') return { k: 'jammed', c: HG_SL_C.jammed, t: hgTr('Zacięty', 'Jammed') };
-    if (['locking', 'unlocking', 'opening'].includes(st)) return { k: 'move', c: HG_SL_C.move, t: st === 'locking' ? hgTr('Zamykanie…', 'Locking…') : st === 'opening' ? hgTr('Otwieranie drzwi…', 'Opening…') : hgTr('Otwieranie…', 'Unlocking…') };
-    if (st === 'locked') return { k: 'locked', c: HG_SL_C.locked, t: hgTr('Zamknięty', 'Locked') };
-    if (st === 'open') return { k: 'open', c: HG_SL_C.open, t: hgTr('Drzwi otwarte', 'Open') };
-    return { k: 'unlocked', c: HG_SL_C.unlocked, t: hgTr('Otwarty', 'Unlocked') }; }
+    if (!H.ok(s)) return { k: 'un', c: HG_SL_C.un, t: hgT('common.unavailable_masc') };
+    if (st === 'jammed') return { k: 'jammed', c: HG_SL_C.jammed, t: hgT('cards.smartlock.jammed') };
+    if (['locking', 'unlocking', 'opening'].includes(st)) return { k: 'move', c: HG_SL_C.move, t: st === 'locking' ? hgT('cards.smartlock.locking') : st === 'opening' ? hgT('cards.smartlock.opening') : hgT('cards.smartlock.unlocking') };
+    if (st === 'locked') return { k: 'locked', c: HG_SL_C.locked, t: hgT('cards.smartlock.locked') };
+    if (st === 'open') return { k: 'open', c: HG_SL_C.open, t: hgT('cards.smartlock.open') };
+    return { k: 'unlocked', c: HG_SL_C.unlocked, t: hgT('cards.smartlock.unlocked') }; }
   _ago(s) { const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000));
-    return m < 1 ? hgTr('przed chwilą', 'just now') : m < 60 ? hgTr(`${m} min temu`, `${m} min ago`) : m < 1440 ? hgTr(`${Math.floor(m / 60)} h temu`, `${Math.floor(m / 60)} h ago`) : new Intl.DateTimeFormat(HG_LOC(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(s.last_changed)); }
+    return m < 1 ? hgT('common.just_now') : m < 60 ? hgT('common.ago_minutes', { m }) : m < 1440 ? hgT('cards.smartlock.hours_ago', { count: Math.floor(m / 60) }) : new Intl.DateTimeFormat(HG_LOC(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(s.last_changed)); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz zamek', 'Choose a lock')}</span></ha-card>`;
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.smartlock.choose_a_lock')}</span></ha-card>`;
     if (this._pend && (s.state !== this._pendFrom || Date.now() - this._pendT > 9000)) this._pend = null;
     const V = this._view(s), ok = H.ok(s), lk = V.k === 'locked', unl = ['unlocked', 'open'].includes(V.k), mv = V.k === 'move';
     const b = this._bat(), bv = b === '@attr' ? Number(s.attributes.battery_level) : b && h.states[b] ? Number(h.states[b].state) : NaN;
-    const bi = !isFinite(bv) ? '' : `<span class="bt ${bv <= 20 ? 'low' : ''}" title="${H.esc(hgTr('Bateria', 'Battery'))}">${H.icon(bv <= 10 ? 'mdi:battery-alert-variant-outline' : bv <= 35 ? 'mdi:battery-30' : bv <= 70 ? 'mdi:battery-60' : 'mdi:battery-high')}<span>${H.esc(H.fmt(bv, 0))}%</span></span>`;
+    const bi = !isFinite(bv) ? '' : `<span class="bt ${bv <= 20 ? 'low' : ''}" title="${H.esc(hgT('common.battery'))}">${H.icon(bv <= 10 ? 'mdi:battery-alert-variant-outline' : bv <= 35 ? 'mdi:battery-30' : bv <= 70 ? 'mdi:battery-60' : 'mdi:battery-high')}<span>${H.esc(H.fmt(bv, 0))}%</span></span>`;
     const d = this._door(), ds = d && h.states[d], dOpen = ds && ds.state === 'on';
-    const hint = !ok ? '' : mv ? '' : lk ? (c.hold !== false ? hgTr('Przytrzymaj, aby otworzyć', 'Hold to unlock') : hgTr('Dotknij, aby otworzyć', 'Tap to unlock')) : V.k === 'jammed' ? hgTr('Sprawdź drzwi i spróbuj ponownie', 'Check the door and try again') : hgTr('Dotknij, aby zamknąć', 'Tap to lock');
+    const hint = !ok ? '' : mv ? '' : lk ? (c.hold !== false ? hgT('cards.smartlock.hold_to_unlock') : hgT('cards.smartlock.tap_to_unlock')) : V.k === 'jammed' ? hgT('cards.smartlock.check_the_door_and') : hgT('cards.smartlock.tap_to_lock');
     const canOpen = ok && (s.attributes.supported_features & 1) && !mv;
-    const lbl = mv ? V.t : lk ? hgTr('Otwórz zamek', 'Unlock') : hgTr('Zamknij zamek', 'Lock');
+    const lbl = mv ? V.t : lk ? hgT('cards.smartlock.unlock_button') : hgT('cards.smartlock.lock_button');
     return `<ha-card class="glass ${unl ? 'unl' : ''} ${mv ? 'mv' : ''} ${V.k === 'jammed' ? 'jam' : ''}" style="--lk:${V.c};--hd:${c.hold === false ? '0s' : '.9s'}">
       <div class="hd"><div><small>${H.esc(c.name || H.name(h, c.entity))}</small><b>${H.esc(c.title)}</b></div>${bi}</div>
       <div class="mid"><button class="kb" ${ok && !mv ? '' : 'disabled'} aria-label="${H.esc(lbl)}">
           <svg class="rg" viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="48" pathLength="100"/><circle class="pg" cx="50" cy="50" r="48" pathLength="100"/></svg>
           <svg class="pl" viewBox="0 0 48 48" aria-hidden="true"><path class="sh" d="M15 22 V15 a9 9 0 0 1 18 0 V22"/><rect class="by" x="8" y="21" width="32" height="24" rx="7"/><rect class="kh" x="22.2" y="28" width="3.6" height="9" rx="1.8"/></svg></button>
         <div class="st" aria-live="polite"><b data-key="slt-${H.esc(V.k)}" class="${this._lastK && this._lastK !== V.k ? 'in' : ''}">${H.esc(V.t)}</b><small>${H.esc(hint || (ok ? this._ago(s) : ''))}</small></div></div>
-      <div class="ft">${ds ? `<span class="lc ${dOpen ? 'op' : ''}">${H.icon(dOpen ? 'mdi:door-open' : 'mdi:door-closed')}${H.esc(dOpen ? hgTr('Drzwi otwarte', 'Door open') : hgTr('Drzwi zamknięte', 'Door closed'))}</span>` : ''}${canOpen ? `<button class="lc" data-act="open">${H.icon('mdi:door-open')}${H.esc(hgTr('Otwórz drzwi', 'Open door'))}</button>` : ''}</div></ha-card>`; }
+      <div class="ft">${ds ? `<span class="lc ${dOpen ? 'op' : ''}">${H.icon(dOpen ? 'mdi:door-open' : 'mdi:door-closed')}${H.esc(dOpen ? hgT('cards.smartlock.door_open') : hgT('cards.smartlock.door_closed'))}</span>` : ''}${canOpen ? `<button class="lc" data-act="open">${H.icon('mdi:door-open')}${H.esc(hgT('cards.smartlock.open_door'))}</button>` : ''}</div></ha-card>`; }
   /* przytrzymanie: pierścień wypełnia się w --hd; puszczenie wcześniej anuluje. Zamykanie: zwykłe dotknięcie. Klawiatura: Enter/Spacja działa jak dotyk */
   afterRender() { const s = H.st(this._hass, this._config.entity), V = s && this._view(s), kb = this.$.querySelector('.kb');
     if (V && this._lastK && this._lastK !== V.k && V.k !== 'move' && kb) { kb.classList.remove('pls'); void kb.offsetWidth; kb.classList.add('pls'); if (V.k === 'locked' || V.k === 'unlocked') H.haptic(V.k === 'locked' ? 'medium' : 'light'); }
@@ -94,9 +94,9 @@ button.lc:focus-visible{ outline:2px solid var(--lk); outline-offset:2px; }
     kb.addEventListener('keyup', (e) => { if (e.key === 'Enter' || e.key === ' ') stop(); });
     kb.addEventListener('contextmenu', (e) => e.preventDefault()); }
   async _fire(svc) { const c = this._config, h = this._hass, s = H.st(h, c.entity); if (!s) return; const data = { entity_id: c.entity };
-    if (s.attributes.code_format) { const r = await hgOverlay.dialog({ title: c.name || H.name(h, c.entity), text: hgTr('Podaj kod zamka.', 'Enter the lock code.'), width: 340, collect: true,
-      html: `<input name="code" type="password" inputmode="numeric" autocomplete="one-time-code" aria-label="${hgTr('Kod', 'Code')}" autofocus style="height:44px;border-radius:12px;border:0;padding:0 14px;font:inherit;font-size:16px;background:var(--hg-inner-bg);color:inherit;box-shadow:var(--hg-inner-hi)">`,
-      actions: [{ label: hgTr('Anuluj', 'Cancel'), value: false }, { label: svc === 'lock' ? hgTr('Zamknij', 'Lock') : hgTr('Otwórz', 'Unlock'), value: true, kind: 'primary' }] });
+    if (s.attributes.code_format) { const r = await hgOverlay.dialog({ title: c.name || H.name(h, c.entity), text: hgT('cards.smartlock.enter_the_lock_code'), width: 340, collect: true,
+      html: `<input name="code" type="password" inputmode="numeric" autocomplete="one-time-code" aria-label="${hgT('common.code')}" autofocus style="height:44px;border-radius:12px;border:0;padding:0 14px;font:inherit;font-size:16px;background:var(--hg-inner-bg);color:inherit;box-shadow:var(--hg-inner-hi)">`,
+      actions: [{ label: hgT('common.cancel'), value: false }, { label: svc === 'lock' ? hgT('cards.smartlock.lock_confirm') : hgT('cards.smartlock.unlock_confirm'), value: true, kind: 'primary' }] });
       if (!r || !r.value) return; data.code = r.data.code; }
     H.haptic('medium'); this._pend = svc === 'lock' ? 'locking' : svc === 'open' ? 'opening' : 'unlocking'; this._pendFrom = s.state; this._pendT = Date.now(); this.rerender();
     setTimeout(() => this.rerender(), 9100); H.call(h, 'lock', svc, data); }
@@ -105,4 +105,4 @@ button.lc:focus-visible{ outline:2px solid var(--lk); outline-offset:2px; }
   getCardSize() { return 5; }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
-hgReg('hg-smartlock-card', HGSmartLockCard, hgTr('Nuvio – Inteligentny zamek', 'Nuvio – Smart lock'), hgTr('Animowana kłódka, przytrzymanie do otwarcia, bateria i drzwi', 'Animated padlock, hold to unlock, battery and door'));
+hgReg('hg-smartlock-card', HGSmartLockCard, hgTLazy('cards.smartlock.picker_name'), hgTLazy('cards.smartlock.picker_description'));

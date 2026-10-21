@@ -743,6 +743,32 @@
       "the_slider_works_with": "Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number",
       "toggle": "Przełącz"
     },
+    "smartlock": {
+      "check_the_door_and": "Sprawdź drzwi i spróbuj ponownie",
+      "choose_a_lock": "Wybierz zamek",
+      "default_title": "Zamek",
+      "door_closed": "Drzwi zamknięte",
+      "door_open": "Drzwi otwarte",
+      "enter_the_lock_code": "Podaj kod zamka.",
+      "hold_to_unlock": "Przytrzymaj, aby otworzyć",
+      "hours_ago": "{count} h temu",
+      "jammed": "Zacięty",
+      "lock_button": "Zamknij zamek",
+      "lock_confirm": "Zamknij",
+      "locked": "Zamknięty",
+      "locking": "Zamykanie…",
+      "open": "Drzwi otwarte",
+      "open_door": "Otwórz drzwi",
+      "opening": "Otwieranie drzwi…",
+      "picker_description": "Animowana kłódka, przytrzymanie do otwarcia, bateria i drzwi",
+      "picker_name": "Nuvio – Inteligentny zamek",
+      "tap_to_lock": "Dotknij, aby zamknąć",
+      "tap_to_unlock": "Dotknij, aby otworzyć",
+      "unlock_button": "Otwórz zamek",
+      "unlock_confirm": "Otwórz",
+      "unlocked": "Otwarty",
+      "unlocking": "Otwieranie…"
+    },
     "solar": {
       "inverter_offline": "falownik offline",
       "kwh_of_clean_energy": "kWh czystej energii",
@@ -946,6 +972,7 @@
     "turn_off": "Wyłącz",
     "turn_on": "Włącz",
     "unavailable": "Niedostępne",
+    "unavailable_masc": "Niedostępny",
     "weather": "Pogoda"
   },
   "core": {
