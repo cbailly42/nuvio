@@ -2858,28 +2858,25 @@ common.check_in,parts/hg-wallboard.part.js,162,hgTr,Check-in,Przyjście,,,auto
 common.check_out,parts/hg-wallboard.part.js,162,hgTr,Check-out,Wyjście,,,auto
 wallboard.sunrise,parts/hg-wallboard.part.js,167,hgTr,Sunrise,Wschód słońca,,,auto
 wallboard.sunset,parts/hg-wallboard.part.js,168,hgTr,Sunset,Zachód słońca,,,auto
-wallboard.tomorrow,parts/hg-wallboard.part.js,170,hgTr,tomorrow,jutro,,plural,manual
-wallboard.in_days,parts/hg-wallboard.part.js,170,hgTr,in {n} days,za {n} dni,n,plural,manual
-wallboard.rain,parts/hg-wallboard.part.js,177,hgTr,rain {pp}%,opady {pp}%,pp,,auto
+wallboard.tomorrow,parts/hg-wallboard.part.js,170,hgTr,tomorrow,jutro,,plural,auto
+wallboard.rain,parts/hg-wallboard.part.js,177,hgTr,rain {percent}%,opady {percent}%,percent,,auto
 wallboard.event,parts/hg-wallboard.part.js,186,hgTr,Event,Wydarzenie,,,auto
 common.today,parts/hg-wallboard.part.js,192,hgTr,Today,Dziś,,,auto
-wallboard.tomorrow_2,parts/hg-wallboard.part.js,192,hgTr,Tomorrow,Jutro,,plural,manual
-wallboard.in_min,parts/hg-wallboard.part.js,193,hgTr,in {m} min,za {m} min,m,,auto
-wallboard.in_math_floor_m,parts/hg-wallboard.part.js,193,hgTr,in ${Math.floor(m / 60)} h ${m % 60} min,za ${Math.floor(m / 60)} h ${m % 60} min,,expr,manual
+wallboard.tomorrow_cap,parts/hg-wallboard.part.js,192,hgTr,Tomorrow,Jutro,,plural,auto
+wallboard.in_min,parts/hg-wallboard.part.js,193,hgTr,in {minutes} min,za {minutes} min,minutes,,auto
+wallboard.in_hours_minutes,parts/hg-wallboard.part.js,193,hgTr,in {hours} h {minutes} min,za {hours} h {minutes} min,"hours,minutes",expr,auto
 common.now_cap,parts/hg-wallboard.part.js,195,hgTr,Now,Teraz,,,auto
-wallboard.until,parts/hg-wallboard.part.js,195,hgTr,until ,do ,,concat,manual
+wallboard.until_time,parts/hg-wallboard.part.js,195,hgTr,until {time},do {time},time,concat,auto
 wallboard.now_playing,parts/hg-wallboard.part.js,200,hgTr,Now playing,Teraz gra,,,auto
 wallboard.paused,parts/hg-wallboard.part.js,200,hgTr,Paused,Wstrzymane,,,auto
-wallboard.remove,parts/hg-wallboard.part.js,210,hgTr,Remove: ,Usuń: ,,concat,manual
+wallboard.remove_name,parts/hg-wallboard.part.js,210,hgTr,Remove: {name},Usuń: {name},name,concat,auto
 common.change,parts/hg-wallboard.part.js,211,hgTr,Change,Zmień,,,auto
 common.add,parts/hg-wallboard.part.js,211,hgTr,Add,Dodaj,,,auto
 wallboard.no_matches,parts/hg-wallboard.part.js,218,hgTr,No matches,Nic nie pasuje,,,auto
 wallboard.type_more_to_narrow,parts/hg-wallboard.part.js,218,hgTr,Type more to narrow the list,"Wpisz więcej, aby zawęzić listę",,,auto
 wallboard.search,parts/hg-wallboard.part.js,220,hgTr,Search…,Szukaj…,,,auto
 common.search,parts/hg-wallboard.part.js,220,hgTr,Search,Szukaj,,,auto
-wallboard.en,parts/hg-wallboard.part.js,241,hgTr,en,pl,,expr,manual
 wallboard.screensavers,parts/hg-wallboard.part.js,242,hgTr,Screensavers,Wygaszacze,,,auto
-wallboard.en,parts/hg-wallboard.part.js,249,hgTr,en,pl,,expr,manual
 wallboard.move_up,parts/hg-wallboard.part.js,250,hgTr,Move up,Wyżej,,,auto
 wallboard.move_down,parts/hg-wallboard.part.js,250,hgTr,Move down,Niżej,,,auto
 common.add_widget,parts/hg-wallboard.part.js,251,hgTr,Add widget,Dodaj widżet,,,auto
@@ -2895,6 +2892,19 @@ wallboard.widgets_under_the_clock,parts/hg-wallboard.part.js,262,hgTr,Widgets un
 wallboard.extras,parts/hg-wallboard.part.js,263,hgTr,Extras,Dodatki,,,auto
 wallboard.now_playing,parts/hg-wallboard.part.js,263,hgTr,Now playing,Teraz gra,,,auto
 wallboard.room_humidity,parts/hg-wallboard.part.js,263,hgTr,Room humidity,Wilgotność w pokojach,,,auto
+wallboard.widgets.wx,parts/hg-wallboard.part.js,6,hgTr,Weather,Pogoda,,expr,auto
+wallboard.widgets.sun,parts/hg-wallboard.part.js,6,hgTr,Sunrise & sunset,Wschód i zachód słońca,,expr,auto
+wallboard.widgets.cnt,parts/hg-wallboard.part.js,7,hgTr,Event countdown,Odliczanie do wydarzenia,,expr,auto
+wallboard.widgets.cal,parts/hg-wallboard.part.js,7,hgTr,Coming up,Najbliższe wydarzenia,,expr,auto
+wallboard.widgets.tmp,parts/hg-wallboard.part.js,8,hgTr,Room temperatures,Temperatury w pokojach,,expr,auto
+wallboard.style_photo,parts/hg-wallboard.part.js,242,hgTr,Clock on photo,Zegar na zdjęciu,,expr,auto
+wallboard.style_board,parts/hg-wallboard.part.js,242,hgTr,Board,Tablica,,expr,auto
+wallboard.style_glass,parts/hg-wallboard.part.js,242,hgTr,Glass,Szkło,,expr,auto
+wallboard.theme_like_dashboard,parts/hg-wallboard.part.js,260,hgTr,Like dashboard,Jak panel,,expr,auto
+wallboard.theme_light,parts/hg-wallboard.part.js,260,hgTr,Light,Jasny,,expr,auto
+wallboard.theme_dark,parts/hg-wallboard.part.js,260,hgTr,Dark,Ciemny,,expr,auto
+wallboard.heading_time,parts/hg-wallboard.part.js,261,hgTr,Time,Godzina,,expr,auto
+wallboard.heading_weekday,parts/hg-wallboard.part.js,261,hgTr,Weekday,Dzień tygodnia,,expr,auto
 common.open_assist,parts/hg-wallglass.part.js,97,hgTr,Open Assist,Otwórz Assist,,,auto
 wallglass.family,parts/hg-wallglass.part.js,115,hgTr,Family,Rodzina,,,auto
 common.touch_to_wake,parts/hg-wallglass.part.js,117,hgTr,Touch the screen to wake,"Dotknij ekranu, aby wybudzić",,,auto

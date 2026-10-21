@@ -3,15 +3,14 @@
    bk { sun, cnt, wx, cal, np, tmp, hum } (włączone elementy), ord (kolejność kart), wxE (encja pogody), calX / roomX (wykluczone kalendarze i pokoje).
    Kolory przez K() (interpolacja): tokenizer motywu ich nie zmienia, motyw tablicy wybiera się w ustawieniach. */
 /* widżety w rzędzie pod zegarem, w kolejności z ord (✕ w ustawieniach chowa widżet: bk[k] = false) */
-const HG_WB_CARDS = [['wx', 'Pogoda', 'Weather', 'mdi:weather-partly-cloudy'], ['sun', 'Wschód i zachód słońca', 'Sunrise & sunset', 'mdi:weather-sunset'],
-  ['cnt', 'Odliczanie do wydarzenia', 'Event countdown', 'mdi:calendar-star'], ['cal', 'Najbliższe wydarzenia', 'Coming up', 'mdi:calendar-blank-outline'],
-  ['tmp', 'Temperatury w pokojach', 'Room temperatures', 'mdi:thermometer']];
+const HG_WB_CARDS = [['wx', hgTLazy('wallboard.widgets.wx'), 'mdi:weather-partly-cloudy'], ['sun', hgTLazy('wallboard.widgets.sun'), 'mdi:weather-sunset'],
+  ['cnt', hgTLazy('wallboard.widgets.cnt'), 'mdi:calendar-star'], ['cal', hgTLazy('wallboard.widgets.cal'), 'mdi:calendar-blank-outline'],
+  ['tmp', hgTLazy('wallboard.widgets.tmp'), 'mdi:thermometer']];
 /* ikony pogody jak na iPhonie: białe symbole zamiast kolorowych obrazków */
 const HG_WB_WXI = { 'clear-night': 'weather-night', cloudy: 'weather-cloudy', exceptional: 'alert-circle-outline', fog: 'weather-fog', hail: 'weather-hail', lightning: 'weather-lightning',
   'lightning-rainy': 'weather-lightning-rainy', partlycloudy: 'weather-partly-cloudy', pouring: 'weather-pouring', rainy: 'weather-rainy', snowy: 'weather-snowy', 'snowy-rainy': 'weather-snowy-rainy',
   sunny: 'weather-sunny', windy: 'weather-windy', 'windy-variant': 'weather-windy-variant' };
-const HG_WB_BK = [['wx', 'Pogoda', 'Weather'], ['sun', 'Wschód i zachód', 'Sunrise & sunset'], ['cnt', 'Odliczanie', 'Countdown'], ['cal', 'Kalendarz', 'Calendar'],
-  ['np', 'Teraz gra', 'Now playing'], ['tmp', 'Temperatury', 'Temperatures'], ['hum', 'Wilgotność', 'Humidity']];
+const HG_WB_BK = ['wx', 'sun', 'cnt', 'cal', 'np', 'tmp', 'hum'];
 const HG_WB_SS = `
 /* tablica jak ekran blokady iPhone'a: cienki duży zegar na środku u góry, pod nim rząd małych widżetów na zdjęciu, u dołu odtwarzacz i powiadomienia */
 .nwb{ --nb-glass:${K(250,251,253,.78)}; --nb-tx:${K(22,24,28,1)}; --nb-tx2:${K(22,24,28,.58)}; --nb-edge:inset 0 1px 0 ${K(255,255,255,.7)}, inset 0 0 0 1px ${K(255,255,255,.3)};
@@ -119,7 +118,7 @@ const HG_WB_CSS = `
 Object.assign(HGWall, {
   /* ---- ustawienia tablicy ---- */
   bget() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, bk0 = w.bk && typeof w.bk === 'object' ? w.bk : {}, ids = HG_WB_CARDS.map((x) => x[0]);
-    const bk = {}; for (const [k] of HG_WB_BK) bk[k] = bk0[k] !== false;
+    const bk = {}; for (const k of HG_WB_BK) bk[k] = bk0[k] !== false;
     const ord = [...new Set(Array.isArray(w.ord) ? w.ord.filter((k) => ids.includes(k)) : [])]; ord.unshift(...ids.filter((k) => !ord.includes(k)));   /* starsza kolejność (cal, np, tmp): brakujące widżety na początek */
     const L = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^[a-z0-9_.]+$/.test(x)) : []);
     return { style: w.style === 'board' || w.style === 'glass' || (this.XS && this.XS.some((x) => x[0] === w.style)) ? w.style : 'photo', bt: ['auto', 'light', 'dark'].includes(w.bt) ? w.bt : 'auto', hd: w.hd === 'day' ? 'day' : 'time', bk, ord: [...new Set(ord)],
@@ -128,7 +127,7 @@ Object.assign(HGWall, {
   /* ---- nakładka ---- */
   bdShell() { return `<style>${HG_WALL_SS}${HG_WB_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nwb"><header class="nb-top"><div class="nb-h2"></div><h1 class="nb-h1"></h1><div class="nb-row"></div></header><div class="nb-bot"><section class="nb-kid" hidden></section><section class="nb-np" hidden></section></div></div>
-      <p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`; },
+      <p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`; },
   bdStart(rm) { const el = this.el; el.classList.add('bd'); this._bdk = {};
     const b = el.querySelector('.nwb'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.008; b.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); b.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     this.photos(rm);   /* tło: zdjęcie dashboardu / pokaz slajdów jak w klasycznym wygaszaczu (interwał w _sl) */
@@ -159,22 +158,22 @@ Object.assign(HGWall, {
   bdKid(h, k) { const v = this.kidView(h, k), L = v.next ? [Object.assign({ nx: 1 }, v.next), ...v.rest] : [];
     const tm = (l, x) => `<div><b class="${x ? '' : 'mu'}">${H.esc(x || '--:--')}</b><small>${H.esc(l)}</small></div>`;
     return `<article class="nb-k"><header class="nb-kh"><i>${H.icon('mdi:human-child')}</i><b>${H.esc(v.name)}</b>${this.kidPill(v, 'nb-kp')}</header>
-      <div class="nb-kt">${tm(hgTr('Przyjście', 'Check-in'), v.inT)}${tm(hgTr('Wyjście', 'Check-out'), v.outT)}</div>
+      <div class="nb-kt">${tm(hgT('common.check_in'), v.inT)}${tm(hgT('common.check_out'), v.outT)}</div>
       ${L.length ? `<ul class="nb-kl">${L.map((x) => `<li${x.nx ? ' class="nx"' : ''}><span>${H.esc(x.t)}</span><span>${H.esc(x.title)}</span>${x.nx && x.rel ? `<em>${H.esc(x.rel)}</em>` : '<span></span>'}</li>`).join('')}</ul>` : `<p class="nb-kn">${H.esc(v.note)}</p>`}</article>`; },
   /* mały widżet: biała ikona + dwie linie */
   bdW(ic, t, sub, cls) { return `<div class="nb-w${cls ? ' ' + cls : ''}"><i>${H.icon(ic)}</i><div><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div></div>`; },
   bdSun(h, tf) { const sun = h.states['sun.sun']; if (!sun) return ''; const r = new Date(sun.attributes.next_rising), s = new Date(sun.attributes.next_setting);
-    if (!isNaN(r) && (isNaN(s) || r < s)) return this.bdW('mdi:weather-sunset-up', H.esc(tf.format(r)), H.esc(hgTr('Wschód słońca', 'Sunrise')));
-    return isNaN(s) ? '' : this.bdW('mdi:weather-sunset-down', H.esc(tf.format(s)), H.esc(hgTr('Zachód słońca', 'Sunset'))); },
+    if (!isNaN(r) && (isNaN(s) || r < s)) return this.bdW('mdi:weather-sunset-up', H.esc(tf.format(r)), H.esc(hgT('wallboard.sunrise')));
+    return isNaN(s) ? '' : this.bdW('mdi:weather-sunset-down', H.esc(tf.format(s)), H.esc(hgT('wallboard.sunset'))); },
   bdCnt() { if (!this._bev) return ''; const d0 = new Date(); d0.setHours(0, 0, 0, 0); const ev = this._bev.find((e) => e.ad && e.s > d0); if (!ev) return '';
-    const n = Math.round((ev.s - d0) / 864e5); return this.bdW('mdi:calendar-star', H.esc(ev.t), H.esc(n === 1 ? hgTr('jutro', 'tomorrow') : hgTr(`za ${n} dni`, `in ${n} days`))); },
+    const n = Math.round((ev.s - d0) / 864e5); return this.bdW('mdi:calendar-star', H.esc(ev.t), H.esc(n === 1 ? hgT('wallboard.tomorrow') : hgT('wallboard.in_days', { count: n }))); },
   wxId(h, B) { if (B.wxE && H.ok(h.states[B.wxE])) return B.wxE; return Object.keys(h.states).find((e) => e.startsWith('weather.') && H.ok(h.states[e])) || ''; },
   bdWx(h, B) { const id = this.wxId(h, B); if (!id || typeof HGWx === 'undefined') return ''; const w = h.states[id], A = w.attributes;
     const u = A.temperature_unit || '°C', deg = (v) => (isFinite(v) ? H.esc(H.fmt(v, 0)) + (u.startsWith('°') ? '°' : ' ' + H.esc(u)) : '–'), sun = h.states['sun.sun'], night = !!sun && sun.state === 'below_horizon';
     const ic = 'mdi:' + (night && w.state === 'sunny' ? 'weather-night' : night && w.state === 'partlycloudy' ? 'weather-night-partly-cloudy' : HG_WB_WXI[w.state] || 'weather-partly-cloudy');
     this.fc(h, id); const F = this._fc && this._fc.id === id ? this._fc : null, D = F && F.daily && F.daily[0], hi = D ? parseFloat(D.temperature) : NaN, lo = D ? parseFloat(D.templow) : NaN;
     const hr = F && F.hourly ? F.hourly.filter((x) => new Date(x.datetime) > Date.now() - 3600000) : [], pp = hr.length && hr[0].precipitation_probability != null ? Number(hr[0].precipitation_probability) : D && D.precipitation_probability != null ? Number(D.precipitation_probability) : null;
-    const sub = [isFinite(hi) ? `↑${deg(hi)}${isFinite(lo) ? ` ↓${deg(lo)}` : ''}` : '', pp ? hgTr(`opady ${pp}%`, `rain ${pp}%`) : ''].filter(Boolean).join(' · ');
+    const sub = [isFinite(hi) ? `↑${deg(hi)}${isFinite(lo) ? ` ↓${deg(lo)}` : ''}` : '', pp ? hgT('wallboard.rain', { percent: pp }) : ''].filter(Boolean).join(' · ');
     return this.bdW(ic, `${deg(parseFloat(A.temperature))} ${H.esc(HGWx.cn(w.state))}`, sub); },
   /* wydarzenia na 60 dni (lista: 14 dni, odliczanie: najbliższe całodniowe), co 10 min */
   bdCal(h, B) { const kx = this._kidCal || [], ids = Object.keys(h.states).filter((e) => e.startsWith('calendar.') && !B.calX.includes(e) && !kx.includes(e)); if (!ids.length || !h.callApi) { this._bev = null; return; }
@@ -183,21 +182,21 @@ Object.assign(HGWall, {
     const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;
     Promise.all(ids.map((id) => h.callApi('GET', `calendars/${id}${q}`).catch(() => []))).then((rs) => {
       const L = []; for (const [ci, r] of rs.entries()) for (const e of (Array.isArray(r) ? r : [])) { const ad = !!(e.start && e.start.date && !e.start.dateTime), s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start && e.start.dateTime), en = ad ? new Date((e.end && e.end.date || e.start.date) + 'T00:00:00') : new Date(e.end && e.end.dateTime || s);
-        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: String(e.summary || hgTr('Wydarzenie', 'Event')), loc: String(e.location || '').split(',')[0] }); }
+        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: String(e.summary || hgT('wallboard.event')), loc: String(e.location || '').split(',')[0] }); }
       this._bev = L.sort((a, b) => (a.s - b.s) || (b.ad - a.ad)); if (this.el) this.bd(true); }); },
   /* najbliższe wydarzenia: trwające albo kolejne (najwyżej dwa widżety) */
   bdEv(h, B, tf) { if (!this._bev) return [];
     const now = new Date(), d0 = new Date(now); d0.setHours(0, 0, 0, 0); const lim = new Date(d0); lim.setDate(lim.getDate() + 14);
     const E = this._bev.filter((e) => !e.ad && e.en > now && e.s < lim).slice(0, 2);
-    const day = (s) => { const n = Math.round((new Date(s).setHours(0, 0, 0, 0) - d0) / 864e5); return n <= 0 ? hgTr('Dziś', 'Today') : n === 1 ? hgTr('Jutro', 'Tomorrow') : new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short', day: 'numeric', month: 'short' }).format(s); };
-    const rel = (e) => { const m = Math.round((e.s - now) / 60000); return m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 600 ? hgTr(`za ${Math.floor(m / 60)} h ${m % 60} min`, `in ${Math.floor(m / 60)} h ${m % 60} min`) : ''; };
+    const day = (s) => { const n = Math.round((new Date(s).setHours(0, 0, 0, 0) - d0) / 864e5); return n <= 0 ? hgT('common.today') : n === 1 ? hgT('wallboard.tomorrow_cap') : new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short', day: 'numeric', month: 'short' }).format(s); };
+    const rel = (e) => { const m = Math.round((e.s - now) / 60000); return m < 60 ? hgT('wallboard.in_min', { minutes: m }) : m < 600 ? hgT('wallboard.in_hours_minutes', { hours: Math.floor(m / 60), minutes: m % 60 }) : ''; };
     return E.map((e) => { const live = e.s <= now, r = live ? '' : rel(e);
-      const sub = live ? `<em>${H.esc(hgTr('Teraz', 'Now'))}</em> · ${H.esc(hgTr('do ', 'until ') + tf.format(e.en))}` : `${H.esc(day(e.s) + ' ' + tf.format(e.s))}${r ? ` · <em>${H.esc(r)}</em>` : ''}`;
+      const sub = live ? `<em>${H.esc(hgT('common.now_cap'))}</em> · ${H.esc(hgT('wallboard.until_time', { time: tf.format(e.en) }))}` : `${H.esc(day(e.s) + ' ' + tf.format(e.s))}${r ? ` · <em>${H.esc(r)}</em>` : ''}`;
       return this.bdW('mdi:calendar-blank', H.esc(e.t), sub); }); },
   bdNp(h) { const L = Object.keys(h.states).filter((e) => e.startsWith('media_player.') && hgMpActive(h.states[e]) && (h.states[e].attributes.media_title || h.states[e].attributes.media_channel));
     const id = L.find((e) => h.states[e].state === 'playing') || L[0]; if (!id) return ''; const s = h.states[id], A = s.attributes, pl = s.state === 'playing';
     const sub = [A.media_artist || A.media_series_title || A.app_name, H.name(h, id, id)].filter(Boolean).join(' · '), pic = A.entity_picture ? String(A.entity_picture).replace(/["\\()]/g, '') : '';
-    return `${pic ? `<i style="background-image:url(&quot;${H.esc(pic)}&quot;)"></i>` : `<span class="ph">${H.icon('mdi:music-note')}</span>`}<div><small>${H.esc(pl ? hgTr('Teraz gra', 'Now playing') : hgTr('Wstrzymane', 'Paused'))}${pl ? '<span class="eq"><u></u><u></u><u></u></span>' : ''}</small><b class="mq"><span><i>${H.esc(A.media_title || A.media_channel)}</i></span></b>${sub ? `<span class="s">${H.esc(sub)}</span>` : ''}</div>`; },
+    return `${pic ? `<i style="background-image:url(&quot;${H.esc(pic)}&quot;)"></i>` : `<span class="ph">${H.icon('mdi:music-note')}</span>`}<div><small>${H.esc(pl ? hgT('wallboard.now_playing') : hgT('wallboard.paused'))}${pl ? '<span class="eq"><u></u><u></u><u></u></span>' : ''}</small><b class="mq"><span><i>${H.esc(A.media_title || A.media_channel)}</i></span></b>${sub ? `<span class="s">${H.esc(sub)}</span>` : ''}</div>`; },
   /* temperatury w pokojach jako okrągłe wskaźniki (10–30 °C na pełnym okręgu) */
   bdTmp(h, B) { if (typeof HGAreas === 'undefined') return ''; let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp && !B.roomX.includes(a.id)); } catch (e) { return ''; }
     const L = R.map((a) => ({ a, v: HGAreas.env(h, a) })).filter((x) => x.v.t != null).slice(0, innerWidth < 640 ? 4 : 5); if (!L.length) return '';
@@ -207,17 +206,17 @@ Object.assign(HGWall, {
   /* lista wybranych + „Dodaj”: sel/opt = [{ k, l, s, ic, x }]; x = dodatkowe przyciski w wierszu; o.one = jedna wartość (przycisk „Zmień”), o.fix = wiersz bez ✕ */
   pk(id, sel, opt, o) { o = o || {}; const open = this._dd === id && opt.length, v = (k) => H.esc(id + '|' + k);
     (this._pko || (this._pko = {}))[id] = { opt, o };   /* dane listy do otwarcia w miejscu (bez przerysowania arkusza) */
-    const row = (x) => `<div class="wl-it">${H.icon(x.ic || o.ic || 'mdi:circle-small')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span>${x.x || ''}${x.fix ? '' : `<button type="button" class="x" data-hge="wl-pk-rm" data-v="${v(x.k)}" aria-label="${H.esc(hgTr('Usuń: ', 'Remove: ') + x.l)}">${H.icon('mdi:close')}</button>`}</div>`;
-    return `<div class="wl-pk" data-pk="${H.esc(id)}">${sel.map(row).join('')}${opt.length ? `<button type="button" class="wl-add" data-hge="wl-pk-open" data-v="${H.esc(id)}" aria-expanded="${!!open}">${H.icon(o.one ? 'mdi:swap-horizontal' : 'mdi:plus')}${H.esc(o.add || (o.one ? hgTr('Zmień', 'Change') : hgTr('Dodaj', 'Add')))}</button>` : ''}${open ? this.pkDd(id) : ''}</div>`; },
+    const row = (x) => `<div class="wl-it">${H.icon(x.ic || o.ic || 'mdi:circle-small')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span>${x.x || ''}${x.fix ? '' : `<button type="button" class="x" data-hge="wl-pk-rm" data-v="${v(x.k)}" aria-label="${H.esc(hgT('wallboard.remove_name', { name: x.l }))}">${H.icon('mdi:close')}</button>`}</div>`;
+    return `<div class="wl-pk" data-pk="${H.esc(id)}">${sel.map(row).join('')}${opt.length ? `<button type="button" class="wl-add" data-hge="wl-pk-open" data-v="${H.esc(id)}" aria-expanded="${!!open}">${H.icon(o.one ? 'mdi:swap-horizontal' : 'mdi:plus')}${H.esc(o.add || (o.one ? hgT('common.change') : hgT('common.add')))}</button>` : ''}${open ? this.pkDd(id) : ''}</div>`; },
   /* rozwinięta lista: rysowane najwyżej PK_MAX pasujących pozycji (przy tysiącach encji lista otwiera się od razu), reszta przez wyszukiwanie */
   PK_MAX: 60,
   pkRows(id, t) { const st = (this._pko || {})[id]; if (!st) return ''; const { opt, o } = st, w = (t || '').trim().toLowerCase().split(/\s+/).filter(Boolean), v = (k) => H.esc(id + '|' + k);
     const hit = []; for (const x of opt) { const q = x._q || (x._q = (x.l + ' ' + (x.s || '') + ' ' + x.k).toLowerCase()); if (!w.length || w.every((y) => q.includes(y))) { hit.push(x); if (hit.length > this.PK_MAX) break; } }
     const more = hit.length > this.PK_MAX; if (more) hit.length = this.PK_MAX;
     return hit.map((x) => `<button type="button" role="option" data-hge="wl-pk-add" data-v="${v(x.k)}">${H.icon(x.ic || o.ic || 'mdi:plus')}<span><b>${H.esc(x.l)}</b>${x.s ? `<small>${H.esc(x.s)}</small>` : ''}</span></button>`).join('')
-      + (hit.length ? '' : `<div class="no">${hgTr('Nic nie pasuje', 'No matches')}</div>`) + (more ? `<div class="no">${hgTr('Wpisz więcej, aby zawęzić listę', 'Type more to narrow the list')}</div>` : ''); },
+      + (hit.length ? '' : `<div class="no">${hgT('wallboard.no_matches')}</div>`) + (more ? `<div class="no">${hgT('wallboard.type_more_to_narrow')}</div>` : ''); },
   pkDd(id) { const st = (this._pko || {})[id], n = st ? st.opt.length : 0;
-    return `<div class="wl-dd">${n > 1 ? `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" data-pk-q="${H.esc(id)}" placeholder="${hgTr('Szukaj…', 'Search…')}" aria-label="${hgTr('Szukaj', 'Search')}" autocomplete="off"></label>` : ''}<div class="wl-ol" role="listbox">${this.pkRows(id, '')}</div></div>`; },
+    return `<div class="wl-dd">${n > 1 ? `<label class="hs-s">${H.icon('mdi:magnify')}<input type="search" data-pk-q="${H.esc(id)}" placeholder="${hgT('wallboard.search')}" aria-label="${hgT('common.search')}" autocomplete="off"></label>` : ''}<div class="wl-ol" role="listbox">${this.pkRows(id, '')}</div></div>`; },
   /* otwarcie i zamknięcie listy w miejscu: bez p._eLook(), więc podglądy wygaszacza i reszta arkusza się nie przerysowują */
   pkToggle(p, id) { const S = p._eSheetEl, el = S && [...S.querySelectorAll('.wl-pk')].find((x) => x.dataset.pk === id); if (!el || !(this._pko || {})[id]) return false;
     const was = this._dd === id; for (const d of S.querySelectorAll('.wl-pk > .wl-dd')) d.remove(); for (const b of S.querySelectorAll('[data-hge="wl-pk-open"]')) b.setAttribute('aria-expanded', 'false');
@@ -238,29 +237,29 @@ Object.assign(HGWall, {
     else if (id === 'wx') { this._fc = null; this.set({ wxE: add ? k : '' }); }
     else if (id === 'sens') { this._ms = undefined; this.set({ sensor: add ? k : '' }); }
     else return false; return true; },
-  bdHtml(c, h) { const B = this.bget(), seg = (a, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, pl, en]) => `<button type="button" data-hge="${a}" data-v="${k}" aria-pressed="${cur === k}">${hgTr(pl, en)}</button>`).join('')}</div>`;
-    const style = `<div class="wl-f" role="group" aria-labelledby="wl-st"><span id="wl-st">${hgTr('Wygaszacze', 'Screensavers')}</span>${this.galHtml ? this.galHtml(B.style) : seg('wl-style', [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board'], ['glass', 'Szkło', 'Glass']], B.style)}</div>`;
+  bdHtml(c, h) { const B = this.bget(), seg = (a, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, t]) => `<button type="button" data-hge="${a}" data-v="${k}" aria-pressed="${cur === k}">${t}</button>`).join('')}</div>`;
+    const style = `<div class="wl-f" role="group" aria-labelledby="wl-st"><span id="wl-st">${hgT('wallboard.screensavers')}</span>${this.galHtml ? this.galHtml(B.style) : seg('wl-style', [['photo', hgT('wallboard.style_photo')], ['board', hgT('wallboard.style_board')], ['glass', hgT('wallboard.style_glass')]], B.style)}</div>`;
     if (B.style === 'glass' && this.glHtml) return { top: style, board: this.glHtml(c, h) };
     if (B.style !== 'board') return { top: style, board: '' };
     const W = Object.keys(h.states).filter((e) => e.startsWith('weather.')), Cs = Object.keys(h.states).filter((e) => e.startsWith('calendar.')), nm = (e) => H.name(h, e, e);
     let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp); } catch (e) { /* bez pokoi */ }
     const grp = (id, t, body, hint) => `<div class="wl-f" role="group" aria-labelledby="wl-${id}"><span id="wl-${id}">${t}</span>${body}${hint ? `<small>${H.esc(hint)}</small>` : ''}</div>`;
     const chips = (a, list) => `<div class="wl-chips">${list.map(([k, l, on]) => `<button type="button" data-hge="${a}" data-v="${H.esc(k)}" aria-pressed="${on}">${H.icon('mdi:check')}${H.esc(l)}</button>`).join('')}</div>`;
-    const cn = Object.fromEntries(HG_WB_CARDS.map(([k, pl, en, ic]) => [k, { l: hgTr(pl, en), ic }])), vis = B.ord.filter((k) => B.bk[k]);
-    const mv = (k, i) => `<button type="button" data-hge="wl-up" data-v="${k}" ${i === 0 ? 'disabled' : ''} aria-label="${hgTr('Wyżej', 'Move up')}">${H.icon('mdi:chevron-up')}</button><button type="button" data-hge="wl-dn" data-v="${k}" ${i === vis.length - 1 ? 'disabled' : ''} aria-label="${hgTr('Niżej', 'Move down')}">${H.icon('mdi:chevron-down')}</button>`;
-    const wid = this.pk('wid', vis.map((k, i) => ({ k, l: cn[k].l, ic: cn[k].ic, x: mv(k, i) })), B.ord.filter((k) => !B.bk[k]).map((k) => ({ k, l: cn[k].l, ic: cn[k].ic })), { add: hgTr('Dodaj widżet', 'Add widget') });
+    const cn = Object.fromEntries(HG_WB_CARDS.map(([k, t, ic]) => [k, { l: String(t), ic }])), vis = B.ord.filter((k) => B.bk[k]);
+    const mv = (k, i) => `<button type="button" data-hge="wl-up" data-v="${k}" ${i === 0 ? 'disabled' : ''} aria-label="${hgT('wallboard.move_up')}">${H.icon('mdi:chevron-up')}</button><button type="button" data-hge="wl-dn" data-v="${k}" ${i === vis.length - 1 ? 'disabled' : ''} aria-label="${hgT('wallboard.move_down')}">${H.icon('mdi:chevron-down')}</button>`;
+    const wid = this.pk('wid', vis.map((k, i) => ({ k, l: cn[k].l, ic: cn[k].ic, x: mv(k, i) })), B.ord.filter((k) => !B.bk[k]).map((k) => ({ k, l: cn[k].l, ic: cn[k].ic })), { add: hgT('common.add_widget') });
     const on = (k) => vis.includes(k), auto = this.wxId(h, Object.assign({}, B, { wxE: '' }));
-    const wx = on('wx') && W.length > 1 ? grp('wx', hgTr('Pogoda', 'Weather'), this.pk('wx', [B.wxE && h.states[B.wxE] ? { k: B.wxE, l: nm(B.wxE), s: B.wxE } : { k: '', l: hgTr('Automatycznie', 'Automatic'), s: auto ? nm(auto) : '', fix: true }],
+    const wx = on('wx') && W.length > 1 ? grp('wx', hgT('common.weather'), this.pk('wx', [B.wxE && h.states[B.wxE] ? { k: B.wxE, l: nm(B.wxE), s: B.wxE } : { k: '', l: hgT('common.automatic'), s: auto ? nm(auto) : '', fix: true }],
       W.filter((e) => e !== B.wxE).map((e) => ({ k: e, l: nm(e), s: e })), { one: true, ic: 'mdi:weather-partly-cloudy' })) : '';
-    const cal = (on('cal') || on('cnt')) && Cs.length ? grp('cl', hgTr('Kalendarze', 'Calendars'), this.pk('cal', Cs.filter((e) => !B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })),
-      Cs.filter((e) => B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })), { ic: 'mdi:calendar', add: hgTr('Dodaj kalendarz', 'Add calendar') })) : '';
-    const rm = on('tmp') && R.length ? grp('rm', hgTr('Pokoje na liście temperatur', 'Rooms in the temperature list'), this.pk('room', R.filter((a) => !B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })),
-      R.filter((a) => B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })), { ic: 'mdi:sofa-outline', add: hgTr('Dodaj pokój', 'Add room') })) : '';
+    const cal = (on('cal') || on('cnt')) && Cs.length ? grp('cl', hgT('wallboard.calendars'), this.pk('cal', Cs.filter((e) => !B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })),
+      Cs.filter((e) => B.calX.includes(e)).map((e) => ({ k: e, l: nm(e), s: e })), { ic: 'mdi:calendar', add: hgT('wallboard.add_calendar') })) : '';
+    const rm = on('tmp') && R.length ? grp('rm', hgT('wallboard.rooms_in_the_temperature'), this.pk('room', R.filter((a) => !B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })),
+      R.filter((a) => B.roomX.includes(a.id)).map((a) => ({ k: a.id, l: a.name, ic: a.icon })), { ic: 'mdi:sofa-outline', add: hgT('wallboard.add_room') })) : '';
     const board = `
-      <div class="wl-f" role="group" aria-labelledby="wl-bt"><span id="wl-bt">${hgTr('Motyw tablicy', 'Board theme')}</span>${seg('wl-bt', [['auto', 'Jak panel', 'Like dashboard'], ['light', 'Jasny', 'Light'], ['dark', 'Ciemny', 'Dark']], B.bt)}</div>
-      <div class="wl-f" role="group" aria-labelledby="wl-hd"><span id="wl-hd">${hgTr('Nagłówek', 'Heading')}</span>${seg('wl-hd', [['time', 'Godzina', 'Time'], ['day', 'Dzień tygodnia', 'Weekday']], B.hd)}</div>
-      ${grp('wd', hgTr('Widżety pod zegarem', 'Widgets under the clock'), wid)}
-      ${grp('bk', hgTr('Dodatki', 'Extras'), chips('wl-bk', [['np', hgTr('Teraz gra', 'Now playing'), B.bk.np], ['hum', hgTr('Wilgotność w pokojach', 'Room humidity'), B.bk.hum]]))}
+      <div class="wl-f" role="group" aria-labelledby="wl-bt"><span id="wl-bt">${hgT('wallboard.board_theme')}</span>${seg('wl-bt', [['auto', hgT('wallboard.theme_like_dashboard')], ['light', hgT('wallboard.theme_light')], ['dark', hgT('wallboard.theme_dark')]], B.bt)}</div>
+      <div class="wl-f" role="group" aria-labelledby="wl-hd"><span id="wl-hd">${hgT('wallboard.heading')}</span>${seg('wl-hd', [['time', hgT('wallboard.heading_time')], ['day', hgT('wallboard.heading_weekday')]], B.hd)}</div>
+      ${grp('wd', hgT('wallboard.widgets_under_the_clock'), wid)}
+      ${grp('bk', hgT('wallboard.extras'), chips('wl-bk', [['np', hgT('wallboard.now_playing'), B.bk.np], ['hum', hgT('wallboard.room_humidity'), B.bk.hum]]))}
       ${wx}${cal}${rm}`;
     return { top: style, board }; },
   bdAct(p, b, a) { const B = this.bget(), v = b.dataset.v || '';
