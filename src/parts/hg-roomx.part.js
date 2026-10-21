@@ -24,12 +24,12 @@ const HGRoomX = {
     const adm = typeof HGL !== 'undefined' ? HGL.canEdit(h) : !!(h.user && h.user.is_admin), vir = !!a.virtual;
     return `<ha-card class="glass rxc"><style>${HG_RX_EMPTY_CSS}</style><div class="rxe">
       <span class="rxi">${H.icon('mdi:home-plus-outline')}</span>
-      <div class="rxt"><b>${hgTr('Brak urządzeń w tym pokoju', 'No devices in this room')}</b>
-      <p>${vir ? hgTr('Wybierz encje, które mają się tu pojawić, albo ułóż pokój od zera.', 'Pick the entities to show here, or build the room from scratch.')
-        : hgTr(`Zaimportuj urządzenia z obszaru „${H.esc(a.name)}” w Home Assistant albo ułóż pokój od zera.`, `Import devices from the “${H.esc(a.name)}” area in Home Assistant, or build the room from scratch.`)}</p></div>
-      <div class="rxb"><button class="rxp" data-act="rximp">${H.icon(vir ? 'mdi:checkbox-multiple-marked-outline' : 'mdi:import')}${vir ? hgTr('Wybierz encje', 'Pick entities') : hgTr('Importuj z obszaru', 'Import from area')}</button>
-        ${adm ? `<button class="rxs" data-act="rxlay">${H.icon('mdi:view-grid-plus-outline')}${hgTr('Utwórz własny układ', 'Create custom layout')}</button>` : ''}</div>
-      ${vir ? '' : `<button class="rxl" data-act="area" data-a="${H.esc(a.id)}">${H.icon('mdi:cog-outline')}${hgTr('Ustawienia obszaru', 'Area settings')}</button>`}</div></ha-card>`;
+      <div class="rxt"><b>${hgT('roomx.no_devices_in_this')}</b>
+      <p>${vir ? hgT('roomx.pick_the_entities_to')
+        : hgT('roomx.import_area_hint', { name: H.esc(a.name) })}</p></div>
+      <div class="rxb"><button class="rxp" data-act="rximp">${H.icon(vir ? 'mdi:checkbox-multiple-marked-outline' : 'mdi:import')}${vir ? hgT('roomx.pick_entities') : hgT('roomx.import_from_area')}</button>
+        ${adm ? `<button class="rxs" data-act="rxlay">${H.icon('mdi:view-grid-plus-outline')}${hgT('roomx.create_custom_layout')}</button>` : ''}</div>
+      ${vir ? '' : `<button class="rxl" data-act="area" data-a="${H.esc(a.id)}">${H.icon('mdi:cog-outline')}${hgT('roomx.area_settings')}</button>`}</div></ha-card>`;
   },
   page(card) { let n = card; while (n && n.tagName !== 'HG-PAGE' && n.tagName !== 'NUVIO-PAGE') n = n.parentNode || n.host; return n && n._editEnter ? n : null; },
   layout(card, RS) { const p = this.page(card); if (!p) return; p._editEnter(); const x = card.render(); card._html = x; card.$.innerHTML = x; if (card.afterRender) card.afterRender(); setTimeout(() => { p._eDecorate && p._eDecorate(); p._eGallery(null, RS); }, 60); },
@@ -55,28 +55,28 @@ class HGRoomImport extends HTMLElement {
   hide() { this.hidden = true; this.shadowRoot.innerHTML = ''; }
   _row(e, x) { const h = this._h, s = h.states[e], on = this._sel.has(e), d = hgRxDom(e), st = s ? (H.stateLabel ? H.stateLabel(s.state) : s.state) : '';
     return `<label class="rr ${on ? 'on' : ''}"><input type="checkbox" data-e="${H.esc(e)}" ${on ? 'checked' : ''}><span class="ck">${H.icon('mdi:check')}</span><span class="ri">${H.icon((s && s.attributes.icon) || HG_RX_ICON[d] || 'mdi:shape-outline')}</span>
-      <span class="rt"><b>${H.esc(hgRxNm(h, e))}</b><small>${H.esc(e)}${x && x.aux ? ' · ' + hgTr('pomocnicza', 'auxiliary') : ''}</small></span><span class="rs">${H.esc(String(st))}${s && s.attributes.unit_of_measurement && !isNaN(+s.state) ? ' ' + H.esc(s.attributes.unit_of_measurement) : ''}</span></label>`; }
+      <span class="rt"><b>${H.esc(hgRxNm(h, e))}</b><small>${H.esc(e)}${x && x.aux ? ' · ' + hgT('roomx.auxiliary') : ''}</small></span><span class="rs">${H.esc(String(st))}${s && s.attributes.unit_of_measurement && !isNaN(+s.state) ? ' ' + H.esc(s.attributes.unit_of_measurement) : ''}</span></label>`; }
   _items() { const h = this._h;
     if (this._mode === 'imp') { const g = (src) => this._c.filter((x) => x.src === src);
       const sec = (src, t) => { const L = g(src); return L.length ? `<div class="gh">${t}<i>${L.length}</i></div>${L.map((x) => this._row(x.e, x)).join('')}` : ''; };
-      return sec('area', hgTr('Przypisane do obszaru', 'Assigned to the area')) + sec('name', hgTr('Pasujące po nazwie', 'Matching by name')); }
+      return sec('area', hgT('roomx.assigned_to_the_area')) + sec('name', hgT('roomx.matching_by_name')); }
     const q = hgRxN(this._q).trim(), all = Object.keys(h.states).filter((e) => hgRxRank(e) < 99 && h.states[e].state !== 'unavailable');
     const hit = (q ? all.filter((e) => (hgRxN(hgRxNm(h, e)) + ' ' + e).includes(q)) : all).sort((x, y) => (this._sel.has(y) - this._sel.has(x)) || hgRxRank(x) - hgRxRank(y) || hgRxNm(h, x).localeCompare(hgRxNm(h, y)));
-    const L = hit.slice(0, 150); return L.length ? L.map((e) => this._row(e)).join('') + (hit.length > L.length ? `<p class="mo">${hgTr(`Pokazano 150 z ${hit.length}. Zawęź wyszukiwanie.`, `Showing 150 of ${hit.length}. Narrow the search.`)}</p>` : '')
-      : `<p class="mo">${hgTr('Brak wyników.', 'No results.')}</p>`; }
+    const L = hit.slice(0, 150); return L.length ? L.map((e) => this._row(e)).join('') + (hit.length > L.length ? `<p class="mo">${hgT('roomx.showing_first', { shown: L.length, count: hit.length })}</p>` : '')
+      : `<p class="mo">${hgT('roomx.no_results')}</p>`; }
   _list() { const l = this.shadowRoot.querySelector('.rl'); if (l) l.innerHTML = this._items(); this._foot(); }
-  _foot() { const n = this._sel.size, b = this.shadowRoot.querySelector('[data-a="ok"]'); if (b) { b.disabled = !n || this._busy; b.lastChild.textContent = n ? hgTr(`Dodaj ${n} ${n === 1 ? 'kafelek' : n < 5 ? 'kafelki' : 'kafelków'}`, `Add ${n} ${n === 1 ? 'tile' : 'tiles'}`) : hgTr('Zaznacz encje', 'Select entities'); }
-    const c = this.shadowRoot.querySelector('.cnt'); if (c) c.textContent = hgTr(`Zaznaczono: ${n}`, `Selected: ${n}`); }
+  _foot() { const n = this._sel.size, b = this.shadowRoot.querySelector('[data-a="ok"]'); if (b) { b.disabled = !n || this._busy; b.lastChild.textContent = n ? hgT('roomx.add_tiles', { count: n }) : hgT('roomx.select_entities'); }
+    const c = this.shadowRoot.querySelector('.cnt'); if (c) c.textContent = hgT('roomx.selected', { count: n }); }
   _paint() { const a = this._a, imp = this._mode === 'imp', adm = !!(this._h.user && this._h.user.is_admin), hasC = this._c.length;
     this.shadowRoot.innerHTML = `<style>${HG_RX_CSS}</style><div class="scr" data-a="x"></div><div class="rxd" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="rxh">
-      <div class="hd"><span class="hi">${H.icon('mdi:import')}</span><div><b id="rxh">${a.virtual ? hgTr('Wybierz encje', 'Pick entities') : hgTr(`Importuj z obszaru „${H.esc(a.name)}”`, `Import from the “${H.esc(a.name)}” area`)}</b><small>${hgTr('Zaznacz, co ma się pojawić w tym pokoju. Kafelki ułożymy według rodzaju.', 'Choose what to show in this room. Tiles are arranged by type.')}</small></div>
-        <button class="x" data-a="x" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div>
-      ${a.virtual ? '' : `<div class="seg" role="tablist"><button role="tab" data-a="imp" aria-selected="${imp}">${H.icon('mdi:home-import-outline')}${hgTr('Z obszaru', 'From area')}<i>${hasC}</i></button><button role="tab" data-a="pick" aria-selected="${!imp}">${H.icon('mdi:checkbox-multiple-marked-outline')}${hgTr('Wybierz encje', 'Pick entities')}</button></div>`}
-      ${!imp ? `<label class="sr">${H.icon('mdi:magnify')}<input data-q value="${H.esc(this._q)}" placeholder="${hgTr('Szukaj encji', 'Search entities')}" aria-label="${hgTr('Szukaj encji', 'Search entities')}" autocomplete="off"></label>` : ''}
+      <div class="hd"><span class="hi">${H.icon('mdi:import')}</span><div><b id="rxh">${a.virtual ? hgT('roomx.pick_entities') : hgT('roomx.import_from_named_area', { name: H.esc(a.name) })}</b><small>${hgT('roomx.choose_what_to_show')}</small></div>
+        <button class="x" data-a="x" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
+      ${a.virtual ? '' : `<div class="seg" role="tablist"><button role="tab" data-a="imp" aria-selected="${imp}">${H.icon('mdi:home-import-outline')}${hgT('roomx.from_area')}<i>${hasC}</i></button><button role="tab" data-a="pick" aria-selected="${!imp}">${H.icon('mdi:checkbox-multiple-marked-outline')}${hgT('roomx.pick_entities')}</button></div>`}
+      ${!imp ? `<label class="sr">${H.icon('mdi:magnify')}<input data-q value="${H.esc(this._q)}" placeholder="${hgT('roomx.search_entities')}" aria-label="${hgT('roomx.search_entities')}" autocomplete="off"></label>` : ''}
       ${imp && !hasC ? '' : ''}<div class="rl">${this._items()}</div>
-      ${imp && !hasC ? `<p class="mo">${hgTr('W tym obszarze nie ma jeszcze encji.', 'This area has no entities yet.')}</p>` : ''}
-      ${adm && !a.virtual ? `<label class="ha"><span><b>${hgTr('Przypisz też do obszaru w Home Assistant', 'Also assign to the area in Home Assistant')}</b><small>${hgTr('Encje bez obszaru trafią do „' + H.esc(a.name) + '”.', 'Entities without an area move to “' + H.esc(a.name) + '”.')}</small></span><button class="sw" role="switch" data-a="ha" aria-checked="${this._ha}"><i></i></button></label>` : ''}
-      <div class="ft"><span class="cnt"></span><button class="sec" data-a="x">${hgTr('Anuluj', 'Cancel')}</button><button class="pri" data-a="ok">${H.icon('mdi:check')}<span></span></button></div></div>`;
+      ${imp && !hasC ? `<p class="mo">${hgT('roomx.this_area_has_no')}</p>` : ''}
+      ${adm && !a.virtual ? `<label class="ha"><span><b>${hgT('roomx.also_assign_to_the')}</b><small>${hgT('roomx.unassigned_move_hint', { name: H.esc(a.name) })}</small></span><button class="sw" role="switch" data-a="ha" aria-checked="${this._ha}"><i></i></button></label>` : ''}
+      <div class="ft"><span class="cnt"></span><button class="sec" data-a="x">${hgT('common.cancel')}</button><button class="pri" data-a="ok">${H.icon('mdi:check')}<span></span></button></div></div>`;
     this._foot(); }
   async _click(ev) { const t = ev.target, cb = t.closest('input[type=checkbox]');
     if (cb) { const e = cb.dataset.e; cb.checked ? this._sel.add(e) : this._sel.delete(e); cb.closest('.rr').classList.toggle('on', cb.checked); return this._foot(); }
@@ -91,7 +91,7 @@ class HGRoomImport extends HTMLElement {
       const d = hgRxDom(e); if (['climate', 'camera'].includes(d)) L.size[e] = 'l'; else if (d === 'media_player') L.size[e] = 'm'; }
     HGL.set(RS, L); try { await HGL.save(h); } catch (er) { /* zapis lokalny i tak jest */ }
     if (this._ha && !window.__hgDryRun) for (const e of sel) { const r = E[e]; if (r && !r.area_id && !(r.device_id && (h.devices || {})[r.device_id] && h.devices[r.device_id].area_id)) try { await h.callWS({ type: 'config/entity_registry/update', entity_id: e, area_id: this._a.id }); } catch (er) { /* bez uprawnień lub bez rejestru */ } }
-    const p = HGRoomX.page(this._card); if (p && p._eToast) p._eToast(hgTr(`Dodano ${sel.length} do pokoju ${this._a.name}`, `Added ${sel.length} to ${this._a.name}`));
+    const p = HGRoomX.page(this._card); if (p && p._eToast) p._eToast(hgT('roomx.added_count_to', { count: sel.length, name: this._a.name }));
     if (HGL.notify) HGL.notify(); this._card.rerender(); }
 }
 if (!customElements.get('hg-room-import')) customElements.define('hg-room-import', HGRoomImport);

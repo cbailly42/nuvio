@@ -22,4 +22,4 @@ class HGGridCard extends HGStackCard {
   _narrowSet() {}
   getGridOptions() { return { columns: 12, rows: 'auto' }; }
 }
-hgReg('hg-grid-card', HGGridCard, hgTr('Nuvio – Siatka', 'Nuvio – Grid'), hgTr('Karty w kolumnach, jak siatka w HA', 'Cards in columns, like the HA grid'));
+hgReg('hg-grid-card', HGGridCard, hgTLazy('cards.grid.picker_name'), hgTLazy('cards.grid.picker_description'));

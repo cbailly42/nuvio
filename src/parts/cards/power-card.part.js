@@ -1,6 +1,6 @@
 /* hg-power-card: moc teraz (suma faz) + linia z ostatnich godzin (statystyki 5-minutowe „mean”) + cienki pasek obciążenia */
 class HGPowerCard extends HGBase {
-  defaults() { return { title: hgTr('Moc teraz', 'Power now'), icon: 'mdi:flash-outline', entities: [], max_power: 17250, max: null, hours: 6, chart_label: '', hide_chart_label: false, show_level: null, expand: null,
+  defaults() { return { title: hgT('common.power_now'), icon: 'mdi:flash-outline', entities: [], max_power: 17250, max: null, hours: 6, chart_label: '', hide_chart_label: false, show_level: null, expand: null,
     source: 'history', forecast: false, forecast_entities: [], forecast_attribute: '', forecast_value: '', forecast_type: 'hourly', forecast_days: null, forecast_hours: null }; }
   /* moc (W, kW, MW albo device_class power) liczona w W; każda inna jednostka (kWh, Wh, %, …) pokazywana tak, jak podaje czujnik */
   _unit() { const h = this._hass; for (const e of this._config.entities) { const s = h && h.states[e]; if (s) return String(s.attributes.unit_of_measurement || '').trim(); } return ''; }
@@ -71,20 +71,20 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
   render() {
     const c = this._config, h = this._hass;
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Raporty', 'Reports')}" title="${hgTr('Raporty', 'Reports')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgT('cards.power.reports')}" title="${hgT('cards.power.reports')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     const pw = this._isPow(), u = this._unit();
     let tot = 0, n = 0; for (const e of c.entities) { const v = pw ? hgW(h, e) : H.num(h, e); if (v != null) { tot += pw ? Math.abs(v) : v; n++; } }
-    if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${pw ? hgTr('Czujniki mocy niedostępne', 'Power sensors unavailable') : hgTr('Czujniki niedostępne', 'Sensors unavailable')}</div></ha-card>`;
+    if (!n) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgT('common.no_data_source')}</b>${pw ? hgT('cards.power.power_sensors_unavailable') : hgT('cards.power.sensors_unavailable')}</div></ha-card>`;
     const fc = this._fc(), pts = fc ? this._fcPts() : (this._sp ? this._sp.pts : []).concat([[Date.now(), tot]]);
     /* skala paska: moc z max_power (W); inne jednostki z „max” albo z największej wartości na wykresie */
     const mxV = pw ? (+c.max > 0 ? +c.max * ({ kW: 1000, MW: 1e6 }[u] || 1) : c.max_power) : (+c.max > 0 ? +c.max : Math.max(...(fc ? [] : pts).map((p) => Math.abs(p[1])), Math.abs(tot)) || 1);
     const pct = Math.max(0, Math.min(100, (tot / mxV) * 100));
-    const lvl = (c.show_level ?? pw) ? (pct < 30 ? hgTr('Niskie', 'Low') : pct < 70 ? hgTr('Średnie', 'Medium') : hgTr('Wysokie', 'High')) : '';
+    const lvl = (c.show_level ?? pw) ? (pct < 30 ? hgT('cards.power.low') : pct < 70 ? hgT('common.medium') : hgT('cards.power.high')) : '';
     const dg = (v) => (Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2);
     const kw = pw ? (tot >= 1000 ? [H.fmt(tot / 1000, 2), 'kW'] : [H.fmt(tot, 0), 'W']) : [H.fmt(tot, dg(tot)), u];
-    const sub = [kw[1], pw || +c.max > 0 ? `${Math.round(pct)}%${lvl ? ' ' + lvl : ''}` : ''].filter(Boolean).join(' · ');
-    const gR = pw && !(+c.max > 0) ? '100%' : `${H.fmt(pw ? mxV / (mxV >= 1000 ? 1000 : 1) : mxV, dg(pw && mxV >= 1000 ? mxV / 1000 : mxV))} ${pw ? (mxV >= 1000 ? 'kW' : 'W') : u}`.trim();
-    const axL = c.chart_label ? String(c.chart_label) : fc ? hgTr('teraz', 'now') : `−${c.hours} h`;
+    const sub = [kw[1], pw || +c.max > 0 ? `${H.pct(Math.round(pct))}${lvl ? ' ' + lvl : ''}` : ''].filter(Boolean).join(' · ');
+    const gR = pw && !(+c.max > 0) ? H.pct(100) : `${H.fmt(pw ? mxV / (mxV >= 1000 ? 1000 : 1) : mxV, dg(pw && mxV >= 1000 ? mxV / 1000 : mxV))} ${pw ? (mxV >= 1000 ? 'kW' : 'W') : u}`.trim();
+    const axL = c.chart_label ? String(c.chart_label) : fc ? hgT('common.now') : `−${c.hours} h`;
     let svg = '';
     let days = '';
     if (pts.length > 2) {
@@ -105,13 +105,13 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
       svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
         <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/>${fc ? (this._fcTicks || []).map((x) => `<line class="dl" x1="${x.toFixed(2)}" x2="${x.toFixed(2)}" y1="0" y2="100"/>`).join('') : ''}</svg>`;
     }
-    const tip = pw ? `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% ${hgTr('z', 'of')} ${H.fmt(mxV / 1000, 2)} kW` : c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(H.num(h, e) ?? 0, dg(H.num(h, e) ?? 0))} ${u}`).join(', ');
+    const tip = pw ? `${c.entities.map((e) => H.lv(H.name(h, e), `${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`)).join(', ')} · ${H.pct(Math.round(pct))} ${hgT('common.of')} ${H.fmt(mxV / 1000, 2)} kW` : c.entities.map((e) => H.lv(H.name(h, e), `${H.fmt(H.num(h, e) ?? 0, dg(H.num(h, e) ?? 0))} ${u}`)).join(', ');
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
       <div class="v"><b>${kw[0]}</b><span>${H.esc(sub)}</span></div>
-      <div class="gg" style="--p:${pct.toFixed(1)}%" title="${H.esc(`${Math.round(pct)}%${lvl ? ' ' + lvl : ''}`)}"><i></i></div><div class="gl"><span>0</span><span>${H.esc(gR)}</span></div>
-      <div class="spk">${svg}${svg ? `<span class="dot" style="left:${fc ? 0 : 100}%;top:${this._lastY}%"></span>${fc ? '' : `<span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${H.esc(kw[1])}</span>`}` : ''}</div>${svg && !c.hide_chart_label ? (fc && days ? days : `<div class="ax">${fc ? `<span>${H.esc(axL)}</span><span>+${H.esc(String(Math.round(this._fcH())))} h</span>` : `<span>${H.esc(axL)}</span><span>${hgTr('teraz', 'now')}</span>`}</div>`) : ''}
+      <div class="gg" style="--p:${pct.toFixed(1)}%" title="${H.esc(`${H.pct(Math.round(pct))}${lvl ? ' ' + lvl : ''}`)}"><i></i></div><div class="gl"><span>0</span><span>${H.esc(gR)}</span></div>
+      <div class="spk">${svg}${svg ? `<span class="dot" style="left:${fc ? 0 : 100}%;top:${this._lastY}%"></span>${fc ? '' : `<span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${H.esc(kw[1])}</span>`}` : ''}</div>${svg && !c.hide_chart_label ? (fc && days ? days : `<div class="ax">${fc ? `<span>${H.esc(axL)}</span><span>+${H.esc(String(Math.round(this._fcH())))} h</span>` : `<span>${H.esc(axL)}</span><span>${hgT('common.now')}</span>`}</div>`) : ''}
       </ha-card>`;
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('hg-power-card', HGPowerCard, hgTr('Home Glass – Moc', 'Home Glass – Power'), hgTr('Wartość z paskiem i linią z ostatnich godzin (moc, energia, prognoza)', 'Value with a bar and a line of recent hours (power, energy, forecast)'));
+hgReg('hg-power-card', HGPowerCard, hgTLazy('cards.power.picker_name'), hgTLazy('cards.power.picker_description'));

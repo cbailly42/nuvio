@@ -11,7 +11,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>
 
-<p align="center"><b>English</b> · <a href="README.pl.md">Polski</a></p>
+<p align="center"><b>English</b> · <a href="README.pl.md">Polski</a> · <a href="README.fr.md">Français</a></p>
 
 <p align="center">
   <img src="docs/screenshots/demo_dashboard_dark_1440.png" alt="Nuvio home view in the dark theme" width="49%">
@@ -31,7 +31,7 @@ Nuvio is a glass-style dashboard for Home Assistant: pages, navigation, cards an
 - **Shared by default.** An administrator sets up one dashboard for everyone, and any person can be given their own layout. See [Features guide](docs/features.md#shared-dashboard).
 - **Wall tablet mode.** Seven screensavers (clock on photo, board, minimal, analog, flip, aurora and night) with previews and an optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
 - **Layout backup.** Export and import the whole layout as versioned JSON. See [Layout backup](docs/features.md#layout-backup).
-- **Polish and English.** Switch language at any time, without reloading. See [Language](docs/configuration.md#language).
+- **Polish, English and French.** Switch language at any time, without reloading; more languages can be added as a single JSON file. See [Language](docs/configuration.md#language).
 - **Light and dark mode**, touch friendly, keyboard friendly in edit mode, and aware of reduced motion.
 
 ## Components
@@ -72,7 +72,7 @@ Nuvio works without options. One optional setting sets the dashboard default lan
 ```yaml
 strategy:
   type: custom:nuvio
-  language: en        # pl | en
+  language: en        # pl | en | fr …
 ```
 
 More in [docs/configuration.md](docs/configuration.md).

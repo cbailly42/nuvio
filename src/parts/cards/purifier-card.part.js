@@ -1,9 +1,11 @@
 /* ===================== OCZYSZCZACZ POWIETRZA: duży odczyt PM2.5 z odliczaniem, fale powietrza wokół liczby (tempo zależne od trybu), włącznik i tryby z przesuwanym podświetleniem ===================== */
 /* PM2.5 (µg/m³): progi jak w US EPA AQI; kolor fal i etykiety z jakości powietrza */
-const HG_AQ_LV = [[12, 'Czyste powietrze', 'Clean air', '#0A84FF'], [35, 'Dobre', 'Good', '#2FB36B'], [55, 'Umiarkowane', 'Moderate', '#F5A524'], [150, 'Złe', 'Poor', '#FF7A3D'], [Infinity, 'Bardzo złe', 'Very poor', '#FF4D4F']];
+/* [próg, etykieta (hgTLazy), kolor] */
+const HG_AQ_LV = [[12, hgTLazy('cards.purifier.aq_levels.clean'), '#0A84FF'], [35, hgTLazy('cards.purifier.aq_levels.good'), '#2FB36B'], [55, hgTLazy('cards.purifier.aq_levels.moderate'), '#F5A524'], [150, hgTLazy('cards.purifier.aq_levels.poor'), '#FF7A3D'], [Infinity, hgTLazy('cards.purifier.aq_levels.very_poor'), '#FF4D4F']];
 const HG_AQ_IC = [[/auto|smart/, 'mdi:weather-windy'], [/sleep|night|silent|quiet/, 'mdi:weather-night'], [/turbo|boost|max|strong|high/, 'mdi:lightning-bolt'], [/fav|heart|custom|manual/, 'mdi:heart-outline'],
   [/low/, 'mdi:fan-speed-1'], [/mid|medium/, 'mdi:fan-speed-2'], [/pet/, 'mdi:paw'], [/allerg|pollen/, 'mdi:flower-pollen-outline']];
-const HG_AQ_PL = { auto: 'Auto', smart: 'Smart', sleep: 'Sen', night: 'Noc', silent: 'Cichy', quiet: 'Cichy', turbo: 'Turbo', boost: 'Turbo', max: 'Maks.', favorite: 'Ulubiony', manual: 'Ręczny', low: 'Niski', medium: 'Średni', high: 'Wysoki', on: 'Wł.', pet: 'Zwierzęta', allergy: 'Alergia' };
+/* tryby z nazwą w katalogu: hgTD('cards.purifier.modes.' + tryb) */
+const HG_AQ_MODES = ['auto', 'smart', 'sleep', 'night', 'silent', 'quiet', 'turbo', 'boost', 'max', 'favorite', 'manual', 'low', 'medium', 'high', 'on', 'pet', 'allergy'];
 class HGPurifierCard extends HGBase {
   static getStubConfig(h) { return { entity: hgStub(h, ['fan'], (s) => (s.attributes.preset_modes || []).length > 0) || hgStub(h, ['fan']) || null, pm: HGPurifierCard.pmFor(h, null) }; }
   /* czujnik PM2.5: z tego samego urządzenia co oczyszczacz (rejestr HA), potem ten sam początek nazwy, na końcu pierwszy w domu.
@@ -13,7 +15,7 @@ class HGPurifierCard extends HGBase {
     const dev = fan && R[fan] && R[fan].device_id, same = dev ? L.filter((e) => R[e] && R[e].device_id === dev) : [];
     if (same.length) return same.find((e) => S[e].attributes.device_class === 'pm25') || same[0];
     const base = fan ? fan.split('.')[1].replace(/_(fan|purifier|air_purifier)$/, '') : ''; return (base && L.find((e) => e.split('.')[1].startsWith(base))) || L.find((e) => e.startsWith('sensor.') && S[e].attributes.device_class === 'pm25') || L[0] || null; }
-  defaults() { return { entity: null, pm: null, name: null, title: hgTr('Jakość powietrza', 'Air quality'), modes: null }; }
+  defaults() { return { entity: null, pm: null, name: null, title: hgT('common.air_quality'), modes: null }; }
   /* bez stałej pamięci listy encji: czujnik dobrany automatycznie może się pojawić dopiero po starcie HA */
   ents() { const c = this._config; return [c.entity, c.pm || HGPurifierCard.pmFor(this._hass, c.entity)].filter(Boolean); }
   _changed() { this._entsC = null; return super._changed(); }
@@ -54,29 +56,29 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
     const v = Number(id.startsWith('air_quality.') && s.attributes.particulate_matter_2_5 != null ? s.attributes.particulate_matter_2_5 : s.state); return isFinite(v) && s.state !== '' ? v : null; }
   _modes(s) { const c = this._config, a = s.attributes, P = Array.isArray(c.modes) && c.modes.length ? c.modes : (a.preset_modes || []);
     if (P.length) return P.slice(0, 4).map((m) => { const k = String(m).toLowerCase(), ic = (HG_AQ_IC.find(([r]) => r.test(k)) || [0, 'mdi:fan'])[1];
-      return { k: m, l: hgTr(HG_AQ_PL[k] || String(m).replace(/_/g, ' '), HG_AQ_PL[k] ? String(m).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase()) : String(m).replace(/_/g, ' ')), ic, pct: null }; });
-    return [[33, 'Niski', 'Low', 'mdi:fan-speed-1'], [66, 'Średni', 'Medium', 'mdi:fan-speed-2'], [100, 'Turbo', 'Turbo', 'mdi:lightning-bolt']].map(([p, pl, en, ic]) => ({ k: 'p' + p, l: hgTr(pl, en), ic, pct: p })); }
+      return { k: m, l: HG_AQ_MODES.includes(k) ? hgTD('cards.purifier.modes.' + k, k) : String(m).replace(/_/g, ' '), ic, pct: null }; });
+    return [[33, 'low', 'mdi:fan-speed-1'], [66, 'medium', 'mdi:fan-speed-2'], [100, 'turbo', 'mdi:lightning-bolt']].map(([p, mk, ic]) => ({ k: 'p' + p, l: hgTD('cards.purifier.modes.' + mk, mk), ic, pct: p })); }
   _cur(s, M) { const o = this._opt && Date.now() - this._opt.ts < 6000 ? this._opt.k : null; if (o != null) return o; const a = s.attributes;
     if (a.preset_mode != null && M.some((m) => m.k === a.preset_mode)) return a.preset_mode; const p = Number(a.percentage);
     if (M[0] && M[0].pct != null && isFinite(p) && p > 0) return M.reduce((b, m) => (Math.abs(m.pct - p) < Math.abs(b.pct - p) ? m : b)).k; return null; }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz oczyszczacz (encja fan)', 'Choose an air purifier (fan entity)')}</span></ha-card>`;
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.purifier.choose_an_air_purifier')}</span></ha-card>`;
     const on = s.state === 'on', ok = H.ok(s), M = this._modes(s), cur = this._cur(s, M), i = M.findIndex((m) => m.k === cur), v = this._pm(), lv = HG_AQ_LV.find((x) => v == null || v <= x[0]);
     const k = String(cur || '').toLowerCase(), pct = Number(s.attributes.percentage), fast = /turbo|boost|max|strong|high/.test(k) || (!k && pct >= 80) || (M[i] && M[i].pct >= 100), slow = /sleep|night|silent|quiet/.test(k);
     const sp = fast ? 1.9 : slow ? 7 : 4.2; this._val = v;
-    return `<ha-card class="glass ${on ? '' : 'off'} ${ok ? '' : 'un'} ${fast ? 'fast' : ''}" style="--aq:${v == null ? '#0A84FF' : lv[3]};--sp:${sp}s">
+    return `<ha-card class="glass ${on ? '' : 'off'} ${ok ? '' : 'un'} ${fast ? 'fast' : ''}" style="--aq:${v == null ? '#0A84FF' : lv[2]};--sp:${sp}s">
       <div class="hd"><div><small>${H.esc(c.name || H.name(h, c.entity))}</small><b>${H.esc(c.title)}</b></div>
-        <button class="pw" data-act="pw" role="switch" aria-checked="${on}" ${ok ? '' : 'disabled'} aria-label="${H.esc(hgTr('Zasilanie', 'Power'))}">${H.icon('mdi:power')}<span>${on ? hgTr('Wł.', 'On') : hgTr('Wył.', 'Off')}</span></button></div>
+        <button class="pw" data-act="pw" role="switch" aria-checked="${on}" ${ok ? '' : 'disabled'} aria-label="${H.esc(hgT('common.power'))}">${H.icon('mdi:power')}<span>${on ? hgT('common.on_short') : hgT('common.off_short')}</span></button></div>
       <div class="mid"><div class="rg" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="nm" data-own role="img" aria-label="${H.esc(v == null ? hgTr('Brak odczytu PM2.5', 'No PM2.5 reading') : `PM2.5 ${H.fmt(v, 0)} µg/m³`)}"></div>
-        <span class="u2">PM2.5 µg/m³</span>${v == null ? '' : `<span class="aqb">${H.esc(hgTr(lv[1], lv[2]))}</span>`}</div>
-      <div class="md" style="--n:${M.length};--i:${Math.max(0, i)}" role="group" aria-label="${H.esc(hgTr('Tryb', 'Mode'))}"><span class="hl ${i < 0 ? 'no' : ''}" aria-hidden="true"></span>${M.map((m) => `<button type="button" data-act="mode" data-m="${H.esc(m.k)}" aria-pressed="${on && m.k === cur}" ${ok ? '' : 'disabled'}>${H.icon(m.ic)}<span>${H.esc(m.l)}</span></button>`).join('')}</div></ha-card>`; }
+        <div class="nm" data-own role="img" aria-label="${H.esc(v == null ? hgT('cards.purifier.no_pm2_5_reading') : `PM2.5 ${H.fmt(v, 0)} µg/m³`)}"></div>
+        <span class="u2">PM2.5 µg/m³</span>${v == null ? '' : `<span class="aqb">${H.esc(String(lv[1]))}</span>`}</div>
+      <div class="md" style="--n:${M.length};--i:${Math.max(0, i)}" role="group" aria-label="${H.esc(hgT('common.mode'))}"><span class="hl ${i < 0 ? 'no' : ''}" aria-hidden="true"></span>${M.map((m) => `<button type="button" data-act="mode" data-m="${H.esc(m.k)}" aria-pressed="${on && m.k === cur}" ${ok ? '' : 'disabled'}>${H.icon(m.ic)}<span>${H.esc(m.l)}</span></button>`).join('')}</div></ha-card>`; }
   /* liczba: zmiana o kilka jednostek odlicza po kolei (stara wyjeżdża w górę, nowa wjeżdża od dołu), po dojściu krótko świeci kolorem jakości */
   afterRender() { const el = this.$.querySelector('.nm'); if (!el) return; const v = this._val == null ? null : Math.round(this._val);
     if (this._tgt === v && el.childElementCount) return; this._tgt = v; clearTimeout(this._nt);
     const put = (x, anim, hi) => { const old = [...el.children]; for (const o of old) { if (anim) { o.className = 'out'; setTimeout(() => o.remove(), 450); } else o.remove(); }
       const n = document.createElement('span'); n.textContent = x == null ? '–' : String(x); if (anim) n.className = 'in' + (hi ? ' hi' : ''); el.appendChild(n); return n; };
-    const shown = this._shown; if (shown == null || v == null || !this.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) { this._shown = v; put(v, shown != null && v != null && shown !== v, false); return; }
+    const shown = this._shown; if (shown == null || v == null || !el.childElementCount || !this.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) { this._shown = v; put(v, shown != null && v != null && shown !== v, false); return; }
     if (shown === v) return; const dir = v > shown ? 1 : -1, steps = Math.min(Math.abs(v - shown), 12), st = Math.abs(v - shown) > 12 ? (v - shown) / 12 : dir;
     let n = 0; const tick = () => { n++; const x = n >= steps ? v : Math.round(shown + st * n); this._shown = x; const s = put(x, true, n >= steps && v < shown);
       if (n < steps) this._nt = setTimeout(tick, 380); else this._nt = setTimeout(() => s.classList.remove('hi'), 1300); };
@@ -90,4 +92,4 @@ ha-card.glass{ position:relative; overflow:hidden; display:flex; flex-direction:
   getCardSize() { return 5; }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
-hgReg('hg-purifier-card', HGPurifierCard, hgTr('Nuvio – Oczyszczacz powietrza', 'Nuvio – Air purifier'), hgTr('PM2.5 z falami powietrza, włącznik i tryby', 'PM2.5 with air waves, power and modes'));
+hgReg('hg-purifier-card', HGPurifierCard, hgTLazy('cards.purifier.picker_name'), hgTLazy('cards.purifier.picker_description'));

@@ -8,21 +8,21 @@ const HG_LK_BG = (id) => ({ kind: 'image', v: HG_ASSET + 'nuvio-bg-' + id + '-wi
 const HG_LK_GR = (a, b) => ({ kind: 'gradient', v: HG_LK_X(a), v2: HG_LK_X(b) });
 /* g = [jasny, ciemny] wypełnienie szkła [karta, kafel, panel]; r = zaokrąglenia [--r-lg, --r-md, --r-sm]; bl = rozmycie szkła */
 const HG_LOOKS = [
-  { k: 'nuvio', n: ['Nuvio', 'Nuvio'], d: ['Domyślny', 'Default'], acc: '63D71E', bg: null, th: 'dom-w-lesie', dim: 0.4,
+  { k: 'nuvio', n: hgTLazy('looks.styles.nuvio.name'), d: hgTLazy('looks.styles.nuvio.description'), acc: '63D71E', bg: null, th: 'dom-w-lesie', dim: 0.4,
     g: [[HG_LK_C(234,238,243,.66), HG_LK_C(255,255,255,.52), HG_LK_C(210,218,226,.30)], [HG_LK_C(255,255,255,.13), HG_LK_C(255,255,255,.12), HG_LK_C(16,22,30,.34)]], def: true },
-  { k: 'frost', n: ['Szron', 'Frost'], d: ['Mocno zmrożone szkło', 'Deep frosted glass'], acc: '4C9BFF', bg: HG_LK_BG('nad-mgla'), th: 'nad-mgla', dim: 0.3, bl: '26px',
+  { k: 'frost', n: hgTLazy('looks.styles.frost.name'), d: hgTLazy('looks.styles.frost.description'), acc: '4C9BFF', bg: HG_LK_BG('nad-mgla'), th: 'nad-mgla', dim: 0.3, bl: '26px',
     g: [[HG_LK_C(244,248,252,.76), HG_LK_C(255,255,255,.64), HG_LK_C(226,234,244,.40)], [HG_LK_C(205,222,255,.17), HG_LK_C(215,228,255,.15), HG_LK_C(18,28,44,.40)]] },
-  { k: 'midnight', n: ['Północ', 'Midnight'], d: ['Granat i fiolet', 'Navy and violet'], acc: 'A78BFA', bg: HG_LK_GR('2A1E63', '07081A'), dim: 0.3,
+  { k: 'midnight', n: hgTLazy('looks.styles.midnight.name'), d: hgTLazy('looks.styles.midnight.description'), acc: 'A78BFA', bg: HG_LK_GR('2A1E63', '07081A'), dim: 0.3,
     g: [[HG_LK_C(240,236,255,.70), HG_LK_C(250,248,255,.56), HG_LK_C(220,212,250,.32)], [HG_LK_C(168,150,255,.14), HG_LK_C(178,160,255,.12), HG_LK_C(14,12,40,.42)]] },
-  { k: 'sunset', n: ['Zachód', 'Sunset'], d: ['Ciepłe światło', 'Warm light'], acc: 'FF9F43', bg: HG_LK_BG('zachod-slonca'), th: 'zachod-slonca', dim: 0.35,
+  { k: 'sunset', n: hgTLazy('looks.styles.sunset.name'), d: hgTLazy('looks.styles.sunset.description'), acc: 'FF9F43', bg: HG_LK_BG('zachod-slonca'), th: 'zachod-slonca', dim: 0.35,
     g: [[HG_LK_C(255,244,236,.70), HG_LK_C(255,250,246,.56), HG_LK_C(250,226,210,.32)], [HG_LK_C(255,206,170,.14), HG_LK_C(255,214,184,.12), HG_LK_C(40,20,14,.38)]] },
-  { k: 'forest', n: ['Las', 'Forest'], d: ['Zieleń i mgła', 'Greens and mist'], acc: '3DDC97', bg: HG_LK_BG('mglisty-las'), th: 'mglisty-las', dim: 0.4,
+  { k: 'forest', n: hgTLazy('looks.styles.forest.name'), d: hgTLazy('looks.styles.forest.description'), acc: '3DDC97', bg: HG_LK_BG('mglisty-las'), th: 'mglisty-las', dim: 0.4,
     g: [[HG_LK_C(236,246,240,.70), HG_LK_C(248,255,251,.56), HG_LK_C(214,232,222,.32)], [HG_LK_C(180,255,214,.12), HG_LK_C(190,255,222,.11), HG_LK_C(10,26,18,.40)]] },
-  { k: 'ocean', n: ['Ocean', 'Ocean'], d: ['Woda i turkus', 'Water and teal'], acc: '2EC4D6', bg: HG_LK_BG('domek-nad-woda'), th: 'domek-nad-woda', dim: 0.35,
+  { k: 'ocean', n: hgTLazy('looks.styles.ocean.name'), d: hgTLazy('looks.styles.ocean.description'), acc: '2EC4D6', bg: HG_LK_BG('domek-nad-woda'), th: 'domek-nad-woda', dim: 0.35,
     g: [[HG_LK_C(234,246,248,.70), HG_LK_C(246,253,255,.56), HG_LK_C(208,230,236,.32)], [HG_LK_C(160,236,255,.13), HG_LK_C(170,240,255,.12), HG_LK_C(8,26,34,.40)]] },
-  { k: 'pastel', n: ['Pastel', 'Pastel'], d: ['Jasny i miękki', 'Bright and soft'], acc: 'FF6FAE', bg: HG_LK_BG('jasny-salon'), th: 'jasny-salon', dim: 0.25, r: ['36px', '26px', '20px'],
+  { k: 'pastel', n: hgTLazy('looks.styles.pastel.name'), d: hgTLazy('looks.styles.pastel.description'), acc: 'FF6FAE', bg: HG_LK_BG('jasny-salon'), th: 'jasny-salon', dim: 0.25, r: ['36px', '26px', '20px'],
     g: [[HG_LK_C(255,255,255,.74), HG_LK_C(255,255,255,.62), HG_LK_C(255,240,246,.36)], [HG_LK_C(255,214,232,.14), HG_LK_C(255,222,238,.12), HG_LK_C(36,18,28,.38)]] },
-  { k: 'graphite', n: ['Grafit', 'Graphite'], d: ['Płaski, ostrzejsze rogi', 'Flat, sharper corners'], acc: 'F5C542', bg: HG_LK_GR('2C2E33', '111215'), dim: 0.2, bl: '6px', r: ['18px', '13px', '10px'],
+  { k: 'graphite', n: hgTLazy('looks.styles.graphite.name'), d: hgTLazy('looks.styles.graphite.description'), acc: 'F5C542', bg: HG_LK_GR('2C2E33', '111215'), dim: 0.2, bl: '6px', r: ['18px', '13px', '10px'],
     g: [[HG_LK_C(246,247,249,.88), HG_LK_C(255,255,255,.80), HG_LK_C(230,232,236,.60)], [HG_LK_C(52,54,60,.80), HG_LK_C(74,76,84,.56), HG_LK_C(22,23,26,.62)]] },
 ];
 const HG_LK_CSS = `
@@ -59,11 +59,11 @@ const HGLooks = window.HGLooks = {
     const ck = H.icon('mdi:check-circle'), card = (L) => { const g = L.g[dk ? 1 : 0], t = T(L), on = cur === L.k, rr = L.r ? L.r[0] : '31px';
       const st = `--bg:${this.thumb(L)};--a:${HG_LK_X(L.acc)};--on:${t.light['--hg-on-accent']};--g:${g[0]};--t:${g[1]};--p:${g[2]};--bl:${L.bl ? parseFloat(L.bl) / 4 : 3.5}px;--rr:calc(${rr} / 3.2);--ink:${dk ? HG_LK_X('FFFFFF') : HG_LK_X('1C1C1E')};--dim:${dk ? HG_LK_C(6, 8, 12, (L.dim * 0.55).toFixed(2)) : 'transparent'}`;
       return `<button type="button" class="lk-lk" role="radio" data-hge="lk-look" data-v="${L.k}" aria-checked="${on}" style="${H.esc(st)}"><span class="lk-lp" aria-hidden="true"><span class="lkp-r"></span><span class="lkp-h"></span><span class="lkp-h lkp-h2"></span><span class="lkp-p">${'<span></span>'.repeat(6)}</span></span>
-        <span class="lk-ll">${on ? ck : ''}<span>${H.esc(hgTr(...L.n))}<small>${H.esc(hgTr(...L.d))}</small></span></span></button>`; };
-    return `<section class="lk-g" data-tab="look"><style>${HG_LK_CSS}</style><h4>${H.icon('mdi:palette-swatch-outline')}${hgTr('Styl pulpitu', 'Dashboard style')}</h4>
-      <small class="lk-hn">${hgTr('Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.', 'A ready-made set: accent, background and glass. You can change the accent and background below afterwards.')}</small>
-      <div class="lk-lks" role="radiogroup" aria-label="${H.esc(hgTr('Styl pulpitu', 'Dashboard style'))}">${HG_LOOKS.map(card).join('')}</div></section>`; },
+        <span class="lk-ll">${on ? ck : ''}<span>${H.esc(L.n)}<small>${H.esc(L.d)}</small></span></span></button>`; };
+    return `<section class="lk-g" data-tab="look"><style>${HG_LK_CSS}</style><h4>${H.icon('mdi:palette-swatch-outline')}${hgT('looks.dashboard_style')}</h4>
+      <small class="lk-hn">${hgT('looks.a_ready_made_set')}</small>
+      <div class="lk-lks" role="radiogroup" aria-label="${H.esc(hgT('looks.dashboard_style'))}">${HG_LOOKS.map(card).join('')}</div></section>`; },
   act(page, b, a) { if (a !== 'lk-look') return; const L = this.get(b.dataset.v); if (!L) return;
     page._eApp((A) => { if (L.def) delete A.look; else A.look = L.k; A.accent = HG_LK_X(L.acc); if (L.bg) A.bg = Object.assign({}, L.bg); else delete A.bg; A.dim = L.dim; });
-    page._eToast(hgTr(`Styl: ${L.n[0]}`, `Style: ${L.n[1]}`)); return page._eLook(); },
+    page._eToast(hgT('looks.style_toast', { name: L.n })); return page._eLook(); },
 };

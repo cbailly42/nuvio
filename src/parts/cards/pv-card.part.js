@@ -1,6 +1,6 @@
 /* --- hg-pv-card: stan falownika, produkcja teraz i dziś, ostatnia aktywność --- */
 class HGPvCard extends HGBase {
-  defaults() { return { title: hgTr('Fotowoltaika', 'Solar'), icon: 'mdi:solar-power-variant-outline', power: null, today: null, state: null, temperature: null, strings: [], extra: [] }; }
+  defaults() { return { title: hgT('cards.pv.solar'), icon: 'mdi:solar-power-variant-outline', power: null, today: null, state: null, temperature: null, strings: [], extra: [] }; }
   ents() { const c = this._config; return [c.power, c.today, c.state, c.temperature, ...c.strings.map((s) => s.entity || s.power), ...c.extra].filter(Boolean); }
   _extraSig() { return [Math.floor(Date.now() / 60000), this._last ? this._last.t : 0]; }
   connectedCallback() { super.connectedCallback(); this._ld(); }
@@ -44,26 +44,26 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     const w = hgW(h, c.power), td = H.num(h, c.today), tmp = H.num(h, c.temperature), dst = H.st(h, c.state);
     const col = on ? (w > 0 ? 'var(--hg-accent)' : '#6E747A') : '#6E747A';
     const since = s ? hgRel(new Date(s.last_changed)) : '';
-    const lbl = on ? (w > 0 ? hgTr('Produkuje', 'Producing') : hgTr('Brak produkcji (noc / zachmurzenie)', 'No production (night / clouds)')) : hgTr('Falownik offline', 'Inverter offline');
+    const lbl = on ? (w > 0 ? hgT('cards.pv.producing') : hgT('cards.pv.no_production_night_clouds')) : hgT('cards.pv.inverter_offline');
     if (this._last && Date.now() - this._last.t > 15 * 60000 && !this._ldg) { this._last.t = Date.now(); setTimeout(() => this._ld(), 0); }
     // „Dziś”: większa z wartości czujnika dziennego i przyrostu liczników całkowitych; 0 przy produkcji = brak danych
     // czujnik dzienny ma rozdzielczość 0,1 kWh: 0 przy produkcji = „< 0,1”; bez czujnika dziennego -> przyrost licznika całkowitego
     const dsum = this._dsum != null ? Math.max(this._dsum, td || 0) : td;
     const tday = dsum != null ? dsum : this._today;
-    const dz = tday == null ? ['–', ''] : tday < 0.05 && w > 0 ? [hgTr('< 0,1', '< 0.1'), 'kWh'] : [H.fmt(tday, 1), 'kWh'];
-    const kv = [[hgTr('Teraz', 'Now'), w != null ? [H.fmt(w, 0), 'W'] : ['–', '']], [hgTr('Dziś', 'Today'), dz]];
+    const dz = tday == null ? ['–', ''] : tday < 0.05 && w > 0 ? [hgT('cards.pv.0_1'), 'kWh'] : [H.fmt(tday, 1), 'kWh'];
+    const kv = [[hgT('common.now_cap'), w != null ? [H.fmt(w, 0), 'W'] : ['–', '']], [hgT('common.today'), dz]];
     for (const st of c.strings) { const v = hgW(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
-    if (c.temperature) kv.push([hgTr('Temperatura falownika', 'Inverter temperature'), tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
+    if (c.temperature) kv.push([hgT('cards.pv.inverter_temperature'), tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
     const L = this._last;
-    const last = L && L.d ? `${hgTr('Ostatnia produkcja', 'Last production')}: <b>${H.esc(L.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.` : L ? hgTr('Brak produkcji w statystykach z ostatnich 30 dni.', 'No production in statistics for the last 30 days.') : '';
-    const note = !on ? `<div class="pvn">${last} ${hgTr('Dni bez danych z falownika są na wykresach szarą kropką (nie zerem).', 'Days without inverter data are shown on charts as a grey dot (not zero).')}</div>`
-      : dst && H.ok(dst) ? `<div class="pvn" style="background:var(--hg-accent-faint)">${hgTr('Stan falownika', 'Inverter state')}: ${H.esc(H.t(h, dst))}</div>` : '';
+    const last = L && L.d ? `${H.lv(hgT('cards.pv.last_production'), `<b>${H.esc(L.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.`)}` : L ? hgT('cards.pv.no_production_in_statistics') : '';
+    const note = !on ? `<div class="pvn">${last} ${hgT('cards.pv.days_without_inverter_data')}</div>`
+      : dst && H.ok(dst) ? `<div class="pvn" style="background:var(--hg-accent-faint)">${H.lv(hgT('cards.pv.inverter_state'), `${H.esc(H.t(h, dst))}`)}</div>` : '';
     return `<ha-card class="glass warm ${on ? 'on' : 'off'}" style="--c:${col}"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-        <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły falownika', 'Inverter details')}" title="${hgTr('Szczegóły i historia', 'Details and history')}">${H.icon('mdi:dots-vertical')}</button></div>
-      <div class="st"><span class="bd">${H.icon(on ? 'mdi:white-balance-sunny' : 'mdi:solar-panel')}</span><div><b>${lbl}</b><span>${on ? hgTr('aktualizacja ', 'updated ') + H.esc(since) : since ? hgTr('brak danych od ', 'last data ') + H.esc(since) : hgTr('brak encji', 'no entity')}</span></div></div>
+        <button class="ib kebab" data-act="more" aria-label="${hgT('cards.pv.inverter_details')}" title="${hgT('cards.pv.details_and_history')}">${H.icon('mdi:dots-vertical')}</button></div>
+      <div class="st"><span class="bd">${H.icon(on ? 'mdi:white-balance-sunny' : 'mdi:solar-panel')}</span><div><b>${lbl}</b><span>${on ? hgT('cards.pv.updated_ago', { time: H.esc(since) }) : since ? hgT('cards.pv.last_data_since', { time: H.esc(since) }) : hgT('cards.pv.no_entity')}</span></div></div>
       ${on ? '' : ''}<div class="kv" ${on ? '' : 'hidden'}>${kv.map(([k, [v, u]]) => `<div><small>${H.esc(k)}</small><b>${v}<em>${u}</em></b></div>`).join('')}</div>${note}</ha-card>`;
   }
   onAct(a) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.power }); }
   getCardSize() { return 4; }
 }
-hgReg('hg-pv-card', HGPvCard, hgTr('Home Glass – Fotowoltaika', 'Home Glass – Solar'), hgTr('Stan falownika, produkcja teraz i dziś', 'Inverter state, production now and today'));
+hgReg('hg-pv-card', HGPvCard, hgTLazy('cards.pv.picker_name'), hgTLazy('cards.pv.picker_description'));

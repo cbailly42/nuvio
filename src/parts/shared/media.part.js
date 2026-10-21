@@ -67,28 +67,28 @@ const hgNP = {
     const B = (a, ic, l, cls = '', x = '') => `<button class="npb ${cls}" data-act="${a}" data-e="${E}" aria-label="${H.esc(l)}" title="${H.esc(l)}"${x}>${H.icon(ic)}</button>`;
     const shuf = !!at.shuffle, rep = at.repeat || 'off';
     const ctl = act || ['idle', 'on'].includes(s.state) ? [
-      f & F.SHUFFLE ? B('npsh', 'mdi:shuffle-variant', hgTr('Losowo', 'Shuffle'), `sm opt ${shuf ? 'on' : ''}`, ` aria-pressed="${shuf}"`) : '',
-      f & F.PREV ? B('npprev', 'mdi:skip-previous', hgTr('Poprzedni', 'Previous')) : '',
-      (pl ? f & (F.PAUSE | F.STOP) : f & F.PLAY) ? B('npp', pl ? (f & F.PAUSE ? 'mdi:pause' : 'mdi:stop') : 'mdi:play', pl ? hgTr('Pauza', 'Pause') : hgTr('Odtwarzaj', 'Play'), 'big') : '',
-      f & F.NEXT ? B('npnext', 'mdi:skip-next', hgTr('Następny', 'Next')) : '',
-      f & F.REPEAT ? B('nprep', rep === 'one' ? 'mdi:repeat-once' : rep === 'all' ? 'mdi:repeat' : 'mdi:repeat-off', hgTr('Powtarzanie', 'Repeat'), `sm opt ${rep !== 'off' ? 'on' : ''}`) : '',
+      f & F.SHUFFLE ? B('npsh', 'mdi:shuffle-variant', hgT('shared.media.shuffle'), `sm opt ${shuf ? 'on' : ''}`, ` aria-pressed="${shuf}"`) : '',
+      f & F.PREV ? B('npprev', 'mdi:skip-previous', hgT('common.previous_track')) : '',
+      (pl ? f & (F.PAUSE | F.STOP) : f & F.PLAY) ? B('npp', pl ? (f & F.PAUSE ? 'mdi:pause' : 'mdi:stop') : 'mdi:play', pl ? hgT('common.pause') : hgT('shared.media.play'), 'big') : '',
+      f & F.NEXT ? B('npnext', 'mdi:skip-next', hgT('common.next_track')) : '',
+      f & F.REPEAT ? B('nprep', rep === 'one' ? 'mdi:repeat-once' : rep === 'all' ? 'mdi:repeat' : 'mdi:repeat-off', hgT('shared.media.repeat'), `sm opt ${rep !== 'off' ? 'on' : ''}`) : '',
     ].join('') : '';
     const vp = at.volume_level != null ? Math.round(at.volume_level * 100) : null, mu = !!at.is_volume_muted;
-    const vol = off ? '' : (f & F.VOL_SET) && vp != null ? `<div class="npv">${B(f & F.MUTE ? 'npmu' : 'npvd', f & F.MUTE ? (mu || vp === 0 ? 'mdi:volume-off' : 'mdi:volume-low') : 'mdi:volume-minus', f & F.MUTE ? (mu ? hgTr('Wyłącz wyciszenie', 'Unmute') : hgTr('Wycisz', 'Mute')) : hgTr('Ciszej', 'Volume down'), '', f & F.MUTE ? ` aria-pressed="${mu}"` : '')}
-        <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgTr('Głośność: ', 'Volume: ') + nm)}">${B('npvu', 'mdi:volume-high', hgTr('Głośniej', 'Volume up'))}
-        <span class="npo"><output>${vp}%</output><small>${hgTr('Głośność', 'Volume')}</small></span></div>`
-      : (f & F.VOL_STEP) ? `<div class="npv">${B('npvd', 'mdi:volume-minus', hgTr('Ciszej', 'Volume down'))}${B('npvu', 'mdi:volume-plus', hgTr('Głośniej', 'Volume up'))}</div>` : '';
+    const vol = off ? '' : (f & F.VOL_SET) && vp != null ? `<div class="npv">${B(f & F.MUTE ? 'npmu' : 'npvd', f & F.MUTE ? (mu || vp === 0 ? 'mdi:volume-off' : 'mdi:volume-low') : 'mdi:volume-minus', f & F.MUTE ? (mu ? hgT('shared.media.unmute') : hgT('shared.media.mute')) : hgT('shared.media.volume_down'), '', f & F.MUTE ? ` aria-pressed="${mu}"` : '')}
+        <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgT('shared.media.volume_aria', { name: nm }))}">${B('npvu', 'mdi:volume-high', hgT('shared.media.volume_up'))}
+        <span class="npo"><output>${H.pct(vp)}</output><small>${hgT('shared.media.volume_label')}</small></span></div>`
+      : (f & F.VOL_STEP) ? `<div class="npv">${B('npvd', 'mdi:volume-minus', hgT('shared.media.volume_down'))}${B('npvu', 'mdi:volume-plus', hgT('shared.media.volume_up'))}</div>` : '';
     const C = (a, ic, l, on) => `<button class="npc ${on ? 'on' : ''}" data-act="${a}" data-e="${E}" aria-label="${H.esc(l)}" title="${H.esc(l)}">${H.icon(ic)}<span>${H.esc(l)}</span></button>`;
     const grp = (at.group_members || []).length > 1;
     const chips = off ? '' : [
-      (f & F.SOURCE) && (at.source_list || []).length ? C('npsrc', tv ? 'mdi:import' : 'mdi:music-box-multiple-outline', at.source || hgTr('Źródło', 'Source')) : '',
-      (f & F.GROUP) ? C('npgrp', 'mdi:speaker-multiple', grp ? hgTr(`Pokoje · ${at.group_members.length}`, `Rooms · ${at.group_members.length}`) : hgTr('Pokoje', 'Rooms'), grp) : '',
-      (f & F.SOUND) && (at.sound_mode_list || []).length ? C('npsnd', 'mdi:tune-vertical', at.sound_mode || hgTr('Dźwięk', 'Sound')) : '',
+      (f & F.SOURCE) && (at.source_list || []).length ? C('npsrc', tv ? 'mdi:import' : 'mdi:music-box-multiple-outline', at.source || hgT('shared.media.source')) : '',
+      (f & F.GROUP) ? C('npgrp', 'mdi:speaker-multiple', grp ? hgT('shared.media.rooms_count', { count: at.group_members.length }) : hgT('common.rooms'), grp) : '',
+      (f & F.SOUND) && (at.sound_mode_list || []).length ? C('npsnd', 'mdi:tune-vertical', at.sound_mode || hgT('shared.media.sound')) : '',
     ].join('');
-    const pw = f & (off ? F.ON : F.OFF) ? `<button class="npc npic" data-act="npw" data-e="${E}" aria-label="${off ? hgTr('Włącz', 'Turn on') : hgTr('Wyłącz', 'Turn off')}" title="${off ? hgTr('Włącz', 'Turn on') : hgTr('Wyłącz', 'Turn off')}">${H.icon('mdi:power')}</button>` : '';
+    const pw = f & (off ? F.ON : F.OFF) ? `<button class="npc npic" data-act="npw" data-e="${E}" aria-label="${off ? hgT('common.turn_on') : hgT('common.turn_off')}" title="${off ? hgT('common.turn_on') : hgT('common.turn_off')}">${H.icon('mdi:power')}</button>` : '';
     return `<ha-card class="glass np ${pl ? 'pl' : ''} ${off ? 'off' : ''} ${act ? '' : 'idle'}" style="${col ? `--mt:${col}` : ''}">
       <div class="npbg"${pic ? ` style="background-image:url('${H.cssUrl(pic)}')" data-pic="${H.esc(pic)}"` : ''}></div>
-      <div class="nph"><button class="npc" data-act="more" data-e="${E}">${H.icon(tv ? 'mdi:television' : 'mdi:speaker')}<span>${H.esc(nm)}</span></button><span class="sp"></span>${pw}<button class="npc npic" data-act="more" data-e="${E}" aria-label="${hgTr('Szczegóły', 'Details')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:dots-horizontal')}</button></div>
+      <div class="nph"><button class="npc" data-act="more" data-e="${E}">${H.icon(tv ? 'mdi:television' : 'mdi:speaker')}<span>${H.esc(nm)}</span></button><span class="sp"></span>${pw}<button class="npc npic" data-act="more" data-e="${E}" aria-label="${hgT('common.details')}" title="${hgT('common.details')}">${H.icon('mdi:dots-horizontal')}</button></div>
       <div class="npm"><span class="npk">${H.esc(ctx)}</span><span class="npt">${H.esc(title)}</span>${sub ? `<span class="npa">${H.esc(sub)}</span>` : ''}</div>
       ${has ? `<div class="npg" data-dur="${dur}" data-pos="${pos.toFixed(1)}" data-t="${Date.now()}" data-pl="${pl ? 1 : 0}"><div class="npr"><i style="--p:${(pos / dur).toFixed(4)}"></i></div><div class="npn"><span>${hgNP.tm(pos)}</span><span>-${hgNP.tm(dur - pos)}</span></div></div>` : ''}
       ${ctl ? `<div class="npk2">${ctl}</div>` : ''}${vol || chips ? `<div class="npf">${vol}${chips ? `<div class="npx">${chips}</div>` : ''}</div>` : ''}</ha-card>`;

@@ -1,6 +1,6 @@
 /* ===================== LINK ===================== */
 class HGLinkCard extends HGBase {
-  defaults() { return { title: hgTr('Otwórz', 'Open'), subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
+  defaults() { return { title: hgT('common.open'), subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
@@ -17,4 +17,4 @@ b{ display:block; font-size:var(--fs-md); font-weight:400; } span{ display:block
   }
   onAct() { H.action(this, this._hass, this._config.action); }
 }
-hgReg('hg-link-card', HGLinkCard, 'Home Glass – Link', 'Kafel nawigacji / akcji');
+hgReg('hg-link-card', HGLinkCard, hgTLazy('cards.link.picker_name'), hgTLazy('cards.link.picker_description'));

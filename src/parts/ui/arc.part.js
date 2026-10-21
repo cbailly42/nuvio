@@ -13,4 +13,4 @@ hgUI.arc = (pct, o = {}) => { const n = o.ticks || 17, p = Math.max(0, Math.min(
   for (let i = 0; i < n; i++) { const a = Math.PI - (i / (n - 1)) * Math.PI, c = Math.cos(a), si = Math.sin(a);
     s += `<line class="${i <= on && p > 0 ? 'on' : ''}" x1="${(cx + c * r).toFixed(1)}" y1="${(cy - si * r).toFixed(1)}" x2="${(cx + c * R).toFixed(1)}" y2="${(cy - si * R).toFixed(1)}"/>`; }
   const a = Math.PI - (p / 100) * Math.PI;
-  return `<svg class="nv-arc" viewBox="0 0 200 104" role="img" aria-label="${H.esc(o.label || '')} ${Math.round(p)}%">${s}<circle cx="${(cx + Math.cos(a) * (R + 8)).toFixed(1)}" cy="${(cy - Math.sin(a) * (R + 8)).toFixed(1)}" r="5"/></svg>`; };
+  return `<svg class="nv-arc" viewBox="0 0 200 104" role="img" aria-label="${H.esc(o.label || '')} ${H.pct(Math.round(p))}">${s}<circle cx="${(cx + Math.cos(a) * (R + 8)).toFixed(1)}" cy="${(cy - Math.sin(a) * (R + 8)).toFixed(1)}" r="5"/></svg>`; };

@@ -9,9 +9,9 @@ class HGWebpageCard extends HGBase {
 `); }
   url() { const u = String(this._config.url || '').trim(); return /^(https?:\/\/|\/)/i.test(u) ? u : ''; }
   render() { const c = this._config, u = this.url();
-    if (!u) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Podaj adres strony (https://… albo /…)', 'Enter a page address (https://… or /…)')}</span></ha-card>`;
+    if (!u) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.webpage.enter_a_page_address')}</span></ha-card>`;
     const ar = String(c.aspect_ratio || '').match(/^(\d+(?:\.\d+)?)\s*[:x/]\s*(\d+(?:\.\d+)?)$/), st = c.height ? `height:${Math.max(80, +c.height || 0)}px` : ar ? `aspect-ratio:${ar[1]} / ${ar[2]}` : 'aspect-ratio:16 / 9';
-    return `<ha-card class="glass">${c.title ? hgUI.header(c.title, { icon: 'mdi:web', right: hgUI.iconBtn('mdi:open-in-new', 'open', hgTr('Otwórz w nowej karcie', 'Open in a new tab'), { bare: true, size: 'sm' }) }) : ''}<div class="fr" data-own style="${st}"></div></ha-card>`; }
+    return `<ha-card class="glass">${c.title ? hgUI.header(c.title, { icon: 'mdi:web', right: hgUI.iconBtn('mdi:open-in-new', 'open', hgT('cards.webpage.open_in_a_new'), { bare: true, size: 'sm' }) }) : ''}<div class="fr" data-own style="${st}"></div></ha-card>`; }
   /* ramka powstaje raz na adres: aktualizacje stanu jej nie przeładowują */
   afterRender() { const fr = this.$.querySelector('.fr'), u = this.url(); if (!fr || !u) return; const f = fr.querySelector('iframe'); if (f && f.dataset.u === u) return;
     const n = document.createElement('iframe'); n.dataset.u = u; n.src = u; n.loading = 'lazy'; n.referrerPolicy = 'no-referrer'; n.title = this._config.title || u;
@@ -19,4 +19,4 @@ class HGWebpageCard extends HGBase {
   onAct(a) { if (a === 'open') window.open(this.url(), '_blank', 'noopener'); }
   getGridOptions() { return { columns: 12, rows: 4 }; }
 }
-hgReg('hg-webpage-card', HGWebpageCard, hgTr('Nuvio – Strona WWW', 'Nuvio – Web page'), hgTr('Dowolny adres w ramce', 'Any address in a frame'));
+hgReg('hg-webpage-card', HGWebpageCard, hgTLazy('cards.webpage.picker_name'), hgTLazy('cards.webpage.picker_description'));

@@ -1,3 +1,5 @@
+[English](../development.md) · **Polski** · [Français](../fr/development.md)
+
 # Rozwój
 
 Jak budować, organizować i wydawać Nuvio. Zasady współpracy opisuje [CONTRIBUTING.md](../../CONTRIBUTING.md). Wróć do [README](../../README.pl.md).
@@ -8,7 +10,7 @@ Zasady interfejsu, które musi spełniać każda nowa funkcja, opisuje [DESIGN.m
 ```bash
 npm install              # raz: esbuild do minifikacji paczki
 python3 tools/build.py   # -> dist/nuvio.js
-python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu
+python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu; uruchamia kontrolę i18n
 ```
 
 ## Układ źródeł
@@ -24,12 +26,47 @@ python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretn
 
 Nową kartę dodajesz jako `src/parts/cards/<nazwa>-card.part.js` i dopisujesz do listy `CARDS` w `tools/build.py`. Kolejność ma znaczenie: kod wykonywany przy ładowaniu bundla (na przykład `class X extends Y`) może używać tylko tego, co definiuje wcześniejszy plik.
 
+## Tłumaczenia
+
+Każdy widoczny tekst jest w katalogu JSON, nigdy w kodzie. `src/locales/en.json` to katalog wzorcowy i język źródłowy; `pl.json`, `fr.json` i każdy dodany język mają te same klucze. Dodawanie języka opisuje [Konfiguracja](configuration.md#nowy-język).
+
+**Klucze.** Zagnieżdżony JSON, każdy segment w `snake_case`. Klucz opisuje rolę tekstu, a nie jego słowa (`cards.smartlock.default_title`, a nie `cards.smartlock.lock`). Jedna przestrzeń nazw na obszar:
+
+| Przestrzeń | Zawartość |
+|---|---|
+| `common.*` | teksty wspólne dla co najmniej trzech modułów (`common.save`, `common.cancel`) |
+| `nav.*` | nawigacja i tytuły widoków |
+| `wizard.*` | kreator pierwszego uruchomienia |
+| `edit.*`, `wall.*`, `backup.*`, `users.*`, `assist.*` … | jedna przestrzeń na moduł `hg-*.part.js` |
+| `ui.*`, `shared.*` | bloki `ui/` i `shared/` |
+| `cards.<karta>.*` | jedna karta (`cards.smartlock.hours_ago_one`) |
+| `states.*` | surowe stany Home Assistant |
+| `weather.*` | warunki pogodowe |
+| `accents.*`, `backgrounds.*` | nazwy kolorów akcentu i dołączonych teł |
+
+**Komunikaty.** Zmienne mają nazwy: `"Witaj, {name}!"`. Tłumaczenie zachowuje dokładnie zmienne tekstu angielskiego. Liczba mnoga to przyrostki klucza (`entities_one`, `entities_few`, `entities_many`, `entities_other`, także `_zero` i `_two`): formę wybiera `Intl.PluralRules(locale)` na podstawie parametru `count`, więc każdy język podaje formy, których wymagają jego reguły (angielski `_one` / `_other`, polski `_one` / `_few` / `_many` / `_other`, francuski `_one` / `_many` / `_other`). Po angielsku tekst z `{count}` musi być rozbity na formy liczby mnogiej.
+
+**API** (`src/parts/hg-i18n.part.js`, wszystko synchroniczne):
+
+| Wywołanie | Zastosowanie |
+|---|---|
+| `hgT('ns.key', params?)` | tekst w bieżącym języku |
+| `hgTLazy('ns.key', params?)` | obiekt rozwiązywany przy zamianie na tekst, dla tekstów definiowanych, zanim język jest znany |
+| `hgTO(obj, { prop: 'ns.key' })` | dodaje do `obj` gettery wywołujące `hgT` |
+| `hgTD('states.' + state, fallback)` | klucz dynamiczny, składany w czasie działania; `fallback`, gdy klucza nie ma |
+
+Klucze w `hgT`, `hgTLazy` i `hgTO` to literały tekstowe. Tylko `hgTD` składa klucze, i to wyłącznie pod prefiksami zadeklarowanymi w `DYN_PREFIXES` w `tools/i18n_compile.py` (`states.`, `weather.` i kilka tabel opcji kart); nowa tabela dynamiczna wymaga dopisania tam prefiksu. Brakujący tekst zastępuje angielski. Klucz statyczny, którego nie ma w `en.json`, zatrzymuje `tools/i18n_check.py` i budowanie, więc żaden klucz nie trafia do pakietu jako tekst; gdyby skompilowany numer nie miał tekstu angielskiego, widać `#<numer>` (celowo). `hgTD` zwraca wtedy `fallback`.
+
+**Budowanie.** Klucze istnieją tylko w źródłach. `tools/build.py` nadaje każdemu kluczowi statycznemu numer (posortowane klucze `en.json`), zamienia w bundlu `hgT('ns.key')` na `hgT(842)` (formy liczby mnogiej mają wspólny numer), kompiluje każdy katalog do tablicy indeksowanej (`dist/nuvio-locale-<kod>.<hash8>.json`, hash zawartości) i wbudowuje w core angielski oraz manifest języków (`code`, `name`, `locale`, `file`, opcjonalnie `flag` i `intro`). Pozostałe języki ładują się na żądanie. Skompilowany katalog pasuje tylko do core z tego samego budowania. Teksty w źródłach mogą mówić *Home Glass*; budowanie zamienia to na *Nuvio* w bundlu i w katalogach.
+
+**Kontrola.** `python3 tools/i18n_check.py` kończy się błędem (kod wyjścia 1), gdy klucz nie jest literałem, użytego klucza brak w `en.json`, klucz z `en.json` nie jest używany, widoczny tekst jest wpisany w kodzie, katalog ma niepoprawny JSON, zdublowany klucz, niepełne `_meta`, inne zmienne albo brakujące formy liczby mnogiej, albo gdy wymagany język (`en`, `pl`, `fr`) jest niekompletny. Tekst katalogu trafia na stronę jako HTML, więc odrzuca też znaczniki w tekście (`<b>`, `</…`, `<!--`; dozwolony jest symbol zastępczy małymi literami, np. `<id>`, który nie jest nazwą elementu HTML), atrybut zdarzenia `on…=`, prosty cudzysłów `"` poza angielskim i nazwę pliku katalogu, która nie jest kodem języka małymi literami (`fr`, `pt-br`). Inne języki mogą być niepełne i dostają tylko ostrzeżenie z pokryciem. Opcje: `--lang <kod>` wypisuje brakujące i przestarzałe klucze jednego języka, `--list` pokazuje wszystkie błędy, `--json` zwraca wynik jako JSON. `tools/guard.py` uruchamia ją w ramach swoich kontroli.
+
 Nie ma CI/CD: wydania i tagi buduje się lokalnie. `tools/release.sh X.Y.Z` podbija wersję (`package.json`, README), buduje, sprawdza `dist/nuvio.js` (`node --check`) i guard, robi commit `chore: release X.Y.Z`, tworzy adnotowany tag `vX.Y.Z`, wypycha `main` i tag oraz tworzy wydanie GitHub bez załączników (HACS instaluje wtedy płaski `dist/`):
 
 ```bash
 ./tools/release.sh 0.3.21   # czyste drzewo, zalogowane gh
 ```
 
-Przed wydaniem dopisz wpis w `CHANGELOG.md` i `CHANGELOG.pl.md`: skrypt aktualizuje tylko wersję w `package.json` i plakietkę wersji w plikach README.
+Przed wydaniem dopisz wpis w `CHANGELOG.md` i `CHANGELOG.pl.md` (`CHANGELOG.fr.md` uzupełnia współtwórca, zobacz [CONTRIBUTING.md](../../CONTRIBUTING.md)): skrypt aktualizuje tylko wersję w `package.json` i plakietkę wersji w plikach README.
 
 Sam tag ręcznie: `git fetch origin && git tag -a v2.12.0 origin/main -m "Nuvio 2.12.0" && git push origin v2.12.0`.

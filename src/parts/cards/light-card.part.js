@@ -1,6 +1,6 @@
 /* ===================== OŚWIETLENIE ===================== */
 class HGLightCard extends HGBase {
-  defaults() { return { title: hgTr('Oświetlenie', 'Lighting'), icon: 'mdi:lightbulb-outline', name: null }; }
+  defaults() { return { title: hgT('cards.light.lighting'), icon: 'mdi:lightbulb-outline', name: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; padding:var(--s2) var(--s3) var(--s3); }
@@ -29,12 +29,12 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const c = this._config, s = H.st(this._hass, c.entity);
     const on = s && s.state === 'on', un = !s || s.state === 'unavailable', p = this.pct();
     const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
-    const hd = `<div class="hd"><button class="ib" data-act="toggle" aria-label="${hgTr('Przełącz', 'Toggle')} ${H.esc(nm)}" title="${H.esc(nm)}" style="margin-left:calc(var(--k) * -4)">${H.icon(c.icon, 'ic' + (on ? ' on' : ''))}</button>
+    const hd = `<div class="hd"><button class="ib" data-act="toggle" aria-label="${hgT('cards.light.toggle')} ${H.esc(nm)}" title="${H.esc(nm)}" style="margin-left:calc(var(--k) * -4)">${H.icon(c.icon, 'ic' + (on ? ' on' : ''))}</button>
       <span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      <button class="ib" data-act="more" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
-    return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? hgTr(' – niedostępne', ' – unavailable') : ''}">${hd}
-      <div class="trk" role="slider" aria-label="${hgTr('Jasność', 'Brightness')} ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
-        <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : p + '%'}</span></div></ha-card>`;
+      <button class="ib" data-act="more" aria-label="${hgT('common.expand')}" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
+    return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? hgT('cards.light.unavailable') : ''}">${hd}
+      <div class="trk" role="slider" aria-label="${hgT('common.brightness')} ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
+        <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : H.pct(p)}</span></div></ha-card>`;
   }
   afterRender() {
     const t = this.$.querySelector('.trk'); if (!t || !this._once(t)) return;
@@ -54,7 +54,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       ev.preventDefault(); send(Math.max(0, Math.min(100, this.pct() + (ev.key === 'ArrowRight' ? 10 : -10))));
     });
   }
-  _paint(t) { const p = this._drag; t.querySelector('.fl').style.width = p + '%'; t.querySelector('.pc').textContent = p + '%'; t.setAttribute('aria-valuenow', p); }
+  _paint(t) { const p = this._drag; t.querySelector('.fl').style.width = p + '%'; t.querySelector('.pc').textContent = H.pct(p); t.setAttribute('aria-valuenow', p); }
   set hass(h) {
     const old = this._hass; this._hass = h;
     if (this._pending != null && old && this._config) { const s = H.st(h, this._config.entity), o = H.st(old, this._config.entity); if (s && o && s.last_updated !== o.last_updated) this._pending = null; }
@@ -68,4 +68,4 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-light-card', HGLightCard, hgTr('Home Glass – Oświetlenie', 'Home Glass – Light'), hgTr('Suwak jasności światła', 'Light brightness slider'));
+hgReg('hg-light-card', HGLightCard, hgTLazy('cards.light.picker_name'), hgTLazy('cards.light.picker_description'));

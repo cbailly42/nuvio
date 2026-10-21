@@ -15,12 +15,12 @@ class HGGlanceCard extends HGBase {
 @container (max-width: 220px){ .gl{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 `); }
   render() { const c = this._config, h = this._hass, L = (c.entities || []).map((x) => (typeof x === 'string' ? { entity: x } : x)).filter((x) => x && x.entity);
-    if (!L.length) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz encje', 'Choose entities')}</span></ha-card>`;
+    if (!L.length) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.glance.choose_entities')}</span></ha-card>`;
     const n = Math.round(+c.columns) || 0;
     return `<ha-card class="glass">${c.title ? hgUI.header(c.title) : ''}<div class="gl" style="${n ? `--nv-c:${Math.min(8, n)}` : ''}">${L.map((x) => { const s = H.st(h, x.entity), nm = x.name || H.name(h, x.entity), on = !!s && HG_ON_ST.includes(s.state);
       const ic = x.icon || (s && s.attributes.icon) || HG_DOM_ICON2[hgDom(x.entity)] || 'mdi:circle-outline';
-      return `<button class="gi ${s && H.ok(s) ? '' : 'un'}" data-act="more" data-e="${H.esc(x.entity)}" data-key="${H.esc(x.entity)}" aria-label="${H.esc(nm)}${s ? ', ' + H.esc(H.T(h, s)) : ''}"><span class="nv-ic ${on ? 'on' : ''}">${H.icon(ic)}</span>${c.show_name !== false ? `<b>${H.esc(nm)}</b>` : ''}${c.show_state !== false ? `<small>${s ? H.esc(H.T(h, s)) : hgTr('brak', 'missing')}</small>` : ''}</button>`; }).join('')}</div></ha-card>`; }
+      return `<button class="gi ${s && H.ok(s) ? '' : 'un'}" data-act="more" data-e="${H.esc(x.entity)}" data-key="${H.esc(x.entity)}" aria-label="${H.esc(nm)}${s ? ', ' + H.esc(H.T(h, s)) : ''}"><span class="nv-ic ${on ? 'on' : ''}">${H.icon(ic)}</span>${c.show_name !== false ? `<b>${H.esc(nm)}</b>` : ''}${c.show_state !== false ? `<small>${s ? H.esc(H.T(h, s)) : hgT('cards.glance.missing')}</small>` : ''}</button>`; }).join('')}</div></ha-card>`; }
   onAct(a, t) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: t.dataset.e }); }
   getGridOptions() { return { columns: 12, rows: 2 }; }
 }
-hgReg('hg-glance-card', HGGlanceCard, hgTr('Nuvio – Rzut oka', 'Nuvio – Glance'), hgTr('Kilka encji w rzędzie: ikona, nazwa i stan', 'Several entities in a row: icon, name and state'));
+hgReg('hg-glance-card', HGGlanceCard, hgTLazy('cards.glance.picker_name'), hgTLazy('cards.glance.picker_description'));

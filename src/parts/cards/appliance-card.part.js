@@ -10,6 +10,6 @@ class HGApplianceCard extends HGRoomCard {
   _changed() { return HGBase.prototype._changed.call(this); }
   render() { const h = this._hass, d = this._dev(), ents = this._devEnts(); this._a = { id: '_app', name: '', strip: [], ents };
     const out = ents.length ? this._devCard({ d: d || ents[0], ents }, this._a) : null;
-    return out || `<ha-card class="glass"><div class="empty"><b>${hgTr('Brak urządzenia', 'No device')}</b>${hgTr('Wybierz encję urządzenia w ustawieniach widżetu.', 'Pick an entity of the device in the widget settings.')}</div></ha-card>`; }
+    return out || `<ha-card class="glass"><div class="empty"><b>${hgT('cards.appliance.no_device')}</b>${hgT('cards.appliance.pick_an_entity_of')}</div></ha-card>`; }
 }
-hgReg('hg-appliance-card', HGApplianceCard, hgTr('Home Glass – Urządzenie AGD', 'Home Glass – Appliance'), hgTr('Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp', 'Washer, dryer, kettle and other devices: state, program, time left, progress'));
+hgReg('hg-appliance-card', HGApplianceCard, hgTLazy('cards.appliance.picker_name'), hgTLazy('cards.appliance.picker_description'));

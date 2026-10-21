@@ -1,11 +1,15 @@
-"""Smoke test Nuvio against a local HA (default http://127.0.0.1:8124). Usage: python tests/local_ha.py <token> [base] [tag]"""
-import sys, json, time, os
+"""Smoke test Nuvio against a local HA (default http://127.0.0.1:8124). Usage: python tests/local_ha.py <token> [base] [tag] [--locale pl-PL]"""
+import sys, json, time, os, argparse
 from playwright.sync_api import sync_playwright
-tok = sys.argv[1]; B = sys.argv[2] if len(sys.argv) > 2 else 'http://127.0.0.1:8124'; TAG = sys.argv[3] if len(sys.argv) > 3 else 'empty'
+_ap = argparse.ArgumentParser(description='Smoke test Nuvio against a local HA')
+_ap.add_argument('token'); _ap.add_argument('base', nargs='?', default='http://127.0.0.1:8124'); _ap.add_argument('tag', nargs='?', default='empty')
+_ap.add_argument('--locale', default='pl-PL', help='browser locale of the test contexts (e.g. pl-PL, en-US, fr-FR); default pl-PL')
+_a = _ap.parse_args()
+tok = _a.token; B = _a.base; TAG = _a.tag; LOCALE = _a.locale
 OUT = os.path.join(os.path.dirname(__file__), 'out') + '/'
 FIND = """()=>{let p=null;const f=r=>{for(const el of r.querySelectorAll('*')){if(el.tagName==='NUVIO-PAGE'&&el.isConnected&&el.getBoundingClientRect().width){p=el;return}if(el.shadowRoot)f(el.shadowRoot);if(p)return}};f(document);window.__np=p;return !!p}"""
 def ctx(b, W, H, sch, wiz=None):
-    c = b.new_context(service_workers='block', viewport={'width': W, 'height': H}, color_scheme=sch, has_touch=W < 600, is_mobile=W < 600, locale='pl-PL')
+    c = b.new_context(service_workers='block', viewport={'width': W, 'height': H}, color_scheme=sch, has_touch=W < 600, is_mobile=W < 600, locale=LOCALE)
     t = {'access_token': tok, 'token_type': 'Bearer', 'expires_in': 1800000000, 'hassUrl': B, 'clientId': B + '/', 'expires': int(time.time() * 1000) + 1800000000000, 'refresh_token': 'x'}
     c.add_init_script("localStorage.setItem('hassTokens',%s);window.__hgDryRun=%s;" % (json.dumps(json.dumps(t)), 'true' if wiz is None else 'false'))
     return c

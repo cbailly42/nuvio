@@ -1,3 +1,5 @@
+<p align="center"><a href="CHANGELOG.md">English</a> · <b>Polski</b> · <a href="CHANGELOG.fr.md">Français</a></p>
+
 # Lista zmian
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).

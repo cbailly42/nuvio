@@ -7,4 +7,4 @@ class HGFanCard extends HGArcCard {
     return `<div class="pm hide-s">${pm.map((m) => hgUI.pill(m.replace(/_/g, ' '), { act: 'pm', on: s.attributes.preset_mode === m, data: { m } })).join('')}</div>`; }
   onAct(a, t) { if (a === 'pm') return H.call(this._hass, 'fan', 'set_preset_mode', { entity_id: this._config.entity, preset_mode: t.dataset.m }); return super.onAct(a, t); }
 }
-hgReg('hg-fan-card', HGFanCard, hgTr('Nuvio – Wentylator', 'Nuvio – Fan'), hgTr('Prędkość na łuku i tryby', 'Speed on an arc and preset modes'));
+hgReg('hg-fan-card', HGFanCard, hgTLazy('cards.fan.picker_name'), hgTLazy('cards.fan.picker_description'));

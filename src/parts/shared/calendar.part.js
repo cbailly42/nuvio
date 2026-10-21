@@ -5,22 +5,26 @@ const hgTime = (d) => d.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: 
 const hgDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /* --- kalendarze: wspólne pobieranie (REST /api/calendars, tylko odczyt) --- */
+/* pamięć podręczna (5 min, klucz bez języka) trzyma tylko znaczniki: title null (bez tytułu), err 'unavailable' | 'fetch';
+   tekst w bieżącym języku przy rysowaniu: HGCal.title(e), HGCal.errText(r) */
 const HGCal = {
   cache: {},
+  title: (e) => e.title || hgT('shared.calendar.untitled'),
+  errText: (r) => (r.err === 'unavailable' ? hgT('common.state_unavailable_masc') : r.err ? hgT('shared.calendar.fetch_error') : ''),
   parse(e, cal) {
     const ad = !!(e.start && e.start.date && !e.start.dateTime);
     const s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime || e.start);
     const en = ad ? new Date((e.end && e.end.date ? e.end.date : e.start.date) + 'T00:00:00') : new Date((e.end && (e.end.dateTime || e.end)) || s);
-    return { title: e.summary || hgTr('(bez tytułu)', '(untitled)'), start: s, end: en, allDay: ad, loc: e.location || '', cal };
+    return { title: e.summary || null, start: s, end: en, allDay: ad, loc: e.location || '', cal };
   },
   async fetch(hass, cals, start, end) {
     const key = cals.map((c) => c.entity).join(',') + start.toISOString() + end.toISOString();
     const hit = this.cache[key]; if (hit && Date.now() - hit.t < 300000) return hit.p;
     const p = Promise.all(cals.map(async (c) => {
       const s = H.st(hass, c.entity);
-      if (!s || s.state === 'unavailable') return { cal: c, err: hgTr('niedostępny', 'unavailable'), ev: [] };
+      if (!s || s.state === 'unavailable') return { cal: c, err: 'unavailable', ev: [] };
       try { const r = await hass.callApi('GET', `calendars/${c.entity}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
-        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: hgTr('błąd pobierania', 'fetch error'), ev: [] }; }
+        return { cal: c, ev: r.map((e) => this.parse(e, c)) }; } catch (e) { return { cal: c, err: 'fetch', ev: [] }; }
     }));
     this.cache[key] = { t: Date.now(), p }; return p;
   },

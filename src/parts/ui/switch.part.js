@@ -6,4 +6,4 @@ hgUI.add(`
 .tg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 `);
 /* hgUI.switch(on, 'tog', 'Salon', disabled, data) */
-hgUI.switch = (on, act, label, disabled, data) => `<button class="tg ${on ? 'on' : ''}" type="button" role="switch" aria-checked="${!!on}" aria-label="${H.esc(label || hgTr('przełącz', 'toggle'))}"${hgUI.act(act, data)}${disabled ? ' disabled' : ''}><i></i></button>`;
+hgUI.switch = (on, act, label, disabled, data) => `<button class="tg ${on ? 'on' : ''}" type="button" role="switch" aria-checked="${!!on}" aria-label="${H.esc(label || hgT('ui.switch.toggle'))}"${hgUI.act(act, data)}${disabled ? ' disabled' : ''}><i></i></button>`;

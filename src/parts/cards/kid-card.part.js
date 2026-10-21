@@ -10,19 +10,19 @@ class HGKidCard extends HGBase {
 .li.mu .vl{ font-weight:500; opacity:.7; } .em{ opacity:.6; font-size:13px; } .li{ all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:10px; min-height:40px; padding:4px 2px; min-width:0; }
 .li + .li{ border-top:1px solid color-mix(in srgb, currentColor 8%, transparent); }`; }
   render() { const h = this._hass, c = this._config, k = this._kid();
-    if (!k) return `<ha-card class="glass">${hgHead('mdi:human-child', c.title || hgTr('Dziecko', 'Child'), '', false)}<div class="em">${hgTr('Brak danych dziecka.', 'No child data.')}</div></ha-card>`;
-    const st = k.present ? hgTr('W placówce', 'At facility') : hgTr('Poza placówką', 'Away');
+    if (!k) return `<ha-card class="glass">${hgHead('mdi:human-child', c.title || hgT('cards.kid.child'), '', false)}<div class="em">${hgT('cards.kid.no_child_data')}</div></ha-card>`;
+    const st = k.present ? hgT('common.at_facility') : hgT('cards.kid.away');
     const row = (ic, nm, vl, e, cls = '', sub = '') => `<button class="li ${cls}" data-act="more" data-e="${H.esc(e || '')}">${H.icon(ic)}<span class="nm">${H.esc(nm)}</span><span class="vl">${H.esc(vl)}${sub ? `<small>${H.esc(sub)}</small>` : ''}</span></button>`;
-    const none = hgTr('Brak', 'None'), rows = [
-      row('mdi:login', hgTr('Przyjście', 'Check-in'), k.inToday || k.lastIn || '--:--', k.ids.last_check_in || k.ids.present, k.inToday || k.lastIn ? '' : 'mu'),
-      row('mdi:logout', hgTr('Wyjście', 'Check-out'), k.outToday || k.lastOut || '--:--', k.ids.last_check_out || k.ids.present, k.outToday || k.lastOut ? '' : 'mu'),
-      k.ids.meals_today ? row('mdi:silverware-fork-knife', hgTr('Posiłki dziś', 'Meals today'), k.mealsOn ? k.meals : none, k.ids.meals_today, k.mealsOn ? '' : 'mu') : '',
-      k.unread != null ? row('mdi:bell-badge-outline', hgTr('Nieprzeczytane', 'Unread'), String(k.unread), k.ids.unread_feed, k.unread ? 'al' : 'mu') : '',
-      k.bill ? row('mdi:cash', hgTr('Rachunek', 'Bill'), k.billNum > 0 ? k.bill : hgTr('Opłacony', 'Paid'), k.ids.bill_to_pay, k.billNum > 0 ? (k.overdue ? 'od' : '') : 'mu',
-        k.billNum > 0 && k.due ? (k.overdue ? hgTr(`po terminie ${k.due}`, `overdue since ${k.due}`) : hgTr(`termin ${k.due}`, `due ${k.due}`)) : '') : ''].join('');
-    return `<ha-card class="glass">${hgHead(k.present ? 'mdi:human-child' : 'mdi:home-outline', c.title || k.name || hgTr('Dziecko', 'Child'), '', k.present, `<span class="cnt${k.present ? ' al' : ''}">${H.esc(st)}</span>`)}<div class="ls">${rows}</div></ha-card>`; }
+    const none = hgT('cards.kid.none'), rows = [
+      row('mdi:login', hgT('common.check_in'), k.inToday || k.lastIn || '--:--', k.ids.last_check_in || k.ids.present, k.inToday || k.lastIn ? '' : 'mu'),
+      row('mdi:logout', hgT('common.check_out'), k.outToday || k.lastOut || '--:--', k.ids.last_check_out || k.ids.present, k.outToday || k.lastOut ? '' : 'mu'),
+      k.ids.meals_today ? row('mdi:silverware-fork-knife', hgT('cards.kid.meals_today'), k.mealsOn ? k.meals : none, k.ids.meals_today, k.mealsOn ? '' : 'mu') : '',
+      k.unread != null ? row('mdi:bell-badge-outline', hgT('cards.kid.unread'), String(k.unread), k.ids.unread_feed, k.unread ? 'al' : 'mu') : '',
+      k.bill ? row('mdi:cash', hgT('cards.kid.bill'), k.billNum > 0 ? k.bill : hgT('cards.kid.paid'), k.ids.bill_to_pay, k.billNum > 0 ? (k.overdue ? 'od' : '') : 'mu',
+        k.billNum > 0 && k.due ? (k.overdue ? hgT('cards.kid.overdue_since', { date: k.due }) : hgT('cards.kid.due_date', { date: k.due })) : '') : ''].join('');
+    return `<ha-card class="glass">${hgHead(k.present ? 'mdi:human-child' : 'mdi:home-outline', c.title || k.name || hgT('cards.kid.child'), '', k.present, `<span class="cnt${k.present ? ' al' : ''}">${H.esc(st)}</span>`)}<div class="ls">${rows}</div></ha-card>`; }
   onAct(a, t) { if (a === 'more') hgMore(this, t.dataset.e); }
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-kid-card', HGKidCard, hgTr('Nuvio – Dziecko (LiveKid)', 'Nuvio – Child (LiveKid)'), hgTr('Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek', 'Presence at nursery or kindergarten, check-in, check-out, meals, news and bill'));
+hgReg('hg-kid-card', HGKidCard, hgTLazy('cards.kid.picker_name'), hgTLazy('cards.kid.picker_description'));

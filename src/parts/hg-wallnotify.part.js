@@ -60,15 +60,15 @@ const HG_NT_SS = `
       const msg = String(sd.message == null ? '' : sd.message); if (!msg || /^(clear_notification|request_location_update|command_)/.test(msg)) return;
       const L = this.ntList(); L.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), t: String(sd.title || ''), m: msg.slice(0, 600) });
       wr(LL, L.slice(0, 20)); this._ntNew = L[0].id; this.ntRender(); },
-    ntAgo(ts) { const m = Math.round((Date.now() - ts) / 60000); if (m < 1) return hgTr('teraz', 'now'); if (m < 60) return hgTr(`${m} min temu`, `${m} min ago`);
+    ntAgo(ts) { const m = Math.round((Date.now() - ts) / 60000); if (m < 1) return hgT('common.now'); if (m < 60) return hgT('common.ago_minutes', { m });
       return new Intl.DateTimeFormat(HG_LOC(), { hour: '2-digit', minute: '2-digit' }).format(new Date(ts)); },
     ntRender() { const box = this.el && this.el.querySelector('.nb-nt'); if (!box) return; const L = this.ntList();
       if (!L.length) { box.hidden = true; box.classList.remove('open'); box.innerHTML = ''; return; }
       box.hidden = false; const open = box.classList.contains('open'), n = L.length;
       box.classList.toggle('st2', !open && n === 2); box.classList.toggle('st3', !open && n > 2);
-      box.innerHTML = `<div class="nt-bar"><b>${H.esc(hgTr('Powiadomienia', 'Notifications'))}</b><span><button type="button" data-nt="less">${H.esc(hgTr('Pokaż mniej', 'Show less'))}</button><button type="button" class="x" data-nt="clr" aria-label="${H.esc(hgTr('Wyczyść', 'Clear'))}">${H.icon('mdi:close')}</button></span></div>
+      box.innerHTML = `<div class="nt-bar"><b>${H.esc(hgT('common.notifications'))}</b><span><button type="button" data-nt="less">${H.esc(hgT('wallnotify.show_less'))}</button><button type="button" class="x" data-nt="clr" aria-label="${H.esc(hgT('wallnotify.clear'))}">${H.icon('mdi:close')}</button></span></div>
         <div class="nt-st">${L.map((x, i) => `<article class="nt-c${x.id === this._ntNew ? ' new' : ''}${this._ntFull === x.id ? ' full' : ''}" data-id="${H.esc(x.id)}" style="--i:${i}"><header><i>${H.icon('mdi:home-assistant')}</i><span>Home Assistant</span><time>${H.esc(this.ntAgo(x.ts))}</time></header>${x.t ? `<b>${H.esc(x.t)}</b>` : ''}<p>${H.esc(x.m)}</p></article>`).join('')}</div>
-        ${n > 1 ? `<small class="nt-more">${H.esc(hgTr(`${n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'powiadomienia' : 'powiadomień'} · dotknij, aby rozwinąć`, `${n} notifications · tap to expand`))}</small>` : ''}`;
+        ${n > 1 ? `<small class="nt-more">${H.esc(hgT('wallnotify.more_count', { count: n }))}</small>` : ''}`;
       this._ntNew = null; },
     ntWire(el) { const box = el.querySelector('.nb-nt'); if (!box) return;
       /* dotknięcie stosu nie wybudza ekranu */
@@ -81,10 +81,10 @@ const HG_NT_SS = `
     ntHtml(h) { const sv = Object.keys((h.services && h.services.notify) || {}).filter((s) => !['send_message', 'persistent_notification', 'notify'].includes(s)).map((s) => 'notify.' + s);
       const en = Object.keys(h.states).filter((e) => e.startsWith('notify.')), S = this.ntSel(), all = [...new Set([...sv, ...en])];
       const lab = (k) => (h.states[k] ? H.name(h, k, k) : k.replace(/^notify\.(mobile_app_)?/, '').replace(/_/g, ' '));
-      const body = all.length ? this.pk('ntf', S.map((k) => ({ k, l: lab(k), s: k })), all.filter((k) => !S.includes(k)).map((k) => ({ k, l: lab(k), s: k })), { ic: 'mdi:message-badge-outline', add: hgTr('Dodaj usługę', 'Add service') })
-        : `<small>${H.esc(hgTr('Brak usług notify w Home Assistant.', 'No notify services in Home Assistant.'))}</small>`;
-      return `<div class="wl-f" role="group" aria-labelledby="wl-nt"><span id="wl-nt">${hgTr('Powiadomienia na tym urządzeniu', 'Notifications on this device')}</span>${body}
-        <small>${H.esc(hgTr('Wiadomości wysłane przez wybraną usługę notify pokażą się na wygaszaczu. Wybór dotyczy tylko tego urządzenia.', 'Messages sent through the selected notify service appear on the screensaver. The choice applies to this device only.'))}</small></div>`; },
+      const body = all.length ? this.pk('ntf', S.map((k) => ({ k, l: lab(k), s: k })), all.filter((k) => !S.includes(k)).map((k) => ({ k, l: lab(k), s: k })), { ic: 'mdi:message-badge-outline', add: hgT('wallnotify.add_service') })
+        : `<small>${H.esc(hgT('wallnotify.no_notify_services_in'))}</small>`;
+      return `<div class="wl-f" role="group" aria-labelledby="wl-nt"><span id="wl-nt">${hgT('wallnotify.notifications_on_this_device')}</span>${body}
+        <small>${H.esc(hgT('wallnotify.messages_sent_through_the'))}</small></div>`; },
     bdHtml(c, h) { const r = _bh.call(this, c, h); r.top += this.ntHtml(h); return r; },
     pkOp(id, op, k) { if (id !== 'ntf') return _po.call(this, id, op, k); const S = this.ntSel(); wr(LS, op === 'add' ? [...new Set([...S, k])] : S.filter((x) => x !== k)); this.ntSub(this.hass); return true; },
     tick(h, page) { _tk.call(this, h, page); this.ntSub(h); },

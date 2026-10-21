@@ -12,15 +12,15 @@ class HGStatCard extends HGBase {
   hrs() { return this._hrs || +this._config.hours || 24; }
   _extraSig() { return [this._hrs, this._k]; }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz czujnik liczbowy', 'Choose a numeric sensor')}</span></ha-card>`;
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.stat.choose_a_numeric_sensor')}</span></ha-card>`;
     this._load(); const u = s.attributes.unit_of_measurement || '', d = +c.decimals, v = parseFloat(s.state), R = this._r, f = (x) => (isFinite(x) ? H.fmt(x, d) + (u ? ' ' + u : '') : '–');
-    const per = [[24, '24 h'], [168, hgTr('7 dni', '7 days')], [720, hgTr('30 dni', '30 days')]], hr = this.hrs();
+    const per = [[24, '24 h'], [168, hgT('cards.stat.7_days')], [720, hgT('cards.stat.30_days')]], hr = this.hrs();
     const dl = R && isFinite(R.first) && isFinite(v) ? v - R.first : NaN;
-    const body = !R ? `<span class="nv-empty">${hgTr('Wczytywanie…', 'Loading…')}</span>` : !R.n ? `<span class="nv-empty">${hgTr('Brak historii w tym okresie', 'No history in this period')}</span>`
-      : `<div class="st"><div><small>${hgTr('Minimum', 'Minimum')}</small><b>${f(R.min)}</b></div><div><small>${hgTr('Średnia', 'Average')}</small><b>${f(R.avg)}</b></div><div><small>${hgTr('Maksimum', 'Maximum')}</small><b>${f(R.max)}</b></div><div><small>${hgTr('Zmiana', 'Change')}</small><b class="${dl > 0 ? 'up' : ''}">${isFinite(dl) ? (dl > 0 ? '+' : '') + f(dl) : '–'}</b></div></div>${R.pts.filter(isFinite).length > 1 ? `<div class="hide-s">${hgUI.spark(R.pts, { axis: [per.find((p) => p[0] === hr) ? '-' + per.find((p) => p[0] === hr)[1] : `-${hr} h`, hgTr('teraz', 'now')] })}</div>` : ''}`;
-    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || s.attributes.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgTr('Szczegóły', 'Details'), { bare: true, size: 'sm' }) })}
+    const body = !R ? `<span class="nv-empty">${hgT('common.loading')}</span>` : !R.n ? `<span class="nv-empty">${hgT('cards.stat.no_history_in_this')}</span>`
+      : `<div class="st"><div><small>${hgT('cards.stat.minimum')}</small><b>${f(R.min)}</b></div><div><small>${hgT('cards.stat.average')}</small><b>${f(R.avg)}</b></div><div><small>${hgT('cards.stat.maximum')}</small><b>${f(R.max)}</b></div><div><small>${hgT('cards.stat.change')}</small><b class="${dl > 0 ? 'up' : ''}">${isFinite(dl) ? (dl > 0 ? '+' : '') + f(dl) : '–'}</b></div></div>${R.pts.filter(isFinite).length > 1 ? `<div class="hide-s">${hgUI.spark(R.pts, { axis: [per.find((p) => p[0] === hr) ? '-' + per.find((p) => p[0] === hr)[1] : `-${hr} h`, hgT('common.now')] })}</div>` : ''}`;
+    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || s.attributes.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgT('common.details'), { bare: true, size: 'sm' }) })}
       ${hgUI.big(isFinite(v) ? v : null, { d, unit: u, caption: H.ok(s) ? '' : H.t(h, s) })}<div class="nv-mid">${body}</div>
-      <div class="pp" role="group" aria-label="${hgTr('Okres', 'Period')}">${per.map(([x, l]) => hgUI.pill(l, { act: 'per', on: x === hr, data: { h: x } })).join('')}</div></ha-card>`; }
+      <div class="pp" role="group" aria-label="${hgT('cards.stat.period')}">${per.map(([x, l]) => hgUI.pill(l, { act: 'per', on: x === hr, data: { h: x } })).join('')}</div></ha-card>`; }
   _load() { const c = this._config, hr = this.hrs(), k = c.entity + '|' + hr; if (this._lk === k && Date.now() - this._ld < 5 * 60e3) return; this._lk = k; this._ld = Date.now();
     hgHistory(this._hass, c.entity, hr).then((P) => { if (this._lk !== k) return; const t0 = Date.now() - hr * 3600e3, inP = P.filter((p) => p.t >= t0), base = P.filter((p) => p.t < t0).pop(), vs = (base ? [base, ...inP] : inP).map((p) => p.v);
       const pts = hgBuckets(P, hr, 48), ok = pts.filter(isFinite);
@@ -29,4 +29,4 @@ class HGStatCard extends HGBase {
   onAct(a, t) { if (a === 'per') { this._hrs = +t.dataset.h; this._r = null; return this.rerender(); } if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
   getGridOptions() { return { columns: 6, rows: 3 }; }
 }
-hgReg('hg-stat-card', HGStatCard, hgTr('Nuvio – Statystyka', 'Nuvio – Statistics'), hgTr('Minimum, średnia, maksimum i zmiana czujnika', 'Minimum, average, maximum and change of a sensor'));
+hgReg('hg-stat-card', HGStatCard, hgTLazy('cards.stat.picker_name'), hgTLazy('cards.stat.picker_description'));

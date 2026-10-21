@@ -108,7 +108,7 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
       const el = document.createElement('div'); el.className = 'glass dlg'; el.setAttribute('role', o.alert ? 'alertdialog' : 'dialog'); el.setAttribute('aria-modal', 'true');
       if (o.width) el.style.setProperty('--w', o.width + 'px'); if (o.bare) el.classList.add('bare');
       const id = 'd' + Math.random().toString(36).slice(2, 7); el.setAttribute('aria-labelledby', id + 't');
-      el.innerHTML = `${o.alert || o.bare ? '' : `<button class="x" data-v="__x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button>`}${o.title ? `<h2 id="${id}t">${esc(o.title)}</h2>` : ''}${o.text ? `<p class="tx">${esc(o.text)}</p>` : ''}${o.html || ''}
+      el.innerHTML = `${o.alert || o.bare ? '' : `<button class="x" data-v="__x" aria-label="${esc(hgT('common.close'))}"><ha-icon icon="mdi:close"></ha-icon></button>`}${o.title ? `<h2 id="${id}t">${esc(o.title)}</h2>` : ''}${o.text ? `<p class="tx">${esc(o.text)}</p>` : ''}${o.html || ''}
         ${(o.actions || []).length ? `<div class="acts">${o.actions.map((a, i) => `<button class="btn ${a.kind || ''}" data-i="${i}"${a.focus ? ' autofocus' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}`;
       let it = null;
       el.addEventListener('click', (e) => { const b = e.composedPath().find((n) => n.dataset && (n.dataset.i != null || n.dataset.v)); if (!b) return;
@@ -120,15 +120,15 @@ ha-icon{ display:inline-flex; --mdc-icon-size:100%; }
       if (o.mount) o.mount(el, (v) => it.close(v));
     }); },
     /* alert dialog: potwierdzenie; fokus na bezpiecznym przycisku, bez zamykania kliknięciem obok */
-    alert(title, text, ok = hgTr('Potwierdź', 'Confirm'), danger = true, info = false) {
-      return api.dialog({ alert: true, title, text, width: 380, actions: [...(info ? [] : [{ label: hgTr('Anuluj', 'Cancel'), value: false, focus: true }]), { label: ok, value: true, kind: danger ? 'danger' : 'primary', focus: info }] })
+    alert(title, text, ok = hgT('ui.overlay.confirm'), danger = true, info = false) {
+      return api.dialog({ alert: true, title, text, width: 380, actions: [...(info ? [] : [{ label: hgT('common.cancel'), value: false, focus: true }]), { label: ok, value: true, kind: danger ? 'danger' : 'primary', focus: info }] })
         .then((v) => v === true);
     },
     /* sheet({ title, html, side: 'auto'|'bottom'|'side' }) -> { el, body, close } ; przeciągnięcie w dół zamyka dolny */
     sheet(o = {}) {
       const side = o.side && o.side !== 'auto' ? o.side : (innerWidth < 700 ? 'bottom' : 'side');
       const el = document.createElement('div'); el.className = 'glass sheet ' + side; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', o.title || '');
-      el.innerHTML = `<div class="hd"><h2>${esc(o.title || '')}</h2><button class="x" aria-label="${esc(hgTr('Zamknij', 'Close'))}"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="bd">${o.html || ''}</div>`;
+      el.innerHTML = `<div class="hd"><h2>${esc(o.title || '')}</h2><button class="x" aria-label="${esc(hgT('common.close'))}"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="bd">${o.html || ''}</div>`;
       const it = open(el, { modal: true, onClose: o.onClose });
       el.querySelector('.x').addEventListener('click', () => it.close());
       if (side === 'bottom') { let y0 = null, dy = 0;

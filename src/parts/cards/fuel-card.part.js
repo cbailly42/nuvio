@@ -15,9 +15,9 @@ class HGFuelCard extends HGBase {
     const rows = L.map((f) => { const s = H.st(h, f.entity), v = s ? parseFloat(s.state) : NaN; if (!H.ok(s) || !isFinite(v)) return '';
       const ch = H.st(h, f.change), ca = (H.ok(ch) && ch.attributes) || {}, gr = Number(ca.roznica_gr), known = H.ok(ch) && isFinite(gr) && ca.cena_jutro != null, dir = !known || gr === 0 ? 'eq' : gr > 0 ? 'up' : 'dn';
       const price = `${v.toLocaleString(HG_LOC(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${f.unit || 'zł'}`;
-      const tom = !f.change ? '' : !known ? hgTr('jutro: brak danych', 'tomorrow: no data') : gr === 0 ? hgTr('jutro bez zmian', 'no change tomorrow') : `${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`;
+      const tom = !f.change ? '' : !known ? hgT('cards.fuel.tomorrow_no_data') : gr === 0 ? hgT('cards.fuel.no_change_tomorrow') : `${gr > 0 ? '+' : '−'}${Math.abs(gr)} gr`;
       return `<button class="fr" data-act="more" data-e="${H.esc(f.entity)}"><span class="fl">${H.esc(String(f.label || H.name(h, f.entity)).toUpperCase())}</span><b>${price}</b><span class="tr ${dir}">${f.change ? H.icon(dir === 'up' ? 'mdi:arrow-up' : dir === 'dn' ? 'mdi:arrow-down' : 'mdi:equal') : ''}${H.esc(tom)}</span></button>`; }).join('');
-    return `<ha-card class="glass"><div class="fu"><div class="fh">${H.icon(c.icon || 'mdi:gas-station-outline')}<span>${H.esc(c.title || c.name || hgTr('Ceny paliw', 'Fuel prices'))}</span></div>${rows || `<div class="em">${hgTr('Dodaj czujniki cen paliw.', 'Add fuel price sensors.')}</div>`}</div></ha-card>`; }
+    return `<ha-card class="glass"><div class="fu"><div class="fh">${H.icon(c.icon || 'mdi:gas-station-outline')}<span>${H.esc(c.title || c.name || hgT('common.fuel_prices'))}</span></div>${rows || `<div class="em">${hgT('cards.fuel.add_fuel_price_sensors')}</div>`}</div></ha-card>`; }
   onAct(a, t) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: t.dataset.e }); }
 }
-hgReg('hg-fuel-card', HGFuelCard, 'Home Glass – Ceny paliw', 'Ceny paliw z czujników (np. ceny maksymalne gov.pl) z trendem na jutro');
+hgReg('hg-fuel-card', HGFuelCard, hgTLazy('cards.fuel.picker_name'), hgTLazy('cards.fuel.picker_description'));

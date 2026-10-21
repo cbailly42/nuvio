@@ -94,7 +94,7 @@ const HG_GL_SS2 = `.ng-dm{ position:absolute; inset:0; background:${K(0,0,0,1)};
 Object.assign(HGWall, {
   glShell() { return `<style>${HG_WALL_SS}${HG_GL_SS}${HG_GL_SS2}</style><div class="ng"><div class="ng-st"><div class="ng-bg" aria-hidden="true"></div><div class="ng-sp" aria-hidden="true"></div>
     <div class="ng-top"><time class="ng-dt"></time><i class="ng-av" aria-hidden="true"></i></div><div class="ng-mid"></div><div class="ng-fam"></div>
-    <p class="nw-h"></p></div><div class="ng-dm" aria-hidden="true"></div><button type="button" class="ng-orb" aria-label="${H.esc(hgTr('Otwórz Assist', 'Open Assist'))}"></button></div>`; },
+    <p class="nw-h"></p></div><div class="ng-dm" aria-hidden="true"></div><button type="button" class="ng-orb" aria-label="${H.esc(hgT('common.open_assist'))}"></button></div>`; },
   glStart() { const el = this.el; el.classList.add('gl'); this._gk = {}; this.gl(true); },
   /* odświeżenie z HA co najwyżej co 2 s; force = od razu */
   gl(force) { const el = this.el, h = this.hass; if (!el || !h || !el.classList.contains('gl')) return;
@@ -112,9 +112,9 @@ Object.assign(HGWall, {
     const me = h.user && Object.keys(h.states).find((e) => e.startsWith('person.') && h.states[e].attributes.user_id === h.user.id), pic = me && h.states[me].attributes.entity_picture;
     const av = root.querySelector('.ng-av'); av.hidden = !G.top.av; av.style.backgroundImage = pic ? `url("${pic}")` : ''; av.textContent = pic ? '' : ((h.user && h.user.name) || '?')[0].toUpperCase();
     const P = G.fam.on ? this.glPeople(h, G) : [];
-    this.glPut(root, '.ng-fam', P.length ? `${hgTr('Rodzina', 'Family')}<span>${P.map((e) => { const a = h.states[e].attributes, aw = G.fam.grey && h.states[e].state !== 'home', n = a.friendly_name || e;
+    this.glPut(root, '.ng-fam', P.length ? `${hgT('wallglass.family')}<span>${P.map((e) => { const a = h.states[e].attributes, aw = G.fam.grey && h.states[e].state !== 'home', n = a.friendly_name || e;
       return `<i class="${aw ? 'aw' : ''}" title="${H.esc(n)}"${a.entity_picture ? ` style="background-image:url(&quot;${H.esc(a.entity_picture)}&quot;)"` : ''}>${a.entity_picture ? '' : H.esc((n[0] || '?').toUpperCase())}</i>`; }).join('')}</span>` : '');
-    const hi = root.querySelector('.nw-h'); if (!root.closest('.nw.lk')) hi.textContent = G.hint.t || hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake');
+    const hi = root.querySelector('.nw-h'); if (!root.closest('.nw.lk')) hi.textContent = G.hint.t || hgT('common.touch_to_wake');
     let mid = '';
     { const tf = this.gtf(G), parts = tf.formatToParts(d), t = parts.filter((x) => x.type !== 'dayPeriod').map((x) => x.value).join('').trim(), ap = (parts.find((x) => x.type === 'dayPeriod') || {}).value;
       const wid = Object.keys(h.states).find((e) => e.startsWith('weather.')), w = wid && h.states[wid];
@@ -123,8 +123,8 @@ Object.assign(HGWall, {
       mid = `<div class="ng-mn${G.min.pos === 'center' ? ' c' : ''}" style="--cs:${G.min.cs}"><div class="ng-mt">${H.esc(t)}${ap ? `<small>${H.esc(ap)}</small>` : ''}</div>${G.min.date ? `<div class="ng-md">${H.esc(this.gdate(G, d))}</div>` : ''}
         <div class="ng-mr">${G.min.wx && w && H.ok(w) ? `<div class="ng-mw"><img src="${H.esc(this.gimg(HG_GL_WX[w.state] || 'partly'))}" alt=""><div><b>${H.esc(H.fmt(parseFloat(w.attributes.temperature), 0))}°</b><small>${H.esc(typeof HGWx !== 'undefined' && HGWx.cn ? HGWx.cn(w.state) : w.state)}</small></div></div>` : ''}
         ${(this.kidList ? this.kidList(h) : []).map((k) => { const v = this.kidView(h, k), tm = (l, x) => `<div><b class="${x ? '' : 'mu'}">${H.esc(x || '--:--')}</b><small>${H.esc(l)}</small></div>`;
-          return `<div class="ng-mk"><div class="ng-kh"><b>${H.esc(v.name)}</b>${this.kidPill(v, 'ng-kp')}</div><div class="ng-kt">${tm(hgTr('Przyjście', 'Check-in'), v.inT)}${tm(hgTr('Wyjście', 'Check-out'), v.outT)}</div>
-            ${v.next ? `<div class="ng-kn"><b>${H.esc(v.next.t + '  ' + v.next.title)}</b>${v.next.rel ? `<em>${H.esc(v.next.rel)}</em>` : ''}</div>${v.rest.length ? `<small class="ng-kr">${H.esc(hgTr('Potem ', 'Then ') + v.rest.map((x) => x.t + ' ' + x.title).join(', '))}</small>` : ''}` : `<small class="ng-kr">${H.esc(v.note)}</small>`}</div>`; }).join('')}</div>
+          return `<div class="ng-mk"><div class="ng-kh"><b>${H.esc(v.name)}</b>${this.kidPill(v, 'ng-kp')}</div><div class="ng-kt">${tm(hgT('common.check_in'), v.inT)}${tm(hgT('common.check_out'), v.outT)}</div>
+            ${v.next ? `<div class="ng-kn"><b>${H.esc(v.next.t + '  ' + v.next.title)}</b>${v.next.rel ? `<em>${H.esc(v.next.rel)}</em>` : ''}</div>${v.rest.length ? `<small class="ng-kr">${H.esc(hgT('wallglass.then_items', { items: v.rest.map((x) => x.t + ' ' + x.title).join(', ') }))}</small>` : ''}` : `<small class="ng-kr">${H.esc(v.note)}</small>`}</div>`; }).join('')}</div>
         ${G.min.np && M ? `<div class="ng-mp"><i${art ? ` style="background-image:url(&quot;${H.esc(art)}&quot;)"` : ''}>${art ? '' : H.icon('mdi:music-note')}</i><div><b>${H.esc(M.media_title)}</b><small>${H.esc(M.media_artist || H.name(h, mp, ''))}</small></div></div>` : ''}</div>`; }
     this.glPut(root, '.ng-mid', mid); },
   /* dotknięcie w nakładce: true = obsłużone (nie budzi ekranu) */
@@ -163,36 +163,36 @@ const HG_GL_CSS = `
 `;
 Object.assign(HGWall, {
   /* ---- arkusz Wygląd > Wygaszacz, wariant „Szkło” ---- */
-  glHtml(c, h) { const G = this.gget(), L = (pl, en) => H.esc(hgTr(pl, en));
-    const seg = (path, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, pl, en]) => `<button type="button" data-hge="wl-g-s" data-v="${H.esc(path + '=' + k)}" aria-pressed="${String(cur) === String(k)}">${L(pl, en)}</button>`).join('')}</div>`;
-    const sw = (path, on, pl, en, spl, sen) => `<button type="button" class="wl-sw" role="switch" data-hge="wl-g-b" data-v="${H.esc(path)}" aria-checked="${!!on}"><span>${L(pl, en)}${spl ? `<small>${L(spl, sen)}</small>` : ''}</span><i aria-hidden="true"></i></button>`;
-    const rg = (path, v, mi, mx, st, pl, en, fmt) => `<div class="wl-f"><span>${L(pl, en)}<em class="wg-rv">${H.esc(fmt(v))}</em></span><input class="lk-rg" type="range" min="${mi}" max="${mx}" step="${st}" name="wg:${path}" value="${v}" data-fmt="${fmt === this._pc ? 'pc' : fmt === this._px ? 'px' : 'x'}" style="--v:${((v - mi) / (mx - mi)) * 100}%" aria-label="${L(pl, en)}"></div>`;
-    let s = `<div class="wl-f"><span>${L('Podgląd na żywo', 'Live preview')}</span>
-      <div class="wg-pv" aria-label="${L('Podgląd na żywo', 'Live preview')}" role="img">${this.glShell().replace(/^<style>[\s\S]*?<\/style>/, '')}</div></div>`;
-    s += `<div class="wg-h">${L('Zegar', 'Clock')}</div><div class="wl-f"><span>${L('Format', 'Format')}</span>${seg('min.h12', [['auto', 'Jak w HA', 'As in HA'], ['24', '24 h', '24 h'], ['12', '12 h', '12 h']], G.min.h12)}</div>
-      ${rg('min.cs', G.min.cs, 0.6, 1.4, 0.1, 'Wielkość zegara', 'Clock size', this._pc)}<div class="wl-f"><span>${L('Położenie', 'Position')}</span>${seg('min.pos', [['left', 'Z lewej', 'Left'], ['center', 'Na środku', 'Centre']], G.min.pos)}</div>
-      ${sw('min.date', G.min.date, 'Data', 'Date')}${sw('min.wx', G.min.wx, 'Pogoda', 'Weather')}${sw('min.np', G.min.np, 'Teraz gra', 'Now playing')}`;
+  glHtml(c, h) { const G = this.gget(), L = (t) => H.esc(t);
+    const seg = (path, list, cur) => `<div class="wl-seg" style="--n:${list.length}">${list.map(([k, t]) => `<button type="button" data-hge="wl-g-s" data-v="${H.esc(path + '=' + k)}" aria-pressed="${String(cur) === String(k)}">${L(t)}</button>`).join('')}</div>`;
+    const sw = (path, on, t, sub) => `<button type="button" class="wl-sw" role="switch" data-hge="wl-g-b" data-v="${H.esc(path)}" aria-checked="${!!on}"><span>${L(t)}${sub ? `<small>${L(sub)}</small>` : ''}</span><i aria-hidden="true"></i></button>`;
+    const rg = (path, v, mi, mx, st, t, fmt) => `<div class="wl-f"><span>${L(t)}<em class="wg-rv">${H.esc(fmt(v))}</em></span><input class="lk-rg" type="range" min="${mi}" max="${mx}" step="${st}" name="wg:${path}" value="${v}" data-fmt="${fmt === this._pc ? 'pc' : fmt === this._px ? 'px' : 'x'}" style="--v:${((v - mi) / (mx - mi)) * 100}%" aria-label="${L(t)}"></div>`;
+    let s = `<div class="wl-f"><span>${L(hgT('wallglass.live_preview'))}</span>
+      <div class="wg-pv" aria-label="${L(hgT('wallglass.live_preview'))}" role="img">${this.glShell().replace(/^<style>[\s\S]*?<\/style>/, '')}</div></div>`;
+    s += `<div class="wg-h">${L(hgT('wallglass.clock'))}</div><div class="wl-f"><span>${L(hgT('wallglass.clock_format'))}</span>${seg('min.h12', [['auto', hgT('wallglass.clock_format_as_in_ha')], ['24', '24 h'], ['12', '12 h']], G.min.h12)}</div>
+      ${rg('min.cs', G.min.cs, 0.6, 1.4, 0.1, hgT('wallglass.clock_size'), this._pc)}<div class="wl-f"><span>${L(hgT('wallglass.position'))}</span>${seg('min.pos', [['left', hgT('wallglass.position_left')], ['center', hgT('wallglass.position_centre')]], G.min.pos)}</div>
+      ${sw('min.date', G.min.date, hgT('wallglass.show_date'))}${sw('min.wx', G.min.wx, hgT('common.weather'))}${sw('min.np', G.min.np, hgT('wallglass.now_playing'))}`;
     const B = G.bg, gal = (typeof hgBgList === 'function' ? hgBgList() : []).map((x) => [x[0] || HG_ASSET + 'nuvio-bg-default-wide.webp', x[1], x[3] || x[0] || HG_ASSET + 'nuvio-bg-default-wide.webp']).slice(0, 18);
-    s += `<div class="wg-h">${L('Tło', 'Background')}</div><div class="wl-f"><span>${L('Gradient', 'Gradient')}</span><div class="wg-cl">${[['c1', 'Góra', 'Top'], ['c2', 'Dół', 'Bottom'], ['c3', 'Poświata', 'Glow']].map(([k, pl, en]) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${L(pl, en)}</label>`).join('')}</div></div>
-      ${sw('bg.orb', B.orb, 'Kula asystenta', 'Assistant orb')}${B.orb ? `${sw('bg.orbA', B.orbA, 'Dotknięcie kuli otwiera Assist', 'Tapping the orb opens Assist', 'Wybudza ekran i od razu pokazuje okno Assist', 'Wakes the screen and opens the Assist dialog')}<div class="wl-f"><span>${L('Kolory kuli', 'Orb colours')}</span><div class="wg-cl">${['o1', 'o2'].map((k, i) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${i + 1}</label>`).join('')}</div></div>${rg('bg.oi', B.oi, 0, 1, 0.05, 'Intensywność', 'Intensity', this._pc)}` : ''}
-      ${sw('bg.sph', B.sph, 'Sfera w tle', 'Background sphere')}
-      <div class="wl-f"><span>${L('Własne zdjęcie', 'Own image')}</span><div class="wg-im"><button type="button" data-hge="wl-g-s" data-v="bg.img=" aria-pressed="${!B.img}">${L('Gradient', 'Gradient')}</button>${gal.map(([u, n, th]) => `<button type="button" class="bg" data-hge="wl-g-s" data-v="${H.esc('bg.img=' + u)}" aria-pressed="${B.img === u}" title="${H.esc(n)}"><img src="${H.esc(th)}" alt="${H.esc(n)}" loading="lazy"></button>`).join('')}</div>
-        <div class="wg-row" style="margin-top:6px"><button type="button" class="wl-tb" data-hge="wl-g-file" data-v="@bg">${H.icon('mdi:upload')}<span>${L('Prześlij', 'Upload')}</span></button></div></div>
-      ${sw('bg.night', B.night, 'Ciemniej w nocy', 'Dimmer at night', 'Po zachodzie słońca', 'After sunset')}${B.night ? rg('bg.nd', B.nd, 0, 0.8, 0.05, 'Przyciemnienie nocne', 'Night dimming', this._pc) : ''}`;
-    const T = G.top; s += `<div class="wg-h">${L('Górny pasek', 'Top bar')}</div><div class="wl-f"><span>${L('Format daty', 'Date format')}</span>${seg('top.df', [['long', 'Długi', 'Long'], ['short', 'Krótki', 'Short'], ['num', 'Liczbowy', 'Numeric']], T.df)}</div>
-      ${sw('top.av', T.av, 'Awatar', 'Avatar')}`;
+    s += `<div class="wg-h">${L(hgT('wallglass.background'))}</div><div class="wl-f"><span>${L(hgT('wallglass.background_gradient'))}</span><div class="wg-cl">${[['c1', hgT('wallglass.gradient_top')], ['c2', hgT('wallglass.gradient_bottom')], ['c3', hgT('wallglass.gradient_glow')]].map(([k, t]) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${L(t)}</label>`).join('')}</div></div>
+      ${sw('bg.orb', B.orb, hgT('wallglass.assistant_orb'))}${B.orb ? `${sw('bg.orbA', B.orbA, hgT('wallglass.orb_opens_assist'), hgT('wallglass.orb_opens_assist_hint'))}<div class="wl-f"><span>${L(hgT('wallglass.orb_colours'))}</span><div class="wg-cl">${['o1', 'o2'].map((k, i) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${i + 1}</label>`).join('')}</div></div>${rg('bg.oi', B.oi, 0, 1, 0.05, hgT('wallglass.intensity'), this._pc)}` : ''}
+      ${sw('bg.sph', B.sph, hgT('wallglass.background_sphere'))}
+      <div class="wl-f"><span>${L(hgT('wallglass.own_image'))}</span><div class="wg-im"><button type="button" data-hge="wl-g-s" data-v="bg.img=" aria-pressed="${!B.img}">${L(hgT('wallglass.background_gradient'))}</button>${gal.map(([u, n, th]) => `<button type="button" class="bg" data-hge="wl-g-s" data-v="${H.esc('bg.img=' + u)}" aria-pressed="${B.img === u}" title="${H.esc(n)}"><img src="${H.esc(th)}" alt="${H.esc(n)}" loading="lazy"></button>`).join('')}</div>
+        <div class="wg-row" style="margin-top:6px"><button type="button" class="wl-tb" data-hge="wl-g-file" data-v="@bg">${H.icon('mdi:upload')}<span>${L(hgT('wallglass.upload'))}</span></button></div></div>
+      ${sw('bg.night', B.night, hgT('wallglass.dimmer_at_night'), hgT('wallglass.after_sunset'))}${B.night ? rg('bg.nd', B.nd, 0, 0.8, 0.05, hgT('wallglass.night_dimming'), this._pc) : ''}`;
+    const T = G.top; s += `<div class="wg-h">${L(hgT('wallglass.top_bar'))}</div><div class="wl-f"><span>${L(hgT('wallglass.date_format'))}</span>${seg('top.df', [['long', hgT('wallglass.date_long')], ['short', hgT('wallglass.date_short')], ['num', hgT('wallglass.date_numeric')]], T.df)}</div>
+      ${sw('top.av', T.av, hgT('wallglass.avatar'))}`;
     const F = G.fam, P = Object.keys(h.states).filter((e) => e.startsWith('person.')).sort();
-    s += `<div class="wg-h">${L('Rodzina', 'Family')}</div>${sw('fam.on', F.on, 'Pokaż domowników', 'Show household')}${F.on ? `${this.pk('glf', (F.who.length ? F.who : P).map((e) => ({ k: e, l: H.name(h, e, e), s: e, ic: 'mdi:account', fix: !F.who.length })), P.filter((e) => F.who.length && !F.who.includes(e)).map((e) => ({ k: e, l: H.name(h, e, e), s: e, ic: 'mdi:account' })), { add: hgTr('Dodaj osobę', 'Add person') })}
-      ${F.who.length ? `<button type="button" class="wl-tb" data-hge="wl-g-s" data-v="fam.who=*">${H.icon('mdi:account-multiple')}<span>${L('Wszyscy', 'Everyone')}</span></button>` : `<button type="button" class="wl-tb" data-hge="wl-g-s" data-v="fam.who=+">${H.icon('mdi:account-edit-outline')}<span>${L('Wybierz osoby', 'Choose people')}</span></button>`}${sw('fam.grey', F.grey, 'Szare poza domem', 'Grey when away')}` : ''}`;
-    s += `<div class="wg-h">${L('Napis i ruch', 'Hint and motion')}</div>${sw('hint.on', G.hint.on, 'Napis na dole', 'Bottom hint')}${G.hint.on ? `<span class="hs-s">${H.icon('mdi:format-text')}<input class="hs-in" name="wg:hint.t" value="${H.esc(G.hint.t)}" maxlength="60" placeholder="${L('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake')}" aria-label="${L('Tekst napisu', 'Hint text')}"></span>` : ''}
-      <div class="wl-f"><span>${L('Animacje', 'Motion')}</span>${seg('rm', [['auto', 'Jak w systemie', 'As system'], ['on', 'Ograniczone', 'Reduced']], G.rm)}</div><small class="lk-hn">${L('Opóźnienie startu ustawisz wyżej: „Włącz po bezczynności”.', 'Set the start delay above: “Start after inactivity”.')}</small>
+    s += `<div class="wg-h">${L(hgT('wallglass.family'))}</div>${sw('fam.on', F.on, hgT('wallglass.show_household'))}${F.on ? `${this.pk('glf', (F.who.length ? F.who : P).map((e) => ({ k: e, l: H.name(h, e, e), s: e, ic: 'mdi:account', fix: !F.who.length })), P.filter((e) => F.who.length && !F.who.includes(e)).map((e) => ({ k: e, l: H.name(h, e, e), s: e, ic: 'mdi:account' })), { add: hgT('wallglass.add_person') })}
+      ${F.who.length ? `<button type="button" class="wl-tb" data-hge="wl-g-s" data-v="fam.who=*">${H.icon('mdi:account-multiple')}<span>${L(hgT('wallglass.everyone'))}</span></button>` : `<button type="button" class="wl-tb" data-hge="wl-g-s" data-v="fam.who=+">${H.icon('mdi:account-edit-outline')}<span>${L(hgT('wallglass.choose_people'))}</span></button>`}${sw('fam.grey', F.grey, hgT('wallglass.grey_when_away'))}` : ''}`;
+    s += `<div class="wg-h">${L(hgT('wallglass.hint_and_motion'))}</div>${sw('hint.on', G.hint.on, hgT('wallglass.bottom_hint'))}${G.hint.on ? `<span class="hs-s">${H.icon('mdi:format-text')}<input class="hs-in" name="wg:hint.t" value="${H.esc(G.hint.t)}" maxlength="60" placeholder="${L(hgT('common.touch_to_wake'))}" aria-label="${L(hgT('wallglass.hint_text'))}"></span>` : ''}
+      <div class="wl-f"><span>${L(hgT('wallglass.motion'))}</span>${seg('rm', [['auto', hgT('wallglass.motion_as_system')], ['on', hgT('wallglass.motion_reduced')]], G.rm)}</div><small class="lk-hn">${L(hgT('wallglass.start_delay_hint'))}</small>
       <input type="file" accept="image/*" name="wg-file" hidden>`;
     return s; },
   /* galeria wygaszaczy (zamiast przełącznika): kafle z żywym podglądem */
-  GAL: [['photo', 'Zegar na zdjęciu', 'Clock on photo'], ['board', 'Tablica', 'Board'], ['glass:minimal', 'Minimal', 'Minimal']],
+  GAL: [['photo', hgTLazy('wallglass.gallery.photo')], ['board', hgTLazy('wallglass.gallery.board')], ['glass:minimal', hgTLazy('wallglass.gallery.minimal')]],
   galHtml(style) { const cur = style === 'glass' ? 'glass:' + this.gget().v : style;
-    return `<style>${HG_GL_SS}${HG_GL_SS2}${HG_GL_CSS}</style><div class="wg-gal" role="radiogroup" aria-label="${H.esc(hgTr('Wygaszacze', 'Screensavers'))}">${this.GAL.map(([k, pl, en]) => `<button type="button" class="wg-gt" role="radio" data-hge="wl-g-gal" data-v="${k}" aria-checked="${cur === k}">
-      <span class="wg-gp" data-gp="${k}"><span class="wg-gs" aria-hidden="true"></span></span><span class="wg-gl">${cur === k ? H.icon('mdi:check-circle') : ''}${H.esc(hgTr(pl, en))}</span></button>`).join('')}</div>`; },
+    return `<style>${HG_GL_SS}${HG_GL_SS2}${HG_GL_CSS}</style><div class="wg-gal" role="radiogroup" aria-label="${H.esc(hgT('wallglass.screensavers'))}">${this.GAL.map(([k, t]) => `<button type="button" class="wg-gt" role="radio" data-hge="wl-g-gal" data-v="${k}" aria-checked="${cur === k}">
+      <span class="wg-gp" data-gp="${k}"><span class="wg-gs" aria-hidden="true"></span></span><span class="wg-gl">${cur === k ? H.icon('mdi:check-circle') : ''}${H.esc(t)}</span></button>`).join('')}</div>`; },
   /* każdy kafel to prawdziwy wygaszacz w rozmiarze ekranu, pomniejszony transformacją (position:fixed liczy się wtedy względem kafla) */
   galWire(S, h) { const W = innerWidth, Hh = innerHeight, G0 = this.gget(), keep = this.el, d = new Date();
     for (const g of S.querySelectorAll('[data-gp]')) { const k = g.dataset.gp, box = g.querySelector('.wg-gs'), r = g.getBoundingClientRect(); if (!r.width) continue; const sc = Math.min(r.width / W, r.height / Hh);   /* cały ekran w kaflu 16:10, bez przycinania */
@@ -204,12 +204,12 @@ Object.assign(HGWall, {
         else if (this.XS && this.XS.some((x) => x[0] === k)) { el.innerHTML = this.xsShell(k); el.classList.add('xs'); el.dataset.xs = k; const bg = el.querySelector('.nw-bg'); if (bg) { bg.classList.add('on'); bg.style.backgroundImage = this.imgs()[0]; }
           const q = this.hass; this.hass = h; this.xsDraw(); this.hass = q; }
         else if (k === 'board' && this.bdShell) { el.innerHTML = this.bdShell(); el.classList.add('bd'); this._bdk = {}; const q = this.hass; this.hass = h; this.bd(true); this.hass = q; }
-        else { el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg on" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div><div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
+        else { el.innerHTML = `<style>${HG_WALL_SS}</style><div class="nw-bg on" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div><div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`;
           el.querySelector('.nw-bg').style.backgroundImage = this.imgs()[0]; const l = h && h.locale ? h.locale.time_format : null;
           el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {})).format(d);
           el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d); const q = this.hass; this.hass = h; this.wx(); this.hass = q; } }
       catch (e) { /* podgląd pomocniczy */ } finally { this.el = keep; } } },
-  _pc(v) { return Math.round(v * 100) + '%'; }, _px(v) { return v + ' px'; },
+  _pc(v) { return H.pct(Math.round(v * 100)); }, _px(v) { return v + ' px'; },
   /* edytor jednej karty */
 
   gpatch(path, val) { const [a, b, c] = path.split('.'); if (!b) return this.gset({ [a]: val }); const G = this.gget(); if (c != null) { const arr = (G[a][b] || []).slice(); arr[Number(c)] = val; return this.gset({ [a]: { [b]: arr } }); } this.gset({ [a]: { [b]: val } }); },
@@ -225,10 +225,10 @@ Object.assign(HGWall, {
     else if (a === 'wl-g-file') { const S = b.closest('section') || p._eSheetEl, f = S && S.querySelector('[name=wg-file]'); if (f) { f.dataset.tg = v; f.click(); } return true; }
 
     p._eLook(); return true; },
-  glUpload(p, f, tg) { const h = p._hass; if (!f || !h || !h.fetchWithAuth) return p._eToast(hgTr('Brak sesji, nie można przesłać', 'No session, cannot upload'));
-    const fd = new FormData(); fd.append('file', f, f.name); p._eToast(hgTr('Przesyłanie…', 'Uploading…'));
+  glUpload(p, f, tg) { const h = p._hass; if (!f || !h || !h.fetchWithAuth) return p._eToast(hgT('wallglass.no_session_cannot_upload'));
+    const fd = new FormData(); fd.append('file', f, f.name); p._eToast(hgT('wallglass.uploading'));
     h.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => { const u = `/api/image/serve/${j.id}/original`;
-      this.gpatch('bg.img', u); p._eToast(hgTr('Obraz zapisany', 'Image saved')); p._eLook(); }, (e) => p._eToast(hgTr('Nie udało się przesłać (', 'Upload failed (') + e + ')')); },
+      this.gpatch('bg.img', u); p._eToast(hgT('wallglass.image_saved')); p._eLook(); }, (e) => p._eToast(hgT('wallglass.upload_failed', { error: e }))); },
   /* podglądy rysują się dopiero, gdy mają rozmiar: karta Wygaszacz bywa ukryta (inna zakładka Ustawień) w chwili renderu,
      więc ResizeObserver rysuje je przy pierwszym pokazaniu i przeskalowuje przy zmianie szerokości */
   glWire(p, S) { const h = p._hass; this.hass = this.hass || h; if (S._wgRo) { S._wgRo.disconnect(); S._wgRo = null; }

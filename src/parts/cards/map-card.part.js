@@ -2,7 +2,8 @@
 class HGMapCard extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
   setConfig(c) {
-    this._config = Object.assign({ title: hgTr('Mapa', 'Map'), icon: 'mdi:map-outline', entities: [], theme_mode: 'dark', hours_to_show: 0 }, c);
+    this._cfgTitle = !!c && Object.prototype.hasOwnProperty.call(c, 'title');   /* domyślny tytuł liczony przy rysowaniu (zmiana języka) */
+    this._config = Object.assign({ title: null, icon: 'mdi:map-outline', entities: [], theme_mode: 'dark', hours_to_show: 0 }, c);
     const sr = this.shadowRoot;
     sr.innerHTML = `<style>${HG_BASE}${U(`
 ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) var(--s2); gap:var(--s2); }
@@ -10,10 +11,12 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
 .mw{ position:relative; flex:1; min-height:220u; border-radius:var(--r-sm); overflow:hidden; background:#e9e5df;
   --ha-card-border-radius: 0; --ha-card-box-shadow: none; --ha-card-border-width: 0; }
 .mw > *{ position:absolute; inset:0; display:block; height:100%; }
-`)}</style><ha-card class="glass"><div class="hd">${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._config.title)}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} ${hgTr('os.', 'people')} · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} ${hgTr('strefy', 'zones')}</span></div><div class="mw"></div></ha-card>`;
+`)}</style><ha-card class="glass"><div class="hd">${this._hd()}</div><div class="mw"></div></ha-card>`;
     this._mw = sr.querySelector('.mw');
     this._make();
   }
+  _hd() { return `${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._cfgTitle ? this._config.title : hgT('common.map'))}</span><span class="sp"></span><span class="note">${hgT('cards.map.people_count', { count: this._config.entities.filter((e) => String(e).startsWith('person.')).length })} · ${hgT('cards.map.zones_count', { count: this._config.entities.filter((e) => String(e).startsWith('zone.')).length })}</span>`; }
+  _errHtml() { return `<div class="ph"><b>${hgT('cards.map.map_unavailable')}</b>${H.esc(this._err.message)}</div>`; }
   async _make() {
     const c = this._config;
     // theme_mode: auto -> jasna/ciemna mapa razem ze schematem dashboardu (HGTheme), przełączana na żywo
@@ -25,7 +28,8 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
     const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
     if (mk !== this._mk) return;
     let el;
-    try { el = helpers.createCardElement(conf); } catch (e) { this._mw.innerHTML = `<div class="ph"><b>${hgTr('Mapa niedostępna', 'Map unavailable')}</b>${H.esc(e.message)}</div>`; return; }
+    this._err = null;
+    try { el = helpers.createCardElement(conf); } catch (e) { this._err = e || {}; this._mw.innerHTML = this._errHtml(); return; }
     el.layout = 'grid'; el.setAttribute('layout', 'grid');
     this._map = el; if (this._hass) el.hass = this._hass;
     this._mw.appendChild(el);
@@ -42,11 +46,14 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
   set hass(h) { this._hass = h; if (this._map) this._map.hass = h; }
   get hass() { return this._hass; }
   connectedCallback() {
+    /* karta spoza HGBase: nagłówek (tytuł domyślny, os. / strefy) i komunikat błędu przepisywane po nadejściu katalogu */
+    this._onLang = this._onLang || (() => { const d = this._config && this.shadowRoot.querySelector('.hd'); if (d) d.innerHTML = this._hd(); if (this._err && this._mw) this._mw.innerHTML = this._errHtml(); });
+    window.addEventListener('hg-lang', this._onLang);
     this._onScheme = this._onScheme || (() => { if (this._config && this._config.theme_mode === 'auto' && this._tm !== (HGTheme.dark ? 'dark' : 'light')) this._make(); });
     window.addEventListener('hg-scheme', this._onScheme); this._onScheme();
   }
-  disconnectedCallback() { window.removeEventListener('hg-scheme', this._onScheme); }
+  disconnectedCallback() { window.removeEventListener('hg-scheme', this._onScheme); window.removeEventListener('hg-lang', this._onLang); }
   getCardSize() { return 6; }
   getGridOptions() { return { columns: 12, rows: 6 }; }
 }
-hgReg('hg-map-card', HGMapCard, 'Home Glass – Mapa', 'Natywna mapa HA w szklanej ramce');
+hgReg('hg-map-card', HGMapCard, hgTLazy('cards.map.picker_name'), hgTLazy('cards.map.picker_description'));

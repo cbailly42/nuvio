@@ -9,5 +9,5 @@ hgUI.add(`
 @media (hover:hover) and (pointer:fine){ .nv-avs .nv-av:hover{ transform: translateY(-2px); z-index:1; } }
 `);
 /* hgUI.avatars([{ name, pic, home }], { add: 'act' }) */
-hgUI.avatars = (people, o = {}) => `<div class="nv-avs">${o.add ? hgUI.iconBtn('mdi:plus', o.add, hgTr('Dodaj', 'Add')) : ''}${(people || []).map((p) =>
+hgUI.avatars = (people, o = {}) => `<div class="nv-avs">${o.add ? hgUI.iconBtn('mdi:plus', o.add, hgT('common.add')) : ''}${(people || []).map((p) =>
   `<span class="nv-av ${p.home ? 'home' : ''}" title="${H.esc(p.name)}" data-key="av-${H.esc(p.name)}"${p.pic ? ` style="background-image:url('${H.cssUrl(p.pic)}')"` : ''}>${p.pic ? '' : H.esc(String(p.name || '?').slice(0, 1).toUpperCase())}</span>`).join('')}</div>`;

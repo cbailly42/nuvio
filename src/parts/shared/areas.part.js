@@ -16,13 +16,10 @@ const HG_SKIP_DOM = new Set(['event', 'notify', 'update', 'device_tracker', 'tts
 const HG_CTRL_DOM = new Set(['light', 'switch', 'climate', 'cover', 'fan', 'lock', 'humidifier', 'media_player', 'vacuum', 'water_heater', 'valve', 'lawn_mower', 'siren', 'camera']);
 const HG_LIGHTISH = /(swiatl|swiatel|oswietl|lamp|\bled\b|light|wlacznik|zarowk|kinkiet|zyrandol)/;
 const HG_TEMP_BAD = /(water|woda|wody|kettle|czajnik|boiler|bojler|heater|cpu|chip|procesor|battery|bateri|inverter|falownik|motor|silnik|pralk|washer|dryer|suszark|lodowk|fridge|zamrazark|freezer|piekarnik|oven|soc\b|core)/;
-const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', 'Lights'], ['clim', 'Klimatyzacja', 'mdi:thermostat', 'Climate'], ['media', 'Media', 'mdi:speaker', 'Media'],
-  ['cover', 'Rolety', 'mdi:window-shutter', 'Covers'], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', 'Switches'], ['sens', 'Czujniki', 'mdi:gauge', 'Sensors'],
-  ['mot', 'Ruch i obecność', 'mdi:motion-sensor', 'Motion & presence'], ['door', 'Drzwi i okna', 'mdi:door', 'Doors & windows'], ['cam', 'Kamery', 'mdi:cctv', 'Cameras'], ['rob', 'Roboty', 'mdi:robot-vacuum', 'Robots'],
-  ['misc', 'Inne', 'mdi:tune-variant', 'Other']];
+/* sekcje pokoju: [id, klucz zapisany w układzie (polska nazwa, identyfikator – nie tekst do wyświetlenia), ikona, nazwa w katalogu] */
+const HG_SEC = [['light', 'Światła', 'mdi:lightbulb-group-outline', hgTLazy('shared.areas.sections.light')], ['clim', 'Klimatyzacja', 'mdi:thermostat', hgTLazy('shared.areas.sections.clim')], ['media', 'Media', 'mdi:speaker', hgTLazy('shared.areas.sections.media')], ['cover', 'Rolety', 'mdi:window-shutter', hgTLazy('shared.areas.sections.cover')], ['sw', 'Przełączniki', 'mdi:toggle-switch-outline', hgTLazy('shared.areas.sections.sw')], ['sens', 'Czujniki', 'mdi:gauge', hgTLazy('shared.areas.sections.sens')], ['mot', 'Ruch i obecność', 'mdi:motion-sensor', hgTLazy('shared.areas.sections.mot')], ['door', 'Drzwi i okna', 'mdi:door', hgTLazy('shared.areas.sections.door')], ['cam', 'Kamery', 'mdi:cctv', hgTLazy('shared.areas.sections.cam')], ['rob', 'Roboty', 'mdi:robot-vacuum', hgTLazy('shared.areas.sections.rob')], ['misc', 'Inne', 'mdi:tune-variant', hgTLazy('shared.areas.sections.misc')]];
 /* domeny, które można dodać do sekcji pokoju (Ustawienia sekcji → Dodaj encję) */
 const HG_SEC_DOMS = { light: ['light', 'switch'], sw: ['switch', 'fan', 'humidifier', 'input_boolean', 'lock', 'valve', 'siren'], clim: ['climate', 'water_heater'], media: ['media_player'], cover: ['cover'], sens: ['sensor', 'binary_sensor'], mot: ['binary_sensor'], door: ['binary_sensor'], cam: ['camera'], rob: ['vacuum', 'lawn_mower'] };
-const hgPl = (n, one, few, many, en1, enN) => en1 && hgCurLang() === 'en' ? `${n} ${n === 1 ? en1 : enN || en1 + 's'}` : `${n} ${n === 1 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
 
 const HGAreas = {
   _memo: new WeakMap(), _e: {}, _sc: { s: null, n: 0, t: 0 },
@@ -35,7 +32,7 @@ const HGAreas = {
     if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
   model(h, cfg) {
     cfg = this.glob(cfg) || this._e;
-    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
+    const key = [h.entities, h.devices, h.areas, this._cnt(h), HGI18n.code, HGI18n.cache[HGI18n.code]];   /* język i katalog w kluczu: nazwa pokoju „Bez pokoju” jest tłumaczona */
     const m0 = this._memo.get(cfg);
     if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
     const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
@@ -64,7 +61,7 @@ const HGAreas = {
       if (aid && byId[aid]) { if (!(rHide[aid] && rHide[aid].includes(e))) byId[aid].ents.push(e); }   /* ukryte w tym pokoju (Ustawienia sekcji → Ukryj w tym pokoju) */
       else if (!aid && HG_CTRL_DOM.has(dom) && !unEx.some((x) => x.test(e))) un.push(e);
     }
-    if (cfg.unassigned !== false && un.length) { add('_none', hgTr('Bez pokoju', 'No room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
+    if (cfg.unassigned !== false && un.length) { add('_none', hgT('shared.areas.no_room'), 'mdi:help-box-multiple-outline', true); byId._none.ents = un; }
     for (const a of list) this._classify(h, a, cfg);
     const coll = new Intl.Collator(HG_LOC());
     const ord = cfg.order || [];
@@ -147,7 +144,7 @@ const HGAreas = {
   },
   env(h, a) {
     const t = this.val(h, a.temp), u = this.val(h, a.hum);
-    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
+    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? H.pct(H.fmt(u, 0)) : ''].filter(Boolean) };
   },
   /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
   name(h, e, a, cfg, fb) {

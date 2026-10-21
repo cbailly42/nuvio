@@ -1,17 +1,68 @@
 #!/usr/bin/env python3
-"""i18n guard: every user-facing string in src/ must be a PL/EN pair (hgTr, hgTrO, hgTrLazy or a 'pl', 'en' literal pair).
-Flags (1) Polish text without an English partner, (2) English text in UI positions (aria-label, title, placeholder, alt,
-text between tags, toasts) that is not translated. Exit 1 on findings. Usage: i18n_check.py [--list] [--json]"""
-import os, re, sys, json
-R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+"""i18n control (spec section 6): keyed catalogs src/locales/<code>.json and the hgT / hgTLazy / hgTO / hgTD calls in src/parts.
+
+Code:
+  - hgT / hgTLazy keys are string literals; hgTO maps use literal keys; hgTD literal prefixes are declared in DYN_PREFIXES (tools/i18n_compile.py)
+  - every key used exists in en.json; every en.json key is used (keys under DYN_PREFIXES are resolved at runtime and exempt)
+  - no UI text written in the code (aria-label, title, placeholder, alt, text between tags, DOM text properties, Polish anywhere)
+  - no PL/EN text choice (hgTr / hgTrLazy / hgTrO, hgCurLang() === 'pl' | 'en'), except the sites in ALLOW_LANG_CHOICE
+Catalogs:
+  - valid JSON without duplicate keys, _meta with name and locale
+  - same {variables} as English; plural forms required by the language (Intl.PluralRules categories, from Node)
+  - English: a plain string using {count} must be split into plural forms
+  - REQUIRED languages complete and without obsolete keys (error); other languages: warning with coverage
+  - file name = lowercase language code (LANG_CODE: fr, pt-br)
+  - no markup in any text (catalog text reaches innerHTML and attributes unescaped): no '<' followed by a letter, '/' or '!'
+    (except <word> placeholders that are not HTML element names, e.g. ?area=<id>), no on…= event handler; outside English no straight
+    double quote (use the language's typographic quotes), except the v2.16.0 texts in ALLOW_QUOTE
+Usage: i18n_check.py [--list] [--json] [--lang <code>] [--root <dir>]   exit 1 on errors (--lang: exit 1 when keys are missing or obsolete)"""
+import os, re, sys, json, shutil, subprocess
+TOOLS = os.path.dirname(os.path.abspath(__file__))
+R = os.path.dirname(TOOLS)
+sys.path.insert(0, TOOLS)
+from i18n_compile import DYN_PREFIXES, LANG_CODE, flatten, _close, _map_span   # single source for prefixes, language codes and plural handling
+
+REQUIRED = ('en', 'pl', 'fr')
+# runtime definitions take non-literal keys by design
+RUNTIME_FILES = ('hg-i18n.part.js',)
+# literals the heuristic flags but that are data, never displayed: {(file name, exact literal)}. Brand names, units and technical
+# words (Nuvio, Home Assistant, Assist, kWh, °C, PM2.5 …) are already accepted by TECH, ids and mdi: icons by NOTPROSE.
+ALLOW_TEXT = {
+    ('sensors-card.part.js', ' Zajętość'),     # name_strip: suffix removed from HA entity names (matches Polish entity names)
+    ('areas.part.js', 'Ruch i obecność'),      # HG_SEC: section id stored in saved layouts (Polish legacy id; label is shared.areas.sections.mot)
+}
+# hgCurLang() compared with 'pl'/'en' where it does not pick a text (file, snippet of the line)
+ALLOW_LANG_CHOICE = (
+    # English shows the raw HA state for states without a states.label.* entry (v2.16.0 behaviour, raw value, not a translation)
+    ('hg-core.part.js', "stateLabel: (s) => hgTD('states.label.' + s) ?? (hgCurLang() === 'en'"),
+    # H.t: English keeps HA's own formatted value instead of the states.* dictionary
+    ('hg-core.part.js', "const en = hgCurLang() === 'en';"),
+)
+# straight double quotes kept outside English: (code, key) of v2.16.0 texts, shown escaped (PL display stays identical to v2.16.0)
+ALLOW_QUOTE = {
+    ('pl', 'edit.options.note_text'),   # 'Treść (… listy "- ")': hgForm.field label, H.esc
+}
+HTML_TAGS = frozenset('''a abbr address area article aside audio b base bdi bdo blockquote body br button canvas caption center cite code col colgroup data
+    datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure font footer form frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html
+    i iframe img input ins kbd label legend li link main map mark marquee math menu meta meter nav noscript object ol optgroup option output p param picture
+    plaintext pre progress q rp rt ruby s samp script search section select slot small source span strike strong style sub summary sup svg table tbody td
+    template textarea tfoot th thead time title tr track tt u ul var video wbr xmp'''.split())
+MARKUP = re.compile(r"<[A-Za-z/!]")
+PLACEHOLDER = re.compile(r"<([a-z]+)>")
+HANDLER = re.compile(r"\bon[a-z]+\s*=", re.I)
+NODE = shutil.which('node') or '/opt/node22/bin/node'
+
 PL = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]|\b(nie|jest|się|oraz|lub|dla|zapisz|usuń|dodaj|wybierz|brak|włącz|wyłącz|edytuj|zamknij|anuluj|gotowe|ustawienia|widok|karta|kafel|tło|pokój|pokoje|zmień|pokaż|ukryj|domyślny|domyślne|szukaj|wróć|dalej|nazwa|ikona|tytuł|kolor|rozmiar|tylko|wszystko|wszyscy|teraz|dzisiaj|jutro|wczoraj|godz|minut|sekund|dni|temperatura|wilgotność|zużycie|moc)\b", re.I)
 WORD = re.compile(r"[A-Za-z]{3,}")
-SKIP_FILES = ()
-# literals that are not prose: ids, css, urls, entity ids, icon names, html tags only, numbers
+# literals that are not prose: ids, css, urls, entity ids, icon names, numbers
 NOTPROSE = re.compile(r"^(?:[\w.\-:/#%?&=+@*]+|mdi:[\w-]+|\s*)$")
+TECH = re.compile(r"^[\d.,\s~+\-]*(?:min|h|s|kWh(?: PV)?|kW|W|Wh|V|A|Hz|CPU|RAM|BETA|LIVE|PV|EV|AC|DC|UV|PM2\.5|PM10|CO2|VOC|Wi-?Fi|LAN|WAN|IP|MAC|DNS|SSID|Home Assistant|Assist|Nuvio|HACS|Zigbee|Matter|Bluetooth|zł|°C|°F|%|lx|ppm|mdi:…|OK|ID|URL|HTTP|API|alarm|Auto|Turbo|Smart|Standard|Max|Mop|Start|Stop|Eco|Eko)$")
+VARS = re.compile(r"\{(\w+)\}")
+CHOICE = re.compile(r"\bhgTr(?:Lazy|O)?\s*\(|hgCurLang\(\)\s*[!=]==?\s*(['\"])(?:pl|en)\1|(['\"])(?:pl|en)\2\s*[!=]==?\s*hgCurLang\(\)")
 
+# ---------- JavaScript ----------
 def lex(src):
-    """yield (kind, start, end, text) for strings and code; kind in str|tpl|code. Template literals are split into text parts and ${} code."""
+    """[(kind, start, end, text)] kind: str (quoted string body) | tpl (template text part) | lit (whole template) | cmt (comment)"""
     i, n = 0, len(src); out = []
     def tpl(i):  # i at char after backtick; returns index after closing backtick
         buf_start = i; lit0 = i - 1
@@ -35,8 +86,8 @@ def lex(src):
                     j += 1
                 out.append(('str', i + 1, j, src[i + 1:j])); i = j + 1; continue
             if c == '`': i = tpl(i + 1); continue
-            if c == '/' and i + 1 < n and src[i + 1] == '/': j = src.find('\n', i); i = n if j < 0 else j; continue
-            if c == '/' and i + 1 < n and src[i + 1] == '*': j = src.find('*/', i + 2); i = n if j < 0 else j + 2; continue
+            if c == '/' and i + 1 < n and src[i + 1] == '/': j = src.find('\n', i); j = n if j < 0 else j; out.append(('cmt', i, j, '')); i = j; continue
+            if c == '/' and i + 1 < n and src[i + 1] == '*': j = src.find('*/', i + 2); j = n if j < 0 else j + 2; out.append(('cmt', i, j, '')); i = j; continue
             if c == '/':  # regex literal heuristic: previous non-space char is an operator or ( , = : [ ! & | ? { } ;
                 k = i - 1
                 while k >= 0 and src[k] in ' \t': k -= 1
@@ -57,167 +108,218 @@ def lex(src):
         return i
     code(0, None); return out
 
-def tr_spans(src):
-    """character ranges covered by hgTr(...), hgTrLazy(...), hgTrO(...) calls"""
-    sp = []
-    for m in re.finditer(r"\b(hgTr|hgTrLazy|hgTrO|L)\s*\(", src):
-        i = m.end(); d = 1; n = len(src); q = None
-        while i < n and d:
-            c = src[i]
-            if q:
-                if c == '\\': i += 2; continue
-                if c == q: q = None
-            elif c in '\'"`': q = c
-            elif c == '(': d += 1
-            elif c == ')': d -= 1
-            i += 1
-        sp.append((m.start(), i))
-    return sp
+def masked(src, toks):
+    """source with comments blanked (newlines kept, so offsets and line numbers hold)"""
+    s = list(src)
+    for k, a, b, _ in toks:
+        if k == 'cmt':
+            for i in range(a, b):
+                if s[i] != '\n': s[i] = ' '
+    return ''.join(s)
 
-TECH = re.compile(r"^[\d.,\s~+\-]*(?:min|h|s|kWh(?: PV)?|kW|W|Wh|V|A|Hz|CPU|RAM|BETA|LIVE|PV|EV|AC|DC|UV|PM2\.5|PM10|CO2|VOC|Wi-?Fi|LAN|WAN|IP|MAC|DNS|SSID|Home Assistant|Assist|Nuvio|HACS|Zigbee|Matter|Bluetooth|zł|°C|°F|%|lx|ppm|mdi:…|OK|ID|URL|HTTP|API|alarm|Auto|Turbo|Smart|Standard|Max|Mop|Start|Stop|Eco|Eko)$")
-# PL-only dictionaries whose English is the raw HA value (by design, see hgTr fallback)
-PL_FALLBACK = ('HG_PL', 'HG_WX_SHORT')
+def line_of(src, i): return src.count('\n', 0, i) + 1
 
-def close_of(src, i):
-    """i just after an opening { or [ ; returns index after the matching closer"""
-    d = 1; q = None
-    while i < len(src) and d:
-        c = src[i]
-        if q:
-            if c == '\\': i += 2; continue
-            if c == q: q = None
-        elif c in '\'"`': q = c
-        elif c in '{[(': d += 1
-        elif c in '}])': d -= 1
-        i += 1
-    return i
-
-def top_keys(body):
-    """keys at depth 0 of an object body"""
-    out = []; d = 0; q = None; i = 0; tok = re.compile(r"\s*(?:'([^']+)'|\"([^\"]+)\"|([A-Za-z_$][\w$]*))\s*:")
-    expect = True
-    while i < len(body):
-        c = body[i]
-        if q:
-            if c == '\\': i += 2; continue
-            if c == q: q = None
-            i += 1; continue
-        if d == 0 and expect:
-            m = tok.match(body, i)
-            if m: out.append(m.group(1) or m.group(2) or m.group(3)); i = m.end(); expect = False; continue
-        if c in '\'"`': q = c
-        elif c in '{[(': d += 1
-        elif c in '}])': d -= 1
-        elif c == ',' and d == 0: expect = True
-        i += 1
-    return out
-
-def lang_dicts(src):
-    """{ pl: { ... }, en: { ... } } language tables -> list of (line, pl_keys, en_keys, span)"""
-    out = []
-    for m in re.finditer(r"\bpl\s*:\s*\{", src):
-        a = m.end(); b = close_of(src, a)
-        n = re.match(r"\s*,\s*en\s*:\s*\{", src[b:])
-        if not n: continue
-        c = b + n.end(); e = close_of(src, c)
-        out.append((src.count('\n', 0, m.start()) + 1, top_keys(src[a:b - 1]), top_keys(src[c:e - 1]), (m.start(), e)))
-    return out
-
-def maps(src):
-    """const NAME = { k: 'v', ... } -> {NAME: (start, end, keys)}"""
-    M = {}
-    for m in re.finditer(r"\bconst\s+([A-Z][A-Z0-9_]*)\s*=\s*\{", src):
-        i = m.end(); d = 1; q = None
-        while i < len(src) and d:
-            c = src[i]
-            if q:
-                if c == '\\': i += 2; continue
-                if c == q: q = None
-            elif c in '\'"`': q = c
-            elif c == '{': d += 1
-            elif c == '}': d -= 1
-            i += 1
-        body = src[m.end():i - 1]
-        keys = re.findall(r"(?:^|[,{]\s*)(?:'([^']+)'|\"([^\"]+)\"|([A-Za-z_$][\w$]*))\s*:", body)
-        M[m.group(1)] = (m.start(), i, [a or b or c for a, b, c in keys])
-    return M
-
-def check(path):
-    src = open(path, encoding='utf-8').read(); allt = lex(src); sp = tr_spans(src); bad = []
-    lits = [(a, b) for k, a, b, _ in allt if k == 'lit']; toks = [x for x in allt if x[0] != 'lit']
-    def lit_of(a, b, kind):
-        if kind == 'str': return a - 1, b + 1
-        best = None
-        for s0, e0 in lits:
-            if s0 < a and b < e0 and (best is None or e0 - s0 < best[1] - best[0]): best = (s0, e0)
-        return best or (a - 1, b + 1)
-    NEXT = re.compile(r"\s*,\s*(?:(?:en|pl|on)\s*:\s*)?['\"`]"); PREV = re.compile(r"['\"`]\s*,\s*(?:(?:en|pl|on)\s*:\s*)?$")
-    M = maps(src)
-    def partner(n):
-        for a, b in ((n + '_EN', None), (n[:-3] + '_EN' if n.endswith('_PL') else None, None)):
-            if a and a in M: return a
-        return None
-    paired = []
-    for n, (a, b, keys) in M.items():
-        if n.endswith('_EN'): paired.append((a, b)); continue
-        en = partner(n)
-        if en:
-            paired.append((a, b)); miss = [k for k in keys if k not in M[en][2]]
-            for k in miss: bad.append((src.count('\n', 0, a) + 1, 'missing-en-key', f'{n}.{k} (no key in {en})'))
-            for k in [k for k in M[en][2] if k not in keys]: bad.append((src.count('\n', 0, a) + 1, 'missing-pl-key', f'{en}.{k} (no key in {n})'))
-        elif n in PL_FALLBACK: paired.append((a, b))
-    for line, pk, ek, span in lang_dicts(src):
-        paired.append(span)
-        for k in pk:
-            if k not in ek: bad.append((line, 'missing-en-key', f'pl.{k} has no en.{k}'))
-        for k in ek:
-            if k not in pk: bad.append((line, 'missing-pl-key', f'en.{k} has no pl.{k}'))
-    inside = lambda a: any(s <= a < e for s, e in sp) or any(s <= a < e for s, e in paired)
-    PAIRGAP = re.compile(r"['\"`]\s*,\s*(?:(?:en|pl|on)\s*:\s*)?['\"`]")
-    for k, (kind, a, b, t) in enumerate(toks):
-        if inside(a): continue
-        line = src.count('\n', 0, a) + 1
-        nxt = toks[k + 1] if k + 1 < len(toks) else None; prv = toks[k - 1] if k else None
-        L0, L1 = lit_of(a, b, kind)
-        pn = NEXT.match(src, L1) is not None
-        pp = PREV.search(src[max(0, L0 - 40):L0]) is not None
-        if kind == 'str':
-            if not t.strip() or NOTPROSE.match(t) or pn or pp: continue
-            if PL.search(t): bad.append((line, 'pl-only', t)); continue
-            # English literal written straight into the DOM
-            if WORD.search(t) and not TECH.match(t) and not re.search(r"[{};<>]", t) and re.search(r"\b(?:textContent|innerText|placeholder|ariaLabel|title)\s*=\s*$", src[max(0, a - 40):a - 1]):
-                bad.append((line, 'en-dom', t))
+def calls(code):
+    """-> used [(key, pos)], dyn [(literal, is_prefix, pos)], bad [(pos, msg)], spans [(a, b)] of every i18n call"""
+    used, dyn, bad, spans = [], [], [], []
+    for m in re.finditer(r"\b(hgT|hgTLazy|hgTO|hgTD)\s*\(", code):
+        fn, a = m.group(1), m.end()
+        try: end = _close(code, a)
+        except ValueError: end = len(code)
+        spans.append((m.start(), end))
+        if fn == 'hgTO':
+            sp = _map_span(code[a:end - 1])
+            if sp: used += [(x.group(2), a + sp[0] + x.start(2)) for x in re.finditer(r":\s*(['\"])([^'\"\\\n]*)\1", code[a + sp[0]:a + sp[1]])]
             continue
-        if pn or pp: continue
+        lit = re.match(r"\s*(['\"])([^'\"\\\n]*)\1\s*(.)", code[a:end])
+        nxt = lit.group(3) if lit else None
+        if fn == 'hgTD':
+            if lit: dyn.append((lit.group(2), nxt == '+', m.start()))
+            continue
+        if lit and nxt in ',)': used.append((lit.group(2), m.start()))
+        else: bad.append((m.start(), '%s() with a non-literal key: %s' % (fn, ' '.join(code[a:min(end - 1, a + 60)].split()))))
+    return used, dyn, bad, spans
+
+def hardcoded(src, toks, spans, fname=''):
+    """UI text written in the code (heuristic kept from the PL/EN checker) -> [(pos, kind, text)]"""
+    bad = []; lits = [(a, b) for k, a, b, _ in toks if k == 'lit']
+    inside = lambda a: any(s <= a < e for s, e in spans)
+    allowed = lambda v: (fname, v) in ALLOW_TEXT
+    for kind, a, b, t in toks:
+        if kind not in ('str', 'tpl') or inside(a): continue
+        if kind == 'str':
+            if not t.strip() or NOTPROSE.match(t) or allowed(t): continue
+            if PL.search(t): bad.append((a, 'pl', t)); continue
+            if WORD.search(t) and not TECH.match(t) and not re.search(r"[{};<>]", t) and re.search(r"\b(?:textContent|innerText|placeholder|ariaLabel|title)\s*=\s*$", src[max(0, a - 40):a - 1]):
+                bad.append((a, 'en-dom', t))
+            continue
         t = re.sub(r"/\*.*?\*/", " ", t, flags=re.S)
-        css = len(re.findall(r"[{};]", t)) >= 3 and re.search(r"[a-z-]+\s*:\s*[^;]+;", t)
-        if css: continue
+        if len(re.findall(r"[{};]", t)) >= 3 and re.search(r"[a-z-]+\s*:\s*[^;]+;", t): continue   # css
+        found = []
         for m in re.finditer(r"\b(aria-label|title|placeholder|alt)=\"([^\"$]*)\"", t):
             v = m.group(2).strip()
-            if v and WORD.search(v) and not NOTPROSE.match(v) and not TECH.match(v): bad.append((line, m.group(1), v))
+            if v and WORD.search(v) and not NOTPROSE.match(v) and not TECH.match(v) and not allowed(v): found.append((m.group(1), v))
         for m in re.finditer(r">([^<>]+)<", t):
             v = m.group(1).strip()
-            if v and WORD.search(v) and not TECH.match(v) and not re.search(r"[{};=]", v): bad.append((line, 'text', v))
-        plain = re.sub(r"<[^>]*>", "\n", t)
-        for v in [x.strip() for x in plain.split('\n')]:
-            if v and PL.search(v) and not TECH.match(v) and not any(v == x[2] for x in bad): bad.append((line, 'pl-tpl', v))
+            if v and WORD.search(v) and not TECH.match(v) and not re.search(r"[{};=]", v) and not allowed(v): found.append(('text', v))
+        for v in [x.strip() for x in re.sub(r"<[^>]*>", "\n", t).split('\n')]:
+            if v and PL.search(v) and not TECH.match(v) and not allowed(v) and not any(v == x[1] for x in found): found.append(('pl', v))
+        bad += [(a, k, v) for k, v in found]
     return bad
 
-def main():
-    files = []
-    for d, _, fs in os.walk(os.path.join(R, 'src', 'parts')):
-        for f in fs:
-            if f.endswith('.js') and f not in SKIP_FILES: files.append(os.path.join(d, f))
-    allbad = {}
-    for p in sorted(files):
-        b = check(p)
-        if b: allbad[os.path.relpath(p, R)] = b
-    n = sum(len(v) for v in allbad.values())
-    if '--json' in sys.argv: print(json.dumps(allbad, ensure_ascii=False, indent=1)); return n
-    if n:
-        print(f'i18n: {n} untranslated UI strings')
-        for f, b in allbad.items():
-            for line, k, t in b[: (10**6 if '--list' in sys.argv else 5)]: print(f'  {f}:{line} [{k}] {t[:90]}')
-    else: print('i18n OK – every UI string has PL and EN')
-    return n
-if __name__ == '__main__': sys.exit(1 if main() else 0)
+def scan_code(root):
+    """-> used {key: [where]}, errors"""
+    used, errs = {}, []
+    base = os.path.join(root, 'src', 'parts')
+    for d, _, fs in sorted(os.walk(base)):
+        for f in sorted(fs):
+            if not f.endswith('.js') or f in RUNTIME_FILES: continue
+            p = os.path.join(d, f); rel = os.path.relpath(p, root)
+            with open(p, encoding='utf-8') as fh: src = fh.read()
+            toks = lex(src); code = masked(src, toks)
+            u, dyn, bad, spans = calls(code)
+            for k, pos in u: used.setdefault(k, []).append('%s:%d' % (rel, line_of(src, pos)))
+            for pos, msg in bad: errs.append('%s:%d %s' % (rel, line_of(src, pos), msg))
+            for lit, pre, pos in dyn:
+                if not lit.startswith(DYN_PREFIXES): errs.append("%s:%d hgTD() dynamic prefix %r is not declared in DYN_PREFIXES (tools/i18n_compile.py)" % (rel, line_of(src, pos), lit))
+                elif not pre: used.setdefault(lit, []).append('%s:%d' % (rel, line_of(src, pos)))
+            for m in CHOICE.finditer(code):
+                ln = src[src.rfind('\n', 0, m.start()) + 1:src.find('\n', m.start()) if src.find('\n', m.start()) >= 0 else len(src)]
+                if any(f == af and snip in ln for af, snip in ALLOW_LANG_CHOICE): continue
+                errs.append('%s:%d PL/EN text choice is gone, use hgT keys: %s' % (rel, line_of(src, m.start()), m.group(0)))
+            for pos, kind, t in hardcoded(src, toks, spans, f): errs.append('%s:%d hard-coded UI text [%s] %s' % (rel, line_of(src, pos), kind, t[:90]))
+    return used, errs
+
+# ---------- catalogs ----------
+def load_catalog(path):
+    """-> (data or None, [errors])"""
+    dups = []
+    def hook(pairs):
+        seen = set()
+        for k, _ in pairs:
+            if k in seen: dups.append(k)
+            seen.add(k)
+        return dict(pairs)
+    name = os.path.basename(path)
+    try:
+        with open(path, encoding='utf-8') as fh: d = json.load(fh, object_pairs_hook=hook)
+    except (ValueError, OSError) as e: return None, ['%s: invalid JSON (%s)' % (name, e)]
+    errs = ['%s: duplicate key %r' % (name, k) for k in dups]
+    if not isinstance(d, dict): return None, errs + ['%s: top level must be an object' % name]
+    m = d.get('_meta')
+    if not isinstance(m, dict) or not all(isinstance(m.get(k), str) and m.get(k) for k in ('name', 'locale')): errs.append('%s: _meta needs name and locale' % name)
+    def leaves(node, pre):
+        for k, v in node.items():
+            if pre == '' and k == '_meta': continue
+            if isinstance(v, dict): leaves(v, pre + k + '.')
+            elif not isinstance(v, str): errs.append('%s: %s%s is not a string' % (name, pre, k))
+    leaves(d, '')
+    return d, errs
+
+def plural_categories(locales):
+    """{locale: [categories]} from Intl.PluralRules (Node)"""
+    js = 'const L=%s;console.log(JSON.stringify(Object.fromEntries(L.map((l)=>[l,new Intl.PluralRules(l).resolvedOptions().pluralCategories]))))' % json.dumps(sorted(set(locales)))
+    r = subprocess.run([NODE, '-e', js], capture_output=True, text=True, check=True)
+    return json.loads(r.stdout)
+
+def vars_of(v): return set(VARS.findall(v)) if isinstance(v, str) else set().union(*[set(VARS.findall(x)) for x in v.values() if isinstance(x, str)])
+
+def compare(code, flat, en, cats):
+    """errors on shape, plural forms and variables of a catalog against English"""
+    errs, f = [], code + '.json'
+    for k, ev in en.items():
+        if k not in flat: continue
+        tv = flat[k]
+        if isinstance(ev, str):
+            if isinstance(tv, dict): errs.append('%s: %s has plural forms but English has a plain string' % (f, k)); continue
+            for x in sorted(VARS.findall(ev)):
+                if '{%s}' % x not in tv: errs.append('%s: %s misses variable {%s}' % (f, k, x))
+            for x in sorted(set(VARS.findall(tv)) - set(VARS.findall(ev))): errs.append('%s: %s uses unknown variable {%s}' % (f, k, x))
+            continue
+        if not isinstance(tv, dict): errs.append('%s: %s needs plural forms (%s), found a plain string' % (f, k, ', '.join(cats))); continue
+        miss = [c for c in cats if c not in tv]
+        if miss: errs.append('%s: %s misses plural forms: %s' % (f, k, ', '.join(miss)))
+        allv, need = vars_of(ev), vars_of(ev.get('other', ''))
+        for form, s in sorted(tv.items()):
+            for x in sorted(set(VARS.findall(s)) - allv): errs.append('%s: %s_%s uses unknown variable {%s}' % (f, k, form, x))
+            if form not in ('zero', 'one', 'two'):   # one/zero/two may spell the number out
+                for x in sorted(need - set(VARS.findall(s))): errs.append('%s: %s_%s misses variable {%s}' % (f, k, form, x))
+    return errs
+
+def unsafe(code, flat):
+    """markup, event handlers and (outside English) straight double quotes in the texts of a flattened catalog (all keys, dynamic tables included)"""
+    errs, f = [], code + '.json'
+    for k, v in sorted(flat.items()):
+        for name, s in ([(k, v)] if isinstance(v, str) else [('%s_%s' % (k, form), x) for form, x in sorted(v.items())] if isinstance(v, dict) else []):
+            if not isinstance(s, str): continue
+            tags = [m for m in MARKUP.finditer(s) if not (PLACEHOLDER.match(s, m.start()) and PLACEHOLDER.match(s, m.start()).group(1) not in HTML_TAGS)]
+            if tags: errs.append('%s: %s contains markup (%r): catalog text is inserted as HTML, write plain text' % (f, name, s[tags[0].start():tags[0].start() + 12]))
+            if HANDLER.search(s): errs.append('%s: %s contains an event handler attribute (%r)' % (f, name, HANDLER.search(s).group(0)))
+            if code != 'en' and '"' in s and (code, k) not in ALLOW_QUOTE: errs.append('%s: %s contains a straight double quote: use typographic quotes (« », „ ”, “ ”)' % (f, name))
+    return errs
+
+def diff_keys(flat, en):
+    return sorted(k for k in en if k not in flat), sorted(k for k in flat if k not in en)
+
+def check(root=R, required=REQUIRED):
+    """-> {errors: [str], warnings: [str], coverage: {code: percent}}"""
+    errors, warnings, coverage = [], [], {}
+    ld = os.path.join(root, 'src', 'locales')
+    codes = sorted(f[:-5] for f in os.listdir(ld) if f.endswith('.json')) if os.path.isdir(ld) else []
+    for c in required:
+        if c not in codes: errors.append('%s.json is missing (required language)' % c)
+    for c in codes:
+        if not LANG_CODE.match(c): errors.append('%s.json: invalid language code %r: file names are lowercase codes such as fr or pt-br (the build refuses it)' % (c, c))
+    data = {}
+    for c in codes:
+        d, e = load_catalog(os.path.join(ld, c + '.json')); errors += e
+        if d is not None: data[c] = d
+    used, ce = scan_code(root); errors += ce
+    if 'en' not in data: return {'errors': errors, 'warnings': warnings, 'coverage': coverage}
+    en = flatten(data['en'])
+    for c in sorted(data): errors += unsafe(c, en if c == 'en' else flatten(data[c]))
+    for k, where in sorted(used.items()):
+        if k not in en: errors.append('%s: key %r is missing from en.json' % (where[0], k))
+    for k in sorted(en):
+        if k not in used and not k.startswith(DYN_PREFIXES): errors.append('en.json: %s is not used in src/parts' % k)
+    try: cats = plural_categories([(data[c].get('_meta') or {}).get('locale') or c for c in data])
+    except (OSError, subprocess.CalledProcessError, ValueError) as e: return {'errors': errors + ['plural categories: cannot run Node (%s)' % e], 'warnings': warnings, 'coverage': coverage}
+    loc = lambda c: (data[c].get('_meta') or {}).get('locale') or c
+    for k, v in sorted(en.items()):
+        if isinstance(v, str) and '{count}' in v: errors.append('en.json: %s uses {count}: split it into plural forms (%s)' % (k, ', '.join('_' + x for x in cats[loc('en')])))
+    errors += [e for e in compare('en', en, {k: v for k, v in en.items() if isinstance(v, dict)}, cats[loc('en')]) if 'misses plural forms' in e]
+    coverage['en'] = 100.0
+    for c in sorted(x for x in data if x != 'en'):
+        fl = flatten(data[c]); errors += compare(c, fl, en, cats[loc(c)])
+        miss, old = diff_keys(fl, en)
+        coverage[c] = round(100 * (len(en) - len(miss)) / len(en), 1) if en else 100.0
+        if c in required:
+            if miss: errors.append('%s.json: %d keys missing (required language): %s%s' % (c, len(miss), ', '.join(miss[:15]), ' …' if len(miss) > 15 else ''))
+            if old: errors.append('%s.json: %d obsolete keys (not in en.json): %s%s' % (c, len(old), ', '.join(old[:15]), ' …' if len(old) > 15 else ''))
+        elif miss or old:
+            warnings.append('%s.json: %.1f%% coverage (%d missing, %d obsolete) – i18n_check.py --lang %s' % (c, coverage[c], len(miss), len(old), c))
+    return {'errors': errors, 'warnings': warnings, 'coverage': coverage}
+
+def main(argv):
+    root = R
+    if '--root' in argv: root = argv[argv.index('--root') + 1]
+    if '--lang' in argv:
+        c = argv[argv.index('--lang') + 1]; ld = os.path.join(root, 'src', 'locales')
+        en, e1 = load_catalog(os.path.join(ld, 'en.json')); d, e2 = load_catalog(os.path.join(ld, c + '.json'))
+        if en is None or d is None: print('\n'.join(e1 + e2) or 'cannot read catalogs'); return 2
+        miss, old = diff_keys(flatten(d), flatten(en))
+        print('%s: %d missing' % (c, len(miss))); [print('  missing  ', k) for k in miss]
+        print('%s: %d obsolete' % (c, len(old))); [print('  obsolete ', k) for k in old]
+        return 1 if miss or old else 0
+    r = check(root)
+    if '--json' in argv: print(json.dumps(r, ensure_ascii=False, indent=1)); return 1 if r['errors'] else 0
+    for w in r['warnings']: print('warning:', w)
+    if r['errors']:
+        print('i18n: %d errors' % len(r['errors']))
+        for e in r['errors'][: (10 ** 6 if '--list' in argv else 40)]: print('  ' + e)
+        if len(r['errors']) > 40 and '--list' not in argv: print('  … --list for all')
+        return 1
+    print('i18n OK – keys, catalogs and coverage: ' + ', '.join('%s %.1f%%' % kv for kv in sorted(r['coverage'].items())))
+    return 0
+
+if __name__ == '__main__': sys.exit(main(sys.argv[1:]))
