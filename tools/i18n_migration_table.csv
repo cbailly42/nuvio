@@ -1021,8 +1021,8 @@ cards.stat.change,parts/cards/stat-card.part.js,20,hgTr,Change,Zmiana,,,auto
 common.now,parts/cards/stat-card.part.js,20,hgTr,now,teraz,,,auto
 common.details,parts/cards/stat-card.part.js,21,hgTr,Details,Szczegóły,,,auto
 cards.stat.period,parts/cards/stat-card.part.js,23,hgTr,Period,Okres,,,auto
-cards.stat.nuvio_statistics,parts/cards/stat-card.part.js,32,hgTr,Nuvio – Statistics,Nuvio – Statystyka,,load-time,manual
-cards.stat.minimum_average_maximum_and,parts/cards/stat-card.part.js,32,hgTr,"Minimum, average, maximum and change of a sensor","Minimum, średnia, maksimum i zmiana czujnika",,load-time,manual
+cards.stat.picker_name,parts/cards/stat-card.part.js,32,hgTr,Nuvio – Statistics,Nuvio – Statystyka,,load-time,auto
+cards.stat.picker_description,parts/cards/stat-card.part.js,32,hgTr,"Minimum, average, maximum and change of a sensor","Minimum, średnia, maksimum i zmiana czujnika",,load-time,auto
 common.choose_entity,parts/cards/stepper-card.part.js,15,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.stepper.counter_input_number_or,parts/cards/stepper-card.part.js,15,hgTr,"counter, input_number or number","counter, input_number lub number",,,auto
 cards.stepper.counter,parts/cards/stepper-card.part.js,17,hgTr,Counter,Licznik,,,auto

@@ -588,6 +588,19 @@
       "picker_name": "Home Glass – Stairs",
       "set_the_bottom_and": "Set the bottom and top lights and sensors.",
       "stairs": "Stairs"
+    },
+    "stat": {
+      "30_days": "30 days",
+      "7_days": "7 days",
+      "average": "Average",
+      "change": "Change",
+      "choose_a_numeric_sensor": "Choose a numeric sensor",
+      "maximum": "Maximum",
+      "minimum": "Minimum",
+      "no_history_in_this": "No history in this period",
+      "period": "Period",
+      "picker_description": "Minimum, average, maximum and change of a sensor",
+      "picker_name": "Nuvio – Statistics"
     }
   },
   "common": {

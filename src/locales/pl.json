@@ -592,6 +592,19 @@
       "picker_name": "Home Glass – Schody",
       "set_the_bottom_and": "Ustaw światła i czujniki dołu i góry.",
       "stairs": "Schody"
+    },
+    "stat": {
+      "30_days": "30 dni",
+      "7_days": "7 dni",
+      "average": "Średnia",
+      "change": "Zmiana",
+      "choose_a_numeric_sensor": "Wybierz czujnik liczbowy",
+      "maximum": "Maksimum",
+      "minimum": "Minimum",
+      "no_history_in_this": "Brak historii w tym okresie",
+      "period": "Okres",
+      "picker_description": "Minimum, średnia, maksimum i zmiana czujnika",
+      "picker_name": "Nuvio – Statystyka"
     }
   },
   "common": {
