@@ -469,6 +469,14 @@
       "picker_description": "Obecność w żłobku lub przedszkolu, przyjście, wyjście, posiłki, aktualności i rachunek",
       "picker_name": "Nuvio – Dziecko (LiveKid)",
       "unread": "Nieprzeczytane"
+    },
+    "lamp": {
+      "any_light_entity": "Dowolna encja light",
+      "choose_a_light": "Wybierz światło",
+      "cool": "Zimne",
+      "picker_description": "Włącznik, jasność i barwa",
+      "picker_name": "Home Glass – Światło",
+      "warm": "Ciepłe"
     }
   },
   "common": {
@@ -512,7 +520,9 @@
     "now_cap": "Teraz",
     "of": "z",
     "off_fem": "Wyłączona",
+    "off_neut": "Wyłączone",
     "off_short": "Wył.",
+    "on_neut": "Włączone",
     "on_short": "Wł.",
     "open": "Otwórz",
     "open_assist": "Otwórz Assist",

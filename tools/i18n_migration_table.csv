@@ -426,8 +426,8 @@ common.state_unavailable,parts/cards/lamp-card.part.js,9,hgTr,unavailable,niedos
 common.brightness,parts/cards/lamp-card.part.js,10,hgTr,Brightness,Jasność,,,auto
 cards.lamp.warm,parts/cards/lamp-card.part.js,11,hgTr,Warm,Ciepłe,,,auto
 cards.lamp.cool,parts/cards/lamp-card.part.js,11,hgTr,Cool,Zimne,,,auto
-cards.lamp.home_glass_light,parts/cards/lamp-card.part.js,18,hgTr,Home Glass – Light,Home Glass – Światło,,load-time,manual
-cards.lamp.switch_brightness_and_colour,parts/cards/lamp-card.part.js,18,hgTr,"Switch, brightness and colour temperature","Włącznik, jasność i barwa",,load-time,manual
+cards.lamp.picker_name,parts/cards/lamp-card.part.js,18,hgTr,Home Glass – Light,Home Glass – Światło,,load-time,auto
+cards.lamp.picker_description,parts/cards/lamp-card.part.js,18,hgTr,"Switch, brightness and colour temperature","Włącznik, jasność i barwa",,load-time,auto
 cards.light.lighting,parts/cards/light-card.part.js,3,hgTr,Lighting,Oświetlenie,,,auto
 cards.light.toggle,parts/cards/light-card.part.js,32,hgTr,Toggle,Przełącz,,,auto
 common.expand,parts/cards/light-card.part.js,34,hgTr,Expand,Rozwiń,,,auto

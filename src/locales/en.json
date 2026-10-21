@@ -465,6 +465,14 @@
       "picker_description": "Presence at nursery or kindergarten, check-in, check-out, meals, news and bill",
       "picker_name": "Nuvio – Child (LiveKid)",
       "unread": "Unread"
+    },
+    "lamp": {
+      "any_light_entity": "Any light entity",
+      "choose_a_light": "Choose a light",
+      "cool": "Cool",
+      "picker_description": "Switch, brightness and colour temperature",
+      "picker_name": "Home Glass – Light",
+      "warm": "Warm"
     }
   },
   "common": {
@@ -508,7 +516,9 @@
     "now_cap": "Now",
     "of": "of",
     "off_fem": "Off",
+    "off_neut": "Off",
     "off_short": "Off",
+    "on_neut": "On",
     "on_short": "On",
     "open": "Open",
     "open_assist": "Open Assist",
