@@ -20,7 +20,7 @@ Which language is used, first match wins:
 
 1. Your own choice in Settings or the user menu.
 2. The `language:` strategy option (dashboard default set in YAML). It accepts any language code that Nuvio has (`en`, `pl`, `fr` …); a regional code such as `fr-CA` falls back to `fr`.
-3. The language picked in the first-run wizard.
+3. The language you picked in the first-run wizard. Only a language you actually tapped counts: a language that older versions saved automatically (often English when the browser was neither Polish nor English) is ignored, so the browser decides.
 4. Your browser languages, in order of preference: the full code first (`pt-br`), then the language alone (`pt`). If none of them is available, English.
 
 Texts that are not translated in the chosen language are shown in English.

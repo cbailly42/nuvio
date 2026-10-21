@@ -1636,8 +1636,8 @@ const HG_EDIT = {
   _eBgSync() { const A = HGApp.get(); if (A.bg) { this.style.removeProperty('--hg-bg-wide'); this.style.removeProperty('--hg-bg-portrait'); } else if (this._bgDef) { for (const [k, v] of this._bgDef) if (v) this.style.setProperty(k, `url('${v}')`); } this._glassRefresh && this._glassRefresh(); },
   /* Język: osobisty wybór (konto HA + to urządzenie), „Automatycznie” = ustawienie pulpitu / kreator / przeglądarka */
   _eLangHtml() {
-    const sel = HGLang.get(), w = (HGL.data && HGL.data.wiz) || {}, src = window.__hgLangOpt ? hgT('edit.dashboard_setting') : w.lang ? hgT('edit.setup_wizard') : hgT('edit.browser_language');
-    const auto = hgLang(null, window.__hgLangOpt || w.lang || ''), nm = (l) => (HGLang.LIST.find((x) => x[0] === l) || [l, l])[1];
+    const sel = HGLang.get(), w = (HGL.data && HGL.data.wiz) || {}, src = window.__hgLangOpt ? hgT('edit.dashboard_setting') : hgWizLang(w) ? hgT('edit.setup_wizard') : hgT('edit.browser_language');
+    const auto = hgLang(null, window.__hgLangOpt || hgWizLang(w) || ''), nm = (l) => (HGLang.LIST.find((x) => x[0] === l) || [l, l])[1];
     return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgT('edit.language')}</h4><small class="lk-hn">${hgT('edit.language_auto_hint', { name: H.esc(nm(auto)), source: src })}</small>
       <div class="lk-seg lk-lng" role="group" aria-label="${hgT('edit.language')}">${[['', hgT('common.automatic')], ...[...HGLang.LIST].sort((a, b) => (a[0] === 'en') - (b[0] === 'en'))].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },

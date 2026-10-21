@@ -20,7 +20,7 @@ Langue utilisée, la première qui correspond l’emporte :
 
 1. Votre propre choix dans les Paramètres ou le menu utilisateur.
 2. L’option de stratégie `language:` (langue par défaut du tableau de bord, définie en YAML). Elle accepte tout code de langue dont dispose Nuvio (`en`, `pl`, `fr` …) ; un code régional comme `fr-CA` se ramène à `fr`.
-3. La langue choisie dans l’assistant de première configuration.
+3. La langue choisie dans l’assistant de première configuration. Seule compte une langue sur laquelle vous avez réellement appuyé : une langue enregistrée automatiquement par les versions précédentes (souvent l’anglais quand le navigateur n’était ni en polonais ni en anglais) est ignorée, et c’est le navigateur qui décide.
 4. Les langues de votre navigateur, par ordre de préférence : d’abord le code complet (`pt-br`), puis la langue seule (`pt`). Si aucune n’est disponible, l’anglais.
 
 Les textes non traduits dans la langue choisie s’affichent en anglais.

@@ -104,7 +104,7 @@ async function hgGenerate(hass, opt) {
   /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */
   const vOff = hgViewOff(hass, (E && E.doc && E.doc.data && E.doc.data.wiz) || wiz);
   /* nawigacja i tytuły widoków dopiero z katalogiem języka (maks. 3 s, potem angielski i hg-lang, gdy dotrze); model wczytywany równolegle */
-  const lang = hgLang(hass, HGLang.get() || opt.language || (wiz && wiz.lang)), [M0] = await Promise.all([HGModel.load(hass), HGI18n.ready(lang)]);
+  const lang = hgLang(hass, HGLang.get() || opt.language || hgWizLang(wiz)), [M0] = await Promise.all([HGModel.load(hass), HGI18n.ready(lang)]);
   /* _empty: tylko testy – symulacja instancji bez danych */
   const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
   const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);
@@ -394,7 +394,7 @@ const HGWizard = {
       if (b.dataset.j) return go(+b.dataset.j);
       if (b.dataset.x === 'all') { hid.clear(); return draw(); } if (b.dataset.x === 'none') { areas.forEach((x) => hid.add(x.area_id)); return draw(); }
       if (b.dataset.x === 'next') return go(step + 1); if (b.dataset.x === 'back') return go(step - 1);
-      if (b.dataset.x === 'go' || b.dataset.x === 'skip') { HGL.data.wiz = b.dataset.x === 'go' ? { lang, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { ...(picked ? { lang } : {}), ts: Date.now() };
+      if (b.dataset.x === 'go' || b.dataset.x === 'skip') { const pk = picked ? { lang, lp: 1 } : {}; HGL.data.wiz = b.dataset.x === 'go' ? { ...pk, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { ...pk, ts: Date.now() };
         if (HGLang.get() && HGLang.get() !== lang && (picked || b.dataset.x === 'go')) await HGLang.set(page._hass, lang);   /* osobisty wybór idzie za decyzją w kreatorze (z katalogiem) */
         if (b.dataset.x === 'go') { HGL.data.app = app; if (typeof HGApp !== 'undefined') HGApp.apply(); }
         await HGL.save(page._hass); document.removeEventListener('keydown', onKey); d.remove(); if (!window.__hgDryRun) location.reload(); } });

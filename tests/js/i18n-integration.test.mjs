@@ -73,7 +73,7 @@ test('HGStrategy.generate waits for HGI18n.ready(lang) before handing over (gene
   const d = deferred(), m = mk({ fetch: d.fetch });
   let done = false, codeAtEnd = null;
   const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'u', is_admin: true }, callWS: () => Promise.reject(new Error('no ws')) };
-  const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass).then((c) => { done = true; codeAtEnd = m.HGI18n.code; return c; }, (e) => { done = true; codeAtEnd = m.HGI18n.code; throw e; });
+  const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', lp: 1, views: ['dashboard'] } }, hass).then((c) => { done = true; codeAtEnd = m.HGI18n.code; return c; }, (e) => { done = true; codeAtEnd = m.HGI18n.code; throw e; });
   await tick(20);
   assert.equal(done, false, 'generation must wait for the pl catalog'); assert.equal(d.calls.length, 1);
   d.release(); const cfg = await p;
@@ -85,7 +85,7 @@ test('late catalog (after 3 s): strategy renders English, the arrival rebuilds t
   try {
     const d = deferred(), m = mk({ lang: 'pl', fetch: d.fetch, parts: ['hg-page.part.js'], names: ['HGPage'] });
     const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'u', is_admin: true }, callWS: () => Promise.reject(new Error('no ws')) };
-    const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass);
+    const p = m.HGStrategy.generate({ _wiz: { lang: 'pl', lp: 1, views: ['dashboard'] } }, hass);
     await tick(20); mock.timers.tick(3000); const cfg = await p;
     const pc = cfg.views[0].cards[0]; assert.equal(pc.type, 'custom:hg-page'); assert.equal(pc._hgAuto, true);
     assert.equal(pc._hgCode, 'en', 'config built while English was active'); assert.equal(m.HGI18n.code, 'en');
@@ -96,7 +96,7 @@ test('late catalog (after 3 s): strategy renders English, the arrival rebuilds t
     d.release(); await tick(10);
     assert.equal(m.HGI18n.code, 'pl'); assert.deepEqual(m.events, ['hg-lang']); assert.deepEqual(built, ['pl', 'pl']); assert.deepEqual(sent, ['config-refresh:pl']);
     /* the regenerated config carries the active code: no further refresh */
-    const cfg2 = await m.HGStrategy.generate({ _wiz: { lang: 'pl', views: ['dashboard'] } }, hass); assert.equal(cfg2.views[0].cards[0]._hgCode, 'pl');
+    const cfg2 = await m.HGStrategy.generate({ _wiz: { lang: 'pl', lp: 1, views: ['dashboard'] } }, hass); assert.equal(cfg2.views[0].cards[0]._hgCode, 'pl');
     const c = page(); c._config = cfg2.views[0].cards[0]; c._langChanged(); assert.deepEqual(sent, ['config-refresh:pl']);
     /* manual hg-page (no strategy): no config-refresh from the page itself */
     const n = page(); n._config = { ...pc, _hgAuto: false }; m.HGI18n.code = 'en'; n._langChanged(); assert.deepEqual(sent, ['config-refresh:pl']);
@@ -210,4 +210,15 @@ test('H.t: binary_sensor fallback by device_class comes from the catalog (states
   /* another language without the entry: English catalog text, then the raw state */
   const f = mk({ lang: 'fr', manifest: MAN_FR, names: ['H'] }); f.HGI18n.cache.fr = { m: { name: 'Français', locale: 'fr-FR' }, t: [], d: {} }; f.HGI18n.code = 'fr';
   assert.equal(f.H.t({}, so('on', 'door')), 'on');
+});
+
+test('wizard language counts only when it was explicitly picked (wiz.lp); a legacy wiz.lang does not override the browser', async () => {
+  const legacy = mk({ nav: ['fr-FR'], manifest: MAN_FR }); legacy.window.__hgL = { data: { wiz: { lang: 'en', views: ['dashboard'] } } };
+  assert.equal(legacy.hgCurLang(), 'fr');
+  const picked = mk({ nav: ['fr-FR'], manifest: MAN_FR }); picked.window.__hgL = { data: { wiz: { lang: 'en', lp: 1, views: ['dashboard'] } } };
+  assert.equal(picked.hgCurLang(), 'en');
+  const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'u', is_admin: true }, language: 'fr', locale: { language: 'fr' }, callWS: async () => null };
+  const d = deferred(), m = mk({ nav: ['pl-PL'], fetch: d.fetch });
+  const p = m.HGStrategy.generate({ _wiz: { lang: 'en', views: ['dashboard'] } }, hass); await tick(); d.release(); await p;
+  assert.equal(m.HGI18n.code, 'pl');
 });

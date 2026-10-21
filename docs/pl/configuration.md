@@ -20,7 +20,7 @@ Który język jest używany (wygrywa pierwszy pasujący):
 
 1. Twój wybór w Ustawieniach albo w menu użytkownika.
 2. Opcja strategii `language:` (domyślny język pulpitu w YAML). Przyjmuje każdy kod języka, który ma Nuvio (`en`, `pl`, `fr` …); kod regionalny, np. `fr-CA`, oznacza `fr`.
-3. Język wybrany w kreatorze pierwszego uruchomienia.
+3. Język wybrany w kreatorze pierwszego uruchomienia. Liczy się tylko język, który faktycznie kliknięto: język zapisany automatycznie przez starsze wersje (często angielski, gdy przeglądarka nie była ani polska, ani angielska) jest pomijany i decyduje przeglądarka.
 4. Języki przeglądarki w kolejności preferencji: najpierw pełny kod (`pt-br`), potem sam język (`pt`). Jeśli żaden nie jest dostępny, angielski.
 
 Teksty, których brakuje w wybranym języku, wyświetlają się po angielsku.

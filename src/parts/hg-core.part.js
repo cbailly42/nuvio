@@ -104,7 +104,9 @@ const hgI18nWant = (l) => {
   /* po mikrozadaniu: HGI18n.ready (strategia) na tej samej obietnicy ustawia kod pierwszy i sam powiadamia, gdy spóźniony */
   HGI18n.load(l).then((ok) => Promise.resolve().then(() => { if (ok && HGI18n.code !== l && hgCurLang() === l) { HGI18n.code = l; window.dispatchEvent(new CustomEvent('hg-lang')); } }));
 };
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz, l = hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang));
+/* język z kreatora liczy się tylko, gdy kliknięto go w kreatorze (wiz.lp); stare wiz.lang zapisywane zawsze (często 'en' przy przeglądarce bez pl/en) nie zasłania przeglądarki */
+const hgWizLang = (w) => (w && w.lp && w.lang) || null;
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz, l = hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || hgWizLang(w));
   if (l !== HGI18n.code) hgI18nWant(l); return l; };
 const HG_LOC = () => HGI18n.locale(hgCurLang());
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
