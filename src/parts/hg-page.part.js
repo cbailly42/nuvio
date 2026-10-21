@@ -898,7 +898,8 @@ class HGPage extends HTMLElement {
       case 'updreload': { location.reload(); return; }
       case 'updopen': { this._menuOpen = false; this._paintTop(true); const U = this._upd || {}; if (U.src === 'hacs' && window.hgHacsOpen) window.hgHacsOpen(this._hass, 1416967732, 'kczepiec/nuvio'); else window.open('https://github.com/kczepiec/nuvio/releases/latest', '_blank', 'noopener'); return; }
       case 'walllock': this._menuOpen = false; this._paintTop(true); HGWall.page = HGWall.page || this; HGWall.hass = HGWall.hass || this._hass; return HGWall.lockNow();
-      case 'lang': this._menuOpen = false; this._paintTop(true); return HGLang.set(this._hass, t.dataset.l, this);
+      /* pasek przerysowany dopiero z katalogiem nowego języka (hg-lang przebudowuje stronę; tu: gdy przebudowa pominięta, np. w edycji) */
+      case 'lang': this._menuOpen = false; return Promise.resolve(HGLang.set(this._hass, t.dataset.l, this)).then(() => { if (this._built) this._paintTop(true); });
       case 'kmtoggle': this._menuOpen = false; this._paintTop(true); return this._kmToggle();
       case 'menuitem': { this._menuOpen = false; this._paintTop(true); const m = c.menu[i]; if (m.kiosk_off) { location.href = location.pathname + '?disable_km'; return; } return go(m.action); }
       case 'back': return go(c.back);

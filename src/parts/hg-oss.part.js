@@ -415,7 +415,7 @@ const HGWizard = {
       if (b.dataset.x === 'all') { hid.clear(); return draw(); } if (b.dataset.x === 'none') { areas.forEach((x) => hid.add(x.area_id)); return draw(); }
       if (b.dataset.x === 'next') return go(step + 1); if (b.dataset.x === 'back') return go(step - 1);
       if (b.dataset.x === 'go' || b.dataset.x === 'skip') { HGL.data.wiz = b.dataset.x === 'go' ? { lang, views: [...sel], hiddenRooms: [...hid], ts: Date.now() } : { ...(picked ? { lang } : {}), ts: Date.now() };
-        if (HGLang.get() && HGLang.get() !== lang && (picked || b.dataset.x === 'go')) HGLang.set(page._hass, lang);   /* osobisty wybór idzie za decyzją w kreatorze */
+        if (HGLang.get() && HGLang.get() !== lang && (picked || b.dataset.x === 'go')) await HGLang.set(page._hass, lang);   /* osobisty wybór idzie za decyzją w kreatorze (z katalogiem) */
         if (b.dataset.x === 'go') { HGL.data.app = app; if (typeof HGApp !== 'undefined') HGApp.apply(); }
         await HGL.save(page._hass); document.removeEventListener('keydown', onKey); d.remove(); if (!window.__hgDryRun) location.reload(); } });
   },

@@ -1289,8 +1289,11 @@ const HG_EDIT = {
     if (a === 'hidden') return this._eSheet('hidden');
     if (a === 'look') return this._eLook();
     /* zmiana języka w edycji: arkusz, pasek i karty od razu po nowemu; nawigację ze strategii HA generuje po wyjściu z edycji (niezapisany układ zostaje) */
-    if (a === 'lang') { const v = b.dataset.l || ''; if (v === HGLang.get()) return; HGLang.set(this._hass, v); HGLang._pend = 1; this._eBar(); this._eLook(); Promise.resolve(this._eRefresh(true)).then(() => { if (this._editing) { this._eBar(); this._eLook(); } });
-      return this._eToast(hgTr('Język: ', 'Language: ') + (v ? (HGLang.LIST.find((x) => x[0] === v) || [v, v])[1] : hgTr('automatycznie', 'automatic'))); }
+    /* dopiero po wczytaniu katalogu (HGLang.set czeka na niego): bez mieszanego wyświetlania; po wyjściu z edycji w międzyczasie stronę przerysowuje hg-lang */
+    if (a === 'lang') { const v = b.dataset.l || ''; if (v === HGLang.get()) return; HGLang._pend = 1;
+      return Promise.resolve(HGLang.set(this._hass, v)).then(() => { if (!this._editing) return; this._eBar(); this._eLook();
+        this._eToast(hgTr('Język: ', 'Language: ') + (v ? (HGLang.LIST.find((x) => x[0] === v) || [v, v])[1] : hgTr('automatycznie', 'automatic')));
+        return Promise.resolve(this._eRefresh(true)).then(() => { if (this._editing) { this._eBar(); this._eLook(); } }); }); }
     if (a === 'headedit') return this._eHead();
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
     if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis') return this._eHeadAct(a, b);

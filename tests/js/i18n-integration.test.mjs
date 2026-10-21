@@ -19,7 +19,7 @@ function deferred(cat = PL) {
   const fetch = (u) => { calls.push(u); return gate.then(() => ({ ok: true, json: () => Promise.resolve(cat) })); };
   return { fetch, calls, release: () => rel() };
 }
-function mk({ lang = null, nav = ['en-GB'], fetch = deferred().fetch, manifest = MAN, parts = [], names = [] } = {}) {
+function mk({ lang = null, nav = ['en-GB'], fetch = deferred().fetch, manifest = MAN, parts = [], names = [], globals = {} } = {}) {
   const store = {}; if (lang) store['home-glass:lang'] = lang;
   const events = [], window = new EventTarget();   /* events: only hg-lang (hg-perf etc. are not under test) */
   const disp = window.dispatchEvent.bind(window); window.dispatchEvent = (e) => { if (e.type === 'hg-lang') events.push(e.type); return disp(e); };
@@ -28,7 +28,7 @@ function mk({ lang = null, nav = ['en-GB'], fetch = deferred().fetch, manifest =
     localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } },
     sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
     HTMLElement: El, customElements: { get() {}, define() {} }, matchMedia: stub(), requestAnimationFrame: () => 0, setInterval: () => 0, MutationObserver: class { observe() {} },
-    CustomEvent, Event, fetch, getComputedStyle: stub() };
+    CustomEvent, Event, fetch, getComputedStyle: stub(), ...globals };
   const api = loadParts([...FILES, ...parts], g, [...NAMES, ...names], { EN, MANIFEST: manifest, text: [['import.meta.url', 'undefined']] });
   return { ...api, events, window, store };
 }
@@ -111,4 +111,16 @@ test('hgAgoRel formats with HG_LOC()', () => {
   const m = mk({ lang: 'fr', manifest: MAN_FR, parts: ['cards/logbook-card.part.js'], names: ['hgAgoRel'] });
   assert.equal(m.hgAgoRel(Date.now() - 2 * 3600e3), new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' }).format(-2, 'hour'));
   assert.equal(mk({ lang: 'pl', parts: ['cards/logbook-card.part.js'], names: ['hgAgoRel'] }).hgAgoRel(Date.now() - 5 * 60e3), '5 minut temu');
+});
+
+test('edit mode: language switch repaints the edit bar, Look sheet and cards only once the catalog is active', async () => {
+  const d = deferred(), m = mk({ fetch: d.fetch, parts: ['hg-edit.part.js'], names: ['HG_EDIT'], globals: { HGPage: class {}, HG_TOGGLE_DOM: stub(), HG_FLOW_RX: stub() } });
+  const seen = [], page = { _editing: true, _hass: null };
+  for (const f of ['_eBar', '_eLook', '_eRefresh', '_eToast']) page[f] = () => { seen.push(f + ':' + m.HGI18n.code); };
+  const p = m.HG_EDIT._eCtl.call(page, { dataset: { hge: 'lang', l: 'pl' } });
+  await tick(10);
+  assert.deepEqual(seen, [], 'nothing repainted before the catalog'); assert.equal(m.HGLang.get(), 'pl');
+  d.release(); await p; await tick();
+  assert.ok(seen.length >= 3 && seen.every((s) => s.endsWith(':pl')), seen.join(','));
+  assert.ok(['_eBar:pl', '_eLook:pl', '_eRefresh:pl', '_eToast:pl'].every((s) => seen.includes(s)), seen.join(','));
 });
