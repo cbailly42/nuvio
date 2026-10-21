@@ -1530,7 +1530,6 @@ common.unavailable,parts/hg-edit.part.js,205,hgTr,Unavailable,Niedostępne,,,aut
 common.unavailable,parts/hg-edit.part.js,207,hgTr,Unavailable,Niedostępne,,,auto
 common.unavailable,parts/hg-edit.part.js,210,hgTr,Unavailable,Niedostępne,,,auto
 edit.last_24_h,parts/hg-edit.part.js,212,hgTr,Last 24 h,Ostatnie 24 h,,,auto
-edit.run_aria,parts/hg-edit.part.js,217,hgTr,Run: ,Uruchom: ,,concat,manual
 common.open,parts/hg-edit.part.js,219,hgTr,Open,Otwórz,,,auto
 common.stop,parts/hg-edit.part.js,219,hgTr,Stop,Zatrzymaj,,,auto
 common.close,parts/hg-edit.part.js,219,hgTr,Close,Zamknij,,,auto
@@ -1548,7 +1547,6 @@ edit.search_icons,parts/hg-edit.part.js,246,hgTr,Search icons,Szukaj ikony,,,aut
 edit.recent,parts/hg-edit.part.js,246,hgTr,Recent,Ostatnie,,,auto
 edit.all_icons,parts/hg-edit.part.js,246,hgTr,All icons,Wszystkie ikony,,,auto
 edit.size,parts/hg-edit.part.js,260,hgTr,Size,Rozmiar,,,auto
-edit.en,parts/hg-edit.part.js,260,hgTr,en,pl,,expr,manual
 edit.device,parts/hg-edit.part.js,322,hgTrO,Device,Urządzenie,,,auto
 edit.light_switch,parts/hg-edit.part.js,322,hgTrO,Light / switch,Światło / przełącznik,,,auto
 edit.turn_on_and_off,parts/hg-edit.part.js,322,hgTrO,Turn on and off with one tap,Włącz i wyłącz jednym dotknięciem,,,auto
@@ -1946,8 +1944,6 @@ edit.title,parts/hg-edit.part.js,763,hgTr,Title,Tytuł,,,auto
 edit.subtitle,parts/hg-edit.part.js,763,hgTr,Subtitle,Podtytuł,,,auto
 edit.icon_next_to_the,parts/hg-edit.part.js,764,hgTr,Icon next to the title (optional),Ikona przy tytule (opcjonalnie),,,auto
 edit.no_icon,parts/hg-edit.part.js,764,hgTr,no icon,bez ikony,,,auto
-edit.insert_to_show_the,parts/hg-edit.part.js,765,hgTr,Insert {name} to show the signed-in person's first name (now: ${H.esc(ui.first || 'none')}).,"Wstaw {name}, aby pokazać imię zalogowanej osoby (teraz: ${H.esc(ui.first || 'brak')}).",,expr,manual
-edit.is_the_name_of,parts/hg-edit.part.js,765,hgTr,{room} is the name of the open room; an empty subtitle shows the temperature and room status.,{room} to nazwa otwartego pokoju; pusty podtytuł pokazuje temperaturę i stan pokoju.,,concat,manual
 edit.shorter_versions_for_phone,parts/hg-edit.part.js,766,hgTr,Shorter versions for phone and tablet,Krótsze wersje dla telefonu i tabletu,,,auto
 edit.optional_empty_fields_use,parts/hg-edit.part.js,766,hgTr,Optional – empty fields use the main version,Opcjonalne – puste pola używają wersji głównej,,,auto
 edit.title_tablet,parts/hg-edit.part.js,767,hgTr,Title – tablet,Tytuł – tablet,,,auto
@@ -1967,7 +1963,6 @@ edit.tablet,parts/hg-edit.part.js,778,hgTr,Tablet,Tablet,,,auto
 edit.phone,parts/hg-edit.part.js,778,hgTr,Phone,Telefon,,,auto
 edit.default_header_restored,parts/hg-edit.part.js,786,hgTr,Default header restored,Przywrócono domyślny nagłówek,,,auto
 edit.header_saved,parts/hg-edit.part.js,786,hgTr,Header saved,Zapisano nagłówek,,,auto
-edit.needs,parts/hg-edit.part.js,797,hgTr,Needs,Wymaga,,concat,manual
 edit.no_matching_entity,parts/hg-edit.part.js,797,hgTr,No matching entity,Brak pasującej encji,,,auto
 edit.add_to_container,parts/hg-edit.part.js,798,hgTr,Add to container,Dodaj do kontenera,,,auto
 edit.add_component,parts/hg-edit.part.js,798,hgTr,Add component,Dodaj komponent,,,auto
@@ -1993,7 +1988,6 @@ edit.tile_type_default,parts/hg-edit.part.js,823,hgTr,Default,Normalny,,,auto
 edit.cards_in_the_container,parts/hg-edit.part.js,827,hgTr,Cards in the container,Karty w kontenerze,,,auto
 edit.empty_container_add_the,parts/hg-edit.part.js,827,hgTr,Empty container. Add the first card.,Pusty kontener. Dodaj pierwszą kartę.,,,auto
 edit.drag_or_use_arrow,parts/hg-edit.part.js,828,hgTr,Drag or use arrow keys to reorder,"Przeciągnij lub użyj strzałek, aby zmienić kolejność",,,auto
-edit.cards_2,parts/hg-edit.part.js,828,hgTr,cards,kart,,concat,manual
 edit.edit,parts/hg-edit.part.js,828,hgTr,Edit,Edytuj,,,auto
 edit.width_in_columns,parts/hg-edit.part.js,828,hgTr,Width in columns,Szerokość w kolumnach,,,auto
 edit.width,parts/hg-edit.part.js,828,hgTr,Width,Szerokość,,,auto
@@ -2011,10 +2005,8 @@ common.close,parts/hg-edit.part.js,832,hgTr,Close,Zamknij,,,auto
 edit.live_preview,parts/hg-edit.part.js,833,hgTr,Live preview,Podgląd na żywo,,,auto
 edit.component_options,parts/hg-edit.part.js,835,hgTr,Component options,Opcje komponentu,,,auto
 edit.component_options,parts/hg-edit.part.js,835,hgTr,Component options,Opcje komponentu,,,auto
-edit.en,parts/hg-edit.part.js,835,hgTr,en,pl,,expr,manual
 common.name,parts/hg-edit.part.js,836,hgTr,Name,Nazwa,,,auto
 edit.icon_e_g_mdi,parts/hg-edit.part.js,837,hgTr,Icon (e.g. mdi:sofa),Ikona (np. mdi:sofa),,,auto
-edit.o_l_1,parts/hg-edit.part.js,838,hgTr,o.l[1],o.l[0],,expr,manual
 edit.from_address_area,parts/hg-edit.part.js,839,hgTr,From address (?area=),Z adresu (?area=),,,auto
 edit.advanced_configuration_json,parts/hg-edit.part.js,843,hgTr,Advanced configuration (JSON),Zaawansowana konfiguracja (JSON),,,auto
 edit.any_card_fields_e,parts/hg-edit.part.js,843,hgTr,"Any card fields, e.g. labels, colors, thresholds, actions. They override the settings above.","Dowolne pola karty, np. etykiety, kolory, progi, akcje. Nadpisują ustawienia powyżej.",,,auto
@@ -2030,15 +2022,10 @@ edit.cannot_read_this_yaml,parts/hg-edit.part.js,858,hgTr,Cannot read this YAML.
 edit.paste_the_card_yaml,parts/hg-edit.part.js,858,hgTr,"Paste the card YAML from the HA editor (Edit card, Show code editor).","Wklej YAML karty z edytora HA (Edytuj kartę, Pokaż edytor kodu).",,,auto
 edit.choose_entities,parts/hg-edit.part.js,859,hgTr,Choose entities,Wybierz encje,,,auto
 edit.paste_a_valid_card,parts/hg-edit.part.js,889,hgTr,Paste a valid card YAML first,Najpierw wklej poprawny YAML karty,,,auto
-edit.saved,parts/hg-edit.part.js,893,hgTr,Saved: ,Zapisano: ,,,auto
-edit.added_to_container,parts/hg-edit.part.js,893,hgTr,Added to container: ,Dodano do kontenera: ,,,auto
-edit.saved,parts/hg-edit.part.js,899,hgTr,Saved: ,Zapisano: ,,concat,manual
-edit.saved,parts/hg-edit.part.js,907,hgTr,Saved: ,Zapisano: ,,,auto
-edit.added,parts/hg-edit.part.js,907,hgTr,Added: ,Dodano: ,,,auto
-edit.moved_out_to_the,parts/hg-edit.part.js,919,hgTr,Moved out to the panel: ,Wyjęto na panel: ,,concat,manual
-edit.moved_into,parts/hg-edit.part.js,923,hgTr,Moved into: ,Przeniesiono do: ,,concat,manual
-edit.home_glass_my_tiles,parts/hg-edit.part.js,960,hgTr,Home Glass – My tiles,Home Glass – Moje kafelki,,load-time,manual
-edit.tiles_added_in_edit,parts/hg-edit.part.js,960,hgTr,Tiles added in edit mode,Kafelki dodane w trybie edycji,,load-time,manual
+edit.saved_name,parts/hg-edit.part.js,893,hgTr,Saved: {name},Zapisano: {name},name,concat,auto
+edit.added_to_container_name,parts/hg-edit.part.js,893,hgTr,Added to container: {name},Dodano do kontenera: {name},name,concat,auto
+edit.saved_name,parts/hg-edit.part.js,907,hgTr,Saved: {name},Zapisano: {name},name,concat,auto
+edit.added_name,parts/hg-edit.part.js,907,hgTr,Added: {name},Dodano: {name},name,concat,auto
 common.media,parts/hg-edit.part.js,1074,hgTrO,Media,Multimedia,,,auto
 edit.cameras,parts/hg-edit.part.js,1074,hgTrO,Cameras,Kamery,,,auto
 edit.scenes,parts/hg-edit.part.js,1074,hgTrO,Scenes,Sceny,,,auto
@@ -2048,9 +2035,7 @@ edit.lights,parts/hg-edit.part.js,1074,hgTrO,Lights,Światła,,,auto
 edit.robots,parts/hg-edit.part.js,1074,hgTrO,Robots,Roboty,,,auto
 edit.power,parts/hg-edit.part.js,1074,hgTrO,Power,Moc,,,auto
 edit.covers,parts/hg-edit.part.js,1074,hgTrO,Covers,Rolety,,,auto
-edit.en,parts/hg-edit.part.js,1075,hgTrO,en,pl,,expr,manual
 edit.style,parts/hg-edit.part.js,1077,hgTr,Style,Styl,,,auto
-edit.loaded_version_hg_build,parts/hg-edit.part.js,1173,hgTr,Loaded version ${HG_BUILD.split('+')[0]} differs from the server (${m[1].split('+')[0]}). Reload without cache (Ctrl+Shift+R).,Załadowana wersja ${HG_BUILD.split('+')[0]} jest starsza niż na serwerze (${m[1].split('+')[0]}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).,,expr,manual
 edit.layout_saved_synced_via,parts/hg-edit.part.js,1189,hgTr,Layout saved (synced via Home Assistant),Zapisano układ (synchronizacja przez Home Assistant),,,auto
 edit.layout_saved_on_this,parts/hg-edit.part.js,1189,hgTr,Layout saved on this device,Zapisano układ na tym urządzeniu,,,auto
 edit.drag_or_use_arrow,parts/hg-edit.part.js,1215,hgTr,Drag or use arrow keys to reorder,"Przeciągnij lub użyj strzałek, aby zmienić kolejność",,,auto
@@ -2067,21 +2052,16 @@ edit.appearance,parts/hg-edit.part.js,1242,hgTr,Appearance,Wygląd,,,auto
 edit.reset_to_default_layout,parts/hg-edit.part.js,1243,hgTr,Reset to default layout,Przywróć domyślny układ,,,auto
 common.cancel,parts/hg-edit.part.js,1244,hgTr,Cancel,Anuluj,,,auto
 common.done,parts/hg-edit.part.js,1244,hgTr,Done,Gotowe,,,auto
-edit.section,parts/hg-edit.part.js,1255,hgTr,Section: ,Sekcja: ,,,auto
+edit.section_name,parts/hg-edit.part.js,1255,hgTr,Section: {name},Sekcja: {name},name,concat,auto
 edit.discard_unsaved_layout_changes,parts/hg-edit.part.js,1264,hgTr,Discard unsaved layout changes?,Odrzucić niezapisane zmiany układu?,,,auto
 edit.view_layout_reset_to,parts/hg-edit.part.js,1288,hgTr,View layout reset to default (save with “Done”),Przywrócono domyślny układ widoku (zapisz „Gotowe”),,,auto
-edit.language_toast,parts/hg-edit.part.js,1295,hgTr,Language: ,Język: ,,concat,manual
 edit.automatic,parts/hg-edit.part.js,1295,hgTr,automatic,automatycznie,,,auto
 edit.enter_an_https_or,parts/hg-edit.part.js,1310,hgTr,Enter an https:// or /local/… address,Podaj adres https:// lub /local/…,,,auto
 edit.appearance_reset_to_default,parts/hg-edit.part.js,1314,hgTr,Appearance reset to default,Przywrócono domyślny wygląd,,,auto
-edit.added,parts/hg-edit.part.js,1332,hgTr,Added: ,Dodano: ,,concat,manual
 edit.entity_added,parts/hg-edit.part.js,1334,hgTr,Entity added,Dodano encję,,,auto
 edit.entity_changed,parts/hg-edit.part.js,1334,hgTr,Entity changed,Zmieniono encję,,,auto
-edit.removed_from_room,parts/hg-edit.part.js,1342,hgTr,Removed from room: ,Usunięto z pokoju: ,,concat,manual
-edit.hidden_in_this_room,parts/hg-edit.part.js,1342,hgTr,Hidden in this room: ,Ukryto w tym pokoju: ,,concat,manual
 edit.entity_removed,parts/hg-edit.part.js,1344,hgTr,Entity removed,Usunięto encję,,,auto
 edit.this_item,parts/hg-edit.part.js,1351,hgTr,this item,ten element,,,auto
-edit.remove_h_esc_nm,parts/hg-edit.part.js,1352,hgTr,"Remove “${H.esc(nm.trim().slice(0, 40))}”?","Usunąć „${H.esc(nm.trim().slice(0, 40))}”?",,expr,manual
 edit.remove,parts/hg-edit.part.js,1352,hgTr,Remove,Usuń,,,auto
 edit.answer_no,parts/hg-edit.part.js,1352,hgTr,No,Nie,,,auto
 edit.tile_removed,parts/hg-edit.part.js,1362,hgTr,Tile removed,Usunięto kafelek,,,auto
@@ -2157,7 +2137,7 @@ edit.dashboard_setting,parts/hg-edit.part.js,1630,hgTr,dashboard setting,ustawie
 edit.setup_wizard,parts/hg-edit.part.js,1630,hgTr,setup wizard,kreator,,,auto
 edit.browser_language,parts/hg-edit.part.js,1630,hgTr,browser language,język przeglądarki,,,auto
 edit.language,parts/hg-edit.part.js,1632,hgTr,Language,Język,,,auto
-edit.saved_to_your_account,parts/hg-edit.part.js,1632,hgTr,Saved to your account. Automatic: ,Zapisywany na Twoim koncie. Automatycznie: ,,,auto
+edit.language_auto_hint,parts/hg-edit.part.js,1632,hgTr,Saved to your account. Automatic: {name} ({source}),Zapisywany na Twoim koncie. Automatycznie: {name} ({source}),"name,source",concat,auto
 edit.language,parts/hg-edit.part.js,1633,hgTr,Language,Język,,,auto
 common.automatic,parts/hg-edit.part.js,1633,hgTr,Automatic,Automatycznie,,,auto
 edit.full,parts/hg-edit.part.js,1638,hgTr,Full,Pełne,,,auto
@@ -2223,7 +2203,6 @@ common.close,parts/hg-edit.part.js,1729,hgTr,Close,Zamknij,,,auto
 edit.no_session_cannot_upload,parts/hg-edit.part.js,1731,hgTr,No session – cannot upload,Brak sesji – nie można przesłać,,,auto
 edit.uploading,parts/hg-edit.part.js,1732,hgTr,Uploading…,Przesyłanie…,,,auto
 edit.uploaded_image_set,parts/hg-edit.part.js,1735,hgTr,Uploaded image set,Ustawiono przesłane zdjęcie,,,auto
-edit.upload_failed,parts/hg-edit.part.js,1735,hgTr,Upload failed (,Nie udało się przesłać (,,concat,manual
 edit.restore_hidden,parts/hg-edit.part.js,1749,hgTr,Restore hidden,Przywróć ukryte,,,auto
 edit.restore_hidden,parts/hg-edit.part.js,1749,hgTr,Restore hidden,Przywróć ukryte,,,auto
 common.close,parts/hg-edit.part.js,1749,hgTr,Close,Zamknij,,,auto
@@ -2253,8 +2232,6 @@ common.media,parts/hg-edit.part.js,1758,hgTr,Media,Multimedia,,,auto
 edit.cameras,parts/hg-edit.part.js,1758,hgTr,Cameras,Kamery,,,auto
 edit.covers,parts/hg-edit.part.js,1758,hgTr,Covers,Rolety,,,auto
 edit.scenes_and_scripts,parts/hg-edit.part.js,1758,hgTr,Scenes and scripts,Sceny i skrypty,,,auto
-edit.entity_2,parts/hg-edit.part.js,1783,hgTr,entity,encja,,plural,manual
-edit.entities_2,parts/hg-edit.part.js,1783,hgTr,entities,encji,,plural,manual
 common.hidden_suffix,parts/hg-edit.part.js,1783,hgTr, · hidden, · ukryty,,,auto
 edit.all_areas_are_already,parts/hg-edit.part.js,1783,hgTr,All areas are already on the list.,Wszystkie obszary są już na liście.,,,auto
 edit.preview,parts/hg-edit.part.js,1801,hgTr,Preview,Podgląd,,,auto
@@ -2263,8 +2240,110 @@ edit.already_in_view,parts/hg-edit.part.js,1802,hgTr,already in view,już na wid
 common.state_unavailable,parts/hg-edit.part.js,1802,hgTr,unavailable,niedostępne,,,auto
 edit.no_matching_entities,parts/hg-edit.part.js,1805,hgTr,No matching entities.,Brak pasujących encji.,,,auto
 edit.no_matching_entities_those,parts/hg-edit.part.js,1805,hgTr,No matching entities (those already shown are skipped).,Brak pasujących encji (już widoczne są pomijane).,,,auto
-edit.entity_2,parts/hg-edit.part.js,1806,hgTr,entity,encja,,plural,manual
-edit.entities_2,parts/hg-edit.part.js,1806,hgTr,entities,encji,,plural,manual
+edit.run_aria,parts/hg-edit.part.js,217,hgTr,Run: {name},Uruchom: {name},name,concat,auto
+edit.head_name_hint,parts/hg-edit.part.js,765,hgTr,Insert {placeholder} to show the signed-in person's first name (now: {name}).,"Wstaw {placeholder}, aby pokazać imię zalogowanej osoby (teraz: {name}).","placeholder,name",expr,auto
+edit.head_name_none,parts/hg-edit.part.js,765,hgTr,none,brak,,expr,auto
+edit.head_room_hint,parts/hg-edit.part.js,765,hgTr,{room} is the name of the open room; an empty subtitle shows the temperature and room status.,{room} to nazwa otwartego pokoju; pusty podtytuł pokazuje temperaturę i stan pokoju.,room,concat,auto
+edit.needs_domains,parts/hg-edit.part.js,797,hgTr,Needs {domains},Wymaga {domains},domains,concat,auto
+edit.cards_count,parts/hg-edit.part.js,828,hgTr,{count} cards,{count} kart,count,concat,auto
+edit.saved_name,parts/hg-edit.part.js,899,hgTr,Saved: {name},Zapisano: {name},name,concat,auto
+edit.moved_out_name,parts/hg-edit.part.js,919,hgTr,Moved out to the panel: {name},Wyjęto na panel: {name},name,concat,auto
+edit.moved_into_name,parts/hg-edit.part.js,923,hgTr,Moved into: {name},Przeniesiono do: {name},name,concat,auto
+edit.added_name,parts/hg-edit.part.js,1332,hgTr,Added: {name},Dodano: {name},name,concat,auto
+edit.removed_from_room_name,parts/hg-edit.part.js,1342,hgTr,Removed from room: {name},Usunięto z pokoju: {name},name,concat,auto
+edit.hidden_in_room_name,parts/hg-edit.part.js,1342,hgTr,Hidden in this room: {name},Ukryto w tym pokoju: {name},name,concat,auto
+edit.upload_failed,parts/hg-edit.part.js,1735,hgTr,Upload failed ({error}),Nie udało się przesłać ({error}),error,concat,auto
+edit.language_toast,parts/hg-edit.part.js,1295,hgTr,Language: {name},Język: {name},name,concat,auto
+edit.remove_confirm,parts/hg-edit.part.js,1352,hgTr,Remove “{name}”?,Usunąć „{name}”?,name,expr,auto
+edit.version_mismatch,parts/hg-edit.part.js,1173,hgTr,Loaded version {version} differs from the server ({server}). Reload without cache (Ctrl+Shift+R).,Załadowana wersja {version} jest starsza niż na serwerze ({server}). Odśwież stronę bez pamięci podręcznej (Ctrl+Shift+R).,"version,server",expr,auto
+edit.tiles_card.picker_name,parts/hg-edit.part.js,960,hgTr,Home Glass – My tiles,Home Glass – Moje kafelki,,load-time,auto
+edit.tiles_card.picker_description,parts/hg-edit.part.js,960,hgTr,Tiles added in edit mode,Kafelki dodane w trybie edycji,,load-time,auto
+edit.size_small,parts/hg-edit.part.js,260,hgTr,Small,Mały,,array,auto
+edit.size_medium,parts/hg-edit.part.js,260,hgTr,Medium,Średni,,array,auto
+edit.size_full_width,parts/hg-edit.part.js,260,hgTr,Full width,Cała szerokość,,array,auto
+edit.modes.agenda,parts/hg-edit.part.js,341,hgTr,Agenda,Agenda,,array,auto
+edit.modes.month,parts/hg-edit.part.js,341,hgTr,Month,Miesiąc,,array,auto
+edit.modes.horizontal,parts/hg-edit.part.js,343,hgTr,Horizontal,Poziomy,,array,auto
+edit.modes.vertical,parts/hg-edit.part.js,343,hgTr,Vertical,Pionowy,,array,auto
+edit.modes.tile,parts/hg-edit.part.js,345,hgTr,Tile,Kafel,,array,auto
+edit.modes.row,parts/hg-edit.part.js,345,hgTr,Row,Wiersz,,array,auto
+edit.modes.buttons,parts/hg-edit.part.js,349,hgTr,Buttons,Przyciski,,array,auto
+edit.modes.list,parts/hg-edit.part.js,349,hgTr,List,Lista,,array,auto
+edit.modes.internet,parts/hg-edit.part.js,384,hgTr,Internet,Internet,,array,auto
+edit.modes.gateway,parts/hg-edit.part.js,384,hgTr,Gateway,Brama,,array,auto
+edit.modes.wi_fi,parts/hg-edit.part.js,384,hgTr,Wi-Fi,Wi-Fi,,array,auto
+edit.modes.devices,parts/hg-edit.part.js,384,hgTr,Devices,Urządzenia,,array,auto
+edit.modes.clients,parts/hg-edit.part.js,384,hgTr,Clients,Klienci,,array,auto
+edit.modes.image,parts/hg-edit.part.js,418,hgTr,Image,Obraz,,array,auto
+edit.modes.page,parts/hg-edit.part.js,418,hgTr,Page,Strona,,array,auto
+edit.modes.area,parts/hg-edit.part.js,428,hgTr,Area,Obszar,,array,auto
+edit.modes.line,parts/hg-edit.part.js,428,hgTr,Line,Linia,,array,auto
+edit.modes.bars,parts/hg-edit.part.js,428,hgTr,Bars,Słupki,,array,auto
+edit.options.title,parts/hg-edit.part.js,357,hgTr,Title,Tytuł,,array,auto
+edit.options.number_of_days,parts/hg-edit.part.js,362,hgTr,Number of days,Liczba dni,,array,auto
+edit.options.on_tap_open_path,parts/hg-edit.part.js,362,hgTr,On tap open (path),Po dotknięciu otwórz (ścieżka),,array,auto
+edit.options.max_total_power_w,parts/hg-edit.part.js,365,hgTr,Max total power (W),Maks. moc łącznie (W),,array,auto
+edit.options.max_phase_power_w,parts/hg-edit.part.js,365,hgTr,Max phase power (W),Maks. moc fazy (W),,array,auto
+edit.options.invert_grid_sign,parts/hg-edit.part.js,375,hgTr,Invert grid sign,Odwróć znak sieci,,array,auto
+edit.options.invert_battery_sign,parts/hg-edit.part.js,375,hgTr,Invert battery sign,Odwróć znak baterii,,array,auto
+edit.options.device_classes,parts/hg-edit.part.js,387,hgTr,"Kinds (device_class, comma separated)","Rodzaje (device_class, po przecinku)",,array,auto
+edit.options.subtitle,parts/hg-edit.part.js,390,hgTr,Subtitle,Podtytuł,,array,auto
+edit.options.open_path_or_url,parts/hg-edit.part.js,390,hgTr,Open path or URL,Otwórz ścieżkę lub adres,,array,auto
+edit.options.home_label,parts/hg-edit.part.js,393,hgTr,"""Home"" label",Etykieta „w domu”,,array,auto
+edit.options.away_label,parts/hg-edit.part.js,393,hgTr,"""Away"" label",Etykieta „poza domem”,,array,auto
+edit.options.room_view_path,parts/hg-edit.part.js,394,hgTr,Room view path,Ścieżka widoku pokoju,,array,auto
+edit.options.room,parts/hg-edit.part.js,396,hgTr,Room,Pokój,,array,auto
+edit.options.warning_threshold,parts/hg-edit.part.js,409,hgTr,Warning threshold,Próg ostrzeżenia,,array,auto
+edit.options.alert_threshold,parts/hg-edit.part.js,409,hgTr,Alert threshold,Próg alarmu,,array,auto
+edit.options.decimals,parts/hg-edit.part.js,409,hgTr,Decimals,Miejsca po przecinku,,array,auto
+edit.options.range_hours,parts/hg-edit.part.js,410,hgTr,Range (hours),Zakres (godziny),,array,auto
+edit.options.only_open_ones,parts/hg-edit.part.js,411,hgTr,Only open ones,Tylko otwarte,,array,auto
+edit.options.low_level,parts/hg-edit.part.js,412,hgTr,Low level (%),Niski poziom (%),,array,auto
+edit.options.show_at_most,parts/hg-edit.part.js,412,hgTr,Show at most,Pokaż najwyżej,,array,auto
+edit.options.seconds,parts/hg-edit.part.js,415,hgTr,Seconds,Sekundy,,array,auto
+edit.options.clock_12_hour,parts/hg-edit.part.js,415,hgTr,12 hour clock,Zegar 12 godzinny,,array,auto
+edit.options.note_text,parts/hg-edit.part.js,417,hgTr,"Text (**bold**, *italic*, ""- "" lists)","Treść (**pogrubienie**, *kursywa*, listy ""- "")",,array,auto
+edit.options.image_address,parts/hg-edit.part.js,418,hgTr,Address (https://… or /local/…),Adres (https://… lub /local/…),,array,auto
+edit.options.aspect_ratio,parts/hg-edit.part.js,418,hgTr,Aspect ratio,Proporcje,,array,auto
+edit.options.image_refresh_s,parts/hg-edit.part.js,418,hgTr,Image refresh (s),Odświeżanie obrazu (s),,array,auto
+edit.options.child_name,parts/hg-edit.part.js,420,hgTr,Child name (with several children),Imię dziecka (przy kilku dzieciach),,array,auto
+edit.options.title_with_name,parts/hg-edit.part.js,423,hgTr,Title ({name} = first name),Tytuł ({name} = imię),,array,auto
+edit.options.tagline,parts/hg-edit.part.js,423,hgTr,Tagline,Hasło,,array,auto
+edit.options.photo_address,parts/hg-edit.part.js,423,hgTr,Photo (https://… or /local/…),Zdjęcie (https://… lub /local/…),,array,auto
+edit.options.maximum,parts/hg-edit.part.js,426,hgTr,Maximum,Maksimum,,array,auto
+edit.options.hours_back,parts/hg-edit.part.js,429,hgTr,Hours back,Godziny wstecz,,array,auto
+edit.options.room_name,parts/hg-edit.part.js,431,hgTr,Room name,Nazwa pokoju,,array,auto
+edit.options.columns_empty_automatic,parts/hg-edit.part.js,442,hgTr,Columns (empty = automatic),Kolumny (puste = automatycznie),,array,auto
+edit.options.starting_period_hours,parts/hg-edit.part.js,444,hgTr,"Starting period in hours (24, 168, 720)","Okres na start w godzinach (24, 168, 720)",,array,auto
+edit.options.plant_name,parts/hg-edit.part.js,453,hgTr,Plant name,Nazwa rośliny,,array,auto
+edit.options.moisture_min,parts/hg-edit.part.js,453,hgTr,Moisture min. (%),Wilgotność min. (%),,array,auto
+edit.options.moisture_max,parts/hg-edit.part.js,453,hgTr,Moisture max. (%),Wilgotność maks. (%),,array,auto
+edit.options.cheapest_window_hours,parts/hg-edit.part.js,456,hgTr,Cheapest window (hours),Najtańsze okno (godziny),,array,auto
+edit.options.decimal_places,parts/hg-edit.part.js,456,hgTr,Decimal places,Miejsca po przecinku,,array,auto
+edit.options.last_hours,parts/hg-edit.part.js,459,hgTr,Last hours,Ostatnie godziny,,array,auto
+edit.options.most_entries,parts/hg-edit.part.js,459,hgTr,Most entries,Najwyżej wpisów,,array,auto
+edit.options.page_address,parts/hg-edit.part.js,461,hgTr,Page address (https://… or /…),Adres strony (https://… albo /…),,array,auto
+edit.options.aspect_ratio_examples,parts/hg-edit.part.js,461,hgTr,"Aspect ratio (e.g. 16:9, 4:3, 1:1)","Proporcje (np. 16:9, 4:3, 1:1)",,array,auto
+edit.options.fixed_height,parts/hg-edit.part.js,461,hgTr,Or a fixed height (px),Albo stała wysokość (px),,array,auto
+edit.options.grid_columns,parts/hg-edit.part.js,464,hgTr,"Columns (1–6, empty = 3)","Kolumny (1–6, puste = 3)",,array,auto
+edit.options.gap_px,parts/hg-edit.part.js,464,hgTr,Gap (px),Odstęp (px),,array,auto
+edit.options.square_cells,parts/hg-edit.part.js,465,hgTr,Square cells,Kwadratowe komórki,,array,auto
+edit.options.one_glass_for_grid,parts/hg-edit.part.js,465,hgTr,One glass for the whole grid,Jedno szkło na całą siatkę,,array,auto
+edit.options.each_card_own_glass,parts/hg-edit.part.js,468,hgTr,Each card in its own glass,Każda karta we własnym szkle,,array,auto
+edit.options.no_lines_between_cards,parts/hg-edit.part.js,468,hgTr,No lines between cards,Bez linii między kartami,,array,auto
+edit.options.width_ratio,parts/hg-edit.part.js,471,hgTr,"Width ratio (e.g. 2, 1)","Proporcje szerokości (np. 2, 1)",,array,auto
+edit.options.stack_vertically_below_px,parts/hg-edit.part.js,472,hgTr,Stack vertically below (px),Układaj pionowo poniżej (px),,array,auto
+edit.options.condition_state,parts/hg-edit.part.js,480,hgTr,"State (e.g. on, home; several with commas)","Stan (np. on, home; kilka po przecinku)",,array,auto
+edit.options.condition_not,parts/hg-edit.part.js,480,hgTr,When the state is different,Gdy stan jest inny,,array,auto
+edit.options.condition_above,parts/hg-edit.part.js,481,hgTr,Or a value above,Albo wartość powyżej,,array,auto
+edit.options.condition_below,parts/hg-edit.part.js,481,hgTr,Or a value below,Albo wartość poniżej,,array,auto
+edit.options.condition_screen,parts/hg-edit.part.js,481,hgTr,"Only on screen: phone, big or a CSS media query","Tylko na ekranie: phone, big albo zapytanie CSS",,array,auto
+edit.options.ha_card_yaml,parts/hg-edit.part.js,485,hgTr,YAML or JSON of a Home Assistant card,YAML albo JSON karty z Home Assistant,,array,auto
+edit.group_types.card,parts/hg-edit.part.js,1075,hgTrO,Card,Karta,,array,auto
+edit.group_types.list,parts/hg-edit.part.js,1075,hgTrO,List,Lista,,array,auto
+edit.group_types.grid,parts/hg-edit.part.js,1075,hgTrO,Grid,Siatka,,array,auto
+edit.group_types.carousel,parts/hg-edit.part.js,1075,hgTrO,Carousel,Karuzela,,array,auto
+edit.group_types.compact_list,parts/hg-edit.part.js,1075,hgTrO,Compact list,Kompaktowa lista,,array,auto
 lookr.temperature_sensor,parts/hg-lookr.part.js,11,hgTr,Temperature sensor,Czujnik temperatury,,,auto
 lookr.humidity_sensor,parts/hg-lookr.part.js,11,hgTr,Humidity sensor,Czujnik wilgotności,,,auto
 common.automatic,parts/hg-lookr.part.js,11,hgTr,Automatic,Automatycznie,,,auto
