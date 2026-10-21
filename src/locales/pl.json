@@ -425,6 +425,10 @@
       "missing": "brak",
       "picker_description": "Kilka encji w rzędzie: ikona, nazwa i stan",
       "picker_name": "Nuvio – Rzut oka"
+    },
+    "grid": {
+      "picker_description": "Karty w kolumnach, jak siatka w HA",
+      "picker_name": "Nuvio – Siatka"
     }
   },
   "common": {

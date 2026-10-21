@@ -421,6 +421,10 @@
       "missing": "missing",
       "picker_description": "Several entities in a row: icon, name and state",
       "picker_name": "Nuvio – Glance"
+    },
+    "grid": {
+      "picker_description": "Cards in columns, like the HA grid",
+      "picker_name": "Nuvio – Grid"
     }
   },
   "common": {
