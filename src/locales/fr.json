@@ -128,11 +128,11 @@
         "auto": "Auto",
         "diffuse": "Diffus",
         "focus": "Concentré",
-        "high": "Élevée",
+        "high": "Élevé",
         "low": "Faible",
-        "medium": "Moyenne",
-        "mid": "Moyenne",
-        "middle": "Moyenne",
+        "medium": "Moyen",
+        "mid": "Moyen",
+        "middle": "Moyen",
         "off": "Arrêt",
         "on": "Marche",
         "quiet": "Silencieux",
@@ -181,7 +181,7 @@
       "days_count_many": "{count} jours",
       "no_calendar_entities_found": "Aucune entité calendar.* trouvée",
       "no_calendars": "Aucun calendrier",
-      "no_events_days_one": "Aucun événement dans les {count} prochains jours.",
+      "no_events_days_one": "Aucun événement d’ici {count} jour.",
       "no_events_days_other": "Aucun événement dans les {count} prochains jours.",
       "no_events_days_many": "Aucun événement dans les {count} prochains jours.",
       "picker_description": "Événements à venir regroupés par jour",
@@ -244,7 +244,7 @@
         "pending": "En attente…",
         "triggered": "Déclenchée !",
         "unavailable": "Indisponible",
-        "unknown": "Inconnu"
+        "unknown": "Inconnue"
       }
     },
     "appliance": {
@@ -336,7 +336,7 @@
     "button": {
       "button": "Bouton",
       "choose_an_entity_or": "Choisissez une entité ou une action",
-      "done": "Fait",
+      "done": "Terminé",
       "picker_description": "Bouton pour un script, une scène, button.press ou toute autre action",
       "picker_name": "Home Glass – Bouton",
       "script_scene_button_or": "Script, scène, bouton ou tap_action",
@@ -359,7 +359,7 @@
       "picker_description": "Image actualisée toutes les quelques secondes, vue en direct au toucher",
       "picker_name": "Home Glass – Caméra",
       "preview": "APERÇU",
-      "recording": "enregistre",
+      "recording": "enregistrement",
       "state_live": "en direct",
       "state_offline": "hors ligne",
       "stop_live": "Arrêter",
@@ -1147,7 +1147,7 @@
           "metrics": {
             "filter": "Filtre",
             "humidity": "Humidité",
-            "pm25": "PM2,5",
+            "pm25": "PM2.5",
             "temperature": "Température"
           },
           "name": "Purificateur d’air"
@@ -1298,7 +1298,7 @@
           "on": "Fuite !"
         },
         "motion": {
-          "off": "Aucun",
+          "off": "Normal",
           "on": "Détecté"
         },
         "occupancy": {
