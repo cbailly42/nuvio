@@ -42,6 +42,7 @@
     "name": "Nazwa",
     "save": "Zapisz",
     "state_unavailable": "niedostępne",
+    "state_unavailable_masc": "niedostępny",
     "weather": "Pogoda"
   },
   "core": {
@@ -221,6 +222,12 @@
       "who_sees": "Kto widzi ten widok",
       "who_sees_count": "Widzi {n} z {total} osób. Osoba z własnym układem też nie zobaczy ukrytego widoku.",
       "you": "Ty"
+    }
+  },
+  "shared": {
+    "calendar": {
+      "fetch_error": "błąd pobierania",
+      "untitled": "(bez tytułu)"
     }
   },
   "states": {

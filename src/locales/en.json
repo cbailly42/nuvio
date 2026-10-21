@@ -42,6 +42,7 @@
     "name": "Name",
     "save": "Save",
     "state_unavailable": "unavailable",
+    "state_unavailable_masc": "unavailable",
     "weather": "Weather"
   },
   "core": {
@@ -221,6 +222,12 @@
       "who_sees": "Who sees this view",
       "who_sees_count": "{n} of {total} people see it. People with their own layout don't see a hidden view either.",
       "you": "You"
+    }
+  },
+  "shared": {
+    "calendar": {
+      "fetch_error": "fetch error",
+      "untitled": "(untitled)"
     }
   },
   "states": {
