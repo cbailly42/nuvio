@@ -44,7 +44,8 @@ document.documentElement.setAttribute('data-hg-scheme', sch);
       box.innerHTML = `<div class="lab">${name} · ${sz.toUpperCase()}</div>`;
       const host = document.createElement('div'); host.dataset.scheme = sch; box.appendChild(host);
       const r = host.attachShadow({ mode: 'open' });
-      r.innerHTML = `<style>${css}</style><ha-card class="glass" style="display:block;height:auto">${fn()}</ha-card>`;
+      const paint = () => { r.innerHTML = `<style>${css}</style><ha-card class="glass" style="display:block;height:auto">${fn()}</ha-card>`; };
+      paint(); window.addEventListener('hg-lang', paint);   /* katalog języka dociera po pierwszym rysowaniu: klocki rysują się od nowa, jak karty */
     }
   }
 }

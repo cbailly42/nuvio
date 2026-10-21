@@ -34,7 +34,7 @@ const HGAreas = {
     if (!v) { if (G.size > 40) G.clear(); v = Object.assign({}, w, cfg || {}, { hide: [...new Set([...(w.hide || []), ...((cfg && cfg.hide) || [])])] }); G.set(k, v); (this._gs || (this._gs = new WeakSet())).add(v); } return v; },
   model(h, cfg) {
     cfg = this.glob(cfg) || this._e;
-    const key = [h.entities, h.devices, h.areas, this._cnt(h)];
+    const key = [h.entities, h.devices, h.areas, this._cnt(h), HGI18n.code, HGI18n.cache[HGI18n.code]];   /* język i katalog w kluczu: nazwa pokoju „Bez pokoju” jest tłumaczona */
     const m0 = this._memo.get(cfg);
     if (m0 && m0.key.every((x, i) => x === key[i])) return m0;
     const reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
