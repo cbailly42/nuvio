@@ -94,7 +94,7 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/power.webp" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current value with a bar and a line for recent hours: power, energy or a forecast. Options: chart caption, hide the chart labels, bar scale end, level label.</td>
+<td width="50%" valign="top"><img src="components/power.webp" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current value with a bar and a line for recent hours: power, energy or a forecast. Options: chart caption, hide the chart labels, bar scale end, level label, [forecast chart](#forecast-chart) (for example 7 days of Solcast).</td>
 <td width="50%" valign="top"><img src="components/energy.webp" alt="Energy – statistics" width="100%"><br><b>Energy – statistics</b> <code>custom:nuvio-energy-stats-card</code><br>Consumption and production: today, week, month.</td>
 </tr>
 <tr>
@@ -325,3 +325,41 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 
 **More components in + Add** (0.9.0): light with brightness, thermostat, big value, history graph, doors and windows, batteries, vacuum, mini player, clock, sun, note, image or page, and updates. Each one has a live preview, form fields and is included in export and import.
 
+## Forecast chart
+
+**Power now** (`custom:nuvio-power-card`) can draw values from a forecast attribute instead of the history. The big value and the bar still show the current state of `entities`.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `source` | `history` | `forecast` draws the chart from a forecast (the editor switch is `forecast: true`) |
+| `forecast_entities` | the card `entities` | entities that carry the forecast; values with the same time are added up |
+| `forecast_attribute` | `detailedForecast`, else `detailedHourly`, else `forecast` | attribute with the list of forecast points |
+| `forecast_value` | `pv_estimate`, `value` or `temperature` | field with the value in each point |
+| `forecast_days` / `forecast_hours` | 1 day | how far ahead to draw; hours win over days |
+| `forecast_type` | `hourly` | for `weather.*` entities: `hourly`, `daily` or `twice_daily` |
+
+Each point needs a time in `period_start` (Solcast) or `datetime` (weather). With more than 36 hours the axis shows day names at midnight.
+
+**Solcast PV Forecast** ([BJReplay/ha-solcast-solar](https://github.com/BJReplay/ha-solcast-solar#attributes)): every daily sensor (today, tomorrow, day 3 to day 7) has `detailedForecast` (every 30 minutes) and `detailedHourly` (every hour), a list of `period_start`, `pv_estimate`, `pv_estimate10` and `pv_estimate90`, in kW (average power of the period). Days 3 to 7 are disabled by default in Home Assistant, so enable them first. Entity ids depend on your language (for example `..._prognoza_na_dzisiaj` in Polish); check them in Developer tools.
+
+**Weather** ([weather.get_forecasts](https://www.home-assistant.io/integrations/weather/)): the card calls the action with `return_response` every 5 minutes and reads `forecast[].datetime` and `temperature` (or `forecast_value`, for example `precipitation`).
+
+```yaml
+type: custom:nuvio-power-card
+title: Solar forecast, 7 days
+icon: mdi:solar-power
+entities:
+  - sensor.solcast_pv_forecast_forecast_today
+source: forecast
+forecast_days: 7
+forecast_entities:
+  - sensor.solcast_pv_forecast_forecast_today
+  - sensor.solcast_pv_forecast_forecast_tomorrow
+  - sensor.solcast_pv_forecast_forecast_day_3
+  - sensor.solcast_pv_forecast_forecast_day_4
+  - sensor.solcast_pv_forecast_forecast_day_5
+  - sensor.solcast_pv_forecast_forecast_day_6
+  - sensor.solcast_pv_forecast_forecast_day_7
+# forecast_attribute: detailedHourly   # hourly instead of every 30 minutes
+# forecast_value: pv_estimate90        # optimistic variant (pv_estimate10 = pessimistic)
+```
