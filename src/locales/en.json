@@ -652,6 +652,12 @@
       "a_sensor_or_any": "A sensor or any entity with a state",
       "picker_description": "One number with warning thresholds",
       "picker_name": "Home Glass – Big value"
+    },
+    "webpage": {
+      "enter_a_page_address": "Enter a page address (https://… or /…)",
+      "open_in_a_new": "Open in a new tab",
+      "picker_description": "Any address in a frame",
+      "picker_name": "Nuvio – Web page"
     }
   },
   "common": {

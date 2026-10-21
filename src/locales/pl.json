@@ -656,6 +656,12 @@
       "a_sensor_or_any": "Czujnik lub dowolna encja ze stanem",
       "picker_description": "Jedna liczba z progami ostrzeżeń",
       "picker_name": "Home Glass – Duża wartość"
+    },
+    "webpage": {
+      "enter_a_page_address": "Podaj adres strony (https://… albo /…)",
+      "open_in_a_new": "Otwórz w nowej karcie",
+      "picker_description": "Dowolny adres w ramce",
+      "picker_name": "Nuvio – Strona WWW"
     }
   },
   "common": {

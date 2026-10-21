@@ -1170,8 +1170,8 @@ cards.weather.home_glass_weather,parts/cards/weather-card.part.js,329,hgTr,Home 
 cards.weather.outside_now_hourly_forecast,parts/cards/weather-card.part.js,329,hgTr,"Outside: now, hourly forecast, sun; details with daily forecast","Na zewnątrz: teraz, prognoza godzinowa, słońce; szczegóły z dniami",,load-time,manual
 cards.webpage.enter_a_page_address,parts/cards/webpage-card.part.js,12,hgTr,Enter a page address (https://… or /…),Podaj adres strony (https://… albo /…),,,auto
 cards.webpage.open_in_a_new,parts/cards/webpage-card.part.js,14,hgTr,Open in a new tab,Otwórz w nowej karcie,,,auto
-cards.webpage.nuvio_web_page,parts/cards/webpage-card.part.js,22,hgTr,Nuvio – Web page,Nuvio – Strona WWW,,load-time,manual
-cards.webpage.any_address_in_a,parts/cards/webpage-card.part.js,22,hgTr,Any address in a frame,Dowolny adres w ramce,,load-time,manual
+cards.webpage.picker_name,parts/cards/webpage-card.part.js,22,hgTr,Nuvio – Web page,Nuvio – Strona WWW,,load-time,auto
+cards.webpage.picker_description,parts/cards/webpage-card.part.js,22,hgTr,Any address in a frame,Dowolny adres w ramce,,load-time,auto
 cards.week.energy_week,parts/cards/week-card.part.js,5,hgTr,Energy · week,Energia · tydzień,,,auto
 cards.week.consumption,parts/cards/week-card.part.js,6,hgTr,Consumption,Zużycie,,,auto
 cards.week.production,parts/cards/week-card.part.js,6,hgTr,Production,Produkcja,,,auto
