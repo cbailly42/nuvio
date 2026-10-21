@@ -2307,7 +2307,7 @@ edit.options.image_address,parts/hg-edit.part.js,418,hgTr,Address (https://… o
 edit.options.aspect_ratio,parts/hg-edit.part.js,418,hgTr,Aspect ratio,Proporcje,,array,auto
 edit.options.image_refresh_s,parts/hg-edit.part.js,418,hgTr,Image refresh (s),Odświeżanie obrazu (s),,array,auto
 edit.options.child_name,parts/hg-edit.part.js,420,hgTr,Child name (with several children),Imię dziecka (przy kilku dzieciach),,array,auto
-edit.options.title_with_name,parts/hg-edit.part.js,423,hgTr,Title ({name} = first name),Tytuł ({name} = imię),,array,auto
+edit.options.title_with_name,parts/hg-edit.part.js,423,hgTr,Title ({name} = first name),Tytuł ({name} = imię),name,array,auto
 edit.options.tagline,parts/hg-edit.part.js,423,hgTr,Tagline,Hasło,,array,auto
 edit.options.photo_address,parts/hg-edit.part.js,423,hgTr,Photo (https://… or /local/…),Zdjęcie (https://… lub /local/…),,array,auto
 edit.options.maximum,parts/hg-edit.part.js,426,hgTr,Maximum,Maksimum,,array,auto

@@ -70,9 +70,9 @@ class Completeness(unittest.TestCase):
             orig = M.tr_spans; M.tr_spans = lambda s: []     # simulate an extraction hole
             try: self.assertRaises(RuntimeError, M.extract, d)
             finally: M.tr_spans = orig
-    def test_real_src_has_the_hg_edit_calls(self):
-        occs = M.extract(os.path.join(HERE, '..', '..', 'src'))
-        self.assertTrue([o for o in occs if o['en'] == 'Gradient' and o['file'].endswith('hg-edit.part.js')])
+    def test_real_src_extracts_and_hg_edit_is_migrated(self):
+        occs = M.extract(os.path.join(HERE, '..', '..', 'src'))   # raises on a hgTr( that is not accounted for
+        self.assertFalse([o for o in occs if o['file'].endswith('hg-edit.part.js')])   # migrated in Task 7 (lot D)
 
 class Propose(unittest.TestCase):
     def test_namespaces(self):
