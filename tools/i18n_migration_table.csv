@@ -937,8 +937,8 @@ cards.script.picker_description,parts/cards/script-card.part.js,45,hgTr,Tile tha
 common.choose_entity,parts/cards/select-card.part.js,12,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.select.input_select_or_select,parts/cards/select-card.part.js,12,hgTr,input_select or select,input_select lub select,,,auto
 common.state_unavailable,parts/cards/select-card.part.js,15,hgTr,unavailable,niedostępne,,,auto
-cards.select.home_glass_select,parts/cards/select-card.part.js,23,hgTr,Home Glass – Select,Home Glass – Wybór,,load-time,manual
-cards.select.input_select_and_select,parts/cards/select-card.part.js,23,hgTr,input_select and select options as buttons or a list,Opcje input_select i select jako przyciski lub lista,,load-time,manual
+cards.select.picker_name,parts/cards/select-card.part.js,23,hgTr,Home Glass – Select,Home Glass – Wybór,,load-time,auto
+cards.select.picker_description,parts/cards/select-card.part.js,23,hgTr,input_select and select options as buttons or a list,Opcje input_select i select jako przyciski lub lista,,load-time,auto
 cards.sensors.sensors,parts/cards/sensors-card.part.js,15,hgTr,Sensors,Czujniki,,,auto
 cards.sensors.bright,parts/cards/sensors-card.part.js,103,hgTr,bright,jasno,,,auto
 cards.sensors.dim,parts/cards/sensors-card.part.js,103,hgTr,dim,ciemno,,,auto

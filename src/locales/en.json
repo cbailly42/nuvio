@@ -571,6 +571,11 @@
       "script_unavailable": "Script unavailable",
       "started": "Started",
       "tap_to_run": "Tap to run"
+    },
+    "select": {
+      "input_select_or_select": "input_select or select",
+      "picker_description": "input_select and select options as buttons or a list",
+      "picker_name": "Home Glass – Select"
     }
   },
   "common": {
@@ -588,6 +593,7 @@
     "cancel": "Cancel",
     "check_in": "Check-in",
     "check_out": "Check-out",
+    "choose_entity": "Choose an entity",
     "close": "Close",
     "code": "Code",
     "cooling": "Cooling",
