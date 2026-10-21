@@ -105,7 +105,7 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
     if (big && (f & HG_MP.PREV)) h += btn('prev', 'mdi:skip-previous', hgT('common.previous_track'));
     if (!big && ['off', 'standby'].includes(st)) return h;          // wyłączony: tylko przycisk zasilania
     if (f & (HG_MP.PAUSE | HG_MP.PLAY)) h += btn('pp', playing ? 'mdi:pause' : 'mdi:play', playing ? hgT('common.pause') : hgT('cards.players.play'), big ? 'main' : 'soft');
-    else if (playing && (f & HG_MP.STOP)) h += btn('stop', 'mdi:stop', 'Stop', 'main');
+    else if (playing && (f & HG_MP.STOP)) h += btn('stop', 'mdi:stop', hgT('cards.players.stop'), 'main');
     if (big && (f & HG_MP.NEXT)) h += btn('next', 'mdi:skip-next', hgT('common.next_track'));
     return h;
   }

@@ -602,7 +602,9 @@
       "got_it": "Got it",
       "hours_count": "{count} h",
       "household_phones": "Household phones",
+      "internet_title": "Internet",
       "latency": "latency",
+      "member": "domownik",
       "memory": "Memory",
       "memory_label": "memory",
       "network": "Network",
@@ -734,6 +736,7 @@
         "unavailable": "Unavailable",
         "unknown": "Unknown"
       },
+      "stop": "Stop",
       "unavailable": "Unavailable:"
     },
     "power": {
@@ -893,6 +896,7 @@
         "water": "Water"
       },
       "start": "Start",
+      "stop": "Stop",
       "time": "Time",
       "time_left": "{time} left",
       "today_at": "today {time}",

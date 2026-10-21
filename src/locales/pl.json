@@ -608,7 +608,9 @@
       "got_it": "Rozumiem",
       "hours_count": "{count} godz.",
       "household_phones": "Telefony domowników",
+      "internet_title": "Internet",
       "latency": "opóźnienie",
+      "member": "domownik",
       "memory": "Pamięć",
       "memory_label": "pamięć",
       "network": "Sieć",
@@ -742,6 +744,7 @@
         "unavailable": "Niedostępny",
         "unknown": "Nieznany"
       },
+      "stop": "Stop",
       "unavailable": "Niedostępne:"
     },
     "power": {
@@ -903,6 +906,7 @@
         "water": "Woda"
       },
       "start": "Start",
+      "stop": "Stop",
       "time": "Czas",
       "time_left": "zostało {time}",
       "today_at": "dziś {time}",

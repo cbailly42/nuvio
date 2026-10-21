@@ -163,12 +163,12 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
     const B = (act, icon, label, on, pri) => `<button class="cb ${pri ? 'pri' : ''}" data-act="${act}" data-e="${r.e}" aria-label="${label}">${H.icon(icon)}<span>${label}</span></button>`;
     let ctl = '';
     if (mower) {
-      if (working && (f & HG_MF.PAUSE)) ctl += B('pause', 'mdi:pause', hgT('common.pause'), 0, 1); else if (f & HG_MF.START) ctl += B('start', 'mdi:play', 'Start', 0, 1);
+      if (working && (f & HG_MF.PAUSE)) ctl += B('pause', 'mdi:pause', hgT('common.pause'), 0, 1); else if (f & HG_MF.START) ctl += B('start', 'mdi:play', hgT('cards.robots.start'), 0, 1);
       if (f & HG_MF.DOCK) ctl += B('home', 'mdi:home-import-outline', hgT('cards.robots.dock'));
     } else {
       if (working && (f & HG_VF.PAUSE)) ctl += B('pause', 'mdi:pause', hgT('common.pause'), 0, 1);
       else if (f & HG_VF.START) ctl += B('start', 'mdi:play', cls === 'pause' ? hgT('common.resume') : hgT('cards.robots.start'), 0, 1);
-      if ((f & HG_VF.STOP) && (working || cls === 'pause' || cls === 'ret')) ctl += B('stop', 'mdi:stop', 'Stop');
+      if ((f & HG_VF.STOP) && (working || cls === 'pause' || cls === 'ret')) ctl += B('stop', 'mdi:stop', hgT('cards.robots.stop'));
       if (f & HG_VF.HOME) ctl += B('home', 'mdi:home-import-outline', hgT('cards.robots.dock'));
       if (f & HG_VF.LOCATE) ctl += B('locate', 'mdi:map-marker-radius-outline', hgT('cards.robots.locate'));
     }

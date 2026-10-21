@@ -83,7 +83,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .cr + .cr{ border-top:1px solid rgba(0,0,0,.06); }
 .cr i{ width:8px; height:8px; border-radius:50%; background:#9AA0A6; } .cr.on i{ background:var(--hg-accent); }
 .cr b{ font-size:var(--fs-sm); font-weight:600; color:#1E2023; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .cr span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
-.cr.mem b{ color:var(--hg-accent-tx); } .cr.mem b::after{ content:' · domownik'; font-weight:400; color:#4A4E54; font-size:var(--fs-xs); }
+.cr.mem b{ color:var(--hg-accent-tx); } .cr.mem b::after{ content:' · ' attr(data-mem); font-weight:400; color:#4A4E54; font-size:var(--fs-xs); }
 .pin{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap:var(--s1); }
 .pm{ display:flex; align-items:center; gap:var(--s2); padding:var(--s1) var(--s2); border-radius:var(--r-sm); background:rgba(255,255,255,.55); min-width:0; text-align:left; min-height:52px; }
 .pm .av{ position:relative; width:36px; height:36px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.06); }
@@ -125,7 +125,7 @@ ha-card.glass{ container-type:inline-size; }
     const sp = [[w.down, 'mdi:download', hgT('cards.net.download'), 'Mb/s'], [w.up, 'mdi:upload', hgT('cards.net.upload'), 'Mb/s'], [w.ping, 'mdi:timer-outline', 'Ping', 'ms']].map(([e, i, l, u]) => this._kv(i, l, this._num(e), u)).join('');
     const hs = this._hist || [], mx = Math.max(...hs, 1), mn = Math.min(...hs, mx);
     const pts = hs.length > 2 ? hs.map((v, i) => `${(i / (hs.length - 1) * 100).toFixed(2)},${(40 - ((v - mn) / Math.max(1, mx - mn)) * 36).toFixed(1)}`).join(' ') : '';
-    return `${this._hd('mdi:web', 'Internet')}
+    return `${this._hd('mdi:web', hgT('cards.net.internet_title'))}
       <div class="big"><span class="bd ${ok === true ? 'ok' : ok === false ? 'bad' : ''}">${H.icon(ok === false ? 'mdi:web-off' : 'mdi:web')}</span><div><b>${ok === true ? hgT('cards.net.connected') : ok === false ? hgT('cards.net.disconnected') : hgT('cards.net.unknown_state')}</b><span>${[ip ? 'IP ' + H.esc(ip) : '', up ? hgT('cards.net.gateway_up_for', { time: up }) : ''].filter(Boolean).join(' · ')}</span></div></div>
       ${lat.length || sp ? `<div class="kv">${lat.map(([x, v]) => this._kv('mdi:timer-outline', x.name, v, 'ms')).join('')}${sp}</div>` : ''}
       ${pts ? `<div class="spk" aria-label="${hgT('cards.net.wan_latency_last_24')}"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points="${pts}"/></svg><small><span>−24 h</span><span>${hgT('cards.net.latency')} ${H.esc((w.latency || [])[0].name)} · ${H.fmt(mn, 0)}–${H.fmt(mx, 0)} ms</span><span>${hgT('common.now')}</span></small></div>` : ''}`;
@@ -190,7 +190,7 @@ ha-card.glass{ container-type:inline-size; }
         <span>${H.esc([this._cname(st), on ? [hgT('cards.net.online'), apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') : hgT('cards.net.offline_since', { time: hgRel(new Date(st.last_changed)) })].join(' · '))}</span></span></button>`; }).join('');
     const pinSet = new Set(Object.values(byP).map((st) => st.entity_id));
     const rows = L.filter((s) => !pinSet.has(s.entity_id)).map((s) => { const a = s.attributes, on = s.state === 'home', m = isMem(s);
-      return `<button class="cr ${on ? 'on' : ''} ${m ? 'mem' : ''}" data-act="more" data-e="${H.esc(s.entity_id)}" title="${H.esc(a.mac || '')}"><i></i><b>${H.esc(this._cname(s))}</b>
+      return `<button class="cr ${on ? 'on' : ''} ${m ? 'mem' : ''}" data-act="more" data-e="${H.esc(s.entity_id)}" title="${H.esc(a.mac || '')}"><i></i><b${m ? ` data-mem="${H.esc(hgT('cards.net.member'))}"` : ''}>${H.esc(this._cname(s))}</b>
         <span class="ap">${H.esc([apN[a.ap_mac], a.essid].filter(Boolean).join(' · ') || (a.is_wired ? hgT('cards.net.wired') : ''))}</span><span class="ip">${H.esc(a.ip || '')}</span>
         <span class="ls">${on ? hgT('cards.net.state_connected') : hgT('cards.net.disconnected_since', { time: H.esc(hgRel(new Date(s.last_changed))) })}</span></button>`; }).join('');
     const f = (k, l) => `<button class="${(this._flt || 'all') === k ? 'on' : ''}" data-act="flt" data-k="${k}">${l}</button>`;
