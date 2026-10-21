@@ -400,8 +400,8 @@ cards.humidifier.picker_description,parts/cards/humidifier-card.part.js,10,hgTr,
 cards.image.enter_an_address,parts/cards/image-card.part.js,10,hgTr,Enter an address,Podaj adres,,,auto
 cards.image.https_or_local,parts/cards/image-card.part.js,10,hgTr,https://… or /local/…,https://… lub /local/…,,,auto
 cards.image.page,parts/cards/image-card.part.js,12,hgTr,Page,Strona,,,auto
-cards.image.home_glass_image_or,parts/cards/image-card.part.js,15,hgTr,Home Glass – Image or page,Home Glass – Obraz lub strona,,load-time,manual
-cards.image.picture_chart_from_a,parts/cards/image-card.part.js,15,hgTr,"Picture, chart from a URL or a page in a frame","Zdjęcie, wykres z adresu albo strona w ramce",,load-time,manual
+cards.image.picker_name,parts/cards/image-card.part.js,15,hgTr,Home Glass – Image or page,Home Glass – Obraz lub strona,,load-time,auto
+cards.image.picker_description,parts/cards/image-card.part.js,15,hgTr,"Picture, chart from a URL or a page in a frame","Zdjęcie, wykres z adresu albo strona w ramce",,load-time,auto
 cards.kid.child,parts/cards/kid-card.part.js,13,hgTr,Child,Dziecko,,,auto
 cards.kid.no_child_data,parts/cards/kid-card.part.js,13,hgTr,No child data.,Brak danych dziecka.,,,auto
 common.at_facility,parts/cards/kid-card.part.js,14,hgTr,At facility,W placówce,,,auto

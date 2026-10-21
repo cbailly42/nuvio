@@ -444,6 +444,13 @@
     "humidifier": {
       "picker_description": "Target humidity on an arc and modes",
       "picker_name": "Nuvio – Humidifier"
+    },
+    "image": {
+      "enter_an_address": "Enter an address",
+      "https_or_local": "https://… or /local/…",
+      "page": "Page",
+      "picker_description": "Picture, chart from a URL or a page in a frame",
+      "picker_name": "Home Glass – Image or page"
     }
   },
   "common": {

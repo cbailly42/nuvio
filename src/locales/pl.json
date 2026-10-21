@@ -448,6 +448,13 @@
     "humidifier": {
       "picker_description": "Docelowa wilgotność na łuku i tryby",
       "picker_name": "Nuvio – Nawilżacz"
+    },
+    "image": {
+      "enter_an_address": "Podaj adres",
+      "https_or_local": "https://… lub /local/…",
+      "page": "Strona",
+      "picker_description": "Zdjęcie, wykres z adresu albo strona w ramce",
+      "picker_name": "Home Glass – Obraz lub strona"
     }
   },
   "common": {
