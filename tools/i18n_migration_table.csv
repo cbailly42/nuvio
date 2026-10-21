@@ -932,8 +932,8 @@ cards.script.tap_to_run,parts/cards/script-card.part.js,4,hgTr,Tap to run,"Dotkn
 cards.script.script_unavailable,parts/cards/script-card.part.js,30,hgTr,Script unavailable,Skrypt niedostępny,,,auto
 cards.script.running,parts/cards/script-card.part.js,30,hgTr,Running…,Działa…,,,auto
 cards.script.started,parts/cards/script-card.part.js,30,hgTr,Started,Uruchomiono,,,auto
-cards.script.home_glass_script,parts/cards/script-card.part.js,45,hgTr,Home Glass – Script,Home Glass – Skrypt,,load-time,manual
-cards.script.tile_that_runs_a,parts/cards/script-card.part.js,45,hgTr,Tile that runs a script with a confirmation animation,Kafel uruchamiający skrypt z animacją potwierdzenia,,load-time,manual
+cards.script.picker_name,parts/cards/script-card.part.js,45,hgTr,Home Glass – Script,Home Glass – Skrypt,,load-time,auto
+cards.script.picker_description,parts/cards/script-card.part.js,45,hgTr,Tile that runs a script with a confirmation animation,Kafel uruchamiający skrypt z animacją potwierdzenia,,load-time,auto
 common.choose_entity,parts/cards/select-card.part.js,12,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.select.input_select_or_select,parts/cards/select-card.part.js,12,hgTr,input_select or select,input_select lub select,,,auto
 common.state_unavailable,parts/cards/select-card.part.js,15,hgTr,unavailable,niedostępne,,,auto

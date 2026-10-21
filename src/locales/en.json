@@ -563,6 +563,14 @@
       "running": "running…",
       "scenes": "Scenes",
       "started": "started"
+    },
+    "script": {
+      "picker_description": "Tile that runs a script with a confirmation animation",
+      "picker_name": "Home Glass – Script",
+      "running": "Running…",
+      "script_unavailable": "Script unavailable",
+      "started": "Started",
+      "tap_to_run": "Tap to run"
     }
   },
   "common": {

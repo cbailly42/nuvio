@@ -567,6 +567,14 @@
       "running": "działa…",
       "scenes": "Sceny",
       "started": "uruchomiono"
+    },
+    "script": {
+      "picker_description": "Kafel uruchamiający skrypt z animacją potwierdzenia",
+      "picker_name": "Home Glass – Skrypt",
+      "running": "Działa…",
+      "script_unavailable": "Skrypt niedostępny",
+      "started": "Uruchomiono",
+      "tap_to_run": "Dotknij, aby uruchomić"
     }
   },
   "common": {
