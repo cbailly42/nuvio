@@ -261,6 +261,12 @@
     },
     "cameras": {
       "no_cameras_are_available": "No cameras are available right now"
+    },
+    "chart": {
+      "choose_a_numeric_sensor": "Choose a numeric sensor",
+      "not_enough_history_yet": "Not enough history yet",
+      "picker_description": "Line, area or bars from sensor history",
+      "picker_name": "Nuvio – Chart"
     }
   },
   "common": {
@@ -295,6 +301,7 @@
     "next_track": "Next",
     "no_data_source": "No data source",
     "notifications": "Notifications",
+    "now": "now",
     "off_fem": "Off",
     "off_short": "Off",
     "on_short": "On",

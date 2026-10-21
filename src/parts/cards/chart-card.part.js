@@ -12,15 +12,15 @@ class HGChartCard extends HGBase {
 @container (min-width: 420px){ .nv-spark, .bars{ --nv-sh: 110u; } }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgTr('Wybierz czujnik liczbowy', 'Choose a numeric sensor')}</span></ha-card>`;
+    if (!s) return `<ha-card class="glass"><span class="nv-empty">${hgT('cards.chart.choose_a_numeric_sensor')}</span></ha-card>`;
     this._load(); const u = s.attributes.unit_of_measurement || '', v = parseFloat(s.state), d = +c.decimals;
     const pts = (this._pts || []).slice(); if (pts.length && isFinite(v)) pts[pts.length - 1] = v;
-    const tip = isFinite(v) ? `${H.fmt(v, d)}${u ? ' ' + u : ''}` : H.t(h, s), ax = [`-${c.hours} h`, hgTr('teraz', 'now')];
+    const tip = isFinite(v) ? `${H.fmt(v, d)}${u ? ' ' + u : ''}` : H.t(h, s), ax = [`-${c.hours} h`, hgT('common.now')];
     let g = ''; if (pts.filter(isFinite).length >= 2) {
       if (c.style === 'bars') { const ok = pts.filter(isFinite), mn = Math.min(0, ...ok), mx = Math.max(...ok) || 1; g = `<div class="bars" aria-hidden="true">${pts.map((x) => `<i style="--h:${isFinite(x) ? Math.max(2, ((x - mn) / (mx - mn || 1)) * 100).toFixed(1) : 0}%"></i>`).join('')}</div><div class="ax"><span>${ax[0]}</span><span>${ax[1]}</span></div>`; }
       else g = hgUI.spark(pts, { tip, axis: ax, tone: c.tone || '' }).replace('class="nv-spark', `class="nv-spark ${c.style === 'line' ? 'line' : ''}`);
-    } else g = `<div class="nv-empty">${this._pts ? hgTr('Za mało danych w historii', 'Not enough history yet') : hgTr('Wczytywanie…', 'Loading…')}</div>`;
-    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || s.attributes.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgTr('Szczegóły', 'Details'), { bare: true, size: 'sm' }) })}
+    } else g = `<div class="nv-empty">${this._pts ? hgT('cards.chart.not_enough_history_yet') : hgT('common.loading')}</div>`;
+    return `<ha-card class="glass ${H.ok(s) ? '' : 'un'}">${hgUI.header(c.name || H.name(h, c.entity), { icon: c.icon || s.attributes.icon, right: hgUI.iconBtn('mdi:arrow-expand', 'more', hgT('common.details'), { bare: true, size: 'sm' }) })}
       ${hgUI.big(isFinite(v) ? v : null, { d, unit: u, caption: H.ok(s) ? '' : H.t(h, s) })}<div class="nv-mid">${g}</div></ha-card>`; }
   /* historia ze wspólnej pamięci (ui/history), odświeżana co 5 minut */
   _load() { const c = this._config; if (this._ld && Date.now() - this._ld < 5 * 60e3 && this._le === c.entity) return; this._ld = Date.now(); this._le = c.entity;
@@ -28,4 +28,4 @@ class HGChartCard extends HGBase {
   onAct(a) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
   getGridOptions() { return { columns: 6, rows: 3 }; }
 }
-hgReg('hg-chart-card', HGChartCard, hgTr('Nuvio – Wykres', 'Nuvio – Chart'), hgTr('Linia, obszar albo słupki z historii czujnika', 'Line, area or bars from sensor history'));
+hgReg('hg-chart-card', HGChartCard, hgTLazy('cards.chart.picker_name'), hgTLazy('cards.chart.picker_description'));

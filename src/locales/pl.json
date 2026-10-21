@@ -265,6 +265,12 @@
     },
     "cameras": {
       "no_cameras_are_available": "Żadna kamera nie jest teraz dostępna"
+    },
+    "chart": {
+      "choose_a_numeric_sensor": "Wybierz czujnik liczbowy",
+      "not_enough_history_yet": "Za mało danych w historii",
+      "picker_description": "Linia, obszar albo słupki z historii czujnika",
+      "picker_name": "Nuvio – Wykres"
     }
   },
   "common": {
@@ -299,6 +305,7 @@
     "next_track": "Następny",
     "no_data_source": "Brak źródła danych",
     "notifications": "Powiadomienia",
+    "now": "teraz",
     "off_fem": "Wyłączona",
     "off_short": "Wył.",
     "on_short": "Wł.",

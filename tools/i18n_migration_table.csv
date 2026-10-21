@@ -232,8 +232,8 @@ common.now,parts/cards/chart-card.part.js,18,hgTr,now,teraz,,,auto
 cards.chart.not_enough_history_yet,parts/cards/chart-card.part.js,22,hgTr,Not enough history yet,Za mało danych w historii,,,auto
 common.loading,parts/cards/chart-card.part.js,22,hgTr,Loading…,Wczytywanie…,,,auto
 common.details,parts/cards/chart-card.part.js,23,hgTr,Details,Szczegóły,,,auto
-cards.chart.nuvio_chart,parts/cards/chart-card.part.js,31,hgTr,Nuvio – Chart,Nuvio – Wykres,,load-time,manual
-cards.chart.line_area_or_bars,parts/cards/chart-card.part.js,31,hgTr,"Line, area or bars from sensor history","Linia, obszar albo słupki z historii czujnika",,load-time,manual
+cards.chart.picker_name,parts/cards/chart-card.part.js,31,hgTr,Nuvio – Chart,Nuvio – Wykres,,load-time,auto
+cards.chart.picker_description,parts/cards/chart-card.part.js,31,hgTr,"Line, area or bars from sensor history","Linia, obszar albo słupki z historii czujnika",,load-time,auto
 cards.clock.home_glass_clock,parts/cards/clock-card.part.js,13,hgTr,Home Glass – Clock,Home Glass – Zegar,,load-time,manual
 cards.clock.time_and_date,parts/cards/clock-card.part.js,13,hgTr,Time and date,Godzina i data,,load-time,manual
 cards.conditional.nuvio_conditional,parts/cards/conditional-card.part.js,26,hgTr,Nuvio – Conditional,Nuvio – Warunek,,load-time,manual
