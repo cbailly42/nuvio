@@ -107,10 +107,10 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
   _lab(k, v) {
     const en = hgCurLang() === 'en';
     if (k === 'mode') return (HG_AC_MODE[v] || {}).l || v;
-    const M = k === 'fan' ? (en ? HG_FAN_EN : HG_FAN_PL) : k === 'swing' ? (en ? HG_SWING_EN : HG_SWING_PL) : (en ? HG_PRESET_EN : HG_PRESET_PL);
+    const M = k === 'fan' ? hgFanL : k === 'swing' ? hgSwingL : (x) => (en ? HG_PRESET_EN : HG_PRESET_PL)[x];
     if (k === 'swing' && /^\d+$/.test(v)) return hgTr(`Pozycja ${v}`, `Position ${v}`);
-    if (!M[v] && /_/.test(v) && String(v).split('_').every((x) => M[x])) return String(v).split('_').map((x) => M[x]).join(' · ');
-    return M[v] || String(v).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase());
+    if (!M(v) && /_/.test(v) && String(v).split('_').every((x) => M(x))) return String(v).split('_').map((x) => M(x)).join(' · ');
+    return M(v) || String(v).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase());
   }
   _ic(k, v) { return k === 'mode' ? (HG_AC_MODE[v] || {}).i || 'mdi:thermostat' : k === 'fan' ? HG_FAN_IC[v] || (/high/.test(v) ? 'mdi:fan-speed-3' : /low/.test(v) ? 'mdi:fan-speed-1' : 'mdi:fan') : k === 'swing' ? HG_SWING_IC[v] || (/^\d+$/.test(v) ? `mdi:numeric-${v}-circle-outline` : 'mdi:arrow-oscillating') : HG_PRESET_IC[v] || 'mdi:tune-variant'; }
   _stat(st, t) { if (st === 'off') return hgTr('Wyłączony', 'Off'); const l = this._lab('mode', st); return (st === 'fan_only' || st === 'dry' || t == null) ? l : hgTr(`${l} do ${H.fmt(t)}°`, `${l} to ${H.fmt(t)}°`); }

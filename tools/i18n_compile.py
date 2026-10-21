@@ -2,7 +2,9 @@
 """i18n build step (spec 3.1 bis): nested source catalogs -> compiled {m, t, d} with integer key indexes, hashed flat files dist/nuvio-locale-<code>.<hash8>.json,
 and the source keys in the bundle rewritten to those indexes. Keys exist only in the sources; the bundle carries integers."""
 import os, re, json, hashlib
-DYN_PREFIXES = ('states.', 'weather.')
+# states. / weather. + per-card option tables read with hgTD (lot C, R14)
+DYN_PREFIXES = ('states.', 'weather.',
+                'cards.ac.fan_modes.', 'cards.ac.swing_modes.')
 PLURAL_SUFFIXES = ('zero', 'one', 'two', 'few', 'many', 'other')
 _PL = re.compile(r'^(.+)_(%s)$' % '|'.join(PLURAL_SUFFIXES))
 _CALL = re.compile(r'\bhgT(?:Lazy)?\(\s*(?:(?P<lit>(?P<q>[\'"])(?P<k>[^\'"\\\n]*)(?P=q))\s*(?=[,)]))?')

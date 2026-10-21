@@ -8,7 +8,7 @@ cards.ac.dry,parts/cards/ac-card.part.js,10,hgTr,Dry,Osusz.,,,auto
 cards.ac.fan,parts/cards/ac-card.part.js,10,hgTr,Fan,Wiatr,,,auto
 cards.ac.indoor,parts/cards/ac-card.part.js,11,hgTr,Indoor,Wnętrze,,,auto
 common.off_fem,parts/cards/ac-card.part.js,99,hgTr,Off,Wyłączona,,,auto
-cards.ac.m_l_to_h,parts/cards/ac-card.part.js,99,hgTr,${m.l} to ${H.fmt(t)}°,${m.l} do ${H.fmt(t)}°,,expr,manual
+cards.ac.mode_to_temp,parts/cards/ac-card.part.js,99,hgTr,{mode} to {temp}°,{mode} do {temp}°,"mode,temp",expr,auto
 common.more,parts/cards/ac-card.part.js,102,hgTr,More,Więcej,,,auto
 common.more,parts/cards/ac-card.part.js,102,hgTr,More,Więcej,,,auto
 cards.ac.unavailable,parts/cards/ac-card.part.js,103,hgTr,Unavailable,Niedostępna,,,auto
@@ -21,30 +21,30 @@ cards.ac.turn_off_air_conditioning,parts/cards/ac-card.part.js,117,hgTr,Turn off
 cards.ac.turn_on_air_conditioning,parts/cards/ac-card.part.js,117,hgTr,Turn on air conditioning,Włącz klimatyzację,,,auto
 common.turn_off,parts/cards/ac-card.part.js,117,hgTr,Turn off,Wyłącz,,,auto
 common.turn_on,parts/cards/ac-card.part.js,117,hgTr,Turn on,Włącz,,,auto
-cards.ac.on,parts/cards/ac-card.part.js,117,hgTr,On,Włączona,,,review
+cards.ac.on_fem,parts/cards/ac-card.part.js,117,hgTr,On,Włączona,,,auto
 common.off_fem,parts/cards/ac-card.part.js,117,hgTr,Off,Wyłączona,,,auto
 common.on_short,parts/cards/ac-card.part.js,117,hgTr,On,Wł.,,,auto
 common.off_short,parts/cards/ac-card.part.js,117,hgTr,Off,Wył.,,,auto
 cards.ac.fan_change,parts/cards/ac-card.part.js,121,hgTr,Fan: {fv} (change),Nawiew: {fv} (zmień),fv,,auto
 cards.ac.fan_change_speed,parts/cards/ac-card.part.js,121,hgTr,Fan: {fv} – change speed,Nawiew: {fv} – zmień prędkość,fv,,auto
-cards.ac.fan_2,parts/cards/ac-card.part.js,121,hgTr,Fan,Nawiew,,,review
-cards.ac.fan_2,parts/cards/ac-card.part.js,121,hgTr,Fan,Nawiew,,,review
+cards.ac.fan_airflow,parts/cards/ac-card.part.js,121,hgTr,Fan,Nawiew,,,auto
+cards.ac.fan_airflow,parts/cards/ac-card.part.js,121,hgTr,Fan,Nawiew,,,auto
 cards.ac.swing_change,parts/cards/ac-card.part.js,122,hgTr,Swing: {sv} (change),Kierunek nawiewu: {sv} (zmień),sv,,auto
-cards.ac.swing_change_2,parts/cards/ac-card.part.js,122,hgTr,Swing: {sv} – change,Kierunek nawiewu: {sv} – zmień,sv,,review
+cards.ac.swing_change_title,parts/cards/ac-card.part.js,122,hgTr,Swing: {sv} – change,Kierunek nawiewu: {sv} – zmień,sv,,auto
 cards.ac.swing,parts/cards/ac-card.part.js,122,hgTr,Swing,Kierunek,,,auto
-cards.ac.swing_2,parts/cards/ac-card.part.js,122,hgTr,Swing,Kier.,,,review
+cards.ac.swing_short,parts/cards/ac-card.part.js,122,hgTr,Swing,Kier.,,,auto
 cards.ac.collapse_modes,parts/cards/ac-card.part.js,128,hgTr,Collapse modes,Zwiń tryby,,,auto
 cards.ac.all_modes,parts/cards/ac-card.part.js,128,hgTr,All modes,Wszystkie tryby,,,auto
 cards.ac.collapse_modes,parts/cards/ac-card.part.js,128,hgTr,Collapse modes,Zwiń tryby,,,auto
 cards.ac.all_modes,parts/cards/ac-card.part.js,128,hgTr,All modes,Wszystkie tryby,,,auto
 cards.ac.modes,parts/cards/ac-card.part.js,128,hgTr,Modes,Tryby,,,auto
 cards.ac.modes,parts/cards/ac-card.part.js,128,hgTr,Modes,Tryby,,,auto
-cards.ac.indoor_h_fmt_cur,parts/cards/ac-card.part.js,131,hgTr,indoor ${H.fmt(cur)}°,wnętrze ${H.fmt(cur)}°,,expr,manual
-cards.ac.indoor_h_fmt_cur,parts/cards/ac-card.part.js,150,hgTr,indoor ${H.fmt(cur)}°,wnętrze ${H.fmt(cur)}°,,expr,manual
+cards.ac.indoor_temp,parts/cards/ac-card.part.js,131,hgTr,indoor {temp}°,wnętrze {temp}°,temp,expr,auto
+cards.ac.indoor_temp,parts/cards/ac-card.part.js,150,hgTr,indoor {temp}°,wnętrze {temp}°,temp,expr,auto
 cards.ac.collapse_modes,parts/cards/ac-card.part.js,238,hgTr,Collapse modes,Zwiń tryby,,,auto
 cards.ac.all_modes,parts/cards/ac-card.part.js,238,hgTr,All modes,Wszystkie tryby,,,auto
-cards.ac.home_glass_climate,parts/cards/ac-card.part.js,266,hgTr,Home Glass – Climate,Home Glass – Klimatyzacja,,load-time,manual
-cards.ac.tesla_style_climate_control,parts/cards/ac-card.part.js,266,hgTr,"Tesla-style climate control: temperature, bar, modes","Klimatyzacja w stylu Tesli: temperatura, pasek, tryby",,load-time,manual
+cards.ac.picker_name,parts/cards/ac-card.part.js,266,hgTr,Home Glass – Climate,Home Glass – Klimatyzacja,,load-time,auto
+cards.ac.picker_description,parts/cards/ac-card.part.js,266,hgTr,"Tesla-style climate control: temperature, bar, modes","Klimatyzacja w stylu Tesli: temperatura, pasek, tryby",,load-time,auto
 cards.actions.add_actions_in_the,parts/cards/actions-card.part.js,14,hgTr,Add actions in the card settings,Dodaj akcje w ustawieniach karty,,,auto
 cards.actions.nuvio_quick_actions,parts/cards/actions-card.part.js,25,hgTr,Nuvio – Quick actions,Nuvio – Szybkie akcje,,load-time,manual
 cards.actions.a_row_of_round,parts/cards/actions-card.part.js,25,hgTr,"A row of round buttons: scenes, scripts, services","Rząd okrągłych przycisków: sceny, skrypty, usługi",,load-time,manual
