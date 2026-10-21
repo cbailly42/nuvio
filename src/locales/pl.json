@@ -611,6 +611,13 @@
       "the_slider_works_with": "Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number",
       "toggle": "Przełącz"
     },
+    "solar": {
+      "inverter_offline": "falownik offline",
+      "kwh_of_clean_energy": "kWh czystej energii",
+      "picker_description": "Produkcja PV z ostatnich dni (statystyki)",
+      "picker_name": "Home Glass – Solar",
+      "solar_energy_today": "Energia słoneczna dziś"
+    },
     "stack": {
       "add_cards_to_the": "Dodaj karty do kontenera",
       "picker_description": "Kilka kart w jednym szkle, pionowo albo poziomo",

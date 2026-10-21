@@ -607,6 +607,13 @@
       "the_slider_works_with": "The slider works with lights, media players, fans, covers and input_number",
       "toggle": "Toggle"
     },
+    "solar": {
+      "inverter_offline": "inverter offline",
+      "kwh_of_clean_energy": "kWh of clean energy",
+      "picker_description": "Produkcja PV z ostatnich dni (statystyki)",
+      "picker_name": "Home Glass – Solar",
+      "solar_energy_today": "Solar energy today"
+    },
     "stack": {
       "add_cards_to_the": "Add cards to the container",
       "picker_description": "Several cards in one glass, vertical or horizontal",
