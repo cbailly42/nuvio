@@ -577,6 +577,13 @@
       "picker_description": "input_select and select options as buttons or a list",
       "picker_name": "Home Glass – Select"
     },
+    "slider": {
+      "mute": "Mute",
+      "picker_description": "Slider for brightness, volume, fan, cover and input_number",
+      "picker_name": "Home Glass – Slider",
+      "the_slider_works_with": "The slider works with lights, media players, fans, covers and input_number",
+      "toggle": "Toggle"
+    },
     "stack": {
       "add_cards_to_the": "Add cards to the container",
       "picker_description": "Several cards in one glass, vertical or horizontal",

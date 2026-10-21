@@ -581,6 +581,13 @@
       "picker_description": "Opcje input_select i select jako przyciski lub lista",
       "picker_name": "Home Glass – Wybór"
     },
+    "slider": {
+      "mute": "Wycisz",
+      "picker_description": "Suwak dla jasności, głośności, wentylatora, rolety i input_number",
+      "picker_name": "Home Glass – Suwak",
+      "the_slider_works_with": "Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number",
+      "toggle": "Przełącz"
+    },
     "stack": {
       "add_cards_to_the": "Dodaj karty do kontenera",
       "picker_description": "Kilka kart w jednym szkle, pionowo albo poziomo",

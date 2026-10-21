@@ -962,8 +962,8 @@ cards.slider.the_slider_works_with,parts/cards/slider-card.part.js,17,hgTr,"The 
 cards.slider.mute,parts/cards/slider-card.part.js,21,hgTr,Mute,Wycisz,,,auto
 cards.slider.toggle,parts/cards/slider-card.part.js,21,hgTr,Toggle,Przełącz,,,auto
 common.state_unavailable,parts/cards/slider-card.part.js,22,hgTr,unavailable,niedostępne,,,auto
-cards.slider.home_glass_slider,parts/cards/slider-card.part.js,42,hgTr,Home Glass – Slider,Home Glass – Suwak,,load-time,manual
-cards.slider.slider_for_brightness_volume,parts/cards/slider-card.part.js,42,hgTr,"Slider for brightness, volume, fan, cover and input_number","Suwak dla jasności, głośności, wentylatora, rolety i input_number",,load-time,manual
+cards.slider.picker_name,parts/cards/slider-card.part.js,42,hgTr,Home Glass – Slider,Home Glass – Suwak,,load-time,auto
+cards.slider.picker_description,parts/cards/slider-card.part.js,42,hgTr,"Slider for brightness, volume, fan, cover and input_number","Suwak dla jasności, głośności, wentylatora, rolety i input_number",,load-time,auto
 cards.smartlock.lock,parts/cards/smartlock-card.part.js,6,hgTr,Lock,Zamek,,,auto
 common.unavailable_masc,parts/cards/smartlock-card.part.js,57,hgTr,Unavailable,Niedostępny,,,auto
 cards.smartlock.jammed,parts/cards/smartlock-card.part.js,58,hgTr,Jammed,Zacięty,,,auto
