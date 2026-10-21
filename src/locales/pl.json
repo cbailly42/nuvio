@@ -538,6 +538,14 @@
       "empty_note": "Pusta notatka",
       "picker_description": "Tekst z prostym formatowaniem",
       "picker_name": "Home Glass – Notatka"
+    },
+    "power": {
+      "high": "Wysokie",
+      "low": "Niskie",
+      "picker_description": "Moc teraz z linią z ostatnich godzin",
+      "picker_name": "Home Glass – Moc",
+      "power_sensors_unavailable": "Czujniki mocy niedostępne",
+      "reports": "Raporty"
     }
   },
   "common": {
@@ -570,6 +578,7 @@
     "loading": "Wczytywanie…",
     "map": "Mapa",
     "media": "Multimedia",
+    "medium": "Średnie",
     "more": "Więcej",
     "motion": "Ruch",
     "name": "Nazwa",
@@ -588,6 +597,7 @@
     "open": "Otwórz",
     "open_assist": "Otwórz Assist",
     "pause": "Pauza",
+    "power_now": "Moc teraz",
     "previous_track": "Poprzedni",
     "rooms": "Pokoje",
     "save": "Zapisz",

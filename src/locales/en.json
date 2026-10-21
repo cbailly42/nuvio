@@ -534,6 +534,14 @@
       "empty_note": "Empty note",
       "picker_description": "Text with simple formatting",
       "picker_name": "Home Glass – Note"
+    },
+    "power": {
+      "high": "High",
+      "low": "Low",
+      "picker_description": "Current power with a line of recent hours",
+      "picker_name": "Home Glass – Power",
+      "power_sensors_unavailable": "Power sensors unavailable",
+      "reports": "Reports"
     }
   },
   "common": {
@@ -566,6 +574,7 @@
     "loading": "Loading…",
     "map": "Map",
     "media": "Media",
+    "medium": "Medium",
     "more": "More",
     "motion": "Motion",
     "name": "Name",
@@ -584,6 +593,7 @@
     "open": "Open",
     "open_assist": "Open Assist",
     "pause": "Pause",
+    "power_now": "Power now",
     "previous_track": "Previous",
     "rooms": "Rooms",
     "save": "Save",

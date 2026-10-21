@@ -643,8 +643,8 @@ common.medium,parts/cards/power-card.part.js,45,hgTr,Medium,Średnie,,,auto
 cards.power.high,parts/cards/power-card.part.js,45,hgTr,High,Wysokie,,,auto
 common.of,parts/cards/power-card.part.js,60,hgTr,of,z,,,auto
 common.now,parts/cards/power-card.part.js,64,hgTr,now,teraz,,,auto
-cards.power.home_glass_power,parts/cards/power-card.part.js,69,hgTr,Home Glass – Power,Home Glass – Moc,,load-time,manual
-cards.power.current_power_with_a,parts/cards/power-card.part.js,69,hgTr,Current power with a line of recent hours,Moc teraz z linią z ostatnich godzin,,load-time,manual
+cards.power.picker_name,parts/cards/power-card.part.js,69,hgTr,Home Glass – Power,Home Glass – Moc,,load-time,auto
+cards.power.picker_description,parts/cards/power-card.part.js,69,hgTr,Current power with a line of recent hours,Moc teraz z linią z ostatnich godzin,,load-time,auto
 cards.progress.choose_a_sensor,parts/cards/progress-card.part.js,7,hgTr,Choose a sensor,Wybierz czujnik,,,auto
 cards.progress.low,parts/cards/progress-card.part.js,10,hgTr,Low,Niskie,,,auto
 common.medium,parts/cards/progress-card.part.js,10,hgTr,Medium,Średnie,,,auto
