@@ -521,6 +521,12 @@
       "picker_description": "Recent changes of chosen entities",
       "picker_name": "Nuvio – Logbook",
       "recent_activity": "Recent activity"
+    },
+    "note": {
+      "add_text_in_the": "Add text in the \"Text\" field",
+      "empty_note": "Empty note",
+      "picker_description": "Text with simple formatting",
+      "picker_name": "Home Glass – Note"
     }
   },
   "common": {

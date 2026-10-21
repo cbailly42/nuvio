@@ -567,8 +567,8 @@ cards.net.home_glass_network,parts/cards/net-card.part.js,241,hgTr,Home Glass �
 cards.net.unifi_internet_gateway_access,parts/cards/net-card.part.js,241,hgTr,"UniFi: internet, gateway, access points, Wi‑Fi and clients","UniFi: internet, bramka, punkty dostępowe, Wi‑Fi i klienci",,load-time,manual
 cards.note.empty_note,parts/cards/note-card.part.js,13,hgTr,Empty note,Pusta notatka,,,auto
 cards.note.add_text_in_the,parts/cards/note-card.part.js,13,hgTr,"Add text in the ""Text"" field",Dodaj treść w polu „Treść”,,,auto
-cards.note.home_glass_note,parts/cards/note-card.part.js,16,hgTr,Home Glass – Note,Home Glass – Notatka,,load-time,manual
-cards.note.text_with_simple_formatting,parts/cards/note-card.part.js,16,hgTr,Text with simple formatting,Tekst z prostym formatowaniem,,load-time,manual
+cards.note.picker_name,parts/cards/note-card.part.js,16,hgTr,Home Glass – Note,Home Glass – Notatka,,load-time,auto
+cards.note.picker_description,parts/cards/note-card.part.js,16,hgTr,Text with simple formatting,Tekst z prostym formatowaniem,,load-time,auto
 cards.openings.no_opening_sensors,parts/cards/openings-card.part.js,9,hgTr,No opening sensors,Brak czujników otwarcia,,,auto
 cards.openings.pick_door_and_window,parts/cards/openings-card.part.js,9,hgTr,Pick door and window sensors,Wybierz czujniki drzwi i okien,,,auto
 cards.openings.open,parts/cards/openings-card.part.js,12,hgTr,Open,Otwarte,,,auto

@@ -525,6 +525,12 @@
       "picker_description": "Ostatnie zmiany wybranych encji",
       "picker_name": "Nuvio – Dziennik",
       "recent_activity": "Ostatnie zdarzenia"
+    },
+    "note": {
+      "add_text_in_the": "Dodaj treść w polu „Treść”",
+      "empty_note": "Pusta notatka",
+      "picker_description": "Tekst z prostym formatowaniem",
+      "picker_name": "Home Glass – Notatka"
     }
   },
   "common": {
