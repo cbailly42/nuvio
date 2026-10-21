@@ -275,6 +275,13 @@
     "conditional": {
       "picker_description": "Cards shown only when a condition is met",
       "picker_name": "Nuvio – Conditional"
+    },
+    "cover": {
+      "choose_a_cover_or": "Choose a cover or gate",
+      "open": "open",
+      "picker_description": "Position, open, stop, close",
+      "picker_name": "Nuvio – Cover / gate",
+      "position": "Position"
     }
   },
   "common": {
@@ -313,6 +320,7 @@
     "off_fem": "Off",
     "off_short": "Off",
     "on_short": "On",
+    "open": "Open",
     "open_assist": "Open Assist",
     "pause": "Pause",
     "previous_track": "Previous",
@@ -321,6 +329,7 @@
     "state_motion": "motion",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
+    "stop": "Stop",
     "today": "Today",
     "turn_off": "Turn off",
     "turn_on": "Turn on",

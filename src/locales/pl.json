@@ -279,6 +279,13 @@
     "conditional": {
       "picker_description": "Karty widoczne tylko przy spełnionym warunku",
       "picker_name": "Nuvio – Warunek"
+    },
+    "cover": {
+      "choose_a_cover_or": "Wybierz roletę albo bramę",
+      "open": "otwarcie",
+      "picker_description": "Pozycja, otwórz, zatrzymaj, zamknij",
+      "picker_name": "Nuvio – Roleta / brama",
+      "position": "Pozycja"
     }
   },
   "common": {
@@ -317,6 +324,7 @@
     "off_fem": "Wyłączona",
     "off_short": "Wył.",
     "on_short": "Wł.",
+    "open": "Otwórz",
     "open_assist": "Otwórz Assist",
     "pause": "Pauza",
     "previous_track": "Poprzedni",
@@ -325,6 +333,7 @@
     "state_motion": "ruch",
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
+    "stop": "Zatrzymaj",
     "today": "Dziś",
     "turn_off": "Wyłącz",
     "turn_on": "Włącz",

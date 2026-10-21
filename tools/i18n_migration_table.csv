@@ -244,8 +244,8 @@ cards.cover.position,parts/cards/cover-card.part.js,15,hgTr,Position,Pozycja,,,a
 common.open,parts/cards/cover-card.part.js,16,hgTr,Open,Otwórz,,,auto
 common.stop,parts/cards/cover-card.part.js,16,hgTr,Stop,Zatrzymaj,,,auto
 common.close,parts/cards/cover-card.part.js,16,hgTr,Close,Zamknij,,,auto
-cards.cover.nuvio_cover_gate,parts/cards/cover-card.part.js,29,hgTr,Nuvio – Cover / gate,Nuvio – Roleta / brama,,load-time,manual
-cards.cover.position_open_stop_close,parts/cards/cover-card.part.js,29,hgTr,"Position, open, stop, close","Pozycja, otwórz, zatrzymaj, zamknij",,load-time,manual
+cards.cover.picker_name,parts/cards/cover-card.part.js,29,hgTr,Nuvio – Cover / gate,Nuvio – Roleta / brama,,load-time,auto
+cards.cover.picker_description,parts/cards/cover-card.part.js,29,hgTr,"Position, open, stop, close","Pozycja, otwórz, zatrzymaj, zamknij",,load-time,auto
 cards.cwu.hot_water,parts/cards/cwu-card.part.js,5,hgTr,Hot water,Ciepła woda,,,auto
 cards.cwu.choose_a_water_heater,parts/cards/cwu-card.part.js,5,hgTr,Choose a water heater.,Wybierz podgrzewacz wody.,,,auto
 cards.cwu.home_glass_hot_water,parts/cards/cwu-card.part.js,8,hgTr,Home Glass – Hot water,Home Glass – Ciepła woda,,load-time,manual
