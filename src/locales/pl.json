@@ -444,6 +444,10 @@
       "one_or_more_numeric": "Jeden lub kilka czujników liczbowych",
       "picker_description": "Kilka czujników na jednym wykresie",
       "picker_name": "Home Glass – Historia"
+    },
+    "humidifier": {
+      "picker_description": "Docelowa wilgotność na łuku i tryby",
+      "picker_name": "Nuvio – Nawilżacz"
     }
   },
   "common": {
@@ -481,6 +485,7 @@
     "no_data_source": "Brak źródła danych",
     "notifications": "Powiadomienia",
     "now": "teraz",
+    "now_cap": "Teraz",
     "of": "z",
     "off_fem": "Wyłączona",
     "off_short": "Wył.",

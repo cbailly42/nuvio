@@ -440,6 +440,10 @@
       "one_or_more_numeric": "One or more numeric sensors",
       "picker_description": "Several sensors on one chart",
       "picker_name": "Home Glass – History"
+    },
+    "humidifier": {
+      "picker_description": "Target humidity on an arc and modes",
+      "picker_name": "Nuvio – Humidifier"
     }
   },
   "common": {
@@ -477,6 +481,7 @@
     "no_data_source": "No data source",
     "notifications": "Notifications",
     "now": "now",
+    "now_cap": "Now",
     "of": "of",
     "off_fem": "Off",
     "off_short": "Off",

@@ -395,8 +395,8 @@ common.now,parts/cards/history-card.part.js,19,hgTr,now,teraz,,,auto
 cards.history.picker_name,parts/cards/history-card.part.js,23,hgTr,Home Glass – History,Home Glass – Historia,,load-time,auto
 cards.history.picker_description,parts/cards/history-card.part.js,23,hgTr,Several sensors on one chart,Kilka czujników na jednym wykresie,,load-time,auto
 common.now_cap,parts/cards/humidifier-card.part.js,7,hgTr,Now,Teraz,,,auto
-cards.humidifier.nuvio_humidifier,parts/cards/humidifier-card.part.js,10,hgTr,Nuvio – Humidifier,Nuvio – Nawilżacz,,load-time,manual
-cards.humidifier.target_humidity_on_an,parts/cards/humidifier-card.part.js,10,hgTr,Target humidity on an arc and modes,Docelowa wilgotność na łuku i tryby,,load-time,manual
+cards.humidifier.picker_name,parts/cards/humidifier-card.part.js,10,hgTr,Nuvio – Humidifier,Nuvio – Nawilżacz,,load-time,auto
+cards.humidifier.picker_description,parts/cards/humidifier-card.part.js,10,hgTr,Target humidity on an arc and modes,Docelowa wilgotność na łuku i tryby,,load-time,auto
 cards.image.enter_an_address,parts/cards/image-card.part.js,10,hgTr,Enter an address,Podaj adres,,,auto
 cards.image.https_or_local,parts/cards/image-card.part.js,10,hgTr,https://… or /local/…,https://… lub /local/…,,,auto
 cards.image.page,parts/cards/image-card.part.js,12,hgTr,Page,Strona,,,auto
