@@ -51,6 +51,7 @@
     "media": "Multimedia",
     "name": "Nazwa",
     "next_track": "Następny",
+    "notifications": "Powiadomienia",
     "off_fem": "Wyłączona",
     "pause": "Pauza",
     "previous_track": "Poprzedni",
@@ -533,6 +534,9 @@
     },
     "switch": {
       "toggle": "przełącz"
+    },
+    "toast": {
+      "undo": "Cofnij"
     }
   },
   "weather": {

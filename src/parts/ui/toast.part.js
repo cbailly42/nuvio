@@ -2,7 +2,7 @@
    API: HGToast.show(tekst, onAction?, etykietaAkcji?) albo hgOverlay.toast(tekst, { onAction, action }). ===== */
 const HGToast = window.__hgToast || (window.__hgToast = {
   L: [], el: null,
-  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgTr('Powiadomienia', 'Notifications'));
+  box() { if (this.el && this.el.isConnected) return this.el; const el = this.el = document.createElement('section'); el.className = 'hgt'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-label', hgT('common.notifications'));
     const st = document.createElement('style'); st.textContent = `.hgt{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:10020; width:min(380px, calc(100vw - 24px)); height:0; font:500 14px/1.3 'DM Sans', system-ui, sans-serif; }
 .hgt .t{ position:absolute; left:0; right:0; bottom:0; box-sizing:border-box; display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 8px 8px 16px; border-radius:var(--hg-radius-in, 16px); background:rgba(30,32,35,.84); color:#F5F6F7; box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.12); -webkit-backdrop-filter:var(--hg-bfo, blur(20px) saturate(180%)); backdrop-filter:var(--hg-bfo, blur(20px) saturate(180%));
   transition:transform var(--hg-t-slow, 320ms) var(--hg-spring, cubic-bezier(.2,.9,.25,1)), opacity var(--hg-t-base, 200ms); transform-origin:bottom center; cursor:pointer; touch-action:pan-y; user-select:none; pointer-events:auto; will-change:transform; }
@@ -25,7 +25,7 @@ const HGToast = window.__hgToast || (window.__hgToast = {
     if (same) { same.c++; same.n.querySelector('em') ? (same.n.querySelector('em').textContent = '×' + same.c) : same.n.querySelector('span').insertAdjacentHTML('afterend', `<em>×${same.c}</em>`); this.L = this.L.filter((y) => y !== same).concat(same); this.arm(same, ms); return this.lay(); }
     const n = document.createElement('div'); n.className = 't in'; n.setAttribute('role', 'status'); const sp = document.createElement('span'); sp.textContent = t; n.appendChild(sp);
     const x = { t, n, c: 1, undo: !!undo };
-    if (undo) { const u = document.createElement('button'); u.textContent = ul || hgTr('Cofnij', 'Undo'); u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
+    if (undo) { const u = document.createElement('button'); u.textContent = ul || hgT('ui.toast.undo'); u.addEventListener('click', (ev) => { ev.stopPropagation(); this.drop(x); undo(); }); n.appendChild(u); }
     let sx = null; n.addEventListener('pointerdown', (e) => { sx = e.clientX; }); n.addEventListener('pointermove', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 6) n.style.translate = (e.clientX - sx) + 'px 0'; });
     n.addEventListener('pointerup', (e) => { const dx = sx == null ? 0 : e.clientX - sx; sx = null; n.style.translate = ''; if (Math.abs(dx) > 60 || (Math.abs(dx) < 6 && !e.target.closest('button') && (this.exp || window.matchMedia('(hover:none)').matches))) this.drop(x); else if (Math.abs(dx) < 6 && !this.exp) { this.exp = true; this.lay(); } });
     box.appendChild(n); this.L.push(x); requestAnimationFrame(() => { n.classList.remove('in'); this.lay(); }); if (this.L.filter((y) => !y.gone).length > 6) this.drop(this.L.find((y) => !y.gone));

@@ -51,6 +51,7 @@
     "media": "Media",
     "name": "Name",
     "next_track": "Next",
+    "notifications": "Notifications",
     "off_fem": "Off",
     "pause": "Pause",
     "previous_track": "Previous",
@@ -533,6 +534,9 @@
     },
     "switch": {
       "toggle": "toggle"
+    },
+    "toast": {
+      "undo": "Undo"
     }
   },
   "weather": {
