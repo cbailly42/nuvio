@@ -398,6 +398,23 @@
       "add_fuel_price_sensors": "Add fuel price sensors.",
       "no_change_tomorrow": "no change tomorrow",
       "tomorrow_no_data": "tomorrow: no data"
+    },
+    "gauge": {
+      "any_numeric_sensor": "Any numeric sensor",
+      "choose_a_sensor": "Choose a sensor",
+      "device_classes": {
+        "battery": "Battery",
+        "carbon_dioxide": "CO₂",
+        "energy": "Energy",
+        "humidity": "Humidity",
+        "illuminance": "Illuminance",
+        "pm25": "PM2.5",
+        "power": "Power",
+        "pressure": "Pressure",
+        "temperature": "Temperature"
+      },
+      "picker_description": "Arc with the value of a numeric sensor",
+      "picker_name": "Home Glass – Gauge"
     }
   },
   "common": {
@@ -445,6 +462,7 @@
     "previous_track": "Previous",
     "rooms": "Rooms",
     "save": "Save",
+    "sensor": "Sensor",
     "state_motion": "motion",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",

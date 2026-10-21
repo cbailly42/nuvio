@@ -363,11 +363,19 @@ common.fuel_prices,parts/cards/fuel-card.part.js,20,hgTr,Fuel prices,Ceny paliw,
 cards.fuel.add_fuel_price_sensors,parts/cards/fuel-card.part.js,20,hgTr,Add fuel price sensors.,Dodaj czujniki cen paliw.,,,auto
 cards.gauge.choose_a_sensor,parts/cards/gauge-card.part.js,14,hgTr,Choose a sensor,Wybierz czujnik,,,auto
 cards.gauge.any_numeric_sensor,parts/cards/gauge-card.part.js,14,hgTr,Any numeric sensor,Dowolny czujnik liczbowy,,,auto
-cards.gauge.temperature_temperature_humidity_humidit,parts/cards/gauge-card.part.js,18,hgTr,"{ temperature: 'Temperature', humidity: 'Humidity', power: 'Power', battery: 'Battery', carbon_dioxide: 'CO₂', illuminance: 'Illuminance', pm25: 'PM2.5', pressure: 'Pressure', energy: 'Energy' }","{ temperature: 'Temperatura', humidity: 'Wilgotność', power: 'Moc', battery: 'Bateria', carbon_dioxide: 'CO₂', illuminance: 'Natężenie światła', pm25: 'PM2.5', pressure: 'Ciśnienie', energy: 'Energia' }",,object,manual
+cards.gauge.device_classes.temperature,parts/cards/gauge-card.part.js,18,hgTr,Temperature,Temperatura,,object,auto
+cards.gauge.device_classes.humidity,parts/cards/gauge-card.part.js,18,hgTr,Humidity,Wilgotność,,object,auto
+cards.gauge.device_classes.power,parts/cards/gauge-card.part.js,18,hgTr,Power,Moc,,object,auto
+cards.gauge.device_classes.battery,parts/cards/gauge-card.part.js,18,hgTr,Battery,Bateria,,object,auto
+cards.gauge.device_classes.carbon_dioxide,parts/cards/gauge-card.part.js,18,hgTr,CO₂,CO₂,,object,auto
+cards.gauge.device_classes.illuminance,parts/cards/gauge-card.part.js,18,hgTr,Illuminance,Natężenie światła,,object,auto
+cards.gauge.device_classes.pm25,parts/cards/gauge-card.part.js,18,hgTr,PM2.5,PM2.5,,object,auto
+cards.gauge.device_classes.pressure,parts/cards/gauge-card.part.js,18,hgTr,Pressure,Ciśnienie,,object,auto
+cards.gauge.device_classes.energy,parts/cards/gauge-card.part.js,18,hgTr,Energy,Energia,,object,auto
 common.sensor,parts/cards/gauge-card.part.js,18,hgTr,Sensor,Czujnik,,,auto
 common.state_unavailable,parts/cards/gauge-card.part.js,18,hgTr,unavailable,niedostępne,,,auto
-cards.gauge.home_glass_gauge,parts/cards/gauge-card.part.js,24,hgTr,Home Glass – Gauge,Home Glass – Wskaźnik,,load-time,manual
-cards.gauge.arc_with_the_value,parts/cards/gauge-card.part.js,24,hgTr,Arc with the value of a numeric sensor,Łuk z wartością czujnika liczbowego,,load-time,manual
+cards.gauge.picker_name,parts/cards/gauge-card.part.js,24,hgTr,Home Glass – Gauge,Home Glass – Wskaźnik,,load-time,auto
+cards.gauge.picker_description,parts/cards/gauge-card.part.js,24,hgTr,Arc with the value of a numeric sensor,Łuk z wartością czujnika liczbowego,,load-time,auto
 cards.glance.choose_entities,parts/cards/glance-card.part.js,18,hgTr,Choose entities,Wybierz encje,,,auto
 cards.glance.missing,parts/cards/glance-card.part.js,22,hgTr,missing,brak,,,auto
 cards.glance.nuvio_glance,parts/cards/glance-card.part.js,26,hgTr,Nuvio – Glance,Nuvio – Rzut oka,,load-time,manual
