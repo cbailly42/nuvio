@@ -78,9 +78,24 @@ cards.airq.levels.poor,parts/cards/airq-card.part.js,50,hgTr,Poor,Słaba,,expr,a
 cards.airq.levels.bad,parts/cards/airq-card.part.js,50,hgTr,Bad,Zła,,expr,auto
 cards.airq.picker_name,parts/cards/airq-card.part.js,54,hgTr,Home Glass – Air quality,Home Glass – Jakość powietrza,,load-time,auto
 cards.airq.picker_description,parts/cards/airq-card.part.js,54,hgTr,"CO₂, particulates, VOC and humidity with coloured thresholds","CO₂, pyły, LZO i wilgotność z kolorowymi progami",,load-time,auto
-cards.alarm.a_5,parts/cards/alarm-card.part.js,16,hgTr,a[5],a[2],,expr,manual
+cards.alarm.arm_modes.home,parts/cards/alarm-card.part.js,16,hgTr,Home,W domu,,expr,auto
+cards.alarm.arm_modes.away,parts/cards/alarm-card.part.js,16,hgTr,Away,Poza domem,,expr,auto
+cards.alarm.arm_modes.night,parts/cards/alarm-card.part.js,16,hgTr,Night,Noc,,expr,auto
+cards.alarm.arm_modes.vacation,parts/cards/alarm-card.part.js,16,hgTr,Vacation,Urlop,,expr,auto
+cards.alarm.arm_modes.custom_bypass,parts/cards/alarm-card.part.js,16,hgTr,Custom,Własny,,expr,auto
 cards.alarm.alarm_home,parts/cards/alarm-card.part.js,18,hgTr,Alarm · Home,Alarm · Dom,,,auto
-cards.alarm.lblen,parts/cards/alarm-card.part.js,79,hgTr,lblEn,lblPl,,expr,manual
+cards.alarm.states.disarmed,parts/cards/alarm-card.part.js,79,hgTr,Disarmed,Rozbrojony,,expr,auto
+cards.alarm.states.armed_home,parts/cards/alarm-card.part.js,79,hgTr,Armed · home,Uzbrojony · w domu,,expr,auto
+cards.alarm.states.armed_away,parts/cards/alarm-card.part.js,79,hgTr,Armed · away,Uzbrojony · poza domem,,expr,auto
+cards.alarm.states.armed_night,parts/cards/alarm-card.part.js,79,hgTr,Armed · night,Uzbrojony · noc,,expr,auto
+cards.alarm.states.armed_vacation,parts/cards/alarm-card.part.js,79,hgTr,Armed · vacation,Uzbrojony · urlop,,expr,auto
+cards.alarm.states.armed_custom_bypass,parts/cards/alarm-card.part.js,79,hgTr,Armed · custom,Uzbrojony · własny,,expr,auto
+cards.alarm.states.arming,parts/cards/alarm-card.part.js,79,hgTr,Arming…,Uzbrajanie…,,expr,auto
+cards.alarm.states.pending,parts/cards/alarm-card.part.js,79,hgTr,Pending…,Oczekuje…,,expr,auto
+cards.alarm.states.disarming,parts/cards/alarm-card.part.js,79,hgTr,Disarming…,Rozbrajanie…,,expr,auto
+cards.alarm.states.triggered,parts/cards/alarm-card.part.js,79,hgTr,Triggered!,Alarm!,,expr,auto
+cards.alarm.states.unavailable,parts/cards/alarm-card.part.js,79,hgTr,Unavailable,Niedostępny,,expr,auto
+cards.alarm.states.unknown,parts/cards/alarm-card.part.js,79,hgTr,Unknown,Nieznany,,expr,auto
 cards.alarm.arm,parts/cards/alarm-card.part.js,83,hgTr,Arm,Uzbrój,,,auto
 cards.alarm.arm,parts/cards/alarm-card.part.js,83,hgTr,Arm,Uzbrój,,,auto
 cards.alarm.disarm,parts/cards/alarm-card.part.js,84,hgTr,Disarm,Rozbrój,,,auto
@@ -102,9 +117,9 @@ cards.alarm.delete_digit,parts/cards/alarm-card.part.js,94,hgTr,Delete digit,Usu
 cards.alarm.confirm,parts/cards/alarm-card.part.js,94,hgTr,Confirm,Zatwierdź,,,auto
 cards.alarm.alarm_details,parts/cards/alarm-card.part.js,99,hgTr,Alarm details,Szczegóły alarmu,,,auto
 cards.alarm.details_and_history,parts/cards/alarm-card.part.js,99,hgTr,Details and history,Szczegóły i historia,,,auto
-cards.alarm.changed,parts/cards/alarm-card.part.js,101,hgTr,changed ,zmiana ,,concat,manual
-cards.alarm.entity_not_found,parts/cards/alarm-card.part.js,101,hgTr,Entity not found: ,Brak encji ,,concat,manual
-cards.alarm.alarm_state_arm_disarm,parts/cards/alarm-card.part.js,128,hgTr,"Alarm state, arm/disarm per supported_features, code keypad","Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu",,load-time,manual
+cards.alarm.changed_ago,parts/cards/alarm-card.part.js,101,hgTr,changed {time},zmiana {time},time,concat,auto
+cards.alarm.entity_not_found,parts/cards/alarm-card.part.js,101,hgTr,Entity not found: {entity},Brak encji {entity},entity,concat,auto
+cards.alarm.picker_description,parts/cards/alarm-card.part.js,128,hgTr,"Alarm state, arm/disarm per supported_features, code keypad","Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu",,load-time,auto
 cards.appliance.no_device,parts/cards/appliance-card.part.js,13,hgTr,No device,Brak urządzenia,,,auto
 cards.appliance.pick_an_entity_of,parts/cards/appliance-card.part.js,13,hgTr,Pick an entity of the device in the widget settings.,Wybierz encję urządzenia w ustawieniach widżetu.,,,auto
 cards.appliance.picker_name,parts/cards/appliance-card.part.js,15,hgTr,Home Glass – Appliance,Home Glass – Urządzenie AGD,,load-time,auto

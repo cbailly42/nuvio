@@ -113,6 +113,45 @@
       "picker_description": "CO₂, pyły, LZO i wilgotność z kolorowymi progami",
       "picker_name": "Home Glass – Jakość powietrza"
     },
+    "alarm": {
+      "alarm_code": "Kod alarmu",
+      "alarm_details": "Szczegóły alarmu",
+      "alarm_home": "Alarm · Dom",
+      "arm": "Uzbrój",
+      "arm_modes": {
+        "away": "Poza domem",
+        "custom_bypass": "Własny",
+        "home": "W domu",
+        "night": "Noc",
+        "vacation": "Urlop"
+      },
+      "changed_ago": "zmiana {time}",
+      "clear_code": "Wyczyść kod",
+      "code_for": "Kod do",
+      "confirm": "Zatwierdź",
+      "delete_digit": "Usuń cyfrę",
+      "details_and_history": "Szczegóły i historia",
+      "disarm": "Rozbrój",
+      "enter_code": "Wpisz kod",
+      "enter_the_code_first": "Najpierw wpisz kod",
+      "enter_the_code_then": "Wpisz kod, potem wybierz akcję",
+      "entity_not_found": "Brak encji {entity}",
+      "picker_description": "Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu",
+      "states": {
+        "armed_away": "Uzbrojony · poza domem",
+        "armed_custom_bypass": "Uzbrojony · własny",
+        "armed_home": "Uzbrojony · w domu",
+        "armed_night": "Uzbrojony · noc",
+        "armed_vacation": "Uzbrojony · urlop",
+        "arming": "Uzbrajanie…",
+        "disarmed": "Rozbrojony",
+        "disarming": "Rozbrajanie…",
+        "pending": "Oczekuje…",
+        "triggered": "Alarm!",
+        "unavailable": "Niedostępny",
+        "unknown": "Nieznany"
+      }
+    },
     "appliance": {
       "no_device": "Brak urządzenia",
       "pick_an_entity_of": "Wybierz encję urządzenia w ustawieniach widżetu.",
@@ -146,6 +185,7 @@
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
     "close": "Zamknij",
+    "code": "Kod",
     "cooling": "Chłodzenie",
     "details": "Szczegóły",
     "done": "Gotowe",

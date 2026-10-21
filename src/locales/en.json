@@ -113,6 +113,45 @@
       "picker_description": "CO₂, particulates, VOC and humidity with coloured thresholds",
       "picker_name": "Home Glass – Air quality"
     },
+    "alarm": {
+      "alarm_code": "Alarm code",
+      "alarm_details": "Alarm details",
+      "alarm_home": "Alarm · Home",
+      "arm": "Arm",
+      "arm_modes": {
+        "away": "Away",
+        "custom_bypass": "Custom",
+        "home": "Home",
+        "night": "Night",
+        "vacation": "Vacation"
+      },
+      "changed_ago": "changed {time}",
+      "clear_code": "Clear code",
+      "code_for": "Code for",
+      "confirm": "Confirm",
+      "delete_digit": "Delete digit",
+      "details_and_history": "Details and history",
+      "disarm": "Disarm",
+      "enter_code": "Enter code",
+      "enter_the_code_first": "Enter the code first",
+      "enter_the_code_then": "Enter the code, then pick an action",
+      "entity_not_found": "Entity not found: {entity}",
+      "picker_description": "Alarm state, arm/disarm per supported_features, code keypad",
+      "states": {
+        "armed_away": "Armed · away",
+        "armed_custom_bypass": "Armed · custom",
+        "armed_home": "Armed · home",
+        "armed_night": "Armed · night",
+        "armed_vacation": "Armed · vacation",
+        "arming": "Arming…",
+        "disarmed": "Disarmed",
+        "disarming": "Disarming…",
+        "pending": "Pending…",
+        "triggered": "Triggered!",
+        "unavailable": "Unavailable",
+        "unknown": "Unknown"
+      }
+    },
     "appliance": {
       "no_device": "No device",
       "pick_an_entity_of": "Pick an entity of the device in the widget settings.",
@@ -146,6 +185,7 @@
     "calendar": "Calendar",
     "cancel": "Cancel",
     "close": "Close",
+    "code": "Code",
     "cooling": "Cooling",
     "details": "Details",
     "done": "Done",
