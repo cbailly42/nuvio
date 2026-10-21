@@ -166,7 +166,7 @@ Object.assign(HGWall, {
     if (!isNaN(r) && (isNaN(s) || r < s)) return this.bdW('mdi:weather-sunset-up', H.esc(tf.format(r)), H.esc(hgT('wallboard.sunrise')));
     return isNaN(s) ? '' : this.bdW('mdi:weather-sunset-down', H.esc(tf.format(s)), H.esc(hgT('wallboard.sunset'))); },
   bdCnt() { if (!this._bev) return ''; const d0 = new Date(); d0.setHours(0, 0, 0, 0); const ev = this._bev.find((e) => e.ad && e.s > d0); if (!ev) return '';
-    const n = Math.round((ev.s - d0) / 864e5); return this.bdW('mdi:calendar-star', H.esc(ev.t), H.esc(n === 1 ? hgT('wallboard.tomorrow') : hgT('wallboard.in_days', { count: n }))); },
+    const n = Math.round((ev.s - d0) / 864e5); return this.bdW('mdi:calendar-star', H.esc(ev.t || hgT('wallboard.event')), H.esc(n === 1 ? hgT('wallboard.tomorrow') : hgT('wallboard.in_days', { count: n }))); },
   wxId(h, B) { if (B.wxE && H.ok(h.states[B.wxE])) return B.wxE; return Object.keys(h.states).find((e) => e.startsWith('weather.') && H.ok(h.states[e])) || ''; },
   bdWx(h, B) { const id = this.wxId(h, B); if (!id || typeof HGWx === 'undefined') return ''; const w = h.states[id], A = w.attributes;
     const u = A.temperature_unit || '°C', deg = (v) => (isFinite(v) ? H.esc(H.fmt(v, 0)) + (u.startsWith('°') ? '°' : ' ' + H.esc(u)) : '–'), sun = h.states['sun.sun'], night = !!sun && sun.state === 'below_horizon';
@@ -182,7 +182,7 @@ Object.assign(HGWall, {
     const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;
     Promise.all(ids.map((id) => h.callApi('GET', `calendars/${id}${q}`).catch(() => []))).then((rs) => {
       const L = []; for (const [ci, r] of rs.entries()) for (const e of (Array.isArray(r) ? r : [])) { const ad = !!(e.start && e.start.date && !e.start.dateTime), s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start && e.start.dateTime), en = ad ? new Date((e.end && e.end.date || e.start.date) + 'T00:00:00') : new Date(e.end && e.end.dateTime || s);
-        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: String(e.summary || hgT('wallboard.event')), loc: String(e.location || '').split(',')[0] }); }
+        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: e.summary ? String(e.summary) : null, loc: String(e.location || '').split(',')[0] }); }
       this._bev = L.sort((a, b) => (a.s - b.s) || (b.ad - a.ad)); if (this.el) this.bd(true); }); },
   /* najbliższe wydarzenia: trwające albo kolejne (najwyżej dwa widżety) */
   bdEv(h, B, tf) { if (!this._bev) return [];
@@ -192,7 +192,7 @@ Object.assign(HGWall, {
     const rel = (e) => { const m = Math.round((e.s - now) / 60000); return m < 60 ? hgT('wallboard.in_min', { minutes: m }) : m < 600 ? hgT('wallboard.in_hours_minutes', { hours: Math.floor(m / 60), minutes: m % 60 }) : ''; };
     return E.map((e) => { const live = e.s <= now, r = live ? '' : rel(e);
       const sub = live ? `<em>${H.esc(hgT('common.now_cap'))}</em> · ${H.esc(hgT('wallboard.until_time', { time: tf.format(e.en) }))}` : `${H.esc(day(e.s) + ' ' + tf.format(e.s))}${r ? ` · <em>${H.esc(r)}</em>` : ''}`;
-      return this.bdW('mdi:calendar-blank', H.esc(e.t), sub); }); },
+      return this.bdW('mdi:calendar-blank', H.esc(e.t || hgT('wallboard.event')), sub); }); },
   bdNp(h) { const L = Object.keys(h.states).filter((e) => e.startsWith('media_player.') && hgMpActive(h.states[e]) && (h.states[e].attributes.media_title || h.states[e].attributes.media_channel));
     const id = L.find((e) => h.states[e].state === 'playing') || L[0]; if (!id) return ''; const s = h.states[id], A = s.attributes, pl = s.state === 'playing';
     const sub = [A.media_artist || A.media_series_title || A.app_name, H.name(h, id, id)].filter(Boolean).join(' · '), pic = A.entity_picture ? String(A.entity_picture).replace(/["\\()]/g, '') : '';
