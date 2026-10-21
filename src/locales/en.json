@@ -617,6 +617,13 @@
       "picker_description": "Sunrise and sunset",
       "picker_name": "Home Glass – Sun"
     },
+    "switch": {
+      "connected": "connected",
+      "disconnected": "disconnected",
+      "internet_status": "Internet: {status}",
+      "picker_description": "Glass-style switch (row or tile)",
+      "picker_name": "Home Glass – Switch"
+    },
     "timer": {
       "choose_a_timer": "Choose a timer",
       "paused": "Paused",

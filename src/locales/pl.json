@@ -621,6 +621,13 @@
       "picker_description": "Wschód i zachód słońca",
       "picker_name": "Home Glass – Słońce"
     },
+    "switch": {
+      "connected": "połączony",
+      "disconnected": "brak",
+      "internet_status": "Internet: {status}",
+      "picker_description": "Przełącznik w stylu glass (wiersz lub kafel)",
+      "picker_name": "Home Glass – Przełącznik"
+    },
     "timer": {
       "choose_a_timer": "Wybierz minutnik (timer)",
       "paused": "Wstrzymany",

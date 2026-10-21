@@ -1049,8 +1049,8 @@ common.state_unavailable,parts/cards/switch-card.part.js,32,hgTr,unavailable,nie
 common.on_neut,parts/cards/switch-card.part.js,32,hgTr,On,Włączone,,,auto
 common.on_neut,parts/cards/switch-card.part.js,32,hgTr,On,Włączone,,,auto
 common.off_neut,parts/cards/switch-card.part.js,32,hgTr,Off,Wyłączone,,,auto
-cards.switch.home_glass_switch,parts/cards/switch-card.part.js,48,hgTr,Home Glass – Switch,Home Glass – Przełącznik,,load-time,manual
-cards.switch.glass_style_switch_row,parts/cards/switch-card.part.js,48,hgTr,Glass-style switch (row or tile),Przełącznik w stylu glass (wiersz lub kafel),,load-time,manual
+cards.switch.picker_name,parts/cards/switch-card.part.js,48,hgTr,Home Glass – Switch,Home Glass – Przełącznik,,load-time,auto
+cards.switch.picker_description,parts/cards/switch-card.part.js,48,hgTr,Glass-style switch (row or tile),Przełącznik w stylu glass (wiersz lub kafel),,load-time,auto
 cards.tabs.dashboard,parts/cards/tabs-card.part.js,3,hgTr,Dashboard,Panel,,,auto
 cards.tabs.chart,parts/cards/tabs-card.part.js,3,hgTr,Chart,Wykres,,,auto
 cards.tabs.tab,parts/cards/tabs-card.part.js,8,hgTr,Tab,Zakładka,,concat,manual
