@@ -4,7 +4,7 @@
 const HG_VF = { PAUSE: 4, STOP: 8, HOME: 16, FAN: 32, LOCATE: 512, START: 8192 };
 const HG_MF = { START: 1, PAUSE: 2, DOCK: 4 };
 /* opcje select (ssanie, tryb, woda): hgTD('cards.robots.options.' + opcja, spacje -> _) */
-const HG_OPT_KEYS = [' quiet', ' silent', ' standard', ' basic', ' strong', ' turbo', 'full speed', ' max', '  mopping', ' sweeping', ' sweeping_and_mopping', ' mopping_after_sweeping', ' low', ' medium', ' high'];
+const HG_OPT_KEYS = ['quiet', 'silent', 'standard', 'basic', 'strong', 'turbo', 'full speed', 'max', 'mopping', 'sweeping', 'sweeping_and_mopping', 'mopping_after_sweeping', 'low', 'medium', 'high'];
 /* [wzorzec, etykieta (hgTLazy)] */
 const HG_SEL_LBL = [[/suction_level$|_mode_p_\d+_\d+$|fan_speed$/, hgTLazy('cards.robots.settings.suction')], [/cleaning_mode$/, hgTLazy('cards.robots.settings.mode')], [/water_volume$/, hgTLazy('cards.robots.settings.water')]];
 /* [wzorzec, id, etykieta (hgTLazy), pełna nazwa (hgTLazy) albo null] */
