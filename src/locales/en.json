@@ -415,6 +415,12 @@
       },
       "picker_description": "Arc with the value of a numeric sensor",
       "picker_name": "Home Glass – Gauge"
+    },
+    "glance": {
+      "choose_entities": "Choose entities",
+      "missing": "missing",
+      "picker_description": "Several entities in a row: icon, name and state",
+      "picker_name": "Nuvio – Glance"
     }
   },
   "common": {

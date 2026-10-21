@@ -378,8 +378,8 @@ cards.gauge.picker_name,parts/cards/gauge-card.part.js,24,hgTr,Home Glass – Ga
 cards.gauge.picker_description,parts/cards/gauge-card.part.js,24,hgTr,Arc with the value of a numeric sensor,Łuk z wartością czujnika liczbowego,,load-time,auto
 cards.glance.choose_entities,parts/cards/glance-card.part.js,18,hgTr,Choose entities,Wybierz encje,,,auto
 cards.glance.missing,parts/cards/glance-card.part.js,22,hgTr,missing,brak,,,auto
-cards.glance.nuvio_glance,parts/cards/glance-card.part.js,26,hgTr,Nuvio – Glance,Nuvio – Rzut oka,,load-time,manual
-cards.glance.several_entities_in_a,parts/cards/glance-card.part.js,26,hgTr,"Several entities in a row: icon, name and state","Kilka encji w rzędzie: ikona, nazwa i stan",,load-time,manual
+cards.glance.picker_name,parts/cards/glance-card.part.js,26,hgTr,Nuvio – Glance,Nuvio – Rzut oka,,load-time,auto
+cards.glance.picker_description,parts/cards/glance-card.part.js,26,hgTr,"Several entities in a row: icon, name and state","Kilka encji w rzędzie: ikona, nazwa i stan",,load-time,auto
 cards.grid.nuvio_grid,parts/cards/grid-card.part.js,25,hgTr,Nuvio – Grid,Nuvio – Siatka,,load-time,manual
 cards.grid.cards_in_columns_like,parts/cards/grid-card.part.js,25,hgTr,"Cards in columns, like the HA grid","Karty w kolumnach, jak siatka w HA",,load-time,manual
 cards.hero.hey,parts/cards/hero-card.part.js,16,hgTr,"Hey, {name}!","Hej, {name}!",,,auto

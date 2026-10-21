@@ -419,6 +419,12 @@
       },
       "picker_description": "Łuk z wartością czujnika liczbowego",
       "picker_name": "Home Glass – Wskaźnik"
+    },
+    "glance": {
+      "choose_entities": "Wybierz encje",
+      "missing": "brak",
+      "picker_description": "Kilka encji w rzędzie: ikona, nazwa i stan",
+      "picker_name": "Nuvio – Rzut oka"
     }
   },
   "common": {
