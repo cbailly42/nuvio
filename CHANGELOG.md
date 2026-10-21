@@ -1,3 +1,5 @@
+<p align="center"><b>English</b> · <a href="CHANGELOG.pl.md">Polski</a> · <a href="CHANGELOG.fr.md">Français</a></p>
+
 # Changelog
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
