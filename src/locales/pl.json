@@ -286,6 +286,12 @@
       "picker_description": "Pozycja, otwórz, zatrzymaj, zamknij",
       "picker_name": "Nuvio – Roleta / brama",
       "position": "Pozycja"
+    },
+    "cwu": {
+      "choose_a_water_heater": "Wybierz podgrzewacz wody.",
+      "hot_water": "Ciepła woda",
+      "picker_description": "Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki",
+      "picker_name": "Home Glass – Ciepła woda"
     }
   },
   "common": {

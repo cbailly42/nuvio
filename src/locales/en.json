@@ -282,6 +282,12 @@
       "picker_description": "Position, open, stop, close",
       "picker_name": "Nuvio – Cover / gate",
       "position": "Position"
+    },
+    "cwu": {
+      "choose_a_water_heater": "Choose a water heater.",
+      "hot_water": "Hot water",
+      "picker_description": "Water heater: temperature, heating, power, time, switches",
+      "picker_name": "Home Glass – Hot water"
     }
   },
   "common": {

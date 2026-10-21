@@ -248,8 +248,8 @@ cards.cover.picker_name,parts/cards/cover-card.part.js,29,hgTr,Nuvio – Cover /
 cards.cover.picker_description,parts/cards/cover-card.part.js,29,hgTr,"Position, open, stop, close","Pozycja, otwórz, zatrzymaj, zamknij",,load-time,auto
 cards.cwu.hot_water,parts/cards/cwu-card.part.js,5,hgTr,Hot water,Ciepła woda,,,auto
 cards.cwu.choose_a_water_heater,parts/cards/cwu-card.part.js,5,hgTr,Choose a water heater.,Wybierz podgrzewacz wody.,,,auto
-cards.cwu.home_glass_hot_water,parts/cards/cwu-card.part.js,8,hgTr,Home Glass – Hot water,Home Glass – Ciepła woda,,load-time,manual
-cards.cwu.water_heater_temperature_heating,parts/cards/cwu-card.part.js,8,hgTr,"Water heater: temperature, heating, power, time, switches","Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki",,load-time,manual
+cards.cwu.picker_name,parts/cards/cwu-card.part.js,8,hgTr,Home Glass – Hot water,Home Glass – Ciepła woda,,load-time,auto
+cards.cwu.picker_description,parts/cards/cwu-card.part.js,8,hgTr,"Water heater: temperature, heating, power, time, switches","Podgrzewacz CWU: temperatura, grzanie, moc, czas, przełączniki",,load-time,auto
 cards.energy.energy,parts/cards/energy-card.part.js,4,hgTr,Energy,Energia,,,auto
 cards.energy.low_usage,parts/cards/energy-card.part.js,5,hgTr,Low usage,Niskie zużycie,,,auto
 cards.energy.medium_usage,parts/cards/energy-card.part.js,5,hgTr,Medium usage,Średnie zużycie,,,auto
