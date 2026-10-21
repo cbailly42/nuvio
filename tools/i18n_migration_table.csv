@@ -309,14 +309,18 @@ cards.eprice.day,parts/cards/eprice-card.part.js,50,hgTr,Day,Dzień,,,auto
 common.today,parts/cards/eprice-card.part.js,50,hgTr,Today,Dziś,,,auto
 cards.eprice.tomorrow,parts/cards/eprice-card.part.js,50,hgTr,Tomorrow,Jutro,,,auto
 cards.eprice.electricity_price,parts/cards/eprice-card.part.js,51,hgTr,Electricity price,Cena prądu,,,auto
-cards.eprice.lv_1_now,parts/cards/eprice-card.part.js,51,hgTr,${lv[1]} now,Teraz ${lv[0].toLowerCase()},,expr,manual
-cards.eprice.lv_1,parts/cards/eprice-card.part.js,52,hgTr,lv[1],lv[0],,expr,manual
+cards.eprice.now.cheap,parts/cards/eprice-card.part.js,51,hgTr,Cheap now,Teraz tanio,,expr,auto
+cards.eprice.now.average,parts/cards/eprice-card.part.js,51,hgTr,Average now,Teraz średnio,,expr,auto
+cards.eprice.now.expensive,parts/cards/eprice-card.part.js,51,hgTr,Expensive now,Teraz drogo,,expr,auto
+cards.eprice.levels.cheap,parts/cards/eprice-card.part.js,52,hgTr,Cheap,Tanio,,expr,auto
+cards.eprice.levels.average,parts/cards/eprice-card.part.js,52,hgTr,Average,Średnio,,expr,auto
+cards.eprice.levels.expensive,parts/cards/eprice-card.part.js,52,hgTr,Expensive,Drogo,,expr,auto
 cards.eprice.avg,parts/cards/eprice-card.part.js,52,hgTr,avg,śr.,,,auto
 cards.eprice.the_sensor_has_no,parts/cards/eprice-card.part.js,53,hgTr,The sensor has no hourly prices in its attributes,Czujnik nie ma cen godzinowych w atrybutach,,,auto
 cards.eprice.cheapest_h,parts/cards/eprice-card.part.js,54,hgTr,Cheapest {wh} h,Najtaniej {wh} h,wh,,auto
-cards.eprice.tomorrow_2,parts/cards/eprice-card.part.js,54,hgTr,tomorrow,jutro,,concat,manual
-cards.eprice.home_glass_electricity_price,parts/cards/eprice-card.part.js,58,hgTr,Home Glass – Electricity price,Home Glass – Cena prądu,,load-time,manual
-cards.eprice.current_price_bars_for,parts/cards/eprice-card.part.js,58,hgTr,"Current price, bars for today and tomorrow and the cheapest window","Bieżąca cena, słupki na dziś i jutro oraz najtańsze okno",,load-time,manual
+cards.eprice.tomorrow_lower,parts/cards/eprice-card.part.js,54,hgTr,tomorrow,jutro,,concat,auto
+cards.eprice.picker_name,parts/cards/eprice-card.part.js,58,hgTr,Home Glass – Electricity price,Home Glass – Cena prądu,,load-time,auto
+cards.eprice.picker_description,parts/cards/eprice-card.part.js,58,hgTr,"Current price, bars for today and tomorrow and the cheapest window","Bieżąca cena, słupki na dziś i jutro oraz najtańsze okno",,load-time,auto
 cards.family.family,parts/cards/family-card.part.js,4,hgTr,Family,Domownicy,,,auto
 cards.family.home_length_of_l,parts/cards/family-card.part.js,19,hgTr,${home.length} of ${L.length} at home,${home.length} z ${L.length} w domu,,expr,manual
 cards.family.no_people_in_home,parts/cards/family-card.part.js,19,hgTr,No people in Home Assistant,Brak osób w Home Assistant,,,auto

@@ -334,6 +334,31 @@
       "picker_description": "Wiersze encji z przełącznikiem, przyciskiem lub wartością",
       "picker_name": "Home Glass – Lista encji",
       "run": "Uruchom"
+    },
+    "eprice": {
+      "avg": "śr.",
+      "cheapest_h": "Najtaniej {wh} h",
+      "choose_an_electricity_price": "Wybierz czujnik ceny prądu",
+      "day": "Dzień",
+      "electricity_price": "Cena prądu",
+      "levels": {
+        "average": "Średnio",
+        "cheap": "Tanio",
+        "expensive": "Drogo"
+      },
+      "nord_pool_entso_e": "Nord Pool, ENTSO-e, Energi Data Service, Pstryk lub podobny z cenami godzinowymi",
+      "now": {
+        "average": "Teraz średnio",
+        "cheap": "Teraz tanio",
+        "expensive": "Teraz drogo"
+      },
+      "picker_description": "Bieżąca cena, słupki na dziś i jutro oraz najtańsze okno",
+      "picker_name": "Home Glass – Cena prądu",
+      "prices_today": "Ceny dziś",
+      "prices_tomorrow": "Ceny jutro",
+      "the_sensor_has_no": "Czujnik nie ma cen godzinowych w atrybutach",
+      "tomorrow": "Jutro",
+      "tomorrow_lower": "jutro"
     }
   },
   "common": {

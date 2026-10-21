@@ -31,28 +31,28 @@ class HGEpriceCard extends HGBase {
 @media (prefers-reduced-motion:reduce){ .bars i{ transition:none; } }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz czujnik ceny prądu', 'Choose an electricity price sensor')}</b>${hgTr('Nord Pool, ENTSO-e, Energi Data Service, Pstryk lub podobny z cenami godzinowymi', 'Nord Pool, ENTSO-e, Energi Data Service or similar with hourly prices')}</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgT('cards.eprice.choose_an_electricity_price')}</b>${hgT('cards.eprice.nord_pool_entso_e')}</div></ha-card>`;
     const a = s.attributes, dec = c.decimals != null && c.decimals !== '' ? +c.decimals : 2, unit = c.unit || a.unit_of_measurement || a.unit || '', now = Date.now();
     const T = hgEpDay(a, 0), M = hgEpDay(a, 1), day = this._day && M.length ? 1 : 0, D = day ? M : T;
     const cur = T.find((x) => now >= x.t && now < x.t + x.d), sv = parseFloat(s.state), v = isFinite(sv) ? sv : cur ? cur.v : null;
     const fp = (x) => H.fmt(x, dec);
     const srt = D.map((x) => x.v).sort((p, q) => p - q), q1 = srt[Math.floor(srt.length / 3)], q2 = srt[Math.floor((srt.length * 2) / 3)];
     const ref = T.map((x) => x.v).sort((p, q) => p - q), r1 = ref[Math.floor(ref.length / 3)], r2 = ref[Math.floor((ref.length * 2) / 3)];
-    const lv = v == null || !ref.length ? null : v <= r1 ? ['Tanio', 'Cheap', 'var(--hg-accent)'] : v >= r2 ? ['Drogo', 'Expensive', '#FF8A3D'] : ['Średnio', 'Average', '#C9CDD2'];
+    const lv = v == null || !ref.length ? null : v <= r1 ? ['cheap', hgT('cards.eprice.levels.cheap'), 'var(--hg-accent)', hgT('cards.eprice.now.cheap')] : v >= r2 ? ['expensive', hgT('cards.eprice.levels.expensive'), '#FF8A3D', hgT('cards.eprice.now.expensive')] : ['average', hgT('cards.eprice.levels.average'), '#C9CDD2', hgT('cards.eprice.now.average')];   // [poziom, etykieta, kolor, „teraz …”]
     /* najtańsze okno o długości c.window godzin od teraz (dziś i jutro) */
     const fut = [...T, ...M].filter((x) => x.t + x.d > now), wh = Math.max(1, +c.window || 3); let best = null;
     if (fut.length) { const n = Math.max(1, Math.round((wh * 3600000) / fut[0].d)); for (let i = 0; i + n <= fut.length; i++) { const w = fut.slice(i, i + n), av = w.reduce((p, x) => p + x.v, 0) / n; if (!best || av < best.av) best = { t: w[0].t, e: w[n - 1].t + w[n - 1].d, av }; } }
     let bars = '';
     if (D.length) { const mn = Math.min(0, srt[0]), mx = Math.max(srt[srt.length - 1], mn + 1e-9), hp = (x) => Math.max(3, ((x - mn) / (mx - mn)) * 100);
-      bars = `<div class="bars" role="img" aria-label="${day ? hgTr('Ceny jutro', 'Prices tomorrow') : hgTr('Ceny dziś', 'Prices today')}: min ${fp(srt[0])}, max ${fp(srt[srt.length - 1])} ${H.esc(unit)}">${mn < 0 ? `<span class="zl" style="bottom:${((-mn / (mx - mn)) * 100).toFixed(1)}%"></span>` : ''}${D.map((x) => { const k = [x.v <= q1 ? 'c' : x.v >= q2 ? 'x' : '', !day && x.t + x.d <= now ? 'p' : '', !day && cur && x.t === cur.t ? 'n' : '', best && x.t >= best.t && x.t < best.e ? 'w' : ''].filter(Boolean).join(' ');
+      bars = `<div class="bars" role="img" aria-label="${day ? hgT('cards.eprice.prices_tomorrow') : hgT('cards.eprice.prices_today')}: min ${fp(srt[0])}, max ${fp(srt[srt.length - 1])} ${H.esc(unit)}">${mn < 0 ? `<span class="zl" style="bottom:${((-mn / (mx - mn)) * 100).toFixed(1)}%"></span>` : ''}${D.map((x) => { const k = [x.v <= q1 ? 'c' : x.v >= q2 ? 'x' : '', !day && x.t + x.d <= now ? 'p' : '', !day && cur && x.t === cur.t ? 'n' : '', best && x.t >= best.t && x.t < best.e ? 'w' : ''].filter(Boolean).join(' ');
         return `<i class="${k}" style="height:${hp(x.v).toFixed(1)}%" title="${hgEpHm(x.t)} · ${fp(x.v)} ${H.esc(unit)}"></i>`; }).join('')}</div><div class="ax" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>`; }
     const avg = srt.length ? srt.reduce((p, x) => p + x, 0) / srt.length : null;
-    const seg = M.length ? `<span class="seg" role="group" aria-label="${hgTr('Dzień', 'Day')}"><button type="button" data-act="day" data-d="0" aria-pressed="${!day}">${hgTr('Dziś', 'Today')}</button><button type="button" data-act="day" data-d="1" aria-pressed="${!!day}">${hgTr('Jutro', 'Tomorrow')}</button></span>` : '';
-    return `<ha-card class="glass">${hgHead('mdi:cash-clock', c.title || hgTr('Cena prądu', 'Electricity price'), lv ? hgTr(`Teraz ${lv[0].toLowerCase()}`, `${lv[1]} now`) : '', !!lv && lv[1] === 'Cheap', seg)}
-      <div class="nw" data-act="more" role="button" tabindex="0" style="cursor:pointer"><span class="big">${v == null ? '–' : fp(v)}${unit ? `<small>${H.esc(unit)}</small>` : ''}</span>${lv ? `<span class="lv" style="--c:${lv[2]}">${hgTr(lv[0], lv[1])}</span>` : ''}${avg != null ? `<span class="mm">${hgTr('śr.', 'avg')} ${fp(avg)} · min ${fp(srt[0])} · max ${fp(srt[srt.length - 1])}</span>` : ''}</div>
-      ${bars || `<div class="ph">${hgTr('Czujnik nie ma cen godzinowych w atrybutach', 'The sensor has no hourly prices in its attributes')}</div>`}
-      ${best ? `<div class="cw">${H.icon('mdi:clock-check-outline')}<span>${hgTr(`Najtaniej ${wh} h`, `Cheapest ${wh} h`)}: ${hgEpHm(best.t)}–${hgEpHm(best.e)}${new Date(best.t).getDate() !== new Date().getDate() ? ' ' + hgTr('jutro', 'tomorrow') : ''}</span><b>${fp(best.av)}</b></div>` : ''}</ha-card>`; }
+    const seg = M.length ? `<span class="seg" role="group" aria-label="${hgT('cards.eprice.day')}"><button type="button" data-act="day" data-d="0" aria-pressed="${!day}">${hgT('common.today')}</button><button type="button" data-act="day" data-d="1" aria-pressed="${!!day}">${hgT('cards.eprice.tomorrow')}</button></span>` : '';
+    return `<ha-card class="glass">${hgHead('mdi:cash-clock', c.title || hgT('cards.eprice.electricity_price'), lv ? lv[3] : '', !!lv && lv[0] === 'cheap', seg)}
+      <div class="nw" data-act="more" role="button" tabindex="0" style="cursor:pointer"><span class="big">${v == null ? '–' : fp(v)}${unit ? `<small>${H.esc(unit)}</small>` : ''}</span>${lv ? `<span class="lv" style="--c:${lv[2]}">${H.esc(lv[1])}</span>` : ''}${avg != null ? `<span class="mm">${hgT('cards.eprice.avg')} ${fp(avg)} · min ${fp(srt[0])} · max ${fp(srt[srt.length - 1])}</span>` : ''}</div>
+      ${bars || `<div class="ph">${hgT('cards.eprice.the_sensor_has_no')}</div>`}
+      ${best ? `<div class="cw">${H.icon('mdi:clock-check-outline')}<span>${hgT('cards.eprice.cheapest_h', { wh })}: ${hgEpHm(best.t)}–${hgEpHm(best.e)}${new Date(best.t).getDate() !== new Date().getDate() ? ' ' + hgT('cards.eprice.tomorrow_lower') : ''}</span><b>${fp(best.av)}</b></div>` : ''}</ha-card>`; }
   onAct(a, t) { if (a === 'more') return hgMore(this, this._config.entity); if (a === 'day') { this._day = t.dataset.d === '1'; this.rerender(); } }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }
 }
-hgReg('hg-eprice-card', HGEpriceCard, hgTr('Home Glass – Cena prądu', 'Home Glass – Electricity price'), hgTr('Bieżąca cena, słupki na dziś i jutro oraz najtańsze okno', 'Current price, bars for today and tomorrow and the cheapest window'));
+hgReg('hg-eprice-card', HGEpriceCard, hgTLazy('cards.eprice.picker_name'), hgTLazy('cards.eprice.picker_description'));

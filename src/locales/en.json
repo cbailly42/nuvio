@@ -330,6 +330,31 @@
       "picker_description": "Entity rows with a toggle, button or value",
       "picker_name": "Home Glass – Entities",
       "run": "Run"
+    },
+    "eprice": {
+      "avg": "avg",
+      "cheapest_h": "Cheapest {wh} h",
+      "choose_an_electricity_price": "Choose an electricity price sensor",
+      "day": "Day",
+      "electricity_price": "Electricity price",
+      "levels": {
+        "average": "Average",
+        "cheap": "Cheap",
+        "expensive": "Expensive"
+      },
+      "nord_pool_entso_e": "Nord Pool, ENTSO-e, Energi Data Service or similar with hourly prices",
+      "now": {
+        "average": "Average now",
+        "cheap": "Cheap now",
+        "expensive": "Expensive now"
+      },
+      "picker_description": "Current price, bars for today and tomorrow and the cheapest window",
+      "picker_name": "Home Glass – Electricity price",
+      "prices_today": "Prices today",
+      "prices_tomorrow": "Prices tomorrow",
+      "the_sensor_has_no": "The sensor has no hourly prices in its attributes",
+      "tomorrow": "Tomorrow",
+      "tomorrow_lower": "tomorrow"
     }
   },
   "common": {
