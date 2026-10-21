@@ -628,6 +628,11 @@
       "nothing_to_do": "Nothing to do",
       "picker_description": "Add and tick off tasks",
       "picker_name": "Nuvio – To-do list"
+    },
+    "toggle": {
+      "choose_a_device": "Choose a device",
+      "picker_description": "Name, state and switch in one row",
+      "picker_name": "Nuvio – Toggle tile"
     }
   },
   "common": {

@@ -632,6 +632,11 @@
       "nothing_to_do": "Brak zadań",
       "picker_description": "Dodawanie i odhaczanie zadań",
       "picker_name": "Nuvio – Lista zadań"
+    },
+    "toggle": {
+      "choose_a_device": "Wybierz urządzenie",
+      "picker_description": "Nazwa, stan i przełącznik w jednym wierszu",
+      "picker_name": "Nuvio – Kafelek przełącznika"
     }
   },
   "common": {

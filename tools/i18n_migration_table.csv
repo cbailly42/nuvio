@@ -1091,8 +1091,8 @@ cards.todo.picker_name,parts/cards/todo-card.part.js,34,hgTr,Nuvio – To-do lis
 cards.todo.picker_description,parts/cards/todo-card.part.js,34,hgTr,Add and tick off tasks,Dodawanie i odhaczanie zadań,,load-time,auto
 cards.toggle.choose_a_device,parts/cards/toggle-card.part.js,7,hgTr,Choose a device,Wybierz urządzenie,,,auto
 common.more,parts/cards/toggle-card.part.js,11,hgTr,More,Więcej,,,auto
-cards.toggle.nuvio_toggle_tile,parts/cards/toggle-card.part.js,18,hgTr,Nuvio – Toggle tile,Nuvio – Kafelek przełącznika,,load-time,manual
-cards.toggle.name_state_and_switch,parts/cards/toggle-card.part.js,18,hgTr,"Name, state and switch in one row","Nazwa, stan i przełącznik w jednym wierszu",,load-time,manual
+cards.toggle.picker_name,parts/cards/toggle-card.part.js,18,hgTr,Nuvio – Toggle tile,Nuvio – Kafelek przełącznika,,load-time,auto
+cards.toggle.picker_description,parts/cards/toggle-card.part.js,18,hgTr,"Name, state and switch in one row","Nazwa, stan i przełącznik w jednym wierszu",,load-time,auto
 cards.updates.updates,parts/cards/updates-card.part.js,9,hgTr,Updates,Aktualizacje,,,auto
 cards.updates.available_xs_length,parts/cards/updates-card.part.js,9,hgTr,Available: ${xs.length},Dostępne: ${xs.length},,expr,manual
 cards.updates.everything_up_to_date,parts/cards/updates-card.part.js,9,hgTr,Everything up to date,Wszystko aktualne,,,auto
