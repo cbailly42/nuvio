@@ -18,8 +18,11 @@ extract() raises if a hgTr( / hgTrLazy( / hgTrO( in the source is neither an Occ
           catalog is not loaded yet (hgT would answer in English where hgTr answers in Polish): resolved by hand. hgTrLazy / hgTrO are
           resolved at use time (toString / getter) and are never load-time.
   name    dictionary name (dict only) ; dkey = entry key (hgTrO entry key, dictionary key, HG_BG_SET id)
-  For manual rows pl/en hold the raw source text of the arguments. For HG_PL, en is the raw HA state (= its key).
+  For manual rows pl/en hold the raw source text of the arguments. For HG_PL, en is the raw HA state (= its key) with _ as spaces: how
+  v2.16.0 showed an untranslated state in English (H.t), the reference text for the other languages (EN itself never reads it).
   For HG_WX_SHORT (dict-dynamic) pl is the dictionary key (the PL index text) and en its short value: not a language pair.
+A hand-resolved manual row (manual reason set, status no longer manual) survives propose: matched by file + kind + line (in order),
+it keeps its key, texts, parameters and status.
 Key status: manual (any manual reason) | review (key may be clumsy: promoted to common.*, collision suffix _2.., slug cut at
 40 chars, slug under 3 chars or empty, accented/non-ASCII letters in the first words, dictionary key that had to be rewritten) | auto.
 """
@@ -200,7 +203,7 @@ def extract_dicts(file, s):
         i = s.index('{', m.end()); e = group_end(s, i + 1); spans.append((m.start(), e))
         for k, (a, b) in obj_entries(s, i + 1, e - 1):
             p = lit(s, a, b); o = dict_occ(file, s, 'HG_PL', k, a, b, en_start=None, en_end=None)
-            o['pl'], o['en'] = (p[1], k) if p else (re.sub(r"\s+", " ", s[a:b]), k)
+            o['pl'], o['en'] = (p[1], k.replace('_', ' ')) if p else (re.sub(r"\s+", " ", s[a:b]), k.replace('_', ' '))
             if not p: o['manual'] = 'expr'
             occs.append(o)
     m = find_assign(s, 'HG_WX_SHORT')
@@ -458,8 +461,14 @@ def propose(occs, existing=None):
         p = k.split('.')
         return k not in used and k not in prefixes and not any('.'.join(p[:i]) in used for i in range(1, len(p)))
     for r in existing: reg(r['key'])
+    kept_l = {}   # hand-resolved manual rows (their en/pl may be the resolved text): file + kind + line, in table order
+    for r in existing:
+        if r.get('manual') and r.get('status') != 'manual': kept_l.setdefault((r['file'], r['kind'], int(r['line'])), []).append(r)
     ident = {}; rows = []; cnt = {}; seen = {}
     for o in occs:
+        lst = o['manual'] and kept_l.get((o['file'], o['kind'], o['line']))
+        if lst:
+            k = lst.pop(0); r = dict(o); r.update(key=k['key'], en=k['en'], pl=k['pl'], params=list(k['params']), status=k['status'], why=['resolved']); rows.append(r); continue
         r = dict(o); why = []; key = None
         if o['kind'] == 'dict':
             ns = DICTS[o['name']]

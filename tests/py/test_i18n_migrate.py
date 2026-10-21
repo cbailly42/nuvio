@@ -47,7 +47,7 @@ class Extract(unittest.TestCase):
     def test_dictionaries(self):
         self.assertEqual({(o['pl'], o['en']) for o in occ('hg-oss.part.js', name='HG_I18N')}, {('Mapa', 'Map'), ('Witaj, {name}!', 'Welcome, {name}!')})
         self.assertEqual(occ('hg-oss.part.js', name='HG_I18N', dkey='hello')[0]['params'], ['name'])
-        self.assertEqual(occ('hg-core.part.js', name='HG_PL', dkey='not_home')[0]['en'], 'not_home')
+        self.assertEqual(occ('hg-core.part.js', name='HG_PL', dkey='not_home')[0]['en'], 'not home')   # as v2.16.0 showed it in EN
         self.assertEqual(occ('hg-oss.part.js', name='HG_WZ_T', dkey='s')[0]['manual'], 'array')
         self.assertEqual(occ('hg-oss.part.js', name='HG_BG_SET', dkey='kuchnia')[0]['en'], 'Kitchen')
     def test_wx_short_dynamic(self):
@@ -123,6 +123,21 @@ class Csv(unittest.TestCase):
             again = M.propose(M.extract(FIX), existing=M.read_csv(p))
             self.assertEqual([r['key'] for r in again if r['en'] == 'Cancel'], ['cards.alarm.dismiss'])
             self.assertEqual([r['key'] for r in again if r['en'] != 'Cancel'], [r['key'] for r in ROWS if r['en'] != 'Cancel'])
+
+    def test_hand_resolved_manual_rows_survive_propose(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, 't.csv'); rows = [dict(r) for r in ROWS]
+            wx = [r for r in rows if r['file'].endswith('weather-card.part.js')]; self.assertEqual(len(wx), 2)
+            wx[0].update(key='weather.short.partlycloudy', en='Partly cloudy', pl='Częś. zachm.', status='auto')
+            wx[1].update(key='weather.short.lightning', en='Storm', pl='Burza', status='auto')
+            lg = [r for r in rows if r['en'] == 'Language: '][0]; lg.update(key='cards.alarm.language', en='Language: {name}', pl='Język: {name}', params=['name'], status='auto')
+            M.write_csv(rows, p); again = M.propose(M.extract(FIX), existing=M.read_csv(p))
+            got = [(r['key'], r['en'], r['pl'], r['status'], r['manual']) for r in again if r['file'].endswith('weather-card.part.js')]
+            self.assertEqual(got, [('weather.short.partlycloudy', 'Partly cloudy', 'Częś. zachm.', 'auto', 'dict-dynamic'), ('weather.short.lightning', 'Storm', 'Burza', 'auto', 'dict-dynamic')])
+            r = [r for r in again if r['key'] == 'cards.alarm.language'][0]; self.assertEqual((r['en'], r['params'], r['status']), ('Language: {name}', ['name'], 'auto'))
+            self.assertEqual(len(again), len(ROWS))
+            # an unresolved manual row is proposed again as manual
+            self.assertEqual({r['status'] for r in again if r['manual'] and r['key'] not in ('cards.alarm.language',) and not r['key'].startswith('weather.short.')}, {'manual'})
 
 def workdir():
     """a writable copy of the fixture tree with seeded catalogs; returns (tmp TemporaryDirectory, root)"""

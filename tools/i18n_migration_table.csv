@@ -1229,7 +1229,7 @@ states.discharging,parts/hg-core.part.js,61,dict,discharging,rozładowanie,,,aut
 states.cleaning,parts/hg-core.part.js,62,dict,cleaning,sprzątanie,,,auto
 states.docked,parts/hg-core.part.js,62,dict,docked,w stacji,,,auto
 states.returning,parts/hg-core.part.js,62,dict,returning,powrót do stacji,,,auto
-states.returning_home,parts/hg-core.part.js,62,dict,returning_home,powrót do stacji,,,auto
+states.returning_home,parts/hg-core.part.js,62,dict,returning home,powrót do stacji,,,auto
 states.paused,parts/hg-core.part.js,62,dict,paused,wstrzymany,,,auto
 states.error,parts/hg-core.part.js,62,dict,error,błąd,,,auto
 states.mowing,parts/hg-core.part.js,62,dict,mowing,koszenie,,,auto
@@ -1238,7 +1238,7 @@ states.offline,parts/hg-core.part.js,63,dict,offline,offline,,,auto
 states.connected,parts/hg-core.part.js,63,dict,connected,połączony,,,auto
 states.disconnected,parts/hg-core.part.js,63,dict,disconnected,rozłączony,,,auto
 states.home,parts/hg-core.part.js,63,dict,home,w domu,,,auto
-states.not_home,parts/hg-core.part.js,63,dict,not_home,poza domem,,,auto
+states.not_home,parts/hg-core.part.js,63,dict,not home,poza domem,,,auto
 states.away,parts/hg-core.part.js,63,dict,away,poza domem,,,auto
 states.on,parts/hg-core.part.js,64,dict,on,wł.,,,auto
 states.off,parts/hg-core.part.js,64,dict,off,wył.,,,auto
@@ -1257,12 +1257,12 @@ states.heating,parts/hg-core.part.js,65,dict,heating,grzanie,,,auto
 states.cooling,parts/hg-core.part.js,65,dict,cooling,chłodzenie,,,auto
 states.drying,parts/hg-core.part.js,65,dict,drying,osuszanie,,,auto
 states.fan,parts/hg-core.part.js,66,dict,fan,wentylator,,,auto
-states.fan_only,parts/hg-core.part.js,66,dict,fan_only,wentylator,,,auto
+states.fan_only,parts/hg-core.part.js,66,dict,fan only,wentylator,,,auto
 states.heat,parts/hg-core.part.js,66,dict,heat,grzanie,,,auto
 states.cool,parts/hg-core.part.js,66,dict,cool,chłodzenie,,,auto
 states.dry,parts/hg-core.part.js,66,dict,dry,osuszanie,,,auto
 states.auto,parts/hg-core.part.js,66,dict,auto,auto,,,auto
-states.heat_cool,parts/hg-core.part.js,66,dict,heat_cool,grzanie/chłodzenie,,,auto
+states.heat_cool,parts/hg-core.part.js,66,dict,heat cool,grzanie/chłodzenie,,,auto
 states.preheating,parts/hg-core.part.js,66,dict,preheating,podgrzewanie,,,auto
 states.detected,parts/hg-core.part.js,67,dict,detected,wykryto,,,auto
 states.clear,parts/hg-core.part.js,67,dict,clear,brak,,,auto
@@ -1274,8 +1274,8 @@ states.ok,parts/hg-core.part.js,67,dict,ok,OK,,,auto
 states.low,parts/hg-core.part.js,67,dict,low,niski,,,auto
 states.medium,parts/hg-core.part.js,67,dict,medium,średni,,,auto
 states.high,parts/hg-core.part.js,67,dict,high,wysoki,,,auto
-states.above_horizon,parts/hg-core.part.js,68,dict,above_horizon,nad horyzontem,,,auto
-states.below_horizon,parts/hg-core.part.js,68,dict,below_horizon,pod horyzontem,,,auto
+states.above_horizon,parts/hg-core.part.js,68,dict,above horizon,nad horyzontem,,,auto
+states.below_horizon,parts/hg-core.part.js,68,dict,below horizon,pod horyzontem,,,auto
 states.recording,parts/hg-core.part.js,68,dict,recording,nagrywa,,,auto
 states.streaming,parts/hg-core.part.js,68,dict,streaming,transmisja,,,auto
 states.armed,parts/hg-core.part.js,68,dict,armed,uzbrojony,,,auto
@@ -1289,15 +1289,15 @@ states.working,parts/hg-core.part.js,69,dict,working,pracuje,,,auto
 states.busy,parts/hg-core.part.js,69,dict,busy,zajęty,,,auto
 states.upgrading,parts/hg-core.part.js,70,dict,upgrading,aktualizacja,,,auto
 states.provisioning,parts/hg-core.part.js,70,dict,provisioning,konfiguracja,,,auto
-states.heartbeat_missed,parts/hg-core.part.js,70,dict,heartbeat_missed,brak odpowiedzi,,,auto
+states.heartbeat_missed,parts/hg-core.part.js,70,dict,heartbeat missed,brak odpowiedzi,,,auto
 states.adopting,parts/hg-core.part.js,70,dict,adopting,adopcja,,,auto
-states.firmware_mismatch,parts/hg-core.part.js,70,dict,firmware_mismatch,niezgodne oprogramowanie,,,auto
+states.firmware_mismatch,parts/hg-core.part.js,70,dict,firmware mismatch,niezgodne oprogramowanie,,,auto
 states.isolated,parts/hg-core.part.js,70,dict,isolated,odizolowany,,,auto
 states.sunny,parts/hg-core.part.js,71,dict,sunny,słonecznie,,,auto
 states.cloudy,parts/hg-core.part.js,71,dict,cloudy,pochmurno,,,auto
 states.partlycloudy,parts/hg-core.part.js,71,dict,partlycloudy,częściowe zachmurzenie,,,auto
 states.rainy,parts/hg-core.part.js,71,dict,rainy,deszcz,,,auto
-states.clear_night,parts/hg-core.part.js,71,dict,clear_night,pogodna noc,,,auto
+states.clear_night,parts/hg-core.part.js,71,dict,clear night,pogodna noc,,,auto
 states.none,parts/hg-core.part.js,71,dict,none,brak,,,auto
 states.true,parts/hg-core.part.js,71,dict,true,tak,,,auto
 states.false,parts/hg-core.part.js,71,dict,false,nie,,,auto
