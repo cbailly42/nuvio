@@ -1115,8 +1115,8 @@ cards.vacuum.picker_name,parts/cards/vacuum-card.part.js,15,hgTr,Home Glass – 
 cards.vacuum.picker_description,parts/cards/vacuum-card.part.js,15,hgTr,"Robot state, battery and controls","Stan, bateria i sterowanie robotem",,load-time,auto
 common.choose_entity,parts/cards/value-card.part.js,6,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.value.a_sensor_or_any,parts/cards/value-card.part.js,6,hgTr,A sensor or any entity with a state,Czujnik lub dowolna encja ze stanem,,,auto
-cards.value.home_glass_big_value,parts/cards/value-card.part.js,12,hgTr,Home Glass – Big value,Home Glass – Duża wartość,,load-time,manual
-cards.value.one_number_with_warning,parts/cards/value-card.part.js,12,hgTr,One number with warning thresholds,Jedna liczba z progami ostrzeżeń,,load-time,manual
+cards.value.picker_name,parts/cards/value-card.part.js,12,hgTr,Home Glass – Big value,Home Glass – Duża wartość,,load-time,auto
+cards.value.picker_description,parts/cards/value-card.part.js,12,hgTr,One number with warning thresholds,Jedna liczba z progami ostrzeżeń,,load-time,auto
 weather.short.partlycloudy,parts/cards/weather-card.part.js,1,dict,Partly cloudy,Częś. zachm.,,dict-dynamic,auto
 weather.short.snowy_rainy,parts/cards/weather-card.part.js,1,dict,Sleet,Deszcz/śnieg,,dict-dynamic,auto
 weather.short.lightning_rainy,parts/cards/weather-card.part.js,1,dict,"Storm, rain","Burza, deszcz",,dict-dynamic,auto

@@ -651,6 +651,11 @@
       "picker_name": "Home Glass – Odkurzacz",
       "returning": "Wraca do stacji",
       "start": "Start"
+    },
+    "value": {
+      "a_sensor_or_any": "Czujnik lub dowolna encja ze stanem",
+      "picker_description": "Jedna liczba z progami ostrzeżeń",
+      "picker_name": "Home Glass – Duża wartość"
     }
   },
   "common": {

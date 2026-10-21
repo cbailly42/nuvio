@@ -647,6 +647,11 @@
       "picker_name": "Home Glass – Vacuum",
       "returning": "Returning",
       "start": "Start"
+    },
+    "value": {
+      "a_sensor_or_any": "A sensor or any entity with a state",
+      "picker_description": "One number with warning thresholds",
+      "picker_name": "Home Glass – Big value"
     }
   },
   "common": {
