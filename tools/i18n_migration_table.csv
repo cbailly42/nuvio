@@ -660,17 +660,36 @@ common.details,parts/cards/progress-card.part.js,11,hgTr,Details,Szczegóły,,,a
 cards.progress.picker_name,parts/cards/progress-card.part.js,16,hgTr,Nuvio – Progress bar,Nuvio – Pasek postępu,,load-time,auto
 cards.progress.picker_description,parts/cards/progress-card.part.js,16,hgTr,A value on a thick bar with thresholds,Wartość na grubym pasku z progami,,load-time,auto
 common.air_quality,parts/cards/purifier-card.part.js,16,hgTr,Air quality,Jakość powietrza,,,auto
-cards.purifier.hg_aq_pl_k,parts/cards/purifier-card.part.js,57,hgTr,"HG_AQ_PL[k] ? String(m).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase()) : String(m).replace(/_/g, ' ')","HG_AQ_PL[k] || String(m).replace(/_/g, ' ')",,expr,manual
-cards.purifier.en,parts/cards/purifier-card.part.js,58,hgTr,en,pl,,expr,manual
+cards.purifier.modes.auto,parts/cards/purifier-card.part.js,57,hgTr,Auto,Auto,,expr,auto
+cards.purifier.modes.smart,parts/cards/purifier-card.part.js,57,hgTr,Smart,Smart,,expr,auto
+cards.purifier.modes.sleep,parts/cards/purifier-card.part.js,57,hgTr,Sleep,Sen,,expr,auto
+cards.purifier.modes.night,parts/cards/purifier-card.part.js,57,hgTr,Night,Noc,,expr,auto
+cards.purifier.modes.silent,parts/cards/purifier-card.part.js,57,hgTr,Silent,Cichy,,expr,auto
+cards.purifier.modes.quiet,parts/cards/purifier-card.part.js,57,hgTr,Quiet,Cichy,,expr,auto
+cards.purifier.modes.turbo,parts/cards/purifier-card.part.js,57,hgTr,Turbo,Turbo,,expr,auto
+cards.purifier.modes.boost,parts/cards/purifier-card.part.js,57,hgTr,Boost,Turbo,,expr,auto
+cards.purifier.modes.max,parts/cards/purifier-card.part.js,57,hgTr,Max,Maks.,,expr,auto
+cards.purifier.modes.favorite,parts/cards/purifier-card.part.js,57,hgTr,Favorite,Ulubiony,,expr,auto
+cards.purifier.modes.manual,parts/cards/purifier-card.part.js,57,hgTr,Manual,Ręczny,,expr,auto
+cards.purifier.modes.low,parts/cards/purifier-card.part.js,57,hgTr,Low,Niski,,expr,auto
+cards.purifier.modes.medium,parts/cards/purifier-card.part.js,57,hgTr,Medium,Średni,,expr,auto
+cards.purifier.modes.high,parts/cards/purifier-card.part.js,57,hgTr,High,Wysoki,,expr,auto
+cards.purifier.modes.on,parts/cards/purifier-card.part.js,57,hgTr,On,Wł.,,expr,auto
+cards.purifier.modes.pet,parts/cards/purifier-card.part.js,57,hgTr,Pet,Zwierzęta,,expr,auto
+cards.purifier.modes.allergy,parts/cards/purifier-card.part.js,57,hgTr,Allergy,Alergia,,expr,auto
 cards.purifier.choose_an_air_purifier,parts/cards/purifier-card.part.js,63,hgTr,Choose an air purifier (fan entity),Wybierz oczyszczacz (encja fan),,,auto
 common.power,parts/cards/purifier-card.part.js,69,hgTr,Power,Zasilanie,,,auto
 common.on_short,parts/cards/purifier-card.part.js,69,hgTr,On,Wł.,,,auto
 common.off_short,parts/cards/purifier-card.part.js,69,hgTr,Off,Wył.,,,auto
 cards.purifier.no_pm2_5_reading,parts/cards/purifier-card.part.js,71,hgTr,No PM2.5 reading,Brak odczytu PM2.5,,,auto
-cards.purifier.lv_2,parts/cards/purifier-card.part.js,72,hgTr,lv[2],lv[1],,expr,manual
+cards.purifier.aq_levels.clean,parts/cards/purifier-card.part.js,72,hgTr,Clean air,Czyste powietrze,,expr,auto
+cards.purifier.aq_levels.good,parts/cards/purifier-card.part.js,72,hgTr,Good,Dobre,,expr,auto
+cards.purifier.aq_levels.moderate,parts/cards/purifier-card.part.js,72,hgTr,Moderate,Umiarkowane,,expr,auto
+cards.purifier.aq_levels.poor,parts/cards/purifier-card.part.js,72,hgTr,Poor,Złe,,expr,auto
+cards.purifier.aq_levels.very_poor,parts/cards/purifier-card.part.js,72,hgTr,Very poor,Bardzo złe,,expr,auto
 common.mode,parts/cards/purifier-card.part.js,73,hgTr,Mode,Tryb,,,auto
-cards.purifier.nuvio_air_purifier,parts/cards/purifier-card.part.js,93,hgTr,Nuvio – Air purifier,Nuvio – Oczyszczacz powietrza,,load-time,manual
-cards.purifier.pm2_5_with_air,parts/cards/purifier-card.part.js,93,hgTr,"PM2.5 with air waves, power and modes","PM2.5 z falami powietrza, włącznik i tryby",,load-time,manual
+cards.purifier.picker_name,parts/cards/purifier-card.part.js,93,hgTr,Nuvio – Air purifier,Nuvio – Oczyszczacz powietrza,,load-time,auto
+cards.purifier.picker_description,parts/cards/purifier-card.part.js,93,hgTr,"PM2.5 with air waves, power and modes","PM2.5 z falami powietrza, włącznik i tryby",,load-time,auto
 cards.pv.solar,parts/cards/pv-card.part.js,3,hgTr,Solar,Fotowoltaika,,,auto
 cards.pv.producing,parts/cards/pv-card.part.js,47,hgTr,Producing,Produkuje,,,auto
 cards.pv.no_production_night_clouds,parts/cards/pv-card.part.js,47,hgTr,No production (night / clouds),Brak produkcji (noc / zachmurzenie),,,auto

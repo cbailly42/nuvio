@@ -652,6 +652,38 @@
       "picker_description": "A value on a thick bar with thresholds",
       "picker_name": "Nuvio – Progress bar"
     },
+    "purifier": {
+      "aq_levels": {
+        "clean": "Clean air",
+        "good": "Good",
+        "moderate": "Moderate",
+        "poor": "Poor",
+        "very_poor": "Very poor"
+      },
+      "choose_an_air_purifier": "Choose an air purifier (fan entity)",
+      "modes": {
+        "allergy": "Allergy",
+        "auto": "Auto",
+        "boost": "Boost",
+        "favorite": "Favorite",
+        "high": "High",
+        "low": "Low",
+        "manual": "Manual",
+        "max": "Max",
+        "medium": "Medium",
+        "night": "Night",
+        "on": "On",
+        "pet": "Pet",
+        "quiet": "Quiet",
+        "silent": "Silent",
+        "sleep": "Sleep",
+        "smart": "Smart",
+        "turbo": "Turbo"
+      },
+      "no_pm2_5_reading": "No PM2.5 reading",
+      "picker_description": "PM2.5 with air waves, power and modes",
+      "picker_name": "Nuvio – Air purifier"
+    },
     "room_compact": {
       "hum": "hum.",
       "living_room": "Living room",
@@ -851,6 +883,7 @@
     "map": "Map",
     "media": "Media",
     "medium": "Medium",
+    "mode": "Mode",
     "more": "More",
     "motion": "Motion",
     "name": "Name",
@@ -869,6 +902,7 @@
     "open": "Open",
     "open_assist": "Open Assist",
     "pause": "Pause",
+    "power": "Power",
     "power_now": "Power now",
     "previous_track": "Previous",
     "resume": "Resume",

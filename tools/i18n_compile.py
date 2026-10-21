@@ -6,7 +6,7 @@ import os, re, json, hashlib
 DYN_PREFIXES = ('states.', 'weather.',
                 'cards.ac.fan_modes.', 'cards.ac.swing_modes.', 'cards.alarm.states.',
                 'cards.areas.climate_states.', 'cards.gauge.device_classes.',
-                'cards.players.states.')
+                'cards.players.states.', 'cards.purifier.modes.')
 PLURAL_SUFFIXES = ('zero', 'one', 'two', 'few', 'many', 'other')
 _PL = re.compile(r'^(.+)_(%s)$' % '|'.join(PLURAL_SUFFIXES))
 _CALL = re.compile(r'\bhgT(?:Lazy)?\(\s*(?:(?P<lit>(?P<q>[\'"])(?P<k>[^\'"\\\n]*)(?P=q))\s*(?=[,)]))?')
