@@ -119,7 +119,7 @@ const HGShell = window.__hgShell || {
     root.parentNode.insertBefore(pg, root.nextSibling);
   },
   /* stan HA dociera tylko do roota: przekaż widocznej stronie */
-  fwd(h) { const p = this.pages.get(this.cur); if (p && p !== this.root && p.isConnected) p.hass = h; },
+  fwd(h) { const p = this.pages.get(this.cur); if (p && p !== this.root && p.isConnected) hgPass(p, h); },
 };
 if (!window.__hgShell) {
   window.__hgShell = HGShell;
@@ -170,19 +170,19 @@ class HGPage extends HTMLElement {
   }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
-    if (window.HGWall) HGWall.tick(h, this);
-    if (window.HGAssistUI) HGAssistUI.bind(h, this);   /* okno Assist: hass dla rozmowy i skrót klawiszowy */   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
+    if (window.HGWall) { try { HGWall.tick(h, this); } catch (e) { /* */ } }
+    if (window.HGAssistUI) { try { HGAssistUI.bind(h, this); } catch (e) { /* */ } }   /* okno Assist: hass dla rozmowy i skrót klawiszowy */   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
     const first = !this._hass, old = this._hass;
     this._hass = h;
-    if (this._editing && this._eSheetEl && old && old.states !== h.states) this._ePvTick(h);
+    if (this._editing && this._eSheetEl && old && old.states !== h.states) { try { this._ePvTick(h); } catch (e) { /* */ } }
     if (!this._config) return;
     if (this._config.redirect) { this._redirect(); return; }
     if (!this._built) this._build();
-    for (const el of this._cards) el.hass = h;
-    if (this._wxEl) this._wxEl.hass = h;
+    for (const el of this._cards) hgPass(el, h);
+    if (this._wxEl) hgPass(this._wxEl, h);
     if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
     // górny pasek / hub zależą tylko od kilku encji -> przerysuj tylko gdy zmienił się ich obiekt stanu
     const w = this._watch();

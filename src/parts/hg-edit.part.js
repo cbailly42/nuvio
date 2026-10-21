@@ -1191,7 +1191,7 @@ const HG_EDIT = {
     if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); if (HGLang._pend) { HGLang._pend = 0; HGLang.refresh(this); } };
-    if (save) HGL.save(this._hass).then((w) => { this._eToast(w === 'ha' ? hgTr('Zapisano układ (synchronizacja przez Home Assistant)', 'Layout saved (synced via Home Assistant)') : hgTr('Zapisano układ na tym urządzeniu', 'Layout saved on this device')); fin(); }); else fin();
+    if (save) HGL.save(this._hass).then((w) => { try { this._eToast(w === 'ha' ? hgTr('Zapisano układ (synchronizacja przez Home Assistant)', 'Layout saved (synced via Home Assistant)') : hgTr('Zapisano układ na tym urządzeniu', 'Layout saved on this device')); } catch (e) { /* */ } fin(); }, fin); else fin();
   },
   /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
      rozwija się po najechaniu / dotknięciu, przesunięcie lub dotyk zamyka, auto-zamknięcie pauzowane, identyczne komunikaty łączone (×n) */
@@ -1203,7 +1203,7 @@ const HG_EDIT = {
     HGL.notify(); for (const c of this._cards || []) { try { c.rerender && c.rerender(); } catch (e) {} }
     const deep = (el, d) => { if (!el || !el.shadowRoot || d > 2) return; for (const x of el.shadowRoot.querySelectorAll('hg-areas-card, hg-room-card, hg-tiles-card')) { try { x.rerender(); } catch (e) {} deep(x, d + 1); } };
     for (const c of this._cards || []) deep(c, 0);
-    requestAnimationFrame(() => { HG_FREEZE.on = true; this._eDecorate(); });
+    requestAnimationFrame(() => { if (this._editing) HG_FREEZE.on = true; this._eDecorate(); });
   },
   _eDecorate() {
     if (!this._editing) return;

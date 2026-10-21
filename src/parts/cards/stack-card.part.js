@@ -63,12 +63,12 @@ ha-card:not(.h) .bd, ha-card.nw .bd{ flex:1 0 auto; }   /* Safari: podstawa 0% p
   afterRender() { this._kids = this._kids || new Map(); const L = this.cards(), h = this._hass, deep = this.depth() >= HG_CONT_MAX;
     this.$.querySelectorAll('.sl[data-own]').forEach((slot, i) => { const cfg = L[i]; if (!cfg) return; const sig = this.key() + i + JSON.stringify(cfg); const el = this._kids.get(sig);
       const put = (x) => { if (this._hgPv) x._hgPv = true;   /* podgląd w edytorze: dzieci też omijają wstrzymanie odświeżania */
-        if (x.parentElement !== slot) { slot.textContent = ''; slot.appendChild(x); } if (x.localName.includes('-')) x.hass = this._hass; };
+        if (x.parentElement !== slot) { slot.textContent = ''; slot.appendChild(x); } if (x.localName.includes('-')) hgPass(x, this._hass); };
       if (el) return put(el);
       if (deep && hgIsCont(cfg)) { const d = document.createElement('div'); d.className = 'deep'; d.textContent = hgTr('Za dużo poziomów kontenerów (najwyżej 3)', 'Too many container levels (3 at most)'); this._kids.set(sig, d); return put(d); }
       this._kids.set(sig, null); hgMakeCard(cfg, (x) => { this._kids.set(sig, x); if (this.$.contains(slot)) put(x); }); });
-    for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) el.hass = h; }
-  set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); if (this._kids) for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) el.hass = h; }
+    for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) hgPass(el, h); }
+  set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); if (this._kids) for (const el of this._kids.values()) if (el && el.parentElement && el.localName.includes('-')) hgPass(el, h); }
   get hass() { return this._hass; }
   getCardSize() { return this.cards().length * 2 || 1; }
   getGridOptions() { return { columns: 6, rows: 'auto' }; }

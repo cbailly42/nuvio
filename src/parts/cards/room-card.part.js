@@ -86,7 +86,7 @@ class HGRoomCard extends HGBase {
     this._lsub = this._lsub || (() => { this._entsC = null; this.rerender(); }); HGL.subs.add(this._lsub);
   }
   disconnectedCallback() { if (this._lsub) HGL.subs.delete(this._lsub); window.removeEventListener('location-changed', this._onLoc); window.removeEventListener('popstate', this._onLoc); clearInterval(this._stT); this._stT = 0; clearInterval(this._npT); this._npT = 0; }
-  set hass(h) { super.hass = h; for (const el of this._ac.values()) el.hass = h; if (this._cams) for (const el of this._cams.values()) el.hass = h; }
+  set hass(h) { super.hass = h; for (const el of this._ac.values()) hgPass(el, h); if (this._cams) for (const el of this._cams.values()) hgPass(el, h); }
   get hass() { return this._hass; }
   _rid() { return (this._config && this._config.room) || HGAreas.areaFromUrl(); }
   _area() { const m = HGAreas.model(this._hass, this._config.areas); this._aid = this._rid(); return m.byId[this._aid] || null; }

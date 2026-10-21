@@ -198,7 +198,11 @@ window.__hg = H;
 
 /* zamrożenie przerysowań na czas animacji panelu (ukryj/pokaż) – po zwolnieniu zaległe karty odświeżają się raz */
 const HG_FREEZE = window.__hgFreezeObj || (window.__hgFreezeObj = { on: false, q: new Set(),
-  release() { this.on = false; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) c._doUpdate(false); } });
+  release() { this.on = false; clearTimeout(this._wd); this._wd = 0; const q = [...this.q]; this.q.clear(); for (const c of q) if (c.isConnected) { try { c._doUpdate(false); } catch (e) { /* jedna karta nie blokuje reszty */ } } },
+  /* strażnik: zamrożenie poza trybem edycji trwa najwyżej 2 s (przerwana animacja, uśpiona aplikacja), potem karty same się odświeżają */
+  guard() { if (this._wd) return; this._wd = setTimeout(() => { this._wd = 0; if (!this.on) return; if (typeof HGL !== 'undefined' && HGL.editing) return this.guard(); this.release(); }, 2000); } });
+/* przekazanie hass jednej karcie: błąd w jednej karcie nie może zatrzymać odświeżania pozostałych */
+const hgPass = (el, h) => { try { el.hass = h; } catch (e) { if (!el.__hgErr) { el.__hgErr = 1; console.warn('Nuvio: card update failed', el.localName, e); } } };
 /* karty poza ekranem nie przerysowują się: zmiana stanu tylko oznacza kartę jako zaległą, a odświeżenie przychodzi, gdy karta wjedzie
    w widok (z zapasem 300 px, więc przy przewijaniu jest już gotowa). Pierwsze malowanie i zmiana konfiguracji zawsze od razu. */
 /* czy karta naprawdę leży w oknie (z zapasem jak w HG_VIS); 0x0 = ukryta */
@@ -216,7 +220,7 @@ class HGBase extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     hgSelWatch(this.shadowRoot);
     this._sig = null;
-    const down = () => { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); };
+    const down = () => { this._touching = true; this._touchT = Date.now(); clearTimeout(this._tt); this._tt = setTimeout(up, 1500); };
     const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingUpd) { this._pendingUpd = false; this._update(true); } }, 60); };
     this.shadowRoot.addEventListener('pointerdown', down, { passive: true });
     this.shadowRoot.addEventListener('pointerup', up, { passive: true });
@@ -266,8 +270,10 @@ class HGBase extends HTMLElement {
     if (!this._config || !this._hass || this._busy) return;
     if (this._html != null && !this.isConnected) { this._stale = true; return; }
     if (this._html != null && !force) {
-      if (this._raf) return;
-      this._raf = requestAnimationFrame(() => { this._raf = 0; this._doUpdate(false); });
+      /* rAF bywa wstrzymany (karta w tle, uśpiona aplikacja): zapasowy timer gwarantuje, że zaległa zmiana nie utknie na zawsze */
+      if (this._raf) { if (performance.now() - this._rafT < 1000) return; cancelAnimationFrame(this._raf); clearTimeout(this._rafTo); }
+      const go = () => { if (!this._raf) return; cancelAnimationFrame(this._raf); clearTimeout(this._rafTo); this._raf = 0; this._doUpdate(false); };
+      this._rafT = performance.now(); this._raf = requestAnimationFrame(go); this._rafTo = setTimeout(go, 500);
       return;
     }
     this._doUpdate(force);
@@ -276,21 +282,24 @@ class HGBase extends HTMLElement {
   disconnectedCallback() { if (HG_VIS) HG_VIS.unobserve(this); }
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;
-    if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); return; }
+    if (HG_FREEZE.on && !this._hgPv) { HG_FREEZE.q.add(this); HG_FREEZE.guard(); return; }
     if (this._off && this._html != null && !window.__hgNoPause) {
       /* IntersectionObserver bywa nieaktualny (Safari / aplikacja HA po pokazaniu ukrytego widoku): karta widoczna na ekranie rysuje się od razu */
       if (hgOnScreen(this)) { this._off = false; this.removeAttribute('hg-off'); } else { this._offDirty = true; HG_OFFQ.add(this); return; } }   // poza ekranem: nadrobi po pokazaniu           // panel w trakcie animacji: przerysuj po jej końcu
     if (!force && !this._changed()) return;
     // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
-    if (this._touching) { this._pendingUpd = true; return; }
-    const html = this.render();
+    if (this._touching && Date.now() - (this._touchT || 0) < 2000) { this._pendingUpd = true; return; }
+    this._touching = false;
+    let html;
+    /* błąd renderu: karta pokazuje komunikat zamiast rzucać wyjątek w pętli przekazującej hass (to zatrzymywało inne karty) */
+    try { html = this.render(); } catch (e) { if (!this._rErr) { this._rErr = 1; console.warn('Nuvio: render failed', this.localName, e); } html = `<ha-card class="glass" style="padding:12px;opacity:.7">${hgTr('Błąd karty', 'Card error')}</ha-card>`; }
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
     const first = this._html == null; this._html = html;
     /* na żywo: łatanie istniejących węzłów (ui/morph). Węzły przeżywają aktualizację, więc afterRender musi być idempotentne:
        nasłuchiwanie podpina się raz na węzeł przez this._once(el), a resztę (wartości, obserwatory) może powtarzać bez szkody. */
     if (first || this.constructor.noMorph || typeof hgMorph === 'undefined') this.$.innerHTML = html;
     else hgMorph(this.$, html);
-    if (this.afterRender) this.afterRender();
+    if (this.afterRender) { try { this.afterRender(); } catch (e) { console.warn('Nuvio: afterRender failed', this.localName, e); } }
   }
   rerender() { this._prevStates = null; this._update(true); }
   /* true tylko za pierwszym razem dla danego węzła i klucza: podpinanie nasłuchiwania w afterRender bez dublowania po łataniu */
