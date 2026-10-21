@@ -628,6 +628,18 @@
       "picker_description": "Przełącznik w stylu glass (wiersz lub kafel)",
       "picker_name": "Home Glass – Przełącznik"
     },
+    "thermo": {
+      "a_climate_or_water": "Encja climate lub water_heater",
+      "choose_a_thermostat": "Wybierz termostat",
+      "cool": "Chłodzenie",
+      "dry": "Osuszanie",
+      "heat": "Grzanie",
+      "higher": "Wyżej",
+      "lower": "Niżej",
+      "mode_auto": "Auto",
+      "picker_description": "Temperatura zadana i tryb",
+      "picker_name": "Home Glass – Termostat"
+    },
     "timer": {
       "choose_a_timer": "Wybierz minutnik (timer)",
       "paused": "Wstrzymany",
@@ -701,6 +713,7 @@
     "details": "Szczegóły",
     "done": "Gotowe",
     "expand": "Rozwiń",
+    "fan": "Wentylator",
     "fuel_prices": "Ceny paliw",
     "heating": "Grzanie",
     "hidden_suffix": " · ukryty",

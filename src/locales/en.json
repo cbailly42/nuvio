@@ -624,6 +624,18 @@
       "picker_description": "Glass-style switch (row or tile)",
       "picker_name": "Home Glass – Switch"
     },
+    "thermo": {
+      "a_climate_or_water": "A climate or water_heater entity",
+      "choose_a_thermostat": "Choose a thermostat",
+      "cool": "Cool",
+      "dry": "Dry",
+      "heat": "Heat",
+      "higher": "Higher",
+      "lower": "Lower",
+      "mode_auto": "Auto",
+      "picker_description": "Target temperature and mode",
+      "picker_name": "Home Glass – Thermostat"
+    },
     "timer": {
       "choose_a_timer": "Choose a timer",
       "paused": "Paused",
@@ -697,6 +709,7 @@
     "details": "Details",
     "done": "Done",
     "expand": "Expand",
+    "fan": "Fan",
     "fuel_prices": "Fuel prices",
     "heating": "Heating",
     "hidden_suffix": " · hidden",

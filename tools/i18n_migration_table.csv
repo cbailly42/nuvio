@@ -1067,8 +1067,8 @@ common.fan,parts/cards/thermo-card.part.js,8,hgTr,Fan,Wentylator,,,auto
 common.now,parts/cards/thermo-card.part.js,10,hgTr,now,teraz,,,auto
 cards.thermo.lower,parts/cards/thermo-card.part.js,11,hgTr,Lower,Niżej,,,auto
 cards.thermo.higher,parts/cards/thermo-card.part.js,11,hgTr,Higher,Wyżej,,,auto
-cards.thermo.home_glass_thermostat,parts/cards/thermo-card.part.js,18,hgTr,Home Glass – Thermostat,Home Glass – Termostat,,load-time,manual
-cards.thermo.target_temperature_and_mode,parts/cards/thermo-card.part.js,18,hgTr,Target temperature and mode,Temperatura zadana i tryb,,load-time,manual
+cards.thermo.picker_name,parts/cards/thermo-card.part.js,18,hgTr,Home Glass – Thermostat,Home Glass – Termostat,,load-time,auto
+cards.thermo.picker_description,parts/cards/thermo-card.part.js,18,hgTr,Target temperature and mode,Temperatura zadana i tryb,,load-time,auto
 cards.timer.choose_a_timer,parts/cards/timer-card.part.js,13,hgTr,Choose a timer,Wybierz minutnik (timer),,,auto
 cards.timer.running,parts/cards/timer-card.part.js,15,hgTr,Running,Odlicza,,,auto
 cards.timer.paused,parts/cards/timer-card.part.js,15,hgTr,Paused,Wstrzymany,,,auto
