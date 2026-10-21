@@ -2282,7 +2282,11 @@ wizard.skip,parts/hg-oss.part.js,240,dict,Skip setup,Pomiń kreator,,,auto
 wizard.back,parts/hg-oss.part.js,240,dict,Back,Wstecz,,,auto
 wizard.next,parts/hg-oss.part.js,240,dict,Next,Dalej,,,auto
 wizard.go,parts/hg-oss.part.js,240,dict,Create dashboard,Utwórz pulpit,,,auto
-wizard.s,parts/hg-oss.part.js,241,dict,"['Language', 'Views', 'Rooms', 'Appearance', 'Summary']","['Język', 'Widoki', 'Pokoje', 'Wygląd', 'Podsumowanie']",,array,manual
+wizard.steps.lang,parts/hg-oss.part.js,241,dict,Language,Język,,array,auto
+wizard.steps.views,parts/hg-oss.part.js,241,dict,Views,Widoki,,array,auto
+wizard.steps.rooms,parts/hg-oss.part.js,241,dict,Rooms,Pokoje,,array,auto
+wizard.steps.look,parts/hg-oss.part.js,241,dict,Appearance,Wygląd,,array,auto
+wizard.steps.summary,parts/hg-oss.part.js,241,dict,Summary,Podsumowanie,,array,auto
 wizard.lang_sub,parts/hg-oss.part.js,241,dict,Which language should the dashboard speak?,W jakim języku ma mówić pulpit?,,,auto
 wizard.views_sub,parts/hg-oss.part.js,241,dict,Pick the views in the menu. Home is always on.,Wybierz widoki w menu. Panel jest zawsze włączony.,,,auto
 wizard.rooms_sub,parts/hg-oss.part.js,241,dict,Which rooms should be shown? Hidden ones can be restored later.,Które pokoje pokazać? Ukryte możesz przywrócić później.,,,auto
@@ -2316,7 +2320,7 @@ oss.views.you,parts/hg-oss.part.js,448,hgTr,You,Ty,,,auto
 oss.views.user_sees,parts/hg-oss.part.js,448,hgTr,Sees this view,Widzi ten widok,,,auto
 oss.views.user_hidden,parts/hg-oss.part.js,448,hgTr,View hidden,Widok ukryty,,,auto
 oss.views.who_sees,parts/hg-oss.part.js,449,hgTr,Who sees this view,Kto widzi ten widok,,,auto
-oss.views.who_sees_count,parts/hg-oss.part.js,449,hgTr,{n} of ${L.length} people see it. People with their own layout don't see a hidden view either.,Widzi {n} z ${L.length} osób. Osoba z własnym układem też nie zobaczy ukrytego widoku.,,expr,manual
+oss.views.who_sees_count,parts/hg-oss.part.js,449,hgTr,{n} of {total} people see it. People with their own layout don't see a hidden view either.,Widzi {n} z {total} osób. Osoba z własnym układem też nie zobaczy ukrytego widoku.,"n,total",expr,auto
 oss.cv.edit,parts/hg-oss.part.js,463,hgTr,Edit view,Edytuj widok,,,auto
 oss.cv.new,parts/hg-oss.part.js,463,hgTr,New view,Nowy widok,,,auto
 oss.cv.edit,parts/hg-oss.part.js,463,hgTr,Edit view,Edytuj widok,,,auto
@@ -2348,7 +2352,7 @@ common.hidden_suffix,parts/hg-oss.part.js,493,hgTr, · hidden, · ukryty,,,auto
 oss.views.always_visible,parts/hg-oss.part.js,493,hgTr,Always visible,Zawsze widoczny,,,auto
 oss.views.visible,parts/hg-oss.part.js,493,hgTr,Visible,Widoczny,,,auto
 oss.views.hidden,parts/hg-oss.part.js,493,hgTr,Hidden,Ukryty,,,auto
-oss.views.hidden_from,parts/hg-oss.part.js,493,hgTr, · hidden from: , · nie widzi: ,,concat,manual
+oss.views.hidden_from,parts/hg-oss.part.js,493,hgTr, · hidden from: {names}, · nie widzi: {names},names,concat,auto
 oss.cv.edit,parts/hg-oss.part.js,493,hgTr,Edit view,Edytuj widok,,,auto
 oss.views.who_sees,parts/hg-oss.part.js,494,hgTr,Who sees this view,Kto widzi ten widok,,,auto
 oss.views.who_sees,parts/hg-oss.part.js,494,hgTr,Who sees this view,Kto widzi ten widok,,,auto
@@ -2377,22 +2381,21 @@ oss.views.apply,parts/hg-oss.part.js,506,hgTr,Apply views,Zastosuj widoki,,,auto
 oss.pkgs.title,parts/hg-oss.part.js,507,hgTr,Integrations,Integracje,,,auto
 oss.pkgs.intro,parts/hg-oss.part.js,507,hgTr,Optional add-ons from HACS – Nuvio works without them,Opcjonalne dodatki z HACS – Nuvio działa bez nich,,,auto
 oss.pkgs.save_kiosk,parts/hg-oss.part.js,507,hgTr,Save kiosk settings,Zapisz ustawienia kiosku,,,auto
-oss.toast.view_deleted,parts/hg-oss.part.js,531,hgTr,View deleted: ,Usunięto widok: ,,concat,manual
+oss.toast.view_deleted,parts/hg-oss.part.js,531,hgTr,View deleted: {name},Usunięto widok: {name},name,concat,auto
 oss.cv.err_name,parts/hg-oss.part.js,533,hgTr,Enter a view name.,Podaj nazwę widoku.,,,auto
 oss.cv.err_path,parts/hg-oss.part.js,533,hgTr,Enter a path (letters and digits).,Podaj ścieżkę (litery i cyfry).,,,auto
-oss.cv.err_path_taken,parts/hg-oss.part.js,533,hgTr,The path /${c.p} is already taken.,Ścieżka /${c.p} jest już zajęta.,,expr,manual
+oss.cv.err_path_taken,parts/hg-oss.part.js,533,hgTr,The path /{path} is already taken.,Ścieżka /{path} jest już zajęta.,path,expr,auto
 oss.cv.err_icon,parts/hg-oss.part.js,533,hgTr,Icon must be in the mdi:name format.,Ikona w formacie mdi:nazwa.,,,auto
-oss.toast.view_saved,parts/hg-oss.part.js,538,hgTr,View saved: ,Zapisano widok: ,,,auto
-oss.toast.view_created,parts/hg-oss.part.js,538,hgTr,View created: ,Utworzono widok: ,,,auto
-oss.toast.reloading,parts/hg-oss.part.js,538,hgTr, (reloading…), (odświeżanie…),,concat,manual
+oss.toast.view_saved,parts/hg-oss.part.js,538,hgTr,View saved: {name} (reloading…),Zapisano widok: {name} (odświeżanie…),name,concat,auto
+oss.toast.view_created,parts/hg-oss.part.js,538,hgTr,View created: {name} (reloading…),Utworzono widok: {name} (odświeżanie…),name,concat,auto
 oss.toast.saved_shared,parts/hg-oss.part.js,545,hgTr,Saved. The change reaches this person right away.,Zapisano. Ta osoba zobaczy zmianę od razu.,,,auto
 oss.toast.saved_local,parts/hg-oss.part.js,545,hgTr,Saved locally only,Zapisano tylko lokalnie,,,auto
 oss.toast.views_saved,parts/hg-oss.part.js,553,hgTr,Views saved – reloading…,Zapisano widoki – odświeżanie…,,,auto
 oss.toast.no_strategy,parts/hg-oss.part.js,559,hgTr,This dashboard does not use the Nuvio strategy – add kiosk_mode in its YAML,Ten pulpit nie korzysta ze strategii Nuvio – dodaj kiosk_mode w jego YAML,,,auto
-oss.toast.save_failed,parts/hg-oss.part.js,561,hgTr,Could not save (,Nie udało się zapisać (,,concat,manual
+oss.toast.save_failed,parts/hg-oss.part.js,561,hgTr,Could not save ({error}),Nie udało się zapisać ({error}),error,concat,auto
 oss.toast.kiosk_saved,parts/hg-oss.part.js,562,hgTr,Kiosk settings saved – reloading…,Zapisano ustawienia kiosku – odświeżanie…,,,auto
 oss.toast.copied,parts/hg-oss.part.js,565,hgTr,Copied – paste into /config/www/custom-sidebar-config.yaml,Skopiowano – wklej do /config/www/custom-sidebar-config.yaml,,,auto
-oss.toast.copy_manually,parts/hg-oss.part.js,565,hgTr,Copy manually: ,Skopiuj ręcznie: ,,concat,manual
+oss.toast.copy_manually,parts/hg-oss.part.js,565,hgTr,Copy manually: {text},Skopiuj ręcznie: {text},text,concat,auto
 page.sections,parts/hg-page.part.js,415,hgTr,Sections,Sekcje,,,auto
 page.scroll_down,parts/hg-page.part.js,419,hgTr,Scroll down,Przewiń w dół,,,auto
 page.more_below,parts/hg-page.part.js,419,hgTr,More below,Więcej poniżej,,,auto

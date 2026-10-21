@@ -143,3 +143,12 @@ test('hgReg: customCards name / description are enumerable getters resolved at r
   assert.equal(z.name, 'Z'); assert.equal(z.description, undefined);
   m.hgReg('hg-x-card', C, 'again', 'again'); assert.equal(m.window.customCards.filter((c) => c.type === 'hg-x-card').length, 1);
 });
+
+test('setup wizard languages come from the manifest (flag / intro from _meta), English last; a new language appears by itself', () => {
+  const man = [{ code: 'en', name: 'English', locale: 'en-GB', file: null, flag: '🇬🇧', intro: 'English interface' }, { code: 'pl', name: 'Polski', locale: 'pl-PL', file: 'p.json', flag: '🇵🇱', intro: 'Interfejs po polsku' }];
+  const m = mk({ manifest: man, names: ['hgWzLangs', 'hgLangName'] });
+  assert.deepEqual(m.hgWzLangs(), [['pl', 'Polski', '🇵🇱', 'Interfejs po polsku'], ['en', 'English', '🇬🇧', 'English interface']]);
+  assert.equal(m.hgLangName('pl'), 'Polski'); assert.equal(m.hgLangName('en'), 'English');
+  const f = mk({ manifest: [...man, { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'f.json' }], names: ['hgWzLangs'] });
+  assert.deepEqual(f.hgWzLangs().map((x) => x[0]), ['pl', 'fr', 'en']); assert.deepEqual(f.hgWzLangs()[1], ['fr', 'Français', '🌐', 'Français']);
+});
