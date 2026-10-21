@@ -215,6 +215,7 @@ class HGPage extends HTMLElement {
     const h = this._hgPend; this._hgPend = null;
     if (h) this.hass = h;
     this._syncPlay(); this._layout(); this._enter();
+    requestAnimationFrame(() => requestAnimationFrame(hgOffFlush));   // karty z ukrytego widoku: nadrób zaległe zmiany stanu
   }
   _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
   _saveNav() {

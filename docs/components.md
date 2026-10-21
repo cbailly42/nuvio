@@ -94,7 +94,7 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="components/power.webp" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current power with a line for recent hours.</td>
+<td width="50%" valign="top"><img src="components/power.webp" alt="Power now" width="100%"><br><b>Power now</b> <code>custom:nuvio-power-card</code><br>Current value with a bar and a line for recent hours: power, energy or a forecast. Options: chart caption, hide the chart labels, bar scale end, level label.</td>
 <td width="50%" valign="top"><img src="components/energy.webp" alt="Energy – statistics" width="100%"><br><b>Energy – statistics</b> <code>custom:nuvio-energy-stats-card</code><br>Consumption and production: today, week, month.</td>
 </tr>
 <tr>

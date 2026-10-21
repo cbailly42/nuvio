@@ -94,7 +94,7 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="../components/power.webp" alt="Moc teraz" width="100%"><br><b>Moc teraz</b> <code>custom:nuvio-power-card</code><br>Moc chwilowa z linią z ostatnich godzin.</td>
+<td width="50%" valign="top"><img src="../components/power.webp" alt="Moc teraz" width="100%"><br><b>Moc teraz</b> <code>custom:nuvio-power-card</code><br>Bieżąca wartość z paskiem i linią z ostatnich godzin: moc, energia albo prognoza. Opcje: podpis wykresu, ukrycie podpisów, koniec skali paska, poziom.</td>
 <td width="50%" valign="top"><img src="../components/energy.webp" alt="Energia – statystyki" width="100%"><br><b>Energia – statystyki</b> <code>custom:nuvio-energy-stats-card</code><br>Zużycie i produkcja: dziś, tydzień, miesiąc.</td>
 </tr>
 <tr>
