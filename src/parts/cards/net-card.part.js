@@ -112,7 +112,7 @@ ha-card.glass{ container-type:inline-size; }
     const P = (L || []).map((p) => (typeof p === 'string' ? { entity: p } : p)).map((p) => [p, this._st(p.entity)]).filter(([, st]) => st && H.ok(st));
     if (!P.length) return '';
     return `<div class="pts" role="group" aria-label="${hgT('cards.net.ports')} · ${H.esc(dn)}">${P.map(([p, st], i) => { const on = st.state === 'on', n = p.n || (String(p.entity).match(/_(\d+)$/) || [])[1] || i + 1;
-      const t = `${hgT('cards.net.port_number', { port: n })}${p.label ? ' · ' + p.label : ''}: ${on ? hgT('cards.net.state_on') : hgT('cards.net.off')}${p.lock ? ' · ' + hgT('cards.net.port_locked_note') : ''}`;
+      const t = H.lv(`${hgT('cards.net.port_number', { port: n })}${p.label ? ' · ' + p.label : ''}`, `${on ? hgT('cards.net.state_on') : hgT('cards.net.off')}${p.lock ? ' · ' + hgT('cards.net.port_locked_note') : ''}`);
       return `<button class="pt ${on ? 'on' : ''} ${p.lock ? 'lk' : ''}" data-act="port" data-e="${H.esc(p.entity)}" data-n="${H.esc(n)}" data-l="${H.esc(p.label || '')}" data-d="${H.esc(dn)}" ${p.lock ? 'data-lock="1" aria-disabled="true"' : ''} aria-pressed="${on}" aria-label="${H.esc(t)}" title="${H.esc(t)}">${p.lock ? H.icon('mdi:lock') : `<i></i>`}<b>${H.esc(n)}</b>${p.label ? `<small>${H.esc(p.label)}</small>` : ''}</button>`; }).join('')}</div>`;
   }
   _hd(icon, title, note) { return `<div class="hd">${H.icon(icon, 'ic')}<span class="tt">${H.esc(title)}</span><span class="sp"></span>${note ? `<span class="note">${note}</span>` : ''}</div>`; }
@@ -150,7 +150,7 @@ ha-card.glass{ container-type:inline-size; }
       return `<div class="dv"><div class="t">${H.icon(d.kind === 'switch' ? 'mdi:switch' : 'mdi:access-point')}<span class="sp"></span>${s && H.ok(s) ? `<span class="chip ${ok ? 'ok' : 'bad'}">${H.esc(H.t(this._hass, s))}</span>` : ''}
           ${this._st(d.restart) ? `<button class="ib2" data-act="restart" data-e="${H.esc(d.restart)}" data-n="${H.esc(nm)}" aria-label="${hgT('cards.net.restart')} ${H.esc(nm)}" title="${hgT('cards.net.restart')}">${H.icon('mdi:restart')}</button>` : ''}</div>
         <div class="nm"><b title="${H.esc(nm)}">${H.esc(nm)}</b>${model ? `<small>${H.esc(model)}</small>` : ''}</div>
-        <div class="m">${cl != null ? `<span><b>${H.fmt(cl, 0)}</b>${hgPlK(cl)}</span>` : ''}${cpu != null ? `<span><b>${H.fmt(cpu, 0)}%</b>CPU</span>` : ''}${mem != null ? `<span><b>${H.fmt(mem, 0)}%</b>${hgT('cards.net.memory_label')}</span>` : ''}</div>
+        <div class="m">${cl != null ? `<span><b>${H.fmt(cl, 0)}</b>${hgPlK(cl)}</span>` : ''}${cpu != null ? `<span><b>${H.pct(H.fmt(cpu, 0))}</b>CPU</span>` : ''}${mem != null ? `<span><b>${H.pct(H.fmt(mem, 0))}</b>${hgT('cards.net.memory_label')}</span>` : ''}</div>
         ${up ? `<span class="upd">${H.icon('mdi:timer-sand')}${hgT('cards.net.up_for')} ${up}</span>` : ''}${ua ? this._upd(d.update) : ''}${ports}</div>`;
     }).join('');
     return `${this._hd('mdi:access-point-network', hgT('cards.net.access_points_and_switches'), hgT('cards.net.devices_count', { count: L.length }))}<div class="devs">${tiles}</div>`;

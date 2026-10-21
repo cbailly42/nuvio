@@ -154,6 +154,9 @@ const H = {
   },
   sig: (hass, ents) => ents.map((e) => { const s = H.st(hass, e); return s ? e + s.state + JSON.stringify(s.attributes) : e + '-'; }).join('|'),
   fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString(HG_LOC(), { maximumFractionDigits: d, minimumFractionDigits: 0 })),
+  /* tekst składany z katalogu (typografia języka, np. spacja przed % lub : po francusku): procent i para etykieta–wartość */
+  pct: (v) => hgT('common.percent', { value: v }),
+  lv: (label, value) => hgT('common.label_value', { label, value }),
   get DAYS() { return [hgT('core.days.sun'), hgT('core.days.mon'), hgT('core.days.tue'), hgT('core.days.wed'), hgT('core.days.thu'), hgT('core.days.fri'), hgT('core.days.sat')]; },
   /* etykieta samodzielnego stanu (wielka litera): states.label.<stan>; poza tabelą EN pokazuje surowy stan ze spacjami, inne języki słownik states.* */
   stateLabel: (s) => hgTD('states.label.' + s) ?? (hgCurLang() === 'en' ? String(s).replace(/_/g, ' ') : hgTD('states.' + hgStN(s), s)),

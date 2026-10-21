@@ -57,10 +57,10 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s3) 
       svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
         <path d="${d} L100,100 L0,100 Z" fill="url(#pg)"/><path class="ln" d="${d}"/></svg>`;
     }
-    const tip = `${c.entities.map((e) => `${H.name(h, e)}: ${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`).join(', ')} · ${Math.round(pct)}% ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = `${c.entities.map((e) => H.lv(H.name(h, e), `${H.fmt(Math.abs(hgW(h, e) || 0), 0)} W`)).join(', ')} · ${H.pct(Math.round(pct))} ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
-      <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${Math.round(pct)}% ${lvl}</span></div>
-      <div class="gg" style="--p:${pct.toFixed(1)}%" title="${Math.round(pct)}% ${lvl}"><i></i></div><div class="gl"><span>0</span><span>100%</span></div>
+      <div class="v"><b>${kw[0]}</b><span>${kw[1]} · ${H.pct(Math.round(pct))} ${lvl}</span></div>
+      <div class="gg" style="--p:${pct.toFixed(1)}%" title="${H.pct(Math.round(pct))} ${lvl}"><i></i></div><div class="gl"><span>0</span><span>${H.pct(100)}</span></div>
       <div class="spk">${svg}${svg ? `<span class="dot" style="left:100%;top:${this._lastY}%"></span><span class="tipb" style="left:100%;top:${this._lastY}%">${kw[0]} ${kw[1]}</span>` : ''}</div>${svg ? `<div class="ax"><span>−${c.hours} h</span><span>${hgT('common.now')}</span></div>` : ''}
       </ha-card>`;
   }

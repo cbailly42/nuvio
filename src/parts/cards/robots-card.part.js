@@ -153,10 +153,10 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
     if (!H.ok(s)) return `<div class="rb idle"><div class="top"><span class="av">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span><span class="nm"><b>${H.esc(nm)}</b><span>${hgT('common.unavailable_masc')}</span></span></div></div>`;
     const [lbl, cls] = hgRobotState(s), f = a.supported_features || 0, working = cls === 'work';
     const batV = a.battery ?? a.battery_level ?? H.num(h, r.bat);
-    const bat = batV != null ? `<span class="bat ${batV < 20 ? 'low' : ''}">${H.icon(a.charging ? 'mdi:battery-charging' : batV > 90 ? 'mdi:battery' : `mdi:battery-${Math.max(10, Math.round(batV / 10) * 10)}`)}${Math.round(batV)}%</span>` : '';
+    const bat = batV != null ? `<span class="bat ${batV < 20 ? 'low' : ''}">${H.icon(a.charging ? 'mdi:battery-charging' : batV > 90 ? 'mdi:battery' : `mdi:battery-${Math.max(10, Math.round(batV / 10) * 10)}`)}${H.pct(Math.round(batV))}</span>` : '';
     const err = cls === 'err' && a.error && a.error !== 'No error' ? ` · ${a.error}` : '';
     const room = r.room && H.ok(h.states[r.room]) && working ? h.states[r.room].state : '';
-    const sub = room ? `${hgT('common.room')}: ${room}` : (r.hist && H.ok(h.states[r.hist]) ? `${hgT('cards.robots.last')} ${hgAgo(h.states[r.hist].state)}` : (mower ? hgT('cards.robots.mower') : hgT('cards.robots.vacuum')));
+    const sub = room ? H.lv(hgT('common.room'), room) : (r.hist && H.ok(h.states[r.hist]) ? `${hgT('cards.robots.last')} ${hgAgo(h.states[r.hist].state)}` : (mower ? hgT('cards.robots.mower') : hgT('cards.robots.vacuum')));
     const top = `<div class="top"><span class="av">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span><span class="nm"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></span>
       ${bat}<span class="pill" title="${H.esc(lbl + err)}"><i></i>${H.esc(lbl)}</span><button class="ib" data-act="more" data-e="${r.e}" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button></div>`;
     // przyciski: tylko obsługiwane funkcje
@@ -192,9 +192,9 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
       // jednostka z encji: % -> pasek zużycia; h/min/d itp. -> sama wartość z jej jednostką (bez zgadywania procentów)
       const v = H.num(h, x.e), t = x.t && H.ok(h.states[x.t]) ? H.num(h, x.t) : null, u = hgUnit(h, x.e), pc = u === '%';
       const lb = String(x.nm), full = x.full ? String(x.full) : lb, dirty = x.id === 'sensors' && v <= 0;
-      const main = pc ? `${Math.round(v)}%` : hgUV(v, u), tt = t != null ? hgUV(t, hgUnit(h, x.t) || 'h') : '';
+      const main = pc ? H.pct(Math.round(v)) : hgUV(v, u), tt = t != null ? hgUV(t, hgUnit(h, x.t) || 'h') : '';
       const lvl = pc ? (v < 10 ? 'bad' : v <= 30 ? 'warn' : '') : (v <= 0 ? 'bad' : '');
-      return `<div class="cs ${lvl}" title="${H.esc(`${full}: ${main}${tt ? ', ' + hgT('cards.robots.time_left', { time: tt }) : ''}`)}"><span class="cl">${H.esc(lb)}</span>
+      return `<div class="cs ${lvl}" title="${H.esc(H.lv(full, `${main}${tt ? ', ' + hgT('cards.robots.time_left', { time: tt }) : ''}`))}"><span class="cl">${H.esc(lb)}</span>
         <div class="cv"><b>${H.esc(main)}</b>${tt ? `<em>${H.esc(tt)}</em>` : ''}</div>${pc ? `<div class="tr"><i style="width:${Math.max(2, Math.min(100, v))}%"></i></div>` : ''}${dirty ? `<span class="hint">${hgT('cards.robots.needs_cleaning')}</span>` : ''}</div>`;
     }).join('');
     // ostatnie sprzątanie
@@ -208,10 +208,10 @@ ha-card.glass{ height:auto; display:flex; flex-direction:column; gap:var(--s2); 
       const hm = dt.toLocaleTimeString(HG_LOC(), { hour: '2-digit', minute: '2-digit' });
       kv.push([hgT('cards.robots.when'), n === 0 ? hgT('cards.robots.today_at', { time: hm }) : n === 1 ? hgT('cards.robots.yesterday_at', { time: hm }) : `${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}, ${hm}`, '']); } }
     if (cnt) kv.push([hgT('cards.robots.cleanings'), H.fmt(cnt[0], 0), '']); if (tot) kv.push([hgT('cards.robots.total'), H.fmt(tot[0], Math.abs(tot[0]) >= 10 ? 0 : 1), tot[1]]);
-    const last = kv.length ? `<div><div class="sec">${hgT('cards.robots.last_cleaning')}</div><div class="kv">${kv.map(([k, v, u]) => `<div title="${H.esc(`${k}: ${v}${u ? ' ' + u : ''}`)}"><small>${k}</small><p><b>${H.esc(v)}</b>${u ? `<em>${H.esc(u)}</em>` : ''}</p></div>`).join('')}</div></div>` : '';
+    const last = kv.length ? `<div><div class="sec">${hgT('cards.robots.last_cleaning')}</div><div class="kv">${kv.map(([k, v, u]) => `<div title="${H.esc(H.lv(k, `${v}${u ? ' ' + u : ''}`))}"><small>${k}</small><p><b>${H.esc(v)}</b>${u ? `<em>${H.esc(u)}</em>` : ''}</p></div>`).join('')}</div></div>` : '';
     const cam = r.cam && h.states[r.cam];
     const map = cam ? `<div class="map" data-cam="${r.cam}" style="--a:${this._asp && this._asp[r.cam] || 1.25}"><div class="ph">${H.ok(cam) ? hgT('cards.robots.loading_map') : hgT('cards.robots.map_unavailable')}</div><img alt="${hgT('common.map')} ${H.esc(nm)}" ${this._src && this._src[r.cam] ? `src="${this._src[r.cam]}" class="ok"` : ''}>${room ? `<span class="rm">${H.esc(room)}</span>` : ''}</div>` : '';
-    const ill = map ? '' : `<div class="media ill" aria-hidden="true"><span class="ring" style="--p:${batV != null ? Math.round(batV) : 0}"><span class="in">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span></span><b>${H.esc(lbl)}</b><small>${batV != null ? `${hgT('common.battery')} ${Math.round(batV)}%` : H.esc(sub)}</small>${cls === 'chg' || cls === 'dock' ? H.icon('mdi:home-lightning-bolt-outline', 'dock') : ''}</div>`;
+    const ill = map ? '' : `<div class="media ill" aria-hidden="true"><span class="ring" style="--p:${batV != null ? Math.round(batV) : 0}"><span class="in">${H.icon(mower ? 'mdi:robot-mower' : 'mdi:robot-vacuum')}</span></span><b>${H.esc(lbl)}</b><small>${batV != null ? `${hgT('common.battery')} ${H.pct(Math.round(batV))}` : H.esc(sub)}</small>${cls === 'chg' || cls === 'dock' ? H.icon('mdi:home-lightning-bolt-outline', 'dock') : ''}</div>`;
     return `<div class="rb ${cls}">${top}<div class="g ${map ? '' : 'nomap'}" style="margin-top:10px">${map ? `<div class="media">${map}</div>` : ill}<div class="side">
       ${ctl ? `<div class="ctl">${ctl}</div>` : ''}${opts}${rooms}${cons ? `<div><div class="sec">${hgT('cards.robots.maintenance')}</div><div class="cons">${cons}</div></div>` : ''}${last}</div></div></div>`;
   }

@@ -20,9 +20,9 @@ class HGRoomCompactCard extends HGBase {
     const nm = c.name || (s ? H.name(h, c.entity) : hgT('common.room'));
     const ticks = Array.from({ length: n }, (_, i) => `<i class="${p > 0 && i <= on ? 'on' : ''}"></i>`).join('');
     return `<ha-card class="glass">${hgUI.header(nm, { icon: c.icon, right: s ? hgUI.switch(M.on, 'tog', nm, !H.ok(s)) : '' })}
-      <div class="nv-mid">${t != null ? hgUI.big(t, { d: 1, unit: '°', sup: true, caption: hu != null ? `${H.fmt(hu, 0)}% ${hgT('cards.room_compact.hum')}` : '' }) : ''}
+      <div class="nv-mid">${t != null ? hgUI.big(t, { d: 1, unit: '°', sup: true, caption: hu != null ? `${H.pct(H.fmt(hu, 0))} ${hgT('cards.room_compact.hum')}` : '' }) : ''}
       ${M && M.ok ? `<div class="rul ${this._drag != null ? 'drag' : ''}" role="slider" tabindex="0" aria-label="${H.esc(M.label)} ${H.esc(nm)}" aria-valuemin="${M.min}" aria-valuemax="${M.max}" aria-valuenow="${v}" style="--p:${p.toFixed(1)}%"><div class="tk">${ticks}</div><span class="kn"></span></div>
-        <div class="meta"><span>${H.esc(M.label)}</span><span class="nv-sp"></span><span>${H.fmt(v, 0)}${H.esc(M.unit)}</span></div>` : ''}</div></ha-card>`; }
+        <div class="meta"><span>${H.esc(M.label)}</span><span class="nv-sp"></span><span>${M.unit === '%' ? H.pct(H.fmt(v, 0)) : H.fmt(v, 0) + H.esc(M.unit)}</span></div>` : ''}</div></ha-card>`; }
   afterRender() { const el = this.$.querySelector('.rul'); if (!el) return; const M = () => hgSlider(this._hass, this._config.entity), set = (f) => { const m = M(); return hgStepRound(m.min + f * (m.max - m.min), m); };
     hgDragVal(this, el, { off: () => !M().ok, move: (f) => { this._drag = set(f); this._paint(el); }, end: (f) => { const v = f == null ? null : set(f); this._drag = null; el.classList.remove('drag'); if (v != null) this._send(v); else this.rerender(); },
       key: (d) => { const m = M(); this._send(hgStepRound((this._pend ?? m.v) + d * (m.unit === '%' ? 5 : m.step), m)); } }); }

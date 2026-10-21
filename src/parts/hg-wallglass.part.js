@@ -209,7 +209,7 @@ Object.assign(HGWall, {
           el.querySelector('.nw-t').textContent = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {})).format(d);
           el.querySelector('.nw-d').textContent = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d); const q = this.hass; this.hass = h; this.wx(); this.hass = q; } }
       catch (e) { /* podgląd pomocniczy */ } finally { this.el = keep; } } },
-  _pc(v) { return Math.round(v * 100) + '%'; }, _px(v) { return v + ' px'; },
+  _pc(v) { return H.pct(Math.round(v * 100)); }, _px(v) { return v + ' px'; },
   /* edytor jednej karty */
 
   gpatch(path, val) { const [a, b, c] = path.split('.'); if (!b) return this.gset({ [a]: val }); const G = this.gget(); if (c != null) { const arr = (G[a][b] || []).slice(); arr[Number(c)] = val; return this.gset({ [a]: { [b]: arr } }); } this.gset({ [a]: { [b]: val } }); },

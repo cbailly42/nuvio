@@ -144,7 +144,7 @@ const HGAreas = {
   },
   env(h, a) {
     const t = this.val(h, a.temp), u = this.val(h, a.hum);
-    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? `${H.fmt(u, 0)}%` : ''].filter(Boolean) };
+    return { t, u, txt: [t != null ? `${H.fmt(t, 1)}°` : '', u != null ? H.pct(H.fmt(u, 0)) : ''].filter(Boolean) };
   },
   /* nazwa bez prefiksu pokoju („Biuro Lampa” -> „Lampa”); pusta -> etykieta zastępcza */
   name(h, e, a, cfg, fb) {

@@ -44,7 +44,7 @@ class HGAirqCard extends HGBase {
     const tiles = xs.map((e) => { const s = h.states[e], a = s.attributes, m = HG_AIRQ.find((x) => x[0] === a.device_class) || [a.device_class, null, a.icon || 'mdi:gauge', null, 0], v = parseFloat(s.state), ok = isFinite(v);
       const lv = ok && (m[3] || m[0] === 'humidity') ? hgAirqLv(m, v) : -1; if (lv > worst) worst = lv;
       const col = lv < 0 ? 'currentColor' : HG_AIRQ_LV[lv][1], pct = ok && m[4] ? Math.max(3, Math.min(100, (v / m[4]) * 100)) : 0, nm = m[1] ? String(m[1]) : H.name(h, e);
-      return `<button class="mt" style="--c:${col}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(nm)}: ${ok ? H.fmt(v, v < 10 ? 1 : 0) : H.esc(H.t(h, s))} ${H.esc(a.unit_of_measurement || '')}${lv >= 0 ? ', ' + H.esc(HG_AIRQ_LV[lv][0]) : ''}">
+      return `<button class="mt" style="--c:${col}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.lv(H.esc(nm), `${ok ? H.fmt(v, v < 10 ? 1 : 0) : H.esc(H.t(h, s))} ${H.esc(a.unit_of_measurement || '')}${lv >= 0 ? ', ' + H.esc(HG_AIRQ_LV[lv][0]) : ''}`)}">
         <span class="lb">${H.icon(m[2])}<span>${H.esc(nm)}</span></span><b>${ok ? H.fmt(v, v < 10 ? 1 : 0) : '–'}${a.unit_of_measurement ? `<small>${H.esc(a.unit_of_measurement)}</small>` : ''}</b>
         ${m[4] ? `<span class="tk" aria-hidden="true"><i style="width:${pct.toFixed(1)}%"></i></span>` : ''}${lv >= 0 ? `<span class="st">${H.esc(HG_AIRQ_LV[lv][0])}</span>` : ''}</button>`; }).join('');
     const W = worst >= 0 ? HG_AIRQ_LV[worst] : null;

@@ -614,10 +614,12 @@
     },
     "map": {
       "map_unavailable": "Map unavailable",
-      "people": "people",
+      "people_count_one": "{count} people",
+      "people_count_other": "{count} people",
       "picker_description": "Natywna mapa HA w szklanej ramce",
       "picker_name": "Home Glass – Mapa",
-      "zones": "zones"
+      "zones_count_one": "{count} zones",
+      "zones_count_other": "{count} zones"
     },
     "media": {
       "entity_not_found": "entity not found",
@@ -815,7 +817,8 @@
       "sensor_battery": "Sensor battery"
     },
     "players": {
-      "active": "active",
+      "active_count_one": "{count} active",
+      "active_count_other": "{count} active",
       "no_available_players": "No available players",
       "nothing_playing": "nothing playing",
       "picker_description": "Players: artwork, title, progress, controls, volume, source",
@@ -1074,7 +1077,8 @@
       "kettle_remaining": "Remaining",
       "less": "Less",
       "light": "Light",
-      "lights_on_of_total": "{on} of {total} on",
+      "lights_on_of_total_one": "{count} of {total} on",
+      "lights_on_of_total_other": "{count} of {total} on",
       "locked": "Locked",
       "lower_setpoint": "Lower setpoint",
       "motion_now": "Motion now",
@@ -1157,6 +1161,9 @@
         "bulb_state": "{bulb}: {state}",
         "bulb_top": "Top bulb",
         "bulb_unavailable": "unavailable",
+        "duration_days": "{days} d",
+        "duration_hours": "{hours} h",
+        "duration_minutes": "{minutes} min",
         "for_moment": "for <1 min",
         "for_time": "for {time}",
         "motion_ago": "No motion {time}",
@@ -1246,11 +1253,14 @@
     "sensors": {
       "active_label_one": "active",
       "active_label_other": "active",
-      "alarm_label": "alarm",
+      "alarm_label_one": "alarm",
+      "alarm_label_other": "alarm",
       "bright": "bright",
       "dark": "dark",
       "dim": "dim",
       "history": "history",
+      "motion_label_one": "motion",
+      "motion_label_other": "motion",
       "no_available_sensors_in": "No available sensors in this group",
       "open_label_one": "open",
       "open_label_other": "open",
@@ -1315,7 +1325,8 @@
         "openings": "Doors / windows",
         "other": "Other"
       },
-      "unavailable": "unavailable"
+      "unavailable_label_one": "unavailable",
+      "unavailable_label_other": "unavailable"
     },
     "slider": {
       "mute": "Mute",
@@ -1528,7 +1539,8 @@
     },
     "week": {
       "consumption": "Consumption",
-      "days": "days",
+      "days_count_one": "{count} days",
+      "days_count_other": "{count} days",
       "energy_dashboard": "Energy dashboard",
       "energy_week": "Energy · week",
       "loading_statistics": "Loading statistics…",
@@ -1576,6 +1588,7 @@
     "household": "Household",
     "humidity": "Humidity",
     "just_now": "just now",
+    "label_value": "{label}: {value}",
     "loading": "Loading…",
     "map": "Map",
     "media": "Media",
@@ -1601,6 +1614,7 @@
     "open": "Open",
     "open_assist": "Open Assist",
     "pause": "Pause",
+    "percent": "{value}%",
     "power": "Power",
     "power_now": "Power now",
     "previous_track": "Previous",
@@ -3165,7 +3179,8 @@
     "back": "Back",
     "background": "Background",
     "duration": "~1 min",
-    "entities_unit": "entities",
+    "entities_count_one": "{count} entities",
+    "entities_count_other": "{count} entities",
     "eyebrow": "First-time setup",
     "go": "Create dashboard",
     "hero": "Welcome to Nuvio",
@@ -3181,8 +3196,9 @@
     "preview": "Preview",
     "preview_music": "Music",
     "preview_room": "Living room",
+    "rooms_count_one": "{count} rooms",
+    "rooms_count_other": "{count} rooms",
     "rooms_sub": "Which rooms should be shown? Hidden ones can be restored later.",
-    "rooms_unit": "rooms",
     "select_all": "Select all",
     "select_none": "Clear all",
     "skip": "Skip setup",

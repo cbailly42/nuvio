@@ -76,7 +76,7 @@ const hgNP = {
     const vp = at.volume_level != null ? Math.round(at.volume_level * 100) : null, mu = !!at.is_volume_muted;
     const vol = off ? '' : (f & F.VOL_SET) && vp != null ? `<div class="npv">${B(f & F.MUTE ? 'npmu' : 'npvd', f & F.MUTE ? (mu || vp === 0 ? 'mdi:volume-off' : 'mdi:volume-low') : 'mdi:volume-minus', f & F.MUTE ? (mu ? hgT('shared.media.unmute') : hgT('shared.media.mute')) : hgT('shared.media.volume_down'), '', f & F.MUTE ? ` aria-pressed="${mu}"` : '')}
         <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgT('shared.media.volume_aria', { name: nm }))}">${B('npvu', 'mdi:volume-high', hgT('shared.media.volume_up'))}
-        <span class="npo"><output>${vp}%</output><small>${hgT('shared.media.volume_label')}</small></span></div>`
+        <span class="npo"><output>${H.pct(vp)}</output><small>${hgT('shared.media.volume_label')}</small></span></div>`
       : (f & F.VOL_STEP) ? `<div class="npv">${B('npvd', 'mdi:volume-minus', hgT('shared.media.volume_down'))}${B('npvu', 'mdi:volume-plus', hgT('shared.media.volume_up'))}</div>` : '';
     const C = (a, ic, l, on) => `<button class="npc ${on ? 'on' : ''}" data-act="${a}" data-e="${E}" aria-label="${H.esc(l)}" title="${H.esc(l)}">${H.icon(ic)}<span>${H.esc(l)}</span></button>`;
     const grp = (at.group_members || []).length > 1;

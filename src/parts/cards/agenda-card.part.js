@@ -39,7 +39,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
       <span class="tm">${e.allDay ? hgT('cards.agenda.all_day') : `${hgTime(e.start)}–${hgTime(e.end)}`}</span><div class="tx"><b>${H.esc(HGCal.title(e))}</b><small>${H.esc(e.cal.name)}${e.loc ? ' · ' + H.esc(e.loc) : ''}</small></div></div>`).join('')}</div>`).join('');
     const errs = this._res.filter((r) => r.err).map((r) => r.cal.name);
     return `<ha-card class="glass">${hd}${body || `<div class="none">${hgT('cards.agenda.no_events_days', { count: c.days })}</div>`}
-      ${errs.length ? `<div class="note" style="margin-top:8u">${hgT('common.unavailable')}: ${H.esc(errs.join(', '))}</div>` : ''}</ha-card>`;
+      ${errs.length ? `<div class="note" style="margin-top:8u">${H.lv(hgT('common.unavailable'), `${H.esc(errs.join(', '))}`)}</div>` : ''}</ha-card>`;
   }
 }
 hgReg('hg-agenda-card', HGAgendaCard, hgTLazy('cards.agenda.picker_name'), hgTLazy('cards.agenda.picker_description'));

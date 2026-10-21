@@ -14,8 +14,10 @@ ha-card.hero.img{ background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,
 `); }
   render() { const c = this._config, h = this._hass, nm = hgFirstName(h), s = c.entity ? H.st(h, c.entity) : null;
     const T = c.title ?? hgT('cards.hero.greeting_title', { name: nm }), Sb = c.subtitle ?? hgT('cards.hero.your_whole_home_in');
-    const fill = (x) => String(x || '').replace(/\{name\}/g, nm).replace(/,\s*!/, '!').replace(/\s+!/, '!');
-    const st = s ? `<div class="st">${hgUI.pill(`${H.name(h, c.entity)}: ${H.t(h, s)}`, { icon: s.attributes.icon || 'mdi:information-outline', act: 'more' })}</div>` : '';
+    /* pusty {name}: usuwa przecinek i zwykłe spacje przed «!», a spacja niełamliwa (typografia francuska) zostaje */
+    const bang = (m) => (m.includes('\u00a0') ? '\u00a0!' : '!');
+    const fill = (x) => String(x || '').replace(/\{name\}/g, nm).replace(/,\s*!/, bang).replace(/\s+!/, bang);
+    const st = s ? `<div class="st">${hgUI.pill(H.lv(H.name(h, c.entity), H.t(h, s)), { icon: s.attributes.icon || 'mdi:information-outline', act: 'more' })}</div>` : '';
     return `<ha-card class="${c.glass ? 'glass' : 'glass hero'}${c.image ? ' img' : ''}"${c.image ? ` style="--img:url('${H.cssUrl(c.image)}')"` : ''}><h1 class="t">${H.esc(fill(T))}</h1>${Sb ? `<p class="s">${H.esc(fill(Sb))}</p>` : ''}${st}</ha-card>`; }
   onAct(a) { if (a === 'more' && this._config.entity) H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
   getGridOptions() { return { columns: 12, rows: 2 }; }

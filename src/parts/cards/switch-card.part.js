@@ -24,7 +24,7 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
     const avail = ss.some((s) => s && s.state !== 'unavailable');
     const onN = ss.filter((s) => s && s.state === 'on').length, on = onN > 0;
     const title = c.title || H.name(this._hass, ids[0]);
-    let tip = `${title}: ${avail ? H.stateLabel(on ? 'on' : 'off') : hgT('common.state_unavailable')}`;
+    let tip = H.lv(title, avail ? H.stateLabel(on ? 'on' : 'off') : hgT('common.state_unavailable'));
     if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ' · ' + hgT('cards.switch.internet_status', { status: s && s.state === 'on' ? hgT('cards.switch.connected') : hgT('cards.switch.disconnected') }); }
     const tg = this.toggleHtml(on, 'toggle', !avail, title);
     const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button>` : '';

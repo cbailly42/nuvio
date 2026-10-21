@@ -38,7 +38,7 @@ ha-card.glass{ display:flex; flex-direction:column; }
     return `<ha-card class="glass">${hd}
       <div class="sum"><b>${H.fmt(week, 1)}</b><span>${H.esc(c.unit)} · ${hgT('cards.bars.days_count', { count: c.days })}</span></div>
       <div class="lg">${c.statistics.map((id, i) => `<span><i style="background:${c.colors[i % c.colors.length]}"></i>${H.esc(c.labels[i] || id)}</span>`).join('')}</div>
-      <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.esc(days[i].toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(tot[i], 1)} ${c.unit}"><em>${H.fmt(tot[i], 1)}</em>
+      <div class="bars">${rows.map((r, i) => `<div class="b" title="${H.lv(H.esc(days[i].toLocaleDateString(c.locale || HG_LOC())), `${H.fmt(tot[i], 1)} ${c.unit}`)}"><em>${H.fmt(tot[i], 1)}</em>
         <div class="st" style="height:${Math.max(3, (tot[i] / mx) * 100)}%">${r.map((v, j) => `<div style="height:${tot[i] ? (v / tot[i]) * 100 : 0}%;background:${c.colors[j % c.colors.length]}"></div>`).join('')}</div>
         <small>${H.DAYS[days[i].getDay()]}</small></div>`).join('')}</div></ha-card>`;
   }

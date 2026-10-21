@@ -342,7 +342,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgT('wall.start_after_inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
-      <div class="wl-f"><span>${hgT('wall.dimming')}<em class="wl-dv">${dv}%</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgT('wall.screensaver_dimming')}"></div>
+      <div class="wl-f"><span>${hgT('wall.dimming')}<em class="wl-dv">${H.pct(dv)}</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgT('wall.screensaver_dimming')}"></div>
       ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgT('wall.photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, t]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${t}</button>`).join('')}</div>
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgT('wall.image_url_hint')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgT('wall.screensaver_image_url')}"></span>` : ''}</div>` : ''}
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
@@ -366,7 +366,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     this.set({ pinH: this.hash(v), pinN: v.length }); p._eToast(hgT('wall.pin_saved')); return p._eLook(); },
   wire(p, S) { if (!this.admin(p)) return;
     const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
-    const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = rg.value + '%'; this.set({ dim: rg.value / 100 }); });
+    const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = H.pct(rg.value); this.set({ dim: rg.value / 100 }); });
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });

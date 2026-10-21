@@ -561,7 +561,7 @@ class HGPage extends HTMLElement {
     const adm = !!(h.user && h.user.is_admin), ov = ((((HGL.data || {}).wiz || {}).areas || {}).sensors || {})[a.id] || {};
     const sb = (k, cls, inner, lbl) => (adm ? `<button type="button" class="${cls} rsens" data-act="roomsens" data-k="${k}" aria-haspopup="menu" aria-label="${H.esc(lbl)}" title="${hgT('page.change_sensor')}">${inner}<span class="pen" aria-hidden="true">${H.icon('mdi:pencil')}</span></button>` : `<span class="${cls}">${inner}</span>`);
     const big = env.t != null ? sb('temperature', 'rt', `${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}<sup>°</sup>`, `${hgT('page.temperature')} ${H.fmt(env.t, 1)}°`) : '';
-    const hum = env.u != null ? sb('humidity', 'ru', `${H.icon('mdi:water-percent')}${H.fmt(env.u, 0)}%`, `${hgT('common.humidity')} ${H.fmt(env.u, 0)}%`) : '';
+    const hum = env.u != null ? sb('humidity', 'ru', `${H.icon('mdi:water-percent')}${H.pct(H.fmt(env.u, 0))}`, `${hgT('common.humidity')} ${H.pct(H.fmt(env.u, 0))}`) : '';
     const add = (k, ic, l) => (adm && ov[k] !== '-' && HGAreas.cands(h, a, k).length ? `<button type="button" class="rp rsadd" data-act="roomsens" data-k="${k}" aria-haspopup="menu">${H.icon(ic)}${l}</button>` : '');
     const adds = (env.t == null ? add('temperature', 'mdi:thermometer-plus', hgT('page.temperature')) : '') + (env.u == null ? add('humidity', 'mdi:water-plus', hgT('common.humidity')) : '');
     const occ = (S.mot || []).filter(okS), occOn = occ.some((e) => h.states[e].state === 'on');
@@ -578,7 +578,7 @@ class HGPage extends HTMLElement {
   async _roomSens(t) {
     const h = this._hass, k = t.dataset.k, a = HGAreas.model(h, this._config.areas || HG_NO_AREAS).byId[HGAreas.areaFromUrl()]; if (!a || !h) return;
     const cur = (((((HGL.data || {}).wiz || {}).areas || {}).sensors || {})[a.id] || {})[k] || '', inR = new Set(a.ents || []), T = k === 'temperature';
-    const fmt = (e) => { const v = parseFloat(h.states[e].state); return isFinite(v) ? `${H.fmt(v, T ? 1 : 0)}${T ? '°' : '%'}` : hgT('common.state_unavailable_masc'); };
+    const fmt = (e) => { const v = parseFloat(h.states[e].state); return isFinite(v) ? (T ? `${H.fmt(v, 1)}°` : H.pct(H.fmt(v, 0))) : hgT('common.state_unavailable_masc'); };
     const cs = HGAreas.cands(h, a, k), shown = cs.filter((e) => inR.has(e) || e === cur).concat(cs.filter((e) => !inR.has(e) && e !== cur).slice(0, 8));
     const ic = T ? 'mdi:thermometer' : 'mdi:water-percent';
     const items = [{ label: hgT('common.automatic'), icon: 'mdi:auto-fix', value: '', checked: !cur }, '-',
@@ -666,7 +666,7 @@ class HGPage extends HTMLElement {
         ${this._canEdit() ? `<button class="cir ed ${this._editing ? 'on' : ''}" data-act="edit" aria-pressed="${!!this._editing}" aria-label="${this._editing ? hgT('page.finish_editing_layout') : hgT('page.edit_layout')}" title="${this._editing ? hgT('common.done') : hgT('page.edit_layout')}">${H.icon(this._editing ? 'mdi:check' : 'mdi:pencil')}</button>` : ''}
         ${window.HGAssistUI && HGAssistUI.get().button ? `<button class="cir as" data-act="assist" aria-haspopup="dialog" aria-keyshortcuts="A" aria-label="${hgT('page.assist_voice_assistant_a')}" title="${hgT('page.assist_a')}">${H.icon('mdi:microphone-message')}</button>` : ''}
         <button class="cir" data-act="mail" aria-label="${hgT('page.messages')}" title="${hgT('page.messages_and_notifications')}">${H.icon('mdi:email')}</button>
-        <button class="cir" data-act="bell" aria-label="${hgT('common.notifications')} (${nCount})" title="${hgT('common.notifications')}: ${nCount}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
+        <button class="cir" data-act="bell" aria-label="${hgT('common.notifications')} (${nCount})" title="${H.lv(hgT('common.notifications'), nCount)}">${H.icon('mdi:bell')}${nCount ? `<i class="nb">${nCount > 9 ? '9+' : nCount}</i>` : ''}</button>
         <div class="user">
           <button class="uin" data-act="profile" aria-label="${hgT('page.profile')}" title="${hgT('page.profile')}">${av}<span class="un"><b>${H.esc(ui.full)}</b><small>${H.esc(ui.handle)}</small></span></button>
           <button class="chev" data-act="menu" aria-haspopup="menu" aria-expanded="${!!this._menuOpen}" aria-label="${this._updDot() ? hgT('page.menu_update_available') : hgT('page.menu')}" title="${hgT('page.menu')}">${H.icon('mdi:chevron-down')}${this._updDot() ? '<i class="udot" aria-hidden="true"></i>' : ''}</button>
@@ -863,7 +863,7 @@ class HGPage extends HTMLElement {
     if (!force && sig === this._sigHub) return; this._sigHub = sig;
     this._setHTML(this._hubEl, `<div class="ht"><b>${H.esc(hb.title)}</b><span>${H.esc(hb.subtitle)}</span></div>
       <button class="plus" data-act="hubplus" aria-label="${H.esc(hb.plus_label || hgT('page.family'))}">${H.icon('mdi:plus')}</button>
-      <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.esc(H.name(this._hass, p))}: ${H.esc(s ? H.t(this._hass, s) : '')}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
+      <div class="avs">${(hb.persons || []).map((p) => { const s = H.st(this._hass, p); return `<button class="pa ${s && s.state === 'home' ? 'home' : ''}" data-act="person" data-e="${p}" aria-label="${H.esc(H.name(this._hass, p))}" title="${H.lv(H.esc(H.name(this._hass, p)), H.esc(s ? H.t(this._hass, s) : ''))}">${hgAvatar(this._hass, p, 'hav')}</button>`; }).join('')}</div>`);
   }
   _dlgOpen() { return !!(this._sheetOpen || this._menuOpen || (window.HGAssistUI && HGAssistUI.isOpen) || this._eSheetOpen || (window.HGWall && HGWall.active)); }
   _swBlock(e) { if (this._dlgOpen()) return true;

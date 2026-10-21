@@ -97,7 +97,7 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
     const un = (es) => es.length > 0 && es.every((e) => H.num(h, e) == null);
     /* węzeł: klucz, encje, ikona, kolor, wartość W, podpis, pierścień (conic), aktywny, etykieta, szerokość */
     const node = (k, es, ic, col, w, sub, ring, on, lbl, wd) => { const [v, u] = this.fw(w); es = es.filter(Boolean);
-      return `<button class="nd ${k === 's' ? 'sun ' : ''}${on ? 'on' : 'off'}${un(es) ? ' un' : ''}" style="${pos(k)};--c:var(${col})${ring ? ';--ring:' + ring : ''}${wd ? ';width:' + wd + '%' : ''}" data-act="more" data-e="${H.esc(es.join(','))}" aria-label="${H.esc(lbl)}: ${v} ${u}${sub ? ', ' + H.esc(sub) : ''}">
+      return `<button class="nd ${k === 's' ? 'sun ' : ''}${on ? 'on' : 'off'}${un(es) ? ' un' : ''}" style="${pos(k)};--c:var(${col})${ring ? ';--ring:' + ring : ''}${wd ? ';width:' + wd + '%' : ''}" data-act="more" data-e="${H.esc(es.join(','))}" aria-label="${H.lv(H.esc(lbl), `${v} ${u}${sub ? ', ' + H.esc(sub) : ''}`)}">
         ${H.icon(ic)}<b>${v}<em>${u}</em></b>${sub ? `<small>${H.esc(sub)}</small>` : ''}</button>`; };
     const full = (col) => `var(${col}) 0 100%`, nds = [], ns = hgArr(c.solar).length;
     if (has.s) nds.push(node('s', hgArr(c.solar), M.S > EPS ? 'mdi:white-balance-sunny' : 'mdi:solar-panel', '--fl-sun', M.S, ns > 1 ? hgT('cards.flow.solar_count_sub', { count: ns }) : hgT('cards.flow.solar_sub'), M.S > EPS ? full('--fl-sun') : '', M.S > EPS, hgT('cards.flow.solar_title')));
@@ -106,7 +106,7 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
         ex ? hgT('cards.flow.export') : im ? hgT('cards.flow.import') : hgT('cards.flow.grid'), ex ? full(xc) : im ? full('--fl-grid') : '', ex || im, hgT('cards.flow.grid_title'))); }
     M.BT.forEach((b, i) => { const w = b.w || 0, ch = w < -EPS, ds = w > EPS, lv = b.soc == null ? null : Math.max(0, Math.min(100, b.soc));
       const ic = lv == null ? (ch ? 'mdi:battery-charging' : 'mdi:battery') : ch ? `mdi:battery-charging-${Math.max(10, Math.round(lv / 10) * 10)}` : lv >= 95 ? 'mdi:battery' : lv < 10 ? 'mdi:battery-outline' : `mdi:battery-${Math.floor(lv / 10) * 10}`;
-      const sub = lv != null ? H.fmt(lv, 0) + '%' : ch ? hgT('cards.flow.charging') : ds ? hgT('cards.flow.discharging') : hgT('cards.flow.battery');
+      const sub = lv != null ? H.pct(H.fmt(lv, 0)) : ch ? hgT('cards.flow.charging') : ds ? hgT('cards.flow.discharging') : hgT('cards.flow.battery');
       const nm = b.name || (bus ? (b.power || b.soc ? H.name(h, b.power || b.soc).replace(/\s*(moc|power|poziom|level|soc|stan naładowania|state of charge)\b/gi, '').trim() : '') || hgT('cards.flow.battery_n', { n: i + 1 }) : hgT('common.battery'));
       nds.push(node('b' + i, [b.power, b.soc], ic, '--fl-bat', b.power ? Math.abs(w) : null, sub, lv != null ? `var(--fl-bat) 0 ${lv}%, color-mix(in srgb, var(--fl-bat) 16%, transparent) ${lv}% 100%` : ds || ch ? full('--fl-bat') : '', ds || ch,
         nm + (ch ? hgT('cards.flow.charging_suffix') : ds ? hgT('cards.flow.discharging_suffix') : ''), bus ? br * 2 : 0));
@@ -116,7 +116,7 @@ ha-card.glass{ --fl-sun:#F5B53D; --fl-grid:#5AA2FF; --fl-bat:#A78BFA; --fl-home:
     let acc = 0; const ring = tot > EPS ? src.filter((x) => x[1] > 0).map(([col, w]) => { const a = acc; acc += (w / tot) * 100; return `var(${col}) ${a.toFixed(1)}% ${acc.toFixed(1)}%`; }).join(', ') : '';
     nds.push(node('h', hgArr(c.home), 'mdi:home-lightning-bolt-outline', '--fl-home', M.Hm, hgT('cards.flow.home'), ring, M.Hm > EPS, hgT('cards.flow.home_title')));
     const own = tot > EPS ? Math.round(((M.sh + M.bh) / tot) * 100) : null;
-    const lgs = src.filter((x) => x[1] / tot >= .005), lg = lgs.length > 1 && tot > EPS ? `<div class="lg" role="list" aria-label="${hgT('cards.flow.where_the_home_power')}">${lgs.map(([col, w, n]) => `<span role="listitem" style="--c:var(${col})"><i></i>${H.esc(n)} <b>${H.fmt((w / tot) * 100, 0)}%</b></span>`).join('')}</div>` : '';
+    const lgs = src.filter((x) => x[1] / tot >= .005), lg = lgs.length > 1 && tot > EPS ? `<div class="lg" role="list" aria-label="${hgT('cards.flow.where_the_home_power')}">${lgs.map(([col, w, n]) => `<span role="listitem" style="--c:var(${col})"><i></i>${H.esc(n)} <b>${H.pct(H.fmt((w / tot) * 100, 0))}</b></span>`).join('')}</div>` : '';
     const fk = [vh, nb, !!lgs.length, has.s, has.g].join(); if (fk !== this._fk) { this._fk = fk; this._fitSoon(); }   /* dopasowanie tylko po zmianie układu (rozmiar śledzi ResizeObserver) */
     const sum = `${hgT('cards.flow.home_title')} ${this.fw(M.Hm).join(' ')}${own != null && (has.s || has.b) ? ', ' + hgT('cards.flow.self_powered_suffix', { own }) : ''}`;
     return `<ha-card class="glass">${hgUI.header(T, { icon: c.icon, sub: own != null && (has.s || has.b) ? hgT('cards.flow.self_powered_percent', { own }) : '' })}

@@ -34,7 +34,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       <button class="ib" data-act="more" aria-label="${hgT('common.expand')}" title="${H.esc(nm)}">${H.icon('mdi:arrow-expand')}</button></div>`;
     return `<ha-card class="glass ${p ? '' : 'off'} ${un ? 'un' : ''}" title="${H.esc(nm)}${un ? hgT('cards.light.unavailable') : ''}">${hd}
       <div class="trk" role="slider" aria-label="${hgT('common.brightness')} ${H.esc(nm)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" tabindex="${un ? -1 : 0}" ${un ? 'aria-disabled="true"' : ''}>
-        <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : p + '%'}</span></div></ha-card>`;
+        <div class="fl" style="width:${p}%">${H.icon('mdi:white-balance-sunny', 'sun')}<i></i></div><span class="pc">${un ? '—' : H.pct(p)}</span></div></ha-card>`;
   }
   afterRender() {
     const t = this.$.querySelector('.trk'); if (!t || !this._once(t)) return;
@@ -54,7 +54,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       ev.preventDefault(); send(Math.max(0, Math.min(100, this.pct() + (ev.key === 'ArrowRight' ? 10 : -10))));
     });
   }
-  _paint(t) { const p = this._drag; t.querySelector('.fl').style.width = p + '%'; t.querySelector('.pc').textContent = p + '%'; t.setAttribute('aria-valuenow', p); }
+  _paint(t) { const p = this._drag; t.querySelector('.fl').style.width = p + '%'; t.querySelector('.pc').textContent = H.pct(p); t.setAttribute('aria-valuenow', p); }
   set hass(h) {
     const old = this._hass; this._hass = h;
     if (this._pending != null && old && this._config) { const s = H.st(h, this._config.entity), o = H.st(old, this._config.entity); if (s && o && s.last_updated !== o.last_updated) this._pending = null; }

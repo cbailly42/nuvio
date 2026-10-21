@@ -120,10 +120,10 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const c = this._config, pu = this._pu();
     return hr.map((f, i) => {
       const d = new Date(f.datetime), pp = f.precipitation_probability, mm = f.precipitation, ws = f.wind_speed;
-      const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${Math.round(pp)}%</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' ' + pu : '') : ''}</i>` : '';
+      const pr = pp != null ? `<i class="${pp > 30 ? 'wet' : ''}">${H.icon('mdi:water')}${H.pct(Math.round(pp))}</i>` : mm != null ? `<i class="${mm > 0 ? 'wet' : ''}">${mm > 0 ? H.icon('mdi:water') + H.fmt(mm, 1) + (wide ? ' ' + pu : '') : ''}</i>` : '';
       const wn = wide && ws != null ? `<i class="wn">${H.icon('mdi:weather-windy')}${H.fmt(ws, 0)}</i>` : '';
       const mmx = wide && pp != null && mm != null && mm > 0 ? `<i class="wet">${H.fmt(mm, 1)} ${pu}</i>` : '';
-      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(`${i === 0 ? hgT('common.now_cap') : hgT('cards.weather.hour_label', { hour: d.getHours() })}: ${HGWx.cn(f.condition)}, ${H.fmt(f.temperature, 0)}°${pp != null ? ', ' + hgT('cards.weather.precipitation_percent', { value: Math.round(pp) }) : mm != null ? ', ' + hgT('cards.weather.precipitation_amount', { value: H.fmt(mm, 1), unit: pu }) : ''}`)}">
+      return `<div class="h ${i === 0 ? 'nw' : ''}" role="listitem" aria-label="${H.esc(H.lv(i === 0 ? hgT('common.now_cap') : hgT('cards.weather.hour_label', { hour: d.getHours() }), `${HGWx.cn(f.condition)}, ${H.fmt(f.temperature, 0)}°${pp != null ? ', ' + hgT('cards.weather.precipitation_percent', { value: Math.round(pp) }) : mm != null ? ', ' + hgT('cards.weather.precipitation_amount', { value: H.fmt(mm, 1), unit: pu }) : ''}`))}">
         <small>${i === 0 ? hgT('common.now_cap') : String(d.getHours()).padStart(2, '0')}</small><img src="${HGWx.icon(c, f.condition, this._night(d), false)}" alt="" loading="lazy" decoding="async"><b>${H.fmt(f.temperature, 0)}°</b>${pr}${mmx}${wn}</div>`;
     }).join('');
   }
@@ -307,7 +307,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const lo = Math.min(...D.map((f) => f.templow ?? f.temperature)), hi = Math.max(...D.map((f) => f.temperature)), sp = Math.max(1, hi - lo);
     const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === TD;
       const nowDot = isT && isFinite(t) ? `<u style="left:${Math.max(0, Math.min(100, ((t - lo) / sp) * 100)).toFixed(1)}%"></u>` : '';
-      return `<div class="dy" aria-label="${H.esc(`${dl(f.datetime)}: ${HGWx.cn(f.condition)}, ${H.fmt(a, 0)}° ${hgT('cards.weather.temp_range_to')} ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, ${hgT('cards.weather.precipitation')} ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`)}">
+      return `<div class="dy" aria-label="${H.esc(H.lv(dl(f.datetime), `${HGWx.cn(f.condition)}, ${H.fmt(a, 0)}° ${hgT('cards.weather.temp_range_to')} ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, ${hgT('cards.weather.precipitation')} ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`))}">
         <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc(HGWx.cn(f.condition))}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
         <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
     // słońce

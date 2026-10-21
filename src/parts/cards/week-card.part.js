@@ -79,16 +79,16 @@ ha-card.glass{ container-type:inline-size; }
     });
     const hide = this._hide || new Set(), vis = ser.filter((s) => !hide.has(s.k));
     const mx = Math.max(0.001, ...vis.flatMap((s) => s.vals)), sel = this._sel;
-    const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.esc(s.label)}: ${hgT('cards.week.show_hide_on_chart')}">
-      <small><i></i><span>${H.esc(s.label)}<span class="nd2"> · ${n} ${hgT('cards.week.days')}</span></span></small><b>${H.fmt(s.tot, 1)}<em>kWh · ${hgT('common.today_lower')} ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
+    const sums = ser.map((s) => `<button class="sm ${hide.has(s.k) ? 'off' : ''}" data-act="ser" data-k="${s.k}" style="--c:${s.color}" aria-pressed="${!hide.has(s.k)}" title="${H.lv(H.esc(s.label), hgT('cards.week.show_hide_on_chart'))}">
+      <small><i></i><span>${H.esc(s.label)}<span class="nd2"> · ${hgT('cards.week.days_count', { count: n })}</span></span></small><b>${H.fmt(s.tot, 1)}<em>kWh · ${hgT('common.today_lower')} ${H.fmt(s.vals[n - 1], 1)}</em></b></button>`).join('');
     const dayName = (d, i) => (i === n - 1 ? hgT('common.today_lower') : H.DAYS[d.getDay()]);
     const cols = days.map((d, i) => {
       const pm = Math.max(0, ...vis.map((s) => (s.has[i] ? s.vals[i] : 0)));
       const bars = vis.map((s) => (!s.has[i] ? `<i class="nd" title="${hgT('common.no_data')}"></i>` : `<i class="${s.vals[i] > 0 ? '' : 'z'}" style="--c:${s.color};--h:${pm > 0 ? (s.vals[i] / pm) * 100 : 0}%;animation-delay:${i * 35}ms"></i>`)).join('');
-      const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? ' ' + hgT('cards.week.so_far') : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.esc(s.label)}: <b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : hgT('common.no_data')}</b>`).join('<br>')}</span>` : '';
+      const tip = sel === i ? `<span class="tip">${H.esc(d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}${i === n - 1 ? ' ' + hgT('cards.week.so_far') : ''}<br>${ser.map((s) => `<i style="background:${s.color}"></i>${H.lv(H.esc(s.label), `<b>${s.has[i] ? H.fmt(s.vals[i], 2) + ' kWh' : hgT('common.no_data')}</b>`)}`).join('<br>')}</span>` : '';
       const top = vis[0] && vis[0].has[i] ? `<span class="val">${H.fmt(vis[0].vals[i], 1)}</span>` : '';
       const pair = `<span class="pr" style="height:${(pm / mx) * 100}%">${top}${bars}</span>`;
-      return `<button class="d ${sel === i ? 'sel' : ''} ${i === n - 1 ? 'today' : ''}" data-act="day" data-i="${i}" aria-label="${H.esc(d.toLocaleDateString(HG_LOC()))}: ${ser.map((s) => `${s.label} ${s.has[i] ? H.fmt(s.vals[i], 1) + ' kWh' : hgT('common.no_data')}`).join(', ')}">${tip}<span class="bs"><span class="bw">${pair}</span></span><small>${dayName(d, i)}</small></button>`;
+      return `<button class="d ${sel === i ? 'sel' : ''} ${i === n - 1 ? 'today' : ''}" data-act="day" data-i="${i}" aria-label="${H.lv(H.esc(d.toLocaleDateString(HG_LOC())), `${ser.map((s) => `${s.label} ${s.has[i] ? H.fmt(s.vals[i], 1) + ' kWh' : hgT('common.no_data')}`).join(', ')}`)}">${tip}<span class="bs"><span class="bw">${pair}</span></span><small>${dayName(d, i)}</small></button>`;
     }).join('');
     const pv = ser.find((s) => s.k === 'production');
     const gaps = pv ? days.filter((d, i) => !pv.has[i]).map((d, i) => d) : [];

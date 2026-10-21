@@ -47,10 +47,10 @@ class HGPlantCard extends HGBase {
     const rows = R.map((r) => { const m = r.m, span = m[6], pos = (x) => Math.max(0, Math.min(100, (x / span) * 100)), st = r.v == null ? 0 : r.v < r.lo ? -1 : r.v > r.hi ? 1 : 0;
       if (st) { const g = HG_PLANT_MSG[m[0]][st < 0 ? 0 : 1]; bad.push(String(g)); }
       const dv = r.v == null ? '–' : m[0] === 'illuminance' && r.v >= 10000 ? H.fmt(r.v / 1000, 1) + 'k' : H.fmt(r.v, m[0] === 'temperature' ? 1 : 0);
-      return `<button class="mr${st ? ' bad' : ''}" data-act="more" data-e="${H.esc(r.id)}" aria-label="${HG_PLANT_L[m[0]]}: ${dv} ${H.esc(r.unit)}, ${hgT('cards.plant.range')} ${H.fmt(r.lo, 0)}–${H.fmt(r.hi, 0)}">${H.icon(m[3])}<span class="nm">${HG_PLANT_L[m[0]]}</span><span class="vl">${dv}<small>${H.esc(r.unit)}</small></span>
+      return `<button class="mr${st ? ' bad' : ''}" data-act="more" data-e="${H.esc(r.id)}" aria-label="${H.lv(HG_PLANT_L[m[0]], `${dv} ${H.esc(r.unit)}, ${hgT('cards.plant.range')} ${H.fmt(r.lo, 0)}–${H.fmt(r.hi, 0)}`)}">${H.icon(m[3])}<span class="nm">${HG_PLANT_L[m[0]]}</span><span class="vl">${dv}<small>${H.esc(r.unit)}</small></span>
         <span class="rgb" aria-hidden="true"><span class="ok" style="left:${pos(r.lo).toFixed(1)}%;width:${Math.max(2, pos(r.hi) - pos(r.lo)).toFixed(1)}%"></span>${r.v == null ? '' : `<span class="mk" style="left:${pos(r.v).toFixed(1)}%"></span>`}</span></button>`; }).join('');
     const bid = this._sens('battery', 'battery'), bv = bid ? H.num(h, bid) : P && P.attributes.battery != null ? Number(P.attributes.battery) : null;
-    const bat = bv == null ? '' : `<span class="bt${bv <= 15 ? ' lo' : ''}" title="${hgT('cards.plant.sensor_battery')}">${H.icon(bv <= 15 ? 'mdi:battery-alert-variant-outline' : 'mdi:battery-outline')}<span>${H.fmt(bv, 0)}%</span></span>`;
+    const bat = bv == null ? '' : `<span class="bt${bv <= 15 ? ' lo' : ''}" title="${hgT('cards.plant.sensor_battery')}">${H.icon(bv <= 15 ? 'mdi:battery-alert-variant-outline' : 'mdi:battery-outline')}<span>${H.pct(H.fmt(bv, 0))}</span></span>`;
     const nm = c.name || (P ? H.name(h, c.entity) : R[0] && R[0].id ? H.name(h, R[0].id).replace(/\s*(wilgotność|moisture|soil moisture)$/i, '') : hgT('cards.plant.plant'));
     const sub = bad.length ? bad.join(' · ') : hgT('cards.plant.all_good');
     const head = c.image ? `<div class="gh"><img class="ph2" src="${H.esc(c.image)}" alt=""><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(sub)}</small></span>${bat}</div>` : hgHead(bad.length ? 'mdi:flower-outline' : 'mdi:flower', nm, H.esc(sub), !bad.length, bat);

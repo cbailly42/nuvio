@@ -15,7 +15,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
     this._mw = sr.querySelector('.mw');
     this._make();
   }
-  _hd() { return `${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._cfgTitle ? this._config.title : hgT('common.map'))}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} ${hgT('cards.map.people')} · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} ${hgT('cards.map.zones')}</span>`; }
+  _hd() { return `${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._cfgTitle ? this._config.title : hgT('common.map'))}</span><span class="sp"></span><span class="note">${hgT('cards.map.people_count', { count: this._config.entities.filter((e) => String(e).startsWith('person.')).length })} · ${hgT('cards.map.zones_count', { count: this._config.entities.filter((e) => String(e).startsWith('zone.')).length })}</span>`; }
   _errHtml() { return `<div class="ph"><b>${hgT('cards.map.map_unavailable')}</b>${H.esc(this._err.message)}</div>`; }
   async _make() {
     const c = this._config;

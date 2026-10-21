@@ -29,7 +29,7 @@ ha-card.glass{ padding:0; }
     const ic = ok ? 'mdi:check' : c.icon || (s && s.attributes.icon) || 'mdi:script-text-play-outline';
     const sub = un ? hgT('cards.script.script_unavailable') : run ? hgT('cards.script.running') : ok ? hgT('cards.script.started') : c.subtitle;
     return `<ha-card class="glass ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${c.color}">
-      <button class="b" data-act="run" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${H.esc(sub)}" aria-busy="${!!run}">
+      <button class="b" data-act="run" ${un || run ? 'disabled' : ''} aria-label="${H.lv(H.esc(nm), `${H.esc(sub)}`)}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ic)}</span><span class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></span></button></ha-card>`;
   }
   onAct(a, t, e) {

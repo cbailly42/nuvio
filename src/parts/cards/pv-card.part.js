@@ -55,9 +55,9 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
     for (const st of c.strings) { const v = hgW(h, st.entity || st.power); kv.push([st.name, v != null ? [H.fmt(v, 0), 'W'] : ['–', '']]); }
     if (c.temperature) kv.push([hgT('cards.pv.inverter_temperature'), tmp != null ? [H.fmt(tmp, 1), '°C'] : ['–', '']]);
     const L = this._last;
-    const last = L && L.d ? `${hgT('cards.pv.last_production')}: <b>${H.esc(L.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.` : L ? hgT('cards.pv.no_production_in_statistics') : '';
+    const last = L && L.d ? `${H.lv(hgT('cards.pv.last_production'), `<b>${H.esc(L.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}</b> · ${H.fmt(L.s, 2)} kWh.`)}` : L ? hgT('cards.pv.no_production_in_statistics') : '';
     const note = !on ? `<div class="pvn">${last} ${hgT('cards.pv.days_without_inverter_data')}</div>`
-      : dst && H.ok(dst) ? `<div class="pvn" style="background:var(--hg-accent-faint)">${hgT('cards.pv.inverter_state')}: ${H.esc(H.t(h, dst))}</div>` : '';
+      : dst && H.ok(dst) ? `<div class="pvn" style="background:var(--hg-accent-faint)">${H.lv(hgT('cards.pv.inverter_state'), `${H.esc(H.t(h, dst))}`)}</div>` : '';
     return `<ha-card class="glass warm ${on ? 'on' : 'off'}" style="--c:${col}"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
         <button class="ib kebab" data-act="more" aria-label="${hgT('cards.pv.inverter_details')}" title="${hgT('cards.pv.details_and_history')}">${H.icon('mdi:dots-vertical')}</button></div>
       <div class="st"><span class="bd">${H.icon(on ? 'mdi:white-balance-sunny' : 'mdi:solar-panel')}</span><div><b>${lbl}</b><span>${on ? hgT('cards.pv.updated_ago', { time: H.esc(since) }) : since ? hgT('cards.pv.last_data_since', { time: H.esc(since) }) : hgT('cards.pv.no_entity')}</span></div></div>

@@ -52,7 +52,7 @@ const hgColor = window.__hgColor || (window.__hgColor = {
     const P = hgOverlay.popover(this.anchor(inp), html, { onClose: () => { this.cur = null; if (val !== v0) inp.dispatchEvent(new Event('change', { bubbles: true, composed: true })); try { inp.focus({ preventScroll: true }); } catch (e) { /* bez fokusu */ } } });
     const el = P.el, sv = el.querySelector('.hgc-sv'), hue = el.querySelector('.hgc-hue'), hx = el.querySelector('.hgc-in');
     const paint = (from) => { el.querySelector('.hgc').style.cssText = `--h:${Math.round(h)};--c:${val};--x:${(s * 100).toFixed(1)}%;--y:${((1 - v) * 100).toFixed(1)}%`;
-      sv.setAttribute('aria-valuetext', `${Math.round(s * 100)}%, ${Math.round(v * 100)}%`); if (from !== 'hue') hue.value = Math.round(h); if (from !== 'hex') { hx.value = val.slice(1); hx.parentNode.classList.remove('bad'); }
+      sv.setAttribute('aria-valuetext', `${H.pct(Math.round(s * 100))}, ${H.pct(Math.round(v * 100))}`); if (from !== 'hue') hue.value = Math.round(h); if (from !== 'hex') { hx.value = val.slice(1); hx.parentNode.classList.remove('bad'); }
       for (const b of el.querySelectorAll('.hgc-sw')) b.setAttribute('aria-pressed', String(b.dataset.c === val)); };
     const set = (from) => { val = hgColorRgb(h, s, v); inp.value = val.toLowerCase(); inp.style.setProperty('--hgc', val); inp.dispatchEvent(new Event('input', { bubbles: true, composed: true })); paint(from); };
     const pick = (hex, from) => { const c = hgColorHex(hex); if (!c) return false; const [h2, s2, v2] = hgColorHsv(c); if (s2 > 0 && v2 > 0) h = h2; s = s2; v = v2; val = c; inp.value = c.toLowerCase(); inp.style.setProperty('--hgc', c); inp.dispatchEvent(new Event('input', { bubbles: true, composed: true })); paint(from); return true; };

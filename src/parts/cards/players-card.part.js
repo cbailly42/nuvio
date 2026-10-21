@@ -47,7 +47,7 @@ class HGPlayersCard extends HGBase {
       if (t.dataset.act === 'src' && t.value) H.call(this._hass, 'media_player', 'select_source', { entity_id: en, source: t.value });
       t.blur(); if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); }
     });
-    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = H.pct(t.value); } }, { passive: true });
     this.shadowRoot.addEventListener('focusout', () => { if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); } });
   }
   css() {
@@ -128,7 +128,7 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
         ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
     const unN = [...new Set(un.map(nm))];
     const unH = unN.length ? `<div class="un">${hgT('cards.players.unavailable')}${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
-    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? `${act.length} ${hgT('cards.players.active')}` : hgT('cards.players.nothing_playing')}</span></div>
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? hgT('cards.players.active_count', { count: act.length }) : hgT('cards.players.nothing_playing')}</span></div>
       ${big ? `<div class="big">${big}</div>` : ''}${sm ? `<div class="sm">${sm}</div>` : ''}${!big && !sm ? `<div class="empty">${hgT('cards.players.no_available_players')}</div>` : ''}${unH}</ha-card>`;
   }
   afterRender() { hgNP.after(this); }

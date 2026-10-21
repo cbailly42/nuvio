@@ -69,7 +69,7 @@ class HGRoomCard extends HGBase {
       const v = Number(t.value), en = t.dataset.e;
       return v <= 0 ? H.call(this._hass, 'light', 'turn_off', { entity_id: en }) : H.call(this._hass, 'light', 'turn_on', { entity_id: en, brightness_pct: v });
     });
-    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && (t.dataset.act === 'bri' || t.dataset.act === 'vol')) { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && (t.dataset.act === 'bri' || t.dataset.act === 'vol')) { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = H.pct(t.value); } }, { passive: true });
   }
   connectedCallback() {
     window.addEventListener('location-changed', this._onLoc); window.addEventListener('popstate', this._onLoc);
@@ -413,7 +413,7 @@ ha-card.wmc{ gap:var(--s2); }
       <div class="wmr"><div class="wmv ph-${ph}" style="--spd:${spd}s">${svg}</div>
         <div class="wmi"><div class="wmt" aria-label="${H.esc(rem ? hgT('cards.room.remaining_time', { time: rem }) : big)}">${big}</div>${endT ? `<div class="wme">${hgT('cards.room.ends')} ${H.esc(endT)}</div>` : ''}
           ${pill ? `<span class="wmp"><i></i>${H.esc(pill)}</span>` : ''}
-          ${sr.length ? `<div class="wsr">${sr.map(([e, ic, v, l]) => `<button data-act="more" data-e="${H.esc(e)}" title="${H.esc(l)}" aria-label="${H.esc(l + ': ' + v)}">${H.icon(ic)}${H.esc(v)}</button>`).join('')}</div>` : ''}</div></div>
+          ${sr.length ? `<div class="wsr">${sr.map(([e, ic, v, l]) => `<button data-act="more" data-e="${H.esc(e)}" title="${H.esc(l)}" aria-label="${H.esc(H.lv(l, v))}">${H.icon(ic)}${H.esc(v)}</button>`).join('')}</div>` : ''}</div></div>
     </ha-card></div>`;
   }
   /* schody: widok z boku, dwie żarówki w rzeczywistych miejscach (świecą wg jasności/koloru, płynne przejście), czujniki ruchu dół/góra z falami,
@@ -426,7 +426,7 @@ ha-card.wmc{ gap:var(--s2); }
     const info = U2.co.map(([e, l]) => { const v = num(e); return v != null ? [`${H.fmt(v, 1)}°`, l] : null; }).filter(Boolean);
     return `<div class="blk stb"><ha-card class="glass cwc ${on ? 'heat' : ''}" style="--f:${fr.toFixed(3)};--tf:0">
       <div class="sth"><div><b>${H.esc(U2.title)}</b><span class="stf">${hgT('cards.room.hot_water_tank')}</span></div><button class="ib" data-act="more" data-e="${H.esc(U2.tank)}" aria-label="${hgT('cards.room.temperature_history')}">${H.icon('mdi:arrow-top-right')}</button></div>
-      <div class="cwm"><div class="cwt" role="img" aria-label="${hgT('cards.room.hot_water_tank_top')}: ${t != null ? H.fmt(t, 0) + '°C' : hgT('common.no_data')}"><i class="fl"></i>${on ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+      <div class="cwm"><div class="cwt" role="img" aria-label="${H.lv(hgT('cards.room.hot_water_tank_top'), t != null ? H.fmt(t, 0) + '°C' : hgT('common.no_data'))}"><i class="fl"></i>${on ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
         <div class="cwv"><span class="cwn">${t != null ? H.fmt(t, 0) : '–'}<sup>°C</sup></span><span class="cws">${on ? `${H.icon('mdi:heat-wave')}${hgT('cards.room.heating')}` : !swOn ? hgT('common.off_masc') : hgT('cards.room.not_heating')}</span></div>
         <div class="cwi">${pw != null ? `<div class="cwp ${on ? 'on' : ''}"><b>${H.fmt(pw, 0)}<em>W</em></b><small>${hgT('cards.room.heating_power')}</small></div>` : ''}</div></div>
       ${H.ok(sw) ? `<div class="stg2"><label class="cp ${swOn ? 'on' : ''}"><b>${hgT('common.power')}</b>${this.toggleHtml(swOn, 'cwus', false, hgT('cards.room.hot_water_top_power')).replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(U2.switch)}"`)}</label></div>` : ''}
@@ -448,7 +448,7 @@ ha-card.wmc{ gap:var(--s2); }
     return `<div class="blk stb"><ha-card class="glass cwc ${heat ? 'heat' : ''} ${on ? '' : 'off'}" style="--f:${f2(fr)};--tf:${tf != null ? f2(tf) : 0}">
       <div class="sth"><div><b>${H.esc(CW.title || hgT('cards.room.hot_water'))}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="${hgT('cards.room.water_heater_details')}">${H.icon('mdi:arrow-top-right')}</button></div>
       <div class="cwm">
-        <div class="cwt" role="img" aria-label="${hgT('cards.room.tank')}: ${cur != null ? H.fmt(cur, 0) + '°C' : hgT('common.no_data')}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+        <div class="cwt" role="img" aria-label="${H.lv(hgT('cards.room.tank'), cur != null ? H.fmt(cur, 0) + '°C' : hgT('common.no_data'))}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
         <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}${hgT('cards.room.heating')}${isNaN(tgt) ? '' : ' ' + hgT('cards.room.to_temp', { temp: H.fmt(tgt, 0) })}` : H.esc(state)}</span>
           <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="${hgT('cards.room.lower_setpoint')}">${H.icon('mdi:minus')}</button><span class="cwg"><small>${hgT('cards.room.setpoint')}</small><b>${isNaN(tgt) ? '–' : H.fmt(tgt, 0) + '°'}</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="${hgT('cards.room.raise_setpoint')}">${H.icon('mdi:plus')}</button></div></div>
         <div class="cwi">${info.map(([v, u, l, hot]) => `<div class="cwp ${hot ? 'on' : ''}"><b>${H.esc(v)}<em>${H.esc(u)}</em></b><small>${H.esc(l)}</small></div>`).join('')}</div>
@@ -457,7 +457,7 @@ ha-card.wmc{ gap:var(--s2); }
   }
   _stairs(ST) {
     const h = this._hass, st = (e) => h.states[e], f = (v) => Number(v).toFixed(2);
-    const ago = (s) => { if (!s) return ''; const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)); const x = m < 1 ? '' : m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h` : `${Math.floor(m / 1440)} d`; return x ? hgT('cards.room.stairs.for_time', { time: x }) : hgT('cards.room.stairs.for_moment'); };
+    const ago = (s) => { if (!s) return ''; const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)); const x = m < 1 ? '' : m < 60 ? hgT('cards.room.stairs.duration_minutes', { minutes: m }) : m < 1440 ? hgT('cards.room.stairs.duration_hours', { hours: Math.floor(m / 60) }) : hgT('cards.room.stairs.duration_days', { days: Math.floor(m / 1440) }); return x ? hgT('cards.room.stairs.for_time', { time: x }) : hgT('cards.room.stairs.for_moment'); };
     const lt = (k) => { const e = ST[k].light, s = st(e), ok = H.ok(s), on = ok && s.state === 'on';
       const b = on ? (s.attributes.brightness != null ? s.attributes.brightness / 255 : 1) : 0;
       return { e, s, ok, on, b, g: on ? Math.max(.5, Math.min(1, .4 + b * .6)) : 0 }; };
@@ -482,7 +482,7 @@ ha-card.wmc{ gap:var(--s2); }
       return `<g class="lmp ${o.on ? 'on' : ''}" style="--g:${f(o.g)}" data-act="stb" data-e="${H.esc(o.e)}" role="button" tabindex="0" aria-label="${H.esc(hgT('cards.room.stairs.bulb_state', { bulb: bulb[k], state: o.ok ? (o.on ? hgT('cards.room.stairs.bulb_on', { percent: p }) : hgT('cards.room.stairs.bulb_off')) : hgT('cards.room.stairs.bulb_unavailable') }))}">
         <polygon class="cone" fill="url(#stcone)" points="${P([[cx - 5, cy + 6], [cx + 5, cy + 6], [sx + RU * .9, sy], [sx - RU * .9, sy]])}"/>
         <circle class="halo" cx="${cx}" cy="${cy}" r="40" fill="url(#sthalo)"/><circle class="bulb" cx="${cx}" cy="${cy}" r="7"/>
-        <text class="tl" x="${tx}" y="${cy - 6}" text-anchor="${an}">${nm[k]}</text><text class="ts" x="${tx}" y="${cy + 7}" text-anchor="${an}">${o.ok ? (o.on ? `${p || 1}%` : hgT('common.off_short')) : '—'}</text>
+        <text class="tl" x="${tx}" y="${cy - 6}" text-anchor="${an}">${nm[k]}</text><text class="ts" x="${tx}" y="${cy + 7}" text-anchor="${an}">${o.ok ? (o.on ? H.pct(p || 1) : hgT('common.off_short')) : '—'}</text>
         <circle class="hit" cx="${cx}" cy="${cy}" r="24"/></g>
         ${H.ok(ms) ? `<g class="mk ${mOn ? 'on' : ''}"><circle class="rp" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="4"/><circle class="dt" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="3"/><text class="ts" x="${side < 0 ? tx - 11 : tx + 11}" y="${cy + 22}" text-anchor="${an}">${mOn ? hgT('cards.room.motion_now') : hgT('cards.room.stairs.motion_ago', { time: ago(ms) })}</text></g>` : ''}`; };
     const svg = `<div class="sv3"><svg viewBox="0 ${YT - LO - 26} 440 ${Y0 - YT + LO + 34}" aria-hidden="false"><defs>
@@ -497,11 +497,11 @@ ha-card.wmc{ gap:var(--s2); }
     const gp = ST.group && st(ST.group), gOn = H.ok(gp) && gp.state === 'on';
     const grp = H.ok(gp) ? `<label class="sgl"><span>${hgT('cards.room.all')}</span>${this.toggleHtml(gOn, 'stb', false, hgT('cards.room.stair_lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : '';
     const au = st(ST.automation), auOn = au && au.state === 'on';
-    const chip = (k, lab, s, on) => H.ok(s) ? `<button class="sm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(ST[k].motion)}" aria-label="${H.esc(`${lab}: ${on ? hgT('common.state_motion') : hgT('cards.room.stairs.no_motion_ago', { time: ago(s) })}`)}">${H.icon(on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off')}<span><b>${lab}</b><small>${on ? hgT('cards.room.motion_now') : `${hgT('cards.room.state_no_motion_cap')} ${ago(s)}`}</small></span><i></i></button>` : '';
+    const chip = (k, lab, s, on) => H.ok(s) ? `<button class="sm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(ST[k].motion)}" aria-label="${H.esc(H.lv(lab, on ? hgT('common.state_motion') : hgT('cards.room.stairs.no_motion_ago', { time: ago(s) })))}">${H.icon(on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off')}<span><b>${lab}</b><small>${on ? hgT('cards.room.motion_now') : `${hgT('cards.room.state_no_motion_cap')} ${ago(s)}`}</small></span><i></i></button>` : '';
     return `<div class="blk stb"><ha-card class="glass stc ${anyOn ? 'lit' : 'idle'}">
       <div class="sth"><div><b>${hgT('cards.room.stair_lighting')}</b><span class="stf" aria-live="polite">${fade ? hgT('cards.room.turning_off_in_s', { seconds: rem }) : anyOn ? hgT('cards.room.stairs.state_lit') : hgT('common.off_neut')}</span></div>${ring}</div>
       ${svg}
-      <div class="stg2">${['bottom', 'top'].map((k) => { const o = L[k]; return o.ok ? `<label class="cp ${o.on ? 'on' : ''}"><b>${nm[k]}</b><small>${o.on ? Math.round(o.b * 100) + '%' : hgT('common.off_short')}</small>${this.toggleHtml(o.on, 'stb', false, bulb[k]).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(o.e)}"`)}</label>` : ''; }).join('')}
+      <div class="stg2">${['bottom', 'top'].map((k) => { const o = L[k]; return o.ok ? `<label class="cp ${o.on ? 'on' : ''}"><b>${nm[k]}</b><small>${o.on ? H.pct(Math.round(o.b * 100)) : hgT('common.off_short')}</small>${this.toggleHtml(o.on, 'stb', false, bulb[k]).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(o.e)}"`)}</label>` : ''; }).join('')}
         ${H.ok(gp) ? `<label class="cp ${gOn ? 'on' : ''}"><b>${hgT('cards.room.all')}</b>${this.toggleHtml(gOn, 'stb', false, hgT('cards.room.stair_lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : ''}
         ${au ? `<label class="cp ${auOn ? 'on' : ''}"><b>${hgT('cards.room.automatic')}</b>${this.toggleHtml(auOn, 'sta', false, hgT('cards.room.stairs_automation')).replace('data-act="sta"', `data-act="sta" data-e="${H.esc(ST.automation)}"`)}</label>` : ''}</div>
     </ha-card></div>`;
@@ -557,7 +557,7 @@ ha-card.wmc{ gap:var(--s2); }
     const icon = (P && P.icon) || (main && HG_DOM_ICON[main.split('.')[0]]) || (met[0] && HG_DC_ICON[st(met[0][0]).attributes.device_class]) || 'mdi:devices';
     const on = main ? ['on', 'open', 'unlocked'].includes(st(main).state) : active && !!se;
     const U = { d: hgT('cards.room.unit_days'), min: 'min', h: 'h', s: 's' };
-    const mx = met.map(([e, l]) => { const [v, u] = this._num(st(e)); return `<button class="m" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(`${l}: ${v} ${u}`)}"><b>${H.esc(v)}<em>${H.esc(U[u] || u)}</em></b><span>${H.esc(l)}</span></button>`; }).join('');
+    const mx = met.map(([e, l]) => { const [v, u] = this._num(st(e)); return `<button class="m" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(H.lv(l, `${v} ${u}`))}"><b>${H.esc(v)}<em>${H.esc(U[u] || u)}</em></b><span>${H.esc(l)}</span></button>`; }).join('');
     const open = this._devOpen && this._devOpen.has(g.d);
     const rows = open ? rest.map((e) => {
       const s = st(e), dom = e.split('.')[0], nm = this._nm(e, e);
@@ -594,17 +594,17 @@ ha-card.wmc{ gap:var(--s2); }
       const mn = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)), dur = mn < 1 ? hgT('cards.room.a_moment') : mn < 60 ? `${mn} min` : mn < 1440 ? `${Math.floor(mn / 60)} h` : `${hgT('cards.room.days_count', { count: Math.floor(mn / 1440) })}`;
       const rel = isNaN(mn) ? '' : mn < 1 ? hgT('common.just_now') : on ? hgT('cards.room.for', { dur }) : hgT('cards.room.ago', { dur });
       const kind = isD ? 'door' + (dc === 'window' ? ' win' : '') : occ ? 'occ' : 'mot';
-      return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(t + ': ' + st + (rel ? ', ' + rel : ''))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`);
+      return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(H.lv(t, st + (rel ? ', ' + rel : '')))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`);
     const blk = (k, rows, n) => { const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${n}</i></div>${rows}</ha-card></div>`); };
     const dimm = (s) => (s.attributes.supported_color_modes || []).some((x) => x !== 'onoff') || s.attributes.brightness != null;
     // światła
     const L = S.light.filter(ok);
     if (L.length) { const d = HG_SEC.find((x) => x[0] === 'light'), nOn = L.filter((e) => h.states[e].state === 'on').length;
-      blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${nOn ? hgT('cards.room.lights_on_of_total', { on: nOn, total: L.length }) : L.length}</i></div><div class="lg">${L.map((e) => {
+      blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${nOn ? hgT('cards.room.lights_on_of_total', { count: nOn, total: L.length }) : L.length}</i></div><div class="lg">${L.map((e) => {
       const s = h.states[e], on = s.state === 'on', dom = e.split('.')[0], nm = this._nm(e, hgT('cards.room.light'));
       const pct = on && s.attributes.brightness != null ? Math.round(s.attributes.brightness / 2.55) : on ? 100 : 0, dm = dom === 'light' && dimm(s);
-      const br = dm && on ? `<div class="br"><input type="range" min="0" max="100" step="1" value="${pct}" style="--v:${pct}%" data-act="bri" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.brightness_aria', { name: nm }))}"><output>${pct}%</output></div>` : '';
-      return `<div class="lt ${on ? 'on' : ''}"><button class="ltb" data-act="tgl" data-e="${H.esc(e)}" aria-pressed="${on}" aria-label="${H.esc(nm + ': ' + (on ? hgT('cards.room.state_on_lower') : hgT('cards.room.off')))}"><span class="lti">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</span><span class="ltx"><b>${H.esc(nm)}</b><span>${on ? (dm ? `${hgT('common.on_neut')} · ${pct}%` : hgT('common.on_neut')) : hgT('common.off_neut')}</span></span></button><button class="ltm" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.details_aria', { name: nm }))}">${H.icon('mdi:dots-horizontal')}</button>${br}</div>`;
+      const br = dm && on ? `<div class="br"><input type="range" min="0" max="100" step="1" value="${pct}" style="--v:${pct}%" data-act="bri" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.brightness_aria', { name: nm }))}"><output>${H.pct(pct)}</output></div>` : '';
+      return `<div class="lt ${on ? 'on' : ''}"><button class="ltb" data-act="tgl" data-e="${H.esc(e)}" aria-pressed="${on}" aria-label="${H.esc(H.lv(nm, on ? hgT('cards.room.state_on_lower') : hgT('cards.room.off')))}"><span class="lti">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</span><span class="ltx"><b>${H.esc(nm)}</b><span>${on ? (dm ? `${hgT('common.on_neut')} · ${H.pct(pct)}` : hgT('common.on_neut')) : hgT('common.off_neut')}</span></span></button><button class="ltm" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.details_aria', { name: nm }))}">${H.icon('mdi:dots-horizontal')}</button>${br}</div>`;
     }).join('')}</div></ha-card></div>`); }
     // klimatyzacja (karta hg-ac-card wstawiana po renderze) + bojler/podgrzewacz jako wiersz
     for (const e of S.clim.filter((x) => x.startsWith('climate.') && ok(x))) blocks.push(`<div class="blk"><div class="acslot" data-ac="${H.esc(e)}"></div></div>`);
@@ -618,7 +618,7 @@ ha-card.wmc{ gap:var(--s2); }
     const C = S.cover.filter(ok);
     if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, hgT('cards.room.cover')), p = s.attributes.current_position, cf = s.attributes.supported_features ?? 11;
       const st = ['open', 'closed', 'opening', 'closing'].includes(s.state) ? hgTD('cards.room.cover_states.' + s.state, s.state) : H.stateLabel(s.state);
-      return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + p + '%' : ''}</span></button>
+      return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + H.pct(p) : ''}</span></button>
         <div class="bts">${cf & 1 ? `<button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.open')}">${H.icon('mdi:arrow-up')}</button>` : ''}${cf & 8 ? `<button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.stop')}">${H.icon('mdi:stop')}</button>` : ''}${cf & 2 ? `<button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.close')}">${H.icon('mdi:arrow-down')}</button>` : ''}</div></div>`; }).join(''), C.length);
     // kamery: osadzona karta kamery (miniatura, podgląd na żywo, pełny ekran)
     for (const e of S.cam) if (ok(e)) blocks.push(`<div class="blk"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`);

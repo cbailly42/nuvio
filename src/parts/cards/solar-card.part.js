@@ -51,7 +51,7 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     const c = this._config;
     const ts0 = H.st(this._hass, c.today_entity);
     const off0 = c.today_entity && (!ts0 || ts0.state === 'unavailable');
-    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.esc(c.today_entity)}: ${hgT('common.state_unavailable_masc')}">${H.esc(c.offline_label)}</span>` : ''}
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.lv(H.esc(c.today_entity), hgT('common.state_unavailable_masc'))}">${H.esc(c.offline_label)}</span>` : ''}
       ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgT('common.expand')}" title="${hgT('common.details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     if (!c.statistic || this._err || (this._data && !this._data.v.has)) {
       return `<ha-card class="glass"><div class="top">${hd}</div><div class="ph" style="padding:0 14px"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || c.statistic || '')}</div></ha-card>`;
@@ -84,8 +84,8 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
           <path d="${area}" fill="url(#g)"/><path class="ln" d="${dl}"/></svg>
         <div class="band" style="left:${xs[sel]}%"></div>
         <span class="dot" style="left:${xs[sel]}%;top:${pts[sel][1]}%"></span>
-        <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.fmt(Math.abs(delta), 2) + '%'}</span></div>
-        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.esc(d.toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(vals[i], 1)} kWh">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
+        <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.pct(H.fmt(Math.abs(delta), 2))}</span></div>
+        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.lv(H.esc(d.toLocaleDateString(c.locale || HG_LOC())), `${H.fmt(vals[i], 1)} kWh`)}">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
       </div></ha-card>`;
   }
   onAct(a, el) {

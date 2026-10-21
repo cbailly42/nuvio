@@ -36,7 +36,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
       const s = H.st(this._hass, x.entity), un = !H.ok(s), run = s && s.state === 'on', ok = this._ok === x.entity && !run;
       const nm = x.name || (s && s.attributes.friendly_name) || x.entity;
       const sub = un ? hgT('common.state_unavailable_masc') : run ? hgT('cards.scenes.running') : ok ? hgT('cards.scenes.started') : hgT('cards.scenes.run');
-      return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${sub}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
+      return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.lv(H.esc(nm), `${sub}`)}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ok ? 'mdi:check' : x.icon || (s && s.attributes.icon) || 'mdi:play')}</span><span class="tx">${H.esc(nm)}</span></button>`;
     }).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div><div class="row">${items}</div></ha-card>`;

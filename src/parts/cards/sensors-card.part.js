@@ -102,13 +102,13 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
       const luxT = lux && H.ok(lux) ? ({ bright: hgT('cards.sensors.bright'), dim: hgT('cards.sensors.dim'), dark: hgT('cards.sensors.dark') }[lux.state] || `${H.fmt(lux.state, 0)} ${lux.attributes.unit_of_measurement || ''}`.trim()) : '';
       const st = x.un ? hgT('common.unavailable_masc') : x.on ? String(d[3]) : String(d[4]);
       const sub = [`<em>${H.esc(st)}</em>`, x.s && !x.un ? hgRel(new Date(x.s.last_changed)) : '', x.area ? H.esc(x.area) : '', luxT ? H.esc(luxT) : ''].filter(Boolean).join(' · ');
-      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – ${hgT('cards.sensors.history')}" aria-label="${H.esc(this._nm(x.e))}: ${H.esc(st)}">
+      return `<button class="t lift ${x.cat} ${x.on ? 'on' : ''} ${x.un ? 'un' : ''}" data-act="more" data-e="${H.esc(x.e)}" title="${H.esc(this._nm(x.e))} – ${hgT('cards.sensors.history')}" aria-label="${H.lv(H.esc(this._nm(x.e)), `${H.esc(st)}`)}">
         <span class="ic">${H.icon(x.on ? d[1] : d[2])}</span><span class="tx"><b>${H.esc(this._nm(x.e))}</b><span>${sub}</span></span></button>`;
     };
     const ok = sel.filter((x) => !x.un), un = sel.filter((x) => x.un);
-    const sum = [`<span class="a"><b>${act.length}</b> ${hgT('cards.sensors.active_label', { count: act.length })}</span>`, mot ? `<span><b>${mot}</b> ${hgT('common.state_motion')}</span>` : '',
-      `<span class="o"><b>${opn}</b> ${hgT('cards.sensors.open_label', { count: opn })}</span>`, alr ? `<span class="a"><b>${alr}</b> ${hgT('cards.sensors.alarm_label')}</span>` : '',
-      unN ? `<span><b>${unN}</b> ${hgT('cards.sensors.unavailable')}</span>` : ''].join('');
+    const sum = [`<span class="a"><b>${act.length}</b> ${hgT('cards.sensors.active_label', { count: act.length })}</span>`, mot ? `<span><b>${mot}</b> ${hgT('cards.sensors.motion_label', { count: mot })}</span>` : '',
+      `<span class="o"><b>${opn}</b> ${hgT('cards.sensors.open_label', { count: opn })}</span>`, alr ? `<span class="a"><b>${alr}</b> ${hgT('cards.sensors.alarm_label', { count: alr })}</span>` : '',
+      unN ? `<span><b>${unN}</b> ${hgT('cards.sensors.unavailable_label', { count: unN })}</span>` : ''].join('');
     const tabs = HG_SENS_TABS.filter(([k]) => k === 'all' || cnt(k)).map(([k, l]) => `<button class="tb ${tab === k ? 'sel' : ''}" data-act="tab" data-k="${k}" aria-pressed="${tab === k}">${l}<i>${cnt(k)}</i></button>`).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
       <div class="sum">${sum}</div><div class="tabs" role="toolbar" aria-label="${hgT('cards.sensors.sensor_filter')}">${tabs}</div>

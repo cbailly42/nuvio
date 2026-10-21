@@ -39,13 +39,13 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
     const pr = Math.round(d.pct);
     if (c.compact) {
       const kw = d.tot >= 1000 ? `${H.fmt(d.tot / 1000, 2)} kW` : `${H.fmt(d.tot, 0)} W`;
-      return `<ha-card class="glass warm cmp" title="${H.esc(`${c.calc_label}: ${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`)}">${hd}
-        <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
+      return `<ha-card class="glass warm cmp" title="${H.esc(H.lv(c.calc_label, `${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`))}">${hd}
+        <div class="row"><b>${kw}</b><span>${H.pct(pr)} · ${H.esc(c.labels[d.lvl])}</span></div>
         <div class="bar" role="meter" aria-label="${hgT('cards.energy.load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
     }
-    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = H.lv(c.calc_label, `${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`);
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
-      <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
+      <div class="sub">${H.pct(pr)} · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
       <div class="scale"><span>0</span><span>50</span><span>100</span></div>
       <div class="bar" role="meter" aria-label="${hgT('cards.energy.load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
   }

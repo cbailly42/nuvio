@@ -67,7 +67,7 @@ button.lc:focus-visible{ outline:2px solid var(--lk); outline-offset:2px; }
     if (this._pend && (s.state !== this._pendFrom || Date.now() - this._pendT > 9000)) this._pend = null;
     const V = this._view(s), ok = H.ok(s), lk = V.k === 'locked', unl = ['unlocked', 'open'].includes(V.k), mv = V.k === 'move';
     const b = this._bat(), bv = b === '@attr' ? Number(s.attributes.battery_level) : b && h.states[b] ? Number(h.states[b].state) : NaN;
-    const bi = !isFinite(bv) ? '' : `<span class="bt ${bv <= 20 ? 'low' : ''}" title="${H.esc(hgT('common.battery'))}">${H.icon(bv <= 10 ? 'mdi:battery-alert-variant-outline' : bv <= 35 ? 'mdi:battery-30' : bv <= 70 ? 'mdi:battery-60' : 'mdi:battery-high')}<span>${H.esc(H.fmt(bv, 0))}%</span></span>`;
+    const bi = !isFinite(bv) ? '' : `<span class="bt ${bv <= 20 ? 'low' : ''}" title="${H.esc(hgT('common.battery'))}">${H.icon(bv <= 10 ? 'mdi:battery-alert-variant-outline' : bv <= 35 ? 'mdi:battery-30' : bv <= 70 ? 'mdi:battery-60' : 'mdi:battery-high')}<span>${H.esc(H.pct(H.fmt(bv, 0)))}</span></span>`;
     const d = this._door(), ds = d && h.states[d], dOpen = ds && ds.state === 'on';
     const hint = !ok ? '' : mv ? '' : lk ? (c.hold !== false ? hgT('cards.smartlock.hold_to_unlock') : hgT('cards.smartlock.tap_to_unlock')) : V.k === 'jammed' ? hgT('cards.smartlock.check_the_door_and') : hgT('cards.smartlock.tap_to_lock');
     const canOpen = ok && (s.attributes.supported_features & 1) && !mv;

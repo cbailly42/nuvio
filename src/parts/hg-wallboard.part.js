@@ -201,7 +201,7 @@ Object.assign(HGWall, {
   bdTmp(h, B) { if (typeof HGAreas === 'undefined') return ''; let R = []; try { R = HGAreas.model(h).rooms.filter((a) => a.temp && !B.roomX.includes(a.id)); } catch (e) { return ''; }
     const L = R.map((a) => ({ a, v: HGAreas.env(h, a) })).filter((x) => x.v.t != null).slice(0, innerWidth < 640 ? 4 : 5); if (!L.length) return '';
     return `<div class="nb-w nb-wr">${L.map(({ a, v }) => { const p = Math.max(4, Math.min(100, Math.round((v.t - 10) * 5)));
-      return `<div class="nb-g" style="--p:${p}" title="${H.esc(a.name)}"><span>${H.esc(H.fmt(v.t, 0))}°${B.bk.hum && v.u != null ? `<u>${H.esc(H.fmt(v.u, 0))}%</u>` : ''}</span><small>${H.esc(a.name)}</small></div>`; }).join('')}</div>`; },
+      return `<div class="nb-g" style="--p:${p}" title="${H.esc(a.name)}"><span>${H.esc(H.fmt(v.t, 0))}°${B.bk.hum && v.u != null ? `<u>${H.esc(H.pct(H.fmt(v.u, 0)))}</u>` : ''}</span><small>${H.esc(a.name)}</small></div>`; }).join('')}</div>`; },
   /* ---- UI ustawień ---- */
   /* lista wybranych + „Dodaj”: sel/opt = [{ k, l, s, ic, x }]; x = dodatkowe przyciski w wierszu; o.one = jedna wartość (przycisk „Zmień”), o.fix = wiersz bez ✕ */
   pk(id, sel, opt, o) { o = o || {}; const open = this._dd === id && opt.length, v = (k) => H.esc(id + '|' + k);
