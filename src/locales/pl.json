@@ -706,6 +706,13 @@
       "picker_description": "Nazwa, stan i przełącznik w jednym wierszu",
       "picker_name": "Nuvio – Kafelek przełącznika"
     },
+    "updates": {
+      "available_count": "Dostępne: {count}",
+      "everything_up_to_date": "Wszystko aktualne",
+      "picker_description": "Dostępne aktualizacje w HA",
+      "picker_name": "Home Glass – Aktualizacje",
+      "updates": "Aktualizacje"
+    },
     "vacuum": {
       "a_vacuum_or_lawn": "Encja vacuum lub lawn_mower",
       "choose_a_vacuum": "Wybierz odkurzacz",

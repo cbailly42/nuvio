@@ -1096,8 +1096,8 @@ cards.toggle.picker_description,parts/cards/toggle-card.part.js,18,hgTr,"Name, s
 cards.updates.updates,parts/cards/updates-card.part.js,9,hgTr,Updates,Aktualizacje,,,auto
 cards.updates.available_count,parts/cards/updates-card.part.js,9,hgTr,Available: {count},Dostępne: {count},count,expr,auto
 cards.updates.everything_up_to_date,parts/cards/updates-card.part.js,9,hgTr,Everything up to date,Wszystko aktualne,,,auto
-cards.updates.home_glass_updates,parts/cards/updates-card.part.js,14,hgTr,Home Glass – Updates,Home Glass – Aktualizacje,,load-time,manual
-cards.updates.available_updates_in_ha,parts/cards/updates-card.part.js,14,hgTr,Available updates in HA,Dostępne aktualizacje w HA,,load-time,manual
+cards.updates.picker_name,parts/cards/updates-card.part.js,14,hgTr,Home Glass – Updates,Home Glass – Aktualizacje,,load-time,auto
+cards.updates.picker_description,parts/cards/updates-card.part.js,14,hgTr,Available updates in HA,Dostępne aktualizacje w HA,,load-time,auto
 cards.vacuum.choose_a_vacuum,parts/cards/vacuum-card.part.js,6,hgTr,Choose a vacuum,Wybierz odkurzacz,,,auto
 cards.vacuum.a_vacuum_or_lawn,parts/cards/vacuum-card.part.js,6,hgTr,A vacuum or lawn_mower entity,Encja vacuum lub lawn_mower,,,auto
 common.cleaning,parts/cards/vacuum-card.part.js,8,hgTr,Cleaning,Sprząta,,,auto
