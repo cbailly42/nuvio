@@ -16,6 +16,7 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
     this._make();
   }
   _hd() { return `${H.icon(this._config.icon, 'ic')}<span class="tt">${H.esc(this._cfgTitle ? this._config.title : hgT('common.map'))}</span><span class="sp"></span><span class="note">${this._config.entities.filter((e) => String(e).startsWith('person.')).length} ${hgT('cards.map.people')} · ${this._config.entities.filter((e) => String(e).startsWith('zone.')).length} ${hgT('cards.map.zones')}</span>`; }
+  _errHtml() { return `<div class="ph"><b>${hgT('cards.map.map_unavailable')}</b>${H.esc(this._err.message)}</div>`; }
   async _make() {
     const c = this._config;
     // theme_mode: auto -> jasna/ciemna mapa razem ze schematem dashboardu (HGTheme), przełączana na żywo
@@ -27,7 +28,8 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
     const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
     if (mk !== this._mk) return;
     let el;
-    try { el = helpers.createCardElement(conf); } catch (e) { this._mw.innerHTML = `<div class="ph"><b>${hgT('cards.map.map_unavailable')}</b>${H.esc(e.message)}</div>`; return; }
+    this._err = null;
+    try { el = helpers.createCardElement(conf); } catch (e) { this._err = e || {}; this._mw.innerHTML = this._errHtml(); return; }
     el.layout = 'grid'; el.setAttribute('layout', 'grid');
     this._map = el; if (this._hass) el.hass = this._hass;
     this._mw.appendChild(el);
@@ -44,8 +46,8 @@ ha-card.glass{ display:flex; flex-direction:column; padding:var(--s2) var(--s2) 
   set hass(h) { this._hass = h; if (this._map) this._map.hass = h; }
   get hass() { return this._hass; }
   connectedCallback() {
-    /* karta spoza HGBase: nagłówek (tytuł domyślny, os. / strefy) przepisywany po nadejściu katalogu */
-    this._onLang = this._onLang || (() => { const d = this._config && this.shadowRoot.querySelector('.hd'); if (d) d.innerHTML = this._hd(); });
+    /* karta spoza HGBase: nagłówek (tytuł domyślny, os. / strefy) i komunikat błędu przepisywane po nadejściu katalogu */
+    this._onLang = this._onLang || (() => { const d = this._config && this.shadowRoot.querySelector('.hd'); if (d) d.innerHTML = this._hd(); if (this._err && this._mw) this._mw.innerHTML = this._errHtml(); });
     window.addEventListener('hg-lang', this._onLang);
     this._onScheme = this._onScheme || (() => { if (this._config && this._config.theme_mode === 'auto' && this._tm !== (HGTheme.dark ? 'dark' : 'light')) this._make(); });
     window.addEventListener('hg-scheme', this._onScheme); this._onScheme();
