@@ -8,7 +8,8 @@ DYN_PREFIXES = ('states.', 'weather.',
                 'cards.areas.climate_states.', 'cards.gauge.device_classes.',
                 'cards.players.states.', 'cards.purifier.modes.',
                 'cards.remote.presets.', 'cards.robots.options.',
-                'cards.weather.weekdays.')
+                'cards.weather.weekdays.',
+                'cards.room.device_states.', 'cards.room.washer_jobs.', 'cards.room.washer_states.', 'cards.room.cover_states.')
 PLURAL_SUFFIXES = ('zero', 'one', 'two', 'few', 'many', 'other')
 _PL = re.compile(r'^(.+)_(%s)$' % '|'.join(PLURAL_SUFFIXES))
 _CALL = re.compile(r'\bhgT(?:Lazy)?\(\s*(?:(?P<lit>(?P<q>[\'"])(?P<k>[^\'"\\\n]*)(?P=q))\s*(?=[,)]))?')

@@ -11,27 +11,21 @@ const HG_DOM_ICON = { light: 'mdi:lightbulb-outline', switch: 'mdi:toggle-switch
 /* --- komponenty urządzeń w widoku pokoju: jedna karta na fizyczne urządzenie (rejestr urządzeń), encje połączone wizualnie ---
    Profile (czajnik, poidełko, frytkownica, oczyszczacz) dobierane po modelu/nazwie urządzenia; pozostałe urządzenia: karta ogólna
    (główny przełącznik + do 3 kluczowych odczytów + „Więcej”). Pokazywane tylko dostępne encje z prawdziwymi wartościami. */
-const HG_ST_PL = { standby: 'Gotowość', idle: 'Bezczynny', heating: 'Grzeje', boiling: 'Gotuje', 'keep warm': 'Utrzymuje temperaturę', 'keep-warm': 'Utrzymuje temperaturę',
-  warming: 'Utrzymuje temperaturę', cooking: 'Gotuje', preheat: 'Rozgrzewa', preheating: 'Rozgrzewa', appointment: 'Zaplanowane', reservation: 'Zaplanowane', paused: 'Pauza', pause: 'Pauza',
-  completed: 'Gotowe', done: 'Gotowe', finished: 'Gotowe', running: 'Pracuje', working: 'Pracuje', shutdown: 'Wyłączone', off: 'Wyłączone', on: 'Włączone', auto: 'Automatyczny',
-  silent: 'Cichy', sleep: 'Nocny', favorite: 'Ulubiony', manual: 'Ręczny', normal: 'Normalny', smart: 'Inteligentny', 'intermittent': 'Przerywany' };
-const HG_ST_EN = { standby: 'Standby', idle: 'Idle', heating: 'Heating', boiling: 'Boiling', 'keep warm': 'Keeping warm', 'keep-warm': 'Keeping warm',
-  warming: 'Keeping warm', cooking: 'Cooking', preheat: 'Preheating', preheating: 'Preheating', appointment: 'Scheduled', reservation: 'Scheduled', paused: 'Paused', pause: 'Paused',
-  completed: 'Done', done: 'Done', finished: 'Done', running: 'Running', working: 'Running', shutdown: 'Off', off: 'Off', on: 'On', auto: 'Auto',
-  silent: 'Silent', sleep: 'Sleep', favorite: 'Favorite', manual: 'Manual', normal: 'Normal', smart: 'Smart', 'intermittent': 'Intermittent' };
+/* stany urządzeń (status / select): hgTD('cards.room.device_states.' + stan, spacja i - -> _) */
+const HG_ST_KEYS = ['standby', 'idle', 'heating', 'boiling', 'keep warm', 'keep-warm', 'warming', 'cooking', 'preheat', 'preheating', 'appointment', 'reservation', 'paused', 'pause', 'completed', 'done', 'finished', 'running', 'working', 'shutdown', 'off', 'on', 'auto', 'silent', 'sleep', 'favorite', 'manual', 'normal', 'smart', 'intermittent'];
 const HG_FAULT_OK = /^(0|no ?errors?|no ?faults?|none|normal|ok|brak)$/i;
 const HG_DEV_PROF = [
-  { id: 'washer', re: /washer|pralk|DA_WM/i, icon: 'mdi:washing-machine', name: 'Pralka', nameEn: 'Washer', metrics: [] },
-  { id: 'kettle', re: /kettle|czajnik/i, icon: 'mdi:kettle-outline', name: 'Czajnik', nameEn: 'Kettle', main: /(_on_p_|switch_status)/, status: /_status_p_|status$/, fault: /fault/,
-    metrics: [{ re: /_temperature_p_2_3|current.*water.*temp/, dom: 'sensor', label: 'Woda', en: 'Water', big: true }, { re: /target_temperature/, label: 'Cel', en: 'Target' }, { re: /keep_warm_temperature/, label: 'Utrzymanie', en: 'Keep warm' }],
-    warn: [{ re: /kettle_lifting/, on: 'Zdjęty z podstawy', en: 'Lifted off base', icon: 'mdi:arrow-up-bold-box-outline' }] },
-  { id: 'fountain', re: /pet_waterer|fountain|poidl/i, icon: 'mdi:fountain', name: 'Poidełko', nameEn: 'Pet fountain', main: /_on_p_/, status: /_mode_p_/, fault: /fault/,
-    metrics: [{ re: /filter_left_time/, label: 'Filtr', en: 'Filter' }, { re: /cotton_left_time/, label: 'Wkład', en: 'Cartridge' }, { re: /remain_clean_time/, label: 'Do mycia', en: 'Until cleaning' }],
-    warn: [{ re: /no_water_flag/, on: 'Brak wody', en: 'No water', icon: 'mdi:water-off-outline' }, { re: /pump_block/, on: 'Pompa zablokowana', en: 'Pump blocked', icon: 'mdi:pump-off' }, { re: /lid_up/, on: 'Pokrywa otwarta', en: 'Lid open', icon: 'mdi:alert-outline' }] },
-  { id: 'fryer', re: /fryer|frytk/i, icon: 'mdi:pot-steam-outline', name: 'Frytkownica', nameEn: 'Air fryer', status: /_status_p_|status$/, fault: /fault/,
-    metrics: [{ re: /_left_time_p_/, label: 'Pozostało', en: 'Remaining', active: true, big: true }, { re: /target_temperature/, label: 'Temperatura', en: 'Temperature' }, { re: /target_time/, label: 'Czas', en: 'Time' }] },
-  { id: 'purifier', re: /airpurifier|air_purifier|purifier|oczyszcz/i, icon: 'mdi:air-purifier', name: 'Oczyszczacz', nameEn: 'Air purifier', mainDom: 'fan', fault: /fault/,
-    metrics: [{ dc: 'pm25', label: 'PM2,5', en: 'PM2.5', big: true }, { re: /filter_life_level/, label: 'Filtr', en: 'Filter' }, { dc: 'temperature', label: 'Temperatura', en: 'Temperature' }, { dc: 'humidity', label: 'Wilgotność', en: 'Humidity' }] },
+  { id: 'washer', re: /washer|pralk|DA_WM/i, icon: 'mdi:washing-machine', name: hgTLazy('cards.room.profiles.washer.name'), metrics: [] },
+  { id: 'kettle', re: /kettle|czajnik/i, icon: 'mdi:kettle-outline', name: hgTLazy('cards.room.profiles.kettle.name'), main: /(_on_p_|switch_status)/, status: /_status_p_|status$/, fault: /fault/,
+    metrics: [{ re: /_temperature_p_2_3|current.*water.*temp/, dom: 'sensor', label: hgTLazy('cards.room.profiles.kettle.metrics.water'), big: true }, { re: /target_temperature/, label: hgTLazy('cards.room.profiles.kettle.metrics.target') }, { re: /keep_warm_temperature/, label: hgTLazy('cards.room.profiles.kettle.metrics.keep_warm') }],
+    warn: [{ re: /kettle_lifting/, on: hgTLazy('cards.room.profiles.kettle.warnings.lifted'), icon: 'mdi:arrow-up-bold-box-outline' }] },
+  { id: 'fountain', re: /pet_waterer|fountain|poidl/i, icon: 'mdi:fountain', name: hgTLazy('cards.room.profiles.fountain.name'), main: /_on_p_/, status: /_mode_p_/, fault: /fault/,
+    metrics: [{ re: /filter_left_time/, label: hgTLazy('cards.room.profiles.fountain.metrics.filter') }, { re: /cotton_left_time/, label: hgTLazy('cards.room.profiles.fountain.metrics.cartridge') }, { re: /remain_clean_time/, label: hgTLazy('cards.room.profiles.fountain.metrics.until_cleaning') }],
+    warn: [{ re: /no_water_flag/, on: hgTLazy('cards.room.profiles.fountain.warnings.no_water'), icon: 'mdi:water-off-outline' }, { re: /pump_block/, on: hgTLazy('cards.room.profiles.fountain.warnings.pump_blocked'), icon: 'mdi:pump-off' }, { re: /lid_up/, on: hgTLazy('cards.room.profiles.fountain.warnings.lid_open'), icon: 'mdi:alert-outline' }] },
+  { id: 'fryer', re: /fryer|frytk/i, icon: 'mdi:pot-steam-outline', name: hgTLazy('cards.room.profiles.fryer.name'), status: /_status_p_|status$/, fault: /fault/,
+    metrics: [{ re: /_left_time_p_/, label: hgTLazy('cards.room.profiles.fryer.metrics.remaining'), active: true, big: true }, { re: /target_temperature/, label: hgTLazy('cards.room.profiles.fryer.metrics.temperature') }, { re: /target_time/, label: hgTLazy('cards.room.profiles.fryer.metrics.time') }] },
+  { id: 'purifier', re: /airpurifier|air_purifier|purifier|oczyszcz/i, icon: 'mdi:air-purifier', name: hgTLazy('cards.room.profiles.purifier.name'), mainDom: 'fan', fault: /fault/,
+    metrics: [{ dc: 'pm25', label: hgTLazy('cards.room.profiles.purifier.metrics.pm25'), big: true }, { re: /filter_life_level/, label: hgTLazy('cards.room.profiles.purifier.metrics.filter') }, { dc: 'temperature', label: hgTLazy('cards.room.profiles.purifier.metrics.temperature') }, { dc: 'humidity', label: hgTLazy('cards.room.profiles.purifier.metrics.humidity') }] },
 ];
 const HGDev = {
   /* grupy urządzeń z encji pokoju (bez świateł, mediów, klimatyzacji, kamer, robotów – te mają własne komponenty) */
@@ -52,17 +46,14 @@ const HGDev = {
     return HG_DEV_PROF.find((p) => p.re.test(key)) || null;
   },
   ok: (s) => H.ok(s) && s.state !== '',
-  stPl: (v) => hgTr(HG_ST_PL, HG_ST_EN)[String(v).toLowerCase()] || String(v),
+  stPl: (v) => { const k = String(v).toLowerCase(); return HG_ST_KEYS.includes(k) ? hgTD('cards.room.device_states.' + k.replace(/[ -]/g, '_'), String(v)) : String(v); },
 };
 
 
 /* --- pralka (SmartThings): bęben animowany wg fazy; tylko istniejące encje --- */
-const HG_WM_JOB = { wash: 'Pranie', ai_wash: 'Pranie AI', pre_wash: 'Pranie wstępne', air_wash: 'Odświeżanie', rinse: 'Płukanie', ai_rinse: 'Płukanie AI', spin: 'Wirowanie', ai_spin: 'Wirowanie AI',
-  drying: 'Suszenie', cooling: 'Chłodzenie', weight_sensing: 'Ważenie prania', delay_wash: 'Opóźniony start', wrinkle_prevent: 'Ochrona przed zagnieceniem', freeze_protection: 'Ochrona przed mrozem', finish: 'Zakończone', none: '' };
-const HG_WM_JOB_EN = { wash: 'Washing', ai_wash: 'AI wash', pre_wash: 'Pre-wash', air_wash: 'Air wash', rinse: 'Rinsing', ai_rinse: 'AI rinse', spin: 'Spinning', ai_spin: 'AI spin',
-  drying: 'Drying', cooling: 'Cooling', weight_sensing: 'Weighing load', delay_wash: 'Delayed start', wrinkle_prevent: 'Wrinkle prevention', freeze_protection: 'Freeze protection', finish: 'Finished', none: '' };
-const HG_WM_MS = { run: 'Pracuje', pause: 'Pauza', stop: 'Zatrzymana' };
-const HG_WM_MS_EN = { run: 'Running', pause: 'Paused', stop: 'Stopped' };
+/* faza / stan pralki: hgTD('cards.room.washer_jobs.' + faza), hgTD('cards.room.washer_states.' + stan) */
+const HG_WM_JOB_KEYS = ['wash', 'ai_wash', 'pre_wash', 'air_wash', 'rinse', 'ai_rinse', 'spin', 'ai_spin', 'drying', 'cooling', 'weight_sensing', 'delay_wash', 'wrinkle_prevent', 'freeze_protection', 'finish'];
+const HG_WM_MS_KEYS = ['run', 'pause', 'stop'];
 const HG_WM_ANIM = { wash: 'wash', ai_wash: 'wash', pre_wash: 'wash', air_wash: 'wash', weight_sensing: 'wash', rinse: 'rinse', ai_rinse: 'rinse', spin: 'spin', ai_spin: 'spin', drying: 'wash', cooling: 'wash', wrinkle_prevent: 'wash' };
 /* --- szczegóły pokoju (<pulpit>/pokoj?area=<id>) --- */
 const hgWebKit = () => /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Android/.test(navigator.userAgent);
@@ -365,13 +356,13 @@ ha-card.wmc{ gap:var(--s2); }
     const eMs = f(/^sensor\..*machine_state$/), eJob = f(/^sensor\..*job_state$/), eEnd = f(/^sensor\..*completion_time$/), eP = f(/^sensor\..*_moc$|^sensor\..*_power$/),
       eSel = f(/^select\.washer$/), eSpin = f(/^select\..*spin_level$/), eTemp = f(/^select\..*water_temperature$/), eRem = f(/^binary_sensor\..*remote_control$/), ePw = f(/^binary_sensor\..*zasilanie$/);
     const ms = eMs ? st(eMs).state : null, job = eJob ? st(eJob).state : null;
-    const lab = (e, map) => { const v = st(e).state; return map[v] != null ? map[v] : H.T(h, st(e)); };
+    const lab = (e, pre, keys) => { const v = st(e).state; return keys.includes(v) ? hgTD(pre + v, v) : H.T(h, st(e)); };
     const run = ms === 'run', pause = ms === 'pause', done = !run && !pause && job === 'finish';
     const off = ePw && st(ePw).state === 'off';
     const ph = run ? (HG_WM_ANIM[job] || 'wash') : pause ? 'pause' : done ? 'done' : 'idle';
-    const phase = eJob && job !== 'none' ? lab(eJob, hgTr(HG_WM_JOB, HG_WM_JOB_EN)) : '';
-    const msL = eMs ? lab(eMs, hgTr(HG_WM_MS, HG_WM_MS_EN)) : '';
-    const status = done ? hgTr('Pranie zakończone', 'Wash complete') : run || pause ? [msL, phase].filter(Boolean).join(' · ') : off ? hgTr('Wyłączona', 'Off') : hgTr('Gotowa', 'Ready');
+    const phase = eJob && job !== 'none' ? lab(eJob, 'cards.room.washer_jobs.', HG_WM_JOB_KEYS) : '';
+    const msL = eMs ? lab(eMs, 'cards.room.washer_states.', HG_WM_MS_KEYS) : '';
+    const status = done ? hgT('cards.room.wash_complete') : run || pause ? [msL, phase].filter(Boolean).join(' · ') : off ? hgT('common.off_fem') : hgT('cards.room.ready');
     // czas i postęp: koniec z completion_time; start = pierwsza zmiana machine_state na „run” w tym cyklu (prawdziwe dane, bez zgadywania)
     let rem = '', endT = '', pct = null;
     const wmS = this._wmS || (this._wmS = new Map());    // pierwszy start cyklu: wznowienie po pauzie zmienia last_changed, nie zeruje postępu
@@ -382,19 +373,19 @@ ha-card.wmc{ gap:var(--s2); }
     if (done) pct = 1;
     const spinV = eSpin ? parseInt(st(eSpin).state, 10) : NaN, spd = isFinite(spinV) ? (1.1 - Math.min(spinV, 1600) / 1600 * .85).toFixed(2) : '.45';
     const remote = eRem && st(eRem).state === 'on';
-    const ctl = eSel && remote && (run || pause) ? `<button class="bt wmb" data-act="wm" data-e="${H.esc(eSel)}" data-o="${run ? 'pause' : 'run'}" aria-label="${run ? hgTr('Wstrzymaj', 'Pause') : hgTr('Wznów', 'Resume')}">${H.icon(run ? 'mdi:pause' : 'mdi:play')}</button>` : '';
-    const title = dv.name_by_user || hgTr('Pralka', 'Washer');
+    const ctl = eSel && remote && (run || pause) ? `<button class="bt wmb" data-act="wm" data-e="${H.esc(eSel)}" data-o="${run ? 'pause' : 'run'}" aria-label="${run ? hgT('cards.room.pause') : hgT('common.resume')}">${H.icon(run ? 'mdi:pause' : 'mdi:play')}</button>` : '';
+    const title = dv.name_by_user || hgT('cards.room.washer');
     // ciche statystyki (tylko istniejące encje)
     const sr = [];
-    if (eTemp && H.ok(st(eTemp)) && st(eTemp).state !== 'none') { const v = st(eTemp).state; sr.push([eTemp, 'mdi:thermometer', v === 'cold' ? hgTr('Zimna woda', 'Cold water') : /^\d+$/.test(v) ? `${v}°C` : H.T(h, st(eTemp)), hgTr('Temperatura wody', 'Water temperature')]); }
-    if (eSpin && H.ok(st(eSpin))) { const v = st(eSpin).state; sr.push([eSpin, 'mdi:rotate-right', /^\d+$/.test(v) ? `${v} ${hgTr('obr./min', 'rpm')}` : v === 'no_spin' ? hgTr('Bez wirowania', 'No spin') : v === 'rinse_hold' ? hgTr('Wstrzymane', 'Rinse hold') : H.T(h, st(eSpin)), hgTr('Wirowanie', 'Spin')]); }
-    if (eP && (run || pause)) { const v = parseFloat(st(eP).state); if (isFinite(v)) sr.push([eP, 'mdi:flash-outline', `${H.fmt(v, 0)} W`, hgTr('Moc', 'Power')]); }
+    if (eTemp && H.ok(st(eTemp)) && st(eTemp).state !== 'none') { const v = st(eTemp).state; sr.push([eTemp, 'mdi:thermometer', v === 'cold' ? hgT('cards.room.cold_water') : /^\d+$/.test(v) ? `${v}°C` : H.T(h, st(eTemp)), hgT('cards.room.water_temperature')]); }
+    if (eSpin && H.ok(st(eSpin))) { const v = st(eSpin).state; sr.push([eSpin, 'mdi:rotate-right', /^\d+$/.test(v) ? `${v} ${hgT('cards.room.rpm')}` : v === 'no_spin' ? hgT('cards.room.no_spin') : v === 'rinse_hold' ? hgT('cards.room.rinse_hold') : H.T(h, st(eSpin)), hgT('cards.room.spin')]); }
+    if (eP && (run || pause)) { const v = parseFloat(st(eP).state); if (isFinite(v)) sr.push([eP, 'mdi:flash-outline', `${H.fmt(v, 0)} W`, hgT('cards.room.power')]); }
     // duży tekst: pozostały czas, albo stan
     let big;
     if (rem) { const m = rem.match(/^(\d+) h (\d+) min$/) || null, mm = rem.match(/^(\d+) min$/);
       big = m ? `${+m[1]}<small>h</small>${+m[2]}<small>min</small>` : mm ? `${mm[1]}<small>min</small>` : H.esc(rem); }
-    else big = H.esc(done ? hgTr('Wyprane', 'Done') : pause ? hgTr('Pauza', 'Paused') : run ? hgTr('Pracuje', 'Running') : off ? hgTr('Wyłączona', 'Off') : hgTr('Gotowa', 'Ready'));
-    const pill = (run || pause) ? (phase || msL) + (pause && phase ? hgTr(' · pauza', ' · paused') : '') : '';
+    else big = H.esc(done ? hgT('cards.room.done') : pause ? hgT('cards.room.paused') : run ? hgT('cards.room.running') : off ? hgT('common.off_fem') : hgT('cards.room.ready'));
+    const pill = (run || pause) ? (phase || msL) + (pause && phase ? ' · ' + hgT('cards.room.washer_paused') : '') : '';
     const C = 2 * Math.PI * 55, prg = pct == null ? '' : `<circle class="wm-trk" cx="60" cy="60" r="55"/><circle class="wm-prg" cx="60" cy="60" r="55" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - pct)).toFixed(1)}"/>`;
     const svg = `<svg viewBox="0 0 120 120" role="img" aria-label="${H.esc(status)}"><defs>
       <linearGradient id="wmg-ch" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(220 10% 97%)"/><stop offset=".45" stop-color="hsl(220 6% 78%)"/><stop offset=".55" stop-color="hsl(220 8% 88%)"/><stop offset="1" stop-color="hsl(220 6% 62%)"/></linearGradient>
@@ -420,7 +411,7 @@ ha-card.wmc{ gap:var(--s2); }
     return `<div class="blk"><ha-card class="glass dv wmc ${run ? 'run' : done ? 'fin' : ''}">
       <div class="wmh"><b role="button" tabindex="0" data-act="${eMs ? 'more' : 'dev'}" ${eMs ? `data-e="${H.esc(eMs)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + ', ' + status)}">${H.esc(title)}</b>${ctl}</div>
       <div class="wmr"><div class="wmv ph-${ph}" style="--spd:${spd}s">${svg}</div>
-        <div class="wmi"><div class="wmt" aria-label="${H.esc(rem ? hgTr('Pozostało ', 'Remaining ') + rem : big)}">${big}</div>${endT ? `<div class="wme">${hgTr('Koniec', 'Ends')} ${H.esc(endT)}</div>` : ''}
+        <div class="wmi"><div class="wmt" aria-label="${H.esc(rem ? hgT('cards.room.remaining_time', { time: rem }) : big)}">${big}</div>${endT ? `<div class="wme">${hgT('cards.room.ends')} ${H.esc(endT)}</div>` : ''}
           ${pill ? `<span class="wmp"><i></i>${H.esc(pill)}</span>` : ''}
           ${sr.length ? `<div class="wsr">${sr.map(([e, ic, v, l]) => `<button data-act="more" data-e="${H.esc(e)}" title="${H.esc(l)}" aria-label="${H.esc(l + ': ' + v)}">${H.icon(ic)}${H.esc(v)}</button>`).join('')}</div>` : ''}</div></div>
     </ha-card></div>`;
@@ -434,43 +425,43 @@ ha-card.wmc{ gap:var(--s2); }
     const t = num(U2.tank), sw = st(U2.switch), swOn = H.ok(sw) && sw.state === 'on', pw = num(U2.power), on = swOn && pw != null && pw > 0, fr = t != null ? Math.max(0, Math.min(1, (t - 20) / 55)) : 0;
     const info = U2.co.map(([e, l]) => { const v = num(e); return v != null ? [`${H.fmt(v, 1)}°`, l] : null; }).filter(Boolean);
     return `<div class="blk stb"><ha-card class="glass cwc ${on ? 'heat' : ''}" style="--f:${fr.toFixed(3)};--tf:0">
-      <div class="sth"><div><b>${H.esc(U2.title)}</b><span class="stf">${hgTr('Zbiornik ciepłej wody', 'Hot water tank')}</span></div><button class="ib" data-act="more" data-e="${H.esc(U2.tank)}" aria-label="${hgTr('Historia temperatury', 'Temperature history')}">${H.icon('mdi:arrow-top-right')}</button></div>
-      <div class="cwm"><div class="cwt" role="img" aria-label="${hgTr('Zbiornik CWU góra', 'Hot water tank, top')}: ${t != null ? H.fmt(t, 0) + '°C' : hgTr('brak danych', 'no data')}"><i class="fl"></i>${on ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
-        <div class="cwv"><span class="cwn">${t != null ? H.fmt(t, 0) : '–'}<sup>°C</sup></span><span class="cws">${on ? `${H.icon('mdi:heat-wave')}${hgTr('Grzeje', 'Heating')}` : !swOn ? hgTr('Wyłączony', 'Off') : hgTr('Nie grzeje', 'Not heating')}</span></div>
-        <div class="cwi">${pw != null ? `<div class="cwp ${on ? 'on' : ''}"><b>${H.fmt(pw, 0)}<em>W</em></b><small>${hgTr('Moc grzania', 'Heating power')}</small></div>` : ''}</div></div>
-      ${H.ok(sw) ? `<div class="stg2"><label class="cp ${swOn ? 'on' : ''}"><b>${hgTr('Zasilanie', 'Power')}</b>${this.toggleHtml(swOn, 'cwus', false, hgTr('CWU góra: zasilanie', 'Hot water top: power')).replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(U2.switch)}"`)}</label></div>` : ''}
+      <div class="sth"><div><b>${H.esc(U2.title)}</b><span class="stf">${hgT('cards.room.hot_water_tank')}</span></div><button class="ib" data-act="more" data-e="${H.esc(U2.tank)}" aria-label="${hgT('cards.room.temperature_history')}">${H.icon('mdi:arrow-top-right')}</button></div>
+      <div class="cwm"><div class="cwt" role="img" aria-label="${hgT('cards.room.hot_water_tank_top')}: ${t != null ? H.fmt(t, 0) + '°C' : hgT('common.no_data')}"><i class="fl"></i>${on ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+        <div class="cwv"><span class="cwn">${t != null ? H.fmt(t, 0) : '–'}<sup>°C</sup></span><span class="cws">${on ? `${H.icon('mdi:heat-wave')}${hgT('cards.room.heating')}` : !swOn ? hgT('common.off_masc') : hgT('cards.room.not_heating')}</span></div>
+        <div class="cwi">${pw != null ? `<div class="cwp ${on ? 'on' : ''}"><b>${H.fmt(pw, 0)}<em>W</em></b><small>${hgT('cards.room.heating_power')}</small></div>` : ''}</div></div>
+      ${H.ok(sw) ? `<div class="stg2"><label class="cp ${swOn ? 'on' : ''}"><b>${hgT('common.power')}</b>${this.toggleHtml(swOn, 'cwus', false, hgT('cards.room.hot_water_top_power')).replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(U2.switch)}"`)}</label></div>` : ''}
     </ha-card></div>`;
   }
   _cwu(CW) {
     const f2 = (v) => Number(v).toFixed(3);
     const h = this._hass, st = (e) => e && h.states[e], num = (e) => { const s = st(e); return H.ok(s) && !isNaN(Number(s.state)) ? Number(s.state) : null; };
-    const w = st(CW.heater); if (!H.ok(w)) return `<div class="blk"><ha-card class="glass"><div class="ph"><b>${hgTr('Bojler niedostępny', 'Water heater unavailable')}</b></div></ha-card></div>`;
+    const w = st(CW.heater); if (!H.ok(w)) return `<div class="blk"><ha-card class="glass"><div class="ph"><b>${hgT('cards.room.water_heater_unavailable')}</b></div></ha-card></div>`;
     const A = w.attributes, cur = A.current_temperature != null ? Number(A.current_temperature) : num(CW.tank), tgt = Number(A.temperature ?? A.target_temperature), mn = A.min_temp || 30, mx = A.max_temp || 75;
     const on = w.state !== 'off', heat = st(CW.heating) ? st(CW.heating).state === 'on' : !!A.heating, keep = st(CW.keep) && st(CW.keep).state === 'on';
     const fr = cur != null ? Math.max(0, Math.min(1, (cur - mn) / (mx - mn))) : 0, tf = !isNaN(tgt) ? Math.max(0, Math.min(1, (tgt - mn) / (mx - mn))) : null;
-    const mode = !on ? hgTr('Wyłączony', 'Off') : A.whole_tank_heating ? hgTr('Grzanie całego zbiornika', 'Whole tank heating') : A.variable_heating ? hgTr('Grzanie zmienne', 'Variable heating') : hgTr('Grzanie standardowe', 'Standard heating');
-    const state = !on ? hgTr('Wyłączony', 'Off') : heat ? hgTr('Grzeje', 'Heating') : keep ? hgTr('Utrzymuje temperaturę', 'Keeping warm') : hgTr('Gotowy', 'Ready');
+    const mode = !on ? hgT('common.off_masc') : A.whole_tank_heating ? hgT('cards.room.whole_tank_heating') : A.variable_heating ? hgT('cards.room.variable_heating') : hgT('cards.room.standard_heating');
+    const state = !on ? hgT('common.off_masc') : heat ? hgT('cards.room.heating') : keep ? hgT('cards.room.keeping_warm') : hgT('cards.room.kettle_ready');
     const pw = num(CW.power), rem = num(CW.remaining), tank = num(CW.tank), cons = num(CW.consumption);
     const E = H.esc(CW.heater), dis = !on ? 'disabled' : '';
-    const info = [pw != null ? [H.fmt(pw, 0), 'W', hgTr('Moc grzania', 'Heating power'), heat && pw > 0] : null, rem != null && heat ? [String(rem), 'min', hgTr('Do końca', 'Remaining')] : null,       cons != null ? [H.fmt(cons, 0), 'l', hgTr('Zużycie wody', 'Water usage')] : null].filter(Boolean);
+    const info = [pw != null ? [H.fmt(pw, 0), 'W', hgT('cards.room.heating_power'), heat && pw > 0] : null, rem != null && heat ? [String(rem), 'min', hgT('cards.room.kettle_remaining')] : null,       cons != null ? [H.fmt(cons, 0), 'l', hgT('cards.room.water_usage')] : null].filter(Boolean);
     const sws = CW.switches.map(([e, l]) => { const s = st(e); if (!H.ok(s)) return ''; const o = s.state === 'on'; return `<label class="cp ${o ? 'on' : ''}"><b>${H.esc(l)}</b>${this.toggleHtml(o, 'cwus', false, l).replace('data-act="cwus"', `data-act="cwus" data-e="${H.esc(e)}"`)}</label>`; }).join('');
     return `<div class="blk stb"><ha-card class="glass cwc ${heat ? 'heat' : ''} ${on ? '' : 'off'}" style="--f:${f2(fr)};--tf:${tf != null ? f2(tf) : 0}">
-      <div class="sth"><div><b>${H.esc(CW.title || hgTr('Ciepła woda', 'Hot water'))}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="${hgTr('Szczegóły bojlera', 'Water heater details')}">${H.icon('mdi:arrow-top-right')}</button></div>
+      <div class="sth"><div><b>${H.esc(CW.title || hgT('cards.room.hot_water'))}</b><span class="stf">${H.esc(mode)}</span></div><button class="ib" data-act="more" data-e="${E}" aria-label="${hgT('cards.room.water_heater_details')}">${H.icon('mdi:arrow-top-right')}</button></div>
       <div class="cwm">
-        <div class="cwt" role="img" aria-label="${hgTr('Zbiornik', 'Tank')}: ${cur != null ? H.fmt(cur, 0) + '°C' : hgTr('brak danych', 'no data')}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
-        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}${hgTr('Grzeje', 'Heating')}${isNaN(tgt) ? '' : hgTr(` do ${H.fmt(tgt, 0)}°`, ` to ${H.fmt(tgt, 0)}°`)}` : H.esc(state)}</span>
-          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="${hgTr('Obniż nastawę', 'Lower setpoint')}">${H.icon('mdi:minus')}</button><span class="cwg"><small>${hgTr('Nastawa', 'Setpoint')}</small><b>${isNaN(tgt) ? '–' : H.fmt(tgt, 0) + '°'}</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="${hgTr('Podwyższ nastawę', 'Raise setpoint')}">${H.icon('mdi:plus')}</button></div></div>
+        <div class="cwt" role="img" aria-label="${hgT('cards.room.tank')}: ${cur != null ? H.fmt(cur, 0) + '°C' : hgT('common.no_data')}"><i class="fl"></i><i class="tg2"></i>${heat ? '<i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i>' : ''}</div>
+        <div class="cwv"><span class="cwn">${cur != null ? H.fmt(cur, 0) : '–'}<sup>°C</sup></span><span class="cws" aria-live="polite">${heat ? `${H.icon('mdi:heat-wave')}${hgT('cards.room.heating')}${isNaN(tgt) ? '' : ' ' + hgT('cards.room.to_temp', { temp: H.fmt(tgt, 0) })}` : H.esc(state)}</span>
+          <div class="cwa"><button class="cv2" data-act="cwut" data-e="${E}" data-d="-1" ${dis} aria-label="${hgT('cards.room.lower_setpoint')}">${H.icon('mdi:minus')}</button><span class="cwg"><small>${hgT('cards.room.setpoint')}</small><b>${isNaN(tgt) ? '–' : H.fmt(tgt, 0) + '°'}</b></span><button class="cv2" data-act="cwut" data-e="${E}" data-d="1" ${dis} aria-label="${hgT('cards.room.raise_setpoint')}">${H.icon('mdi:plus')}</button></div></div>
         <div class="cwi">${info.map(([v, u, l, hot]) => `<div class="cwp ${hot ? 'on' : ''}"><b>${H.esc(v)}<em>${H.esc(u)}</em></b><small>${H.esc(l)}</small></div>`).join('')}</div>
       </div>
       <div class="stg2">${sws}</div></ha-card></div>`;
   }
   _stairs(ST) {
     const h = this._hass, st = (e) => h.states[e], f = (v) => Number(v).toFixed(2);
-    const ago = (s) => { if (!s) return ''; const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)); const x = m < 1 ? '' : m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h` : `${Math.floor(m / 1440)} d`; return hgTr(x ? `od ${x}` : 'od chwili', x ? `for ${x}` : 'for <1 min'); };
+    const ago = (s) => { if (!s) return ''; const m = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)); const x = m < 1 ? '' : m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h` : `${Math.floor(m / 1440)} d`; return x ? hgT('cards.room.stairs.for_time', { time: x }) : hgT('cards.room.stairs.for_moment'); };
     const lt = (k) => { const e = ST[k].light, s = st(e), ok = H.ok(s), on = ok && s.state === 'on';
       const b = on ? (s.attributes.brightness != null ? s.attributes.brightness / 255 : 1) : 0;
       return { e, s, ok, on, b, g: on ? Math.max(.5, Math.min(1, .4 + b * .6)) : 0 }; };
-    const L = { bottom: lt('bottom'), top: lt('top') }, nm = hgTr({ bottom: 'Dół', top: 'Góra' }, { bottom: 'Bottom', top: 'Top' });
+    const L = { bottom: lt('bottom'), top: lt('top') }, nm = { bottom: hgT('cards.room.stairs.bottom'), top: hgT('cards.room.stairs.top') }, bulb = { bottom: hgT('cards.room.stairs.bulb_bottom'), top: hgT('cards.room.stairs.bulb_top') };
     const mb = st(ST.bottom.motion), mt = st(ST.top.motion), mbOn = H.ok(mb) && mb.state === 'on', mtOn = H.ok(mt) && mt.state === 'on';
     const anyOn = L.bottom.on || L.top.on;
     const N = 8, RU = 30, RI = 18, DX = 24, DY = -10, X0 = 100, Y0 = 196, LO = 46;
@@ -488,12 +479,12 @@ ha-card.wmc{ gap:var(--s2); }
     // lampy: ta sama odległość LO nad środkiem własnego stopnia (pierwszy / ostatni), etykiety na zewnątrz (symetrycznie)
     const tc = (i) => [X0 + i * RU + RU / 2 + DX / 2, Y0 - (i + 1) * RI + DY / 2];
     const lampSvg = (k, i, side, ms, mOn) => { const o = L[k], p = Math.round(o.b * 100), [sx, sy] = tc(i), cx = sx, cy = sy - LO, tx = side < 0 ? cx - 16 : cx + 16, an = side < 0 ? 'end' : 'start';
-      return `<g class="lmp ${o.on ? 'on' : ''}" style="--g:${f(o.g)}" data-act="stb" data-e="${H.esc(o.e)}" role="button" tabindex="0" aria-label="${H.esc(hgTr(`Żarówka ${nm[k].toLowerCase()}: ${o.ok ? (o.on ? `włączona ${p}%` : 'wyłączona') : 'niedostępna'}`, `${nm[k]} bulb: ${o.ok ? (o.on ? `on ${p}%` : 'off') : 'unavailable'}`))}">
+      return `<g class="lmp ${o.on ? 'on' : ''}" style="--g:${f(o.g)}" data-act="stb" data-e="${H.esc(o.e)}" role="button" tabindex="0" aria-label="${H.esc(hgT('cards.room.stairs.bulb_state', { bulb: bulb[k], state: o.ok ? (o.on ? hgT('cards.room.stairs.bulb_on', { percent: p }) : hgT('cards.room.stairs.bulb_off')) : hgT('cards.room.stairs.bulb_unavailable') }))}">
         <polygon class="cone" fill="url(#stcone)" points="${P([[cx - 5, cy + 6], [cx + 5, cy + 6], [sx + RU * .9, sy], [sx - RU * .9, sy]])}"/>
         <circle class="halo" cx="${cx}" cy="${cy}" r="40" fill="url(#sthalo)"/><circle class="bulb" cx="${cx}" cy="${cy}" r="7"/>
-        <text class="tl" x="${tx}" y="${cy - 6}" text-anchor="${an}">${nm[k]}</text><text class="ts" x="${tx}" y="${cy + 7}" text-anchor="${an}">${o.ok ? (o.on ? `${p || 1}%` : hgTr('Wył.', 'Off')) : '—'}</text>
+        <text class="tl" x="${tx}" y="${cy - 6}" text-anchor="${an}">${nm[k]}</text><text class="ts" x="${tx}" y="${cy + 7}" text-anchor="${an}">${o.ok ? (o.on ? `${p || 1}%` : hgT('common.off_short')) : '—'}</text>
         <circle class="hit" cx="${cx}" cy="${cy}" r="24"/></g>
-        ${H.ok(ms) ? `<g class="mk ${mOn ? 'on' : ''}"><circle class="rp" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="4"/><circle class="dt" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="3"/><text class="ts" x="${side < 0 ? tx - 11 : tx + 11}" y="${cy + 22}" text-anchor="${an}">${mOn ? hgTr('Ruch teraz', 'Motion now') : hgTr('Ruch ', 'No motion ') + ago(ms)}</text></g>` : ''}`; };
+        ${H.ok(ms) ? `<g class="mk ${mOn ? 'on' : ''}"><circle class="rp" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="4"/><circle class="dt" cx="${side < 0 ? tx - 3 : tx + 3}" cy="${cy + 19}" r="3"/><text class="ts" x="${side < 0 ? tx - 11 : tx + 11}" y="${cy + 22}" text-anchor="${an}">${mOn ? hgT('cards.room.motion_now') : hgT('cards.room.stairs.motion_ago', { time: ago(ms) })}</text></g>` : ''}`; };
     const svg = `<div class="sv3"><svg viewBox="0 ${YT - LO - 26} 440 ${Y0 - YT + LO + 34}" aria-hidden="false"><defs>
       <radialGradient id="sthalo"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".6"/><stop offset=".5" style="stop-color:var(--hg-accent)" stop-opacity=".15"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></radialGradient>
       <linearGradient id="stcone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--hg-accent)" stop-opacity=".45"/><stop offset="1" style="stop-color:var(--hg-accent)" stop-opacity="0"/></linearGradient></defs>
@@ -502,23 +493,23 @@ ha-card.wmc{ gap:var(--s2); }
     if (anyOn && H.ok(mb) && H.ok(mt) && !mbOn && !mtOn) { const t = Math.max(new Date(mb.last_changed), new Date(mt.last_changed)) + ST.delay * 1000; if (t > Date.now()) fade = t; }
     this._stFade = fade;
     const rem = fade ? Math.ceil((fade - Date.now()) / 1000) : 0, fr = fade ? Math.max(0, Math.min(1, (fade - Date.now()) / (ST.delay * 1000))) : 0;
-    const ring = fade ? `<div class="str" role="timer" aria-label="${hgTr(`Gaśnie za ${rem} s`, `Turning off in ${rem} s`)}"><svg viewBox="0 0 40 40"><circle class="rb" cx="20" cy="20" r="17" pathLength="100"/><circle class="rf" cx="20" cy="20" r="17" pathLength="100" style="--o0:${f(100 - fr * 100)};animation-duration:${f((fade - Date.now()) / 1000)}s"/></svg><span class="stn">${rem}</span></div>` : '';
+    const ring = fade ? `<div class="str" role="timer" aria-label="${hgT('cards.room.turning_off_in_s', { seconds: rem })}"><svg viewBox="0 0 40 40"><circle class="rb" cx="20" cy="20" r="17" pathLength="100"/><circle class="rf" cx="20" cy="20" r="17" pathLength="100" style="--o0:${f(100 - fr * 100)};animation-duration:${f((fade - Date.now()) / 1000)}s"/></svg><span class="stn">${rem}</span></div>` : '';
     const gp = ST.group && st(ST.group), gOn = H.ok(gp) && gp.state === 'on';
-    const grp = H.ok(gp) ? `<label class="sgl"><span>${hgTr('Wszystkie', 'All')}</span>${this.toggleHtml(gOn, 'stb', false, hgTr('Światła schody', 'Stair lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : '';
+    const grp = H.ok(gp) ? `<label class="sgl"><span>${hgT('cards.room.all')}</span>${this.toggleHtml(gOn, 'stb', false, hgT('cards.room.stair_lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : '';
     const au = st(ST.automation), auOn = au && au.state === 'on';
-    const chip = (k, lab, s, on) => H.ok(s) ? `<button class="sm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(ST[k].motion)}" aria-label="${H.esc(`${lab}: ${on ? hgTr('ruch', 'motion') : hgTr('brak ruchu ', 'no motion ') + ago(s)}`)}">${H.icon(on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off')}<span><b>${lab}</b><small>${on ? hgTr('Ruch teraz', 'Motion now') : `${hgTr('Brak ruchu', 'No motion')} ${ago(s)}`}</small></span><i></i></button>` : '';
+    const chip = (k, lab, s, on) => H.ok(s) ? `<button class="sm ${on ? 'on' : ''}" data-act="more" data-e="${H.esc(ST[k].motion)}" aria-label="${H.esc(`${lab}: ${on ? hgT('common.state_motion') : hgT('cards.room.stairs.no_motion_ago', { time: ago(s) })}`)}">${H.icon(on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off')}<span><b>${lab}</b><small>${on ? hgT('cards.room.motion_now') : `${hgT('cards.room.state_no_motion_cap')} ${ago(s)}`}</small></span><i></i></button>` : '';
     return `<div class="blk stb"><ha-card class="glass stc ${anyOn ? 'lit' : 'idle'}">
-      <div class="sth"><div><b>${hgTr('Oświetlenie schodów', 'Stair lighting')}</b><span class="stf" aria-live="polite">${fade ? hgTr(`Gaśnie za ${rem} s`, `Turning off in ${rem} s`) : anyOn ? hgTr('Świeci', 'On') : hgTr('Wyłączone', 'Off')}</span></div>${ring}</div>
+      <div class="sth"><div><b>${hgT('cards.room.stair_lighting')}</b><span class="stf" aria-live="polite">${fade ? hgT('cards.room.turning_off_in_s', { seconds: rem }) : anyOn ? hgT('cards.room.stairs.state_lit') : hgT('common.off_neut')}</span></div>${ring}</div>
       ${svg}
-      <div class="stg2">${['bottom', 'top'].map((k) => { const o = L[k]; return o.ok ? `<label class="cp ${o.on ? 'on' : ''}"><b>${nm[k]}</b><small>${o.on ? Math.round(o.b * 100) + '%' : hgTr('Wył.', 'Off')}</small>${this.toggleHtml(o.on, 'stb', false, hgTr('Żarówka ' + nm[k].toLowerCase(), nm[k] + ' bulb')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(o.e)}"`)}</label>` : ''; }).join('')}
-        ${H.ok(gp) ? `<label class="cp ${gOn ? 'on' : ''}"><b>${hgTr('Wszystkie', 'All')}</b>${this.toggleHtml(gOn, 'stb', false, hgTr('Światła schody', 'Stair lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : ''}
-        ${au ? `<label class="cp ${auOn ? 'on' : ''}"><b>${hgTr('Automatyczne', 'Automatic')}</b>${this.toggleHtml(auOn, 'sta', false, hgTr('Automatyzacja schodów', 'Stairs automation')).replace('data-act="sta"', `data-act="sta" data-e="${H.esc(ST.automation)}"`)}</label>` : ''}</div>
+      <div class="stg2">${['bottom', 'top'].map((k) => { const o = L[k]; return o.ok ? `<label class="cp ${o.on ? 'on' : ''}"><b>${nm[k]}</b><small>${o.on ? Math.round(o.b * 100) + '%' : hgT('common.off_short')}</small>${this.toggleHtml(o.on, 'stb', false, bulb[k]).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(o.e)}"`)}</label>` : ''; }).join('')}
+        ${H.ok(gp) ? `<label class="cp ${gOn ? 'on' : ''}"><b>${hgT('cards.room.all')}</b>${this.toggleHtml(gOn, 'stb', false, hgT('cards.room.stair_lights')).replace('data-act="stb"', `data-act="stb" data-e="${H.esc(ST.group)}"`)}</label>` : ''}
+        ${au ? `<label class="cp ${auOn ? 'on' : ''}"><b>${hgT('cards.room.automatic')}</b>${this.toggleHtml(auOn, 'sta', false, hgT('cards.room.stairs_automation')).replace('data-act="sta"', `data-act="sta" data-e="${H.esc(ST.automation)}"`)}</label>` : ''}</div>
     </ha-card></div>`;
   }
   /* odtwarzacz w stylu „Teraz odtwarzane”: okładka (entity_picture) z tłem barwionym kolorem okładki, tytuł/wykonawca/aplikacja,
      postęp z media_position/duration (na żywo), sterowanie wg supported_features, głośność + wyciszenie, źródło */
   /* odtwarzacz: wspólny wygląd „Teraz gra” (shared/media) */
-  _player(e) { return `<div class="blk">${hgNP.html(this._hass, e, { name: this._nm(e, hgTr('Odtwarzacz', 'Player')) })}</div>`; }
+  _player(e) { return `<div class="blk">${hgNP.html(this._hass, e, { name: this._nm(e, hgT('cards.room.player')) })}</div>`; }
   _devCard(g, a) {
     const h = this._hass, dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents), st = (e) => h.states[e];
     const av = g.ents.filter((e) => HGDev.ok(st(e)));
@@ -526,8 +517,8 @@ ha-card.wmc{ gap:var(--s2); }
     if (P && P.id === 'washer') return this._washer(g, av, dv);
     const used = new Set(), num = (e) => /^(sensor|number|input_number)\./.test(e) && isFinite(parseFloat(st(e).state)) && /^-?\d+(\.\d+)?$/.test(String(st(e).state).trim());
     const raw = dv.name_by_user || dv.name || '';
-    const strip = HGAreas.name({ states: { x: { attributes: { friendly_name: raw || hgTr('Urządzenie', 'Device') } } } }, 'x', a, null, '');
-    let title = dv.name_by_user || (P && hgTr(P.name, P.nameEn)) || strip || hgTr('Urządzenie', 'Device');
+    const strip = HGAreas.name({ states: { x: { attributes: { friendly_name: raw || hgT('cards.room.device') } } } }, 'x', a, null, '');
+    let title = dv.name_by_user || (P && String(P.name)) || strip || hgT('cards.room.device');
     // główny przełącznik
     const SW = /^(switch|fan|humidifier|light|valve|input_boolean)\./;
     let main = null;
@@ -540,50 +531,50 @@ ha-card.wmc{ gap:var(--s2); }
     if (P && P.status) se = av.find((e) => /^(sensor|select)\./.test(e) && P.status.test(e) && !num(e));
     if (!se && !P) se = av.find((e) => e.startsWith('sensor.') && /(_status|_state)(_p_\d|$)/.test(e) && !num(e));
     if (se) { used.add(se); status = HGDev.stPl(st(se).state); }
-    else if (main) { const ms = st(main); const oo = ms.state === 'on' ? hgTr('Włączony', 'On') : hgTr('Wyłączony', 'Off'); status = ms.attributes.preset_mode ? `${oo} · ${HGDev.stPl(ms.attributes.preset_mode)}` : oo; }
+    else if (main) { const ms = st(main); const oo = ms.state === 'on' ? hgT('common.on_masc') : hgT('common.off_masc'); status = ms.attributes.preset_mode ? `${oo} · ${HGDev.stPl(ms.attributes.preset_mode)}` : oo; }
     // ostrzeżenia
     const warns = [];
     const fe = av.find((e) => e.startsWith('sensor.') && /fault|error/.test(e) && !num(e) || (e.startsWith('sensor.') && /_fault_p_/.test(e)));
-    if (fe) { used.add(fe); const v = String(st(fe).state).trim(); if (!HG_FAULT_OK.test(v)) warns.push(['mdi:alert-circle-outline', hgTr('Błąd: ', 'Error: ') + HGDev.stPl(v)]); }
-    for (const w of (P && P.warn) || []) { const e = av.find((x) => w.re.test(x)); if (e) { used.add(e); if (st(e).state === 'on') warns.push([w.icon, hgTr(w.on, w.en)]); } }
-    for (const e of av) if (!used.has(e) && e.startsWith('binary_sensor.') && st(e).attributes.device_class === 'problem') { used.add(e); if (st(e).state === 'on') warns.push(['mdi:alert-outline', this._nm(e, 'Problem')]); }
+    if (fe) { used.add(fe); const v = String(st(fe).state).trim(); if (!HG_FAULT_OK.test(v)) warns.push(['mdi:alert-circle-outline', hgT('cards.room.error_value', { value: HGDev.stPl(v) })]); }
+    for (const w of (P && P.warn) || []) { const e = av.find((x) => w.re.test(x)); if (e) { used.add(e); if (st(e).state === 'on') warns.push([w.icon, String(w.on)]); } }
+    for (const e of av) if (!used.has(e) && e.startsWith('binary_sensor.') && st(e).attributes.device_class === 'problem') { used.add(e); if (st(e).state === 'on') warns.push(['mdi:alert-outline', this._nm(e, hgT('cards.room.problem'))]); }
     // kluczowe odczyty
     const met = [], active = se ? !/^(standby|idle|off|shutdown|completed|done|finished)$/i.test(st(se).state) : true;
     if (P) for (const m of P.metrics) {
       if (m.active && !active) continue;
       const e = av.find((x) => !used.has(x) && (!m.dom || x.startsWith(m.dom + '.')) && (m.re ? m.re.test(x) : st(x).attributes.device_class === m.dc) && num(x));
-      if (e) { used.add(e); met.push([e, hgTr(m.label, m.en)]); }
+      if (e) { used.add(e); met.push([e, String(m.label)]); }
     } else {
       const RK = { temperature: 0, humidity: 1, pm25: 2, carbon_dioxide: 3, power: 4, energy: 5, illuminance: 6, battery: 7 };
       av.filter((x) => !used.has(x) && x.startsWith('sensor.') && num(x) && (st(x).attributes.device_class || st(x).attributes.unit_of_measurement))
         .sort((x, y) => (RK[st(x).attributes.device_class] ?? 9) - (RK[st(y).attributes.device_class] ?? 9)).slice(0, 3)
-        .forEach((e) => { used.add(e); met.push([e, this._nm(e, hgTr('Odczyt', 'Reading'))]); });
+        .forEach((e) => { used.add(e); met.push([e, this._nm(e, hgT('cards.room.reading'))]); });
     }
     if (!P && main && !met.length && !dv.name_by_user) title = this._nm(main, title);   // np. samo gniazdko: nazwa encji zamiast nazwy modułu
     // czujnik klimatu nazwany jak pokój -> nazwa rodzajowa
-    if (!P && !main && met.length && met.every(([e]) => ['temperature', 'humidity', 'pressure'].includes(st(e).attributes.device_class)) && (!strip || title.toLowerCase() === a.name.toLowerCase() || title.toLowerCase().includes(a.name.toLowerCase().split(' ')[0]))) title = hgTr('Czujnik klimatu', 'Climate sensor');
+    if (!P && !main && met.length && met.every(([e]) => ['temperature', 'humidity', 'pressure'].includes(st(e).attributes.device_class)) && (!strip || title.toLowerCase() === a.name.toLowerCase() || title.toLowerCase().includes(a.name.toLowerCase().split(' ')[0]))) title = hgT('cards.room.climate_sensor');
     const rest = av.filter((e) => !used.has(e) && !/^(text|button|update|event|image)\./.test(e) && !(e.startsWith('sensor.') && !num(e) && String(st(e).state).length > 28));
     const icon = (P && P.icon) || (main && HG_DOM_ICON[main.split('.')[0]]) || (met[0] && HG_DC_ICON[st(met[0][0]).attributes.device_class]) || 'mdi:devices';
     const on = main ? ['on', 'open', 'unlocked'].includes(st(main).state) : active && !!se;
-    const U = { d: hgTr('dni', 'd'), min: 'min', h: 'h', s: 's' };
+    const U = { d: hgT('cards.room.unit_days'), min: 'min', h: 'h', s: 's' };
     const mx = met.map(([e, l]) => { const [v, u] = this._num(st(e)); return `<button class="m" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(`${l}: ${v} ${u}`)}"><b>${H.esc(v)}<em>${H.esc(U[u] || u)}</em></b><span>${H.esc(l)}</span></button>`; }).join('');
     const open = this._devOpen && this._devOpen.has(g.d);
     const rows = open ? rest.map((e) => {
       const s = st(e), dom = e.split('.')[0], nm = this._nm(e, e);
       if (/^(switch|fan|humidifier|light|input_boolean|valve)$/.test(dom)) { const o = s.state === 'on' || s.state === 'open';
         return `<div class="row sub ${o ? 'on' : ''}"><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b></button>${this.toggleHtml(o, 'tgl', false, nm).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(e)}"`)}</div>`; }
-      const [v, u] = dom === 'binary_sensor' ? [s.state === 'on' ? hgTr('Tak', 'Yes') : hgTr('Nie', 'No'), ''] : dom === 'select' ? [HGDev.stPl(s.state), ''] : this._num(s);
+      const [v, u] = dom === 'binary_sensor' ? [s.state === 'on' ? hgT('cards.room.yes') : hgT('cards.room.answer_no'), ''] : dom === 'select' ? [HGDev.stPl(s.state), ''] : this._num(s);
       return `<button class="row sub" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(U[u] || u)}</em>` : ''}</span></button>`;
-    }).join('') + `<button class="lnk sm" data-act="dev" data-d="${H.esc(g.d)}">${H.icon('mdi:cog-outline')}${hgTr('Ustawienia urządzenia', 'Device settings')}</button>` : '';
+    }).join('') + `<button class="lnk sm" data-act="dev" data-d="${H.esc(g.d)}">${H.icon('mdi:cog-outline')}${hgT('cards.room.device_settings')}</button>` : '';
     const tg = main ? this.toggleHtml(['on', 'open'].includes(st(main).state), 'tgl', false, title).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(main)}"`) : '';
     return `<div class="blk"><ha-card class="glass dv ${on ? 'on' : ''}">
       <div class="dh"><span class="ri">${H.icon(icon)}</span><button class="tx" data-act="${main ? 'more' : 'dev'}" ${main ? `data-e="${H.esc(main)}"` : `data-d="${H.esc(g.d)}"`} aria-label="${H.esc(title + (status ? ', ' + status : ''))}"><b>${H.esc(title)}</b>${status ? `<span>${H.esc(status)}</span>` : ''}</button>${tg}</div>
       ${mx ? `<div class="mx">${mx}</div>` : ''}${warns.length ? `<div class="wr">${warns.map(([i, t]) => `<span class="wc">${H.icon(i)}${H.esc(t)}</span>`).join('')}</div>` : ''}
-      ${rest.length ? `<button class="mr" data-act="dmore" data-d="${H.esc(g.d)}" aria-expanded="${!!open}">${open ? hgTr('Mniej', 'Less') : `${hgTr('Więcej', 'More')} · ${rest.length}`}${H.icon(open ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>${rows}` : ''}</ha-card></div>`;
+      ${rest.length ? `<button class="mr" data-act="dmore" data-d="${H.esc(g.d)}" aria-expanded="${!!open}">${open ? hgT('cards.room.less') : `${hgT('common.more')} · ${rest.length}`}${H.icon(open ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>${rows}` : ''}</ha-card></div>`;
   }
   render() {
     const h = this._hass, a = this._area(); this._a = a;
-    if (!a) return `<ha-card class="glass"><div class="empty"><b>${hgTr('Nie znaleziono pokoju', 'Room not found')}</b>${hgTr('Ten pokój nie istnieje albo został usunięty.', 'This room does not exist or has been deleted.')}<button class="lnk" data-act="rooms">${H.icon('mdi:chevron-left')}${hgTr('Wszystkie pokoje', 'All rooms')}</button></div></ha-card>`;
+    if (!a) return `<ha-card class="glass"><div class="empty"><b>${hgT('cards.room.room_not_found')}</b>${hgT('cards.room.this_room_does_not')}<button class="lnk" data-act="rooms">${H.icon('mdi:chevron-left')}${hgT('cards.room.all_rooms')}</button></div></ha-card>`;
     const ST = (HGAreas.glob(this._config.areas) || {}).stairs, isSt = ST && ST.room === a.id;
     const CW = (HGAreas.glob(this._config.areas) || {}).cwu, isCw = CW && CW.room === a.id;
     const SX = new Set(isSt ? [ST.group, ST.bottom.light, ST.top.light, ST.bottom.motion, ST.top.motion] : []);
@@ -596,39 +587,39 @@ ha-card.wmc{ gap:var(--s2); }
     if (isCw) { blocks.push(this._cwu(CW)); if (CW.up) blocks.push(this._cwuUp(CW.up)); }
     // stan pokoju: obecność / ruch i drzwi / okna jako chipy
     const CH = [...S.mot, ...S.door].filter(ok);
-    if (CH.length) blocks.push(`<div class="blk"><ha-card class="glass chips">${CH.map((e) => { const s = h.states[e], dc = s.attributes.device_class, on = s.state === 'on', isD = S.door.includes(e), nm = this._nm(e, hgTr('Czujnik', 'Sensor'));
-      const occ = ['occupancy', 'presence'].includes(dc), lab = isD ? (on ? hgTr('otwarte', 'open') : hgTr('zamknięte', 'closed')) : on ? (occ ? hgTr('obecność', 'presence') : hgTr('ruch', 'motion')) : (occ ? hgTr('brak obecności', 'no presence') : hgTr('brak ruchu', 'no motion'));
+    if (CH.length) blocks.push(`<div class="blk"><ha-card class="glass chips">${CH.map((e) => { const s = h.states[e], dc = s.attributes.device_class, on = s.state === 'on', isD = S.door.includes(e), nm = this._nm(e, hgT('common.sensor'));
+      const occ = ['occupancy', 'presence'].includes(dc), lab = isD ? (on ? hgT('common.state_open') : hgT('cards.room.closed')) : on ? (occ ? hgT('cards.room.presence') : hgT('common.state_motion')) : (occ ? hgT('cards.room.no_presence') : hgT('cards.room.state_no_motion'));
       const ic = isD ? (dc === 'window' ? (on ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : on ? 'mdi:door-open' : 'mdi:door-closed') : occ ? (on ? 'mdi:account' : 'mdi:account-outline') : on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off';
-      const t = /^(obecność|ruch|czujnik|presence|occupancy|motion|sensor)$/i.test(nm) ? (occ ? hgTr('Obecność', 'Presence') : hgTr('Ruch', 'Motion')) : nm, st = isD ? (on ? hgTr('Otwarte', 'Open') : hgTr('Zamknięte', 'Closed')) : on ? hgTr('Wykryto', 'Detected') : (occ ? hgTr('Brak obecności', 'No presence') : hgTr('Brak ruchu', 'No motion'));
-      const mn = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)), dur = mn < 1 ? hgTr('chwilę', 'a moment') : mn < 60 ? `${mn} min` : mn < 1440 ? `${Math.floor(mn / 60)} h` : `${Math.floor(mn / 1440)} ${Math.floor(mn / 1440) === 1 ? hgTr('dzień', 'day') : hgTr('dni', 'days')}`;
-      const rel = isNaN(mn) ? '' : mn < 1 ? hgTr('przed chwilą', 'just now') : on ? hgTr(`od ${dur}`, `for ${dur}`) : hgTr(`${dur} temu`, `${dur} ago`);
+      const t = /^(obecność|ruch|czujnik|presence|occupancy|motion|sensor)$/i.test(nm) ? (occ ? hgT('cards.room.title_presence') : hgT('common.motion')) : nm, st = isD ? (on ? hgT('cards.room.open') : hgT('cards.room.state_closed_cap')) : on ? hgT('cards.room.detected') : (occ ? hgT('cards.room.state_no_presence_cap') : hgT('cards.room.state_no_motion_cap'));
+      const mn = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)), dur = mn < 1 ? hgT('cards.room.a_moment') : mn < 60 ? `${mn} min` : mn < 1440 ? `${Math.floor(mn / 60)} h` : `${hgT('cards.room.days_count', { count: Math.floor(mn / 1440) })}`;
+      const rel = isNaN(mn) ? '' : mn < 1 ? hgT('common.just_now') : on ? hgT('cards.room.for', { dur }) : hgT('cards.room.ago', { dur });
       const kind = isD ? 'door' + (dc === 'window' ? ' win' : '') : occ ? 'occ' : 'mot';
       return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(t + ': ' + st + (rel ? ', ' + rel : ''))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`);
-    const blk = (k, rows, n) => { const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${hgTr(d[1], d[3])}<i>${n}</i></div>${rows}</ha-card></div>`); };
+    const blk = (k, rows, n) => { const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${n}</i></div>${rows}</ha-card></div>`); };
     const dimm = (s) => (s.attributes.supported_color_modes || []).some((x) => x !== 'onoff') || s.attributes.brightness != null;
     // światła
     const L = S.light.filter(ok);
     if (L.length) { const d = HG_SEC.find((x) => x[0] === 'light'), nOn = L.filter((e) => h.states[e].state === 'on').length;
-      blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${hgTr(d[1], d[3])}<i>${nOn ? hgTr(`${nOn} z ${L.length} wł.`, `${nOn} of ${L.length} on`) : L.length}</i></div><div class="lg">${L.map((e) => {
-      const s = h.states[e], on = s.state === 'on', dom = e.split('.')[0], nm = this._nm(e, hgTr('Światło', 'Light'));
+      blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${nOn ? hgT('cards.room.lights_on_of_total', { on: nOn, total: L.length }) : L.length}</i></div><div class="lg">${L.map((e) => {
+      const s = h.states[e], on = s.state === 'on', dom = e.split('.')[0], nm = this._nm(e, hgT('cards.room.light'));
       const pct = on && s.attributes.brightness != null ? Math.round(s.attributes.brightness / 2.55) : on ? 100 : 0, dm = dom === 'light' && dimm(s);
-      const br = dm && on ? `<div class="br"><input type="range" min="0" max="100" step="1" value="${pct}" style="--v:${pct}%" data-act="bri" data-e="${H.esc(e)}" aria-label="${H.esc(hgTr('Jasność: ', 'Brightness: ') + nm)}"><output>${pct}%</output></div>` : '';
-      return `<div class="lt ${on ? 'on' : ''}"><button class="ltb" data-act="tgl" data-e="${H.esc(e)}" aria-pressed="${on}" aria-label="${H.esc(nm + ': ' + (on ? hgTr('włączone', 'on') : hgTr('wyłączone', 'off')))}"><span class="lti">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</span><span class="ltx"><b>${H.esc(nm)}</b><span>${on ? (dm ? `${hgTr('Włączone', 'On')} · ${pct}%` : hgTr('Włączone', 'On')) : hgTr('Wyłączone', 'Off')}</span></span></button><button class="ltm" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(nm + hgTr(' – szczegóły', ' – details'))}">${H.icon('mdi:dots-horizontal')}</button>${br}</div>`;
+      const br = dm && on ? `<div class="br"><input type="range" min="0" max="100" step="1" value="${pct}" style="--v:${pct}%" data-act="bri" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.brightness_aria', { name: nm }))}"><output>${pct}%</output></div>` : '';
+      return `<div class="lt ${on ? 'on' : ''}"><button class="ltb" data-act="tgl" data-e="${H.esc(e)}" aria-pressed="${on}" aria-label="${H.esc(nm + ': ' + (on ? hgT('cards.room.state_on_lower') : hgT('cards.room.off')))}"><span class="lti">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</span><span class="ltx"><b>${H.esc(nm)}</b><span>${on ? (dm ? `${hgT('common.on_neut')} · ${pct}%` : hgT('common.on_neut')) : hgT('common.off_neut')}</span></span></button><button class="ltm" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(hgT('cards.room.details_aria', { name: nm }))}">${H.icon('mdi:dots-horizontal')}</button>${br}</div>`;
     }).join('')}</div></ha-card></div>`); }
     // klimatyzacja (karta hg-ac-card wstawiana po renderze) + bojler/podgrzewacz jako wiersz
     for (const e of S.clim.filter((x) => x.startsWith('climate.') && ok(x))) blocks.push(`<div class="blk"><div class="acslot" data-ac="${H.esc(e)}"></div></div>`);
     const WH = S.clim.filter((x) => !x.startsWith('climate.') && ok(x));
-    if (WH.length) blk('clim', WH.map((e) => { const s = h.states[e], ct = s.attributes.current_temperature, nm = this._nm(e, hgTr('Podgrzewacz', 'Water heater'));
-      return `<div class="row ${s.state !== 'off' ? 'on' : ''}"><span class="ri">${H.icon('mdi:water-boiler')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(H.T(this._hass, s))}${s.attributes.temperature != null ? hgTr(' · cel ', ' · target ') + H.fmt(s.attributes.temperature) + '°' : ''}</span></button>${ct != null ? `<span class="v">${H.fmt(ct, 0)}<em>°C</em></span>` : ''}</div>`; }).join(''), WH.length);
+    if (WH.length) blk('clim', WH.map((e) => { const s = h.states[e], ct = s.attributes.current_temperature, nm = this._nm(e, hgT('cards.room.water_heater'));
+      return `<div class="row ${s.state !== 'off' ? 'on' : ''}"><span class="ri">${H.icon('mdi:water-boiler')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(H.T(this._hass, s))}${s.attributes.temperature != null ? ' · ' + hgT('cards.room.target_temp', { temp: H.fmt(s.attributes.temperature) }) : ''}</span></button>${ct != null ? `<span class="v">${H.fmt(ct, 0)}<em>°C</em></span>` : ''}</div>`; }).join(''), WH.length);
     // media
     const M = S.media.filter(ok);
     for (const e of M) blocks.push(this._player(e));
     // rolety
     const C = S.cover.filter(ok);
-    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, hgTr('Roleta', 'Cover')), p = s.attributes.current_position, cf = s.attributes.supported_features ?? 11;
-      const st = hgTr({ open: 'Otwarta', closed: 'Zamknięta', opening: 'Otwiera się', closing: 'Zamyka się' }, { open: 'Open', closed: 'Closed', opening: 'Opening', closing: 'Closing' })[s.state] || H.stateLabel(s.state);
+    if (C.length) blk('cover', C.map((e) => { const s = h.states[e], nm = this._nm(e, hgT('cards.room.cover')), p = s.attributes.current_position, cf = s.attributes.supported_features ?? 11;
+      const st = ['open', 'closed', 'opening', 'closing'].includes(s.state) ? hgTD('cards.room.cover_states.' + s.state, s.state) : H.stateLabel(s.state);
       return `<div class="row ${s.state === 'open' ? 'opn' : ''}"><span class="ri">${H.icon(s.state === 'closed' ? 'mdi:window-shutter' : 'mdi:window-shutter-open')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${H.esc(st)}${p != null ? ' · ' + p + '%' : ''}</span></button>
-        <div class="bts">${cf & 1 ? `<button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="${hgTr('Otwórz', 'Open')}">${H.icon('mdi:arrow-up')}</button>` : ''}${cf & 8 ? `<button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="${hgTr('Zatrzymaj', 'Stop')}">${H.icon('mdi:stop')}</button>` : ''}${cf & 2 ? `<button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:arrow-down')}</button>` : ''}</div></div>`; }).join(''), C.length);
+        <div class="bts">${cf & 1 ? `<button class="bt" data-act="cov" data-s="open_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.open')}">${H.icon('mdi:arrow-up')}</button>` : ''}${cf & 8 ? `<button class="bt" data-act="cov" data-s="stop_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.stop')}">${H.icon('mdi:stop')}</button>` : ''}${cf & 2 ? `<button class="bt" data-act="cov" data-s="close_cover" data-e="${H.esc(e)}" aria-label="${hgT('common.close')}">${H.icon('mdi:arrow-down')}</button>` : ''}</div></div>`; }).join(''), C.length);
     // kamery: osadzona karta kamery (miniatura, podgląd na żywo, pełny ekran)
     for (const e of S.cam) if (ok(e)) blocks.push(`<div class="blk"><div class="camslot" data-cam="${H.esc(e)}"></div></div>`);
     // urządzenia: jedna karta na urządzenie (encje mediów/klimatyzacji/kamer należą do swoich komponentów)
@@ -641,21 +632,21 @@ ha-card.wmc{ gap:var(--s2); }
     for (const g of DG.devs) { if (envOnly(g)) continue; const html = this._devCard(g, a); if (html) blocks.push(html); else unDev.push(g); }
     // encje bez urządzenia: przełączniki i odczyty jako listy
     const LW = DG.loose.filter((e) => ok(e) && S.sw.includes(e));
-    if (LW.length) blk('sw', LW.map((e) => { const s = h.states[e], dom = e.split('.')[0], nm = this._nm(e, hgTr('Przełącznik', 'Switch'));
+    if (LW.length) blk('sw', LW.map((e) => { const s = h.states[e], dom = e.split('.')[0], nm = this._nm(e, hgT('cards.room.switch'));
       const on = dom === 'lock' ? s.state === 'unlocked' : ['on', 'open'].includes(s.state);
-      const sub = dom === 'lock' ? (s.state === 'locked' ? hgTr('Zamknięty', 'Locked') : hgTr('Otwarty', 'Unlocked')) : on ? hgTr('Włączone', 'On') : hgTr('Wyłączone', 'Off');
+      const sub = dom === 'lock' ? (s.state === 'locked' ? hgT('cards.room.locked') : hgT('cards.room.unlocked')) : on ? hgT('common.on_neut') : hgT('common.off_neut');
       return `<div class="row ${on ? 'on' : ''}"><span class="ri">${H.icon(s.attributes.icon || HG_DOM_ICON[dom] || 'mdi:toggle-switch-outline')}</span><button class="tx" data-act="more" data-e="${H.esc(e)}"><b>${H.esc(nm)}</b><span>${sub}</span></button>
         ${this.toggleHtml(on, 'tgl', false, nm).replace('data-act="tgl"', `data-act="tgl" data-e="${H.esc(e)}"`)}</div>`; }).join(''), LW.length);
     const LS = DG.loose.filter((e) => ok(e) && S.sens.includes(e));
-    if (LS.length) blk('sens', LS.map((e) => { const s = h.states[e], dc = s.attributes.device_class, bin = e.startsWith('binary_sensor.'), nm = this._nm(e, hgTr('Czujnik', 'Sensor'));
+    if (LS.length) blk('sens', LS.map((e) => { const s = h.states[e], dc = s.attributes.device_class, bin = e.startsWith('binary_sensor.'), nm = this._nm(e, hgT('common.sensor'));
       const [v, u] = bin ? [H.T(this._hass, s), ''] : this._num(s);
       return `<button class="row ${bin && s.state === 'on' ? 'act' : ''}" data-act="more" data-e="${H.esc(e)}" style="width:100%"><span class="ri">${H.icon(s.attributes.icon || HG_DC_ICON[dc] || HG_DOM_ICON[e.split('.')[0]])}</span><span class="tx"><b>${H.esc(nm)}</b></span><span class="v">${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</span></button>`; }).join(''), LS.length);
     // niedostępne: zwinięte (całe urządzenia jako jedna pozycja)
     const UNI = [...DG.loose.filter((e) => !ok(e) && !S.misc.some((g) => g.ents.includes(e))).map((e) => ({ e, n: this._nm(e, e), i: HG_DOM_ICON[e.split('.')[0]] || 'mdi:help-circle-outline' })),
       ...[...S.light, ...S.media, ...S.clim.filter((x) => x.startsWith('climate.'))].filter((e) => !ok(e)).map((e) => ({ e, n: this._nm(e, e), i: HG_DOM_ICON[e.split('.')[0]] || 'mdi:help-circle-outline' })),
-      ...unDev.map((g) => { const dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents); return { d: g.d, n: dv.name_by_user || (P && hgTr(P.name, P.nameEn)) || dv.name || hgTr('Urządzenie', 'Device'), i: (P && P.icon) || 'mdi:devices' }; })];
-    if (UNI.length) blocks.push(`<div class="blk ${this._showUn ? "" : "unb"}"><ha-card class="glass ${this._showUn ? "" : "quiet"}"><button class="unh" data-act="unv" aria-expanded="${!!this._showUn}">${hgTr('Niedostępne', 'Unavailable')} · ${UNI.length}${H.icon(this._showUn ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>
-      ${this._showUn ? UNI.map((x) => `<button class="row un" ${x.d ? `data-act="dev" data-d="${H.esc(x.d)}"` : `data-act="more" data-e="${H.esc(x.e)}"`} style="width:100%"><span class="ri">${H.icon(x.i)}</span><span class="tx"><b>${H.esc(x.n)}</b><span>${hgTr('Niedostępne', 'Unavailable')}</span></span></button>`).join('') : ''}</ha-card></div>`);
+      ...unDev.map((g) => { const dv = (h.devices || {})[g.d] || {}, P = HGDev.prof(h, g.d, g.ents); return { d: g.d, n: dv.name_by_user || (P && String(P.name)) || dv.name || hgT('cards.room.device'), i: (P && P.icon) || 'mdi:devices' }; })];
+    if (UNI.length) blocks.push(`<div class="blk ${this._showUn ? "" : "unb"}"><ha-card class="glass ${this._showUn ? "" : "quiet"}"><button class="unh" data-act="unv" aria-expanded="${!!this._showUn}">${hgT('common.unavailable')} · ${UNI.length}${H.icon(this._showUn ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>
+      ${this._showUn ? UNI.map((x) => `<button class="row un" ${x.d ? `data-act="dev" data-d="${H.esc(x.d)}"` : `data-act="more" data-e="${H.esc(x.e)}"`} style="width:100%"><span class="ri">${H.icon(x.i)}</span><span class="tx"><b>${H.esc(x.n)}</b><span>${hgT('common.unavailable')}</span></span></button>`).join('') : ''}</ha-card></div>`);
     // tryb edycji: encje dodane do pokoju (klimat/kamera jako osadzone karty, reszta jako kafelki)
     for (const x of RL.added) if (x.c) blocks.push(`<div class="blk" style="align-self:start;--hg-min-h:0px" data-hgk="${H.esc(x.e)}">${hgCmHtml(x).replace(/ data-hgk="[^"]*"/, '')}</div>`); else if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
       blocks.push(`<div class="blk" data-hgk="${H.esc(x.e)}">${k === 'clim' ? `<div class="acslot" data-ac="${H.esc(x.e)}"></div>` : k === 'cam' ? `<div class="camslot" data-cam="${H.esc(x.e)}"></div>` : `<div class="tg2 one">${hgTileHtml(h, x.e).replace(/ data-hgk="[^"]*"/, '')}</div>`}</div>`); }
@@ -679,12 +670,13 @@ ha-card.wmc{ gap:var(--s2); }
     clearInterval(this._stT); this._stT = 0;
     hgNP.after(this);
     if (this._stFade) this._stT = setInterval(() => { const el = this.$.querySelector('.stf'), r = Math.ceil((this._stFade - Date.now()) / 1000);
-      if (!el || r <= 0) { clearInterval(this._stT); this._stT = 0; this._stFade = null; if (el) el.textContent = hgTr('Gaśnie…', 'Turning off…'); return; } el.textContent = hgTr(`Gaśnie za ${r} s`, `Turning off in ${r} s`); const n = this.$.querySelector('.stn'); if (n) n.textContent = r; }, 1000);
+      if (!el || r <= 0) { clearInterval(this._stT); this._stT = 0; this._stFade = null; if (el) el.textContent = hgT('cards.room.turning_off'); return; } el.textContent = hgT('cards.room.turning_off_in_s', { seconds: r }); const n = this.$.querySelector('.stn'); if (n) n.textContent = r; }, 1000);
     const h = this._hass, keep = new Set();
     for (const slot of this.$.querySelectorAll('.acslot[data-ac]')) {
       const e = slot.dataset.ac; keep.add(e);
       let el = this._ac.get(e);
-      if (!el) { el = document.createElement('hg-ac-card'); el.setConfig({ entity: e, title: this._nm(e, hgTr('Klimatyzacja', 'Air conditioning')), compact: true }); this._ac.set(e, el); }
+      if (!el) { el = document.createElement('hg-ac-card'); this._ac.set(e, el); }
+      if (el._roomLang !== HGI18n.code) { el._roomLang = HGI18n.code; el.setConfig({ entity: e, title: this._nm(e, hgT('common.air_conditioning')), compact: true }); }   /* tytuł zapasowy w bieżącym języku */
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._ac.keys()]) if (!keep.has(k)) this._ac.delete(k);
@@ -692,8 +684,9 @@ ha-card.wmc{ gap:var(--s2); }
     for (const slot of this.$.querySelectorAll('.camslot[data-cam]')) {
       const e = slot.dataset.cam; kc.add(e);
       let el = this._cams.get(e);
-      if (!el) { el = document.createElement('hg-camera-card'); const A = HGAreas.glob(this._config.areas) || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
-        el.setConfig({ entity: e, name: ((HGAreas.glob(this._config.areas) || {}).entity_names || {})[e] || this._nm(e, hgTr('Kamera', 'Camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); this._cams.set(e, el); }
+      if (!el) { el = document.createElement('hg-camera-card'); this._cams.set(e, el); }
+      if (el._roomLang !== HGI18n.code) { el._roomLang = HGI18n.code; const A = HGAreas.glob(this._config.areas) || {}, fs = (A.camera_fs || {})[e], fb = (A.camera_fb || {})[e], rf = (A.camera_refresh || {})[e];
+        el.setConfig({ entity: e, name: ((HGAreas.glob(this._config.areas) || {}).entity_names || {})[e] || this._nm(e, hgT('cards.room.camera')), embedded: true, ...(fs ? { fs_entity: fs } : {}), ...(fb ? { fallback: fb } : {}), ...(rf ? { refresh: rf } : {}) }); }
       slot.appendChild(el); el.hass = h;
     }
     for (const k of [...this._cams.keys()]) if (!kc.has(k)) this._cams.delete(k);
@@ -725,4 +718,4 @@ ha-card.wmc{ gap:var(--s2); }
   }
   getCardSize() { return 10; }
 }
-hgReg('hg-room-card', HGRoomCard, 'Home Glass – Pokój', 'Wszystkie encje pokoju pogrupowane wg rodzaju (adres ?area=<id> albo pole room)');
+hgReg('hg-room-card', HGRoomCard, hgTLazy('cards.room.picker_name'), hgTLazy('cards.room.picker_description'));

@@ -815,9 +815,53 @@ common.battery,parts/cards/robots-card.part.js,216,hgTr,Battery,Bateria,,,auto
 cards.robots.maintenance,parts/cards/robots-card.part.js,218,hgTr,Maintenance,Eksploatacja,,,auto
 cards.robots.picker_name,parts/cards/robots-card.part.js,277,hgTr,Home Glass: Robots,Home Glass: Roboty,,load-time,auto
 cards.robots.picker_description,parts/cards/robots-card.part.js,277,hgTr,"Vacuums and mowers: state, map, controls, rooms, maintenance","Odkurzacze i kosiarki: stan, mapa, sterowanie, pokoje, eksploatacja",,load-time,auto
-cards.room.hg_st_en,parts/cards/room-card.part.js,55,hgTr,HG_ST_EN,HG_ST_PL,,expr,manual
-cards.room.hg_wm_job_en,parts/cards/room-card.part.js,372,hgTr,HG_WM_JOB_EN,HG_WM_JOB,,expr,manual
-cards.room.hg_wm_ms_en,parts/cards/room-card.part.js,373,hgTr,HG_WM_MS_EN,HG_WM_MS,,expr,manual
+cards.room.device_states.standby,parts/cards/room-card.part.js,55,hgTr,Standby,Gotowość,,expr,auto
+cards.room.device_states.idle,parts/cards/room-card.part.js,55,hgTr,Idle,Bezczynny,,expr,auto
+cards.room.device_states.heating,parts/cards/room-card.part.js,55,hgTr,Heating,Grzeje,,expr,auto
+cards.room.device_states.boiling,parts/cards/room-card.part.js,55,hgTr,Boiling,Gotuje,,expr,auto
+cards.room.device_states.keep_warm,parts/cards/room-card.part.js,55,hgTr,Keeping warm,Utrzymuje temperaturę,,expr,auto
+cards.room.device_states.warming,parts/cards/room-card.part.js,55,hgTr,Keeping warm,Utrzymuje temperaturę,,expr,auto
+cards.room.device_states.cooking,parts/cards/room-card.part.js,55,hgTr,Cooking,Gotuje,,expr,auto
+cards.room.device_states.preheat,parts/cards/room-card.part.js,55,hgTr,Preheating,Rozgrzewa,,expr,auto
+cards.room.device_states.preheating,parts/cards/room-card.part.js,55,hgTr,Preheating,Rozgrzewa,,expr,auto
+cards.room.device_states.appointment,parts/cards/room-card.part.js,55,hgTr,Scheduled,Zaplanowane,,expr,auto
+cards.room.device_states.reservation,parts/cards/room-card.part.js,55,hgTr,Scheduled,Zaplanowane,,expr,auto
+cards.room.device_states.paused,parts/cards/room-card.part.js,55,hgTr,Paused,Pauza,,expr,auto
+cards.room.device_states.pause,parts/cards/room-card.part.js,55,hgTr,Paused,Pauza,,expr,auto
+cards.room.device_states.completed,parts/cards/room-card.part.js,55,hgTr,Done,Gotowe,,expr,auto
+cards.room.device_states.done,parts/cards/room-card.part.js,55,hgTr,Done,Gotowe,,expr,auto
+cards.room.device_states.finished,parts/cards/room-card.part.js,55,hgTr,Done,Gotowe,,expr,auto
+cards.room.device_states.running,parts/cards/room-card.part.js,55,hgTr,Running,Pracuje,,expr,auto
+cards.room.device_states.working,parts/cards/room-card.part.js,55,hgTr,Running,Pracuje,,expr,auto
+cards.room.device_states.shutdown,parts/cards/room-card.part.js,55,hgTr,Off,Wyłączone,,expr,auto
+cards.room.device_states.off,parts/cards/room-card.part.js,55,hgTr,Off,Wyłączone,,expr,auto
+cards.room.device_states.on,parts/cards/room-card.part.js,55,hgTr,On,Włączone,,expr,auto
+cards.room.device_states.auto,parts/cards/room-card.part.js,55,hgTr,Auto,Automatyczny,,expr,auto
+cards.room.device_states.silent,parts/cards/room-card.part.js,55,hgTr,Silent,Cichy,,expr,auto
+cards.room.device_states.sleep,parts/cards/room-card.part.js,55,hgTr,Sleep,Nocny,,expr,auto
+cards.room.device_states.favorite,parts/cards/room-card.part.js,55,hgTr,Favorite,Ulubiony,,expr,auto
+cards.room.device_states.manual,parts/cards/room-card.part.js,55,hgTr,Manual,Ręczny,,expr,auto
+cards.room.device_states.normal,parts/cards/room-card.part.js,55,hgTr,Normal,Normalny,,expr,auto
+cards.room.device_states.smart,parts/cards/room-card.part.js,55,hgTr,Smart,Inteligentny,,expr,auto
+cards.room.device_states.intermittent,parts/cards/room-card.part.js,55,hgTr,Intermittent,Przerywany,,expr,auto
+cards.room.washer_jobs.wash,parts/cards/room-card.part.js,372,hgTr,Washing,Pranie,,expr,auto
+cards.room.washer_jobs.ai_wash,parts/cards/room-card.part.js,372,hgTr,AI wash,Pranie AI,,expr,auto
+cards.room.washer_jobs.pre_wash,parts/cards/room-card.part.js,372,hgTr,Pre-wash,Pranie wstępne,,expr,auto
+cards.room.washer_jobs.air_wash,parts/cards/room-card.part.js,372,hgTr,Air wash,Odświeżanie,,expr,auto
+cards.room.washer_jobs.rinse,parts/cards/room-card.part.js,372,hgTr,Rinsing,Płukanie,,expr,auto
+cards.room.washer_jobs.ai_rinse,parts/cards/room-card.part.js,372,hgTr,AI rinse,Płukanie AI,,expr,auto
+cards.room.washer_jobs.spin,parts/cards/room-card.part.js,372,hgTr,Spinning,Wirowanie,,expr,auto
+cards.room.washer_jobs.ai_spin,parts/cards/room-card.part.js,372,hgTr,AI spin,Wirowanie AI,,expr,auto
+cards.room.washer_jobs.drying,parts/cards/room-card.part.js,372,hgTr,Drying,Suszenie,,expr,auto
+cards.room.washer_jobs.cooling,parts/cards/room-card.part.js,372,hgTr,Cooling,Chłodzenie,,expr,auto
+cards.room.washer_jobs.weight_sensing,parts/cards/room-card.part.js,372,hgTr,Weighing load,Ważenie prania,,expr,auto
+cards.room.washer_jobs.delay_wash,parts/cards/room-card.part.js,372,hgTr,Delayed start,Opóźniony start,,expr,auto
+cards.room.washer_jobs.wrinkle_prevent,parts/cards/room-card.part.js,372,hgTr,Wrinkle prevention,Ochrona przed zagnieceniem,,expr,auto
+cards.room.washer_jobs.freeze_protection,parts/cards/room-card.part.js,372,hgTr,Freeze protection,Ochrona przed mrozem,,expr,auto
+cards.room.washer_jobs.finish,parts/cards/room-card.part.js,372,hgTr,Finished,Zakończone,,expr,auto
+cards.room.washer_states.run,parts/cards/room-card.part.js,373,hgTr,Running,Pracuje,,expr,auto
+cards.room.washer_states.pause,parts/cards/room-card.part.js,373,hgTr,Paused,Pauza,,expr,auto
+cards.room.washer_states.stop,parts/cards/room-card.part.js,373,hgTr,Stopped,Zatrzymana,,expr,auto
 cards.room.wash_complete,parts/cards/room-card.part.js,374,hgTr,Wash complete,Pranie zakończone,,,auto
 common.off_fem,parts/cards/room-card.part.js,374,hgTr,Off,Wyłączona,,,auto
 cards.room.ready,parts/cards/room-card.part.js,374,hgTr,Ready,Gotowa,,,auto
@@ -836,8 +880,8 @@ cards.room.paused,parts/cards/room-card.part.js,396,hgTr,Paused,Pauza,,,auto
 cards.room.running,parts/cards/room-card.part.js,396,hgTr,Running,Pracuje,,,auto
 common.off_fem,parts/cards/room-card.part.js,396,hgTr,Off,Wyłączona,,,auto
 cards.room.ready,parts/cards/room-card.part.js,396,hgTr,Ready,Gotowa,,,auto
-cards.room.paused_2,parts/cards/room-card.part.js,397,hgTr, · paused, · pauza,,,review
-cards.room.remaining,parts/cards/room-card.part.js,423,hgTr,Remaining ,Pozostało ,,concat,manual
+cards.room.washer_paused,parts/cards/room-card.part.js,397,hgTr,paused,pauza,,,auto
+cards.room.remaining_time,parts/cards/room-card.part.js,423,hgTr,Remaining {time},Pozostało {time},time,concat,auto
 cards.room.ends,parts/cards/room-card.part.js,423,hgTr,Ends,Koniec,,,auto
 cards.room.hot_water_tank,parts/cards/room-card.part.js,437,hgTr,Hot water tank,Zbiornik ciepłej wody,,,auto
 cards.room.temperature_history,parts/cards/room-card.part.js,437,hgTr,Temperature history,Historia temperatury,,,auto
@@ -857,56 +901,81 @@ cards.room.standard_heating,parts/cards/room-card.part.js,451,hgTr,Standard heat
 common.off_masc,parts/cards/room-card.part.js,452,hgTr,Off,Wyłączony,,,auto
 cards.room.heating,parts/cards/room-card.part.js,452,hgTr,Heating,Grzeje,,,auto
 cards.room.keeping_warm,parts/cards/room-card.part.js,452,hgTr,Keeping warm,Utrzymuje temperaturę,,,auto
-cards.room.ready_2,parts/cards/room-card.part.js,452,hgTr,Ready,Gotowy,,,review
+cards.room.kettle_ready,parts/cards/room-card.part.js,452,hgTr,Ready,Gotowy,,,auto
 cards.room.heating_power,parts/cards/room-card.part.js,455,hgTr,Heating power,Moc grzania,,,auto
-cards.room.remaining_2,parts/cards/room-card.part.js,455,hgTr,Remaining,Do końca,,,review
+cards.room.kettle_remaining,parts/cards/room-card.part.js,455,hgTr,Remaining,Do końca,,,auto
 cards.room.water_usage,parts/cards/room-card.part.js,455,hgTr,Water usage,Zużycie wody,,,auto
 cards.room.hot_water,parts/cards/room-card.part.js,458,hgTr,Hot water,Ciepła woda,,,auto
 cards.room.water_heater_details,parts/cards/room-card.part.js,458,hgTr,Water heater details,Szczegóły bojlera,,,auto
 cards.room.tank,parts/cards/room-card.part.js,460,hgTr,Tank,Zbiornik,,,auto
 common.no_data,parts/cards/room-card.part.js,460,hgTr,no data,brak danych,,,auto
 cards.room.heating,parts/cards/room-card.part.js,461,hgTr,Heating,Grzeje,,,auto
-cards.room.to_h_fmt_tgt,parts/cards/room-card.part.js,461,hgTr," to ${H.fmt(tgt, 0)}°"," do ${H.fmt(tgt, 0)}°",,expr,manual
+cards.room.to_temp,parts/cards/room-card.part.js,461,hgTr,to {temp}°,do {temp}°,temp,expr,auto
 cards.room.lower_setpoint,parts/cards/room-card.part.js,462,hgTr,Lower setpoint,Obniż nastawę,,,auto
 cards.room.setpoint,parts/cards/room-card.part.js,462,hgTr,Setpoint,Nastawa,,,auto
 cards.room.raise_setpoint,parts/cards/room-card.part.js,462,hgTr,Raise setpoint,Podwyższ nastawę,,,auto
-cards.room.x_for_for_1,parts/cards/room-card.part.js,469,hgTr,x ? `for ${x}` : 'for <1 min',x ? `od ${x}` : 'od chwili',,expr,manual
-cards.room.bottom_bottom_top_top,parts/cards/room-card.part.js,473,hgTr,"{ bottom: 'Bottom', top: 'Top' }","{ bottom: 'Dół', top: 'Góra' }",,object,manual
-cards.room.nm_k_bulb_o,parts/cards/room-card.part.js,491,hgTr,${nm[k]} bulb: ${o.ok ? (o.on ? `on ${p}%` : 'off') : 'unavailable'},Żarówka ${nm[k].toLowerCase()}: ${o.ok ? (o.on ? `włączona ${p}%` : 'wyłączona') : 'niedostępna'},,expr,manual
+cards.room.stairs.for_time,parts/cards/room-card.part.js,469,hgTr,for {time},od {time},time,expr,auto
+cards.room.stairs.for_moment,parts/cards/room-card.part.js,469,hgTr,for <1 min,od chwili,,expr,auto
+cards.room.stairs.bottom,parts/cards/room-card.part.js,473,hgTr,Bottom,Dół,,object,auto
+cards.room.stairs.top,parts/cards/room-card.part.js,473,hgTr,Top,Góra,,object,auto
+cards.room.stairs.bulb_bottom,parts/cards/room-card.part.js,473,hgTr,Bottom bulb,Żarówka dół,,object,auto
+cards.room.stairs.bulb_top,parts/cards/room-card.part.js,473,hgTr,Top bulb,Żarówka góra,,object,auto
+cards.room.stairs.bulb_state,parts/cards/room-card.part.js,491,hgTr,{bulb}: {state},{bulb}: {state},"bulb,state",expr,auto
+cards.room.stairs.bulb_on,parts/cards/room-card.part.js,491,hgTr,on {percent}%,włączona {percent}%,percent,expr,auto
+cards.room.stairs.bulb_off,parts/cards/room-card.part.js,491,hgTr,off,wyłączona,,expr,auto
+cards.room.stairs.bulb_unavailable,parts/cards/room-card.part.js,491,hgTr,unavailable,niedostępna,,expr,auto
 common.off_short,parts/cards/room-card.part.js,494,hgTr,Off,Wył.,,,auto
 cards.room.motion_now,parts/cards/room-card.part.js,496,hgTr,Motion now,Ruch teraz,,,auto
-cards.room.no_motion,parts/cards/room-card.part.js,496,hgTr,No motion ,Ruch ,,concat,manual
-cards.room.turning_off_in_s,parts/cards/room-card.part.js,505,hgTr,Turning off in {rem} s,Gaśnie za {rem} s,rem,,auto
+cards.room.stairs.motion_ago,parts/cards/room-card.part.js,496,hgTr,No motion {time},Ruch {time},time,concat,auto
+cards.room.turning_off_in_s,parts/cards/room-card.part.js,496,hgTr,Turning off in {seconds} s,Gaśnie za {seconds} s,seconds,,auto
 cards.room.all,parts/cards/room-card.part.js,507,hgTr,All,Wszystkie,,,auto
 cards.room.stair_lights,parts/cards/room-card.part.js,507,hgTr,Stair lights,Światła schody,,,auto
 common.state_motion,parts/cards/room-card.part.js,509,hgTr,motion,ruch,,,auto
-cards.room.no_motion_2,parts/cards/room-card.part.js,509,hgTr,no motion ,brak ruchu ,,concat,manual
+cards.room.stairs.no_motion_ago,parts/cards/room-card.part.js,509,hgTr,no motion {time},brak ruchu {time},time,concat,auto
 cards.room.motion_now,parts/cards/room-card.part.js,509,hgTr,Motion now,Ruch teraz,,,auto
-cards.room.no_motion_3,parts/cards/room-card.part.js,509,hgTr,No motion,Brak ruchu,,,review
+cards.room.state_no_motion_cap,parts/cards/room-card.part.js,509,hgTr,No motion,Brak ruchu,,,auto
 cards.room.stair_lighting,parts/cards/room-card.part.js,511,hgTr,Stair lighting,Oświetlenie schodów,,,auto
-cards.room.turning_off_in_s,parts/cards/room-card.part.js,511,hgTr,Turning off in {rem} s,Gaśnie za {rem} s,rem,,auto
-cards.room.on,parts/cards/room-card.part.js,511,hgTr,On,Świeci,,,review
+cards.room.turning_off_in_s,parts/cards/room-card.part.js,502,hgTr,Turning off in {seconds} s,Gaśnie za {seconds} s,seconds,,auto
+cards.room.stairs.state_lit,parts/cards/room-card.part.js,511,hgTr,On,Świeci,,,auto
 common.off_neut,parts/cards/room-card.part.js,511,hgTr,Off,Wyłączone,,,auto
 common.off_short,parts/cards/room-card.part.js,513,hgTr,Off,Wył.,,,auto
-cards.room.nm_k_bulb,parts/cards/room-card.part.js,513,hgTr,nm[k] + ' bulb','Żarówka ' + nm[k].toLowerCase(),,concat,manual
 cards.room.all,parts/cards/room-card.part.js,514,hgTr,All,Wszystkie,,,auto
 cards.room.stair_lights,parts/cards/room-card.part.js,514,hgTr,Stair lights,Światła schody,,,auto
 cards.room.automatic,parts/cards/room-card.part.js,515,hgTr,Automatic,Automatyczne,,,auto
 cards.room.stairs_automation,parts/cards/room-card.part.js,515,hgTr,Stairs automation,Automatyzacja schodów,,,auto
 cards.room.player,parts/cards/room-card.part.js,521,hgTr,Player,Odtwarzacz,,,auto
 cards.room.device,parts/cards/room-card.part.js,529,hgTr,Device,Urządzenie,,,auto
-cards.room.p_nameen,parts/cards/room-card.part.js,530,hgTr,P.nameEn,P.name,,expr,manual
+cards.room.profiles.washer.name,parts/cards/room-card.part.js,530,hgTr,Washer,Pralka,,expr,auto
+cards.room.profiles.kettle.name,parts/cards/room-card.part.js,530,hgTr,Kettle,Czajnik,,expr,auto
+cards.room.profiles.fountain.name,parts/cards/room-card.part.js,530,hgTr,Pet fountain,Poidełko,,expr,auto
+cards.room.profiles.fryer.name,parts/cards/room-card.part.js,530,hgTr,Air fryer,Frytkownica,,expr,auto
+cards.room.profiles.purifier.name,parts/cards/room-card.part.js,530,hgTr,Air purifier,Oczyszczacz,,expr,auto
 cards.room.device,parts/cards/room-card.part.js,530,hgTr,Device,Urządzenie,,,auto
 common.on_masc,parts/cards/room-card.part.js,543,hgTr,On,Włączony,,,auto
 common.off_masc,parts/cards/room-card.part.js,543,hgTr,Off,Wyłączony,,,auto
-cards.room.error,parts/cards/room-card.part.js,547,hgTr,Error: ,Błąd: ,,concat,manual
-cards.room.w_en,parts/cards/room-card.part.js,548,hgTr,w.en,w.on,,expr,manual
-cards.room.m_en,parts/cards/room-card.part.js,555,hgTr,m.en,m.label,,expr,manual
+cards.room.error_value,parts/cards/room-card.part.js,547,hgTr,Error: {value},Błąd: {value},value,concat,auto
+cards.room.profiles.kettle.warnings.lifted,parts/cards/room-card.part.js,548,hgTr,Lifted off base,Zdjęty z podstawy,,expr,auto
+cards.room.profiles.fountain.warnings.no_water,parts/cards/room-card.part.js,548,hgTr,No water,Brak wody,,expr,auto
+cards.room.profiles.fountain.warnings.pump_blocked,parts/cards/room-card.part.js,548,hgTr,Pump blocked,Pompa zablokowana,,expr,auto
+cards.room.profiles.fountain.warnings.lid_open,parts/cards/room-card.part.js,548,hgTr,Lid open,Pokrywa otwarta,,expr,auto
+cards.room.profiles.kettle.metrics.water,parts/cards/room-card.part.js,555,hgTr,Water,Woda,,expr,auto
+cards.room.profiles.kettle.metrics.target,parts/cards/room-card.part.js,555,hgTr,Target,Cel,,expr,auto
+cards.room.profiles.kettle.metrics.keep_warm,parts/cards/room-card.part.js,555,hgTr,Keep warm,Utrzymanie,,expr,auto
+cards.room.profiles.fountain.metrics.filter,parts/cards/room-card.part.js,555,hgTr,Filter,Filtr,,expr,auto
+cards.room.profiles.fountain.metrics.cartridge,parts/cards/room-card.part.js,555,hgTr,Cartridge,Wkład,,expr,auto
+cards.room.profiles.fountain.metrics.until_cleaning,parts/cards/room-card.part.js,555,hgTr,Until cleaning,Do mycia,,expr,auto
+cards.room.profiles.fryer.metrics.remaining,parts/cards/room-card.part.js,555,hgTr,Remaining,Pozostało,,expr,auto
+cards.room.profiles.fryer.metrics.temperature,parts/cards/room-card.part.js,555,hgTr,Temperature,Temperatura,,expr,auto
+cards.room.profiles.fryer.metrics.time,parts/cards/room-card.part.js,555,hgTr,Time,Czas,,expr,auto
+cards.room.profiles.purifier.metrics.pm25,parts/cards/room-card.part.js,555,hgTr,PM2.5,"PM2,5",,expr,auto
+cards.room.profiles.purifier.metrics.filter,parts/cards/room-card.part.js,555,hgTr,Filter,Filtr,,expr,auto
+cards.room.profiles.purifier.metrics.temperature,parts/cards/room-card.part.js,555,hgTr,Temperature,Temperatura,,expr,auto
+cards.room.profiles.purifier.metrics.humidity,parts/cards/room-card.part.js,555,hgTr,Humidity,Wilgotność,,expr,auto
 cards.room.reading,parts/cards/room-card.part.js,560,hgTr,Reading,Odczyt,,,auto
 cards.room.climate_sensor,parts/cards/room-card.part.js,564,hgTr,Climate sensor,Czujnik klimatu,,,auto
-cards.room.d,parts/cards/room-card.part.js,568,hgTr,d,dni,,,review
+cards.room.unit_days,parts/cards/room-card.part.js,568,hgTr,d,dni,,,auto
 cards.room.yes,parts/cards/room-card.part.js,575,hgTr,Yes,Tak,,,auto
-cards.room.no,parts/cards/room-card.part.js,575,hgTr,No,Nie,,,review
+cards.room.answer_no,parts/cards/room-card.part.js,575,hgTr,No,Nie,,,auto
 cards.room.device_settings,parts/cards/room-card.part.js,577,hgTr,Device settings,Ustawienia urządzenia,,,auto
 cards.room.less,parts/cards/room-card.part.js,582,hgTr,Less,Mniej,,,auto
 common.more,parts/cards/room-card.part.js,582,hgTr,More,Więcej,,,auto
@@ -919,35 +988,34 @@ cards.room.closed,parts/cards/room-card.part.js,600,hgTr,closed,zamknięte,,,aut
 cards.room.presence,parts/cards/room-card.part.js,600,hgTr,presence,obecność,,,auto
 common.state_motion,parts/cards/room-card.part.js,600,hgTr,motion,ruch,,,auto
 cards.room.no_presence,parts/cards/room-card.part.js,600,hgTr,no presence,brak obecności,,,auto
-cards.room.no_motion_4,parts/cards/room-card.part.js,600,hgTr,no motion,brak ruchu,,,review
-cards.room.presence_2,parts/cards/room-card.part.js,602,hgTr,Presence,Obecność,,,review
+cards.room.state_no_motion,parts/cards/room-card.part.js,600,hgTr,no motion,brak ruchu,,,auto
+cards.room.title_presence,parts/cards/room-card.part.js,602,hgTr,Presence,Obecność,,,auto
 common.motion,parts/cards/room-card.part.js,602,hgTr,Motion,Ruch,,,auto
 cards.room.open,parts/cards/room-card.part.js,602,hgTr,Open,Otwarte,,,auto
-cards.room.closed_2,parts/cards/room-card.part.js,602,hgTr,Closed,Zamknięte,,,review
+cards.room.state_closed_cap,parts/cards/room-card.part.js,602,hgTr,Closed,Zamknięte,,,auto
 cards.room.detected,parts/cards/room-card.part.js,602,hgTr,Detected,Wykryto,,,auto
-cards.room.no_presence_2,parts/cards/room-card.part.js,602,hgTr,No presence,Brak obecności,,,review
-cards.room.no_motion_3,parts/cards/room-card.part.js,602,hgTr,No motion,Brak ruchu,,,review
+cards.room.state_no_presence_cap,parts/cards/room-card.part.js,602,hgTr,No presence,Brak obecności,,,auto
+cards.room.state_no_motion_cap,parts/cards/room-card.part.js,602,hgTr,No motion,Brak ruchu,,,auto
 cards.room.a_moment,parts/cards/room-card.part.js,603,hgTr,a moment,chwilę,,,auto
-cards.room.day,parts/cards/room-card.part.js,603,hgTr,day,dzień,,plural,manual
-cards.room.days,parts/cards/room-card.part.js,603,hgTr,days,dni,,plural,manual
 common.just_now,parts/cards/room-card.part.js,604,hgTr,just now,przed chwilą,,,auto
 cards.room.for,parts/cards/room-card.part.js,604,hgTr,for {dur},od {dur},dur,,auto
 cards.room.ago,parts/cards/room-card.part.js,604,hgTr,{dur} ago,{dur} temu,dur,,auto
-cards.room.d_3,parts/cards/room-card.part.js,607,hgTr,d[3],d[1],,expr,manual
-cards.room.d_3,parts/cards/room-card.part.js,612,hgTr,d[3],d[1],,expr,manual
-cards.room.of_l_length_on,parts/cards/room-card.part.js,612,hgTr,{nOn} of ${L.length} on,{nOn} z ${L.length} wł.,,expr,manual
+cards.room.lights_on_of_total,parts/cards/room-card.part.js,612,hgTr,{on} of {total} on,{on} z {total} wł.,"on,total",expr,auto
 cards.room.light,parts/cards/room-card.part.js,613,hgTr,Light,Światło,,,auto
-cards.room.brightness,parts/cards/room-card.part.js,615,hgTr,Brightness: ,Jasność: ,,concat,manual
-cards.room.on_2,parts/cards/room-card.part.js,616,hgTr,on,włączone,,,review
+cards.room.brightness_aria,parts/cards/room-card.part.js,615,hgTr,Brightness: {name},Jasność: {name},name,concat,auto
+cards.room.state_on_lower,parts/cards/room-card.part.js,616,hgTr,on,włączone,,,auto
 cards.room.off,parts/cards/room-card.part.js,616,hgTr,off,wyłączone,,,auto
 common.on_neut,parts/cards/room-card.part.js,616,hgTr,On,Włączone,,,auto
 common.on_neut,parts/cards/room-card.part.js,616,hgTr,On,Włączone,,,auto
 common.off_neut,parts/cards/room-card.part.js,616,hgTr,Off,Wyłączone,,,auto
-cards.room.details,parts/cards/room-card.part.js,616,hgTr, – details, – szczegóły,,concat,manual
+cards.room.details_aria,parts/cards/room-card.part.js,616,hgTr,{name} – details,{name} – szczegóły,name,concat,auto
 cards.room.water_heater,parts/cards/room-card.part.js,621,hgTr,Water heater,Podgrzewacz,,,auto
-cards.room.target,parts/cards/room-card.part.js,622,hgTr, · target , · cel ,,concat,manual
+cards.room.target_temp,parts/cards/room-card.part.js,622,hgTr,target {temp}°,cel {temp}°,temp,concat,auto
 cards.room.cover,parts/cards/room-card.part.js,628,hgTr,Cover,Roleta,,,auto
-cards.room.open_open_closed_closed,parts/cards/room-card.part.js,629,hgTr,"{ open: 'Open', closed: 'Closed', opening: 'Opening', closing: 'Closing' }","{ open: 'Otwarta', closed: 'Zamknięta', opening: 'Otwiera się', closing: 'Zamyka się' }",,object,manual
+cards.room.cover_states.open,parts/cards/room-card.part.js,629,hgTr,Open,Otwarta,,object,auto
+cards.room.cover_states.closed,parts/cards/room-card.part.js,629,hgTr,Closed,Zamknięta,,object,auto
+cards.room.cover_states.opening,parts/cards/room-card.part.js,629,hgTr,Opening,Otwiera się,,object,auto
+cards.room.cover_states.closing,parts/cards/room-card.part.js,629,hgTr,Closing,Zamyka się,,object,auto
 common.open,parts/cards/room-card.part.js,631,hgTr,Open,Otwórz,,,auto
 common.stop,parts/cards/room-card.part.js,631,hgTr,Stop,Zatrzymaj,,,auto
 common.close,parts/cards/room-card.part.js,631,hgTr,Close,Zamknij,,,auto
@@ -957,12 +1025,11 @@ cards.room.unlocked,parts/cards/room-card.part.js,646,hgTr,Unlocked,Otwarty,,,au
 common.on_neut,parts/cards/room-card.part.js,646,hgTr,On,Włączone,,,auto
 common.off_neut,parts/cards/room-card.part.js,646,hgTr,Off,Wyłączone,,,auto
 common.sensor,parts/cards/room-card.part.js,650,hgTr,Sensor,Czujnik,,,auto
-cards.room.p_nameen,parts/cards/room-card.part.js,656,hgTr,P.nameEn,P.name,,expr,manual
 cards.room.device,parts/cards/room-card.part.js,656,hgTr,Device,Urządzenie,,,auto
 common.unavailable,parts/cards/room-card.part.js,657,hgTr,Unavailable,Niedostępne,,,auto
 common.unavailable,parts/cards/room-card.part.js,658,hgTr,Unavailable,Niedostępne,,,auto
 cards.room.turning_off,parts/cards/room-card.part.js,682,hgTr,Turning off…,Gaśnie…,,,auto
-cards.room.turning_off_in_s_2,parts/cards/room-card.part.js,682,hgTr,Turning off in {r} s,Gaśnie za {r} s,r,,review
+cards.room.turning_off_in_s,parts/cards/room-card.part.js,673,hgTr,Turning off in {seconds} s,Gaśnie za {seconds} s,seconds,,auto
 common.air_conditioning,parts/cards/room-card.part.js,687,hgTr,Air conditioning,Klimatyzacja,,,auto
 cards.room.camera,parts/cards/room-card.part.js,696,hgTr,Camera,Kamera,,,auto
 cards.room_compact.living_room,parts/cards/room-compact-card.part.js,3,hgTr,Living room,Salon,,,auto
