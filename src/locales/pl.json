@@ -623,6 +623,26 @@
       "range": "zakres",
       "sensor_battery": "Bateria czujnika"
     },
+    "players": {
+      "active": "aktywne",
+      "no_available_players": "Brak dostępnych odtwarzaczy",
+      "nothing_playing": "nic nie gra",
+      "picker_description": "Odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność, źródło",
+      "picker_name": "Home Glass – Multimedia",
+      "play": "Odtwarzaj",
+      "states": {
+        "buffering": "Buforowanie…",
+        "idle": "Bezczynny",
+        "off": "Wyłączony",
+        "on": "Włączony",
+        "paused": "Wstrzymano",
+        "playing": "Odtwarza",
+        "standby": "Czuwanie",
+        "unavailable": "Niedostępny",
+        "unknown": "Nieznany"
+      },
+      "unavailable": "Niedostępne:"
+    },
     "power": {
       "high": "Wysokie",
       "low": "Niskie",

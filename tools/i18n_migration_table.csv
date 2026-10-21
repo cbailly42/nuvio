@@ -639,7 +639,7 @@ cards.players.unavailable,parts/cards/players-card.part.js,130,hgTr,Unavailable:
 cards.players.active,parts/cards/players-card.part.js,131,hgTr,active,aktywne,,,auto
 cards.players.nothing_playing,parts/cards/players-card.part.js,131,hgTr,nothing playing,nic nie gra,,,auto
 cards.players.no_available_players,parts/cards/players-card.part.js,132,hgTr,No available players,Brak dostępnych odtwarzaczy,,,auto
-cards.players.players_artwork_title_progress,parts/cards/players-card.part.js,150,hgTr,"Players: artwork, title, progress, controls, volume, source","Odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność, źródło",,load-time,manual
+cards.players.picker_description,parts/cards/players-card.part.js,150,hgTr,"Players: artwork, title, progress, controls, volume, source","Odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność, źródło",,load-time,auto
 common.power_now,parts/cards/power-card.part.js,3,hgTr,Power now,Moc teraz,,,auto
 cards.power.reports,parts/cards/power-card.part.js,41,hgTr,Reports,Raporty,,,auto
 cards.power.reports,parts/cards/power-card.part.js,41,hgTr,Reports,Raporty,,,auto

@@ -617,6 +617,26 @@
       "range": "range",
       "sensor_battery": "Sensor battery"
     },
+    "players": {
+      "active": "active",
+      "no_available_players": "No available players",
+      "nothing_playing": "nothing playing",
+      "picker_description": "Players: artwork, title, progress, controls, volume, source",
+      "picker_name": "Home Glass – Multimedia",
+      "play": "Play",
+      "states": {
+        "buffering": "Buffering…",
+        "idle": "Idle",
+        "off": "Off",
+        "on": "On",
+        "paused": "Paused",
+        "playing": "Playing",
+        "standby": "Standby",
+        "unavailable": "Unavailable",
+        "unknown": "Unknown"
+      },
+      "unavailable": "Unavailable:"
+    },
     "power": {
       "high": "High",
       "low": "Low",
