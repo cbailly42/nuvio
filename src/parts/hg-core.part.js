@@ -35,7 +35,7 @@ const HGVer = window.__hgVer || {
       padding:8px 8px 8px 16px;border-radius:24px;font:400 14px/1.2 'HG DM Sans',system-ui,sans-serif;box-shadow:var(--hg-sh);
       -webkit-backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));
       background:${dark ? 'rgba(40,40,44,.88)' : 'rgba(255,255,255,.9)'};color:${dark ? '#fff' : '#1C1C1E'};border:1px solid ${dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)'}`;
-    d.innerHTML = `<span>${hgTr('Nowa wersja panelu', 'New dashboard version')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgTr('Odśwież', 'Reload')}</button><button type="button" data-x aria-label="${hgTr('Zamknij', 'Close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
+    d.innerHTML = `<span>${hgT('core.version_toast.text')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgT('core.version_toast.reload')}</button><button type="button" data-x aria-label="${hgT('common.close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
     d.querySelector('[data-r]').onclick = () => location.reload();
     d.querySelector('[data-x]').onclick = () => d.remove();
     document.body.appendChild(d);
@@ -174,16 +174,13 @@ const H = {
   },
   sig: (hass, ents) => ents.map((e) => { const s = H.st(hass, e); return s ? e + s.state + JSON.stringify(s.attributes) : e + '-'; }).join('|'),
   fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString(HG_LOC(), { maximumFractionDigits: d, minimumFractionDigits: 0 })),
-  get DAYS() { return hgTr(['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']); },
-  stateLabel: (s) => hgCurLang() === 'en' ? ({ on: 'On', off: 'Off', unavailable: 'unavailable', unknown: 'unknown', playing: 'Playing', paused: 'Paused', idle: 'Idle',
-    standby: 'Standby', buffering: 'Buffering', home: 'Home', not_home: 'Away', disarmed: 'Disarmed', armed_home: 'Armed (home)', armed_away: 'Armed (away)', armed_night: 'Armed (night)',
-    armed_vacation: 'Armed (vacation)', arming: 'Arming', pending: 'Pending', triggered: 'Triggered!' }[s] || String(s).replace(/_/g, ' ')) : ({ on: 'Włączone', off: 'Wyłączone', unavailable: 'niedostępne', unknown: 'nieznany', playing: 'Odtwarza', paused: 'Pauza', idle: 'Bezczynny',
-    standby: 'Czuwanie', buffering: 'Buforowanie', home: 'W domu', not_home: 'Poza domem', disarmed: 'Rozbrojony', armed_home: 'Uzbrojony (w domu)',
-    armed_away: 'Uzbrojony (poza domem)', armed_night: 'Uzbrojony (noc)', armed_vacation: 'Uzbrojony (urlop)', arming: 'Uzbrajanie', pending: 'Oczekiwanie', triggered: 'Alarm!' }[s] || HG_PL[hgStN(s)] || s),
-  /* stan encji po polsku: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik HG_PL; małe litery do wstawiania w zdania */
+  get DAYS() { return [hgT('core.days.sun'), hgT('core.days.mon'), hgT('core.days.tue'), hgT('core.days.wed'), hgT('core.days.thu'), hgT('core.days.fri'), hgT('core.days.sat')]; },
+  /* etykieta samodzielnego stanu (wielka litera): states.label.<stan>; poza tabelą EN pokazuje surowy stan ze spacjami, inne języki słownik states.* */
+  stateLabel: (s) => hgTD('states.label.' + s) ?? (hgCurLang() === 'en' ? String(s).replace(/_/g, ' ') : hgTD('states.' + hgStN(s), s)),
+  /* stan encji: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik states.* katalogu; małe litery do wstawiania w zdania */
   t: (h, so, attr) => {
     const en = hgCurLang() === 'en';
-    if (!so) return en ? 'unavailable' : 'niedostępne';
+    if (!so) return hgT('common.state_unavailable');
     const raw = attr ? so.attributes[attr] : so.state;
     if (raw == null) return '';
     let r = String(raw); h = h || window.__hgHass;
@@ -193,12 +190,13 @@ const H = {
       if (r !== raw) return r.toLowerCase();                                    // tłumaczenie HA zależne od device_class
       const bm = HG_BIN_PL[so.attributes.device_class]; if (bm) return bm[raw === 'on' ? 0 : 1];
     }
-    const pl = HG_PL[hgStN(raw)] || HG_PL[hgStN(r)];
-    if (pl) return pl;
+    const tr = hgTD('states.' + hgStN(raw)) || hgTD('states.' + hgStN(r));
+    if (tr) return tr;
     return /^[A-Z][a-z]/.test(r) && !/\d/.test(r) && r === String(raw) ? r.toLowerCase() : r;
   },
   /* samodzielna wartość (kafel/wiersz): wielka litera na początku */
-  T: (h, so, attr) => { const r = H.t(h, so, attr); return r && r !== 'wł.' && r !== 'wył.' ? r.charAt(0).toUpperCase() + r.slice(1) : r === 'wł.' ? 'Włączone' : r === 'wył.' ? 'Wyłączone' : r; },
+  T: (h, so, attr) => { const r = H.t(h, so, attr), on = hgTD('states.on'), off = hgTD('states.off');   /* wł. / wył. -> pełna etykieta (Włączone / Wyłączone) */
+    return r && r !== on && r !== off ? r.charAt(0).toUpperCase() + r.slice(1) : r === on ? hgTD('states.label.on') : r === off ? hgTD('states.label.off') : r; },
   dayKey: (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
 };
 window.__hg = H;
@@ -242,7 +240,7 @@ class HGBase extends HTMLElement {
   }
   defaults() { return {}; }
   setConfig(c) {
-    if (!c) throw new Error(hgTr('Brak konfiguracji', 'Missing configuration'));
+    if (!c) throw new Error(hgT('core.missing_config'));
     this._config = Object.assign({}, this.defaults(), c);
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
@@ -310,7 +308,7 @@ class HGBase extends HTMLElement {
   getCardSize() { return 3; }
   getGridOptions() { return { columns: 6, rows: 3 }; }
   toggleHtml(on, act, disabled, label) {
-    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || hgTr('przełącz', 'toggle'))}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
+    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || hgT('core.toggle'))}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
   }
 }
 window.customCards = window.customCards || [];

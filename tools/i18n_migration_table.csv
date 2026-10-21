@@ -1303,7 +1303,13 @@ states.true,parts/hg-core.part.js,71,dict,true,tak,,,auto
 states.false,parts/hg-core.part.js,71,dict,false,nie,,,auto
 states.yes,parts/hg-core.part.js,71,dict,yes,tak,,,auto
 states.no,parts/hg-core.part.js,71,dict,no,nie,,,auto
-core.sun_mon_tue_wed,parts/hg-core.part.js,177,hgTr,"['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']","['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb']",,array,manual
+core.days.sun,parts/hg-core.part.js,177,hgTr,Sun,Nd,,array,auto
+core.days.mon,parts/hg-core.part.js,177,hgTr,Mon,Pn,,array,auto
+core.days.tue,parts/hg-core.part.js,177,hgTr,Tue,Wt,,array,auto
+core.days.wed,parts/hg-core.part.js,177,hgTr,Wed,Śr,,array,auto
+core.days.thu,parts/hg-core.part.js,177,hgTr,Thu,Cz,,array,auto
+core.days.fri,parts/hg-core.part.js,177,hgTr,Fri,Pt,,array,auto
+core.days.sat,parts/hg-core.part.js,177,hgTr,Sat,Sb,,array,auto
 core.missing_config,parts/hg-core.part.js,245,hgTr,Missing configuration,Brak konfiguracji,,,auto
 core.toggle,parts/hg-core.part.js,313,hgTr,toggle,przełącz,,,auto
 edit.default,parts/hg-edit.part.js,102,hgTrLazy,Default,Domyślne,,,auto
