@@ -288,6 +288,10 @@
       "volume_down": "Volume down",
       "volume_label": "Volume",
       "volume_up": "Volume up"
+    },
+    "relative_time": {
+      "days_ago": "{days} days ago",
+      "yesterday": "yesterday"
     }
   },
   "states": {

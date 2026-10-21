@@ -288,6 +288,10 @@
       "volume_down": "Ciszej",
       "volume_label": "Głośność",
       "volume_up": "Głośniej"
+    },
+    "relative_time": {
+      "days_ago": "{days} dni temu",
+      "yesterday": "wczoraj"
     }
   },
   "states": {
