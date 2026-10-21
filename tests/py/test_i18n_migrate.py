@@ -53,6 +53,27 @@ class Extract(unittest.TestCase):
     def test_wx_short_dynamic(self):
         os_ = occ('weather-card.part.js'); self.assertTrue(os_); self.assertEqual({o['manual'] for o in os_}, {'dict-dynamic'})
 
+class Completeness(unittest.TestCase):
+    def test_glob_star_in_template_does_not_hide_later_calls(self):
+        for en in ('Choose', 'small'): self.assertTrue(occ('toast.part.js', en=en), en)
+    def test_nested_call_is_own_row_and_outer_is_expr(self):
+        outer = [o for o in occ('toast.part.js', manual='expr') if o['pl'].startswith('Plik')]
+        self.assertEqual(len(outer), 1); self.assertTrue(occ('toast.part.js', pl='mały'))
+    def test_comments_and_strings_are_not_extracted(self):
+        self.assertFalse([o for o in occ('toast.part.js') if o['pl'] in ('Komentarz', 'Blok', 'Napis')])
+    def test_every_call_accounted_for(self):
+        M.extract(FIX)    # raises when a hgTr( is neither extracted nor in a gateway / dict / comment / string
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'parts')); p = os.path.join(d, 'parts', 'hg-x.part.js')
+            with open(p, 'w', encoding='utf-8') as f: f.write("const a = 1;\nconst b = hgTr('a', 'b');\n")
+            self.assertEqual(len(M.extract(d)), 1)
+            orig = M.tr_spans; M.tr_spans = lambda s: []     # simulate an extraction hole
+            try: self.assertRaises(RuntimeError, M.extract, d)
+            finally: M.tr_spans = orig
+    def test_real_src_has_the_hg_edit_calls(self):
+        occs = M.extract(os.path.join(HERE, '..', '..', 'src'))
+        self.assertTrue([o for o in occs if o['en'] == 'Gradient' and o['file'].endswith('hg-edit.part.js')])
+
 class Propose(unittest.TestCase):
     def test_namespaces(self):
         self.assertEqual(M.namespace('parts/cards/alarm-card.part.js'), 'cards.alarm')

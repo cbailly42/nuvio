@@ -4,7 +4,9 @@
   propose(occs, existing=None) -> [Row]   Occ + key + status; existing = rows of a previous CSV whose keys are kept
   CLI: i18n_migrate.py propose [--root src] [--out tools/i18n_migration_table.csv] [--fresh]
 
-Occ = {file, line, start, end, kind, pl, en, params, manual, name, dkey}
+Occ = {file, line, start, end, kind, pl, en, params, manual, name, dkey}   (the CSV does NOT carry start/end: Task 6 calls extract() again for ranges)
+A hgTr( nested in a template argument of another hgTr is its own Occ (code inside ${}); the outer one is manual `expr`.
+extract() raises if a hgTr( / hgTrLazy( / hgTrO( in the source is neither an Occ, nor in a gateway definition / dictionary / comment / string text.
   kind    hgTr | hgTrLazy | hgTrO | dict ; start/end = character range of the call, of the `[pl, en]` entry (hgTrO) or of the
           dictionary value (dict: the PL value; en_start/en_end give the EN value when there is one)
   manual  None | concat | plural | object | array | expr | dict-dynamic   (see § 5.2 of the spec)
@@ -210,23 +212,71 @@ def extract_dicts(file, s):
                 occs.append(dict_occ(file, s, 'HG_BG_SET', L[0][1], x, y, pl=L[1][1], en=L[2][1]))
     return occs, spans
 
+def scan_regions(s):
+    """(comments, text): character ranges of comments and of string / template text (not ${} code). Same lexical rules as
+    i18n_check.lex, which drops comments without reporting where they were, so the ranges are recomputed here."""
+    comments = []; text = []; n = len(s)
+    def tpl(i):
+        st = i
+        while i < n:
+            c = s[i]
+            if c == '\\': i += 2; continue
+            if c == '`': text.append((st, i)); return i + 1
+            if c == '$' and s[i + 1:i + 2] == '{': text.append((st, i)); i = code(i + 2, '}'); st = i; continue
+            i += 1
+        text.append((st, n)); return n
+    def code(i, end):
+        depth = 0
+        while i < n:
+            c = s[i]
+            if c in '\'"':
+                j = i + 1
+                while j < n and s[j] != c:
+                    if s[j] == '\\': j += 1
+                    if j < n and s[j] == '\n': break
+                    j += 1
+                text.append((i + 1, j)); i = j + 1; continue
+            if c == '`': i = tpl(i + 1); continue
+            if c == '/' and s[i + 1:i + 2] == '/': j = s.find('\n', i); j = n if j < 0 else j; comments.append((i, j)); i = j; continue
+            if c == '/' and s[i + 1:i + 2] == '*': j = s.find('*/', i + 2); j = n if j < 0 else j + 2; comments.append((i, j)); i = j; continue
+            if c == '/':   # regex literal heuristic, as in lex
+                k = i - 1
+                while k >= 0 and s[k] in ' \t': k -= 1
+                if k < 0 or s[k] in '(,=:[!&|?{};\n' or s[max(0, k - 5):k + 1].endswith('return'):
+                    j = i + 1; cls = False
+                    while j < n and s[j] != '\n':
+                        if s[j] == '\\': j += 2; continue
+                        if s[j] == '[': cls = True
+                        elif s[j] == ']': cls = False
+                        elif s[j] == '/' and not cls: break
+                        j += 1
+                    i = j + 1; continue
+            if c in '({[': depth += 1
+            elif c in ')}]':
+                if depth == 0 and c == end: return i + 1
+                depth -= 1
+            i += 1
+        return i
+    code(0, None); return comments, text
+
+CALL = re.compile(r"\bhgTr(?:Lazy|O)?\s*\(")
+
 def gateway_spans(s):
     out = []
     for m in re.finditer(r"\bconst\s+(?:hgTr|hgTrLazy|hgTrO)\s*=", s):
         j = s.find('\n', m.start()); out.append((m.start(), len(s) if j < 0 else j))
     return out
 
-def extract_file(root, path):
+def extract_file(root, path, check=True):
     with open(path, encoding='utf-8') as f: s = f.read()
     file = os.path.relpath(path, root).replace(os.sep, '/')
-    occs, skip = extract_dicts(file, s); skip += gateway_spans(s)
-    toks = [(a, b) for k, a, b, _ in lex(s) if k in ('str', 'tpl')]   # string / template text regions: a call inside is not code
+    occs, dspans = extract_dicts(file, s); gate = gateway_spans(s)
+    comments, text = scan_regions(s); skip = dspans + gate
+    inside = lambda spans, a: any(x <= a < y for x, y in spans)
     for a, e in tr_spans(s):
         m = re.match(r"(hgTrLazy|hgTrO|hgTr)\s*\(", s[a:e])
         if not m: continue          # L(...) is a local helper name, not an i18n API
-        if any(x <= a < y for x, y in skip) or any(x < a < y for x, y in toks): continue
-        ls = s.rfind('\n', 0, a) + 1
-        if re.search(r"(?<![:'\"`])//", s[ls:a]) or s.rfind('/*', 0, a) > s.rfind('*/', 0, a): continue   # in a comment
+        if inside(skip, a) or inside(comments, a) or inside(text, a): continue
         fn = m.group(1); spans = split_top(s, a + m.end(), e - 1)
         if fn == 'hgTrO':
             if len(spans) == 2 and s[spans[1][0]] == '{':
@@ -239,7 +289,23 @@ def extract_file(root, path):
             continue
         pl, en, params, man = classify(s, spans, a, e)
         occs.append({'file': file, 'line': line_of(s, a), 'start': a, 'end': e, 'kind': fn, 'pl': pl, 'en': en, 'params': params, 'manual': man, 'name': None, 'dkey': None})
+    if check: completeness(file, s, occs, dspans, gate, comments, text)
     return occs
+
+ACCOUNTED = {}   # explicit allowlist: {(file, line): reason} of hgTr( sites that are legitimately not occurrences (none needed today)
+
+def completeness(file, s, occs, dspans, gate, comments, text):
+    """every hgTr( / hgTrLazy( / hgTrO( in the source must be an extracted Occ (or enclose one: an hgTrO call whose entries are
+    occurrences), sit in a gateway definition / dictionary / comment / string text, or be allowlisted. Anything else: error."""
+    lost = []
+    for m in CALL.finditer(s):
+        a = m.start()
+        if any(o['start'] == a for o in occs) or any(a <= o['start'] and o['end'] <= tr_end(s, a) for o in occs if o['kind'] == 'hgTrO' and m.group().startswith('hgTrO')): continue
+        if any(x <= a < y for x, y in dspans + gate + comments + text) or (file, line_of(s, a)) in ACCOUNTED: continue
+        lost.append(f'{file}:{line_of(s, a)}')
+    if lost: raise RuntimeError('i18n_migrate: hgTr call(s) neither extracted nor accounted for: ' + ', '.join(lost))
+
+def tr_end(s, a): return group_end(s, s.index('(', a) + 1)
 
 def extract(root):
     base = os.path.join(root, 'parts')

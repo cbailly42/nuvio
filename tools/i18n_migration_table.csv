@@ -1999,6 +1999,21 @@ edit.image_url_https_or,parts/hg-edit.part.js,1666,hgTr,Image URL: https://… o
 edit.set,parts/hg-edit.part.js,1666,hgTr,Set,Ustaw,,,auto
 edit.upload_an_image_to,parts/hg-edit.part.js,1667,hgTr,Upload an image to Home Assistant,Prześlij zdjęcie do Home Assistant,,,auto
 edit.upload,parts/hg-edit.part.js,1667,hgTr,Upload,Prześlij,,,auto
+edit.colour_1,parts/hg-edit.part.js,1669,hgTr,Colour 1,Kolor 1,,,auto
+edit.colour_1,parts/hg-edit.part.js,1669,hgTr,Colour 1,Kolor 1,,,auto
+edit.colour_2,parts/hg-edit.part.js,1670,hgTr,Colour 2,Kolor 2,,,auto
+edit.colour_2,parts/hg-edit.part.js,1670,hgTr,Colour 2,Kolor 2,,,auto
+edit.solid,parts/hg-edit.part.js,1671,hgTr,Solid,Jednolity,,,auto
+edit.gradient,parts/hg-edit.part.js,1671,hgTr,Gradient,Gradient,,,auto
+edit.dimming,parts/hg-edit.part.js,1672,hgTr,Dimming,Przyciemnienie,,,auto
+edit.applies_to_the_background,parts/hg-edit.part.js,1672,hgTr,Applies to the background in dark mode,Dotyczy tła w trybie ciemnym,,,auto
+edit.background_dimming,parts/hg-edit.part.js,1673,hgTr,Background dimming,Przyciemnienie tła,,,auto
+edit.settings,parts/hg-edit.part.js,1684,hgTr,Settings,Ustawienia,,,auto
+edit.settings,parts/hg-edit.part.js,1684,hgTr,Settings,Ustawienia,,,auto
+common.close,parts/hg-edit.part.js,1684,hgTr,Close,Zamknij,,,review
+edit.settings_sections,parts/hg-edit.part.js,1685,hgTr,Settings sections,Sekcje ustawień,,,auto
+edit.reset_to_default,parts/hg-edit.part.js,1685,hgTr,Reset to default,Przywróć domyślne,,,auto
+common.done,parts/hg-edit.part.js,1685,hgTr,Done,Gotowe,,,review
 edit.discard_changes,parts/hg-edit.part.js,1723,hgTr,Discard changes?,Odrzucić zmiany?,,,auto
 edit.unsaved_changes_in_this,parts/hg-edit.part.js,1723,hgTr,Unsaved changes in this sheet will be lost.,Niezapisane zmiany w tym oknie zostaną utracone.,,,auto
 edit.stay,parts/hg-edit.part.js,1723,hgTr,Stay,Zostań,,,auto
