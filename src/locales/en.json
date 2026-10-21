@@ -355,6 +355,13 @@
       "the_sensor_has_no": "The sensor has no hourly prices in its attributes",
       "tomorrow": "Tomorrow",
       "tomorrow_lower": "tomorrow"
+    },
+    "family": {
+      "family": "Family",
+      "home_of_total": "{home} of {total} at home",
+      "no_people_in_home": "No people in Home Assistant",
+      "picker_description": "Avatars and who is home right now",
+      "picker_name": "Nuvio – Family"
     }
   },
   "common": {

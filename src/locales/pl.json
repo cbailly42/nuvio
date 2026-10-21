@@ -359,6 +359,13 @@
       "the_sensor_has_no": "Czujnik nie ma cen godzinowych w atrybutach",
       "tomorrow": "Jutro",
       "tomorrow_lower": "jutro"
+    },
+    "family": {
+      "family": "Domownicy",
+      "home_of_total": "{home} z {total} w domu",
+      "no_people_in_home": "Brak osób w Home Assistant",
+      "picker_description": "Awatary i kto jest teraz w domu",
+      "picker_name": "Nuvio – Domownicy"
     }
   },
   "common": {
