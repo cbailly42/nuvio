@@ -1,6 +1,6 @@
 /* ===================== LINK ===================== */
 class HGLinkCard extends HGBase {
-  defaults() { return { title: hgTr('Otwórz', 'Open'), subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
+  defaults() { return { title: hgT('common.open'), subtitle: '', icon: 'mdi:open-in-new', action: null, entity: null }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
