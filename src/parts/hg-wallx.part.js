@@ -77,7 +77,7 @@ Object.assign(HGWall, {
       : k === 'flip' ? `<div class="nx-fr"><div class="nx-fc"><b data-p="h"></b><small hidden></small></div><div class="nx-fc"><b data-p="m"></b></div></div>${dt}${wx}`
       : k === 'aurora' ? `<time class="nx-t"></time>${dt}${wx}` : `<time class="nx-t"></time>${dt}`;
     return `<style>${HG_WALL_SS}${HG_WX_SS}</style>${bg}<div class="nx nx-${{ analog: 'a', flip: 'f', aurora: 'u', night: 'n' }[k]}">${k === 'aurora' ? '<i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>' : ''}<div class="nx-in">${body}</div></div>
-      <p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`; },
+      <p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`; },
   xsStart(k, rm) { const el = this.el; el.classList.add('xs'); el.dataset.xs = k;
     const s = new Date(); el.querySelector('.nx').style.setProperty('--sd', ((s.getSeconds() + s.getMilliseconds() / 1000) * 6).toFixed(2));
     if (this.xsPic(k)) this.photos(rm);
