@@ -19,7 +19,7 @@ button.nv-ic{ cursor:pointer; } button.nv-ic:active{ transform:scale(.94); }
 /* pierwsze imię zalogowanej osoby (powitanie) */
 const hgFirstName = (h) => String((h && h.user && h.user.name) || '').trim().split(/\s+/)[0] || '';
 /* menu ⋮ karty: szczegóły encji i ewentualne dodatkowe pozycje -> hgOverlay.menu */
-const hgMoreMenu = (card, anchor, e, extra = []) => hgOverlay.menu(anchor, [...extra, { label: hgTr('Szczegóły', 'Details'), icon: 'mdi:information-outline', value: '__more' }])
+const hgMoreMenu = (card, anchor, e, extra = []) => hgOverlay.menu(anchor, [...extra, { label: hgT('common.details'), icon: 'mdi:information-outline', value: '__more' }])
   .then((v) => { if (v === '__more') H.fire(card, 'hass-more-info', { entityId: e }); return v; });
 /* przeciąganie wartości 0..1 po elemencie (poziomo, albo po łuku dla svg.nv-arc); raz na węzeł, z klawiaturą */
 const hgDragVal = (card, el, o) => {
