@@ -821,7 +821,12 @@
       "picker_name": "Home Glass – Switch"
     },
     "tabs": {
-      "tab_number": "Tab {number}"
+      "chart": "Chart",
+      "dashboard": "Dashboard",
+      "picker_description": "Pills that switch between sets of cards",
+      "picker_name": "Nuvio – Tabs",
+      "tab_number": "Tab {number}",
+      "tabs": "Tabs"
     },
     "thermo": {
       "a_climate_or_water": "A climate or water_heater entity",

@@ -1081,8 +1081,8 @@ cards.tabs.dashboard,parts/cards/tabs-card.part.js,3,hgTr,Dashboard,Panel,,,auto
 cards.tabs.chart,parts/cards/tabs-card.part.js,3,hgTr,Chart,Wykres,,,auto
 cards.tabs.tab_number,parts/cards/tabs-card.part.js,8,hgTr,Tab {number},Zakładka {number},number,concat,auto
 cards.tabs.tabs,parts/cards/tabs-card.part.js,8,hgTr,Tabs,Zakładki,,,auto
-cards.tabs.nuvio_tabs,parts/cards/tabs-card.part.js,13,hgTr,Nuvio – Tabs,Nuvio – Zakładki,,load-time,manual
-cards.tabs.pills_that_switch_between,parts/cards/tabs-card.part.js,13,hgTr,Pills that switch between sets of cards,Pigułki przełączające zestawy kart,,load-time,manual
+cards.tabs.picker_name,parts/cards/tabs-card.part.js,13,hgTr,Nuvio – Tabs,Nuvio – Zakładki,,load-time,auto
+cards.tabs.picker_description,parts/cards/tabs-card.part.js,13,hgTr,Pills that switch between sets of cards,Pigułki przełączające zestawy kart,,load-time,auto
 cards.thermo.choose_a_thermostat,parts/cards/thermo-card.part.js,6,hgTr,Choose a thermostat,Wybierz termostat,,,auto
 cards.thermo.a_climate_or_water,parts/cards/thermo-card.part.js,6,hgTr,A climate or water_heater entity,Encja climate lub water_heater,,,auto
 common.off_short,parts/cards/thermo-card.part.js,8,hgTr,Off,Wył.,,,auto
