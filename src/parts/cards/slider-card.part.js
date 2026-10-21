@@ -14,12 +14,12 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .un .trk{ cursor:not-allowed; }
 `); }
   render() { const c = this._config, h = this._hass, m = hgSlider(h, c.entity), s = m.s, nm = c.name || H.name(h, c.entity), v = this._drag ?? this._pend ?? m.v, p = m.max > m.min ? ((v - m.min) / (m.max - m.min)) * 100 : 0;
-    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('Suwak działa ze światłem, odtwarzaczem, wentylatorem, roletą i input_number', 'The slider works with lights, media players, fans, covers and input_number')}</div></ha-card>`;
+    if (!c.entity || !s) return `<ha-card class="glass"><div class="ph"><b>${hgT('common.choose_entity')}</b>${hgT('cards.slider.the_slider_works_with')}</div></ha-card>`;
     const ic = c.icon || s.attributes.icon || HG_DOM_ICON2[m.d] || 'mdi:tune-variant', tog = ['light', 'fan', 'media_player'].includes(m.d) && H.ok(s);
     const vert = c.mode === 'v', fill = vert ? `height:${p}%` : `width:${p}%`;
     return `<div class="${vert ? 'v' : ''}" style="height:100%"><ha-card class="glass ${m.on && v > m.min ? '' : 'off'} ${m.ok ? '' : 'un'}"><div class="gh">
-      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? hgTr('Wycisz', 'Mute') : hgTr('Przełącz', 'Toggle')} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
-      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : hgTr('niedostępne', 'unavailable')}</span></div>
+      ${tog ? `<button class="gic ${m.on ? 'on' : ''}" data-act="${m.d === 'media_player' ? 'mute' : 'toggle'}" aria-label="${m.d === 'media_player' ? hgT('cards.slider.mute') : hgT('cards.slider.toggle')} ${H.esc(nm)}">${H.icon(m.d === 'media_player' && s.attributes.is_volume_muted ? 'mdi:volume-off' : ic)}</button>` : `<span class="gic ${m.on ? 'on' : ''}">${H.icon(ic)}</span>`}
+      <span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(m.label)}</small></span><span class="gv">${m.ok ? hgFmtV(v, m) : hgT('common.state_unavailable')}</span></div>
       <div class="trk" role="slider" tabindex="${m.ok ? 0 : -1}" aria-label="${H.esc(m.label)} ${H.esc(nm)}" aria-orientation="${vert ? 'vertical' : 'horizontal'}" aria-valuemin="${m.min}" aria-valuemax="${m.max}" aria-valuenow="${v}" ${m.ok ? '' : 'aria-disabled="true"'}><div class="gfl" style="${fill}"></div></div></ha-card></div>`; }
   afterRender() { const t = this.$.querySelector('.trk'); if (!t || !this._once(t)) return; const off = () => !!t.getAttribute('aria-disabled'); const vert = this._config.mode === 'v';
     const m = () => hgSlider(this._hass, this._config.entity);
@@ -39,4 +39,4 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     if (a === 'mute') return H.call(this._hass, 'media_player', 'volume_mute', { entity_id: e, is_volume_muted: !s.attributes.is_volume_muted }); }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-slider-card', HGSliderCard, hgTr('Home Glass – Suwak', 'Home Glass – Slider'), hgTr('Suwak dla jasności, głośności, wentylatora, rolety i input_number', 'Slider for brightness, volume, fan, cover and input_number'));
+hgReg('hg-slider-card', HGSliderCard, hgTLazy('cards.slider.picker_name'), hgTLazy('cards.slider.picker_description'));

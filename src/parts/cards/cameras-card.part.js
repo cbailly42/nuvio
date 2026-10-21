@@ -27,7 +27,7 @@ ha-card.wrap{ container-type:inline-size; }
     const c = this._config, h = this._hass;
     const dn = (e) => !(c.pin || []).includes(e) && hgCamUn(H.st(h, e)) && ![].concat((c.fb || {})[e] || []).some((f) => !hgCamUn(H.st(h, f)));   // przypięte: zawsze kafel   // niedostępna, gdy też brak zapasowej
     const av = c.entities.filter((e) => !dn(e)), un = c.entities.filter(dn);
-    const sig = av.join(',') + '|' + un.map((e) => e + H.name(h, e)).join(',');
+    const sig = HGI18n.code + '|' + av.join(',') + '|' + un.map((e) => e + H.name(h, e)).join(',');   // kod języka: komunikat „brak kamer” po zmianie języka
     if (sig !== this._lsig) { this._lsig = sig; this._layoutCams(av, un); }
     for (const t of this._tiles.values()) hgPass(t, h);
   }
@@ -45,7 +45,7 @@ ha-card.wrap{ container-type:inline-size; }
       this._grid.appendChild(t);     // appendChild przenosi istniejący kafel (zachowuje stan i obraz)
     }
     const empty = this._grid.querySelector('.empty'); if (empty) empty.remove();
-    if (!av.length) this._grid.insertAdjacentHTML('beforeend', `<div class="empty">${H.icon('mdi:cctv-off')}<span>${hgTr('Żadna kamera nie jest teraz dostępna', 'No cameras are available right now')}</span></div>`);
+    if (!av.length) this._grid.insertAdjacentHTML('beforeend', `<div class="empty">${H.icon('mdi:cctv-off')}<span>${hgT('cards.cameras.no_cameras_are_available')}</span></div>`);
     const n = av.length, rows = n <= 2 ? 1 : Math.ceil(n / 2);
     this._grid.className = `grid n${Math.min(n, 4)} ${n > 1 ? 'multi' : ''}`;
     this._grid.style.setProperty('--rows', rows);
@@ -56,4 +56,4 @@ ha-card.wrap{ container-type:inline-size; }
   getCardSize() { return 6; }
   getGridOptions() { return { columns: 12, rows: 6 }; }
 }
-hgReg('hg-cameras-card', HGCamerasCard, 'Home Glass – Kamery', 'Działające kamery jako duże kafle, niedostępne jako chipy');
+hgReg('hg-cameras-card', HGCamerasCard, hgTLazy('cards.cameras.picker_name'), hgTLazy('cards.cameras.picker_description'));

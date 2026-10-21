@@ -31,18 +31,18 @@ const HG_TOGGLE_DOM = ['light', 'switch', 'fan', 'input_boolean', 'automation', 
 const HG_PRESS_DOM = ['script', 'scene', 'button', 'input_button', 'automation'];
 /* model suwaka: wartość, zakres i zapis wg domeny */
 const hgSlider = (h, e) => { const s = H.st(h, e), d = hgDom(e), a = (s && s.attributes) || {}, on = !!s && !['off', 'unavailable', 'unknown', 'closed', 'idle', 'standby'].includes(s.state);
-  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgTr('Poziom', 'Level') };
+  const r = { d, s, on, min: 0, max: 100, step: 1, unit: '%', v: 0, ok: H.ok(s), label: hgT('shared.generic_controls.level') };
   if (!s) return r;
-  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgTr('Jasność', 'Brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
+  if (d === 'light') { r.v = s.state === 'on' ? (a.brightness == null ? 100 : Math.round(a.brightness / 2.55)) : 0; r.label = hgT('common.brightness'); r.ok = r.ok && (a.supported_color_modes || []).some((m) => m !== 'onoff');
     r.set = (v) => (v <= 0 ? H.call(h, 'light', 'turn_off', { entity_id: e }) : H.call(h, 'light', 'turn_on', { entity_id: e, brightness_pct: v })); }
-  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgTr('Głośność', 'Volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
-  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgTr('Prędkość', 'Speed');
+  else if (d === 'media_player') { r.v = Math.round((a.volume_level || 0) * 100); r.label = hgT('shared.generic_controls.volume'); r.ok = r.ok && a.volume_level != null; r.set = (v) => H.call(h, 'media_player', 'volume_set', { entity_id: e, volume_level: v / 100 }); }
+  else if (d === 'fan') { r.v = s.state === 'on' ? (a.percentage == null ? 100 : a.percentage) : 0; r.step = a.percentage_step || 1; r.label = hgT('shared.generic_controls.speed');
     r.set = (v) => (v <= 0 ? H.call(h, 'fan', 'turn_off', { entity_id: e }) : H.call(h, 'fan', 'set_percentage', { entity_id: e, percentage: Math.round(v) })); }
-  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgTr('Otwarcie', 'Position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
+  else if (d === 'cover' || d === 'valve') { r.v = a.current_position ?? a.current_valve_position ?? (s.state === 'open' ? 100 : 0); r.label = hgT('shared.generic_controls.position'); r.ok = r.ok && (a.current_position != null || a.current_valve_position != null);
     r.set = (v) => (d === 'cover' ? H.call(h, 'cover', 'set_cover_position', { entity_id: e, position: Math.round(v) }) : H.call(h, 'valve', 'set_valve_position', { entity_id: e, position: Math.round(v) })); }
-  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgTr('Wartość', 'Value');
+  else if (d === 'input_number' || d === 'number') { r.min = +a.min || 0; r.max = a.max == null ? 100 : +a.max; r.step = +a.step || 1; r.unit = a.unit_of_measurement || ''; r.v = parseFloat(s.state); if (!isFinite(r.v)) r.v = r.min; r.on = true; r.label = hgT('shared.generic_controls.value');
     r.set = (v) => H.call(h, d, 'set_value', { entity_id: e, value: v }); }
-  else if (d === 'humidifier') { r.min = +a.min_humidity || 0; r.max = +a.max_humidity || 100; r.v = a.humidity != null ? +a.humidity : r.min; r.label = hgTr('Wilgotność docelowa', 'Target humidity');
+  else if (d === 'humidifier') { r.min = +a.min_humidity || 0; r.max = +a.max_humidity || 100; r.v = a.humidity != null ? +a.humidity : r.min; r.label = hgT('shared.generic_controls.target_humidity');
     r.set = (v) => H.call(h, 'humidifier', 'set_humidity', { entity_id: e, humidity: Math.round(v) }); }
   else r.ok = false;
   return r; };

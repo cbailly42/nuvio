@@ -1,3 +1,5 @@
+**English** · [Polski](pl/components.md) · [Français](fr/components.md)
+
 # Components
 
 Nuvio ships its cards as custom elements. This page lists every card, its entities and its options. Back to the [README](../README.md).

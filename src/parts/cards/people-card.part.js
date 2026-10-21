@@ -1,11 +1,11 @@
 const hgZoneName = (hass, st) => {
-  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || hgTr('W domu', 'Home');
-  if (st === 'not_home') return hgTr('Poza strefami', 'Away'); if (st === 'unknown' || st === 'unavailable') return hgTr('Nieznana lokalizacja', 'Unknown location'); return st;
+  if (st === 'home') return (H.st(hass, 'zone.home') || { attributes: {} }).attributes.friendly_name || hgT('common.at_home');
+  if (st === 'not_home') return hgT('cards.people.away'); if (st === 'unknown' || st === 'unavailable') return hgT('cards.people.unknown_location'); return st;
 };
 
 /* --- lista osób + strefy --- */
 class HGPeopleCard extends HGBase {
-  defaults() { return { title: hgTr('Domownicy', 'Household'), icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
+  defaults() { return { title: hgT('common.household'), icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
   ents() { return this._config.persons.concat(this._config.zones); }
   _extraSig() { return Math.floor(Date.now() / 60000); }
   css() {
@@ -34,14 +34,14 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
     const rows = c.persons.map((e) => {
       const s = H.st(h, e); if (!s) return '';
       const home = s.state === 'home', since = new Date(s.last_changed);
-      return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – ${hgTr('szczegóły', 'details')}">${hgAvatar(h, e, 'av')}
-        <div class="tx"><b>${H.esc(s.attributes.friendly_name)}</b><span title="${hgTr('Ostatnia zmiana', 'Last changed')}: ${H.esc(since.toLocaleString(HG_LOC()))}">${H.icon(home ? 'mdi:home-outline' : s.state === 'not_home' ? 'mdi:map-marker-outline' : 'mdi:map-marker-radius-outline')}${H.esc(hgZoneName(h, s.state))} <em>· ${hgRel(since)}</em></span></div></button>`;
+      return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – ${hgT('cards.people.details')}">${hgAvatar(h, e, 'av')}
+        <div class="tx"><b>${H.esc(s.attributes.friendly_name)}</b><span title="${H.lv(hgT('cards.people.last_changed'), `${H.esc(since.toLocaleString(HG_LOC()))}`)}">${H.icon(home ? 'mdi:home-outline' : s.state === 'not_home' ? 'mdi:map-marker-outline' : 'mdi:map-marker-radius-outline')}${H.esc(hgZoneName(h, s.state))} <em>· ${hgRel(since)}</em></span></div></button>`;
     }).join('');
     const zs = c.zones.map((z) => { const s = H.st(h, z); if (!s) return ''; const n = Number(s.state) || 0;
-      return `<button class="z ${n ? 'has' : ''}" data-act="more" data-e="${z}" title="${H.esc(s.attributes.friendly_name)}: ${n} ${hgTr('os.', 'people')}">${H.esc(s.attributes.friendly_name)}<i>${n}</i></button>`; }).join('');
+      return `<button class="z ${n ? 'has' : ''}" data-act="more" data-e="${z}" title="${H.lv(H.esc(s.attributes.friendly_name), `${n} ${hgT('cards.people.people')}`)}">${H.esc(s.attributes.friendly_name)}<i>${n}</i></button>`; }).join('');
     return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div>
-      <div class="lst">${rows}</div>${zs ? `<div class="sec">${hgTr('Strefy', 'Zones')}</div><div class="zs">${zs}</div>` : ''}</ha-card>`;
+      <div class="lst">${rows}</div>${zs ? `<div class="sec">${hgT('cards.people.zones')}</div><div class="zs">${zs}</div>` : ''}</ha-card>`;
   }
   onAct(a, el) { if (a === 'more') H.fire(this, 'hass-more-info', { entityId: el.dataset.e }); }
 }
-hgReg('hg-people-card', HGPeopleCard, 'Home Glass – Domownicy', 'Lista osób z awatarem, strefą i czasem zmiany');
+hgReg('hg-people-card', HGPeopleCard, hgTLazy('cards.people.picker_name'), hgTLazy('cards.people.picker_description'));

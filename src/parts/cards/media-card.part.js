@@ -19,17 +19,17 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
     const nm = c.name || H.name(this._hass, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>${hgTr('brak encji', 'entity not found')}</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${H.esc(nm)}</b>${hgT('cards.media.entity_not_found')}</div></ha-card>`;
     const a = s.attributes, sf = a.supported_features || 0, st = s.state;
     const pic = a.entity_picture ? `style="background-image:url('${H.cssUrl(a.entity_picture)}')"` : '';
     const sub = [a.media_title, a.media_artist].filter(Boolean).join(' · ') || H.stateLabel(st);
-    const AL = { prev: hgTr('Poprzedni', 'Previous'), next: hgTr('Następny', 'Next'), on: hgTr('Włącz', 'Turn on'), off: hgTr('Wyłącz', 'Turn off') };
+    const AL = { prev: hgT('common.previous_track'), next: hgT('common.next_track'), on: hgT('common.turn_on'), off: hgT('common.turn_off') };
     const b = (f, act, ic, cls = '') => (sf & f ? `<button class="cb ${cls}" data-act="${act}" aria-label="${AL[act]}" title="${AL[act]}">${H.icon(ic)}</button>` : '');
     const unav = st === 'unavailable';
     return `<ha-card class="glass ${st === 'playing' ? 'playing' : ''}"><div class="row"><div class="art" ${pic}>${pic ? '' : H.icon(c.icon)}</div>
       <div class="tx"><b>${H.esc(nm)}</b><span>${H.esc(sub)}</span></div>
-      <button class="ib kebab" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button></div>
-      ${unav ? '' : `<div class="ctl">${b(16, 'prev', 'mdi:skip-previous')}${(sf & 1) || (sf & 16384) ? `<button class="cb pp" data-act="pp" aria-label="${hgTr('Odtwórz/pauza', 'Play/pause')}">${H.icon(st === 'playing' ? 'mdi:pause' : 'mdi:play')}</button>` : ''}${b(32, 'next', 'mdi:skip-next')}
+      <button class="ib kebab" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button></div>
+      ${unav ? '' : `<div class="ctl">${b(16, 'prev', 'mdi:skip-previous')}${(sf & 1) || (sf & 16384) ? `<button class="cb pp" data-act="pp" aria-label="${hgT('cards.media.play_pause')}">${H.icon(st === 'playing' ? 'mdi:pause' : 'mdi:play')}</button>` : ''}${b(32, 'next', 'mdi:skip-next')}
         ${st === 'off' ? b(128, 'on', 'mdi:power') : b(256, 'off', 'mdi:power')}</div>`}</ha-card>`;
   }
   onAct(a) {
@@ -39,4 +39,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); }
     if (m[a]) return H.call(this._hass, 'media_player', m[a], id);
   }
 }
-hgReg('hg-media-card', HGMediaCard, 'Home Glass – Media', 'Odtwarzacz w stylu glass');
+hgReg('hg-media-card', HGMediaCard, hgTLazy('cards.media.picker_name'), hgTLazy('cards.media.picker_description'));

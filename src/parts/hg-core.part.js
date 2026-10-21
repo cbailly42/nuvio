@@ -3,12 +3,6 @@
  * Karty: hg-page, hg-energy-card, hg-ac-card, hg-light-card, hg-switch-card,
  *        hg-solar-card, hg-bars-card, hg-media-card, hg-person-card, hg-link-card
  */
-/* binary_sensor: stany wg device_class (zapas, gdy HA nie zwróci tłumaczenia) */
-const HG_BIN_PL = { battery: ['niski', 'normalny'], battery_charging: ['ładowanie', 'nie ładuje'], carbon_monoxide: ['wykryto', 'brak'], cold: ['zimno', 'normalnie'], connectivity: ['połączono', 'rozłączono'],
-  door: ['otwarte', 'zamknięte'], garage_door: ['otwarte', 'zamknięte'], gas: ['wykryto', 'brak'], heat: ['gorąco', 'normalnie'], light: ['wykryto światło', 'brak światła'], lock: ['otwarte', 'zamknięte'],
-  moisture: ['mokro', 'sucho'], motion: ['wykryto', 'brak'], moving: ['w ruchu', 'nieruchome'], occupancy: ['wykryto', 'brak'], opening: ['otwarte', 'zamknięte'], plug: ['podłączono', 'odłączono'],
-  power: ['wykryto', 'brak'], presence: ['w domu', 'poza domem'], problem: ['problem', 'ok'], running: ['działa', 'nie działa'], safety: ['niebezpiecznie', 'bezpiecznie'], smoke: ['wykryto', 'brak'],
-  sound: ['wykryto', 'brak'], tamper: ['naruszenie', 'brak'], update: ['dostępna aktualizacja', 'aktualne'], vibration: ['wykryto', 'brak'], window: ['otwarte', 'zamknięte'] };
 const HG_VER = '1.0.0';
 const HG_BUILD = '__HG_BUILD__';   /* build.py wstawia hash paczki = ?v= zasobu */
 /* kontrola wersji: zasób Lovelace wskazuje nowszy ?v= niż wczytany kod (stara karta przeglądarki, kiosk, cache aplikacji)
@@ -35,7 +29,7 @@ const HGVer = window.__hgVer || {
       padding:8px 8px 8px 16px;border-radius:24px;font:400 14px/1.2 'HG DM Sans',system-ui,sans-serif;box-shadow:var(--hg-sh);
       -webkit-backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));backdrop-filter:var(--hg-bfo, blur(20px) saturate(140%));
       background:${dark ? 'rgba(40,40,44,.88)' : 'rgba(255,255,255,.9)'};color:${dark ? '#fff' : '#1C1C1E'};border:1px solid ${dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)'}`;
-    d.innerHTML = `<span>${hgTr('Nowa wersja panelu', 'New dashboard version')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgTr('Odśwież', 'Reload')}</button><button type="button" data-x aria-label="${hgTr('Zamknij', 'Close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
+    d.innerHTML = `<span>${hgT('core.version_toast.text')}</span><button type="button" data-r style="font:inherit;font-weight:600;border:0;border-radius:16px;padding:0 16px;height:40px;cursor:pointer;background:${dark ? '#fff' : '#1C1C1E'};color:${dark ? '#1C1C1E' : '#fff'}">${hgT('core.version_toast.reload')}</button><button type="button" data-x aria-label="${hgT('common.close')}" style="border:0;background:none;color:inherit;opacity:.6;cursor:pointer;padding:6px;display:flex"><ha-icon icon="mdi:close" style="--mdc-icon-size:18px;width:18px;height:18px;pointer-events:none"></ha-icon></button>`;
     d.querySelector('[data-r]').onclick = () => location.reload();
     d.querySelector('[data-x]').onclick = () => d.remove();
     document.body.appendChild(d);
@@ -54,22 +48,9 @@ window.__hgVer = HGVer;
   document.head.appendChild(s);
 })();
 
-/* "12u" -> calc(var(--k) * 12): jednostka skalowana względem referencji (912x597) */
-/* słownik zapasowy stanów (surowe wartości i angielskie formy z HA bez tłumaczenia) */
+/* surowy stan HA -> segment klucza states.* (małe litery, spacje i myślniki jako _) */
 const hgStN = (v) => String(v).trim().toLowerCase().replace(/[\s-]+/g, '_');
-const HG_PL = {
-  normal: 'normalny', fault: 'błąd', standby: 'czuwanie', waiting: 'oczekiwanie', idle: 'bezczynny', charging: 'ładowanie', charged: 'naładowany', discharging: 'rozładowanie',
-  cleaning: 'sprzątanie', docked: 'w stacji', returning: 'powrót do stacji', returning_home: 'powrót do stacji', paused: 'wstrzymany', error: 'błąd', mowing: 'koszenie',
-  online: 'online', offline: 'offline', connected: 'połączony', disconnected: 'rozłączony', home: 'w domu', not_home: 'poza domem', away: 'poza domem',
-  on: 'wł.', off: 'wył.', open: 'otwarte', closed: 'zamknięte', opening: 'otwieranie', closing: 'zamykanie', locked: 'zamknięty', unlocked: 'otwarty', jammed: 'zablokowany',
-  unavailable: 'niedostępne', unknown: 'nieznany', playing: 'odtwarza', buffering: 'buforowanie', heating: 'grzanie', cooling: 'chłodzenie', drying: 'osuszanie',
-  fan: 'wentylator', fan_only: 'wentylator', heat: 'grzanie', cool: 'chłodzenie', dry: 'osuszanie', auto: 'auto', heat_cool: 'grzanie/chłodzenie', preheating: 'podgrzewanie',
-  detected: 'wykryto', clear: 'brak', running: 'pracuje', stopped: 'zatrzymany', sleeping: 'uśpiony', sleep: 'uśpiony', ok: 'OK', low: 'niski', medium: 'średni', high: 'wysoki',
-  above_horizon: 'nad horyzontem', below_horizon: 'pod horyzontem', recording: 'nagrywa', streaming: 'transmisja', armed: 'uzbrojony', disarmed: 'rozbrojony',
-  pending: 'oczekiwanie', starting: 'uruchamianie', finished: 'zakończono', completed: 'zakończono', ready: 'gotowy', working: 'pracuje', busy: 'zajęty',
-  upgrading: 'aktualizacja', provisioning: 'konfiguracja', heartbeat_missed: 'brak odpowiedzi', adopting: 'adopcja', firmware_mismatch: 'niezgodne oprogramowanie', isolated: 'odizolowany',
-  sunny: 'słonecznie', cloudy: 'pochmurno', partlycloudy: 'częściowe zachmurzenie', rainy: 'deszcz', clear_night: 'pogodna noc', none: 'brak', true: 'tak', false: 'nie', yes: 'tak', no: 'nie',
-};
+/* "12u" -> calc(var(--k) * 12): jednostka skalowana względem referencji (912x597) */
 const U = (css) => css.replace(/(-?\d+(?:\.\d+)?)u\b/g, (m, n) => `calc(var(--k) * ${n})`);
 
 /* ukryta karta przeglądarki: wstrzymaj animacje ciągłe (zmienna dziedziczona przez wszystkie shadow DOM) */
@@ -114,12 +95,20 @@ const HGPerf = window.__hgPerf || (window.__hgPerf = {
 HGPerf.apply();
 if (window.matchMedia && !window.__hgPerfMq) { window.__hgPerfMq = 1; try { matchMedia('(prefers-reduced-transparency: reduce)').addEventListener('change', () => HGPerf.apply()); } catch (e) { /* stary Safari: bez nasłuchu */ } }
 
-/* język interfejsu kart (pl / en): osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej język przeglądarki (domyślnie angielski).
-   hgTr('tekst PL', 'text EN') – para tłumaczeń w miejscu użycia; HG_LOC() – locale do liczb i dat */
-const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz; return hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || (w && w.lang)); };
-/* argumenty w kolejności HGLang.LIST (pl, en, …); brak tłumaczenia -> angielski */
-const hgTr = (...t) => { const i = HGLang.LIST.findIndex((x) => x[0] === hgCurLang()); return t[i] != null ? t[i] : t[1] != null ? t[1] : t[0]; };
-const HG_LOC = () => { const l = hgCurLang(); return { pl: 'pl-PL', en: 'en-GB' }[l] || l; };
+/* język interfejsu kart: osobisty wybór (HGLang), opcja language strategii, wybór z kreatora, inaczej języki przeglądarki (domyślnie angielski).
+   Język bez katalogu w pamięci: pierwsze użycie go pobiera, a gdy dotrze – hg-lang (karty poza strategią przerysowują się same, bez przeładowania).
+   Teksty: hgT / hgTLazy / hgTO / hgTD (hg-i18n); HG_LOC() – locale do liczb i dat z manifestu */
+const hgI18nWant = (l) => {
+  if (l === 'en' || HGI18n.cache[l]) { HGI18n.code = l; return; }
+  if (HGI18n.pend[l] || HGI18n.bad[l] || !HGI18n.has(l)) return;
+  /* po mikrozadaniu: HGI18n.ready (strategia) na tej samej obietnicy ustawia kod pierwszy i sam powiadamia, gdy spóźniony */
+  HGI18n.load(l).then((ok) => Promise.resolve().then(() => { if (ok && HGI18n.code !== l && hgCurLang() === l) { HGI18n.code = l; window.dispatchEvent(new CustomEvent('hg-lang')); } }));
+};
+/* język z kreatora liczy się tylko, gdy kliknięto go w kreatorze (wiz.lp); stare wiz.lang zapisywane zawsze (często 'en' przy przeglądarce bez pl/en) nie zasłania przeglądarki */
+const hgWizLang = (w) => (w && w.lp && w.lang) || null;
+const hgCurLang = () => { const w = window.__hgL && window.__hgL.data && window.__hgL.data.wiz, l = hgLang(window.__hgHass, HGLang.get() || window.__hgLangOpt || hgWizLang(w));
+  if (l !== HGI18n.code) hgI18nWant(l); return l; };
+const HG_LOC = () => HGI18n.locale(hgCurLang());
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
 const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };
 const hgKmPath = (p) => { if (!hgKmOff() || typeof p !== 'string' || !p.startsWith('/') || /[?&]disable_km\b/.test(p)) return p; const [a, hs] = p.split('#'); return a + (a.includes('?') ? '&' : '?') + 'disable_km' + (hs !== undefined ? '#' + hs : ''); };
@@ -167,16 +156,16 @@ const H = {
   },
   sig: (hass, ents) => ents.map((e) => { const s = H.st(hass, e); return s ? e + s.state + JSON.stringify(s.attributes) : e + '-'; }).join('|'),
   fmt: (v, d = 1) => (v == null ? '–' : Number(v).toLocaleString(HG_LOC(), { maximumFractionDigits: d, minimumFractionDigits: 0 })),
-  get DAYS() { return hgTr(['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']); },
-  stateLabel: (s) => hgCurLang() === 'en' ? ({ on: 'On', off: 'Off', unavailable: 'unavailable', unknown: 'unknown', playing: 'Playing', paused: 'Paused', idle: 'Idle',
-    standby: 'Standby', buffering: 'Buffering', home: 'Home', not_home: 'Away', disarmed: 'Disarmed', armed_home: 'Armed (home)', armed_away: 'Armed (away)', armed_night: 'Armed (night)',
-    armed_vacation: 'Armed (vacation)', arming: 'Arming', pending: 'Pending', triggered: 'Triggered!' }[s] || String(s).replace(/_/g, ' ')) : ({ on: 'Włączone', off: 'Wyłączone', unavailable: 'niedostępne', unknown: 'nieznany', playing: 'Odtwarza', paused: 'Pauza', idle: 'Bezczynny',
-    standby: 'Czuwanie', buffering: 'Buforowanie', home: 'W domu', not_home: 'Poza domem', disarmed: 'Rozbrojony', armed_home: 'Uzbrojony (w domu)',
-    armed_away: 'Uzbrojony (poza domem)', armed_night: 'Uzbrojony (noc)', armed_vacation: 'Uzbrojony (urlop)', arming: 'Uzbrajanie', pending: 'Oczekiwanie', triggered: 'Alarm!' }[s] || HG_PL[hgStN(s)] || s),
-  /* stan encji po polsku: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik HG_PL; małe litery do wstawiania w zdania */
+  /* tekst składany z katalogu (typografia języka, np. spacja przed % lub : po francusku): procent i para etykieta–wartość */
+  pct: (v) => hgT('common.percent', { value: v }),
+  lv: (label, value) => hgT('common.label_value', { label, value }),
+  get DAYS() { return [hgT('core.days.sun'), hgT('core.days.mon'), hgT('core.days.tue'), hgT('core.days.wed'), hgT('core.days.thu'), hgT('core.days.fri'), hgT('core.days.sat')]; },
+  /* etykieta samodzielnego stanu (wielka litera): states.label.<stan>; poza tabelą EN pokazuje surowy stan ze spacjami, inne języki słownik states.* */
+  stateLabel: (s) => hgTD('states.label.' + s) ?? (hgCurLang() === 'en' ? String(s).replace(/_/g, ' ') : hgTD('states.' + hgStN(s), s)),
+  /* stan encji: tłumaczenia HA (formatEntityState / formatEntityAttributeValue), a gdy integracja ich nie ma – słownik states.* katalogu; małe litery do wstawiania w zdania */
   t: (h, so, attr) => {
     const en = hgCurLang() === 'en';
-    if (!so) return en ? 'unavailable' : 'niedostępne';
+    if (!so) return hgT('common.state_unavailable');
     const raw = attr ? so.attributes[attr] : so.state;
     if (raw == null) return '';
     let r = String(raw); h = h || window.__hgHass;
@@ -184,14 +173,15 @@ const H = {
     if (en) return (r === String(raw) ? r.replace(/_/g, ' ') : r).replace(/^[A-Z][a-z]+$/, (x) => x.toLowerCase());   // EN: tłumaczenie HA, bez słownika PL
     if (!attr && so.entity_id && so.entity_id.startsWith('binary_sensor.') && (raw === 'on' || raw === 'off')) {
       if (r !== raw) return r.toLowerCase();                                    // tłumaczenie HA zależne od device_class
-      const bm = HG_BIN_PL[so.attributes.device_class]; if (bm) return bm[raw === 'on' ? 0 : 1];
+      const bm = hgTD('states.binary.' + so.attributes.device_class + '.' + raw); if (bm) return bm;   /* zapas wg device_class (katalog), gdy HA nie zwróci tłumaczenia */
     }
-    const pl = HG_PL[hgStN(raw)] || HG_PL[hgStN(r)];
-    if (pl) return pl;
+    const tr = hgTD('states.' + hgStN(raw)) || hgTD('states.' + hgStN(r));
+    if (tr) return tr;
     return /^[A-Z][a-z]/.test(r) && !/\d/.test(r) && r === String(raw) ? r.toLowerCase() : r;
   },
   /* samodzielna wartość (kafel/wiersz): wielka litera na początku */
-  T: (h, so, attr) => { const r = H.t(h, so, attr); return r && r !== 'wł.' && r !== 'wył.' ? r.charAt(0).toUpperCase() + r.slice(1) : r === 'wł.' ? 'Włączone' : r === 'wył.' ? 'Wyłączone' : r; },
+  T: (h, so, attr) => { const r = H.t(h, so, attr), on = hgTD('states.on'), off = hgTD('states.off');   /* wł. / wył. -> pełna etykieta (Włączone / Wyłączone) */
+    return r && r !== on && r !== off ? r.charAt(0).toUpperCase() + r.slice(1) : r === on ? hgTD('states.label.on') : r === off ? hgTD('states.label.off') : r; },
   dayKey: (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
 };
 window.__hg = H;
@@ -214,9 +204,28 @@ if (!window.__hgOffVis) { window.__hgOffVis = 1; document.addEventListener('visi
 const HG_VIS = window.__hgVisObj || (window.__hgVisObj = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => {
   for (const e of es) { const c = e.target; c._off = !e.isIntersecting; c.toggleAttribute('hg-off', c._off);   /* karty z animacjami zatrzymują je poza ekranem */ if (!c._off && c._offDirty) { c._offDirty = false; c._doUpdate(true); } }
 }, { rootMargin: '300px' }));
+/* żywe karty (WeakRef, bez trzymania odłączonych w pamięci): jedno nasłuchiwanie hg-lang przerysowuje podłączone.
+   Po mikrozadaniu, więc strona Nuvio najpierw przebudowuje się sama (jej stare karty są już odłączone, bez podwójnego rysowania);
+   odłączona karta (ukryty widok HA) jest oznaczana jako zaległa i przerysowuje się przy ponownym podłączeniu. */
+const HG_LIVE = new Set();
+let hgLiveN = 0;
+const hgLivePurge = () => { for (const r of HG_LIVE) if (!r.deref()) HG_LIVE.delete(r); };
+/* teksty z defaults() liczone przed nadejściem katalogu (karta poza strategią) są w _config: gdy po zmianie kodu języka defaults() daje
+   inny tekst niż przy setConfig, karta dostaje swoją konfigurację jeszcze raz (hgReg zapamiętuje ją w _cfgRaw) zamiast samego przerysowania */
+const hgCfgDef = (c) => { try { return JSON.stringify(c.defaults()); } catch (e) { return null; } };
+const hgCfgFresh = (c) => {
+  if (c._cfgRaw === undefined || c._cfgLang === HGI18n.code) return false;
+  c._cfgLang = HGI18n.code; if (hgCfgDef(c) === c._cfgDef) return false;
+  c.setConfig(c._cfgRaw); return true;
+};
+window.addEventListener('hg-lang', () => queueMicrotask(() => {
+  for (const r of HG_LIVE) { const c = r.deref(); if (!c) { HG_LIVE.delete(r); continue; }
+    if (c.isConnected) { try { if (!hgCfgFresh(c)) c.rerender(); } catch (e) { /* karta bez konfiguracji */ } } else if (c._html != null) c._stale = true; }
+}));
 class HGBase extends HTMLElement {
   constructor() {
     super();
+    if (typeof WeakRef === 'function') { HG_LIVE.add(new WeakRef(this)); if (++hgLiveN % 256 === 0) hgLivePurge(); }
     this.attachShadow({ mode: 'open' });
     hgSelWatch(this.shadowRoot);
     this._sig = null;
@@ -234,7 +243,7 @@ class HGBase extends HTMLElement {
   }
   defaults() { return {}; }
   setConfig(c) {
-    if (!c) throw new Error(hgTr('Brak konfiguracji', 'Missing configuration'));
+    if (!c) throw new Error(hgT('core.missing_config'));
     this._config = Object.assign({}, this.defaults(), c);
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
@@ -278,7 +287,9 @@ class HGBase extends HTMLElement {
     }
     this._doUpdate(force);
   }
-  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); if (this._stale) { this._stale = false; this._update(true); } }
+  /* hgCfgFresh zawsze (najpierw porównuje _cfgLang): karta skonfigurowana przed katalogiem, a podłączona po nim, nawet nigdy nie rysowana */
+  connectedCallback() { if (HG_VIS) HG_VIS.observe(this); let f = false; try { f = hgCfgFresh(this); } catch (e) { /* zła konfiguracja */ }
+    if (this._stale) { this._stale = false; if (!f) this._update(true); } }
   disconnectedCallback() { if (HG_VIS) HG_VIS.unobserve(this); }
   _doUpdate(force) {
     if (!this._config || !this._hass || this._busy) return;
@@ -290,9 +301,10 @@ class HGBase extends HTMLElement {
     // nie podmieniaj DOM pod palcem: przerysuj dopiero po puszczeniu
     if (this._touching && Date.now() - (this._touchT || 0) < 2000) { this._pendingUpd = true; return; }
     this._touching = false;
+    hgCurLang();   /* katalog bieżącego języka: aktywny albo pobierany (hgT czyta HGI18n.code) */
     let html;
     /* błąd renderu: karta pokazuje komunikat zamiast rzucać wyjątek w pętli przekazującej hass (to zatrzymywało inne karty) */
-    try { html = this.render(); } catch (e) { if (!this._rErr) { this._rErr = 1; console.warn('Nuvio: render failed', this.localName, e); } html = `<ha-card class="glass" style="padding:12px;opacity:.7">${hgTr('Błąd karty', 'Card error')}</ha-card>`; }
+    try { html = this.render(); } catch (e) { if (!this._rErr) { this._rErr = 1; console.warn('Nuvio: render failed', this.localName, e); } html = `<ha-card class="glass" style="padding:12px;opacity:.7">${hgT('core.card_error')}</ha-card>`; }
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
     const first = this._html == null; this._html = html;
     /* na żywo: łatanie istniejących węzłów (ui/morph). Węzły przeżywają aktualizację, więc afterRender musi być idempotentne:
@@ -310,7 +322,7 @@ class HGBase extends HTMLElement {
   getCardSize() { return 3; }
   getGridOptions() { return { columns: 6, rows: 3 }; }
   toggleHtml(on, act, disabled, label) {
-    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || hgTr('przełącz', 'toggle'))}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
+    return `<button class="tg ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${H.esc(label || hgT('core.toggle'))}" data-act="${act}" ${disabled ? 'disabled' : ''}><i></i></button>`;
   }
 }
 window.customCards = window.customCards || [];
@@ -320,6 +332,18 @@ const hgReg = (tag, cls, name, desc) => {
   if (cls.prototype instanceof HGBase && dc && dc !== HGBase.prototype.disconnectedCallback && !dc.__hgVis) {
     const w = function () { if (HG_VIS) HG_VIS.unobserve(this); return dc.call(this); }; w.__hgVis = true; cls.prototype.disconnectedCallback = w;
   }
+  /* zewnętrzne wywołanie setConfig (HA, karta-rodzic) zapamiętane z kodem języka – dla hgCfgFresh; wewnętrzne super.setConfig pomijane */
+  const sc = cls.prototype.setConfig;
+  if (cls.prototype instanceof HGBase && sc && !Object.prototype.hasOwnProperty.call(cls.prototype, '__hgCfgW')) {
+    cls.prototype.setConfig = function (c) {
+      if (this.__hgCfgIn) return sc.call(this, c);
+      this.__hgCfgIn = true; this._cfgRaw = c; this._cfgLang = HGI18n.code; this._cfgDef = hgCfgDef(this);
+      try { return sc.call(this, c); } finally { this.__hgCfgIn = false; }
+    };
+    Object.defineProperty(cls.prototype, '__hgCfgW', { value: true });
+  }
   if (!customElements.get(tag)) customElements.define(tag, cls);
-  if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, name, description: desc, preview: false });
+  /* name / desc: tekst albo hgTLazy (rozwiązywane przy odczycie, w bieżącym języku – lista kart HA czyta je później niż rejestracja) */
+  const lz = (v) => (v == null ? v : String(v));
+  if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, get name() { return lz(name); }, get description() { return lz(desc); }, preview: false });
 };

@@ -1,14 +1,13 @@
-const HG_FAN_PL = { auto: 'Auto', low: 'Niski', medium: 'Średni', middle: 'Średni', mid: 'Średni', high: 'Wysoki', quiet: 'Cichy', silent: 'Cichy', turbo: 'Turbo', strong: 'Mocny', diffuse: 'Rozproszony', focus: 'Skupiony', on: 'Wł.', off: 'Wył.' };
-const HG_SWING_PL = { off: 'Stały', on: 'Ruch', horizontal: 'Poziomo', vertical: 'Pionowo', both: 'Oba', swing: 'Ruch' };
-const HG_FAN_EN = { auto: 'Auto', low: 'Low', medium: 'Medium', middle: 'Medium', mid: 'Medium', high: 'High', quiet: 'Quiet', silent: 'Silent', turbo: 'Turbo', strong: 'Strong', diffuse: 'Diffuse', focus: 'Focus', on: 'On', off: 'Off' };
-const HG_SWING_EN = { off: 'Fixed', on: 'Swing', horizontal: 'Horizontal', vertical: 'Vertical', both: 'Both', swing: 'Swing' };
+/* etykiety trybów wentylatora / nawiewu z HA (fan_mode, swing_mode): katalog cards.ac.fan_modes.* / cards.ac.swing_modes.*, null gdy brak (też remote-card) */
+const hgFanL = (k) => hgTD('cards.ac.fan_modes.' + k, null);
+const hgSwingL = (k) => hgTD('cards.ac.swing_modes.' + k, null);
 /* Klimatyzacja w stylu aplikacji Tesla: duża temperatura z chevronami, pasek temperatury (przeciągany), rząd dużych przycisków trybów */
 class HGACCard extends HGBase {
   defaults() {
-    return { title: hgTr('Klimatyzacja', 'Air conditioning'), compact: false,
-      modes: [{ mode: 'heat_cool', label: 'Auto' }, { mode: 'auto', label: 'Auto' }, { mode: 'cool', label: hgTr('Chłodzenie', 'Cooling'), short: hgTr('Chłodz.', 'Cool') }, { mode: 'heat', label: hgTr('Grzanie', 'Heating') },
-        { mode: 'dry', label: hgTr('Osuszanie', 'Drying'), short: hgTr('Osusz.', 'Dry') }, { mode: 'fan_only', label: hgTr('Wiatr', 'Fan') }],
-      compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: hgTr('Wnętrze', 'Indoor') };
+    return { title: hgT('common.air_conditioning'), compact: false,
+      modes: [{ mode: 'heat_cool', label: hgT('cards.ac.mode_auto') }, { mode: 'auto', label: hgT('cards.ac.mode_auto') }, { mode: 'cool', label: hgT('common.cooling'), short: hgT('cards.ac.cool') }, { mode: 'heat', label: hgT('common.heating') },
+        { mode: 'dry', label: hgT('cards.ac.drying'), short: hgT('cards.ac.dry') }, { mode: 'fan_only', label: hgT('cards.ac.fan') }],
+      compact_modes: ['cool', 'heat', 'fan_only', 'heat_cool', 'auto'], room_label: hgT('cards.ac.indoor') };
   }
   css() {
     return U(`
@@ -96,11 +95,11 @@ ha-card.glass > *{ flex-shrink:0; }
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
   _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
-  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgTr('Wyłączona', 'Off'); return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgTr(`${m.l} do ${H.fmt(t)}°`, `${m.l} to ${H.fmt(t)}°`); }
+  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgT('common.off_fem'); return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgT('cards.ac.mode_to_temp', { mode: m.l, temp: H.fmt(t) }); }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
-    const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button>`;
-    if (!H.ok(s)) return `<ha-card class="glass off ${c.compact ? 'compact' : ''}" style="--mt:var(--hg-ac-neu-tx)"><div class="hd"><span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${kb}</div><div class="ph"><b>${hgTr('Niedostępna', 'Unavailable')}</b></div></ha-card>`;
+    const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button>`;
+    if (!H.ok(s)) return `<ha-card class="glass off ${c.compact ? 'compact' : ''}" style="--mt:var(--hg-ac-neu-tx)"><div class="hd"><span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${kb}</div><div class="ph"><b>${hgT('cards.ac.unavailable')}</b></div></ha-card>`;
     const a = s.attributes, { st, t } = this._eff(s), on = st !== 'off';
     if (s.state !== 'off') this._last = s.state;
     const m = HG_AC_MODE[st] || HG_AC_MODE.cool, { mn, mx } = this._lim(s);
@@ -110,25 +109,25 @@ ha-card.glass > *{ flex-shrink:0; }
     const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
     const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
     const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
-    const num = `<div class="num${rng ? ' rng' : ''}" data-act="ctr" aria-live="polite" title="${on ? hgTr('Przytrzymaj: szczegóły', 'Hold: details') : hgTr('Dotknij, aby włączyć', 'Tap to turn on')}">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
+    const num = `<div class="num${rng ? ' rng' : ''}" data-act="ctr" aria-live="polite" title="${on ? hgT('cards.ac.hold_details') : hgT('cards.ac.tap_to_turn_on')}">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
     const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
-    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', hgTr('Obniż temperaturę', 'Lower temperature'))}${num}${cv(1, 'mdi:chevron-right', hgTr('Podwyższ temperaturę', 'Raise temperature'))}</div>`;
-    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="${hgTr('Temperatura docelowa', 'Target temperature')}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
-    const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? hgTr('Wyłącz klimatyzację', 'Turn off air conditioning') : hgTr('Włącz klimatyzację', 'Turn on air conditioning')}" title="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? hgTr('Włączona', 'On') : hgTr('Wyłączona', 'Off')}</span><span class="sh">${on ? hgTr('Wł.', 'On') : hgTr('Wył.', 'Off')}</span></button>`;
+    const tr = `<div class="tr">${cv(-1, 'mdi:chevron-left', hgT('cards.ac.lower_temperature'))}${num}${cv(1, 'mdi:chevron-right', hgT('cards.ac.raise_temperature'))}</div>`;
+    const bar = `<div class="bar" role="slider" tabindex="${on && t != null ? 0 : -1}" aria-label="${hgT('cards.ac.target_temperature')}" aria-valuemin="${mn}" aria-valuemax="${mx}" aria-valuenow="${t ?? ''}" aria-valuetext="${t != null ? H.fmt(t) + '°' : ''}" ${on && t != null ? '' : 'aria-disabled="true"'}><i class="tk"></i>${cur != null ? '<i class="cu"></i>' : ''}<i class="kn"></i></div>`;
+    const pw = `<button class="mb pw ${on ? 'on' : 'off'}" data-act="toggle" aria-pressed="${on}" aria-label="${on ? hgT('cards.ac.turn_off_air_conditioning') : hgT('cards.ac.turn_on_air_conditioning')}" title="${on ? hgT('common.turn_off') : hgT('common.turn_on')}"><i>${H.icon('mdi:power')}</i><span class="fl">${on ? hgT('cards.ac.on_fem') : hgT('common.off_fem')}</span><span class="sh">${on ? hgT('common.on_short') : hgT('common.off_short')}</span></button>`;
     const mb = (x) => { const mm = HG_AC_MODE[x.mode] || HG_AC_MODE.cool, act = st === x.mode; return `<button class="mb ${act ? 'act' : ''}" data-act="mode" data-m="${x.mode}" aria-pressed="${act}" aria-label="${H.esc(x.label)}" title="${H.esc(x.label)}" style="--mc:${mm.c};--mo:${mm.on}"><i>${H.icon(mm.i)}</i><span class="fl">${H.esc(x.label)}</span><span class="sh">${H.esc(x.short || x.label)}</span></button>`; };
     const fm = a.fan_mode, fms = a.fan_modes || [], sw = a.swing_mode, sws = a.swing_modes || [];
-    const en = hgCurLang() === 'en', fv = H.esc((en ? HG_FAN_EN : HG_FAN_PL)[fm] || fm), sv = H.esc((en ? HG_SWING_EN : HG_SWING_PL)[sw] || sw);
-    const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="${hgTr(`Nawiew: ${fv} (zmień)`, `Fan: ${fv} (change)`)}" title="${hgTr(`Nawiew: ${fv} – zmień prędkość`, `Fan: ${fv} – change speed`)}"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">${hgTr('Nawiew', 'Fan')}</span><span class="sh">${hgTr('Nawiew', 'Fan')}</span></button>` : '';
-    const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="${hgTr(`Kierunek nawiewu: ${sv} (zmień)`, `Swing: ${sv} (change)`)}" title="${hgTr(`Kierunek nawiewu: ${sv} – zmień`, `Swing: ${sv} – change`)}"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">${hgTr('Kierunek', 'Swing')}</span><span class="sh">${hgTr('Kier.', 'Swing')}</span></button>` : '';
+    const fv = H.esc(hgFanL(fm) || fm), sv = H.esc(hgSwingL(sw) || sw);
+    const fan = fm && fms.length > 1 ? `<button class="mb" data-act="fan" aria-label="${hgT('cards.ac.fan_change', { fv })}" title="${hgT('cards.ac.fan_change_speed', { fv })}"><i class="v">${H.icon('mdi:fan')}<em>${fv}</em></i><span class="fl">${hgT('cards.ac.fan_airflow')}</span><span class="sh">${hgT('cards.ac.fan_airflow')}</span></button>` : '';
+    const swb = sw && sws.length > 1 ? `<button class="mb" data-act="swing" aria-label="${hgT('cards.ac.swing_change', { sv })}" title="${hgT('cards.ac.swing_change_title', { sv })}"><i class="v">${H.icon('mdi:arrow-oscillating')}<em>${sv}</em></i><span class="fl">${hgT('cards.ac.swing')}</span><span class="sh">${hgT('cards.ac.swing_short')}</span></button>` : '';
     const cls = `glass ${on ? 'on' : 'off'} ${c.compact ? 'compact' : ''}`;
     /* zwijane tryby: zwinięte = zasilanie + aktywny tryb + „Tryby”; rozwinięte = pełna siatka (+ Nawiew/Kierunek) */
     const open = this._isOpen();
     const am = on ? st : (this._last && hv.includes(this._last) ? this._last : null), amx = am && (modes.find((y) => y.mode === am) || { mode: am, label: (HG_AC_MODE[am] || {}).l || am });
     const actB = amx ? mb(amx).replace('class="mb ', 'class="mb cur ') : '';
-    const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}" title="${open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes')}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">${hgTr('Tryby', 'Modes')}</span><span class="sh">${hgTr('Tryby', 'Modes')}</span></button>`;
+    const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? hgT('cards.ac.collapse_modes') : hgT('cards.ac.all_modes')}" title="${open ? hgT('cards.ac.collapse_modes') : hgT('cards.ac.all_modes')}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">${hgT('cards.ac.modes')}</span><span class="sh">${hgT('cards.ac.modes')}</span></button>`;
     const xp = (inner) => `<div class="xp ${open ? 'open' : ''}"><div class="xi" ${open ? '' : 'inert'}>${inner}</div></div>`;
     if (c.compact) {
-      const sub = [this._stat(st, t), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ');
+      const sub = [this._stat(st, t), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ');
       return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${tr}</div>
         ${bar}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
     }
@@ -147,7 +146,7 @@ ha-card.glass > *{ flex-shrink:0; }
     this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
     const R = this.$, card = R.querySelector('ha-card'), fr = (v - mn) / (mx - mn);
     if (card) { card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
-      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? hgTr(`wnętrze ${H.fmt(cur)}°`, `indoor ${H.fmt(cur)}°`) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
+      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
       const b = R.querySelector('.bar'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
       R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); }); }
     clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), commitMs);
@@ -235,7 +234,7 @@ ha-card.glass > *{ flex-shrink:0; }
     this._open = !!v; try { sessionStorage.setItem(this._okey(), v ? '1' : '0'); } catch (e) { /* prywatny tryb */ }
     const R = this.$, xp = R.querySelector('.xp'), xb = R.querySelector('.xb');
     if (xp) { xp.classList.toggle('open', this._open); xp.firstElementChild.toggleAttribute('inert', !this._open); }
-    if (xb) { xb.setAttribute('aria-expanded', this._open); const l = this._open ? hgTr('Zwiń tryby', 'Collapse modes') : hgTr('Wszystkie tryby', 'All modes'); xb.setAttribute('aria-label', l); xb.title = l; }
+    if (xb) { xb.setAttribute('aria-expanded', this._open); const l = this._open ? hgT('cards.ac.collapse_modes') : hgT('cards.ac.all_modes'); xb.setAttribute('aria-label', l); xb.title = l; }
     this._html = null;                 // następne przerysowanie zbuduje DOM z nowym stanem
     if (!this._config.compact) this._fit();
   }
@@ -263,4 +262,4 @@ ha-card.glass > *{ flex-shrink:0; }
   }
   getGridOptions() { return { columns: 6, rows: 5 }; }
 }
-hgReg('hg-ac-card', HGACCard, hgTr('Home Glass – Klimatyzacja', 'Home Glass – Climate'), hgTr('Klimatyzacja w stylu Tesli: temperatura, pasek, tryby', 'Tesla-style climate control: temperature, bar, modes'));
+hgReg('hg-ac-card', HGACCard, hgTLazy('cards.ac.picker_name'), hgTLazy('cards.ac.picker_description'));

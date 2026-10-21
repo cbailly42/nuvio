@@ -1,3 +1,5 @@
+[English](../roadmap.md) · **Polski** · [Français](../fr/roadmap.md)
+
 # Plan rozwoju
 
 Plan kolejnych funkcji; źródłem prawdy jest [STATUS.md](../STATUS.md). Wróć do [README](../../README.pl.md).

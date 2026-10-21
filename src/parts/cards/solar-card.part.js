@@ -1,8 +1,8 @@
 /* ===================== SOLAR ===================== */
 class HGSolarCard extends HGBase {
   defaults() {
-    return { title: hgTr('Energia słoneczna dziś', 'Solar energy today'), icon: 'mdi:solar-panel', statistic: null, today_entity: null, days: 7,
-      caption: hgTr('kWh czystej energii', 'kWh of clean energy'), offline_label: hgTr('falownik offline', 'inverter offline'), locale: null, expand: null, no_data: hgTr('Brak źródła danych', 'No data source') };
+    return { title: hgT('cards.solar.solar_energy_today'), icon: 'mdi:solar-panel', statistic: null, today_entity: null, days: 7,
+      caption: hgT('cards.solar.kwh_of_clean_energy'), offline_label: hgT('cards.solar.inverter_offline'), locale: null, expand: null, no_data: hgT('common.no_data_source') };
   }
   ents() { return [this._config.today_entity, this._config.status_entity].filter(Boolean); }
   _extraSig() { return [this._data ? this._data.t : 0, this._sel, this._w]; }
@@ -51,8 +51,8 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
     const c = this._config;
     const ts0 = H.st(this._hass, c.today_entity);
     const off0 = c.today_entity && (!ts0 || ts0.state === 'unavailable');
-    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.esc(c.today_entity)}: ${hgTr('niedostępny', 'unavailable')}">${H.esc(c.offline_label)}</span>` : ''}
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>${off0 ? `<span class="note" title="${H.lv(H.esc(c.today_entity), hgT('common.state_unavailable_masc'))}">${H.esc(c.offline_label)}</span>` : ''}
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgT('common.expand')}" title="${hgT('common.details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
     if (!c.statistic || this._err || (this._data && !this._data.v.has)) {
       return `<ha-card class="glass"><div class="top">${hd}</div><div class="ph" style="padding:0 14px"><b>${H.esc(c.no_data)}</b>${H.esc(this._err || c.statistic || '')}</div></ha-card>`;
     }
@@ -84,8 +84,8 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
           <path d="${area}" fill="url(#g)"/><path class="ln" d="${dl}"/></svg>
         <div class="band" style="left:${xs[sel]}%"></div>
         <span class="dot" style="left:${xs[sel]}%;top:${pts[sel][1]}%"></span>
-        <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.fmt(Math.abs(delta), 2) + '%'}</span></div>
-        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.esc(d.toLocaleDateString(c.locale || HG_LOC()))}: ${H.fmt(vals[i], 1)} kWh">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
+        <div class="tip" style="left:${Math.min(Math.max(xs[sel], 12), 88)}%;top:${pts[sel][1]}%">${dlab}<br><b>${H.fmt(cur, 1)} kWh</b><br><span class="dl">${delta == null ? '—' : (delta >= 0 ? '↑' : '↓') + H.pct(H.fmt(Math.abs(delta), 2))}</span></div>
+        <div class="lb">${days.map((d, i) => `<button class="${i === sel ? 'sel' : ''}" style="left:${xs[i]}%" data-act="sel" data-i="${i}" title="${H.lv(H.esc(d.toLocaleDateString(c.locale || HG_LOC())), `${H.fmt(vals[i], 1)} kWh`)}">${H.DAYS[d.getDay()]}</button>`).join('')}</div>
       </div></ha-card>`;
   }
   onAct(a, el) {
@@ -94,4 +94,4 @@ svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible
   }
   getGridOptions() { return { columns: 12, rows: 3 }; }
 }
-hgReg('hg-solar-card', HGSolarCard, 'Home Glass – Solar', 'Produkcja PV z ostatnich dni (statystyki)');
+hgReg('hg-solar-card', HGSolarCard, hgTLazy('cards.solar.picker_name'), hgTLazy('cards.solar.picker_description'));

@@ -7,9 +7,9 @@ class HGImageCard extends HGBase {
   connectedCallback() { super.connectedCallback(); clearInterval(this._ti); const r = +((this._config || {}).refresh) || 0; if (r >= 5) this._ti = setInterval(() => { this._bust = Date.now(); this.rerender(); }, r * 1000); }
   disconnectedCallback() { clearInterval(this._ti); }
   render() { const c = this._config, u = hgSafeUrl(c.url), ar = /^\d+(\.\d+)?\/\d+(\.\d+)?$/.test(String(c.ratio || '')) ? c.ratio : '16/9';
-    if (!u) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Podaj adres', 'Enter an address')}</b>${hgTr('https://… lub /local/…', 'https://… or /local/…')}</div></ha-card>`;
+    if (!u) return `<ha-card class="glass"><div class="ph"><b>${hgT('cards.image.enter_an_address')}</b>${hgT('cards.image.https_or_local')}</div></ha-card>`;
     const src = this._bust && c.mode !== 'iframe' ? u + (u.includes('?') ? '&' : '?') + '_t=' + this._bust : u;
-    return `<ha-card class="glass"><div class="fr" style="--ar:${ar}">${c.mode === 'iframe' ? `<iframe src="${H.esc(src)}" title="${H.esc(c.title || hgTr('Strona', 'Page'))}" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>` : `<img src="${H.esc(src)}" alt="${H.esc(c.title || '')}" loading="lazy" decoding="async" style="object-fit:${c.fit === 'contain' ? 'contain' : 'cover'}">`}${c.title ? `<span class="ttl">${H.esc(c.title)}</span>` : ''}</div></ha-card>`; }
+    return `<ha-card class="glass"><div class="fr" style="--ar:${ar}">${c.mode === 'iframe' ? `<iframe src="${H.esc(src)}" title="${H.esc(c.title || hgT('cards.image.page'))}" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>` : `<img src="${H.esc(src)}" alt="${H.esc(c.title || '')}" loading="lazy" decoding="async" style="object-fit:${c.fit === 'contain' ? 'contain' : 'cover'}">`}${c.title ? `<span class="ttl">${H.esc(c.title)}</span>` : ''}</div></ha-card>`; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-image-card', HGImageCard, hgTr('Home Glass – Obraz lub strona', 'Home Glass – Image or page'), hgTr('Zdjęcie, wykres z adresu albo strona w ramce', 'Picture, chart from a URL or a page in a frame'));
+hgReg('hg-image-card', HGImageCard, hgTLazy('cards.image.picker_name'), hgTLazy('cards.image.picker_description'));

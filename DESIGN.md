@@ -4,7 +4,7 @@ Every new feature, card, dialog and setting must meet all of the rules below bef
 
 ## Language and copy
 
-- The UI is Polish first. Every string goes through `hgTr('Polski', 'English')`; the English text is the fallback for non Polish users.
+- Every visible string is a key in the catalogs `src/locales/<code>.json`, read with `hgT('ns.key', params)` (see the Translations section of docs/development.md). English is the source and the fallback; Polish and French are complete, and `python3 tools/i18n_check.py` (run by `tools/guard.py`) fails on a missing key or a hard coded text.
 - Short, plain labels. No jargon where a simple word works ("Zapisz", "Gotowe", "Wstecz").
 - No em dashes or en dashes in the README files, the changelogs, docs or release notes. Use commas, colons or full stops.
 - Every user visible change gets a changelog entry in both CHANGELOG.md and CHANGELOG.pl.md.

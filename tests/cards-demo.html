@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- Wszystkie komponenty z galerii „Dodaj komponent” na sztucznym hass (bez HA), z konfiguracją zbudowaną jak w galerii.
      Uruchomienie: python3 tools/build.py && python3 -m http.server 8000, potem
-     http://localhost:8000/tests/cards-demo.html[?mode=shots|sizes][&only=light,ac][&scheme=light][&lang=en]
+     http://localhost:8000/tests/cards-demo.html[?mode=shots|sizes][&only=light,ac][&scheme=light][&lang=pl|en|fr]
      mode=shots (domyślnie): każdy komponent w ramce o tym samym rozmiarze (zrzuty do docs/components, tools/shots.mjs)
      mode=sizes: każdy komponent w szerokościach S, M i L obok siebie (sprawdzanie responsywności, overflow zaznaczony na czerwono) -->
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvio komponenty</title>
@@ -20,7 +20,7 @@
 </style></head><body><div id="out"></div>
 <script type="module">
 const q = new URLSearchParams(location.search), v = await (await fetch('../dist/nuvio-version.json', { cache: 'no-store' })).json();
-const lang = q.get('lang') === 'en' ? 'en' : 'pl', sch = q.get('scheme') === 'light' ? 'light' : 'dark', MODE = q.get('mode') || 'shots';
+const lang = ['pl', 'en', 'fr'].includes(q.get('lang')) ? q.get('lang') : 'pl', sch = q.get('scheme') === 'light' ? 'light' : 'dark', MODE = q.get('mode') || 'shots';
 window.__hgLangOpt = window.__nuvioLangOpt = lang; window.__hgDryRun = window.__nuvioDryRun = true; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true; window.__nuvioNoPause = window.__hgNoPause = true;
 /* zamrożony czas (zegar, kalendarz, harmonogramy wyglądają tak samo przy każdym zrzucie) */
 const D0 = Date, off = new D0(q.get('at') || '2026-10-15T10:32:00').getTime() - D0.now();

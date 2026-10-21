@@ -23,4 +23,4 @@ class HGConditionalCard extends HGStackCard {
   connectedCallback() { super.connectedCallback(); const Q = (this._config && this._config.conditions || []).filter((c) => c && c.condition === 'screen' && c.media_query); if (Q.length && !this._mqL) { this._mqL = Q.map((c) => { const m = matchMedia(c.media_query), f = () => { this._mq = (this._mq || 0) + 1; this._update(); }; m.addEventListener('change', f); return () => m.removeEventListener('change', f); }); } }
   disconnectedCallback() { super.disconnectedCallback(); if (this._mqL) { this._mqL.forEach((f) => f()); this._mqL = null; } }
 }
-hgReg('hg-conditional-card', HGConditionalCard, hgTr('Nuvio – Warunek', 'Nuvio – Conditional'), hgTr('Karty widoczne tylko przy spełnionym warunku', 'Cards shown only when a condition is met'));
+hgReg('hg-conditional-card', HGConditionalCard, hgTLazy('cards.conditional.picker_name'), hgTLazy('cards.conditional.picker_description'));

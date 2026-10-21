@@ -10,7 +10,9 @@ const hgUI = {
   /* atrybuty akcji: data-act + reszta data-* (obsługa przez HGBase.onAct) */
   act(act, data) { if (!act) return ''; return ` data-act="${H.esc(act)}"` + Object.entries(data || {}).map(([k, v]) => ` data-${k}="${H.esc(v)}"`).join(''); },
   /* liczba, która przy zmianie płynnie się przelicza (ui/morph) */
-  num(v, d = 0) { if (v == null || !isFinite(v)) return '<span class="nv-num">–</span>'; const t = (+v).toFixed(d).replace('.', hgCurLang() === 'en' ? '.' : ','); return `<span class="nv-num" data-v="${+v}">${t}</span>`; },
+  /* separator dziesiętny bieżącego języka (Intl.NumberFormat wg HG_LOC) */
+  dec() { const l = HG_LOC(); if (this._dl !== l) { this._dl = l; try { this._ds = new Intl.NumberFormat(l).formatToParts(1.1).find((p) => p.type === 'decimal').value; } catch (e) { this._ds = '.'; } } return this._ds; },
+  num(v, d = 0) { if (v == null || !isFinite(v)) return '<span class="nv-num">–</span>'; const t = (+v).toFixed(d).replace('.', hgUI.dec()); return `<span class="nv-num" data-v="${+v}">${t}</span>`; },
 };
 window.__hgUI = hgUI;
 hgUI.add(`

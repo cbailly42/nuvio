@@ -5,8 +5,8 @@
    potwierdzenie z HA (albo powrót po 8 s, gdy HA nie potwierdzi). */
 const HG_AC_MODE = {
   /* c: wypełnienie aktywnego przycisku trybu, on: ikona/tekst na nim, t: token koloru tekstu statusu (kontrast w obu schematach) */
-  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgTr('Chłodzenie', 'Cooling'); } }, heat: { c: 'var(--hg-accent)', on: '#1E2023', i: 'mdi:fire', t: 'heat', get l() { return hgTr('Grzanie', 'Heating'); } },
-  dry: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:water-percent', t: 'neu', get l() { return hgTr('Osuszanie', 'Drying'); } }, fan_only: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:fan', t: 'neu', get l() { return hgTr('Wentylacja', 'Fan only'); } },
+  cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:snowflake', t: 'cool', get l() { return hgT('common.cooling'); } }, heat: { c: 'var(--hg-accent)', on: '#1E2023', i: 'mdi:fire', t: 'heat', get l() { return hgT('common.heating'); } },
+  dry: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:water-percent', t: 'neu', get l() { return hgT('shared.climate_modes.drying'); } }, fan_only: { c: '#A3A9B1', on: '#1E2023', i: 'mdi:fan', t: 'neu', get l() { return hgT('shared.climate_modes.fan_only'); } },
   heat_cool: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' }, auto: { c: 'var(--hg-accent)', on: 'var(--hg-accent-tx)', i: 'mdi:thermostat-auto', t: 'auto', l: 'Auto' },
-  off: { c: '#C4C8CE', on: '#5A5E64', i: 'mdi:power', t: 'neu', get l() { return hgTr('Wyłączona', 'Off'); } },
+  off: { c: '#C4C8CE', on: '#5A5E64', i: 'mdi:power', t: 'neu', get l() { return hgT('common.off_fem'); } },
 };

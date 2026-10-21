@@ -1,3 +1,5 @@
+[English](../installation.md) · **Polski** · [Français](../fr/installation.md)
+
 # Instalacja
 
 Nuvio wymaga Home Assistant 2024.8.0 lub nowszego. Wróć do [README](../../README.pl.md).
@@ -17,7 +19,7 @@ Nuvio wymaga Home Assistant 2024.8.0 lub nowszego. Wróć do [README](../../READ
 
 ## Ręcznie
 
-1. Pobierz archiwum źródeł najnowszego wydania (GitHub, Releases, Source code) i skopiuj zawartość jego folderu `dist/` (`nuvio.js` oraz pliki `nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`, wszystkie bez podfolderów) do `/config/www/nuvio/`. Wydania nie mają załączonych plików.
+1. Pobierz archiwum źródeł najnowszego wydania (GitHub, Releases, Source code) i skopiuj zawartość jego folderu `dist/` (`nuvio.js` oraz pliki `nuvio-font-*`, `nuvio-bg-*`, `nuvio-meteo-*`, `nuvio-locale-*`, wszystkie bez podfolderów) do `/config/www/nuvio/`. Wydania nie mają załączonych plików.
 2. Dodaj zasób `/local/nuvio/nuvio.js` (typ: **moduł JavaScript**).
 3. Użyj tej samej konfiguracji `strategy` co wyżej.
 

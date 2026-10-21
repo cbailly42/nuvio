@@ -1,9 +1,9 @@
 /* ===================== ENERGIA ===================== */
 class HGEnergyCard extends HGBase {
   defaults() {
-    return { title: hgTr('Energia', 'Energy'), icon: 'mdi:star-four-points', entities: [], max_power: 17250, thresholds: { low: 30, high: 70 },
-      labels: { low: hgTr('Niskie zużycie', 'Low usage'), medium: hgTr('Średnie zużycie', 'Medium usage'), high: hgTr('Wysokie zużycie', 'High usage') }, expand: null,
-      calc_label: hgTr('Suma faz względem mocy maksymalnej', 'Sum of phases vs. maximum power') };
+    return { title: hgT('cards.energy.energy'), icon: 'mdi:star-four-points', entities: [], max_power: 17250, thresholds: { low: 30, high: 70 },
+      labels: { low: hgT('cards.energy.low_usage'), medium: hgT('cards.energy.medium_usage'), high: hgT('cards.energy.high_usage') }, expand: null,
+      calc_label: hgT('cards.energy.sum_of_phases_vs') };
   }
   setConfig(c) { super.setConfig(hgDeep(this.defaults(), c)); }
   ents() { return this._config.entities; }
@@ -34,21 +34,21 @@ ha-card.glass.cmp{ padding:var(--s2) var(--s3) var(--s2); gap:0; }
   render() {
     const c = this._config, d = this.data();
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgTr('Rozwiń', 'Expand')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
-    if (!d) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgTr('Brak źródła danych', 'No data source')}</b>${hgTr('Czujniki mocy niedostępne', 'Power sensors unavailable')}</div></ha-card>`;
+      ${c.expand ? `<button class="ib" data-act="expand" aria-label="${hgT('common.expand')}" title="${hgT('common.details')}">${H.icon('mdi:arrow-expand')}</button>` : ''}</div>`;
+    if (!d) return `<ha-card class="glass warm">${hd}<div class="ph"><b>${hgT('common.no_data_source')}</b>${hgT('cards.energy.power_sensors_unavailable')}</div></ha-card>`;
     const pr = Math.round(d.pct);
     if (c.compact) {
       const kw = d.tot >= 1000 ? `${H.fmt(d.tot / 1000, 2)} kW` : `${H.fmt(d.tot, 0)} W`;
-      return `<ha-card class="glass warm cmp" title="${H.esc(`${c.calc_label}: ${H.fmt(d.tot, 0)} W ${hgTr('z', 'of')} ${H.fmt(c.max_power / 1000, 2)} kW`)}">${hd}
-        <div class="row"><b>${kw}</b><span>${pr}% · ${H.esc(c.labels[d.lvl])}</span></div>
-        <div class="bar" role="meter" aria-label="${hgTr('Obciążenie', 'Load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+      return `<ha-card class="glass warm cmp" title="${H.esc(H.lv(c.calc_label, `${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`))}">${hd}
+        <div class="row"><b>${kw}</b><span>${H.pct(pr)} · ${H.esc(c.labels[d.lvl])}</span></div>
+        <div class="bar" role="meter" aria-label="${hgT('cards.energy.load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
     }
-    const tip = `${c.calc_label}: ${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W ${hgTr('z', 'of')} ${H.fmt(c.max_power / 1000, 2)} kW`;
+    const tip = H.lv(c.calc_label, `${c.entities.map((e) => `${H.name(this._hass, e)} ${H.fmt(Math.abs(hgW(this._hass, e) || 0), 0)} W`).join(' + ')} = ${H.fmt(d.tot, 0)} W ${hgT('common.of')} ${H.fmt(c.max_power / 1000, 2)} kW`);
     return `<ha-card class="glass warm" title="${H.esc(tip)}">${hd}
-      <div class="sub">${pr}% · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
+      <div class="sub">${H.pct(pr)} · ${H.esc(c.labels[d.lvl])}</div><div class="grow"></div>
       <div class="scale"><span>0</span><span>50</span><span>100</span></div>
-      <div class="bar" role="meter" aria-label="${hgTr('Obciążenie', 'Load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
+      <div class="bar" role="meter" aria-label="${hgT('cards.energy.load')}" aria-valuenow="${pr}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${d.pct.toFixed(1)}%"><i></i></div></div></ha-card>`;
   }
   onAct(a) { if (a === 'expand') H.action(this, this._hass, this._config.expand); }
 }
-hgReg('hg-energy-card', HGEnergyCard, hgTr('Home Glass – Energia', 'Home Glass – Energy'), hgTr('Procent obciążenia mocy (suma faz / moc maks.)', 'Power load percentage (sum of phases / max power)'));
+hgReg('hg-energy-card', HGEnergyCard, hgTLazy('cards.energy.picker_name'), hgTLazy('cards.energy.picker_description'));

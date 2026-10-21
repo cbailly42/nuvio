@@ -9,10 +9,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
 .list .gb{ height:44px; justify-content:flex-start; padding:0 14px; border-radius:12px; } .list .gb .ck{ margin-left:auto; } .gb:not([aria-pressed=true]) .ck{ display:none; }
 `); }
   render() { const c = this._config, h = this._hass, s = H.st(h, c.entity), nm = c.name || H.name(h, c.entity);
-    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgTr('Wybierz encję', 'Choose an entity')}</b>${hgTr('input_select lub select', 'input_select or select')}</div></ha-card>`;
+    if (!s) return `<ha-card class="glass"><div class="ph"><b>${hgT('common.choose_entity')}</b>${hgT('cards.select.input_select_or_select')}</div></ha-card>`;
     const ok = H.ok(s), cur = this._pend ?? s.state, ic = c.icon || s.attributes.icon || 'mdi:format-list-bulleted-square';
     const ops = (s.attributes.options || []).map((o) => `<button class="gb" data-act="opt" data-o="${H.esc(o)}" aria-pressed="${o === cur}" ${ok ? '' : 'disabled'}>${H.esc(o)}${c.mode === 'list' ? H.icon('mdi:check', 'ck') : ''}</button>`).join('');
-    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : hgTr('niedostępne', 'unavailable'))}</small></span></div>
+    return `<ha-card class="glass ${c.mode === 'list' ? 'list' : ''} ${ok ? '' : 'un'}"><div class="gh"><span class="gic on">${H.icon(ic)}</span><span class="gn"><b>${H.esc(nm)}</b><small>${H.esc(ok ? cur : hgT('common.state_unavailable'))}</small></span></div>
       <div class="gops" role="radiogroup" aria-label="${H.esc(nm)}">${ops}</div></ha-card>`; }
   onAct(a, t) { if (a !== 'opt') return; const e = this._config.entity; this._pend = t.dataset.o; clearTimeout(this._pt); this._pt = setTimeout(() => { this._pend = null; this.rerender(); }, 3000);
     H.call(this._hass, hgDom(e), 'select_option', { entity_id: e, option: t.dataset.o }); this.rerender(); }
@@ -20,4 +20,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:12px; padding:16px; over
   get hass() { return this._hass; }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-select-card', HGSelectCard, hgTr('Home Glass – Wybór', 'Home Glass – Select'), hgTr('Opcje input_select i select jako przyciski lub lista', 'input_select and select options as buttons or a list'));
+hgReg('hg-select-card', HGSelectCard, hgTLazy('cards.select.picker_name'), hgTLazy('cards.select.picker_description'));

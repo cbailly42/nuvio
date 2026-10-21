@@ -1,21 +1,21 @@
 /* ===================== BEZPIECZEŃSTWO: alarm + czujniki ===================== */
-/* [etykieta PL, kolor, ikona, etykieta EN] */
+/* [kolor, ikona]; etykieta stanu: hgTD('cards.alarm.states.' + stan) */
 const HG_ALARM_ST = {
-  disarmed: ['Rozbrojony', 'var(--hg-accent)', 'mdi:shield-off-outline', 'Disarmed'], armed_home: ['Uzbrojony · w domu', 'var(--hg-accent)', 'mdi:shield-home', 'Armed · home'],
-  armed_away: ['Uzbrojony · poza domem', 'var(--hg-accent)', 'mdi:shield-lock', 'Armed · away'], armed_night: ['Uzbrojony · noc', 'var(--hg-accent)', 'mdi:shield-moon', 'Armed · night'],
-  armed_vacation: ['Uzbrojony · urlop', 'var(--hg-accent)', 'mdi:shield-airplane', 'Armed · vacation'], armed_custom_bypass: ['Uzbrojony · własny', 'var(--hg-accent)', 'mdi:shield-edit', 'Armed · custom'],
-  arming: ['Uzbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync', 'Arming…'], pending: ['Oczekuje…', 'var(--hg-accent)', 'mdi:shield-alert-outline', 'Pending…'],
-  disarming: ['Rozbrajanie…', 'var(--hg-accent)', 'mdi:shield-sync', 'Disarming…'], triggered: ['Alarm!', '#E53935', 'mdi:bell-ring', 'Triggered!'],
-  unavailable: ['Niedostępny', '#9AA0A6', 'mdi:shield-remove-outline', 'Unavailable'], unknown: ['Nieznany', '#9AA0A6', 'mdi:shield-remove-outline', 'Unknown'],
+  disarmed: ['var(--hg-accent)', 'mdi:shield-off-outline'], armed_home: ['var(--hg-accent)', 'mdi:shield-home'],
+  armed_away: ['var(--hg-accent)', 'mdi:shield-lock'], armed_night: ['var(--hg-accent)', 'mdi:shield-moon'],
+  armed_vacation: ['var(--hg-accent)', 'mdi:shield-airplane'], armed_custom_bypass: ['var(--hg-accent)', 'mdi:shield-edit'],
+  arming: ['var(--hg-accent)', 'mdi:shield-sync'], pending: ['var(--hg-accent)', 'mdi:shield-alert-outline'],
+  disarming: ['var(--hg-accent)', 'mdi:shield-sync'], triggered: ['#E53935', 'mdi:bell-ring'],
+  unavailable: ['#9AA0A6', 'mdi:shield-remove-outline'], unknown: ['#9AA0A6', 'mdi:shield-remove-outline'],
 };
 /* supported_features (AlarmControlPanelEntityFeature): 1 ARM_HOME, 2 ARM_AWAY, 4 ARM_NIGHT, 8 TRIGGER (bez przycisku), 16 ARM_CUSTOM_BYPASS, 32 ARM_VACATION */
-/* [bit, tryb, etykieta PL, ikona, stan, etykieta EN]; etykieta w bieżącym języku: hgAlarmLbl(a) */
-const HG_ALARM_ACT = [[1, 'arm_home', 'W domu', 'mdi:home-lock', 'armed_home', 'Home'], [2, 'arm_away', 'Poza domem', 'mdi:lock', 'armed_away', 'Away'],
-  [4, 'arm_night', 'Noc', 'mdi:weather-night', 'armed_night', 'Night'], [32, 'arm_vacation', 'Urlop', 'mdi:airplane', 'armed_vacation', 'Vacation'],
-  [16, 'arm_custom_bypass', 'Własny', 'mdi:shield-edit-outline', 'armed_custom_bypass', 'Custom']];
-const hgAlarmLbl = (a) => hgTr(a[2], a[5]);
+/* [bit, tryb, etykieta (hgTLazy), ikona, stan]; etykieta w bieżącym języku: hgAlarmLbl(a) */
+const HG_ALARM_ACT = [[1, 'arm_home', hgTLazy('cards.alarm.arm_modes.home'), 'mdi:home-lock', 'armed_home'], [2, 'arm_away', hgTLazy('cards.alarm.arm_modes.away'), 'mdi:lock', 'armed_away'],
+  [4, 'arm_night', hgTLazy('cards.alarm.arm_modes.night'), 'mdi:weather-night', 'armed_night'], [32, 'arm_vacation', hgTLazy('cards.alarm.arm_modes.vacation'), 'mdi:airplane', 'armed_vacation'],
+  [16, 'arm_custom_bypass', hgTLazy('cards.alarm.arm_modes.custom_bypass'), 'mdi:shield-edit-outline', 'armed_custom_bypass']];
+const hgAlarmLbl = (a) => String(a[2]);
 class HGAlarmCard extends HGBase {
-  defaults() { return { title: 'Alarm', icon: 'mdi:shield-home-outline', name: hgTr('Alarm · Dom', 'Alarm · Home'), keypad: null }; }
+  defaults() { return { title: hgT('cards.alarm.default_title'), icon: 'mdi:shield-home-outline', name: hgT('cards.alarm.alarm_home'), keypad: null }; }
   /* klawiatura na stałe, jak w HA: gdy centrala ma code_format albo keypad: true (keypad: false = tylko po wybraniu akcji) */
   _pad(s) { return !!s && H.ok(s) && this._config.keypad !== false && !!s.attributes.code_format; }
   _extraSig() { return [this._pend || '', (this._code || '').length, !!this._miss, Math.floor(Date.now() / 60000)]; }
@@ -76,29 +76,29 @@ ha-card.glass::before{ content:''; position:absolute; z-index:-1; left:-20%; top
   _keys(last) { return `<div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="k" data-act="key" data-k="${d}" aria-label="${d}">${d}</button>`).join('')}${last}</div>`; }
   render() {
     const c = this._config, s = H.st(this._hass, c.entity);
-    const stt = s ? s.state : 'unavailable', [lblPl, col, ic, lblEn] = HG_ALARM_ST[stt] || [H.stateLabel(stt), 'var(--hg-accent)', 'mdi:shield'], lbl = lblEn ? hgTr(lblPl, lblEn) : lblPl;
+    const stt = s ? s.state : 'unavailable', [col, ic] = HG_ALARM_ST[stt] || ['var(--hg-accent)', 'mdi:shield'], lbl = HG_ALARM_ST[stt] ? hgTD('cards.alarm.states.' + stt, stt) : H.stateLabel(stt);
     const un = !H.ok(s), feat = s ? Number(s.attributes.supported_features) || 0 : 0;
     const anim = ['arming', 'pending', 'disarming', 'triggered'].includes(stt);
     const by = s && s.attributes.changed_by ? ` · ${H.esc(s.attributes.changed_by)}` : '';
-    const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}" title="${hgTr('Uzbrój', 'Arm')}: ${hgAlarmLbl(a)}">${H.icon(a[3])}<span>${hgAlarmLbl(a)}</span></button>`).join('')
-      + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="${hgTr('Rozbrój', 'Disarm')}">${H.icon('mdi:shield-off-outline')}<span>${hgTr('Rozbrój', 'Disarm')}</span></button>` : '');
+    const acts = un ? '' : HG_ALARM_ACT.filter((a) => feat & a[0]).map((a) => `<button class="ab ${stt === a[4] ? 'sel' : ''}" data-act="arm" data-m="${a[1]}" aria-pressed="${stt === a[4]}" aria-label="${H.lv(hgT('cards.alarm.arm'), hgAlarmLbl(a))}" title="${H.lv(hgT('cards.alarm.arm'), hgAlarmLbl(a))}">${H.icon(a[3])}<span>${hgAlarmLbl(a)}</span></button>`).join('')
+      + (stt !== 'disarmed' ? `<button class="ab dis" data-act="arm" data-m="disarm" aria-label="${hgT('cards.alarm.disarm')}">${H.icon('mdi:shield-off-outline')}<span>${hgT('cards.alarm.disarm')}</span></button>` : '');
     const txt = s && s.attributes.code_format === 'text', n = (this._code || '').length;
-    const pwIn = `<input class="pw" type="password" autocomplete="off" aria-label="${hgTr('Kod alarmu', 'Alarm code')}" placeholder="${hgTr('Kod', 'Code')}">`;
+    const pwIn = `<input class="pw" type="password" autocomplete="off" aria-label="${hgT('cards.alarm.alarm_code')}" placeholder="${hgT('common.code')}">`;
     let kp = '';
     if (!un && this._pad(s) && !this._pend) {
-      kp = `<div class="kp in">${txt ? pwIn : this._pinHtml(n, this._miss ? hgTr('Najpierw wpisz kod', 'Enter the code first') : hgTr('Wpisz kod, potem wybierz akcję', 'Enter the code, then pick an action')) + this._keys(`<button class="k fn" data-act="kclr" aria-label="${hgTr('Wyczyść kod', 'Clear code')}" ${n ? '' : 'disabled'}>${H.icon('mdi:close')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k fn" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}" ${n ? '' : 'disabled'}>${H.icon('mdi:backspace-outline')}</button>`)}</div>`; }
+      kp = `<div class="kp in">${txt ? pwIn : this._pinHtml(n, this._miss ? hgT('cards.alarm.enter_the_code_first') : hgT('cards.alarm.enter_the_code_then')) + this._keys(`<button class="k fn" data-act="kclr" aria-label="${hgT('cards.alarm.clear_code')}" ${n ? '' : 'disabled'}>${H.icon('mdi:close')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k fn" data-act="kdel" aria-label="${hgT('cards.alarm.delete_digit')}" ${n ? '' : 'disabled'}>${H.icon('mdi:backspace-outline')}</button>`)}</div>`; }
     else if (this._pend) {
-      const nm = this._pend === 'disarm' ? hgTr('Rozbrój', 'Disarm') : hgAlarmLbl(HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, 'Uzbrój', 0, 0, 'Arm']);
-      kp = `<div class="kp"><div class="q"><span>${hgTr('Kod do', 'Code for')}: <b>${H.esc(nm)}</b></span><button class="x" data-act="kcancel" aria-label="${hgTr('Anuluj', 'Cancel')}">${hgTr('Anuluj', 'Cancel')}</button></div>
-        ${txt ? pwIn + `<button class="ab dis" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}">${H.icon('mdi:check')}<span>${hgTr('Zatwierdź', 'Confirm')}</span></button>`
-        : this._pinHtml(n, hgTr('Wpisz kod', 'Enter code')) + this._keys(`<button class="k fn" data-act="kdel" aria-label="${hgTr('Usuń cyfrę', 'Delete digit')}">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k ok" data-act="kok" aria-label="${hgTr('Zatwierdź', 'Confirm')}" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button>`)}</div>`;
+      const nm = this._pend === 'disarm' ? hgT('cards.alarm.disarm') : hgAlarmLbl(HG_ALARM_ACT.find((a) => a[1] === this._pend) || [0, 0, hgT('cards.alarm.arm')]);
+      kp = `<div class="kp"><div class="q"><span>${H.lv(hgT('cards.alarm.code_for'), `<b>${H.esc(nm)}</b>`)}</span><button class="x" data-act="kcancel" aria-label="${hgT('common.cancel')}">${hgT('common.cancel')}</button></div>
+        ${txt ? pwIn + `<button class="ab dis" data-act="kok" aria-label="${hgT('cards.alarm.confirm')}">${H.icon('mdi:check')}<span>${hgT('cards.alarm.confirm')}</span></button>`
+        : this._pinHtml(n, hgT('cards.alarm.enter_code')) + this._keys(`<button class="k fn" data-act="kdel" aria-label="${hgT('cards.alarm.delete_digit')}">${H.icon('mdi:backspace-outline')}</button><button class="k" data-act="key" data-k="0" aria-label="0">0</button><button class="k ok" data-act="kok" aria-label="${hgT('cards.alarm.confirm')}" ${n ? '' : 'disabled'}>${H.icon('mdi:check')}</button>`)}</div>`;
     }
     const body = this._pend ? kp : kp + (acts ? `<div class="acts">${acts}</div>` : '');
     return `<ha-card class="glass ${anim ? 'anim' : ''} ${stt === 'triggered' ? 'trig' : ''}" style="--c:${col}">
       <div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span>
-        <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły alarmu', 'Alarm details')}" title="${hgTr('Szczegóły i historia', 'Details and history')}">${H.icon('mdi:dots-vertical')}</button></div>
+        <button class="ib kebab" data-act="more" aria-label="${hgT('cards.alarm.alarm_details')}" title="${hgT('cards.alarm.details_and_history')}">${H.icon('mdi:dots-vertical')}</button></div>
       <div class="big"><div class="ring">${H.icon(ic)}</div><div class="st"><b>${H.esc(lbl)}</b>
-        <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), hgTr('zmiana ', 'changed ') + hgRel(new Date(s.last_changed))].filter(Boolean).join(' · ') + by : hgTr('Brak encji ', 'Entity not found: ') + H.esc(c.entity)}</span></div></div>
+        <span>${s ? [H.esc(c.name || s.attributes.friendly_name || c.entity), hgT('cards.alarm.changed_ago', { time: hgRel(new Date(s.last_changed)) })].filter(Boolean).join(' · ') + by : hgT('cards.alarm.entity_not_found', { entity: H.esc(c.entity) })}</span></div></div>
       ${body ? `<div class="bd${kp && !this._pend && acts ? ' two' : ''}">${body}</div>` : ''}</ha-card>`;
   }
   afterRender() { const i = this.$.querySelector('.pw'); if (i) { i.value = this._code || ''; i.oninput = () => { this._code = i.value; }; i.onkeydown = (e) => { if (e.key === 'Enter') this.onAct('kok'); };
@@ -125,4 +125,4 @@ ha-card.glass::before{ content:''; position:absolute; z-index:-1; left:-20%; top
   }
   getCardSize() { return 5; }
 }
-hgReg('hg-alarm-card', HGAlarmCard, 'Home Glass – Alarm', hgTr('Stan alarmu, uzbrajanie/rozbrajanie wg supported_features, klawiatura kodu', 'Alarm state, arm/disarm per supported_features, code keypad'));
+hgReg('hg-alarm-card', HGAlarmCard, hgTLazy('cards.alarm.picker_name'), hgTLazy('cards.alarm.picker_description'));

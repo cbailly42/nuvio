@@ -24,12 +24,12 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
     const avail = ss.some((s) => s && s.state !== 'unavailable');
     const onN = ss.filter((s) => s && s.state === 'on').length, on = onN > 0;
     const title = c.title || H.name(this._hass, ids[0]);
-    let tip = `${title}: ${avail ? H.stateLabel(on ? 'on' : 'off') : hgTr('niedostępne', 'unavailable')}`;
-    if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ` · Internet: ${s && s.state === 'on' ? hgTr('połączony', 'connected') : hgTr('brak', 'disconnected')}`; }
+    let tip = H.lv(title, avail ? H.stateLabel(on ? 'on' : 'off') : hgT('common.state_unavailable'));
+    if (c.info_entity) { const s = H.st(this._hass, c.info_entity); tip += ' · ' + hgT('cards.switch.internet_status', { status: s && s.state === 'on' ? hgT('cards.switch.connected') : hgT('cards.switch.disconnected') }); }
     const tg = this.toggleHtml(on, 'toggle', !avail, title);
-    const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="${hgTr('Więcej', 'More')}" title="${hgTr('Więcej', 'More')}">${H.icon('mdi:dots-vertical')}</button>` : '';
+    const kb = c.more ? `<button class="ib kebab" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button>` : '';
     if (c.layout === 'tile') {
-      const st = !avail ? hgTr('niedostępne', 'unavailable') : on ? (ids.length > 1 ? `${hgTr('Włączone', 'On')} · ${onN}/${ids.length}` : hgTr('Włączone', 'On')) : hgTr('Wyłączone', 'Off');
+      const st = !avail ? hgT('common.state_unavailable') : on ? (ids.length > 1 ? `${hgT('common.on_neut')} · ${onN}/${ids.length}` : hgT('common.on_neut')) : hgT('common.off_neut');
       return `<ha-card class="glass tile ${on ? 'on' : ''}" title="${H.esc(tip)}"><div class="row">${H.icon(c.icon, 'ic')}<span class="sp"></span>${tg}${kb}</div>
         <div><div class="nm">${H.esc(title)}</div><div class="stt">${H.esc(st)}</div></div></ha-card>`;
     }
@@ -45,4 +45,4 @@ ha-card.tile{ flex-direction:column; align-items:stretch; justify-content:space-
   }
   getGridOptions() { return { columns: 6, rows: 1 }; }
 }
-hgReg('hg-switch-card', HGSwitchCard, hgTr('Home Glass – Przełącznik', 'Home Glass – Switch'), hgTr('Przełącznik w stylu glass (wiersz lub kafel)', 'Glass-style switch (row or tile)'));
+hgReg('hg-switch-card', HGSwitchCard, hgTLazy('cards.switch.picker_name'), hgTLazy('cards.switch.picker_description'));

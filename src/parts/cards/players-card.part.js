@@ -1,12 +1,12 @@
 /* ===================== MULTIMEDIA + ENERGIA ===================== */
 /* --- hg-players-card: odtwarzacze (konfigurowane + wykryte), aktywne duże z okładką, bezczynne kompaktowe, niedostępne jako chipy --- */
 const HG_MP = { PAUSE: 1, SEEK: 2, VOL_SET: 4, MUTE: 8, PREV: 16, NEXT: 32, ON: 128, OFF: 256, VOL_STEP: 1024, SOURCE: 2048, STOP: 4096, PLAY: 16384 };
-const HG_MP_ST = { playing: 'Odtwarza', paused: 'Wstrzymano', idle: 'Bezczynny', on: 'Włączony', off: 'Wyłączony', standby: 'Czuwanie', buffering: 'Buforowanie…', unavailable: 'Niedostępny', unknown: 'Nieznany' };
-const HG_MP_ST_EN = { playing: 'Playing', paused: 'Paused', idle: 'Idle', on: 'On', off: 'Off', standby: 'Standby', buffering: 'Buffering…', unavailable: 'Unavailable', unknown: 'Unknown' };
-const hgMpSt = (st) => (hgCurLang() === 'en' ? HG_MP_ST_EN : HG_MP_ST)[st];
+/* etykieta stanu odtwarzacza w bieżącym języku: hgTD('cards.players.states.' + stan); undefined dla stanu spoza listy */
+const HG_MP_STS = ['playing', 'paused', 'idle', 'on', 'off', 'standby', 'buffering', 'unavailable', 'unknown'];
+const hgMpSt = (st) => (HG_MP_STS.includes(st) ? hgTD('cards.players.states.' + st, st) : undefined);
 class HGPlayersCard extends HGBase {
   defaults() {
-    return { title: hgTr('Multimedia', 'Media'), icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
+    return { title: hgT('common.media'), icon: 'mdi:play-box-multiple-outline', entities: [], names: {}, icons: {}, discover: true,
       exclude_platforms: ['browser_mod'], exclude: [] };
   }
   _list() {
@@ -47,7 +47,7 @@ class HGPlayersCard extends HGBase {
       if (t.dataset.act === 'src' && t.value) H.call(this._hass, 'media_player', 'select_source', { entity_id: en, source: t.value });
       t.blur(); if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); }
     });
-    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = t.value + '%'; } }, { passive: true });
+    this.shadowRoot.addEventListener('input', (e) => { const t = e.target; if (t.dataset && t.dataset.act === 'vol') { t.style.setProperty('--v', t.value + '%'); const o = t.parentNode.querySelector('output'); if (o) o.textContent = H.pct(t.value); } }, { passive: true });
     this.shadowRoot.addEventListener('focusout', () => { if (this._pendingUpd) { this._pendingUpd = false; setTimeout(() => this._update(true), 50); } });
   }
   css() {
@@ -102,17 +102,17 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
     const playing = st === 'playing';
     const btn = (act, icon, lbl, cls = '') => `<button class="cb ${cls}" data-act="${act}" data-e="${e}" aria-label="${lbl}" title="${lbl}">${ic(icon)}</button>`;
     let h = '';
-    if (big && (f & HG_MP.PREV)) h += btn('prev', 'mdi:skip-previous', hgTr('Poprzedni', 'Previous'));
+    if (big && (f & HG_MP.PREV)) h += btn('prev', 'mdi:skip-previous', hgT('common.previous_track'));
     if (!big && ['off', 'standby'].includes(st)) return h;          // wyłączony: tylko przycisk zasilania
-    if (f & (HG_MP.PAUSE | HG_MP.PLAY)) h += btn('pp', playing ? 'mdi:pause' : 'mdi:play', playing ? hgTr('Pauza', 'Pause') : hgTr('Odtwarzaj', 'Play'), big ? 'main' : 'soft');
-    else if (playing && (f & HG_MP.STOP)) h += btn('stop', 'mdi:stop', 'Stop', 'main');
-    if (big && (f & HG_MP.NEXT)) h += btn('next', 'mdi:skip-next', hgTr('Następny', 'Next'));
+    if (f & (HG_MP.PAUSE | HG_MP.PLAY)) h += btn('pp', playing ? 'mdi:pause' : 'mdi:play', playing ? hgT('common.pause') : hgT('cards.players.play'), big ? 'main' : 'soft');
+    else if (playing && (f & HG_MP.STOP)) h += btn('stop', 'mdi:stop', hgT('cards.players.stop'), 'main');
+    if (big && (f & HG_MP.NEXT)) h += btn('next', 'mdi:skip-next', hgT('common.next_track'));
     return h;
   }
   _pw(e, s) {
     const f = Number(s.attributes.supported_features) || 0, on = !['off', 'standby'].includes(s.state);
     if (!(f & (on ? HG_MP.OFF : HG_MP.ON))) return '';
-    return `<button class="cb pw ${on ? 'on' : ''}" data-act="power" data-e="${e}" aria-label="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}" aria-pressed="${on}" title="${on ? hgTr('Wyłącz', 'Turn off') : hgTr('Włącz', 'Turn on')}">${H.icon('mdi:power')}</button>`;
+    return `<button class="cb pw ${on ? 'on' : ''}" data-act="power" data-e="${e}" aria-label="${on ? hgT('common.turn_off') : hgT('common.turn_on')}" aria-pressed="${on}" title="${on ? hgT('common.turn_off') : hgT('common.turn_on')}">${H.icon('mdi:power')}</button>`;
   }
   _cov(e, s, cls = '') {
     const a = s.attributes, pic = a.entity_picture, icon = this._config.icons[e] || (/tv|dekoder|tele/.test(e) ? 'mdi:television-box' : /nest|gh|home/.test(e) ? 'mdi:cast-audio' : 'mdi:speaker');
@@ -127,9 +127,9 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
       return `<div class="ci ${s.state}">${this._cov(e, s)}<div class="meta"><span class="ttl">${H.esc(nm(e))}</span><span class="sub">${H.esc(hgMpSt(s.state) || s.state)}${a.app_name ? ' · ' + H.esc(a.app_name) : ''}</span></div>
         ${this._ctl(e, s, false)}${this._pw(e, s)}</div>`; }).join('');
     const unN = [...new Set(un.map(nm))];
-    const unH = unN.length ? `<div class="un">${hgTr('Niedostępne:', 'Unavailable:')}${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
-    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? `${act.length} ${hgTr('aktywne', 'active')}` : hgTr('nic nie gra', 'nothing playing')}</span></div>
-      ${big ? `<div class="big">${big}</div>` : ''}${sm ? `<div class="sm">${sm}</div>` : ''}${!big && !sm ? `<div class="empty">${hgTr('Brak dostępnych odtwarzaczy', 'No available players')}</div>` : ''}${unH}</ha-card>`;
+    const unH = unN.length ? `<div class="un">${hgT('cards.players.unavailable')}${unN.map((x) => `<span>${H.esc(x)}</span>`).join('')}</div>` : '';
+    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span><span class="sp"></span><span class="cnt">${act.length ? hgT('cards.players.active_count', { count: act.length }) : hgT('cards.players.nothing_playing')}</span></div>
+      ${big ? `<div class="big">${big}</div>` : ''}${sm ? `<div class="sm">${sm}</div>` : ''}${!big && !sm ? `<div class="empty">${hgT('cards.players.no_available_players')}</div>` : ''}${unH}</ha-card>`;
   }
   afterRender() { hgNP.after(this); }
   disconnectedCallback() { super.disconnectedCallback(); clearInterval(this._npT); }
@@ -147,4 +147,4 @@ select{ font:inherit; font-size:var(--fs-sm); color:#2A2D31; height:max(calc(var
   }
   getCardSize() { return 6; }
 }
-hgReg('hg-players-card', HGPlayersCard, 'Home Glass – Multimedia', hgTr('Odtwarzacze: okładka, tytuł, postęp, sterowanie, głośność, źródło', 'Players: artwork, title, progress, controls, volume, source'));
+hgReg('hg-players-card', HGPlayersCard, hgTLazy('cards.players.picker_name'), hgTLazy('cards.players.picker_description'));

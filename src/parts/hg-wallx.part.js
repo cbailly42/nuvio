@@ -67,17 +67,17 @@ const HG_WX_SS = `
 @media (prefers-reduced-motion:reduce){ .nx-ss, .nx-u > i{ animation:none; } .nx-ss{ display:none; } .nx-in, .nx-hd, .nx{ transition:none; } .nx-fc b.go{ animation:none; } }
 `;
 Object.assign(HGWall, {
-  /* [klucz, PL, EN, tło ze zdjęcia] */
-  XS: [['analog', 'Zegar analogowy', 'Analog clock', true], ['flip', 'Zegar klapkowy', 'Flip clock', false], ['aurora', 'Zorza', 'Aurora', false], ['night', 'Nocny', 'Night', false]],
+  /* [klucz, nazwa, tło ze zdjęcia] */
+  XS: [['analog', hgTLazy('wallx.styles.analog'), true], ['flip', hgTLazy('wallx.styles.flip'), false], ['aurora', hgTLazy('wallx.styles.aurora'), false], ['night', hgTLazy('wallx.styles.night'), false]],
   xs() { const s = ((window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}).style; return this.XS.some((x) => x[0] === s) ? s : ''; },
-  xsPic(k) { const x = this.XS.find((y) => y[0] === k); return !!(x && x[3]); },
+  xsPic(k) { const x = this.XS.find((y) => y[0] === k); return !!(x && x[2]); },
   xsShell(k) { const bg = this.xsPic(k) ? '<div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>' : '';
     const dt = '<p class="nx-dt"></p>', wx = '<div class="nx-wx" hidden></div>';
     const body = k === 'analog' ? `<div class="nx-face" role="img"><i class="nx-hd nx-hh"></i><i class="nx-hd nx-mm"></i><i class="nx-hd nx-ss"></i><i class="nx-cap"></i></div><div class="nx-side">${dt}${wx}</div>`
       : k === 'flip' ? `<div class="nx-fr"><div class="nx-fc"><b data-p="h"></b><small hidden></small></div><div class="nx-fc"><b data-p="m"></b></div></div>${dt}${wx}`
       : k === 'aurora' ? `<time class="nx-t"></time>${dt}${wx}` : `<time class="nx-t"></time>${dt}`;
     return `<style>${HG_WALL_SS}${HG_WX_SS}</style>${bg}<div class="nx nx-${{ analog: 'a', flip: 'f', aurora: 'u', night: 'n' }[k]}">${k === 'aurora' ? '<i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>' : ''}<div class="nx-in">${body}</div></div>
-      <p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`; },
+      <p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`; },
   xsStart(k, rm) { const el = this.el; el.classList.add('xs'); el.dataset.xs = k;
     const s = new Date(); el.querySelector('.nx').style.setProperty('--sd', ((s.getSeconds() + s.getMilliseconds() / 1000) * 6).toFixed(2));
     if (this.xsPic(k)) this.photos(rm);
@@ -105,4 +105,4 @@ Object.assign(HGWall, {
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
 });
 /* galeria w ustawieniach: nowe style po Minimal */
-HGWall.GAL.push(...HGWall.XS.map(([k, pl, en]) => [k, pl, en]));
+HGWall.GAL.push(...HGWall.XS.map(([k, t]) => [k, t]));

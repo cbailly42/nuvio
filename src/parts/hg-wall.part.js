@@ -130,7 +130,7 @@ const HG_WALL_SS = `
 `;
 const HGWall = window.__hgWall || (window.__hgWall = {
   IDLES: [30, 60, 120, 300, 600, 1800],
-  SRCS: [['bg', 'Tło dashboardu', 'Dashboard background'], ['slides', 'Pokaz slajdów', 'Slideshow'], ['url', 'Własny adres', 'Custom URL']],
+  SRCS: [['bg', hgTLazy('wall.photo_sources.bg')], ['slides', hgTLazy('wall.photo_sources.slides')], ['url', hgTLazy('wall.photo_sources.url')]],
   last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null, _ev: null, _evt: 0, _evk: '', _fc: null, _fcb: false,
   /* ---- ustawienia ---- */
   get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
@@ -146,22 +146,22 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return ((h2 >>> 0).toString(36) + (h1 >>> 0).toString(36)); },
   flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
   lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
-    this.locked = true; this.flag(true); clearTimeout(this._lk); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); } },
+    this.locked = true; this.flag(true); clearTimeout(this._lk); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
   pad() { const el = this.el; if (!el || el.classList.contains('pin')) return; const c = this.get();
     let pp = el.querySelector('.nw-pp'); if (!pp) {
       const ic = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`, LK = 'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z';
       const BK = 'M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12';
       const L = ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ'], pos = (r, q) => { const x = q - 1, y = r - 1.5; return `--x:${x};--y:${y.toFixed(1)};--d:${Math.hypot(x, y * .9).toFixed(2)}`; }, key = (d) => `<button type="button" data-k="${d}" aria-label="${d}" style="${d ? pos(Math.floor((d - 1) / 3), (d - 1) % 3) : pos(3, 1)}">${d}<small>${d ? L[d - 1] || '' : ''}</small></button>`;
-      pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', hgTr('Odblokuj panel', 'Unlock the dashboard'));
+      pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', hgT('wall.unlock_the_dashboard'));
       const LO = 'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10A2,2 0 0,1 6,8H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6H7A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17Z';
-      pp.innerHTML = `<i class="nw-rip" aria-hidden="true"></i><div class="nw-pt"><span class="nw-li">${ic(LK).replace('<svg ', '<svg class="cl" ')}${ic(LO).replace('<svg ', '<svg class="op" ')}</span><span>${H.esc(hgTr('Wpisz PIN', 'Enter PIN'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
-        <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" style="${pos(3, 2)}" aria-label="${H.esc(hgTr('Usuń', 'Delete'))}">${ic(BK)}</button></div>
-        <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(hgTr('Zablokuj', 'Lock'))}</span></button>`;
+      pp.innerHTML = `<i class="nw-rip" aria-hidden="true"></i><div class="nw-pt"><span class="nw-li">${ic(LK).replace('<svg ', '<svg class="cl" ')}${ic(LO).replace('<svg ', '<svg class="op" ')}</span><span>${H.esc(hgT('wall.enter_pin'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
+        <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" style="${pos(3, 2)}" aria-label="${H.esc(hgT('wall.delete'))}">${ic(BK)}</button></div>
+        <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(hgT('wall.lock'))}</span></button>`;
       pp.addEventListener('pointerdown', (e) => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; e.preventDefault(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 120); this.key(b.dataset.k); });
       el.appendChild(pp); }
     this._pin = ''; this.dots(c.pinN); el.classList.add('pin'); this.idlePad(); },
   dots(n, st) { const el = this.el, d = el && el.querySelector('.nw-dots'); if (!d) return; const N = Math.max(n || 4, this._pin.length);
-    d.className = 'nw-dots' + (st ? ' ' + st : ''); d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < this._pin.length ? 'on' : ''}" style="--i:${i}"></i>`).join(''); d.setAttribute('aria-label', hgTr(`Wpisano ${this._pin.length} z ${N}`, `${this._pin.length} of ${N} entered`)); },
+    d.className = 'nw-dots' + (st ? ' ' + st : ''); d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < this._pin.length ? 'on' : ''}" style="--i:${i}"></i>`).join(''); d.setAttribute('aria-label', hgT('wall.pin_entered', { count: this._pin.length, total: N })); },
   msg(t, err) { const s = this.el && this.el.querySelector('.nw-pt small'); if (s) { s.textContent = t || ''; s.classList.toggle('err', !!err); } },
   unlock() { const el = this.el; if (!el || el.classList.contains('unl')) return; const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const li = el.querySelector('.nw-li'), r = li && li.getBoundingClientRect(); if (r) { el.style.setProperty('--rx', r.left + r.width / 2 + 'px'); el.style.setProperty('--ry', r.top + r.height / 2 + 'px'); }
@@ -173,15 +173,15 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   unpad() { clearTimeout(this._pt); this._pin = ''; this._apin = 0; const el = this.el; if (!el) return; el.classList.remove('pin'); this.msg(''); el.focus({ preventScroll: true }); },
   key(k) { const el = this.el; if (!el || el.classList.contains('unl')) return; const c = this.get(); this.idlePad();
     if (k === 'lock') return this.unpad();
-    const wait = (this._ban || 0) - Date.now(); if (wait > 0) return this.msg(hgTr(`Spróbuj za ${Math.ceil(wait / 1000)} s`, `Try again in ${Math.ceil(wait / 1000)} s`), true);
+    const wait = (this._ban || 0) - Date.now(); if (wait > 0) return this.msg(hgT('wall.try_again_in', { seconds: Math.ceil(wait / 1000) }), true);
     if (k === 'del') { this._pin = this._pin.slice(0, -1); this.msg(''); return this.dots(c.pinN); }
     if (!/^[0-9]$/.test(k) || this._pin.length >= 8) return;
     this._pin += k; this.msg(''); this.dots(c.pinN);
     if (this._pin.length < c.pinN) return;
     if (this.hash(this._pin) === c.pinH) { this._bad = 0; clearTimeout(this._pt); this.dots(c.pinN, 'ok'); this.unlock(); return; }
     this._bad = (this._bad || 0) + 1; this._pin = ''; const d = el.querySelector('.nw-dots'); this.dots(c.pinN); d.classList.remove('bad'); void d.offsetWidth; d.classList.add('bad');
-    if (this._bad >= 5) { const s = 30 * Math.pow(2, Math.min(4, Math.floor(this._bad / 5) - 1)); this._ban = Date.now() + s * 1000; this.msg(hgTr(`Za dużo prób. Spróbuj za ${s} s`, `Too many attempts. Try again in ${s} s`), true); }
-    else this.msg(hgTr('Nieprawidłowy PIN', 'Wrong PIN'), true); },
+    if (this._bad >= 5) { const s = 30 * Math.pow(2, Math.min(4, Math.floor(this._bad / 5) - 1)); this._ban = Date.now() + s * 1000; this.msg(hgT('wall.too_many_attempts', { seconds: s }), true); }
+    else this.msg(hgT('wall.wrong_pin'), true); },
   /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
   set(p) { HGL.data.wall = Object.assign({}, (HGL.data && HGL.data.wall) || {}, this.get(), p); HGL._ls(); this.sync();
     clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
@@ -220,12 +220,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ---- nakładka ---- */
   show() { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
-    const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Wygaszacz ekranu', 'Screensaver')); el.tabIndex = -1;
+    const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('wall.screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
     const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board()), xs = !gl && !bd && this.xs ? this.xs() : '';
     el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : xs ? this.xsShell(xs) : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
-      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgTr('Dotknij ekranu, aby wybudzić', 'Touch the screen to wake'))}</p>`;
-    if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgTr('Dotknij ekranu, aby odblokować', 'Touch the screen to unlock'); }
+      <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`;
+    if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
     const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && this.glTap && this.glTap(e)) { this.last = Date.now(); return; } this.wake('touch'); };
@@ -259,7 +259,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     else if (F && F.daily && F.daily.length > 1) { const df = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'short' });
       row = F.daily.slice(1, 4).map((x) => `<div><i>${H.esc(df.format(new Date(x.datetime)))}</i><img alt="" src="${ic(x.condition, false)}"><b>${deg(parseFloat(x.temperature))}</b></div>`).join(''); }
     const n = (row.match(/<div>/g) || []).length;
-    const html = `<div class="nw-wm"><img alt="" src="${ic(w.state, night)}">${isFinite(t) ? `<b>${deg(t)}</b>` : ''}<div class="nw-wx"><span>${H.esc(HGWx.cn(w.state))}</span>${isFinite(hi) ? `<small>${H.esc(hgTr('Maks.', 'H'))} ${deg(hi)}${isFinite(lo) ? ` · ${H.esc(hgTr('Min.', 'L'))} ${deg(lo)}` : ''}</small>` : ''}</div></div>${row ? `<div class="nw-fc" style="--n:${n}">${row}</div>` : ''}`;
+    const html = `<div class="nw-wm"><img alt="" src="${ic(w.state, night)}">${isFinite(t) ? `<b>${deg(t)}</b>` : ''}<div class="nw-wx"><span>${H.esc(HGWx.cn(w.state))}</span>${isFinite(hi) ? `<small>${H.esc(hgT('wall.temp_high'))} ${deg(hi)}${isFinite(lo) ? ` · ${H.esc(hgT('wall.temp_low'))} ${deg(lo)}` : ''}</small>` : ''}</div></div>${row ? `<div class="nw-fc" style="--n:${n}">${row}</div>` : ''}`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* prognoza (usługa get_forecasts, godzinowa i dzienna), co 30 min; brak usługi lub danych = karta bez prognozy */
   fc(h, id) { if (!h.callWS || (this._fc && this._fc.id === id && Date.now() - this._fc.t < 1800000) || this._fcb) return;
@@ -275,15 +275,15 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const q = `?start=${encodeURIComponent(d0.toISOString())}&end=${encodeURIComponent(d1.toISOString())}`;
     Promise.all(ids.map((id) => h.callApi('GET', `calendars/${id}${q}`).catch(() => []))).then((rs) => {
       const L = []; for (const [ci, r] of rs.entries()) for (const e of (Array.isArray(r) ? r : [])) { const ad = !!(e.start && e.start.date && !e.start.dateTime), s = ad ? new Date(e.start.date + 'T00:00:00') : new Date(e.start && e.start.dateTime), en = ad ? new Date((e.end && e.end.date || e.start.date) + 'T00:00:00') : new Date(e.end && e.end.dateTime || s);
-        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: String(e.summary || hgTr('Wydarzenie', 'Event')) }); }
+        if (isNaN(s)) continue; L.push({ ad, s, en, c: ci, t: e.summary ? String(e.summary) : null }); }
       this._ev = L.sort((a, b) => (b.ad - a.ad) || (a.s - b.s)); if (this.el) this.evDraw(this.el.querySelector('.nw-e')); }); },
   evDraw(box) { if (!box) return; const now = new Date(), l = this.hass && this.hass.locale ? this.hass.locale.time_format : null, o = l === '12' ? { hour12: true } : l === '24' ? { hour12: false } : {};
     const f = new Intl.DateTimeFormat(HG_LOC(), Object.assign({ hour: '2-digit', minute: '2-digit' }, o)), E = (this._ev || []).filter((e) => e.ad || e.en > now).slice(0, 4);
     if (!E.length) { box.hidden = true; return; }
     const C = ['#7AB8FF', '#FF9F6E', '#7EE0A8', '#D59BFF', '#FFD36E', '#FF7FA8'], nx = E.find((e) => !e.ad), rel = (e) => { const m = Math.round((e.s - now) / 60000);
-      return e.s <= now ? hgTr('Teraz', 'Now') : m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 180 ? hgTr(`za ${Math.round(m / 60)} h`, `in ${Math.round(m / 60)} h`) : ''; };
-    const html = `<h5>${H.esc(hgTr('Dzisiaj', 'Today'))}</h5><ul>${E.map((e) => { const b = e === nx ? rel(e) : '';
-      return `<li${e === nx ? ' class="nx"' : ''} style="--c:${C[e.c % C.length]}"><span class="nw-et">${H.esc(e.ad ? hgTr('Cały dzień', 'All day') : f.format(e.s) + ' – ' + f.format(e.en))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(e.t)}">${H.esc(e.t)}</span></li>`; }).join('')}</ul>`;
+      return e.s <= now ? hgT('common.now_cap') : m < 60 ? hgT('wall.in_min', { minutes: m }) : m < 180 ? hgT('wall.in_hours', { hours: Math.round(m / 60) }) : ''; };
+    const html = `<h5>${H.esc(hgT('wall.today'))}</h5><ul>${E.map((e) => { const b = e === nx ? rel(e) : '';
+      return `<li${e === nx ? ' class="nx"' : ''} style="--c:${C[e.c % C.length]}"><span class="nw-et">${H.esc(e.ad ? hgT('wall.all_day') : f.format(e.s) + ' – ' + f.format(e.en))}${b ? `<em>${H.esc(b)}</em>` : ''}</span><span class="nw-en" title="${H.esc(e.t || hgT('wall.event'))}">${H.esc(e.t || hgT('wall.event'))}</span></li>`; }).join('')}</ul>`;
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
   /* dziecko w żłobku / przedszkolu (integracja LiveKid): w dni robocze, gdy encje są wykryte i opcja LiveKid w ustawieniach jest włączona
      (domyślnie tak). Przyjście, wyjście i dzisiejszy plan zajęć; kalendarz integracji nie dubluje się wtedy w wydarzeniach. Wszystkie style wygaszacza. */
@@ -292,17 +292,17 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const kx = K.map((k) => k.ids.calendar).filter(Boolean); if (kx.join() !== (this._kidCal || []).join()) this._kidCal = kx; return K; },
   /* wspólny model dla wszystkich stylów: stan, godziny, najbliższe zajęcia ze „za X min” i kolejne (bez zakończonych) */
   kidView(h, k) { const now = new Date(), at = (v) => { if (!v || !/^\d{1,2}:\d{2}$/.test(v)) return null; const [a, b] = v.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return d; };
-    const P = k.plan.filter((a) => !a.all_day && a.start).map((a) => ({ title: a.title || hgTr('Zajęcia', 'Activity'), s: at(a.start), e: at(a.end), t: HGLiveKid.hhmm(h, a.start), te: a.end ? HGLiveKid.hhmm(h, a.end) : '' })).filter((x) => x.s && (x.e || x.s) > now);
+    const P = k.plan.filter((a) => !a.all_day && a.start).map((a) => ({ title: a.title || hgT('wall.activity'), s: at(a.start), e: at(a.end), t: HGLiveKid.hhmm(h, a.start), te: a.end ? HGLiveKid.hhmm(h, a.end) : '' })).filter((x) => x.s && (x.e || x.s) > now);
     const done = !!k.outToday || (k.plan.length > 0 && !P.length), nx = done ? null : P[0] || null;
-    const rel = (x) => { if (x.s <= now) return x.te ? hgTr(`teraz, do ${x.te}`, `now, until ${x.te}`) : hgTr('teraz', 'now'); const m = Math.round((x.s - now) / 60000);
-      return m < 60 ? hgTr(`za ${m} min`, `in ${m} min`) : m < 600 ? (m % 60 ? hgTr(`za ${Math.floor(m / 60)} h ${m % 60} min`, `in ${Math.floor(m / 60)} h ${m % 60} min`) : hgTr(`za ${m / 60} h`, `in ${m / 60} h`)) : ''; };
-    return { name: k.name || hgTr('Dziecko', 'Child'), present: k.present, pill: k.present ? hgTr('W placówce', 'At facility') : hgTr('Poza placówką', 'Away'),
+    const rel = (x) => { if (x.s <= now) return x.te ? hgT('wall.now_until', { time: x.te }) : hgT('common.now'); const m = Math.round((x.s - now) / 60000);
+      return m < 60 ? hgT('wall.in_min', { minutes: m }) : m < 600 ? (m % 60 ? hgT('wall.in_hours_minutes', { hours: Math.floor(m / 60), minutes: m % 60 }) : hgT('wall.in_hours', { hours: m / 60 })) : ''; };
+    return { name: k.name || hgT('wall.child'), present: k.present, pill: k.present ? hgT('common.at_facility') : hgT('wall.away'),
       inT: k.inToday || '', outT: k.outToday || '', next: nx ? { t: nx.t, title: nx.title, rel: rel(nx) } : null, rest: done ? [] : P.slice(1, 3).map((x) => ({ t: x.t, title: x.title })),
-      done, note: done ? hgTr('Na dziś to wszystko', 'All done for today') : !P.length ? hgTr('Brak zajęć w planie', 'No activities planned') : '' }; },
+      done, note: done ? hgT('wall.all_done_for_today') : !P.length ? hgT('wall.no_activities_planned') : '' }; },
   kidPill(v, cls) { return `<span class="${cls}${v.present ? ' on' : ''}"><i aria-hidden="true"></i>${H.esc(v.pill)}</span>`; },
-  kidHtml(c, h) { const K = typeof HGLiveKid !== 'undefined' && h ? HGLiveKid.kids(h) : [], det = K.length > 0, nm = K.map((k) => k.name).filter(Boolean).join(', ');
-    const sub = !det ? hgTr('Nie wykryto', 'Not detected') : c.lk ? hgTr(`Wykryto${nm ? ': ' + nm : ''}. W dni robocze plan dnia, przyjście i wyjście na wygaszaczu`, `Detected${nm ? ': ' + nm : ''}. On weekdays the day plan, check-in and check-out on the screensaver`) : hgTr(`Wykryto${nm ? ': ' + nm : ''}. Wyłączone`, `Detected${nm ? ': ' + nm : ''}. Off`);
-    return `<button type="button" class="wl-sw wl-lk" role="switch" data-hge="wl-lk" aria-checked="${det && c.lk}" ${det ? '' : 'disabled aria-disabled="true"'}><span>${hgTr('LiveKid (dziecko)', 'LiveKid (child)')}<small>${H.esc(sub)}</small></span><i aria-hidden="true"></i></button>`; },
+  kidHtml(c, h) { const K = typeof HGLiveKid !== 'undefined' && h ? HGLiveKid.kids(h) : [], det = K.length > 0, nm = K.map((k) => k.name).filter(Boolean).join(', '), dt = nm ? hgT('wall.detected_names', { names: nm }) : hgT('wall.detected');
+    const sub = !det ? hgT('wall.not_detected') : c.lk ? hgT('wall.kid_on_hint', { detected: dt }) : hgT('wall.kid_off_hint', { detected: dt });
+    return `<button type="button" class="wl-sw wl-lk" role="switch" data-hge="wl-lk" aria-checked="${det && c.lk}" ${det ? '' : 'disabled aria-disabled="true"'}><span>${hgT('wall.livekid_child')}<small>${H.esc(sub)}</small></span><i aria-hidden="true"></i></button>`; },
   kid() { const el = this.el, h = this.hass, box = el && el.querySelector('.nw-k'); if (!box) return;
     const K = this.kidList(h);
     if (!K.length) { box.hidden = true; return; }
@@ -310,7 +310,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const one = (k) => { const v = this.kidView(h, k), L = v.next ? [Object.assign({ nx: 1 }, v.next), ...v.rest] : [];
       const li = L.map((x, i) => `<li${x.nx ? ' class="nx"' : ''} style="--c:${C[i % C.length]}"><span class="nw-et">${H.esc(x.t)}${x.nx && x.rel ? `<em>${H.esc(x.rel)}</em>` : ''}</span><span class="nw-en" title="${H.esc(x.title)}">${H.esc(x.title)}</span></li>`).join('');
       return `<h5><b>${H.esc(v.name)}</b>${this.kidPill(v, 'nw-kst')}</h5>
-        <div class="nw-kt"><div><i>${H.esc(hgTr('Przyjście', 'Check-in'))}</i><b class="${v.inT ? '' : 'mu'}">${H.esc(v.inT || '--:--')}</b></div><div><i>${H.esc(hgTr('Wyjście', 'Check-out'))}</i><b class="${v.outT ? '' : 'mu'}">${H.esc(v.outT || '--:--')}</b></div></div>
+        <div class="nw-kt"><div><i>${H.esc(hgT('common.check_in'))}</i><b class="${v.inT ? '' : 'mu'}">${H.esc(v.inT || '--:--')}</b></div><div><i>${H.esc(hgT('common.check_out'))}</i><b class="${v.outT ? '' : 'mu'}">${H.esc(v.outT || '--:--')}</b></div></div>
         ${li ? `<ul>${li}</ul>` : `<span class="nw-kn">${H.esc(v.note)}</span>`}`; };
     const html = K.map(one).join('<div class="nw-ks"></div>');
     if (box.dataset.k !== html) { box.dataset.k = html; box.innerHTML = html; } box.hidden = false; },
@@ -341,37 +341,37 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, xk = this.xs ? this.xs() : '', pic = !(this.glass && this.glass()) && (!xk || this.xsPic(xk));   /* zdjęcie jest tłem zegara na zdjęciu, tablicy i zegara analogowego */
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
-      <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgTr('Włącz po bezczynności', 'Start after inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
-      <div class="wl-f"><span>${hgTr('Przyciemnienie', 'Dimming')}<em class="wl-dv">${dv}%</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgTr('Przyciemnienie wygaszacza', 'Screensaver dimming')}"></div>
-      ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgTr('Zdjęcie', 'Photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, pl, en]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${hgTr(pl, en)}</button>`).join('')}</div>
-        ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgTr('Adres zdjęcia: https://… lub /local/…', 'Image URL: https://… or /local/…')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgTr('Adres zdjęcia wygaszacza', 'Screensaver image URL')}"></span>` : ''}</div>` : ''}
-      <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgTr('Czujnik ruchu (wybudzanie)', 'Motion sensor (wake)')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgTr('Brak, tylko dotyk', 'None, touch only'), ic: 'mdi:gesture-tap', fix: true }],
-        sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgTr('Zmień', 'Change') : hgTr('Wybierz czujnik', 'Choose sensor'), ic: 'mdi:motion-sensor' })}</div>
+      <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgT('wall.start_after_inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
+      <div class="wl-f"><span>${hgT('wall.dimming')}<em class="wl-dv">${H.pct(dv)}</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgT('wall.screensaver_dimming')}"></div>
+      ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgT('wall.photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, t]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${t}</button>`).join('')}</div>
+        ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgT('wall.image_url_hint')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgT('wall.screensaver_image_url')}"></span>` : ''}</div>` : ''}
+      <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
+        sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.kidHtml(c, h)}
       ${this.lockHtml(c)}
-      <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgTr('Podgląd wygaszacza', 'Preview screensaver')}</span></button>`;
-    return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgTr('Tryb tabletu ściennego', 'Wall tablet mode')}</h4>
-      <small class="lk-hn">${hgTr('Po bezczynności zegar ze zdjęciem i przyciemnieniem; dotyk lub czujnik ruchu budzi ekran. ' + (HGL.mode === 'shared' ? 'Ustawienie dotyczy wszystkich osób ze wspólnym dashboardem.' : 'Ustawienie dotyczy konta użytkownika HA.'), 'After inactivity: a clock over a dimmed photo; touch or a motion sensor wakes the screen. ' + (HGL.mode === 'shared' ? 'Applies to everyone on the shared dashboard.' : 'Applies to this Home Assistant user.'))}</small>
-      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgTr('Wygaszacz', 'Screensaver')}<small>${c.on ? hgTr('Włączony', 'On') : hgTr('Wyłączony', 'Off')}</small></span><i aria-hidden="true"></i></button>${body}</section>`; },
-  lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgTr('Od razu', 'At once'));
-    const sw = `<button type="button" class="wl-sw" role="switch" data-hge="wl-lock" aria-checked="${c.lock}"><span>${hgTr('Blokada PIN-em', 'PIN lock')}<b class="wl-beta">BETA</b><small>${c.lock ? (c.pinH ? hgTr('Włączona: dotknięcie wygaszacza pokazuje pinpad', 'On: touching the screensaver shows a PIN pad') : hgTr('Ustaw PIN, aby blokada działała', 'Set a PIN to turn the lock on')) : hgTr('Wyłączona', 'Off')}</small></span><i aria-hidden="true"></i></button>`;
+      <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>`;
+    return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
+      <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
+      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${body}</section>`; },
+  lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgT('wall.at_once'));
+    const sw = `<button type="button" class="wl-sw" role="switch" data-hge="wl-lock" aria-checked="${c.lock}"><span>${hgT('wall.pin_lock')}<b class="wl-beta">${hgT('wall.beta')}</b><small>${c.lock ? (c.pinH ? hgT('wall.pin_lock_on_hint') : hgT('wall.pin_lock_needs_pin')) : hgT('common.off_fem')}</small></span><i aria-hidden="true"></i></button>`;
     if (!c.lock) return sw;
     return `${sw}
-      <div class="wl-f"><span>${c.pinH ? hgTr('Zmień PIN (4–8 cyfr)', 'Change PIN (4–8 digits)') : hgTr('PIN (4–8 cyfr)', 'PIN (4–8 digits)')}${c.pinH ? `<em class="wl-ok">${H.icon('mdi:check-circle')}${hgTr('PIN ustawiony', 'PIN set')}</em>` : ''}</span>
-        <div class="wl-pin"><span class="hs-s">${H.icon('mdi:dialpad')}<input class="hs-in" name="wl-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="new-password" placeholder="••••" aria-label="${hgTr('Nowy PIN', 'New PIN')}"></span><button type="button" class="wl-tb" data-hge="wl-pin">${H.icon('mdi:content-save-outline')}<span>${hgTr('Zapisz', 'Save')}</span></button></div></div>
-      <div class="wl-f" role="group" aria-labelledby="wl-la"><span id="wl-la">${hgTr('Zablokuj po starcie wygaszacza', 'Lock after the screensaver starts')}</span><div class="wl-seg" style="--n:${this.LOCKS.length}">${this.LOCKS.map((s) => `<button type="button" data-hge="wl-lockafter" data-v="${s}" aria-pressed="${c.lockAfter === s}">${L(s)}</button>`).join('')}</div></div>
-      <small class="wl-warn">${hgTr('Blokada chroni panel na tablecie przed przypadkowym użyciem; nie zastępuje hasła do Home Assistant. Zapisywany jest tylko skrót PIN-u. Zablokujesz też od razu z menu użytkownika.', 'The lock keeps the tablet dashboard from casual use; it does not replace the Home Assistant password. Only a hash of the PIN is stored. You can also lock right away from the user menu.')}</small>`; },
+      <div class="wl-f"><span>${c.pinH ? hgT('wall.change_pin_digits') : hgT('wall.pin_digits')}${c.pinH ? `<em class="wl-ok">${H.icon('mdi:check-circle')}${hgT('wall.pin_set')}</em>` : ''}</span>
+        <div class="wl-pin"><span class="hs-s">${H.icon('mdi:dialpad')}<input class="hs-in" name="wl-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="new-password" placeholder="••••" aria-label="${hgT('wall.new_pin')}"></span><button type="button" class="wl-tb" data-hge="wl-pin">${H.icon('mdi:content-save-outline')}<span>${hgT('common.save')}</span></button></div></div>
+      <div class="wl-f" role="group" aria-labelledby="wl-la"><span id="wl-la">${hgT('wall.lock_after_screensaver')}</span><div class="wl-seg" style="--n:${this.LOCKS.length}">${this.LOCKS.map((s) => `<button type="button" data-hge="wl-lockafter" data-v="${s}" aria-pressed="${c.lockAfter === s}">${L(s)}</button>`).join('')}</div></div>
+      <small class="wl-warn">${hgT('wall.pin_lock_note')}</small>`; },
   savePin(p, S) { const i = S.querySelector('[name=wl-pin]'), v = i ? i.value.trim() : '';
-    if (!/^[0-9]{4,8}$/.test(v)) return p._eToast(hgTr('PIN to od 4 do 8 cyfr', 'The PIN is 4 to 8 digits'));
-    this.set({ pinH: this.hash(v), pinN: v.length }); p._eToast(hgTr('PIN zapisany', 'PIN saved')); return p._eLook(); },
+    if (!/^[0-9]{4,8}$/.test(v)) return p._eToast(hgT('wall.pin_invalid'));
+    this.set({ pinH: this.hash(v), pinN: v.length }); p._eToast(hgT('wall.pin_saved')); return p._eLook(); },
   wire(p, S) { if (!this.admin(p)) return;
     const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
-    const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = rg.value + '%'; this.set({ dim: rg.value / 100 }); });
+    const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = H.pct(rg.value); this.set({ dim: rg.value / 100 }); });
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
-      if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgTr('Podaj adres https:// lub /local/…', 'Enter an https:// or /local/… address'));
+      if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
       this.set({ url: v }); }); },
   act(p, b, a) { if (!this.admin(p)) return;
     if (this.glAct && this.glAct(p, b, a)) return;

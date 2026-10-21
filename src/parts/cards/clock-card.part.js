@@ -10,4 +10,4 @@ class HGClockCard extends HGBase {
     return `<ha-card class="glass">${c.title ? `<span class="tt">${H.esc(c.title)}</span>` : ''}<span class="tm" role="timer" aria-live="off">${H.esc(t)}${c.seconds ? `<small>${s}</small>` : ''}</span>${c.date !== false ? `<span class="dt">${H.esc(d.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>` : ''}</ha-card>`; }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-clock-card', HGClockCard, hgTr('Home Glass – Zegar', 'Home Glass – Clock'), hgTr('Godzina i data', 'Time and date'));
+hgReg('hg-clock-card', HGClockCard, hgTLazy('cards.clock.picker_name'), hgTLazy('cards.clock.picker_description'));

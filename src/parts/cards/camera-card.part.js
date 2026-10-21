@@ -26,9 +26,9 @@ const HGCamFS = {
     if (this.el) this.close(true);
     card._stopLive && card._liveOn && card._stopLive(true);
     const c = card._config, a = hgAsp.get(c.entity) || c.aspect || 16 / 9, name = c.name || H.name(card._hass, c.entity);
-    const el = document.createElement('div'); el.className = 'hg-camfs'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgTr('Kamera ' + name + ' – pełny ekran', 'Camera ' + name + ' – full screen'));
+    const el = document.createElement('div'); el.className = 'hg-camfs'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('cards.camera.fullscreen_dialog_aria', { name }));
     el.style.setProperty('--a', a);
-    el.innerHTML = `<style>${this.css}</style><div class="st"><div class="box"></div></div><div class="bar"><b>${H.esc(name)}</b><i>${hgTr('NA ŻYWO', 'LIVE')}</i><button class="x" aria-label="${hgTr('Zamknij pełny ekran', 'Close full screen')}" title="${hgTr('Zamknij (Esc)', 'Close (Esc)')}"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="hint">${hgTr('Przesuń w dół, aby zamknąć', 'Swipe down to close')}</div>`;
+    el.innerHTML = `<style>${this.css}</style><div class="st"><div class="box"></div></div><div class="bar"><b>${H.esc(name)}</b><i>${hgT('cards.camera.live')}</i><button class="x" aria-label="${hgT('cards.camera.close_full_screen')}" title="${hgT('cards.camera.close_esc')}"><ha-icon icon="mdi:close"></ha-icon></button></div><div class="hint">${hgT('cards.camera.swipe_down_to_close')}</div>`;
     // w drzewie <home-assistant> (ale poza panelem z backdrop-filter): elementy HA (ha-camera-stream) biorą hass z kontekstu dostawcy
     const ha = document.querySelector('home-assistant');
     (ha && ha.shadowRoot ? ha.shadowRoot : document.body).appendChild(el); this.el = el; this.card = card; this.entity = c.entity; this._prevFocus = document.activeElement;
@@ -51,7 +51,7 @@ const HGCamFS = {
       if (!helpers || this.el !== el) return;
       if (card._nl ? card._nl() : c.no_live) {   // bez strumienia: powiększona migawka podglądu odświeżana co 2 s
         const box = el.querySelector('.box'), img = document.createElement('img'); img.alt = ''; img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block';
-        box.appendChild(img); const lb = el.querySelector('.bar i'); if (lb) lb.textContent = hgTr('PODGLĄD', 'PREVIEW');
+        box.appendChild(img); const lb = el.querySelector('.bar i'); if (lb) lb.textContent = hgT('cards.camera.preview');
         const tick = () => { const s = H.st(this.card ? this.card._hass : card._hass, card._ent ? card._ent() : c.entity); if (!s || !s.attributes.entity_picture) return;
           const u = s.attributes.entity_picture, pre = new Image(); pre.onload = () => { if (pre.naturalWidth >= 16) img.src = pre.src; }; pre.src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(); };
         tick(); this._pv = setInterval(() => { if (this.el === el) tick(); }, 2000); return;
@@ -59,7 +59,7 @@ const HGCamFS = {
       const fe = c.fs_entity && H.ok(card._hass.states[c.fs_entity]) ? c.fs_entity : (card._ent ? card._ent() : c.entity);   // pełny ekran: strumień główny (main), kafel: sub/podgląd
       const live = helpers.createCardElement({ type: 'picture-entity', entity: fe, camera_view: 'live', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' } });
       live.hass = card._hass; this.live = live; el.querySelector('.box').appendChild(live);
-    } catch (err) { el.querySelector('.box').textContent = hgTr('Nie można uruchomić podglądu', 'Unable to start preview'); }
+    } catch (err) { el.querySelector('.box').textContent = hgT('cards.camera.unable_to_start_preview'); }
   },
   hass(h) { if (this.live) this.live.hass = h; },
   close(now) {
@@ -138,10 +138,10 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   _update() {
     if (!this._config || !this._hass) return;
     const c = this._config, s = H.st(this._hass, this._ent()), un = hgCamUn(s);
-    if (!this._sk || this._skUn !== un) this._skeleton(un);
+    if (!this._sk || this._skUn !== un || this._skL !== HGI18n.code) this._skeleton(un);   // też po zmianie języka (teksty szkieletu)
     const nm = c.name || (s && s.attributes.friendly_name) || c.entity;
     const live = !!this._liveOn;
-    const stl = un ? (this._nl() || c.cover ? 'offline' : hgTr('niedostępna', 'unavailable')) : live ? hgTr('na żywo', 'live') : { recording: hgTr('nagrywa', 'recording'), streaming: hgTr('transmisja', 'streaming'), idle: hgTr('bezczynna', 'idle') }[s.state] || H.stateLabel(s.state);
+    const stl = un ? (this._nl() || c.cover ? hgT('cards.camera.state_offline') : hgT('cards.camera.unavailable')) : live ? hgT('cards.camera.state_live') : { recording: hgT('cards.camera.recording'), streaming: hgT('cards.camera.streaming'), idle: hgT('cards.camera.idle') }[s.state] || H.stateLabel(s.state);
     const cls = 'st ' + (un ? '' : live ? 'live' : s.state === 'recording' ? 'rec' : 'ok');
     if (this._ttl.textContent !== nm) this._ttl.textContent = nm;
     if (this._st.textContent !== stl) this._st.textContent = stl;
@@ -153,14 +153,14 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   }
   _skeleton(un) {
     const c = this._config, asp = hgAsp.get(c.entity) || c.aspect;
-    this._sk = true; this._skUn = un; this._loaded = false; this._lastPic = null; this._snapErr = 0;
+    this._sk = true; this._skUn = un; this._skL = HGI18n.code; this._loaded = false; this._lastPic = null; this._snapErr = 0;
     if (this._liveOn) this._stopLive(true);
     const hd = `<div class="hd">${H.icon('mdi:cctv', 'ic')}<span class="tt"></span><span class="sp"></span><span class="st"></span>
-      <button class="ib kebab" data-act="more" aria-label="${hgTr('Szczegóły kamery', 'Camera details')}" title="${hgTr('Szczegóły', 'Details')}">${H.icon('mdi:dots-vertical')}</button></div>`;
-    const body = un ? `<div class="un">${H.icon('mdi:cctv-off')}<span>${c.cover ? hgTr('Brak połączenia z kamerą', 'No connection to camera') : hgTr('Kamera niedostępna', 'Camera unavailable')}</span></div>`
-      : `<div class="fr" data-act="frame" style="--aspn:${asp}"><div class="shim"><span class="ph">${H.icon('mdi:cctv')}<span class="l">${hgTr('Ładowanie…', 'Loading…')}</span><span class="e">${hgTr('Brak obrazu', 'No image')}</span></span></div><img alt="" decoding="async"><div class="live"></div>
-          <div class="ov">${this._nl() ? '<span></span>' : `<button class="pb" data-act="live" aria-label="${hgTr('Podgląd na żywo', 'Live view')}">${H.icon('mdi:play')}<span>${hgTr('Na żywo', 'Live')}</span></button>`}
-          <button class="pb ic" data-act="full" aria-label="${hgTr('Pełny ekran', 'Full screen')}" title="${hgTr('Pełny ekran', 'Full screen')}">${H.icon('mdi:fullscreen')}</button></div></div>`;
+      <button class="ib kebab" data-act="more" aria-label="${hgT('cards.camera.camera_details')}" title="${hgT('common.details')}">${H.icon('mdi:dots-vertical')}</button></div>`;
+    const body = un ? `<div class="un">${H.icon('mdi:cctv-off')}<span>${c.cover ? hgT('cards.camera.no_connection_to_camera') : hgT('cards.camera.camera_unavailable')}</span></div>`
+      : `<div class="fr" data-act="frame" style="--aspn:${asp}"><div class="shim"><span class="ph">${H.icon('mdi:cctv')}<span class="l">${hgT('cards.camera.loading')}</span><span class="e">${hgT('cards.camera.no_image')}</span></span></div><img alt="" decoding="async"><div class="live"></div>
+          <div class="ov">${this._nl() ? '<span></span>' : `<button class="pb" data-act="live" aria-label="${hgT('cards.camera.live_view')}">${H.icon('mdi:play')}<span>${hgT('cards.camera.live_button')}</span></button>`}
+          <button class="pb ic" data-act="full" aria-label="${hgT('cards.camera.full_screen')}" title="${hgT('cards.camera.full_screen')}">${H.icon('mdi:fullscreen')}</button></div></div>`;
     this.$.innerHTML = `<ha-card class="glass ${c.embedded ? 'bare' : ''} ${c.cover ? 'cv' : ''}"><div class="tile">${hd}${body}</div></ha-card>`;
     this._ttl = this.$.querySelector('.tt');   /* nie _tt: to pole timera dotyku w HGBase */ this._st = this.$.querySelector('.st');
     this._fr = this.$.querySelector('.fr'); this._img = this.$.querySelector('img'); this._lb = this.$.querySelector('[data-act=live]');
@@ -211,7 +211,7 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   }
   _paintLive() {
     if (this._fr) this._fr.classList.toggle('on', !!this._liveOn);
-    if (this._lb) { this._lb.innerHTML = `${H.icon(this._liveOn ? 'mdi:stop' : 'mdi:play')}<span>${this._liveOn ? 'Stop' : hgTr('Na żywo', 'Live')}</span>`; this._lb.setAttribute('aria-label', this._liveOn ? hgTr('Zatrzymaj podgląd na żywo', 'Stop live view') : hgTr('Podgląd na żywo', 'Live view')); }
+    if (this._lb) { this._lb.innerHTML = `${H.icon(this._liveOn ? 'mdi:stop' : 'mdi:play')}<span>${this._liveOn ? hgT('cards.camera.stop_live') : hgT('cards.camera.live_button')}</span>`; this._lb.setAttribute('aria-label', this._liveOn ? hgT('cards.camera.stop_live_view') : hgT('cards.camera.live_view')); }
     this._update();
   }
   async _startLive() {
@@ -265,4 +265,4 @@ ha-card.glass.cv{ height:auto; padding:var(--s1) var(--s1) var(--s1); } .cv .til
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 6, rows: 4 }; }
 }
-hgReg('hg-camera-card', HGCameraCard, 'Home Glass – Kamera', 'Migawka odświeżana co kilka sekund, podgląd na żywo po dotknięciu');
+hgReg('hg-camera-card', HGCameraCard, hgTLazy('cards.camera.picker_name'), hgTLazy('cards.camera.picker_description'));
