@@ -767,10 +767,9 @@ cards.robots.idle,parts/cards/robots-card.part.js,22,hgTr,Idle,Bezczynny,,,auto
 common.just_now,parts/cards/robots-card.part.js,30,hgTr,just now,przed chwilą,,,auto
 common.ago_minutes,parts/cards/robots-card.part.js,30,hgTr,{m} min ago,{m} min temu,m,,auto
 cards.robots.h_ago,parts/cards/robots-card.part.js,31,hgTr,{h} h ago,{h} godz. temu,h,,auto
-cards.robots.yesterday,parts/cards/robots-card.part.js,32,hgTr,yesterday,wczoraj,,plural,manual
-cards.robots.days_ago,parts/cards/robots-card.part.js,32,hgTr,{d} days ago,{d} dni temu,d,plural,manual
+cards.robots.yesterday,parts/cards/robots-card.part.js,32,hgTr,yesterday,wczoraj,,plural,auto
+cards.robots.days_ago,parts/cards/robots-card.part.js,32,hgTr,{count} days ago,{count} dni temu,count,plural,auto
 cards.robots.robots,parts/cards/robots-card.part.js,35,hgTr,Robots,Roboty,,,auto
-cards.robots.robots_2,parts/cards/robots-card.part.js,147,hgTr,robots,roboty,,plural,manual
 cards.robots.no_vacuum_or_lawn,parts/cards/robots-card.part.js,148,hgTr,No vacuum.* or lawn_mower.* entities,Brak encji vacuum.* ani lawn_mower.*,,,auto
 common.unavailable_masc,parts/cards/robots-card.part.js,155,hgTr,Unavailable,Niedostępny,,,auto
 common.room,parts/cards/robots-card.part.js,161,hgTr,Room,Pokój,,,auto
@@ -785,20 +784,27 @@ common.pause,parts/cards/robots-card.part.js,171,hgTr,Pause,Pauza,,,auto
 common.resume,parts/cards/robots-card.part.js,172,hgTr,Resume,Wznów,,,auto
 cards.robots.dock,parts/cards/robots-card.part.js,174,hgTr,Dock,Do stacji,,,auto
 cards.robots.locate,parts/cards/robots-card.part.js,175,hgTr,Locate,Zlokalizuj,,,auto
-cards.robots.sl_2,parts/cards/robots-card.part.js,182,hgTr,sl[2],sl[1],,expr,manual
+cards.robots.settings.suction,parts/cards/robots-card.part.js,182,hgTr,Suction,Moc ssania,,expr,auto
+cards.robots.settings.mode,parts/cards/robots-card.part.js,182,hgTr,Mode,Tryb,,expr,auto
+cards.robots.settings.water,parts/cards/robots-card.part.js,182,hgTr,Water,Woda,,expr,auto
+cards.robots.settings.setting,parts/cards/robots-card.part.js,182,hgTr,Setting,Ustawienie,,expr,auto
 cards.robots.suction,parts/cards/robots-card.part.js,183,hgTr,Suction,Moc ssania,,,auto
 cards.robots.room_cleaning,parts/cards/robots-card.part.js,189,hgTr,Room cleaning,Sprzątanie pokoi,,,auto
 cards.robots.clean_selected_rooms,parts/cards/robots-card.part.js,190,hgTr,Clean selected rooms,Sprzątaj wybrane pokoje,,,auto
 cards.robots.clean,parts/cards/robots-card.part.js,190,hgTr,Clean,Sprzątaj,,,auto
-cards.robots.x_en,parts/cards/robots-card.part.js,196,hgTr,x.en,x.nm,,expr,manual
-cards.robots.x_full_1,parts/cards/robots-card.part.js,196,hgTr,x.full[1],x.full[0],,expr,manual
-cards.robots.left,parts/cards/robots-card.part.js,199,hgTr,", {tt} left",", zostało {tt}",tt,,auto
+cards.robots.consumables.main_brush,parts/cards/robots-card.part.js,196,hgTr,Main brush,Szczotka gł.,,expr,auto
+cards.robots.consumables.side_brush,parts/cards/robots-card.part.js,196,hgTr,Side brush,Szczotka boczna,,expr,auto
+cards.robots.consumables.filter,parts/cards/robots-card.part.js,196,hgTr,Filter,Filtr,,expr,auto
+cards.robots.consumables.mop,parts/cards/robots-card.part.js,196,hgTr,Mop,Mop,,expr,auto
+cards.robots.consumables.sensors,parts/cards/robots-card.part.js,196,hgTr,Sensors,Czujniki,,expr,auto
+cards.robots.consumables.main_brush_full,parts/cards/robots-card.part.js,196,hgTr,Main brush,Szczotka główna,,expr,auto
+cards.robots.time_left,parts/cards/robots-card.part.js,199,hgTr,{time} left,zostało {time},time,,auto
 cards.robots.needs_cleaning,parts/cards/robots-card.part.js,200,hgTr,Needs cleaning,Do wyczyszczenia,,,auto
 cards.robots.time,parts/cards/robots-card.part.js,207,hgTr,Time,Czas,,,auto
 cards.robots.area,parts/cards/robots-card.part.js,207,hgTr,Area,Powierzchnia,,,auto
 cards.robots.when,parts/cards/robots-card.part.js,211,hgTr,When,Kiedy,,,auto
-cards.robots.today,parts/cards/robots-card.part.js,211,hgTr,today {hm},dziś {hm},hm,,auto
-cards.robots.yesterday_2,parts/cards/robots-card.part.js,211,hgTr,yesterday {hm},wczoraj {hm},hm,plural,manual
+cards.robots.today_at,parts/cards/robots-card.part.js,211,hgTr,today {time},dziś {time},time,,auto
+cards.robots.yesterday_at,parts/cards/robots-card.part.js,211,hgTr,yesterday {time},wczoraj {time},time,plural,auto
 cards.robots.cleanings,parts/cards/robots-card.part.js,212,hgTr,Cleanings,Sprzątań,,,auto
 cards.robots.total,parts/cards/robots-card.part.js,212,hgTr,Total,Łącznie,,,auto
 cards.robots.last_cleaning,parts/cards/robots-card.part.js,213,hgTr,Last cleaning,Ostatnie sprzątanie,,,auto
@@ -807,8 +813,8 @@ cards.robots.map_unavailable,parts/cards/robots-card.part.js,215,hgTr,Map unavai
 common.map,parts/cards/robots-card.part.js,215,hgTr,Map,Mapa,,,auto
 common.battery,parts/cards/robots-card.part.js,216,hgTr,Battery,Bateria,,,auto
 cards.robots.maintenance,parts/cards/robots-card.part.js,218,hgTr,Maintenance,Eksploatacja,,,auto
-cards.robots.home_glass_robots,parts/cards/robots-card.part.js,277,hgTr,Home Glass: Robots,Home Glass: Roboty,,load-time,manual
-cards.robots.vacuums_and_mowers_state,parts/cards/robots-card.part.js,277,hgTr,"Vacuums and mowers: state, map, controls, rooms, maintenance","Odkurzacze i kosiarki: stan, mapa, sterowanie, pokoje, eksploatacja",,load-time,manual
+cards.robots.picker_name,parts/cards/robots-card.part.js,277,hgTr,Home Glass: Robots,Home Glass: Roboty,,load-time,auto
+cards.robots.picker_description,parts/cards/robots-card.part.js,277,hgTr,"Vacuums and mowers: state, map, controls, rooms, maintenance","Odkurzacze i kosiarki: stan, mapa, sterowanie, pokoje, eksploatacja",,load-time,auto
 cards.room.hg_st_en,parts/cards/room-card.part.js,55,hgTr,HG_ST_EN,HG_ST_PL,,expr,manual
 cards.room.hg_wm_job_en,parts/cards/room-card.part.js,372,hgTr,HG_WM_JOB_EN,HG_WM_JOB,,expr,manual
 cards.room.hg_wm_ms_en,parts/cards/room-card.part.js,373,hgTr,HG_WM_MS_EN,HG_WM_MS,,expr,manual
