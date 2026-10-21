@@ -127,7 +127,12 @@ cards.appliance.picker_description,parts/cards/appliance-card.part.js,15,hgTr,"W
 cards.arc.choose_a_light_fan,parts/cards/arc-card.part.js,18,hgTr,"Choose a light, fan or number","Wybierz światło, wentylator albo liczbę",,,auto
 cards.arc.picker_name,parts/cards/arc-card.part.js,38,hgTr,Nuvio – Arc,Nuvio – Łuk,,load-time,auto
 cards.arc.picker_description,parts/cards/arc-card.part.js,38,hgTr,"Brightness, speed or level on a draggable arc","Jasność, prędkość albo poziom na przeciąganym łuku",,load-time,auto
-cards.areas.cool_cooling_heat_heating,parts/cards/areas-card.part.js,69,hgTr,"{ cool: 'Cooling', heat: 'Heating', fan_only: 'Fan', dry: 'Drying', heat_cool: 'Auto', auto: 'Auto' }","{ cool: 'Chłodzi', heat: 'Grzeje', fan_only: 'Wentyluje', dry: 'Osusza', heat_cool: 'Auto', auto: 'Auto' }",,object,manual
+cards.areas.climate_states.cool,parts/cards/areas-card.part.js,69,hgTr,Cooling,Chłodzi,,object,auto
+cards.areas.climate_states.heat,parts/cards/areas-card.part.js,69,hgTr,Heating,Grzeje,,object,auto
+cards.areas.climate_states.fan_only,parts/cards/areas-card.part.js,69,hgTr,Fan,Wentyluje,,object,auto
+cards.areas.climate_states.dry,parts/cards/areas-card.part.js,69,hgTr,Drying,Osusza,,object,auto
+cards.areas.climate_states.heat_cool,parts/cards/areas-card.part.js,69,hgTr,Auto,Auto,,object,auto
+cards.areas.climate_states.auto,parts/cards/areas-card.part.js,69,hgTr,Auto,Auto,,object,auto
 cards.areas.someone_is_in_the,parts/cards/areas-card.part.js,83,hgTr,Someone is in the room,Ktoś jest w pokoju,,,auto
 cards.areas.motion_detected,parts/cards/areas-card.part.js,83,hgTr,Motion detected,Wykryto ruch,,,auto
 cards.areas.no_presence,parts/cards/areas-card.part.js,83,hgTr,No presence,Brak obecności,,,auto
@@ -136,10 +141,11 @@ cards.areas.presence,parts/cards/areas-card.part.js,83,hgTr,Presence,Obecność,
 common.motion,parts/cards/areas-card.part.js,83,hgTr,Motion,Ruch,,,auto
 cards.areas.no_presence,parts/cards/areas-card.part.js,83,hgTr,No presence,Brak obecności,,,auto
 cards.areas.no_motion,parts/cards/areas-card.part.js,83,hgTr,No motion,Brak ruchu,,,auto
-cards.areas.lights_a_name_on,parts/cards/areas-card.part.js,87,hgTr,Lights: ${a.name} – ${on ? 'turn off' : 'turn on'},Światła: ${a.name} – ${on ? 'wyłącz' : 'włącz'},,expr,manual
+cards.areas.lights_turn_off_aria,parts/cards/areas-card.part.js,87,hgTr,Lights: {name} – turn off,Światła: {name} – wyłącz,name,expr,auto
+cards.areas.lights_turn_on_aria,parts/cards/areas-card.part.js,87,hgTr,Lights: {name} – turn on,Światła: {name} – włącz,name,expr,auto
 cards.areas.turn_off_lights,parts/cards/areas-card.part.js,87,hgTr,Turn off lights,Wyłącz światła,,,auto
 cards.areas.turn_on_lights,parts/cards/areas-card.part.js,87,hgTr,Turn on lights,Włącz światła,,,auto
-cards.areas.presence_2,parts/cards/areas-card.part.js,88,hgTr,presence,obecność,,,review
+cards.areas.state_presence,parts/cards/areas-card.part.js,88,hgTr,presence,obecność,,,auto
 common.state_motion,parts/cards/areas-card.part.js,88,hgTr,motion,ruch,,,auto
 cards.areas.other,parts/cards/areas-card.part.js,93,hgTr,Other,Pozostałe,,,auto
 cards.areas.other,parts/cards/areas-card.part.js,93,hgTr,Other,Pozostałe,,,auto
