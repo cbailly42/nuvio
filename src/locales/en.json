@@ -549,6 +549,12 @@
       "low": "Low",
       "picker_description": "A value on a thick bar with thresholds",
       "picker_name": "Nuvio – Progress bar"
+    },
+    "room_compact": {
+      "hum": "hum.",
+      "living_room": "Living room",
+      "picker_description": "Temperature, switch and a brightness ruler",
+      "picker_name": "Nuvio – Compact room"
     }
   },
   "common": {
@@ -602,6 +608,7 @@
     "pause": "Pause",
     "power_now": "Power now",
     "previous_track": "Previous",
+    "room": "Room",
     "rooms": "Rooms",
     "save": "Save",
     "sensor": "Sensor",

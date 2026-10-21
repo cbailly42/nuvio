@@ -919,8 +919,8 @@ cards.room.camera,parts/cards/room-card.part.js,696,hgTr,Camera,Kamera,,,auto
 cards.room_compact.living_room,parts/cards/room-compact-card.part.js,3,hgTr,Living room,Salon,,,auto
 common.room,parts/cards/room-compact-card.part.js,20,hgTr,Room,Pokój,,,auto
 cards.room_compact.hum,parts/cards/room-compact-card.part.js,23,hgTr,hum.,wilg.,,,auto
-cards.room_compact.nuvio_compact_room,parts/cards/room-compact-card.part.js,38,hgTr,Nuvio – Compact room,Nuvio – Pokój kompakt,,load-time,manual
-cards.room_compact.temperature_switch_and_a,parts/cards/room-compact-card.part.js,38,hgTr,"Temperature, switch and a brightness ruler","Temperatura, przełącznik i linijka jasności",,load-time,manual
+cards.room_compact.picker_name,parts/cards/room-compact-card.part.js,38,hgTr,Nuvio – Compact room,Nuvio – Pokój kompakt,,load-time,auto
+cards.room_compact.picker_description,parts/cards/room-compact-card.part.js,38,hgTr,"Temperature, switch and a brightness ruler","Temperatura, przełącznik i linijka jasności",,load-time,auto
 cards.scenes.scenes,parts/cards/scenes-card.part.js,5,hgTr,Scenes,Sceny,,,auto
 common.state_unavailable_masc,parts/cards/scenes-card.part.js,38,hgTr,unavailable,niedostępny,,,auto
 cards.scenes.running,parts/cards/scenes-card.part.js,38,hgTr,running…,działa…,,,auto

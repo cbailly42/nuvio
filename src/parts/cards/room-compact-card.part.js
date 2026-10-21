@@ -1,6 +1,6 @@
 /* ===================== POKÓJ KOMPAKT: temperatura, przełącznik i suwak-linijka jasności ===================== */
 class HGRoomCompactCard extends HGBase {
-  static getStubConfig(h) { return { name: hgTr('Salon', 'Living room'), temperature: hgStub(h, ['sensor'], (s) => s.attributes.device_class === 'temperature'), entity: hgStub(h, ['light']) }; }
+  static getStubConfig(h) { return { name: hgT('cards.room_compact.living_room'), temperature: hgStub(h, ['sensor'], (s) => s.attributes.device_class === 'temperature'), entity: hgStub(h, ['light']) }; }
   defaults() { return { name: null, icon: 'mdi:sofa-outline', temperature: null, humidity: null, entity: null }; }
   ents() { const c = this._config; return [c.temperature, c.humidity, c.entity].filter(Boolean); }
   css() { return HG_NV_CSS + U(`
@@ -17,10 +17,10 @@ class HGRoomCompactCard extends HGBase {
   _extraSig() { return [this._drag, this._pend]; }
   render() { const c = this._config, h = this._hass, t = H.num(h, c.temperature), hu = H.num(h, c.humidity), s = c.entity ? H.st(h, c.entity) : null;
     const M = s ? hgSlider(h, c.entity) : null, v = M ? (this._drag ?? this._pend ?? M.v) : 0, p = M ? ((v - M.min) / (M.max - M.min || 1)) * 100 : 0, n = 31, on = Math.round((p / 100) * (n - 1));
-    const nm = c.name || (s ? H.name(h, c.entity) : hgTr('Pokój', 'Room'));
+    const nm = c.name || (s ? H.name(h, c.entity) : hgT('common.room'));
     const ticks = Array.from({ length: n }, (_, i) => `<i class="${p > 0 && i <= on ? 'on' : ''}"></i>`).join('');
     return `<ha-card class="glass">${hgUI.header(nm, { icon: c.icon, right: s ? hgUI.switch(M.on, 'tog', nm, !H.ok(s)) : '' })}
-      <div class="nv-mid">${t != null ? hgUI.big(t, { d: 1, unit: '°', sup: true, caption: hu != null ? `${H.fmt(hu, 0)}% ${hgTr('wilg.', 'hum.')}` : '' }) : ''}
+      <div class="nv-mid">${t != null ? hgUI.big(t, { d: 1, unit: '°', sup: true, caption: hu != null ? `${H.fmt(hu, 0)}% ${hgT('cards.room_compact.hum')}` : '' }) : ''}
       ${M && M.ok ? `<div class="rul ${this._drag != null ? 'drag' : ''}" role="slider" tabindex="0" aria-label="${H.esc(M.label)} ${H.esc(nm)}" aria-valuemin="${M.min}" aria-valuemax="${M.max}" aria-valuenow="${v}" style="--p:${p.toFixed(1)}%"><div class="tk">${ticks}</div><span class="kn"></span></div>
         <div class="meta"><span>${H.esc(M.label)}</span><span class="nv-sp"></span><span>${H.fmt(v, 0)}${H.esc(M.unit)}</span></div>` : ''}</div></ha-card>`; }
   afterRender() { const el = this.$.querySelector('.rul'); if (!el) return; const M = () => hgSlider(this._hass, this._config.entity), set = (f) => { const m = M(); return hgStepRound(m.min + f * (m.max - m.min), m); };
@@ -35,4 +35,4 @@ class HGRoomCompactCard extends HGBase {
   onAct(a) { if (a === 'tog') { H.haptic(); H.call(this._hass, 'homeassistant', 'toggle', { entity_id: this._config.entity }); } }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-room-compact-card', HGRoomCompactCard, hgTr('Nuvio – Pokój kompakt', 'Nuvio – Compact room'), hgTr('Temperatura, przełącznik i linijka jasności', 'Temperature, switch and a brightness ruler'));
+hgReg('hg-room-compact-card', HGRoomCompactCard, hgTLazy('cards.room_compact.picker_name'), hgTLazy('cards.room_compact.picker_description'));

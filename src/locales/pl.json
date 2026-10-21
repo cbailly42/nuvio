@@ -553,6 +553,12 @@
       "low": "Niskie",
       "picker_description": "Wartość na grubym pasku z progami",
       "picker_name": "Nuvio – Pasek postępu"
+    },
+    "room_compact": {
+      "hum": "wilg.",
+      "living_room": "Salon",
+      "picker_description": "Temperatura, przełącznik i linijka jasności",
+      "picker_name": "Nuvio – Pokój kompakt"
     }
   },
   "common": {
@@ -606,6 +612,7 @@
     "pause": "Pauza",
     "power_now": "Moc teraz",
     "previous_track": "Poprzedni",
+    "room": "Pokój",
     "rooms": "Pokoje",
     "save": "Zapisz",
     "sensor": "Czujnik",
