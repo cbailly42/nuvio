@@ -2,7 +2,11 @@
 """i18n migration, part 1: extract every inline PL/EN pair from src/parts and propose catalog keys.
   extract(root) -> [Occ]      one per hgTr / hgTrLazy call, per hgTrO entry, per dictionary entry
   propose(occs, existing=None) -> [Row]   Occ + key + status; existing = rows of a previous CSV whose keys are kept
+  verify(rows, root) -> [str]   equivalence proof: original source text vs catalog text, [] when every row is equal
+  apply(rows, ns, root)         merge the namespace's rows into src/locales/{en,pl}.json and rewrite its calls (atomic)
   CLI: i18n_migrate.py propose [--root src] [--out tools/i18n_migration_table.csv] [--fresh]
+       i18n_migrate.py verify  [--root src] [--table tools/i18n_migration_table.csv] [--ns <ns>]
+       i18n_migrate.py apply --ns <ns> [--root src] [--table ...]
 
 Occ = {file, line, start, end, kind, pl, en, params, manual, name, dkey}   (the CSV does NOT carry start/end: Task 6 calls extract() again for ranges)
 A hgTr( nested in a template argument of another hgTr is its own Occ (code inside ${}); the outer one is manual `expr`.
@@ -16,7 +20,7 @@ extract() raises if a hgTr( / hgTrLazy( / hgTrO( in the source is neither an Occ
 Key status: manual (any manual reason) | review (key may be clumsy: promoted to common.*, collision suffix _2.., slug cut at
 40 chars, slug under 3 chars or empty, accented/non-ASCII letters in the first words, dictionary key that had to be rewritten) | auto.
 """
-import os, re, sys, csv, unicodedata
+import os, re, sys, csv, json, subprocess, shutil, unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from i18n_check import lex, tr_spans   # reused as-is (note: tr_spans also reports L(...); we drop those)
 
@@ -417,10 +421,160 @@ def summary(rows):
     out.append('review reasons: ' + ', '.join(f'{k}={v}' for k, v in sorted(Counter(w for r in rows if r['status'] == 'review' for w in r['why']).items())))
     return '\n'.join(out)
 
+# ---------------------------------------------------------------- verify / apply
+class EquivalenceError(RuntimeError): pass
+
+KEY_RE = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)+$")
+PH = re.compile(r"\{([A-Za-z_$][\w$]*)\}")
+
+def join_rows(occs, rows):
+    """attach to every extracted Occ its CSV row (stable identity: same file + kind + original text, in order; then same file + kind + line,
+    for rows whose en/pl the human edited). The result keeps the Occ fields (ranges, original pl/en/params as src_*) and takes
+    key / en / pl / params / status from the CSV. Returns (joined, unmatched occs). CSV rows without an Occ (already migrated) are ignored."""
+    by_file = {}
+    for r in rows: by_file.setdefault(r['file'], []).append(r)
+    used = set(); out = []; lost = []; pending = []
+    for o in occs:
+        c = next((r for r in by_file.get(o['file'], []) if id(r) not in used and r['kind'] == o['kind'] and r['en'] == o['en'] and r['pl'] == o['pl']), None)
+        if c: used.add(id(c)); out.append((o, c))
+        else: pending.append(o)
+    for o in pending:
+        c = next((r for r in by_file.get(o['file'], []) if id(r) not in used and r['kind'] == o['kind'] and int(r['line']) == o['line']), None)
+        if c: used.add(id(c)); out.append((o, c))
+        else: lost.append(o)
+    joined = []
+    for o, c in sorted(out, key=lambda x: (x[0]['file'], x[0]['start'], x[0]['end'])):
+        j = dict(o); j.update(key=c['key'], en=c['en'], pl=c['pl'], params=list(c['params']), status=c['status'])
+        j.update(src_pl=o['pl'], src_en=o['en'], src_params=list(o['params'])); joined.append(j)
+    return joined, lost
+
+def migrates(j): return j['status'] != 'manual'              # unresolved manual rows are skipped
+def rewrites(j): return migrates(j) and not j['manual'] and j['kind'] != 'dict'   # hand-resolved manual rows and dictionaries: catalogs only
+
+def tokens(text, names):
+    """text with each {name} (name in names) replaced by a token numbered by the name's position in names"""
+    return PH.sub(lambda m: f'\0{names.index(m.group(1))}\0' if m.group(1) in names else m.group(0), text)
+
+def check_row(j):
+    """discrepancies of one joined row (list of str); the equivalence test of spec 3.3"""
+    where = f"{j['file']}:{j['line']} [{j['key']}]"; bad = []
+    if not KEY_RE.match(j['key']): bad.append(f"{where}: invalid key {j['key']!r} (lowercase snake_case segments, dotted)")
+    if not rewrites(j) and not (migrates(j) and j['kind'] == 'dict'): return bad
+    sp, cp = j['src_params'], j['params']
+    if len(sp) != len(cp): bad.append(f"{where}: {len(cp)} catalog parameter(s) {cp} for {len(sp)} in the source {sp}"); return bad
+    if j['kind'] == 'hgTrO' and cp: bad.append(f"{where}: hgTrO entries take no parameters"); return bad
+    for lang in ('en', 'pl'):
+        a, b = tokens(j['src_' + lang], sp), tokens(j[lang], cp)
+        if a != b: bad.append(f"{where}: {lang} differs\n    source:  {j['src_' + lang]!r}\n    catalog: {j[lang]!r}")
+        for m in PH.finditer(j[lang]):
+            if m.group(1) not in cp: bad.append(f"{where}: {lang} text uses {{{m.group(1)}}} which is not a declared parameter (renders empty)")
+    return bad
+
+def file_ns(j): return namespace(j['file'])
+
+def plan(rows, root, ns=None):
+    """-> (joined rows in scope, discrepancies). Scope = rows whose FILE belongs to ns (all when ns is None)."""
+    joined, lost = join_rows(extract(root), rows); bad = []
+    scope = [j for j in joined if ns is None or file_ns(j) == ns]
+    for o in lost:
+        if (ns is None or namespace(o['file']) == ns) and not o['manual']:
+            bad.append(f"{o['file']}:{o['line']}: no row in the table for {o['kind']} {o['pl']!r} / {o['en']!r} (stale table: re-run propose)")
+    for j in scope:
+        if migrates(j): bad += check_row(j)
+    return scope, bad
+
+def verify(rows, root=None, ns=None):
+    return plan(rows, root or os.path.join(R, 'src'), ns)[1]
+
+def call_text(j):
+    key = j['key']
+    if j['kind'] == 'hgTrO': return f"'{key}'"
+    fn = 'hgTLazy' if j['kind'] == 'hgTrLazy' else 'hgT'
+    if not j['src_params']: return f"{fn}('{key}')"
+    args = ', '.join(s if s == c else f'{c}: {s}' for c, s in zip(j['params'], j['src_params']))
+    return f"{fn}('{key}', {{ {args} }})"
+
+def nested_set(tree, key, text, code):
+    cur = tree; ks = key.split('.')
+    for k in ks[:-1]:
+        cur = cur.setdefault(k, {})
+        if not isinstance(cur, dict): raise RuntimeError(f"catalog {code}: key {key} collides with the text at {k}")
+    leaf = ks[-1]
+    if isinstance(cur.get(leaf), dict): raise RuntimeError(f"catalog {code}: key {key} is a prefix of existing keys")
+    if leaf in cur and cur[leaf] != text: raise RuntimeError(f"catalog {code}: key {key} already holds {cur[leaf]!r}, migration wants {text!r}")
+    cur[leaf] = text
+
+def dump_catalog(c):
+    """_meta first (as is), every other level sorted by key"""
+    def srt(n): return {k: srt(n[k]) for k in sorted(n)} if isinstance(n, dict) else n
+    out = {'_meta': c['_meta']} if '_meta' in c else {}
+    out.update(srt({k: v for k, v in c.items() if k != '_meta'}))
+    return json.dumps(out, indent=2, ensure_ascii=False) + '\n'
+
+def check_syntax(files):
+    """files {path: source}; every one must parse as an ES module (esbuild transform; parts hold top-level code and import.meta)"""
+    node = shutil.which('node') or '/opt/node22/bin/node'
+    js = "const e=require(process.argv[1]+'/node_modules/esbuild');const f=JSON.parse(require('fs').readFileSync(0,'utf8'));let bad=[];" \
+         "for(const [p,s] of Object.entries(f)){try{e.transformSync(s,{loader:'js',format:'esm',target:'es2020'})}catch(x){bad.push(p+': '+x.message.split('\\n')[0])}}" \
+         "if(bad.length){console.error(bad.join('\\n'));process.exit(1)}"
+    r = subprocess.run([node, '-e', js, R], input=json.dumps(files), capture_output=True, text=True)
+    if r.returncode: raise RuntimeError('i18n_migrate: rewritten source does not parse:\n' + r.stderr.strip())
+
+def apply(rows, ns, root=None):
+    """Migrate namespace ns: a row belongs to ns by its FILE's namespace (so a module's common.* rows migrate with the module).
+    Atomic: verify, merge and rewrite are computed in memory, syntax-checked, and only then written."""
+    root = root or os.path.join(R, 'src')
+    scope, bad = plan(rows, root, ns)
+    if bad: raise EquivalenceError(f'i18n_migrate: {len(bad)} discrepancy(ies) in namespace {ns!r}, nothing written:\n' + '\n'.join(bad))
+    cats = {}
+    for code in ('en', 'pl'):
+        with open(os.path.join(root, 'locales', code + '.json'), encoding='utf-8') as f: cats[code] = json.load(f)
+    for j in scope:
+        if migrates(j):
+            for code in ('en', 'pl'): nested_set(cats[code], j['key'], j[code], code)
+    srcs = {}
+    for j in scope:
+        if rewrites(j): srcs.setdefault(j['file'], []).append(j)
+    new_src = {}
+    for file, js in srcs.items():
+        with open(os.path.join(root, file), encoding='utf-8') as f: s = f.read()
+        for j in sorted(js, key=lambda j: j['start'], reverse=True):
+            s = s[:j['start']] + call_text(j) + s[j['end']:]
+        new_src[file] = s
+    # hgTrO( ... ) calls whose entries were all rewritten become hgTO( ... )
+    for file, s in list(new_src.items()):
+        new_src[file] = rename_hgTrO(s)
+    if new_src: check_syntax(new_src)
+    for file, s in new_src.items():
+        with open(os.path.join(root, file), 'w', encoding='utf-8', newline='') as f: f.write(s)
+    for code in ('en', 'pl'):
+        with open(os.path.join(root, 'locales', code + '.json'), 'w', encoding='utf-8', newline='') as f: f.write(dump_catalog(cats[code]))
+
+def rename_hgTrO(s):
+    """hgTrO(o, { a: 'ns.key', ... }) -> hgTO(...) once no [pl, en] entry is left in the call; the gateway definition is left alone"""
+    out = []; last = 0
+    for m in re.finditer(r"\bhgTrO\s*\(", s):
+        a = m.start()
+        if re.search(r"\bconst\s+$", s[max(0, a - 12):a]): continue
+        sp = split_top(s, m.end(), group_end(s, m.end()) - 1)
+        if len(sp) == 2 and s[sp[1][0]] == '{' and all(s[va] in '\'"' for _, (va, _vb) in obj_entries(s, sp[1][0] + 1, sp[1][1] - 1)):
+            out.append(s[last:a]); out.append('hgTO('); last = m.end()
+    out.append(s[last:]); return ''.join(out)
+
 def main(argv):
-    if not argv or argv[0] != 'propose': print(__doc__); return 2
-    a = argv[1:]; opt = lambda n, d: a[a.index(n) + 1] if n in a else d
-    root = os.path.abspath(opt('--root', os.path.join(R, 'src'))); out = os.path.abspath(opt('--out', os.path.join(R, 'tools', 'i18n_migration_table.csv')))
+    if not argv or argv[0] not in ('propose', 'verify', 'apply'): print(__doc__); return 2
+    cmd = argv[0]; a = argv[1:]; opt = lambda n, d: a[a.index(n) + 1] if n in a else d
+    root = os.path.abspath(opt('--root', os.path.join(R, 'src')))
+    if cmd in ('verify', 'apply'):
+        table = os.path.abspath(opt('--table', opt('--out', os.path.join(R, 'tools', 'i18n_migration_table.csv')))); rows = read_csv(table); ns = opt('--ns', None)
+        if cmd == 'apply':
+            if not ns: print('apply needs --ns <ns>'); return 2
+            apply(rows, ns, root=root); print(f'applied namespace {ns}'); return 0
+        scope, bad = plan(rows, root, ns)
+        from collections import Counter
+        per = Counter(namespace(j['file']) for j in scope); bn = Counter(b.split(':')[0] for b in bad)
+        print('\n'.join(bad)); print(f'{len(scope)} rows joined, {len(bad)} discrepancy(ies)'); return 1 if bad else 0
+    out = os.path.abspath(opt('--out', os.path.join(R, 'tools', 'i18n_migration_table.csv')))
     existing = read_csv(out) if os.path.exists(out) and '--fresh' not in a else None
     rows = propose(extract(root), existing); write_csv(rows, out)
     print(f"{os.path.relpath(out, R)}: " + summary(rows) + ('\n(kept keys from the existing table)' if existing else '')); return 0

@@ -1,4 +1,4 @@
-import os, sys, csv, tempfile, unittest
+import os, sys, csv, json, shutil, tempfile, unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
 import i18n_migrate as M
@@ -123,5 +123,130 @@ class Csv(unittest.TestCase):
             again = M.propose(M.extract(FIX), existing=M.read_csv(p))
             self.assertEqual([r['key'] for r in again if r['en'] == 'Cancel'], ['cards.alarm.dismiss'])
             self.assertEqual([r['key'] for r in again if r['en'] != 'Cancel'], [r['key'] for r in ROWS if r['en'] != 'Cancel'])
+
+def workdir():
+    """a writable copy of the fixture tree with seeded catalogs; returns (tmp TemporaryDirectory, root)"""
+    t = tempfile.TemporaryDirectory(); root = os.path.join(t.name, 'src')
+    shutil.copytree(FIX, root); os.makedirs(os.path.join(root, 'locales'))
+    for code, name, loc in (('en', 'English', 'en-GB'), ('pl', 'Polski', 'pl-PL')):
+        with open(os.path.join(root, 'locales', code + '.json'), 'w', encoding='utf-8') as f:
+            json.dump({'_meta': {'name': name, 'locale': loc}, 'common': {'save': 'Save' if code == 'en' else 'Zapisz'}}, f)
+    return t, root
+def rd(root, *p):
+    with open(os.path.join(root, *p), encoding='utf-8') as f: return f.read()
+def cat(root, code): return json.loads(rd(root, 'locales', code + '.json'))
+def snapshot(root):
+    return {os.path.join(d, f): rd(d, f) for d, _, fs in os.walk(root) for f in fs}
+def key_of(rows, file_end, **kw):
+    return [r for r in rows if r['file'].endswith(file_end) and all(r.get(k) == v for k, v in kw.items())][0]['key']
+def lookup(c, key):
+    for k in key.split('.'): c = c[k]
+    return c
+
+class Apply(unittest.TestCase):
+    def setUp(self):
+        self.t, self.root = workdir(); self.addCleanup(self.t.cleanup)
+        self.rows = M.propose(M.extract(self.root))
+    def test_rewrites_calls_and_writes_catalogs(self):
+        M.apply(self.rows, 'cards.alarm', root=self.root)
+        src = rd(self.root, 'parts', 'cards', 'alarm-card.part.js')
+        kc, kt, kd = (key_of(self.rows, 'alarm-card.part.js', en=e) for e in ('Cancel', '{m} min ago', 'Default'))
+        self.assertIn(f"const b = hgT('{kc}');", src)
+        self.assertIn(f"const c = hgT('{kt}', {{ m }});", src)
+        self.assertIn(f"const ov = hgTLazy('{kd}');", src)
+        self.assertEqual(lookup(cat(self.root, 'en'), kt), '{m} min ago'); self.assertEqual(lookup(cat(self.root, 'pl'), kt), '{m} min temu')
+        self.assertEqual(lookup(cat(self.root, 'pl'), kc), 'Anuluj')
+        self.assertNotIn("hgTr('Anuluj'", src)
+    def test_manual_rows_untouched(self):
+        before = rd(self.root, 'parts', 'cards', 'alarm-card.part.js'); M.apply(self.rows, 'cards.alarm', root=self.root)
+        after = before.splitlines(); now = rd(self.root, 'parts', 'cards', 'alarm-card.part.js').splitlines()
+        for n in (6, 7, 8, 9, 10): self.assertEqual(now[n - 1], after[n - 1])
+        self.assertNotIn('Language', json.dumps(cat(self.root, 'en')))
+    def test_hgTrO_and_common(self):
+        M.apply(self.rows, 'edit', root=self.root)
+        src = rd(self.root, 'parts', 'hg-edit.part.js'); k1 = key_of(self.rows, 'hg-edit.part.js', en='Switch'); k2 = key_of(self.rows, 'hg-edit.part.js', en='Button')
+        self.assertIn(f"{{ tog: '{k1}', btn: '{k2}' }}", src)
+        self.assertIn('hgT(', src)
+        self.assertIn('const hgTrO =', src)   # the gateway definition is not touched
+        self.assertEqual(lookup(cat(self.root, 'en'), k1), 'Switch')
+    def test_hgTrO_call_name(self):
+        M.apply(self.rows, 'edit', root=self.root)
+        self.assertIn('hgTO({}, {', rd(self.root, 'parts', 'hg-edit.part.js'))
+    def test_merge_keeps_meta_and_existing_and_format(self):
+        M.apply(self.rows, 'cards.alarm', root=self.root)
+        raw = rd(self.root, 'locales', 'en.json'); c = json.loads(raw)
+        self.assertEqual(c['_meta'], {'name': 'English', 'locale': 'en-GB'}); self.assertEqual(c['common']['save'], 'Save')
+        self.assertTrue(raw.endswith('}\n')); self.assertEqual(list(c), ['_meta', 'cards', 'common']); self.assertEqual(raw, M.dump_catalog(c))
+        self.assertEqual(list(c['cards']['alarm']), sorted(c['cards']['alarm'])); self.assertIn('\n  "cards": {\n    "alarm": {', raw)
+        self.assertIn('Domyślne', rd(self.root, 'locales', 'pl.json'))    # UTF-8, not \u escapes
+    def test_conflict_raises_and_writes_nothing(self):
+        with open(os.path.join(self.root, 'locales', 'en.json'), 'w', encoding='utf-8') as f:
+            kc = key_of(self.rows, 'alarm-card.part.js', en='Cancel'); n = {}; cur = n
+            ks = kc.split('.')
+            for k in ks[:-1]: cur[k] = {}; cur = cur[k]
+            cur[ks[-1]] = 'Abort'; json.dump({'_meta': {'name': 'English', 'locale': 'en-GB'}, **n}, f)
+        before = snapshot(self.root)
+        with self.assertRaises(Exception): M.apply(self.rows, 'cards.alarm', root=self.root)
+        self.assertEqual(snapshot(self.root), before)
+    def test_idempotent_after_apply(self):
+        M.apply(self.rows, 'cards.alarm', root=self.root)
+        again = M.extract(self.root)     # migrated code must not trip the completeness check
+        self.assertFalse([o for o in again if o['file'].endswith('alarm-card.part.js') and not o['manual']])
+        before = snapshot(self.root); M.apply(self.rows, 'cards.alarm', root=self.root); self.assertEqual(snapshot(self.root), before)
+    def test_resolved_manual_writes_catalog_only(self):
+        rows = [dict(r) for r in self.rows]
+        r = [r for r in rows if r['en'] == 'Language: '][0]; r.update(status='review', en='Language: {name}', pl='Język: {name}', params=['name'], key='cards.alarm.language')
+        before = rd(self.root, 'parts', 'cards', 'alarm-card.part.js'); M.apply(rows, 'cards.alarm', root=self.root)
+        self.assertEqual(lookup(cat(self.root, 'en'), 'cards.alarm.language'), 'Language: {name}')
+        self.assertIn("hgTr('Język: ', 'Language: ') + name", rd(self.root, 'parts', 'cards', 'alarm-card.part.js'))
+    def test_ns_selects_by_file(self):
+        M.apply(self.rows, 'cards.alarm', root=self.root)
+        self.assertIn("hgTr('Zapisz', 'Save')", rd(self.root, 'parts', 'hg-edit.part.js'))   # other module untouched
+    def test_csv_rows_join_without_ranges(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, 't.csv'); M.write_csv(self.rows, p); M.apply(M.read_csv(p), 'cards.alarm', root=self.root)
+        self.assertIn("hgT('", rd(self.root, 'parts', 'cards', 'alarm-card.part.js'))
+    def test_syntax_error_after_rewrite_writes_nothing(self):
+        before = snapshot(self.root); orig = M.check_syntax
+        M.check_syntax = lambda files: (_ for _ in ()).throw(RuntimeError('syntax'))
+        try:
+            with self.assertRaises(RuntimeError): M.apply(self.rows, 'cards.alarm', root=self.root)
+        finally: M.check_syntax = orig
+        self.assertEqual(snapshot(self.root), before)
+
+class Verify(unittest.TestCase):
+    def setUp(self):
+        self.t, self.root = workdir(); self.addCleanup(self.t.cleanup); self.rows = M.propose(M.extract(self.root))
+    def test_clean_table_has_no_discrepancy(self):
+        self.assertEqual(M.verify(self.rows, root=self.root), [])
+    def test_text_difference_is_listed(self):
+        rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['en'] = 'Abort'
+        out = M.verify(rows, root=self.root); self.assertEqual(len(out), 1); self.assertIn('alarm-card.part.js', out[0]); self.assertIn('Abort', out[0])
+    def test_param_substituted_by_same_token(self):
+        rows = [dict(r) for r in self.rows]; r = [r for r in rows if r['en'] == '{m} min ago'][0]
+        r['pl'] = '{m} minut temu'; self.assertTrue(M.verify(rows, root=self.root))
+        r['pl'] = '{x} min temu'; r['en'] = '{x} min ago'; r['params'] = ['x']
+        self.assertEqual(M.verify(rows, root=self.root), [])      # renamed variable: same position, same token
+    def test_swapped_params_detected(self):
+        rows = [dict(r) for r in self.rows]; r = [r for r in rows if r['en'] == '{m} min ago'][0]
+        r['en'] = '{m} min ago {m}'; self.assertTrue(M.verify(rows, root=self.root))
+    def test_undeclared_placeholder_is_a_discrepancy(self):
+        rows = [dict(r) for r in self.rows]; r = [r for r in rows if r['en'] == 'Cancel'][0]; r['en'] = 'Cancel {x}'
+        self.assertTrue(M.verify(rows, root=self.root))
+    def test_apply_refuses_on_discrepancy_before_writing(self):
+        rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['pl'] = 'Zmieniono'
+        before = snapshot(self.root)
+        with self.assertRaises(M.EquivalenceError): M.apply(rows, 'cards.alarm', root=self.root)
+        self.assertEqual(snapshot(self.root), before)
+    def test_discrepancy_in_other_ns_does_not_block(self):
+        rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['pl'] = 'Zmieniono'
+        M.apply(rows, 'edit', root=self.root)
+    def test_dict_rows_catalog_only(self):
+        M.apply(self.rows, 'oss', root=self.root); k = key_of(self.rows, 'hg-oss.part.js', name='HG_I18N', dkey='hello')
+        self.assertEqual(lookup(cat(self.root, 'en'), k), 'Welcome, {name}!')
+        self.assertIn("Witaj, {name}!", rd(self.root, 'parts', 'hg-oss.part.js'))
+    def test_bad_key_is_a_discrepancy(self):
+        rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['key'] = "bad key'x"
+        self.assertTrue(M.verify(rows, root=self.root))
 
 if __name__ == '__main__': unittest.main()
