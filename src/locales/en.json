@@ -548,6 +548,18 @@
       "picker_description": "Text with simple formatting",
       "picker_name": "Home Glass – Note"
     },
+    "openings": {
+      "all_closed": "All closed",
+      "closed": "Closed",
+      "doors_and_windows": "Doors and windows",
+      "no_opening_sensors": "No opening sensors",
+      "nothing_is_open": "Nothing is open",
+      "open": "Open",
+      "open_count": "Open: {count}",
+      "pick_door_and_window": "Pick door and window sensors",
+      "picker_description": "Opening sensors, open ones first",
+      "picker_name": "Home Glass – Doors and windows"
+    },
     "people": {
       "away": "Away",
       "details": "details",
@@ -791,6 +803,7 @@
     "save": "Save",
     "sensor": "Sensor",
     "state_motion": "motion",
+    "state_open": "open",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
     "stop": "Stop",

@@ -574,12 +574,12 @@ cards.openings.pick_door_and_window,parts/cards/openings-card.part.js,9,hgTr,Pic
 cards.openings.open,parts/cards/openings-card.part.js,12,hgTr,Open,Otwarte,,,auto
 cards.openings.closed,parts/cards/openings-card.part.js,12,hgTr,Closed,Zamknięte,,,auto
 cards.openings.doors_and_windows,parts/cards/openings-card.part.js,13,hgTr,Doors and windows,Drzwi i okna,,,auto
-cards.openings.open_op_length,parts/cards/openings-card.part.js,13,hgTr,Open: ${op.length},Otwarte: ${op.length},,expr,manual
+cards.openings.open_count,parts/cards/openings-card.part.js,13,hgTr,Open: {count},Otwarte: {count},count,expr,auto
 cards.openings.all_closed,parts/cards/openings-card.part.js,13,hgTr,All closed,Wszystko zamknięte,,,auto
 common.state_open,parts/cards/openings-card.part.js,14,hgTr,open,otwarte,,,auto
 cards.openings.nothing_is_open,parts/cards/openings-card.part.js,14,hgTr,Nothing is open,Nic nie jest otwarte,,,auto
-cards.openings.home_glass_doors_and,parts/cards/openings-card.part.js,18,hgTr,Home Glass – Doors and windows,Home Glass – Drzwi i okna,,load-time,manual
-cards.openings.opening_sensors_open_ones,parts/cards/openings-card.part.js,18,hgTr,"Opening sensors, open ones first","Czujniki otwarcia, otwarte na górze",,load-time,manual
+cards.openings.picker_name,parts/cards/openings-card.part.js,18,hgTr,Home Glass – Doors and windows,Home Glass – Drzwi i okna,,load-time,auto
+cards.openings.picker_description,parts/cards/openings-card.part.js,18,hgTr,"Opening sensors, open ones first","Czujniki otwarcia, otwarte na górze",,load-time,auto
 common.at_home,parts/cards/people-card.part.js,2,hgTr,Home,W domu,,,auto
 cards.people.away,parts/cards/people-card.part.js,3,hgTr,Away,Poza strefami,,,auto
 cards.people.unknown_location,parts/cards/people-card.part.js,3,hgTr,Unknown location,Nieznana lokalizacja,,,auto
@@ -1094,7 +1094,7 @@ common.more,parts/cards/toggle-card.part.js,11,hgTr,More,Więcej,,,auto
 cards.toggle.picker_name,parts/cards/toggle-card.part.js,18,hgTr,Nuvio – Toggle tile,Nuvio – Kafelek przełącznika,,load-time,auto
 cards.toggle.picker_description,parts/cards/toggle-card.part.js,18,hgTr,"Name, state and switch in one row","Nazwa, stan i przełącznik w jednym wierszu",,load-time,auto
 cards.updates.updates,parts/cards/updates-card.part.js,9,hgTr,Updates,Aktualizacje,,,auto
-cards.updates.available_xs_length,parts/cards/updates-card.part.js,9,hgTr,Available: ${xs.length},Dostępne: ${xs.length},,expr,manual
+cards.updates.available_count,parts/cards/updates-card.part.js,9,hgTr,Available: {count},Dostępne: {count},count,expr,auto
 cards.updates.everything_up_to_date,parts/cards/updates-card.part.js,9,hgTr,Everything up to date,Wszystko aktualne,,,auto
 cards.updates.home_glass_updates,parts/cards/updates-card.part.js,14,hgTr,Home Glass – Updates,Home Glass – Aktualizacje,,load-time,manual
 cards.updates.available_updates_in_ha,parts/cards/updates-card.part.js,14,hgTr,Available updates in HA,Dostępne aktualizacje w HA,,load-time,manual

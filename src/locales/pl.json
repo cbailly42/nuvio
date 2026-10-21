@@ -552,6 +552,18 @@
       "picker_description": "Tekst z prostym formatowaniem",
       "picker_name": "Home Glass – Notatka"
     },
+    "openings": {
+      "all_closed": "Wszystko zamknięte",
+      "closed": "Zamknięte",
+      "doors_and_windows": "Drzwi i okna",
+      "no_opening_sensors": "Brak czujników otwarcia",
+      "nothing_is_open": "Nic nie jest otwarte",
+      "open": "Otwarte",
+      "open_count": "Otwarte: {count}",
+      "pick_door_and_window": "Wybierz czujniki drzwi i okien",
+      "picker_description": "Czujniki otwarcia, otwarte na górze",
+      "picker_name": "Home Glass – Drzwi i okna"
+    },
     "people": {
       "away": "Poza strefami",
       "details": "szczegóły",
@@ -795,6 +807,7 @@
     "save": "Zapisz",
     "sensor": "Czujnik",
     "state_motion": "ruch",
+    "state_open": "otwarte",
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
     "stop": "Zatrzymaj",
