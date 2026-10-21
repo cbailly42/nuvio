@@ -801,6 +801,16 @@
       "picker_description": "Minimum, średnia, maksimum i zmiana czujnika",
       "picker_name": "Nuvio – Statystyka"
     },
+    "stepper": {
+      "counter": "Licznik",
+      "counter_input_number_or": "counter, input_number lub number",
+      "decrease": "Zmniejsz",
+      "increase": "Zwiększ",
+      "picker_description": "Plus i minus dla counter, input_number i number",
+      "picker_name": "Home Glass – Licznik",
+      "reset": "Wyzeruj",
+      "step_value": "Krok {value}"
+    },
     "sun": {
       "above_the_horizon": "Nad horyzontem",
       "below_the_horizon": "Pod horyzontem",
@@ -815,6 +825,9 @@
       "internet_status": "Internet: {status}",
       "picker_description": "Przełącznik w stylu glass (wiersz lub kafel)",
       "picker_name": "Home Glass – Przełącznik"
+    },
+    "tabs": {
+      "tab_number": "Zakładka {number}"
     },
     "thermo": {
       "a_climate_or_water": "Encja climate lub water_heater",

@@ -1052,13 +1052,13 @@ cards.stat.picker_description,parts/cards/stat-card.part.js,32,hgTr,"Minimum, av
 common.choose_entity,parts/cards/stepper-card.part.js,15,hgTr,Choose an entity,Wybierz encję,,,auto
 cards.stepper.counter_input_number_or,parts/cards/stepper-card.part.js,15,hgTr,"counter, input_number or number","counter, input_number lub number",,,auto
 cards.stepper.counter,parts/cards/stepper-card.part.js,17,hgTr,Counter,Licznik,,,auto
-cards.stepper.step,parts/cards/stepper-card.part.js,17,hgTr,Step ,Krok ,,concat,manual
+cards.stepper.step_value,parts/cards/stepper-card.part.js,17,hgTr,Step {value},Krok {value},value,concat,auto
 cards.stepper.reset,parts/cards/stepper-card.part.js,17,hgTr,Reset,Wyzeruj,,,auto
 cards.stepper.decrease,parts/cards/stepper-card.part.js,18,hgTr,Decrease,Zmniejsz,,,auto
 common.state_unavailable,parts/cards/stepper-card.part.js,18,hgTr,unavailable,niedostępne,,,auto
 cards.stepper.increase,parts/cards/stepper-card.part.js,18,hgTr,Increase,Zwiększ,,,auto
-cards.stepper.home_glass_stepper,parts/cards/stepper-card.part.js,27,hgTr,Home Glass – Stepper,Home Glass – Licznik,,load-time,manual
-cards.stepper.plus_and_minus_for,parts/cards/stepper-card.part.js,27,hgTr,"Plus and minus for counter, input_number and number","Plus i minus dla counter, input_number i number",,load-time,manual
+cards.stepper.picker_name,parts/cards/stepper-card.part.js,27,hgTr,Home Glass – Stepper,Home Glass – Licznik,,load-time,auto
+cards.stepper.picker_description,parts/cards/stepper-card.part.js,27,hgTr,"Plus and minus for counter, input_number and number","Plus i minus dla counter, input_number i number",,load-time,auto
 cards.sun.no_sun_sun_entity,parts/cards/sun-card.part.js,7,hgTr,No sun.sun entity,Brak encji sun.sun,,,auto
 cards.sun.enable_the_sun_integration,parts/cards/sun-card.part.js,7,hgTr,Enable the Sun integration in HA,Włącz integrację Słońce w HA,,,auto
 common.sun,parts/cards/sun-card.part.js,11,hgTr,Sun,Słońce,,,auto
@@ -1079,7 +1079,7 @@ cards.switch.picker_name,parts/cards/switch-card.part.js,48,hgTr,Home Glass – 
 cards.switch.picker_description,parts/cards/switch-card.part.js,48,hgTr,Glass-style switch (row or tile),Przełącznik w stylu glass (wiersz lub kafel),,load-time,auto
 cards.tabs.dashboard,parts/cards/tabs-card.part.js,3,hgTr,Dashboard,Panel,,,auto
 cards.tabs.chart,parts/cards/tabs-card.part.js,3,hgTr,Chart,Wykres,,,auto
-cards.tabs.tab,parts/cards/tabs-card.part.js,8,hgTr,Tab,Zakładka,,concat,manual
+cards.tabs.tab_number,parts/cards/tabs-card.part.js,8,hgTr,Tab {number},Zakładka {number},number,concat,auto
 cards.tabs.tabs,parts/cards/tabs-card.part.js,8,hgTr,Tabs,Zakładki,,,auto
 cards.tabs.nuvio_tabs,parts/cards/tabs-card.part.js,13,hgTr,Nuvio – Tabs,Nuvio – Zakładki,,load-time,manual
 cards.tabs.pills_that_switch_between,parts/cards/tabs-card.part.js,13,hgTr,Pills that switch between sets of cards,Pigułki przełączające zestawy kart,,load-time,manual

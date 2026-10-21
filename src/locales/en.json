@@ -795,6 +795,16 @@
       "picker_description": "Minimum, average, maximum and change of a sensor",
       "picker_name": "Nuvio – Statistics"
     },
+    "stepper": {
+      "counter": "Counter",
+      "counter_input_number_or": "counter, input_number or number",
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "picker_description": "Plus and minus for counter, input_number and number",
+      "picker_name": "Home Glass – Stepper",
+      "reset": "Reset",
+      "step_value": "Step {value}"
+    },
     "sun": {
       "above_the_horizon": "Above the horizon",
       "below_the_horizon": "Below the horizon",
@@ -809,6 +819,9 @@
       "internet_status": "Internet: {status}",
       "picker_description": "Glass-style switch (row or tile)",
       "picker_name": "Home Glass – Switch"
+    },
+    "tabs": {
+      "tab_number": "Tab {number}"
     },
     "thermo": {
       "a_climate_or_water": "A climate or water_heater entity",
