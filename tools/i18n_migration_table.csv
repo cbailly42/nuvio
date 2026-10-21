@@ -382,10 +382,10 @@ cards.glance.picker_name,parts/cards/glance-card.part.js,26,hgTr,Nuvio – Glanc
 cards.glance.picker_description,parts/cards/glance-card.part.js,26,hgTr,"Several entities in a row: icon, name and state","Kilka encji w rzędzie: ikona, nazwa i stan",,load-time,auto
 cards.grid.picker_name,parts/cards/grid-card.part.js,25,hgTr,Nuvio – Grid,Nuvio – Siatka,,load-time,auto
 cards.grid.picker_description,parts/cards/grid-card.part.js,25,hgTr,"Cards in columns, like the HA grid","Karty w kolumnach, jak siatka w HA",,load-time,auto
-cards.hero.hey,parts/cards/hero-card.part.js,16,hgTr,"Hey, {name}!","Hej, {name}!",,,auto
+cards.hero.greeting_title,parts/cards/hero-card.part.js,16,hgTr,"Hey, {name}!","Hej, {name}!",name,expr,auto
 cards.hero.your_whole_home_in,parts/cards/hero-card.part.js,16,hgTr,Your whole home in one place,Cały dom w jednym miejscu,,,auto
-cards.hero.nuvio_greeting,parts/cards/hero-card.part.js,23,hgTr,Nuvio – Greeting,Nuvio – Powitanie,,load-time,manual
-cards.hero.large_greeting_with_your,parts/cards/hero-card.part.js,23,hgTr,Large greeting with your name and a tagline,Duże powitanie z imieniem i hasłem,,load-time,manual
+cards.hero.picker_name,parts/cards/hero-card.part.js,23,hgTr,Nuvio – Greeting,Nuvio – Powitanie,,load-time,auto
+cards.hero.picker_description,parts/cards/hero-card.part.js,23,hgTr,Large greeting with your name and a tagline,Duże powitanie z imieniem i hasłem,,load-time,auto
 cards.history.choose_sensors,parts/cards/history-card.part.js,12,hgTr,Choose sensors,Wybierz czujniki,,,auto
 cards.history.one_or_more_numeric,parts/cards/history-card.part.js,12,hgTr,One or more numeric sensors,Jeden lub kilka czujników liczbowych,,,auto
 cards.history.history,parts/cards/history-card.part.js,17,hgTr,History,Historia,,,auto

@@ -425,6 +425,12 @@
     "grid": {
       "picker_description": "Cards in columns, like the HA grid",
       "picker_name": "Nuvio – Grid"
+    },
+    "hero": {
+      "greeting_title": "Hey, {name}!",
+      "picker_description": "Large greeting with your name and a tagline",
+      "picker_name": "Nuvio – Greeting",
+      "your_whole_home_in": "Your whole home in one place"
     }
   },
   "common": {

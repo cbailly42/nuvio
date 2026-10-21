@@ -13,11 +13,11 @@ ha-card.hero.img{ background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,
 @container (min-width: 560px){ .t{ font-size:56px; } .s{ font-size:32px; } }
 `); }
   render() { const c = this._config, h = this._hass, nm = hgFirstName(h), s = c.entity ? H.st(h, c.entity) : null;
-    const T = c.title ?? hgTr('Hej, {name}!', 'Hey, {name}!'), Sb = c.subtitle ?? hgTr('Cały dom w jednym miejscu', 'Your whole home in one place');
+    const T = c.title ?? hgT('cards.hero.greeting_title', { name: nm }), Sb = c.subtitle ?? hgT('cards.hero.your_whole_home_in');
     const fill = (x) => String(x || '').replace(/\{name\}/g, nm).replace(/,\s*!/, '!').replace(/\s+!/, '!');
     const st = s ? `<div class="st">${hgUI.pill(`${H.name(h, c.entity)}: ${H.t(h, s)}`, { icon: s.attributes.icon || 'mdi:information-outline', act: 'more' })}</div>` : '';
     return `<ha-card class="${c.glass ? 'glass' : 'glass hero'}${c.image ? ' img' : ''}"${c.image ? ` style="--img:url('${H.cssUrl(c.image)}')"` : ''}><h1 class="t">${H.esc(fill(T))}</h1>${Sb ? `<p class="s">${H.esc(fill(Sb))}</p>` : ''}${st}</ha-card>`; }
   onAct(a) { if (a === 'more' && this._config.entity) H.fire(this, 'hass-more-info', { entityId: this._config.entity }); }
   getGridOptions() { return { columns: 12, rows: 2 }; }
 }
-hgReg('hg-hero-card', HGHeroCard, hgTr('Nuvio – Powitanie', 'Nuvio – Greeting'), hgTr('Duże powitanie z imieniem i hasłem', 'Large greeting with your name and a tagline'));
+hgReg('hg-hero-card', HGHeroCard, hgTLazy('cards.hero.picker_name'), hgTLazy('cards.hero.picker_description'));

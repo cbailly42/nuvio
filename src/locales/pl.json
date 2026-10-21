@@ -429,6 +429,12 @@
     "grid": {
       "picker_description": "Karty w kolumnach, jak siatka w HA",
       "picker_name": "Nuvio – Siatka"
+    },
+    "hero": {
+      "greeting_title": "Hej, {name}!",
+      "picker_description": "Duże powitanie z imieniem i hasłem",
+      "picker_name": "Nuvio – Powitanie",
+      "your_whole_home_in": "Cały dom w jednym miejscu"
     }
   },
   "common": {
