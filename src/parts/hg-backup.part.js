@@ -3,11 +3,11 @@
    Przed importem bieżący układ trafia do localStorage (nuvio:layout-backup), „Przywróć poprzedni” cofa import jednym kliknięciem. */
 const HGBackup = window.__hgBackup || (window.__hgBackup = {
   SCHEMA: 2, BK: 'nuvio:layout-backup', inc: null, st: null,
-  CATS: [['views', 'wiz', 'mdi:view-dashboard-outline', 'Widoki i własne widoki', 'Views and custom views'],
-    ['layout', 's', 'mdi:view-grid-outline', 'Układ, widżety i encje, tytuły, szerokości sekcji, ukryte', 'Layout, widgets and entities, titles, section widths, hidden items'],
-    ['look', 'app', 'mdi:palette-outline', 'Wygląd: akcent, tło, przyciemnienie', 'Appearance: accent, background, dimming'],
-    ['panel', 'pw', 'mdi:arrow-expand-horizontal', 'Szerokość paneli widoków', 'View panel widths'],
-    ['wall', 'wall', 'mdi:tablet-dashboard', 'Tryb tabletu ściennego', 'Wall tablet mode']],
+  CATS: [['views', 'wiz', 'mdi:view-dashboard-outline', hgTLazy('backup.cats.views')],
+    ['layout', 's', 'mdi:view-grid-outline', hgTLazy('backup.cats.layout')],
+    ['look', 'app', 'mdi:palette-outline', hgTLazy('backup.cats.look')],
+    ['panel', 'pw', 'mdi:arrow-expand-horizontal', hgTLazy('backup.cats.panel')],
+    ['wall', 'wall', 'mdi:tablet-dashboard', hgTLazy('backup.cats.wall')]],
   admin(p) { const h = p && p._hass; return !!(h && h.user && h.user.is_admin); },
   sel() { return this.inc || (this.inc = new Set(this.CATS.map((c) => c[0]))); },
   cl(x) { return x == null ? x : JSON.parse(JSON.stringify(x)); },
@@ -21,29 +21,29 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
   download(p) { const t = this.text(this.sel()), d = new Date(), z = (n) => String(n).padStart(2, '0');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'application/json' }));
     a.download = `nuvio-uklad-${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    p._eToast(hgTr('Wyeksportowano układ do pliku', 'Layout exported to a file')); },
-  async copy(p) { try { await navigator.clipboard.writeText(this.text(this.sel())); p._eToast(hgTr('Skopiowano układ do schowka', 'Layout copied to the clipboard')); }
-    catch (e) { p._eToast(hgTr('Nie udało się skopiować (przeglądarka zablokowała schowek)', 'Could not copy (the browser blocked the clipboard)')); } },
+    p._eToast(hgT('backup.layout_exported_to_a')); },
+  async copy(p) { try { await navigator.clipboard.writeText(this.text(this.sel())); p._eToast(hgT('backup.layout_copied_to_the')); }
+    catch (e) { p._eToast(hgT('backup.could_not_copy_the')); } },
   /* ---- odczyt, walidacja, migracja ---- */
-  fail(pl, en) { const e = new Error(hgTr(pl, en)); e.hg = 1; throw e; },
+  fail(msg) { const e = new Error(msg); e.hg = 1; throw e; },
   migrate(o) {
     /* schemat 1: surowy zapis HGL.data ({ v: 1, ts, s, app, wiz, pw }) z wersji bez eksportu */
     if (o.format == null && o.s && typeof o.s === 'object') return { format: 'nuvio-layout', schema: this.SCHEMA, nuvio: null, exported: o.ts ? new Date(o.ts).toISOString() : null, migrated: 1, data: { s: o.s, app: o.app, wiz: o.wiz, pw: o.pw, wall: o.wall } };
-    if (o.format !== 'nuvio-layout' || !Number.isInteger(o.schema)) this.fail('To nie jest plik kopii układu Nuvio.', 'This is not a Nuvio layout backup file.');
-    if (o.schema > this.SCHEMA) this.fail(`Plik pochodzi z nowszej wersji Nuvio (schemat ${o.schema}). Zaktualizuj Nuvio, aby go wczytać.`, `The file comes from a newer Nuvio (schema ${o.schema}). Update Nuvio to load it.`);
+    if (o.format !== 'nuvio-layout' || !Number.isInteger(o.schema)) this.fail(hgT('backup.errors.not_a_backup'));
+    if (o.schema > this.SCHEMA) this.fail(hgT('backup.errors.newer_schema', { schema: o.schema }));
     if (o.schema === 1) return Object.assign({}, o, { schema: this.SCHEMA, migrated: 1, data: o.data || o.layout });
     return o; },
   parse(t) { const ob = (x) => !!x && typeof x === 'object' && !Array.isArray(x), ar = (x) => x == null || Array.isArray(x);
-    if (typeof t !== 'string' || !t.trim()) this.fail('Plik jest pusty.', 'The file is empty.');
-    if (t.length > 4e6) this.fail('Plik jest za duży (ponad 4 MB).', 'The file is too large (over 4 MB).');
-    let o; try { o = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) { this.fail('To nie jest poprawny plik JSON. Sprawdź, czy skopiowano całą zawartość.', 'This is not valid JSON. Check that the whole content was copied.'); }
-    if (!ob(o)) this.fail('Nieznany format pliku.', 'Unknown file format.');
+    if (typeof t !== 'string' || !t.trim()) this.fail(hgT('backup.errors.empty'));
+    if (t.length > 4e6) this.fail(hgT('backup.the_file_is_too'));
+    let o; try { o = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) { this.fail(hgT('backup.errors.invalid_json')); }
+    if (!ob(o)) this.fail(hgT('backup.errors.unknown_format'));
     o = this.migrate(o); const d = o.data;
-    if (!ob(d)) this.fail('W pliku nie ma danych układu.', 'The file has no layout data.');
-    for (const k of ['s', 'wiz', 'app', 'pw', 'wall']) if (d[k] != null && !ob(d[k])) this.fail(`Uszkodzona część pliku: ${k}.`, `Damaged part of the file: ${k}.`);
-    for (const [k, v] of Object.entries(d.s || {})) if (!ob(v) || !ar(v.order) || !ar(v.hidden) || !ar(v.added) || (v.size != null && !ob(v.size)) || (v.conf != null && !ob(v.conf))) this.fail(`Uszkodzony zakres układu „${k}”.`, `Damaged layout scope “${k}”.`);
-    if (d.wiz && (!ar(d.wiz.views) || !ar(d.wiz.custom) || (d.wiz.custom || []).some((c) => !ob(c) || typeof c.p !== 'string'))) this.fail('Uszkodzona lista widoków.', 'Damaged list of views.');
-    if (!['s', 'wiz', 'app', 'pw', 'wall'].some((k) => d[k] != null)) this.fail('Plik nie zawiera nic do zaimportowania.', 'The file contains nothing to import.');
+    if (!ob(d)) this.fail(hgT('backup.errors.no_layout_data'));
+    for (const k of ['s', 'wiz', 'app', 'pw', 'wall']) if (d[k] != null && !ob(d[k])) this.fail(hgT('backup.errors.damaged_part', { part: k }));
+    for (const [k, v] of Object.entries(d.s || {})) if (!ob(v) || !ar(v.order) || !ar(v.hidden) || !ar(v.added) || (v.size != null && !ob(v.size)) || (v.conf != null && !ob(v.conf))) this.fail(hgT('backup.errors.damaged_scope', { scope: k }));
+    if (d.wiz && (!ar(d.wiz.views) || !ar(d.wiz.custom) || (d.wiz.custom || []).some((c) => !ob(c) || typeof c.p !== 'string'))) this.fail(hgT('backup.errors.damaged_views'));
+    if (!['s', 'wiz', 'app', 'pw', 'wall'].some((k) => d[k] != null)) this.fail(hgT('backup.errors.nothing_to_import'));
     return o; },
   ents(d, h) { const out = new Set(), re = /^[a-z_]+\.[a-z0-9_]+$/;
     const dom = new Set([...Object.keys(h.states).map((e) => e.split('.')[0]), 'light', 'switch', 'sensor', 'binary_sensor', 'climate', 'media_player', 'camera', 'cover', 'fan', 'lock', 'person', 'weather', 'scene', 'script', 'automation', 'input_boolean', 'input_number', 'input_select', 'button', 'number', 'select', 'vacuum', 'water_heater', 'humidifier', 'valve', 'alarm_control_panel', 'calendar', 'device_tracker', 'update', 'siren', 'event', 'todo', 'lawn_mower']);
@@ -61,45 +61,45 @@ const HGBackup = window.__hgBackup || (window.__hgBackup = {
         w.custom = [...cu.values()]; w.views = [...new Set([...(a.views || []), ...(v.views || [])])]; w.hints = Object.assign({}, a.hints, v.hints); D.wiz = w; }
       else D[k] = Object.assign({}, D[k] || {}, v); }
     return this.commit(p, JSON.stringify(prev.wiz || null) !== JSON.stringify(D.wiz || null), true); },
-  restore(p) { const b = this._mem || this.prev(); if (!b) return p._eToast(hgTr('Brak poprzedniego układu do przywrócenia', 'No previous layout to restore'));
+  restore(p) { const b = this._mem || this.prev(); if (!b) return p._eToast(hgT('backup.no_previous_layout_to'));
     const cur = HGL.data, nd = this.cl(b.data); nd.uid = cur.uid; HGL.data = nd; try { localStorage.removeItem(this.BK); } catch (e) { /* bez znaczenia */ } this._mem = null;
     return this.commit(p, JSON.stringify(cur.wiz || null) !== JSON.stringify(nd.wiz || null), false); },
   async commit(p, reload, offer) { HGL._ls(); HGApp.apply(); let w = 'local'; try { w = await HGL.save(p._hass); } catch (e) { /* zapis lokalny */ }
     if (p._editing) p._eSnap = JSON.stringify(HGL.data);   /* Anuluj w trybie edycji nie cofa importu */
     HGL.notify();
-    const msg = offer ? hgTr('Zaimportowano układ', 'Layout imported') : hgTr('Przywrócono poprzedni układ', 'Previous layout restored');
-    if (reload && !window.__hgDryRun) { try { sessionStorage.setItem('nuvio:bk-msg', JSON.stringify({ msg, offer })); } catch (e) { /* bez komunikatu po odświeżeniu */ } p._eToast(msg + hgTr(' (odświeżanie…)', ' (reloading…)')); setTimeout(() => location.reload(), 700); return w; }
+    const msg = offer ? hgT('backup.layout_imported') : hgT('backup.previous_layout_restored');
+    if (reload && !window.__hgDryRun) { try { sessionStorage.setItem('nuvio:bk-msg', JSON.stringify({ msg, offer })); } catch (e) { /* bez komunikatu po odświeżeniu */ } p._eToast(hgT('backup.reloading_message', { message: msg })); setTimeout(() => location.reload(), 700); return w; }
     if (p._eRefresh) p._eRefresh(true);
-    if (offer) p._eToast(msg, () => this.restore(p), hgTr('Przywróć poprzedni', 'Restore previous')); else p._eToast(msg);
+    if (offer) p._eToast(msg, () => this.restore(p), hgT('backup.restore_previous')); else p._eToast(msg);
     return w; },
   /* po odświeżeniu (zmiana widoków): komunikat z przyciskiem cofnięcia */
   offer(p) { let m = null; try { m = JSON.parse(sessionStorage.getItem('nuvio:bk-msg') || 'null'); sessionStorage.removeItem('nuvio:bk-msg'); } catch (e) { return; } if (!m) return;
-    if (m.offer && this.prev()) p._eToast(m.msg, () => this.restore(p), hgTr('Przywróć poprzedni', 'Restore previous')); else p._eToast(m.msg); },
+    if (m.offer && this.prev()) p._eToast(m.msg, () => this.restore(p), hgT('backup.restore_previous')); else p._eToast(m.msg); },
   /* ---- UI: sekcja w arkuszu Wygląd ---- */
   chk(on) { return `<i class="bk-cb" aria-hidden="true">${on ? H.icon('mdi:check') : ''}</i>`; },
   html(p) { if (!this.admin(p)) return ''; const s = this.sel(), pv = this.prev(), none = !s.size;
-    return `<section class="lk-g bk" data-tab="bk" aria-labelledby="bk-h"><style>${HG_BK_CSS}</style><h4 id="bk-h">${H.icon('mdi:backup-restore')}${hgTr('Kopia układu', 'Layout backup')}</h4><small class="lk-hn">${hgTr('Zapisz układ do pliku albo przenieś go na inne urządzenie lub inną instancję Home Assistant.', 'Save the layout to a file or move it to another device or Home Assistant instance.')}</small>
-      <div class="bk-inc" role="group" aria-label="${hgTr('Co zawiera kopia', 'What the backup contains')}">${this.CATS.map(([id, , ic, pl, en]) => `<button type="button" role="checkbox" aria-checked="${s.has(id)}" data-hge="bk-inc" data-k="${id}">${this.chk(s.has(id))}${H.icon(ic)}<span>${hgTr(pl, en)}</span></button>`).join('')}</div>
-      <div class="bk-row"><button type="button" class="bk-p" data-hge="bk-exp" ${none ? 'disabled' : ''}>${H.icon('mdi:download')}<span>${hgTr('Eksportuj', 'Export')}</span></button><button type="button" class="bk-s" data-hge="bk-copy" ${none ? 'disabled' : ''}>${H.icon('mdi:content-copy')}<span>${hgTr('Kopiuj do schowka', 'Copy to clipboard')}</span></button><button type="button" class="bk-s" data-hge="bk-imp">${H.icon('mdi:upload')}<span>${hgTr('Importuj', 'Import')}</span></button></div>
-      ${pv ? `<button type="button" class="bk-u" data-hge="bk-undo">${H.icon('mdi:history')}<span>${hgTr('Przywróć poprzedni układ', 'Restore previous layout')}<small>${hgTr('sprzed importu', 'from before the import')}, ${H.esc(this.when(pv.ts))}</small></span></button>` : ''}</section>`; },
+    return `<section class="lk-g bk" data-tab="bk" aria-labelledby="bk-h"><style>${HG_BK_CSS}</style><h4 id="bk-h">${H.icon('mdi:backup-restore')}${hgT('backup.layout_backup')}</h4><small class="lk-hn">${hgT('backup.save_the_layout_to')}</small>
+      <div class="bk-inc" role="group" aria-label="${hgT('backup.what_the_backup_contains')}">${this.CATS.map(([id, , ic, t]) => `<button type="button" role="checkbox" aria-checked="${s.has(id)}" data-hge="bk-inc" data-k="${id}">${this.chk(s.has(id))}${H.icon(ic)}<span>${t}</span></button>`).join('')}</div>
+      <div class="bk-row"><button type="button" class="bk-p" data-hge="bk-exp" ${none ? 'disabled' : ''}>${H.icon('mdi:download')}<span>${hgT('backup.export')}</span></button><button type="button" class="bk-s" data-hge="bk-copy" ${none ? 'disabled' : ''}>${H.icon('mdi:content-copy')}<span>${hgT('backup.copy_to_clipboard')}</span></button><button type="button" class="bk-s" data-hge="bk-imp">${H.icon('mdi:upload')}<span>${hgT('backup.import')}</span></button></div>
+      ${pv ? `<button type="button" class="bk-u" data-hge="bk-undo">${H.icon('mdi:history')}<span>${hgT('backup.restore_previous_layout')}<small>${hgT('backup.from_before_the_import')}, ${H.esc(this.when(pv.ts))}</small></span></button>` : ''}</section>`; },
   /* krok importu: źródło (plik / przeciągnij / wklej), potem podsumowanie i wybór trybu */
   imp(p) { const h = p._hass, st = this.st, o = st.o, sm = o && this.sum(o, h), d = o && o.data;
-    const src = `<div class="bk-drop" tabindex="0" role="button" data-hge="bk-file" aria-describedby="bk-dh">${H.icon('mdi:file-upload-outline')}<b>${hgTr('Wybierz plik lub przeciągnij go tutaj', 'Choose a file or drop it here')}</b><small id="bk-dh">${hgTr('Plik .json z eksportu Nuvio. Możesz też wkleić zawartość (Ctrl+V).', 'A .json file exported from Nuvio. You can also paste the content (Ctrl+V).')}</small></div><input type="file" class="bk-f" accept=".json,application/json" hidden>
-      <label class="hs-fl"><span>${hgTr('Albo wklej JSON', 'Or paste JSON')}</span><textarea class="bk-ta nf-area code" rows="4" spellcheck="false" placeholder='{ "format": "nuvio-layout", … }'></textarea></label><div class="bk-row r"><button type="button" class="bk-s" data-hge="bk-paste">${H.icon('mdi:clipboard-text-outline')}<span>${hgTr('Wczytaj wklejony tekst', 'Load pasted text')}</span></button></div>`;
-    const prv = o ? `<div class="bk-file">${H.icon('mdi:file-check-outline')}<span><b>${H.esc(st.name || hgTr('Wklejony tekst', 'Pasted text'))}</b><small>${o.nuvio ? 'Nuvio v' + H.esc(o.nuvio) : hgTr('starszy format', 'older format')}${o.exported ? ' · ' + H.esc(this.when(o.exported)) : ''}${o.migrated ? ' · ' + hgTr('przekonwertowano ze starszego schematu', 'converted from an older schema') : ''}</small></span><button type="button" class="bk-s sm" data-hge="bk-again">${hgTr('Inny plik', 'Other file')}</button></div>
-      <div class="bk-st" role="list">${[[sm.views, hgTr('widoków', 'views'), 'mdi:view-dashboard-outline'], [sm.custom, hgTr('własnych widoków', 'custom views'), 'mdi:view-grid-plus-outline'], [sm.widgets, hgTr('dodanych widżetów', 'added widgets'), 'mdi:widgets-outline'], [sm.scopes, hgTr('sekcji z ustawieniami', 'sections with settings'), 'mdi:view-grid-outline'], [sm.ents, hgTr('encji', 'entities'), 'mdi:devices']].map(([n, l, ic]) => `<span role="listitem">${H.icon(ic)}<b>${n}</b><small>${l}</small></span>`).join('')}</div>
-      ${sm.miss.length ? `<div class="bk-miss" role="note"><b>${H.icon('mdi:alert-outline')}${hgTr(`Brak ${sm.miss.length} z ${sm.ents} encji na tej instancji`, `${sm.miss.length} of ${sm.ents} entities are missing on this instance`)}</b><small>${hgTr('Widżety z tymi encjami pokażą „Niedostępne”, dopóki nie wybierzesz innej encji w ustawieniach karty.', 'Widgets with these entities show “Unavailable” until you choose another entity in card settings.')}</small><div class="bk-ch">${sm.miss.slice(0, 40).map((e) => `<code>${H.esc(e)}</code>`).join('')}${sm.miss.length > 40 ? `<em>+${sm.miss.length - 40}</em>` : ''}</div></div>` : sm.ents ? `<div class="bk-ok">${H.icon('mdi:check-circle-outline')}${hgTr('Wszystkie encje z pliku są na tej instancji.', 'All entities from the file exist on this instance.')}</div>` : ''}
-      <div class="hs-fl"><span>${hgTr('Co zaimportować', 'What to import')}</span><div class="bk-inc" role="group" aria-label="${hgTr('Co zaimportować', 'What to import')}">${this.CATS.filter(([, k]) => d[k] != null).map(([id, , ic, pl, en]) => `<button type="button" role="checkbox" aria-checked="${st.sel.has(id)}" data-hge="bk-isel" data-k="${id}">${this.chk(st.sel.has(id))}${H.icon(ic)}<span>${hgTr(pl, en)}</span>${id === 'look' && sm.accent ? `<i class="bk-sw" style="background:${sm.accent}" aria-hidden="true"></i>` : ''}</button>`).join('')}</div></div>
-      <div class="hs-fl"><span id="bk-mh">${hgTr('Sposób', 'Mode')}</span><div class="bk-md" role="radiogroup" aria-labelledby="bk-mh">${[['replace', hgTr('Zastąp', 'Replace'), hgTr('Wybrane części zastąpią obecny układ.', 'The chosen parts replace the current layout.'), 'mdi:swap-horizontal'], ['merge', hgTr('Połącz', 'Merge'), hgTr('Dodaje sekcje i widoki z pliku, reszta zostaje.', 'Adds sections and views from the file, the rest stays.'), 'mdi:call-merge']].map(([m, l, t, ic]) => `<button type="button" role="radio" aria-checked="${st.mode === m}" tabindex="${st.mode === m ? 0 : -1}" data-hge="bk-mode" data-k="${m}">${H.icon(ic)}<b>${l}</b><small>${t}</small></button>`).join('')}</div></div>
-      <small class="bk-nt">${H.icon('mdi:shield-check-outline')}${hgTr('Obecny układ zostanie zapisany jako kopia. Możesz go przywrócić jednym kliknięciem.', 'The current layout is kept as a backup. You can restore it with one click.')}</small>` : '';
-    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide bk-sh" role="dialog" aria-modal="true" aria-label="${hgTr('Importuj układ', 'Import layout')}"><style>${HG_BK_CSS}</style><div class="hs-h"><b>${hgTr('Importuj układ', 'Import layout')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgTr('Zamknij', 'Close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
-      ${st.err ? `<div class="bk-err" role="alert">${H.icon('mdi:alert-circle-outline')}<span><b>${hgTr('Nie można zaimportować', 'Cannot import')}</b><small>${H.esc(st.err)}</small></span></div>` : ''}${o ? prv : src}</div>
-      <div class="hs-ac"><button class="hs-b2" data-hge="cback">${hgTr('Wstecz', 'Back')}</button><button class="hs-b" data-hge="bk-apply" ${o && st.sel.size ? '' : 'disabled'}>${H.icon('mdi:upload')}<span>${st.mode === 'replace' ? hgTr('Zastąp układ', 'Replace layout') : hgTr('Połącz układ', 'Merge layout')}</span></button></div></div>`;
+    const src = `<div class="bk-drop" tabindex="0" role="button" data-hge="bk-file" aria-describedby="bk-dh">${H.icon('mdi:file-upload-outline')}<b>${hgT('backup.choose_a_file_or')}</b><small id="bk-dh">${hgT('backup.a_json_file_exported')}</small></div><input type="file" class="bk-f" accept=".json,application/json" hidden>
+      <label class="hs-fl"><span>${hgT('backup.or_paste_json')}</span><textarea class="bk-ta nf-area code" rows="4" spellcheck="false" placeholder='{ "format": "nuvio-layout", … }'></textarea></label><div class="bk-row r"><button type="button" class="bk-s" data-hge="bk-paste">${H.icon('mdi:clipboard-text-outline')}<span>${hgT('backup.load_pasted_text')}</span></button></div>`;
+    const prv = o ? `<div class="bk-file">${H.icon('mdi:file-check-outline')}<span><b>${H.esc(st.name || hgT('backup.pasted_text'))}</b><small>${o.nuvio ? 'Nuvio v' + H.esc(o.nuvio) : hgT('backup.older_format')}${o.exported ? ' · ' + H.esc(this.when(o.exported)) : ''}${o.migrated ? ' · ' + hgT('backup.converted_from_older_schema') : ''}</small></span><button type="button" class="bk-s sm" data-hge="bk-again">${hgT('backup.other_file')}</button></div>
+      <div class="bk-st" role="list">${[[sm.views, hgT('backup.views'), 'mdi:view-dashboard-outline'], [sm.custom, hgT('backup.custom_views'), 'mdi:view-grid-plus-outline'], [sm.widgets, hgT('backup.added_widgets'), 'mdi:widgets-outline'], [sm.scopes, hgT('backup.sections_with_settings'), 'mdi:view-grid-outline'], [sm.ents, hgT('backup.entities'), 'mdi:devices']].map(([n, l, ic]) => `<span role="listitem">${H.icon(ic)}<b>${n}</b><small>${l}</small></span>`).join('')}</div>
+      ${sm.miss.length ? `<div class="bk-miss" role="note"><b>${H.icon('mdi:alert-outline')}${hgT('backup.missing_entities', { count: sm.miss.length, total: sm.ents })}</b><small>${hgT('backup.widgets_with_these_entities')}</small><div class="bk-ch">${sm.miss.slice(0, 40).map((e) => `<code>${H.esc(e)}</code>`).join('')}${sm.miss.length > 40 ? `<em>+${sm.miss.length - 40}</em>` : ''}</div></div>` : sm.ents ? `<div class="bk-ok">${H.icon('mdi:check-circle-outline')}${hgT('backup.all_entities_from_the')}</div>` : ''}
+      <div class="hs-fl"><span>${hgT('backup.what_to_import')}</span><div class="bk-inc" role="group" aria-label="${hgT('backup.what_to_import')}">${this.CATS.filter(([, k]) => d[k] != null).map(([id, , ic, t]) => `<button type="button" role="checkbox" aria-checked="${st.sel.has(id)}" data-hge="bk-isel" data-k="${id}">${this.chk(st.sel.has(id))}${H.icon(ic)}<span>${t}</span>${id === 'look' && sm.accent ? `<i class="bk-sw" style="background:${sm.accent}" aria-hidden="true"></i>` : ''}</button>`).join('')}</div></div>
+      <div class="hs-fl"><span id="bk-mh">${hgT('backup.mode')}</span><div class="bk-md" role="radiogroup" aria-labelledby="bk-mh">${[['replace', hgT('backup.replace'), hgT('backup.the_chosen_parts_replace'), 'mdi:swap-horizontal'], ['merge', hgT('backup.merge'), hgT('backup.adds_sections_and_views'), 'mdi:call-merge']].map(([m, l, t, ic]) => `<button type="button" role="radio" aria-checked="${st.mode === m}" tabindex="${st.mode === m ? 0 : -1}" data-hge="bk-mode" data-k="${m}">${H.icon(ic)}<b>${l}</b><small>${t}</small></button>`).join('')}</div></div>
+      <small class="bk-nt">${H.icon('mdi:shield-check-outline')}${hgT('backup.the_current_layout_is')}</small>` : '';
+    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide bk-sh" role="dialog" aria-modal="true" aria-label="${hgT('backup.import_layout')}"><style>${HG_BK_CSS}</style><div class="hs-h"><b>${hgT('backup.import_layout')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
+      ${st.err ? `<div class="bk-err" role="alert">${H.icon('mdi:alert-circle-outline')}<span><b>${hgT('backup.cannot_import')}</b><small>${H.esc(st.err)}</small></span></div>` : ''}${o ? prv : src}</div>
+      <div class="hs-ac"><button class="hs-b2" data-hge="cback">${hgT('common.back')}</button><button class="hs-b" data-hge="bk-apply" ${o && st.sel.size ? '' : 'disabled'}>${H.icon('mdi:upload')}<span>${st.mode === 'replace' ? hgT('backup.replace_layout') : hgT('backup.merge_layout')}</span></button></div></div>`;
     p._eSheet('cfg'); const S = p._eSheetEl; S.innerHTML = html; this.wire(p, S); },
   load(p, t, name) { const st = this.st; try { st.o = this.parse(t); st.err = null; st.name = name || null; st.sel = new Set(this.CATS.filter(([, k]) => st.o.data[k] != null).map((c) => c[0])); }
-    catch (e) { st.o = null; st.err = e && e.hg ? e.message : hgTr('Nie udało się odczytać pliku.', 'Could not read the file.'); }
+    catch (e) { st.o = null; st.err = e && e.hg ? e.message : hgT('backup.could_not_read_the'); }
     this.imp(p); requestAnimationFrame(() => { const f = p._eSheetEl && p._eSheetEl.querySelector(st.err ? '.bk-err' : '.bk-file'); if (f) { f.tabIndex = -1; f.focus({ preventScroll: true }); } }); },
-  readFile(p, f) { if (!f) return; if (f.size > 4e6) { this.st.err = hgTr('Plik jest za duży (ponad 4 MB).', 'The file is too large (over 4 MB).'); this.st.o = null; return this.imp(p); }
+  readFile(p, f) { if (!f) return; if (f.size > 4e6) { this.st.err = hgT('backup.the_file_is_too'); this.st.o = null; return this.imp(p); }
     f.text().then((t) => this.load(p, t, f.name), () => this.load(p, '', f.name)); },
   wire(p, S) { const fi = S.querySelector('.bk-f'), dz = S.querySelector('.bk-drop'), ta = S.querySelector('.bk-ta');
     if (fi) fi.addEventListener('change', () => this.readFile(p, fi.files && fi.files[0]));

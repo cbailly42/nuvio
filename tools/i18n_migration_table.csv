@@ -1359,17 +1359,15 @@ common.open_assist,parts/hg-assist.part.js,93,hgTr,Open Assist,Otwórz Assist,,,
 backup.layout_exported_to_a,parts/hg-backup.part.js,24,hgTr,Layout exported to a file,Wyeksportowano układ do pliku,,,auto
 backup.layout_copied_to_the,parts/hg-backup.part.js,25,hgTr,Layout copied to the clipboard,Skopiowano układ do schowka,,,auto
 backup.could_not_copy_the,parts/hg-backup.part.js,26,hgTr,Could not copy (the browser blocked the clipboard),Nie udało się skopiować (przeglądarka zablokowała schowek),,,auto
-backup.en,parts/hg-backup.part.js,28,hgTr,en,pl,,expr,manual
 backup.no_previous_layout_to,parts/hg-backup.part.js,64,hgTr,No previous layout to restore,Brak poprzedniego układu do przywrócenia,,,auto
 backup.layout_imported,parts/hg-backup.part.js,70,hgTr,Layout imported,Zaimportowano układ,,,auto
 backup.previous_layout_restored,parts/hg-backup.part.js,70,hgTr,Previous layout restored,Przywrócono poprzedni układ,,,auto
-backup.reloading,parts/hg-backup.part.js,71,hgTr, (reloading…), (odświeżanie…),,concat,manual
+backup.reloading_message,parts/hg-backup.part.js,71,hgTr,{message} (reloading…),{message} (odświeżanie…),message,concat,auto
 backup.restore_previous,parts/hg-backup.part.js,73,hgTr,Restore previous,Przywróć poprzedni,,,auto
 backup.restore_previous,parts/hg-backup.part.js,77,hgTr,Restore previous,Przywróć poprzedni,,,auto
 backup.layout_backup,parts/hg-backup.part.js,81,hgTr,Layout backup,Kopia układu,,,auto
 backup.save_the_layout_to,parts/hg-backup.part.js,81,hgTr,Save the layout to a file or move it to another device or Home Assistant instance.,Zapisz układ do pliku albo przenieś go na inne urządzenie lub inną instancję Home Assistant.,,,auto
 backup.what_the_backup_contains,parts/hg-backup.part.js,82,hgTr,What the backup contains,Co zawiera kopia,,,auto
-backup.en,parts/hg-backup.part.js,82,hgTr,en,pl,,expr,manual
 backup.export,parts/hg-backup.part.js,83,hgTr,Export,Eksportuj,,,auto
 backup.copy_to_clipboard,parts/hg-backup.part.js,83,hgTr,Copy to clipboard,Kopiuj do schowka,,,auto
 backup.import,parts/hg-backup.part.js,83,hgTr,Import,Importuj,,,auto
@@ -1381,19 +1379,18 @@ backup.or_paste_json,parts/hg-backup.part.js,88,hgTr,Or paste JSON,Albo wklej JS
 backup.load_pasted_text,parts/hg-backup.part.js,88,hgTr,Load pasted text,Wczytaj wklejony tekst,,,auto
 backup.pasted_text,parts/hg-backup.part.js,89,hgTr,Pasted text,Wklejony tekst,,,auto
 backup.older_format,parts/hg-backup.part.js,89,hgTr,older format,starszy format,,,auto
-backup.converted_from_an_older,parts/hg-backup.part.js,89,hgTr,converted from an older schema,przekonwertowano ze starszego schematu,,concat,manual
+backup.converted_from_older_schema,parts/hg-backup.part.js,89,hgTr,converted from an older schema,przekonwertowano ze starszego schematu,,concat,auto
 backup.other_file,parts/hg-backup.part.js,89,hgTr,Other file,Inny plik,,,auto
 backup.views,parts/hg-backup.part.js,90,hgTr,views,widoków,,,auto
 backup.custom_views,parts/hg-backup.part.js,90,hgTr,custom views,własnych widoków,,,auto
 backup.added_widgets,parts/hg-backup.part.js,90,hgTr,added widgets,dodanych widżetów,,,auto
 backup.sections_with_settings,parts/hg-backup.part.js,90,hgTr,sections with settings,sekcji z ustawieniami,,,auto
 backup.entities,parts/hg-backup.part.js,90,hgTr,entities,encji,,,auto
-backup.sm_miss_length_of,parts/hg-backup.part.js,91,hgTr,${sm.miss.length} of ${sm.ents} entities are missing on this instance,Brak ${sm.miss.length} z ${sm.ents} encji na tej instancji,,expr,manual
+backup.missing_entities,parts/hg-backup.part.js,91,hgTr,{count} of {total} entities are missing on this instance,Brak {count} z {total} encji na tej instancji,"count,total",expr,auto
 backup.widgets_with_these_entities,parts/hg-backup.part.js,91,hgTr,Widgets with these entities show “Unavailable” until you choose another entity in card settings.,"Widżety z tymi encjami pokażą „Niedostępne”, dopóki nie wybierzesz innej encji w ustawieniach karty.",,,auto
 backup.all_entities_from_the,parts/hg-backup.part.js,91,hgTr,All entities from the file exist on this instance.,Wszystkie encje z pliku są na tej instancji.,,,auto
 backup.what_to_import,parts/hg-backup.part.js,92,hgTr,What to import,Co zaimportować,,,auto
 backup.what_to_import,parts/hg-backup.part.js,92,hgTr,What to import,Co zaimportować,,,auto
-backup.en,parts/hg-backup.part.js,92,hgTr,en,pl,,expr,manual
 backup.mode,parts/hg-backup.part.js,93,hgTr,Mode,Sposób,,,auto
 backup.replace,parts/hg-backup.part.js,93,hgTr,Replace,Zastąp,,,auto
 backup.the_chosen_parts_replace,parts/hg-backup.part.js,93,hgTr,The chosen parts replace the current layout.,Wybrane części zastąpią obecny układ.,,,auto
@@ -1409,6 +1406,19 @@ backup.replace_layout,parts/hg-backup.part.js,97,hgTr,Replace layout,Zastąp uk�
 backup.merge_layout,parts/hg-backup.part.js,97,hgTr,Merge layout,Połącz układ,,,auto
 backup.could_not_read_the,parts/hg-backup.part.js,100,hgTr,Could not read the file.,Nie udało się odczytać pliku.,,,auto
 backup.the_file_is_too,parts/hg-backup.part.js,102,hgTr,The file is too large (over 4 MB).,Plik jest za duży (ponad 4 MB).,,,auto
+backup.cats.views,parts/hg-backup.part.js,6,hgTr,Views and custom views,Widoki i własne widoki,,expr,auto
+backup.cats.layout,parts/hg-backup.part.js,7,hgTr,"Layout, widgets and entities, titles, section widths, hidden items","Układ, widżety i encje, tytuły, szerokości sekcji, ukryte",,expr,auto
+backup.cats.look,parts/hg-backup.part.js,10,hgTr,"Appearance: accent, background, dimming","Wygląd: akcent, tło, przyciemnienie",,expr,auto
+backup.cats.panel,parts/hg-backup.part.js,11,hgTr,View panel widths,Szerokość paneli widoków,,expr,auto
+backup.cats.wall,parts/hg-backup.part.js,12,hgTr,Wall tablet mode,Tryb tabletu ściennego,,expr,auto
+backup.errors.not_a_backup,parts/hg-backup.part.js,32,hgTr,This is not a Nuvio layout backup file.,To nie jest plik kopii układu Nuvio.,,expr,auto
+backup.errors.empty,parts/hg-backup.part.js,38,hgTr,The file is empty.,Plik jest pusty.,,expr,auto
+backup.the_file_is_too,parts/hg-backup.part.js,39,hgTr,The file is too large (over 4 MB).,Plik jest za duży (ponad 4 MB).,,expr,auto
+backup.errors.invalid_json,parts/hg-backup.part.js,41,hgTr,This is not valid JSON. Check that the whole content was copied.,"To nie jest poprawny plik JSON. Sprawdź, czy skopiowano całą zawartość.",,expr,auto
+backup.errors.unknown_format,parts/hg-backup.part.js,43,hgTr,Unknown file format.,Nieznany format pliku.,,expr,auto
+backup.errors.no_layout_data,parts/hg-backup.part.js,44,hgTr,The file has no layout data.,W pliku nie ma danych układu.,,expr,auto
+backup.errors.damaged_views,parts/hg-backup.part.js,49,hgTr,Damaged list of views.,Uszkodzona lista widoków.,,expr,auto
+backup.errors.nothing_to_import,parts/hg-backup.part.js,49,hgTr,The file contains nothing to import.,Plik nie zawiera nic do zaimportowania.,,expr,auto
 core.version_toast.text,parts/hg-core.part.js,38,hgTr,New dashboard version,Nowa wersja panelu,,,auto
 core.version_toast.reload,parts/hg-core.part.js,38,hgTr,Reload,Odśwież,,,auto
 common.close,parts/hg-core.part.js,38,hgTr,Close,Zamknij,,,auto
