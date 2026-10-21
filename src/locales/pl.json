@@ -32,6 +32,7 @@
     "ago_days_short": "{d} dni temu",
     "ago_hours": "{h} godz. temu",
     "ago_minutes": "{m} min temu",
+    "brightness": "Jasność",
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
     "close": "Zamknij",
@@ -258,6 +259,14 @@
     },
     "confirm": {
       "ok_button": "Potwierdź"
+    },
+    "generic_controls": {
+      "level": "Poziom",
+      "position": "Otwarcie",
+      "speed": "Prędkość",
+      "target_humidity": "Wilgotność docelowa",
+      "value": "Wartość",
+      "volume": "Głośność"
     }
   },
   "states": {

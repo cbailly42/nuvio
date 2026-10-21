@@ -32,6 +32,7 @@
     "ago_days_short": "{d} d ago",
     "ago_hours": "{h} h ago",
     "ago_minutes": "{m} min ago",
+    "brightness": "Brightness",
     "calendar": "Calendar",
     "cancel": "Cancel",
     "close": "Close",
@@ -258,6 +259,14 @@
     },
     "confirm": {
       "ok_button": "Confirm"
+    },
+    "generic_controls": {
+      "level": "Level",
+      "position": "Position",
+      "speed": "Speed",
+      "target_humidity": "Target humidity",
+      "value": "Value",
+      "volume": "Volume"
     }
   },
   "states": {
