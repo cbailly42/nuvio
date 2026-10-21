@@ -93,6 +93,11 @@
       "picker_description": "Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp",
       "picker_name": "Home Glass – Urządzenie AGD"
     },
+    "arc": {
+      "choose_a_light_fan": "Wybierz światło, wentylator albo liczbę",
+      "picker_description": "Jasność, prędkość albo poziom na przeciąganym łuku",
+      "picker_name": "Nuvio – Łuk"
+    },
     "battery": {
       "all_good": "Wszystkie w porządku",
       "batteries": "Baterie",

@@ -93,6 +93,11 @@
       "picker_description": "Washer, dryer, kettle and other devices: state, program, time left, progress",
       "picker_name": "Home Glass – Appliance"
     },
+    "arc": {
+      "choose_a_light_fan": "Choose a light, fan or number",
+      "picker_description": "Brightness, speed or level on a draggable arc",
+      "picker_name": "Nuvio – Arc"
+    },
     "battery": {
       "all_good": "All good",
       "batteries": "Batteries",

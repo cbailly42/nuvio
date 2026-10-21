@@ -100,8 +100,8 @@ cards.appliance.pick_an_entity_of,parts/cards/appliance-card.part.js,13,hgTr,Pic
 cards.appliance.picker_name,parts/cards/appliance-card.part.js,15,hgTr,Home Glass – Appliance,Home Glass – Urządzenie AGD,,load-time,auto
 cards.appliance.picker_description,parts/cards/appliance-card.part.js,15,hgTr,"Washer, dryer, kettle and other devices: state, program, time left, progress","Pralka, suszarka, czajnik i inne urządzenia: stan, program, czas do końca, postęp",,load-time,auto
 cards.arc.choose_a_light_fan,parts/cards/arc-card.part.js,18,hgTr,"Choose a light, fan or number","Wybierz światło, wentylator albo liczbę",,,auto
-cards.arc.nuvio_arc,parts/cards/arc-card.part.js,38,hgTr,Nuvio – Arc,Nuvio – Łuk,,load-time,manual
-cards.arc.brightness_speed_or_level,parts/cards/arc-card.part.js,38,hgTr,"Brightness, speed or level on a draggable arc","Jasność, prędkość albo poziom na przeciąganym łuku",,load-time,manual
+cards.arc.picker_name,parts/cards/arc-card.part.js,38,hgTr,Nuvio – Arc,Nuvio – Łuk,,load-time,auto
+cards.arc.picker_description,parts/cards/arc-card.part.js,38,hgTr,"Brightness, speed or level on a draggable arc","Jasność, prędkość albo poziom na przeciąganym łuku",,load-time,auto
 cards.areas.cool_cooling_heat_heating,parts/cards/areas-card.part.js,69,hgTr,"{ cool: 'Cooling', heat: 'Heating', fan_only: 'Fan', dry: 'Drying', heat_cool: 'Auto', auto: 'Auto' }","{ cool: 'Chłodzi', heat: 'Grzeje', fan_only: 'Wentyluje', dry: 'Osusza', heat_cool: 'Auto', auto: 'Auto' }",,object,manual
 cards.areas.someone_is_in_the,parts/cards/areas-card.part.js,83,hgTr,Someone is in the room,Ktoś jest w pokoju,,,auto
 cards.areas.motion_detected,parts/cards/areas-card.part.js,83,hgTr,Motion detected,Wykryto ruch,,,auto
