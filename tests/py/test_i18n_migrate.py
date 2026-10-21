@@ -249,4 +249,71 @@ class Verify(unittest.TestCase):
         rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['key'] = "bad key'x"
         self.assertTrue(M.verify(rows, root=self.root))
 
+class Round1(unittest.TestCase):
+    def setUp(self):
+        self.t, self.root = workdir(); self.addCleanup(self.t.cleanup); self.rows = M.propose(M.extract(self.root))
+    def resolved(self, **kw):
+        rows = [dict(r) for r in self.rows]; r = [r for r in rows if r['en'] == 'Language: '][0]
+        r.update(status='review', en='Language: {name}', pl='Język: {name}', params=['name'], key='cards.alarm.language'); r.update(kw); return rows
+    # 1. plural-suffix keys
+    def test_plural_suffix_key_is_rejected(self):
+        rows = [dict(r) for r in self.rows]; [r for r in rows if r['en'] == 'Cancel'][0]['key'] = 'cards.alarm.cancel_one'
+        out = M.verify(rows, root=self.root); self.assertTrue([x for x in out if 'plural suffix' in x])
+        before = snapshot(self.root)
+        with self.assertRaises(M.EquivalenceError): M.apply(rows, 'cards.alarm', root=self.root)
+        self.assertEqual(snapshot(self.root), before)
+    def test_propose_never_emits_plural_suffix_keys(self):
+        occs = [dict(o) for o in OCCS if o['en'] == 'Cancel']; occs[0]['en'] = 'Several sensors in one'; occs[0]['pl'] = 'Kilka czujników w jednym'
+        k = M.propose(occs)[0]['key']; self.assertEqual(k, 'cards.alarm.several_sensors_in_one_text')
+        old = [{'key': 'cards.alarm.several_sensors_in_one', 'file': occs[0]['file'], 'en': occs[0]['en'], 'pl': occs[0]['pl'], 'status': 'auto'}]
+        self.assertEqual(M.propose(occs, existing=old)[0]['key'], 'cards.alarm.several_sensors_in_one_text')   # a bad kept key is re-proposed
+    # 2. resolved manual rows
+    def test_resolved_concat_ok_and_apply_writes_catalog(self):
+        rows = self.resolved(); self.assertEqual(M.verify(rows, root=self.root), [])
+        M.apply(rows, 'cards.alarm', root=self.root); self.assertEqual(lookup(cat(self.root, 'pl'), 'cards.alarm.language'), 'Język: {name}')
+    def test_resolved_concat_typo_param(self):
+        self.assertTrue(M.verify(self.resolved(en='Language: {nmae}', pl='Język: {nmae}', params=['name']), root=self.root))
+    def test_resolved_concat_wrong_text(self):
+        out = M.verify(self.resolved(en='Lang: {name}'), root=self.root); self.assertTrue([x for x in out if 'en differs' in x])
+    def test_resolved_en_pl_placeholder_mismatch(self):
+        out = M.verify(self.resolved(pl='Język: {x}', params=['name', 'x']), root=self.root); self.assertTrue([x for x in out if 'different placeholders' in x])
+    def test_resolved_undeclared_param(self):
+        self.assertTrue(M.verify(self.resolved(params=[]), root=self.root))
+    def test_not_verified_list(self):
+        rows = [dict(r) for r in self.rows]
+        for r in rows:
+            if r['file'].endswith('alarm-card.part.js') and r['manual'] in ('plural', 'array'): r['status'] = 'review'
+        nv = M.unverified(rows, root=self.root); self.assertTrue([x for x in nv if 'alarm-card.part.js:9' in x and 'array' in x]); self.assertTrue([x for x in nv if '(plural)' in x])
+        self.assertEqual(M.verify(rows, root=self.root), [])
+        self.assertEqual(M.unverified(self.rows, root=self.root), [])     # unresolved manual rows are skipped, not "unverified"
+    def test_concat_chain_with_larger_expression_is_not_verified(self):
+        p = os.path.join(self.root, 'parts', 'cards', 'alarm-card.part.js'); src = rd(self.root, 'parts', 'cards', 'alarm-card.part.js')
+        with open(p, 'w', encoding='utf-8') as f: f.write(src.replace("hgTr('Język: ', 'Language: ') + name;", "hgTr('Język: ', 'Language: ') + name.toUpperCase();"))
+        rows = M.propose(M.extract(self.root)); r = [r for r in rows if r['en'] == 'Language: '][0]; r.update(status='review')
+        self.assertTrue([x for x in M.unverified(rows, root=self.root) if 'concat' in x])
+    # 3. load-time
+    def test_load_time_detection(self):
+        lt = {o['en']: o['manual'] for o in OCCS if o['file'].endswith('hg-loadtime.part.js')}
+        for en in ('Top', 'Title', 'Object', 'Conditional', 'Template'): self.assertEqual(lt[en], 'load-time', en)
+        for en in ('Lazy', 'Map', 'Arrow', 'Arrow block', 'Inside', 'Declaration', 'Expression', 'Field', 'Static field', 'Method', 'Getter', 'Object method', 'Object getter', 'Template in function', 'Confirm', 'By default'):
+            self.assertIsNone(lt[en], en)
+    def test_load_time_rows_are_manual_and_skipped(self):
+        r = row('hg-loadtime.part.js', en='Top')[0]; self.assertEqual((r['manual'], r['status']), ('load-time', 'manual'))
+        before = rd(self.root, 'parts', 'hg-loadtime.part.js'); M.apply(self.rows, 'loadtime', root=self.root)
+        now = rd(self.root, 'parts', 'hg-loadtime.part.js').splitlines(); old = before.splitlines()
+        self.assertEqual(now[0], old[0]); self.assertIn("hgT('", now[5]); self.assertNotIn('hgTr(', now[5])
+    # 4. guards
+    def test_mixed_hgTrO_raises_and_writes_nothing(self):
+        p = os.path.join(self.root, 'parts', 'hg-edit.part.js'); src = rd(self.root, 'parts', 'hg-edit.part.js')
+        with open(p, 'w', encoding='utf-8') as f: f.write(src.replace("btn: ['Przycisk', 'Button']", "btn: [a, b]"))
+        rows = M.propose(M.extract(self.root)); before = snapshot(self.root)
+        with self.assertRaises(RuntimeError): M.apply(rows, 'edit', root=self.root)
+        self.assertEqual(snapshot(self.root), before)
+    def test_lost_hand_resolved_row_is_reported(self):
+        rows = self.resolved(); r = [r for r in rows if r['key'] == 'cards.alarm.language'][0]
+        with open(os.path.join(self.root, 'parts', 'cards', 'alarm-card.part.js'), 'w', encoding='utf-8') as f:
+            f.write(rd(self.root, 'parts', 'cards', 'alarm-card.part.js').replace("hgTr('Język: ', 'Language: ') + name", "hgT('x') + name"))
+        out = M.verify(rows, root=self.root); self.assertTrue([x for x in out if 'matches no call' in x])
+        with self.assertRaises(M.EquivalenceError): M.apply(rows, 'cards.alarm', root=self.root)
+
 if __name__ == '__main__': unittest.main()

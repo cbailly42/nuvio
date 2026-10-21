@@ -13,7 +13,10 @@ A hgTr( nested in a template argument of another hgTr is its own Occ (code insid
 extract() raises if a hgTr( / hgTrLazy( / hgTrO( in the source is neither an Occ, nor in a gateway definition / dictionary / comment / string text.
   kind    hgTr | hgTrLazy | hgTrO | dict ; start/end = character range of the call, of the `[pl, en]` entry (hgTrO) or of the
           dictionary value (dict: the PL value; en_start/en_end give the EN value when there is one)
-  manual  None | concat | plural | object | array | expr | dict-dynamic   (see § 5.2 of the spec)
+  manual  None | concat | plural | object | array | expr | dict-dynamic | load-time   (see § 5.2 of the spec)
+          load-time = an hgTr(pl, en) outside any function / method / arrow / getter / class body: it runs at module load, when the
+          catalog is not loaded yet (hgT would answer in English where hgTr answers in Polish): resolved by hand. hgTrLazy / hgTrO are
+          resolved at use time (toString / getter) and are never load-time.
   name    dictionary name (dict only) ; dkey = entry key (hgTrO entry key, dictionary key, HG_BG_SET id)
   For manual rows pl/en hold the raw source text of the arguments. For HG_PL, en is the raw HA state (= its key).
   For HG_WX_SHORT (dict-dynamic) pl is the dictionary key (the PL index text) and en its short value: not a language pair.
@@ -22,12 +25,14 @@ Key status: manual (any manual reason) | review (key may be clumsy: promoted to 
 """
 import os, re, sys, csv, json, subprocess, shutil, unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from i18n_check import lex, tr_spans   # reused as-is (note: tr_spans also reports L(...); we drop those)
+from i18n_check import lex, tr_spans
+from i18n_compile import PLURAL_SUFFIXES, flatten   # reused as-is (note: tr_spans also reports L(...); we drop those)
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COLUMNS = ['key', 'file', 'line', 'kind', 'en', 'pl', 'params', 'manual', 'status']
 DICTS = {'HG_I18N': 'nav', 'HG_WZ_T': 'wizard', 'HG_PL': 'states', 'HG_BG_SET': 'backgrounds', 'HG_WX_SHORT': 'weather'}
 MAX_SLUG, SLUG_WORDS, COMMON_MODULES = 40, 4, 3
+PLURAL_END = re.compile(r"_(%s)$" % '|'.join(PLURAL_SUFFIXES))   # the build reads a final _one/_other.. as a plural form of the key before it
 IDENT = re.compile(r"^[A-Za-z_$][\w$]*$")
 COND1 = re.compile(r"(?:[!=]==?\s*1|>\s*1)\s*\?\s*$")
 COND2 = re.compile(r"(?:[!=]==?\s*1|>\s*1)\s*\?\s*(?:hgTr(?:Lazy)?\(.*\)|'[^']*'|\"[^\"]*\")\s*:\s*$")
@@ -263,6 +268,89 @@ def scan_regions(s):
         return i
     code(0, None); return comments, text
 
+NOT_FN = ('if', 'for', 'while', 'switch', 'catch', 'with')
+def expr_end(s, i):
+    """end of an arrow's expression body starting at i: first top-level , ; or closing bracket"""
+    n = len(s)
+    while i < n:
+        c = s[i]
+        if c in '\'"`': i = skip_str(s, i); continue
+        if c == '/' and s[i + 1:i + 2] == '/': j = s.find('\n', i); i = n if j < 0 else j; continue
+        if c == '/' and s[i + 1:i + 2] == '*': j = s.find('*/', i + 2); i = n if j < 0 else j + 2; continue
+        if c in '([{': i = group_end(s, i + 1); continue
+        if c in ',;)]}': return i
+        i += 1
+    return n
+
+def function_ranges(s):
+    """character ranges that run at call time, not at module load: bodies of function / method / getter / arrow (block or expression)
+    and of classes (field initializers run at construction). Same lexical rules as scan_regions."""
+    n = len(s); ranges = []; closes = {}
+    def body_is_fn(i):
+        p = i - 1
+        while p >= 0 and s[p] in ' \t\r\n': p -= 1
+        if p >= 1 and s[p - 1:p + 1] == '=>': return True
+        if p >= 0 and s[p] == ')' and p in closes:
+            before = s[:closes[p]].rstrip()
+            m = re.search(r"([A-Za-z_$][\w$]*)$", before)
+            fn = bool(re.search(r"\bfunction\s*\*$", before)) or (bool(m) and m.group(1) not in NOT_FN)
+            if fn: ranges.append((closes[p], p + 1))   # default parameter values run at call time
+            return fn
+        return bool(re.search(r"\bclass\b[^{};]*$", s[max(0, i - 300):i]))
+    def tpl(i):
+        while i < n:
+            c = s[i]
+            if c == '\\': i += 2; continue
+            if c == '`': return i + 1
+            if c == '$' and s[i + 1:i + 2] == '{': i = code(i + 2, '}'); continue
+            i += 1
+        return n
+    def code(i, end):
+        stack = []
+        while i < n:
+            c = s[i]
+            if c in '\'"':
+                j = i + 1
+                while j < n and s[j] != c:
+                    if s[j] == '\\': j += 1
+                    if j < n and s[j] == '\n': break
+                    j += 1
+                i = j + 1; continue
+            if c == '`': i = tpl(i + 1); continue
+            if c == '/' and s[i + 1:i + 2] == '/': j = s.find('\n', i); i = n if j < 0 else j; continue
+            if c == '/' and s[i + 1:i + 2] == '*': j = s.find('*/', i + 2); i = n if j < 0 else j + 2; continue
+            if c == '/':
+                k = i - 1
+                while k >= 0 and s[k] in ' \t': k -= 1
+                if k < 0 or s[k] in '(,=:[!&|?{};\n' or s[max(0, k - 5):k + 1].endswith('return'):
+                    j = i + 1; cls = False
+                    while j < n and s[j] != '\n':
+                        if s[j] == '\\': j += 2; continue
+                        if s[j] == '[': cls = True
+                        elif s[j] == ']': cls = False
+                        elif s[j] == '/' and not cls: break
+                        j += 1
+                    i = j + 1; continue
+            if c == '=' and s[i + 1:i + 2] == '>':
+                k = i - 1
+                while k >= 0 and s[k] in ' \t\r\n': k -= 1
+                if k >= 0 and s[k] == ')' and k in closes: ranges.append((closes[k], k + 1))   # default parameter values run at call time
+                j = i + 2
+                while j < n and s[j] in ' \t\r\n': j += 1
+                if j < n and s[j] != '{': ranges.append((j, expr_end(s, j)))
+                i += 2; continue
+            if c in '([{': stack.append((c, i, c == '{' and body_is_fn(i)))
+            elif c in ')]}':
+                if not stack:
+                    if c == end: return i + 1
+                else:
+                    o, pos, fn = stack.pop()
+                    if c == ')': closes[i] = pos
+                    if fn: ranges.append((pos, i + 1))
+            i += 1
+        return n
+    code(0, None); return ranges
+
 CALL = re.compile(r"\bhgTr(?:Lazy|O)?\s*\(")
 
 def gateway_spans(s):
@@ -293,6 +381,9 @@ def extract_file(root, path, check=True):
             continue
         pl, en, params, man = classify(s, spans, a, e)
         occs.append({'file': file, 'line': line_of(s, a), 'start': a, 'end': e, 'kind': fn, 'pl': pl, 'en': en, 'params': params, 'manual': man, 'name': None, 'dkey': None})
+    fns = function_ranges(s)
+    for o in occs:
+        if o['kind'] == 'hgTr' and not o['manual'] and not any(a <= o['start'] < b for a, b in fns): o['manual'] = 'load-time'
     if check: completeness(file, s, occs, dspans, gate, comments, text)
     return occs
 
@@ -356,7 +447,8 @@ def propose(occs, existing=None):
     for o in occs:
         if o['kind'] != 'dict' and not o['manual']: mods.setdefault((o['pl'], o['en']), set()).add(o['file'])
     kept_f, kept_t = {}, {}
-    for r in existing or []:
+    existing = [r for r in existing or [] if not PLURAL_END.search(r['key'])]   # a key that the build would read as a plural form is proposed again
+    for r in existing:
         e = (r['key'], r.get('status')); kept_f.setdefault((r['file'], r['en'], r['pl']), []).append(e); kept_t.setdefault((r['en'], r['pl']), []).append(e)
     used = {}; prefixes = set()
     def reg(k):
@@ -365,7 +457,7 @@ def propose(occs, existing=None):
     def free(k):
         p = k.split('.')
         return k not in used and k not in prefixes and not any('.'.join(p[:i]) in used for i in range(1, len(p)))
-    for r in existing or []: reg(r['key'])
+    for r in existing: reg(r['key'])
     ident = {}; rows = []; cnt = {}; seen = {}
     for o in occs:
         r = dict(o); why = []; key = None
@@ -375,12 +467,14 @@ def propose(occs, existing=None):
             else: base_leaf = snake(o['dkey'])
             if o['name'] in ('HG_I18N', 'HG_PL') and base_leaf != o['dkey']: why.append('rewritten')
             if not base_leaf: base_leaf = 'text'; why.append('empty')
+            if PLURAL_END.search(base_leaf): base_leaf += '_text'; why.append('plural-suffix')
             ns_key = ns + '.' + base_leaf; idn = (ns, o['dkey'])
         else:
             files = mods.get((o['pl'], o['en']), ())
             common = not o['manual'] and len(files) >= COMMON_MODULES
             ns = 'common' if common else namespace(o['file'])
             sl = slug(o['en']) or slug(o['pl']) or 'text'; why += slug_flags(o['en']) if slug(o['en']) else ['empty']
+            if PLURAL_END.search(sl): sl += '_text'; why.append('plural-suffix')
             if common: why.append('common')
             ns_key = ns + '.' + sl; idn = (ns, o['pl'], o['en'])
         kst = None
@@ -430,7 +524,8 @@ PH = re.compile(r"\{([A-Za-z_$][\w$]*)\}")
 def join_rows(occs, rows):
     """attach to every extracted Occ its CSV row (stable identity: same file + kind + original text, in order; then same file + kind + line,
     for rows whose en/pl the human edited). The result keeps the Occ fields (ranges, original pl/en/params as src_*) and takes
-    key / en / pl / params / status from the CSV. Returns (joined, unmatched occs). CSV rows without an Occ (already migrated) are ignored."""
+    key / en / pl / params / status from the CSV. Returns (joined, unmatched occs, unmatched rows): rows without an Occ are
+    migrated ones (source already rewritten) or hand-edited ones; plan() decides which."""
     by_file = {}
     for r in rows: by_file.setdefault(r['file'], []).append(r)
     used = set(); out = []; lost = []; pending = []
@@ -446,7 +541,7 @@ def join_rows(occs, rows):
     for o, c in sorted(out, key=lambda x: (x[0]['file'], x[0]['start'], x[0]['end'])):
         j = dict(o); j.update(key=c['key'], en=c['en'], pl=c['pl'], params=list(c['params']), status=c['status'])
         j.update(src_pl=o['pl'], src_en=o['en'], src_params=list(o['params'])); joined.append(j)
-    return joined, lost
+    return joined, lost, [r for r in rows if id(r) not in used]
 
 def migrates(j): return j['status'] != 'manual'              # unresolved manual rows are skipped
 def rewrites(j): return migrates(j) and not j['manual'] and j['kind'] != 'dict'   # hand-resolved manual rows and dictionaries: catalogs only
@@ -455,36 +550,125 @@ def tokens(text, names):
     """text with each {name} (name in names) replaced by a token numbered by the name's position in names"""
     return PH.sub(lambda m: f'\0{names.index(m.group(1))}\0' if m.group(1) in names else m.group(0), text)
 
-def check_row(j):
-    """discrepancies of one joined row (list of str); the equivalence test of spec 3.3"""
-    where = f"{j['file']}:{j['line']} [{j['key']}]"; bad = []
-    if not KEY_RE.match(j['key']): bad.append(f"{where}: invalid key {j['key']!r} (lowercase snake_case segments, dotted)")
-    if not rewrites(j) and not (migrates(j) and j['kind'] == 'dict'): return bad
-    sp, cp = j['src_params'], j['params']
-    if len(sp) != len(cp): bad.append(f"{where}: {len(cp)} catalog parameter(s) {cp} for {len(sp)} in the source {sp}"); return bad
-    if j['kind'] == 'hgTrO' and cp: bad.append(f"{where}: hgTrO entries take no parameters"); return bad
+def esc_at(s, k):
+    n = 0
+    while k - 1 - n >= 0 and s[k - 1 - n] == '\\': n += 1
+    return n % 2 == 1
+
+def concat_render(s, o):
+    """the source of a `hgTr(..) + x + 'lit'` chain as {lang: text with {ident} for each bare identifier} and its identifiers in order,
+    or None (with the reason) when the chain holds anything but string literals and bare identifiers"""
+    ID = re.compile(r"[A-Za-z_$][\w$]*")
+    left = []; pos = o['start']
+    while True:
+        q = pos
+        while q > 0 and s[q - 1] in ' \t\r\n': q -= 1
+        if q < 2 or s[q - 1] != '+' or s[q - 2] == '+': break
+        q -= 1
+        while q > 0 and s[q - 1] in ' \t\r\n': q -= 1
+        ch = s[q - 1:q]
+        if ch and ch in '\'"`':
+            k = q - 2
+            while k >= 0 and not (s[k] == ch and not esc_at(s, k)): k -= 1
+            if k < 0: return None, 'unterminated literal'
+            body = s[k + 1:q - 1]
+            if ch == '`' and '${' in body: return None, 'template literal with ${}'
+            left.append(('lit', unescape(body))); pos = k
+        else:
+            m = re.search(r"[A-Za-z_$][\w$]*$", s[:q])
+            if not m or s[m.start() - 1:m.start()] in ('.', '$') : return None, 'operand is not a literal or a bare identifier'
+            left.append(('id', m.group())); pos = m.start()
+    start = pos
+    right = []; pos = o['end']
+    while True:
+        q = pos
+        while q < len(s) and s[q] in ' \t\r\n': q += 1
+        if s[q:q + 1] != '+' or s[q + 1:q + 2] == '+': break
+        q += 1
+        while q < len(s) and s[q] in ' \t\r\n': q += 1
+        if s[q:q + 1] and s[q] in '\'"`':
+            e = skip_str(s, q); body = s[q + 1:e - 1]
+            if s[q] == '`' and '${' in body: return None, 'template literal with ${}'
+            right.append(('lit', unescape(body))); pos = e
+        else:
+            m = ID.match(s, q)
+            if not m or re.match(r"\s*[.(\[`]", s[m.end():]): return None, 'operand is not a literal or a bare identifier'
+            right.append(('id', m.group())); pos = m.end()
+    p = start
+    while p > 0 and s[p - 1] in ' \t\r\n': p -= 1
+    if p and s[p - 1] not in '=(,:?{;[}&|!>' and not s[:p].endswith('return'): return None, 'concatenation is part of a larger expression'
+    q = pos
+    while q < len(s) and s[q] in ' \t\r\n': q += 1
+    if q < len(s) and s[q] not in ';),]}:?': return None, 'concatenation is part of a larger expression'
+    names = []
+    for kind, v in list(reversed(left)) + [('call', None)] + right:
+        for n in (o['src_params'] if kind == 'call' else [v] if kind == 'id' else []):
+            if n not in names: names.append(n)
+    out = {}
     for lang in ('en', 'pl'):
-        a, b = tokens(j['src_' + lang], sp), tokens(j[lang], cp)
-        if a != b: bad.append(f"{where}: {lang} differs\n    source:  {j['src_' + lang]!r}\n    catalog: {j[lang]!r}")
+        out[lang] = ''.join(v if k == 'lit' else '{' + v + '}' for k, v in list(reversed(left))) + o['src_' + lang] + ''.join(v if k == 'lit' else '{' + v + '}' for k, v in right)
+    return (out, names), None
+
+def check_row(j, src):
+    """-> (discrepancies, unverified reason or None) for one joined row; the equivalence test of spec 3.3. src(file) -> source text"""
+    where = f"{j['file']}:{j['line']} [{j['key']}]"; bad = []; nv = None
+    if not KEY_RE.match(j['key']): bad.append(f"{where}: invalid key {j['key']!r} (lowercase snake_case segments, dotted)")
+    if PLURAL_END.search(j['key']): bad.append(f"{where}: key ends in a plural suffix, the build reads it as a plural form of {PLURAL_END.sub('', j['key'])!r}")
+    if not migrates(j): return bad, nv
+    cp = j['params']
+    for lang in ('en', 'pl'):
         for m in PH.finditer(j[lang]):
-            if m.group(1) not in cp: bad.append(f"{where}: {lang} text uses {{{m.group(1)}}} which is not a declared parameter (renders empty)")
-    return bad
+            if m.group(1) not in cp: bad.append(f"{where}: {lang} text uses {{{m.group(1)}}} which is not a declared parameter {cp} (renders empty)")
+    if set(PH.findall(j['en'])) != set(PH.findall(j['pl'])): bad.append(f"{where}: EN and PL use different placeholders: {sorted(set(PH.findall(j['en'])))} vs {sorted(set(PH.findall(j['pl'])))}")
+    def compare(texts, sp):
+        if len(sp) != len(cp): bad.append(f"{where}: {len(cp)} catalog parameter(s) {cp} for {len(sp)} in the source {sp}"); return
+        for lang in ('en', 'pl'):
+            if tokens(texts[lang], sp) != tokens(j[lang], cp): bad.append(f"{where}: {lang} differs\n    source:  {texts[lang]!r}\n    catalog: {j[lang]!r}")
+    if rewrites(j) or (j['kind'] == 'dict' and not j['manual']):
+        if j['kind'] == 'hgTrO' and cp: bad.append(f"{where}: hgTrO entries take no parameters"); return bad, nv
+        compare({'en': j['src_en'], 'pl': j['src_pl']}, j['src_params'])
+    elif j['manual'] == 'concat' and j['kind'] in ('hgTr', 'hgTrLazy'):
+        r, why = concat_render(src(j['file']), j)
+        if r: compare(r[0], r[1])
+        else: nv = f"{where} (concat: {why})"
+    else: nv = f"{where} ({j['manual']})"
+    return bad, nv
 
 def file_ns(j): return namespace(j['file'])
 
+def read_catalog(root, code):
+    p = os.path.join(root, 'locales', code + '.json')
+    if not os.path.exists(p): return {}
+    with open(p, encoding='utf-8') as f: return json.load(f)
+
 def plan(rows, root, ns=None):
-    """-> (joined rows in scope, discrepancies). Scope = rows whose FILE belongs to ns (all when ns is None)."""
-    joined, lost = join_rows(extract(root), rows); bad = []
-    scope = [j for j in joined if ns is None or file_ns(j) == ns]
+    """-> (joined rows in scope, discrepancies, not verified). Scope = rows whose FILE belongs to ns (all when ns is None)."""
+    joined, lost, spare = join_rows(extract(root), rows); bad = []; nv = []; cache = {}
+    def src(f):
+        if f not in cache:
+            with open(os.path.join(root, f), encoding='utf-8') as fh: cache[f] = fh.read()
+        return cache[f]
+    inscope = lambda f: ns is None or namespace(f) == ns
+    scope = [j for j in joined if inscope(j['file'])]
     for o in lost:
-        if (ns is None or namespace(o['file']) == ns) and not o['manual']:
+        if inscope(o['file']) and not o['manual']:
             bad.append(f"{o['file']}:{o['line']}: no row in the table for {o['kind']} {o['pl']!r} / {o['en']!r} (stale table: re-run propose)")
     for j in scope:
-        if migrates(j): bad += check_row(j)
-    return scope, bad
+        b, n = check_row(j, src); bad += b
+        if n: nv.append(n)
+    flat = {c: flatten(read_catalog(root, c)) for c in ('en', 'pl')}
+    for r in spare:      # a hand-resolved row that no longer matches any call: fine once its text is in the catalogs, a loss otherwise
+        if inscope(r['file']) and r['status'] != 'manual' and r['manual']:
+            if not all(flat[c].get(r['key']) == r[c] for c in ('en', 'pl')):
+                bad.append(f"{r['file']}:{r['line']} [{r['key']}]: hand-resolved row ({r['manual']}) matches no call in the source and its text is not in the catalogs")
+    return scope, bad, nv
 
 def verify(rows, root=None, ns=None):
     return plan(rows, root or os.path.join(R, 'src'), ns)[1]
+
+def unverified(rows, root=None, ns=None):
+    """migrating rows whose original cannot be compared mechanically (plural / object / array / expr / unsupported concat): covered by the text snapshot"""
+    return plan(rows, root or os.path.join(R, 'src'), ns)[2]
 
 def call_text(j):
     key = j['key']
@@ -524,7 +708,7 @@ def apply(rows, ns, root=None):
     """Migrate namespace ns: a row belongs to ns by its FILE's namespace (so a module's common.* rows migrate with the module).
     Atomic: verify, merge and rewrite are computed in memory, syntax-checked, and only then written."""
     root = root or os.path.join(R, 'src')
-    scope, bad = plan(rows, root, ns)
+    scope, bad, _ = plan(rows, root, ns)
     if bad: raise EquivalenceError(f'i18n_migrate: {len(bad)} discrepancy(ies) in namespace {ns!r}, nothing written:\n' + '\n'.join(bad))
     cats = {}
     for code in ('en', 'pl'):
@@ -532,6 +716,10 @@ def apply(rows, ns, root=None):
     for j in scope:
         if migrates(j):
             for code in ('en', 'pl'): nested_set(cats[code], j['key'], j[code], code)
+    for code in ('en', 'pl'):
+        fl = flatten(cats[code])
+        for j in scope:
+            if migrates(j) and not isinstance(fl.get(j['key']), str): raise RuntimeError(f"catalog {code}: key {j['key']} is not a plain text entry once flattened (plural suffix or collision)")
     srcs = {}
     for j in scope:
         if rewrites(j): srcs.setdefault(j['file'], []).append(j)
@@ -557,8 +745,10 @@ def rename_hgTrO(s):
         a = m.start()
         if re.search(r"\bconst\s+$", s[max(0, a - 12):a]): continue
         sp = split_top(s, m.end(), group_end(s, m.end()) - 1)
-        if len(sp) == 2 and s[sp[1][0]] == '{' and all(s[va] in '\'"' for _, (va, _vb) in obj_entries(s, sp[1][0] + 1, sp[1][1] - 1)):
-            out.append(s[last:a]); out.append('hgTO('); last = m.end()
+        if len(sp) == 2 and s[sp[1][0]] == '{':
+            kinds = {s[va] == '[' for _, (va, _vb) in obj_entries(s, sp[1][0] + 1, sp[1][1] - 1)}
+            if kinds == {True, False}: raise RuntimeError(f"i18n_migrate: hgTrO call at offset {a} has both migrated and unmigrated entries: migrate or hand-edit all of them")
+            if kinds == {False}: out.append(s[last:a]); out.append('hgTO('); last = m.end()
     out.append(s[last:]); return ''.join(out)
 
 def main(argv):
@@ -570,10 +760,9 @@ def main(argv):
         if cmd == 'apply':
             if not ns: print('apply needs --ns <ns>'); return 2
             apply(rows, ns, root=root); print(f'applied namespace {ns}'); return 0
-        scope, bad = plan(rows, root, ns)
-        from collections import Counter
-        per = Counter(namespace(j['file']) for j in scope); bn = Counter(b.split(':')[0] for b in bad)
-        print('\n'.join(bad)); print(f'{len(scope)} rows joined, {len(bad)} discrepancy(ies)'); return 1 if bad else 0
+        scope, bad, nv = plan(rows, root, ns)
+        print('\n'.join(bad)); print(f'NOT VERIFIED: {len(nv)} rows (no mechanical comparison; cover them with the text snapshot)'); print('\n'.join('  ' + x for x in nv))
+        print(f'{len(scope)} rows joined, {len(bad)} discrepancy(ies), {len(nv)} not verified'); return 1 if bad else 0
     out = os.path.abspath(opt('--out', os.path.join(R, 'tools', 'i18n_migration_table.csv')))
     existing = read_csv(out) if os.path.exists(out) and '--fresh' not in a else None
     rows = propose(extract(root), existing); write_csv(rows, out)
