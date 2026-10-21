@@ -477,10 +477,27 @@ cards.media_mini.play,parts/cards/media-mini-card.part.js,11,hgTr,Play,Odtwórz,
 common.next_track,parts/cards/media-mini-card.part.js,11,hgTr,Next,Następny,,,auto
 cards.media_mini.picker_name,parts/cards/media-mini-card.part.js,15,hgTr,Home Glass – Mini player,Home Glass – Mini odtwarzacz,,load-time,auto
 cards.media_mini.picker_description,parts/cards/media-mini-card.part.js,15,hgTr,"Artwork, title and buttons in one row","Okładka, tytuł i przyciski w jednym wierszu",,load-time,auto
-cards.month.january_february_march_april,parts/cards/month-card.part.js,1,hgTr,"['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']","['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']",,array,manual
+cards.month.months.january,parts/cards/month-card.part.js,1,hgTr,January,Styczeń,,array,auto
+cards.month.months.february,parts/cards/month-card.part.js,1,hgTr,February,Luty,,array,auto
+cards.month.months.march,parts/cards/month-card.part.js,1,hgTr,March,Marzec,,array,auto
+cards.month.months.april,parts/cards/month-card.part.js,1,hgTr,April,Kwiecień,,array,auto
+cards.month.months.may,parts/cards/month-card.part.js,1,hgTr,May,Maj,,array,auto
+cards.month.months.june,parts/cards/month-card.part.js,1,hgTr,June,Czerwiec,,array,auto
+cards.month.months.july,parts/cards/month-card.part.js,1,hgTr,July,Lipiec,,array,auto
+cards.month.months.august,parts/cards/month-card.part.js,1,hgTr,August,Sierpień,,array,auto
+cards.month.months.september,parts/cards/month-card.part.js,1,hgTr,September,Wrzesień,,array,auto
+cards.month.months.october,parts/cards/month-card.part.js,1,hgTr,October,Październik,,array,auto
+cards.month.months.november,parts/cards/month-card.part.js,1,hgTr,November,Listopad,,array,auto
+cards.month.months.december,parts/cards/month-card.part.js,1,hgTr,December,Grudzień,,array,auto
 common.calendar,parts/cards/month-card.part.js,6,hgTr,Calendar,Kalendarz,,,auto
-cards.month.mon_tue_wed_thu,parts/cards/month-card.part.js,51,hgTr,"['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']","['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd']",,array,manual
-cards.month.events_ev_length,parts/cards/month-card.part.js,56,hgTr,", events: ${ev.length}",", wydarzenia: ${ev.length}",,expr,manual
+cards.month.weekdays_short.mon,parts/cards/month-card.part.js,51,hgTr,Mon,Pn,,array,auto
+cards.month.weekdays_short.tue,parts/cards/month-card.part.js,51,hgTr,Tue,Wt,,array,auto
+cards.month.weekdays_short.wed,parts/cards/month-card.part.js,51,hgTr,Wed,Śr,,array,auto
+cards.month.weekdays_short.thu,parts/cards/month-card.part.js,51,hgTr,Thu,Cz,,array,auto
+cards.month.weekdays_short.fri,parts/cards/month-card.part.js,51,hgTr,Fri,Pt,,array,auto
+cards.month.weekdays_short.sat,parts/cards/month-card.part.js,51,hgTr,Sat,Sb,,array,auto
+cards.month.weekdays_short.sun,parts/cards/month-card.part.js,51,hgTr,Sun,Nd,,array,auto
+cards.month.events_count,parts/cards/month-card.part.js,56,hgTr,events: {count},wydarzenia: {count},count,expr,auto
 cards.month.all_day,parts/cards/month-card.part.js,63,hgTr,all day,cały dzień,,,auto
 cards.month.no_events,parts/cards/month-card.part.js,63,hgTr,No events,Brak wydarzeń,,,auto
 common.loading,parts/cards/month-card.part.js,63,hgTr,Loading…,Wczytywanie…,,,auto

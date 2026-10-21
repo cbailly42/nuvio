@@ -546,6 +546,42 @@
       "picker_name": "Home Glass – Mini odtwarzacz",
       "play": "Odtwórz"
     },
+    "month": {
+      "add_a_calendar_integration": "Dodaj integrację kalendarza w Home Assistant.",
+      "all_day": "cały dzień",
+      "events_count": "wydarzenia: {count}",
+      "months": {
+        "april": "Kwiecień",
+        "august": "Sierpień",
+        "december": "Grudzień",
+        "february": "Luty",
+        "january": "Styczeń",
+        "july": "Lipiec",
+        "june": "Czerwiec",
+        "march": "Marzec",
+        "may": "Maj",
+        "november": "Listopad",
+        "october": "Październik",
+        "september": "Wrzesień"
+      },
+      "next_month": "Następny miesiąc",
+      "no_calendars": "Brak kalendarzy",
+      "no_events": "Brak wydarzeń",
+      "open_ha_calendar": "Otwórz kalendarz HA",
+      "open_home_assistant_calendar": "Otwórz kalendarz Home Assistant",
+      "picker_description": "Mini-kalendarz miesiąca z kropkami wydarzeń",
+      "picker_name": "Home Glass – Miesiąc",
+      "previous_month": "Poprzedni miesiąc",
+      "weekdays_short": {
+        "fri": "Pt",
+        "mon": "Pn",
+        "sat": "Sb",
+        "sun": "Nd",
+        "thu": "Cz",
+        "tue": "Wt",
+        "wed": "Śr"
+      }
+    },
     "note": {
       "add_text_in_the": "Dodaj treść w polu „Treść”",
       "empty_note": "Pusta notatka",
