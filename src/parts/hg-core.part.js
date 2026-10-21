@@ -321,5 +321,7 @@ const hgReg = (tag, cls, name, desc) => {
     const w = function () { if (HG_VIS) HG_VIS.unobserve(this); return dc.call(this); }; w.__hgVis = true; cls.prototype.disconnectedCallback = w;
   }
   if (!customElements.get(tag)) customElements.define(tag, cls);
-  if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, name, description: desc, preview: false });
+  /* name / desc: tekst albo hgTLazy (rozwiązywane przy odczycie, w bieżącym języku – lista kart HA czyta je później niż rejestracja) */
+  const lz = (v) => (v == null ? v : String(v));
+  if (!window.customCards.find((c) => c.type === tag)) window.customCards.push({ type: tag, get name() { return lz(name); }, get description() { return lz(desc); }, preview: false });
 };

@@ -124,3 +124,22 @@ test('edit mode: language switch repaints the edit bar, Look sheet and cards onl
   assert.ok(seen.length >= 3 && seen.every((s) => s.endsWith(':pl')), seen.join(','));
   assert.ok(['_eBar:pl', '_eLook:pl', '_eRefresh:pl', '_eToast:pl'].every((s) => seen.includes(s)), seen.join(','));
 });
+
+test('hgReg: customCards name / description are enumerable getters resolved at read time (lazy values, R10)', () => {
+  const m = mk({ lang: 'en', names: ['hgReg', 'hgTLazy'] });
+  class C extends m.HGBase {}
+  let lab = 'A'; m.hgReg('hg-x-card', C, { toString: () => lab }, { toString: () => 'D' + lab });
+  const e = m.window.customCards.find((c) => c.type === 'hg-x-card');
+  assert.equal(e.name, 'A'); assert.equal(e.description, 'DA');
+  lab = 'B'; assert.equal(e.name, 'B'); assert.equal(e.description, 'DB'); assert.equal(typeof e.name, 'string');
+  assert.deepEqual(Object.keys(e), ['type', 'name', 'description', 'preview']);
+  assert.deepEqual(JSON.parse(JSON.stringify(e)), { type: 'hg-x-card', name: 'B', description: 'DB', preview: false });
+  /* hgTLazy: the catalog index resolves in the language active when HA reads the list */
+  m.hgReg('hg-y-card', class extends m.HGBase {}, m.hgTLazy(0), 'plain');
+  const y = m.window.customCards.find((c) => c.type === 'hg-y-card');
+  assert.equal(y.name, 'Save'); m.HGI18n.cache.pl = PL; m.HGI18n.code = 'pl'; assert.equal(y.name, 'Zapisz'); assert.equal(y.description, 'plain');
+  /* plain strings and a missing description as before; one entry per tag */
+  m.hgReg('hg-z-card', class extends m.HGBase {}, 'Z'); const z = m.window.customCards.find((c) => c.type === 'hg-z-card');
+  assert.equal(z.name, 'Z'); assert.equal(z.description, undefined);
+  m.hgReg('hg-x-card', C, 'again', 'again'); assert.equal(m.window.customCards.filter((c) => c.type === 'hg-x-card').length, 1);
+});
