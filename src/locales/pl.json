@@ -32,7 +32,9 @@
     "calendar": "Kalendarz",
     "cancel": "Anuluj",
     "close": "Zamknij",
+    "cooling": "Chłodzenie",
     "fuel_prices": "Ceny paliw",
+    "heating": "Grzanie",
     "hidden_suffix": " · ukryty",
     "hide": "Ukryj",
     "household": "Domownicy",
@@ -40,6 +42,7 @@
     "map": "Mapa",
     "media": "Multimedia",
     "name": "Nazwa",
+    "off_fem": "Wyłączona",
     "save": "Zapisz",
     "state_unavailable": "niedostępne",
     "state_unavailable_masc": "niedostępny",
@@ -228,6 +231,10 @@
     "calendar": {
       "fetch_error": "błąd pobierania",
       "untitled": "(bez tytułu)"
+    },
+    "climate_modes": {
+      "drying": "Osuszanie",
+      "fan_only": "Wentylacja"
     }
   },
   "states": {

@@ -32,7 +32,9 @@
     "calendar": "Calendar",
     "cancel": "Cancel",
     "close": "Close",
+    "cooling": "Cooling",
     "fuel_prices": "Fuel prices",
+    "heating": "Heating",
     "hidden_suffix": " · hidden",
     "hide": "Hide",
     "household": "Household",
@@ -40,6 +42,7 @@
     "map": "Map",
     "media": "Media",
     "name": "Name",
+    "off_fem": "Off",
     "save": "Save",
     "state_unavailable": "unavailable",
     "state_unavailable_masc": "unavailable",
@@ -228,6 +231,10 @@
     "calendar": {
       "fetch_error": "fetch error",
       "untitled": "(untitled)"
+    },
+    "climate_modes": {
+      "drying": "Drying",
+      "fan_only": "Fan only"
     }
   },
   "states": {
