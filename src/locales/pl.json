@@ -28,6 +28,7 @@
     "zachod_slonca": "Zachód słońca"
   },
   "common": {
+    "add": "Dodaj",
     "add_widget": "Dodaj widżet",
     "ago_days_short": "{d} dni temu",
     "ago_hours": "{h} godz. temu",

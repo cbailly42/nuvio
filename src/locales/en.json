@@ -28,6 +28,7 @@
     "zachod_slonca": "Sunset"
   },
   "common": {
+    "add": "Add",
     "add_widget": "Add widget",
     "ago_days_short": "{d} d ago",
     "ago_hours": "{h} h ago",
