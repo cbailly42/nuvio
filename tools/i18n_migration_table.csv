@@ -433,8 +433,8 @@ cards.light.toggle,parts/cards/light-card.part.js,32,hgTr,Toggle,Przełącz,,,au
 common.expand,parts/cards/light-card.part.js,34,hgTr,Expand,Rozwiń,,,auto
 cards.light.unavailable,parts/cards/light-card.part.js,35,hgTr, – unavailable, – niedostępne,,,auto
 common.brightness,parts/cards/light-card.part.js,36,hgTr,Brightness,Jasność,,,auto
-cards.light.home_glass_light,parts/cards/light-card.part.js,71,hgTr,Home Glass – Light,Home Glass – Oświetlenie,,load-time,manual
-cards.light.light_brightness_slider,parts/cards/light-card.part.js,71,hgTr,Light brightness slider,Suwak jasności światła,,load-time,manual
+cards.light.picker_name,parts/cards/light-card.part.js,71,hgTr,Home Glass – Light,Home Glass – Oświetlenie,,load-time,auto
+cards.light.picker_description,parts/cards/light-card.part.js,71,hgTr,Light brightness slider,Suwak jasności światła,,load-time,auto
 common.open,parts/cards/link-card.part.js,3,hgTr,Open,Otwórz,,,auto
 cards.lock.choose_a_lock,parts/cards/lock-card.part.js,9,hgTr,Choose a lock,Wybierz zamek,,,auto
 common.more,parts/cards/lock-card.part.js,12,hgTr,More,Więcej,,,auto

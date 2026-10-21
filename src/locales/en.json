@@ -473,6 +473,13 @@
       "picker_description": "Switch, brightness and colour temperature",
       "picker_name": "Home Glass – Light",
       "warm": "Warm"
+    },
+    "light": {
+      "lighting": "Lighting",
+      "picker_description": "Light brightness slider",
+      "picker_name": "Home Glass – Light",
+      "toggle": "Toggle",
+      "unavailable": " – unavailable"
     }
   },
   "common": {

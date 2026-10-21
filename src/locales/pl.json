@@ -477,6 +477,13 @@
       "picker_description": "Włącznik, jasność i barwa",
       "picker_name": "Home Glass – Światło",
       "warm": "Ciepłe"
+    },
+    "light": {
+      "lighting": "Oświetlenie",
+      "picker_description": "Suwak jasności światła",
+      "picker_name": "Home Glass – Oświetlenie",
+      "toggle": "Przełącz",
+      "unavailable": " – niedostępne"
     }
   },
   "common": {
