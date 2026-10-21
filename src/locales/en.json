@@ -542,6 +542,13 @@
       "picker_name": "Home Glass – Power",
       "power_sensors_unavailable": "Power sensors unavailable",
       "reports": "Reports"
+    },
+    "progress": {
+      "choose_a_sensor": "Choose a sensor",
+      "high": "High",
+      "low": "Low",
+      "picker_description": "A value on a thick bar with thresholds",
+      "picker_name": "Nuvio – Progress bar"
     }
   },
   "common": {

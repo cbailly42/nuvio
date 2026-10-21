@@ -650,8 +650,8 @@ cards.progress.low,parts/cards/progress-card.part.js,10,hgTr,Low,Niskie,,,auto
 common.medium,parts/cards/progress-card.part.js,10,hgTr,Medium,Średnie,,,auto
 cards.progress.high,parts/cards/progress-card.part.js,10,hgTr,High,Wysokie,,,auto
 common.details,parts/cards/progress-card.part.js,11,hgTr,Details,Szczegóły,,,auto
-cards.progress.nuvio_progress_bar,parts/cards/progress-card.part.js,16,hgTr,Nuvio – Progress bar,Nuvio – Pasek postępu,,load-time,manual
-cards.progress.a_value_on_a,parts/cards/progress-card.part.js,16,hgTr,A value on a thick bar with thresholds,Wartość na grubym pasku z progami,,load-time,manual
+cards.progress.picker_name,parts/cards/progress-card.part.js,16,hgTr,Nuvio – Progress bar,Nuvio – Pasek postępu,,load-time,auto
+cards.progress.picker_description,parts/cards/progress-card.part.js,16,hgTr,A value on a thick bar with thresholds,Wartość na grubym pasku z progami,,load-time,auto
 common.air_quality,parts/cards/purifier-card.part.js,16,hgTr,Air quality,Jakość powietrza,,,auto
 cards.purifier.hg_aq_pl_k,parts/cards/purifier-card.part.js,57,hgTr,"HG_AQ_PL[k] ? String(m).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase()) : String(m).replace(/_/g, ' ')","HG_AQ_PL[k] || String(m).replace(/_/g, ' ')",,expr,manual
 cards.purifier.en,parts/cards/purifier-card.part.js,58,hgTr,en,pl,,expr,manual

@@ -546,6 +546,13 @@
       "picker_name": "Home Glass – Moc",
       "power_sensors_unavailable": "Czujniki mocy niedostępne",
       "reports": "Raporty"
+    },
+    "progress": {
+      "choose_a_sensor": "Wybierz czujnik",
+      "high": "Wysokie",
+      "low": "Niskie",
+      "picker_description": "Wartość na grubym pasku z progami",
+      "picker_name": "Nuvio – Pasek postępu"
     }
   },
   "common": {
