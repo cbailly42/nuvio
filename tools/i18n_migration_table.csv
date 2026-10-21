@@ -926,8 +926,8 @@ common.state_unavailable_masc,parts/cards/scenes-card.part.js,38,hgTr,unavailabl
 cards.scenes.running,parts/cards/scenes-card.part.js,38,hgTr,running…,działa…,,,auto
 cards.scenes.started,parts/cards/scenes-card.part.js,38,hgTr,started,uruchomiono,,,auto
 cards.scenes.run,parts/cards/scenes-card.part.js,38,hgTr,run,uruchom,,,auto
-cards.scenes.home_glass_scenes,parts/cards/scenes-card.part.js,55,hgTr,Home Glass – Scenes,Home Glass – Sceny,,load-time,manual
-cards.scenes.scripts_as_buttons_with,parts/cards/scenes-card.part.js,55,hgTr,Scripts as buttons with a confirmation animation,Skrypty jako przyciski z animacją potwierdzenia,,load-time,manual
+cards.scenes.picker_name,parts/cards/scenes-card.part.js,55,hgTr,Home Glass – Scenes,Home Glass – Sceny,,load-time,auto
+cards.scenes.picker_description,parts/cards/scenes-card.part.js,55,hgTr,Scripts as buttons with a confirmation animation,Skrypty jako przyciski z animacją potwierdzenia,,load-time,auto
 cards.script.tap_to_run,parts/cards/script-card.part.js,4,hgTr,Tap to run,"Dotknij, aby uruchomić",,,auto
 cards.script.script_unavailable,parts/cards/script-card.part.js,30,hgTr,Script unavailable,Skrypt niedostępny,,,auto
 cards.script.running,parts/cards/script-card.part.js,30,hgTr,Running…,Działa…,,,auto

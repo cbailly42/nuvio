@@ -2,7 +2,7 @@
 /* hg-scenes-card: skrypty jako duże pigułki. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
    gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
 class HGScenesCard extends HGBase {
-  defaults() { return { title: hgTr('Sceny', 'Scenes'), icon: 'mdi:play-circle-outline', scripts: [] }; }
+  defaults() { return { title: hgT('cards.scenes.scenes'), icon: 'mdi:play-circle-outline', scripts: [] }; }
   ents() { return this._config.scripts.map((x) => x.entity); }
   _extraSig() { return [this._ok || '']; }
   css() {
@@ -35,7 +35,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const items = c.scripts.map((x, i) => {
       const s = H.st(this._hass, x.entity), un = !H.ok(s), run = s && s.state === 'on', ok = this._ok === x.entity && !run;
       const nm = x.name || (s && s.attributes.friendly_name) || x.entity;
-      const sub = un ? hgTr('niedostępny', 'unavailable') : run ? hgTr('działa…', 'running…') : ok ? hgTr('uruchomiono', 'started') : hgTr('uruchom', 'run');
+      const sub = un ? hgT('common.state_unavailable_masc') : run ? hgT('cards.scenes.running') : ok ? hgT('cards.scenes.started') : hgT('cards.scenes.run');
       return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.esc(nm)}: ${sub}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ok ? 'mdi:check' : x.icon || (s && s.attributes.icon) || 'mdi:play')}</span><span class="tx">${H.esc(nm)}</span></button>`;
     }).join('');
@@ -52,4 +52,4 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
   }
   getGridOptions() { return { columns: 6, rows: 2 }; }
 }
-hgReg('hg-scenes-card', HGScenesCard, hgTr('Home Glass – Sceny', 'Home Glass – Scenes'), hgTr('Skrypty jako przyciski z animacją potwierdzenia', 'Scripts as buttons with a confirmation animation'));
+hgReg('hg-scenes-card', HGScenesCard, hgTLazy('cards.scenes.picker_name'), hgTLazy('cards.scenes.picker_description'));

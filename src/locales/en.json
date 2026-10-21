@@ -555,6 +555,14 @@
       "living_room": "Living room",
       "picker_description": "Temperature, switch and a brightness ruler",
       "picker_name": "Nuvio – Compact room"
+    },
+    "scenes": {
+      "picker_description": "Scripts as buttons with a confirmation animation",
+      "picker_name": "Home Glass – Scenes",
+      "run": "run",
+      "running": "running…",
+      "scenes": "Scenes",
+      "started": "started"
     }
   },
   "common": {

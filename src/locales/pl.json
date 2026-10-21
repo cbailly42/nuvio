@@ -559,6 +559,14 @@
       "living_room": "Salon",
       "picker_description": "Temperatura, przełącznik i linijka jasności",
       "picker_name": "Nuvio – Pokój kompakt"
+    },
+    "scenes": {
+      "picker_description": "Skrypty jako przyciski z animacją potwierdzenia",
+      "picker_name": "Home Glass – Sceny",
+      "run": "uruchom",
+      "running": "działa…",
+      "scenes": "Sceny",
+      "started": "uruchomiono"
     }
   },
   "common": {
