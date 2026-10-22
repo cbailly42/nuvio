@@ -4,6 +4,11 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- New: the **Energy flow** card fills itself from the **Energy dashboard** settings of Home Assistant when they list power sensors (recent HA: grid, solar and battery power, battery level and name). Inverted meters and separate import / export sensors are handled as in HA. Anything missing there is detected as before, and your own choices in the card settings always win.
+- Fixed: the **Energy flow** card placed by default on the **Energy** view could show several batteries for a single one (for example every battery-named power sensor of a SolarFlow, plus a smart plug called "battery"), with levels matched by order. Batteries are now detected per device: one per charge level the device reports (an inverter with Battery 1 and Battery 2 gives two), each with the power sensor whose name matches that level, or the device's main battery power sensor when it has a single level; devices without any level (such as a plug) are ignored when another device reports one. A new card from the gallery uses the same detection.
+- Improved: **Settings** of the Energy flow card on the Energy view now open the same form as the gallery (grid, solar, batteries, levels, export, home, sign options), prefilled with what the card shows; your choices are saved on top of the generated card.
+
 ### 2.22.0
 - Changed: settings changes in edit mode are a draft. Views, kiosk mode, header, rooms, screensaver, PIN and Assist settings no longer save or reload the dashboard on every change; cheap previews (accent, header text) show at once. **Done** saves everything once and reloads at most once, **Cancel** discards the draft, and leaving the page with unsaved changes asks first.
 - Changed: **Settings** have a new layout. A sidebar groups 13 pages (General, Appearance, Dashboard, Wall tablet, System) with a search box that finds settings on every page, keyboard navigation and a drill-down list on phones. PIN settings have their own **PIN and locks** page, there is a new **About Nuvio** page, and per-climate activity detection is folded under an advanced block. Every option and stored setting is unchanged.
