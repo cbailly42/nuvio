@@ -59,7 +59,7 @@ const HG_WALL_SS = `
 .nw-e li, .nw-k li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
 .nw-e li::before, .nw-k li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
 .nw-e .nw-et, .nw-k .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
-.nw-e .nw-et em, .nw-k .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }; text-shadow:none; opacity:1; }
+.nw-e .nw-et em, .nw-k .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }
 .nw-e li.nx .nw-et, .nw-k li.nx .nw-et{ opacity:1; }
 .nw-e .nw-en, .nw-k .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* dziecko (LiveKid, funkcja ukryta): przyjście / wyjście jak kolumny prognozy, plan zajęć jak lista wydarzeń */
@@ -151,7 +151,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return ((h2 >>> 0).toString(36) + (h1 >>> 0).toString(36)); },
   flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
   lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
-    this.locked = true; this.flag(true); clearTimeout(this._lk); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
+    this.locked = true; this.flag(true); clearTimeout(this._lk); if (window.HGVLock) HGVLock.mark(); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
   /* pinpad (przyciski, kropki, kłódka): ten sam dla wygaszacza i blokady widoku (hg-vlock) */
   padEl(lbl, lockLbl) {
       const ic = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`, LK = 'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z';
@@ -227,7 +227,9 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       if (l.length) return [...new Set(l)]; }
     const B = A.bg || window.HG_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.HG_DEFAULT_BG_FB || {}).v || '#16202B'}, ${(window.HG_DEFAULT_BG_FB || {}).v2 || '#05070A'})`]; },
   /* ---- nakładka ---- */
-  show() { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  show(test) { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    /* #35: wygaszacz zamyka widoki odblokowane PIN-em (poza podglądem z ustawień); po wybudzeniu bieżący widok znów pyta o PIN */
+    if (!test && window.HGVLock) HGVLock.mark();
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('wall.screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
@@ -341,6 +343,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
     const f = this._foc; this._foc = null; try { if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) { /* bez znaczenia */ }
+    const pg = this.page; if (window.HGVLock && pg && pg.isConnected) HGVLock.guard(pg);
     this.arm(); },
   hide() { if (this.active) { this.flag(false); this.wake('off'); } },
   /* ---- UI: sekcja w arkuszu Wygląd (tylko admin, jak edycja układu) ---- */
@@ -403,6 +406,6 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (a === 'wl-lock') { this.set({ lock: !this.get().lock }); if (!this.get().lock) this.flag(false); return p._eLook(); }
     if (a === 'wl-lockafter') { this.set({ lockAfter: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-pin') return this.savePin(p, b.closest('.wl-pin') || b.closest('section') || p._eSheetEl);
-    if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(); } },
+    if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(true); } },
 });
 window.HGWall = HGWall;
