@@ -124,12 +124,17 @@ async function hgGenerate(hass, opt) {
   /* wiz.vx[path] = { i: ikona, sl: krótka etykieta (pasek telefonu), cd/ct: kolumny komputer/tablet, rail: false = bez paska bocznego, ro: kolejność w pasku } */
   const VX = (wiz && wiz.vx) || {}; for (const v of V) { const o = VX[v[0]]; if (o && /^mdi:[a-z0-9-]+$/.test(o.i || '')) v[2] = o.i; } window.hgViewNames = Object.fromEntries(V.map((v) => [v[0], v[1]]));
   const nav = (v) => ({ icon: v[2], label: v[1], ...(VX[v[0]] && VX[v[0]].sl ? { short: VX[v[0]].sl } : {}), action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
-  const tabs = V.slice(0, 5).map((v) => ({ label: v[1], icon: v[2], path: HG_P(v[0]), ...(v[0] === 'rooms' ? { match: [HG_P('rooms'), HG_P('pokoj')] } : {}) }));
+  /* licznik na zakładce: wiz.vx[widok].badge = { m: 'on' | 'active', d: domena } albo { m, e: [encje] } -> badge.count_on / count_active (tylko > 0) */
+  const tabBadge = (p) => { const b = VX[p] && VX[p].badge; if (!b || !/^(on|active)$/.test(b.m)) return null;
+    const e = Array.isArray(b.e) && b.e.length ? b.e.filter((x) => hass.states[x]) : /^[a-z_]+$/.test(b.d || '') ? Object.keys(hass.states).filter((x) => x.startsWith(b.d + '.')) : [];
+    return e.length ? { [b.m === 'active' ? 'count_active' : 'count_on']: e } : null; };
+  const tabs = V.slice(0, 5).map((v) => { const bd = tabBadge(v[0]); return { label: v[1], icon: v[2], path: HG_P(v[0]), ...(v[0] === 'rooms' ? { match: [HG_P('rooms'), HG_P('pokoj')] } : {}), ...(bd ? { badge: bd } : {}) }; });
   const set = { icon: 'mdi:cog-outline', label: hgT('nav.settings'), action: { navigate: '/config' }, match: '/config' };
   /* pasek telefonu: wiz.phone = do 4 ścieżek wybranych w Wygląd → Widoki; reszta trafia do „Więcej” */
   const PH = wiz && Array.isArray(wiz.phone) && wiz.phone.length ? wiz.phone.map((p) => V.find((v) => v[0] === p)).filter(Boolean).slice(0, 4) : V.slice(0, 4);
   const RV = V.filter((v) => !VX[v[0]] || VX[v[0]].rail !== false).map((v, i) => [v, VX[v[0]] && isFinite(+VX[v[0]].ro) && VX[v[0]].ro !== '' && VX[v[0]].ro != null ? +VX[v[0]].ro : 100 + i]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
-  const rail = [...RV.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
+  /* wiz.railHide: żaden widok nie jest w pasku bocznym -> pasek znika razem z Ustawieniami (droga powrotna: menu profilu, ołówek, ?nuvio_settings) */
+  const rail = wiz && wiz.railHide && !RV.length ? [] : [...RV.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
   /* pokoje: wiz.areas (Wygląd → Pokoje) = nazwy, ikony, kolejność, czujniki temp./wilg., pokoje własne z listą encji, CWU, schody */
   /* karty pokoi czytają wiz.areas na żywo (HGAreas.glob), więc zmiana w Wyglądzie działa bez przebudowy widoków */
   const areasCfg = { hide: (wiz && wiz.hiddenRooms) || [] };

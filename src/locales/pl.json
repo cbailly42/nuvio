@@ -2125,7 +2125,7 @@
       "forecast_source": "Wykres z prognozy (atrybut) zamiast historii",
       "forecast_value_field": "Pole wartości",
       "gap_px": "Odstęp (px)",
-      "good_day_from": "Próg dobrego dnia (kWh na kW)",
+      "good_day_from": "Próg dobrego dnia (kWh na kW, bez mocy odniesienia: kWh)",
       "grid_columns": "Kolumny (1–6, puste = 3)",
       "ha_card_yaml": "YAML albo JSON karty z Home Assistant",
       "hide_chart_labels": "Ukryj podpisy pod wykresem",
@@ -2155,7 +2155,7 @@
       "page_address": "Adres strony (https://… albo /…)",
       "photo_address": "Zdjęcie (https://… lub /local/…)",
       "plant_name": "Nazwa rośliny",
-      "poor_day_below": "Próg słabego dnia (kWh na kW)",
+      "poor_day_below": "Próg słabego dnia (kWh na kW, bez mocy odniesienia: kWh)",
       "range_hours": "Zakres (godziny)",
       "room": "Pokój",
       "room_name": "Nazwa pokoju",
@@ -2401,7 +2401,10 @@
     "panel_backdrop": "Tło panelu",
     "panel_backdrop_hint": "Wyłączone: karty leżą bezpośrednio na tapecie, każda z własnym szkłem, bez wspólnej ramki.",
     "panel_backdrop_view": "Ten widok",
-    "panel_backdrop_as_all": "Jak wszędzie"
+    "panel_backdrop_as_all": "Jak wszędzie",
+    "head_clock_hint": "{time} pokazuje bieżącą godzinę, a {date} dzisiejszą datę; obie odświeżają się co minutę.",
+    "head_clock_add": "Dodaj zegar",
+    "head_clock_add_desc": "Dopisuje {time} do podtytułu"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",
@@ -2488,7 +2491,20 @@
     "clim_room_temp": "Czujnik do szacunku · {name}",
     "clim_room_temp_default": "Czujnik pokoju",
     "clim_hysteresis": "Histereza (°)",
-    "clim_hint": "Automatycznie: najpierw encja stanu rzeczywistego, potem informacja z urządzenia (hvac_action), potem temperatura pokoju względem nastawy (szacunek). Bez nich widać tylko tryb. Próg: domyślnie 5 W dla mocy, 0 dla innych wartości."
+    "clim_hint": "Automatycznie: najpierw encja stanu rzeczywistego, potem informacja z urządzenia (hvac_action), potem temperatura pokoju względem nastawy (szacunek). Bez nich widać tylko tryb. Próg: domyślnie 5 W dla mocy, 0 dla innych wartości.",
+    "badge": "Licznik",
+    "badge_none": "Bez licznika",
+    "badge_lights": "Włączone światła",
+    "badge_switches": "Włączone przełączniki",
+    "badge_fans": "Włączone wentylatory",
+    "badge_media": "Odtwarzane media",
+    "badge_climate": "Pracująca klimatyzacja",
+    "badge_persons": "Osoby w domu",
+    "badge_custom": "Wybrane encje…",
+    "badge_entities": "Encje do liczenia",
+    "rail_hide": "Ukryj pusty pasek boczny",
+    "rail_hide_desc": "Gdy żaden widok nie jest w pasku bocznym, znika też przycisk Ustawienia. Ustawienia zostają w menu profilu, pod ołówkiem i pod adresem {param}.",
+    "badge_entities_ph": "light.kuchnia, switch.wentylator"
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",

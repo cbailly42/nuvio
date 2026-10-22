@@ -2055,7 +2055,7 @@
       "forecast_source": "Chart from a forecast (attribute) instead of history",
       "forecast_value_field": "Value field",
       "gap_px": "Gap (px)",
-      "good_day_from": "Good day threshold (kWh per kW)",
+      "good_day_from": "Good day threshold (kWh per kW, or kWh without reference power)",
       "grid_columns": "Columns (1–6, empty = 3)",
       "ha_card_yaml": "YAML or JSON of a Home Assistant card",
       "hide_chart_labels": "Hide the labels under the chart",
@@ -2085,7 +2085,7 @@
       "page_address": "Page address (https://… or /…)",
       "photo_address": "Photo (https://… or /local/…)",
       "plant_name": "Plant name",
-      "poor_day_below": "Poor day threshold (kWh per kW)",
+      "poor_day_below": "Poor day threshold (kWh per kW, or kWh without reference power)",
       "range_hours": "Range (hours)",
       "room": "Room",
       "room_name": "Room name",
@@ -2331,7 +2331,10 @@
     "panel_backdrop": "Panel background",
     "panel_backdrop_hint": "Off: cards float on the wallpaper, each with its own glass, without the shared frame.",
     "panel_backdrop_view": "This view",
-    "panel_backdrop_as_all": "As everywhere"
+    "panel_backdrop_as_all": "As everywhere",
+    "head_clock_hint": "{time} shows the current time and {date} today's date, both updated every minute.",
+    "head_clock_add": "Add a clock",
+    "head_clock_add_desc": "Adds {time} to the subtitle"
   },
   "lookr": {
     "add_fuel": "Add fuel",
@@ -2416,7 +2419,20 @@
     "clim_room_temp": "Sensor for the estimate · {name}",
     "clim_room_temp_default": "Room sensor",
     "clim_hysteresis": "Hysteresis (°)",
-    "clim_hint": "Automatic: the actual state entity first, then what the device reports (hvac_action), then the room temperature against the setpoint (an estimate). Without these, only the mode is shown. Threshold: 5 W by default for power, 0 for other values."
+    "clim_hint": "Automatic: the actual state entity first, then what the device reports (hvac_action), then the room temperature against the setpoint (an estimate). Without these, only the mode is shown. Threshold: 5 W by default for power, 0 for other values.",
+    "badge": "Badge",
+    "badge_none": "No badge",
+    "badge_lights": "Lights on",
+    "badge_switches": "Switches on",
+    "badge_fans": "Fans on",
+    "badge_media": "Media playing",
+    "badge_climate": "Climate running",
+    "badge_persons": "People at home",
+    "badge_custom": "Selected entities…",
+    "badge_entities": "Entities to count",
+    "rail_hide": "Hide the sidebar when it is empty",
+    "rail_hide_desc": "When no view is shown in the sidebar, the Settings button disappears too. Settings stay in the profile menu, behind the pencil and at the {param} address.",
+    "badge_entities_ph": "light.kitchen, switch.fan"
   },
   "looks": {
     "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",

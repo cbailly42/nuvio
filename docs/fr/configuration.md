@@ -54,3 +54,10 @@ L’anglais, le polonais et le français doivent rester complets (`REQUIRED` dan
 ## Préréglages
 
 La configuration (disposition + apparence) peut être exportée et importée en JSON. Les préréglages personnels sont conservés hors du dépôt.
+
+
+## Horloge, pastilles d’onglets et barre latérale masquée
+
+- **Horloge dans l’en-tête.** Mettez `{time}` ou `{date}` dans le titre ou le sous-titre d’une vue (éditeur d’en-tête, ou **Ajouter une horloge**). L’heure suit le format 12 ou 24 h du profil Home Assistant et se met à jour chaque minute.
+- **Pastilles d’onglets.** Dans **Paramètres > Vues**, la colonne **Pastille** choisit quoi compter pour chaque vue : lumières, interrupteurs, ventilateurs, climatisation ou personnes allumés ou présents, médias en lecture, ou **Entités choisies** (identifiants séparés par des virgules). Le nombre apparaît sur l’onglet du haut seulement s’il dépasse 0. Stocké dans `wiz.vx.<vue>.badge` = `{ m: on | active, d: <domaine> }` ou `{ m: on, e: [<entités>] }`.
+- **Masquer la barre latérale vide.** Désactivez **Barre latérale** pour toutes les vues et activez **Masquer la barre latérale vide** : la barre et son bouton Paramètres disparaissent sur ordinateur et tablette (la barre du téléphone reste). Pour revenir aux paramètres : menu du profil, crayon, ou `?nuvio_settings` à la fin de l’adresse d’une vue Nuvio. Cela n’ouvre les paramètres qu’aux personnes autorisées à modifier, jamais sur une vue verrouillée par PIN.

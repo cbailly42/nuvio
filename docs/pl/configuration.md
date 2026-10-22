@@ -54,3 +54,10 @@ Angielski, polski i francuski muszą być kompletne (`REQUIRED` w `tools/i18n_ch
 ## Presety
 
 Konfigurację (układ + wygląd) można eksportować i importować jako JSON. Osobiste presety są przechowywane poza repozytorium.
+
+
+## Zegar, liczniki na zakładkach i ukryty pasek boczny
+
+- **Zegar w nagłówku.** Wpisz `{time}` lub `{date}` w tytule albo podtytule widoku (edytor nagłówka albo **Dodaj zegar**). Godzina ma format 12 lub 24 h z profilu Home Assistant i odświeża się co minutę.
+- **Liczniki na zakładkach.** W **Ustawienia > Widoki** kolumna **Licznik** wybiera, co liczyć dla widoku: włączone światła, przełączniki, wentylatory, klimatyzację, osoby w domu, odtwarzane media albo **Wybrane encje** (id rozdzielone przecinkami). Liczba pojawia się na zakładce u góry tylko, gdy jest większa od 0. Zapis: `wiz.vx.<widok>.badge` = `{ m: on | active, d: <domena> }` albo `{ m: on, e: [<encje>] }`.
+- **Ukryj pusty pasek boczny.** Wyłącz **Pasek boczny** dla wszystkich widoków i włącz **Ukryj pusty pasek boczny**: pasek razem z przyciskiem Ustawienia znika na komputerze i tablecie (pasek telefonu zostaje). Do ustawień wrócisz przez menu profilu, ołówek albo dopisując `?nuvio_settings` do adresu dowolnego widoku Nuvio. Otwiera to ustawienia tylko osobom z prawem edycji i nigdy na widoku zablokowanym PIN-em.

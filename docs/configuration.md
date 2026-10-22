@@ -54,3 +54,10 @@ English, Polish and French must stay complete (`REQUIRED` in `tools/i18n_check.p
 ## Presets
 
 Configuration (layout + appearance) can be exported/imported as JSON. Personal presets live outside the repository.
+
+
+## Clock, tab badges and hidden sidebar
+
+- **Clock in the header.** Put `{time}` or `{date}` in a view title or subtitle (view header editor, or **Add a clock**). The time follows the 12 or 24 hour setting of your Home Assistant profile and refreshes every minute.
+- **Tab badges.** In **Settings > Views**, the **Badge** column picks what to count for each view: lights, switches, fans, climate or people that are on, media that is playing, or **Selected entities** (comma separated ids). The number shows on the top tab only when it is above 0. Stored as `wiz.vx.<view>.badge` = `{ m: on | active, d: <domain> }` or `{ m: on, e: [<entity ids>] }`.
+- **Hide the sidebar when it is empty.** Turn off **Sidebar** for every view and switch on **Hide the sidebar when it is empty**: the sidebar and its Settings button disappear on computers and tablets (the phone bar stays). To get back to settings use the profile menu, the pencil, or open any Nuvio view with `?nuvio_settings` at the end of the address. It opens settings only for people who may edit and never on a view locked with a PIN.

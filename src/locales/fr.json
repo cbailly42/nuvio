@@ -2090,7 +2090,7 @@
       "forecast_source": "Graphique à partir d’une prévision (attribut) au lieu de l’historique",
       "forecast_value_field": "Champ de valeur",
       "gap_px": "Espacement (px)",
-      "good_day_from": "Seuil d’un bon jour (kWh par kW)",
+      "good_day_from": "Seuil de bonne journée (kWh par kW, ou kWh sans puissance de référence)",
       "grid_columns": "Colonnes (1–6, vide = 3)",
       "ha_card_yaml": "YAML ou JSON d’une carte Home Assistant",
       "hide_chart_labels": "Masquer les libellés sous le graphique",
@@ -2120,7 +2120,7 @@
       "page_address": "Adresse de la page (https://… ou /…)",
       "photo_address": "Photo (https://… ou /local/…)",
       "plant_name": "Nom de la plante",
-      "poor_day_below": "Seuil d’un jour faible (kWh par kW)",
+      "poor_day_below": "Seuil de journée faible (kWh par kW, ou kWh sans puissance de référence)",
       "range_hours": "Plage (heures)",
       "room": "Pièce",
       "room_name": "Nom de la pièce",
@@ -2366,7 +2366,10 @@
     "panel_backdrop": "Fond du panneau",
     "panel_backdrop_hint": "Désactivé : les cartes flottent sur le fond d’écran, chacune avec son propre verre, sans cadre commun.",
     "panel_backdrop_view": "Cette vue",
-    "panel_backdrop_as_all": "Comme partout"
+    "panel_backdrop_as_all": "Comme partout",
+    "head_clock_hint": "{time} affiche l’heure actuelle et {date} la date du jour, mises à jour chaque minute.",
+    "head_clock_add": "Ajouter une horloge",
+    "head_clock_add_desc": "Ajoute {time} au sous-titre"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",
@@ -2452,7 +2455,20 @@
     "clim_room_temp": "Capteur pour l’estimation · {name}",
     "clim_room_temp_default": "Capteur de la pièce",
     "clim_hysteresis": "Hystérésis (°)",
-    "clim_hint": "Automatique : d’abord l’entité d’état réel, puis ce qu’indique l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (estimation). Sans elles, seul le mode est affiché. Seuil : 5 W par défaut pour une puissance, 0 pour les autres valeurs."
+    "clim_hint": "Automatique : d’abord l’entité d’état réel, puis ce qu’indique l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (estimation). Sans elles, seul le mode est affiché. Seuil : 5 W par défaut pour une puissance, 0 pour les autres valeurs.",
+    "badge": "Pastille",
+    "badge_none": "Sans pastille",
+    "badge_lights": "Lumières allumées",
+    "badge_switches": "Interrupteurs allumés",
+    "badge_fans": "Ventilateurs allumés",
+    "badge_media": "Médias en lecture",
+    "badge_climate": "Climatisation en marche",
+    "badge_persons": "Personnes à la maison",
+    "badge_custom": "Entités choisies…",
+    "badge_entities": "Entités à compter",
+    "rail_hide": "Masquer la barre latérale vide",
+    "rail_hide_desc": "Quand aucune vue n’est dans la barre latérale, le bouton Paramètres disparaît aussi. Les paramètres restent dans le menu du profil, derrière le crayon et à l’adresse {param}.",
+    "badge_entities_ph": "light.cuisine, switch.ventilateur"
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",

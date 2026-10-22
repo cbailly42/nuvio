@@ -4,6 +4,11 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Ajouté : **{time}** et **{date}** dans le titre ou le sous-titre d’une vue affichent l’heure et la date dans la langue de l’interface, au format 12 ou 24 h du profil Home Assistant, mises à jour chaque minute. **Ajouter une horloge** dans l’éditeur d’en-tête ajoute **{time}** au sous-titre.
+- Ajouté : une colonne **Pastille** dans **Paramètres > Vues** compte les lumières, interrupteurs, ventilateurs, climatiseurs ou personnes allumés ou présents (ou les médias en lecture, ou les entités choisies) et affiche le nombre sur l’onglet de la vue s’il dépasse 0.
+- Ajouté : **Masquer la barre latérale vide** dans **Paramètres > Vues**. Quand aucune vue n’est dans la barre latérale, la barre et son bouton Paramètres disparaissent. Les paramètres restent dans le menu du profil, derrière le crayon et à toute adresse Nuvio avec **?nuvio_settings** (pour les personnes autorisées à modifier, pas sur une vue verrouillée par PIN).
+- Corrigé : la carte **Prévision de production** colorait tous les jours de la même couleur après un changement de seuils. Les seuils au-dessus de 12 kWh par kW, ou sans puissance de référence, sont lus en kWh par jour ; des seuils inversés sont échangés ; les champs numériques de l’éditeur acceptent la virgule (3,5).
 ### Non publié
 - Corrigé : un fond intégré choisi sur un appareil s’affichait comme une couleur unie sur les appareils qui ouvrent Home Assistant à une autre adresse (IP locale, domaine, Nabu Casa). L’image était enregistrée avec l’adresse complète du premier appareil ; les fonds intégrés sont désormais enregistrés comme un chemin à côté des fichiers Nuvio (par exemple `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), et les fonds enregistrés avant avec une adresse sont corrigés au chargement de la disposition, sur le tableau de bord et dans l’économiseur d’écran. Les images importées et vos propres adresses ne changent pas.
 
