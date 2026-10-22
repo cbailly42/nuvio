@@ -1584,6 +1584,23 @@
       "show_hide_on_chart": "afficher/masquer sur le graphique",
       "so_far": "(en cours)",
       "the_inverter_sent_no": "L’onduleur n’a envoyé aucune donnée à HA ces jours-là"
+    },
+    "yield": {
+      "picker_name": "Home Glass – Prévision de production",
+      "picker_description": "Production attendue pour les prochains jours, un capteur par jour, avec les bons et mauvais jours",
+      "default_title": "Prévision de production",
+      "choose_sensors": "Choisissez un capteur par jour",
+      "choose_sensors_hint": "Le premier capteur correspond à aujourd’hui, les suivants aux jours d’après",
+      "best_day": "Meilleur jour",
+      "per_kw": "{value} kWh par kW",
+      "levels": {
+        "good": "Bon",
+        "average": "Moyen",
+        "poor": "Faible"
+      },
+      "days_count_one": "{count} jour",
+      "days_count_many": "{count} jours",
+      "days_count_other": "{count} jours"
     }
   },
   "common": {
@@ -2108,7 +2125,11 @@
       "title": "Titre",
       "title_with_name": "Titre ({name} = prénom)",
       "warning_threshold": "Seuil d’avertissement",
-      "width_ratio": "Proportions de largeur (ex. 2, 1)"
+      "width_ratio": "Proportions de largeur (ex. 2, 1)",
+      "capacity_kw": "Puissance de référence en kW (nombre ou entité)",
+      "good_day_from": "Bon jour à partir de (kWh par kW)",
+      "poor_day_below": "Mauvais jour en dessous de (kWh par kW)",
+      "unit": "Unité"
     },
     "order_changed": "Ordre modifié",
     "panel_width": "Largeur du panneau",
@@ -2331,7 +2352,11 @@
     "with_chart": "Avec graphique",
     "workout": "Entraînement",
     "your_whole_home_in": "Toute votre maison au même endroit",
-    "zoe": "Zoé"
+    "zoe": "Zoé",
+    "production_forecast": "Prévision de production",
+    "daily_bars_for_the": "Barres par jour pour les prochains jours, bons et mauvais jours",
+    "daily_sensors": "Capteurs, un par jour (le premier = aujourd’hui)",
+    "next_7_days": "7 prochains jours"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",

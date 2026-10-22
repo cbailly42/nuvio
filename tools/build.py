@@ -51,6 +51,7 @@ CARDS = [
     'cards/power-card.part.js',
     'cards/script-card.part.js',
     'cards/week-card.part.js',
+    'cards/yield-card.part.js',
     'cards/players-card.part.js',
     'cards/phases-card.part.js',
     'cards/energy-stats-card.part.js',

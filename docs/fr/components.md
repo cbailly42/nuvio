@@ -365,3 +365,31 @@ forecast_entities:
 # forecast_attribute: detailedHourly   # toutes les heures au lieu de toutes les 30 minutes
 # forecast_value: pv_estimate90        # variante optimiste (pv_estimate10 = pessimiste)
 ```
+
+## Prévision de production
+
+**Prévision de production** (`custom:nuvio-yield-card`) affiche l’énergie attendue pour les prochains jours sous forme de barres, un capteur par jour : le premier capteur correspond à aujourd’hui, le deuxième à demain, et ainsi de suite. Chaque jour est classé **bon**, **moyen** ou **faible**. Touchez un jour pour voir sa date, sa valeur et son niveau.
+
+| Option | Par défaut | Rôle |
+|---|---|---|
+| `entities` | | capteurs dans l’ordre des jours, l’état est l’énergie du jour |
+| `capacity` | aucune | puissance de référence en kW, un nombre (par exemple `3.4`) ou une entité (W ou kW). Avec elle, un jour est classé selon son énergie par kW |
+| `good` / `poor` | `3.5` / `1.5` | avec `capacity` : kWh par kW à partir desquels un jour est bon, et en dessous desquels il est faible. Sans `capacity`, un jour est comparé au meilleur jour de la période (75 % et plus : bon, moins de 40 % : faible) |
+| `title`, `icon` | | en-tête |
+| `unit` | unité du premier capteur | unité après les valeurs |
+| `decimals` | `1` | nombre de décimales |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # un capteur par jour, le premier est aujourd’hui
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW, or an entity such as sensor.installed_power
+# good: 3.5          # kWh per kW from which a day is good
+# poor: 1.5          # kWh per kW below which a day is poor
+```

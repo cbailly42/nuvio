@@ -1616,6 +1616,24 @@
       "show_hide_on_chart": "pokaż/ukryj na wykresie",
       "so_far": "(do teraz)",
       "the_inverter_sent_no": "W te dni falownik nie przesłał danych do HA"
+    },
+    "yield": {
+      "picker_name": "Home Glass – Prognoza produkcji",
+      "picker_description": "Oczekiwana produkcja na kolejne dni, jeden czujnik na dzień, z dobrymi i słabymi dniami",
+      "default_title": "Prognoza produkcji",
+      "choose_sensors": "Wybierz jeden czujnik na dzień",
+      "choose_sensors_hint": "Pierwszy czujnik to dziś, kolejne to następne dni",
+      "best_day": "Najlepszy dzień",
+      "per_kw": "{value} kWh na kW",
+      "levels": {
+        "good": "Dobry",
+        "average": "Średni",
+        "poor": "Słaby"
+      },
+      "days_count_one": "{count} dzień",
+      "days_count_few": "{count} dni",
+      "days_count_many": "{count} dni",
+      "days_count_other": "{count} dnia"
     }
   },
   "common": {
@@ -2142,7 +2160,11 @@
       "title": "Tytuł",
       "title_with_name": "Tytuł ({name} = imię)",
       "warning_threshold": "Próg ostrzeżenia",
-      "width_ratio": "Proporcje szerokości (np. 2, 1)"
+      "width_ratio": "Proporcje szerokości (np. 2, 1)",
+      "capacity_kw": "Moc odniesienia w kW (liczba lub encja)",
+      "good_day_from": "Dobry dzień od (kWh na kW)",
+      "poor_day_below": "Słaby dzień poniżej (kWh na kW)",
+      "unit": "Jednostka"
     },
     "order_changed": "Zmieniono kolejność",
     "panel_width": "Szerokość panelu",
@@ -2365,7 +2387,11 @@
     "with_chart": "Z wykresem",
     "workout": "Trening",
     "your_whole_home_in": "Cały dom w jednym miejscu",
-    "zoe": "Zosia"
+    "zoe": "Zosia",
+    "production_forecast": "Prognoza produkcji",
+    "daily_bars_for_the": "Słupki dzienne na kolejne dni, dobre i słabe dni",
+    "daily_sensors": "Czujniki, jeden na dzień (pierwszy = dziś)",
+    "next_7_days": "Następne 7 dni"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",
