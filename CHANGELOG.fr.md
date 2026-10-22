@@ -5,6 +5,8 @@
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Corrigé : les vues déverrouillées par code PIN restaient ouvertes 5 minutes même après le démarrage de l’écran de veille ou l’utilisation de **Verrouiller l’écran**, si bien que la personne suivante devant une tablette murale pouvait les ouvrir sans code. L’écran de veille et **Verrouiller l’écran** referment maintenant toutes les vues déverrouillées, et la vue affichée redemande le code PIN au réveil. L’aperçu de l’écran de veille dans les paramètres ne reverrouille rien ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+- Modifié : le clavier PIN d’une vue verrouillée et les réglages du verrouillage des vues n’affichent plus la remarque indiquant que le verrou est un confort et non une sécurité ; cette limite est décrite dans la documentation.
 - Corrigé : dans l’économiseur **Horloge sur photo**, l’heure du prochain événement (et de la prochaine activité LiveKid) est de nouveau en pleine luminosité au lieu d’être atténuée comme les autres lignes. Un `};` en trop dans les styles de l’économiseur faisait ignorer cette règle par le navigateur ([#34](https://github.com/kczepiec/nuvio/issues/34)).
 
 ### 2.21.5

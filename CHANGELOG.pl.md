@@ -5,6 +5,8 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Unreleased
+- Poprawione: widoki odblokowane PIN-em zostawały otwarte przez 5 minut także po włączeniu wygaszacza albo użyciu **Zablokuj ekran**, więc kolejna osoba przy tablecie ściennym mogła wejść w nie bez PIN-u. Wygaszacz i **Zablokuj ekran** zamykają teraz wszystkie odblokowane widoki, a widok na ekranie po wybudzeniu znowu pyta o PIN. Podgląd wygaszacza w ustawieniach niczego nie blokuje ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+- Zmienione: klawiatura PIN zablokowanego widoku i ustawienia blokady widoków nie pokazują już uwagi, że blokada jest dla wygody, a nie zabezpieczeniem; to ograniczenie jest opisane w dokumentacji.
 - Poprawione: w wygaszaczu **Zegar na zdjęciu** godzina najbliższego wydarzenia (i najbliższych zajęć LiveKid) znów ma pełną jasność zamiast przygaszenia jak pozostałe wiersze. Zbędne `};` w stylach wygaszacza sprawiało, że przeglądarka odrzucała tę regułę ([#34](https://github.com/kczepiec/nuvio/issues/34)).
 
 ### 2.21.5
