@@ -202,7 +202,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   sync() { const c = this.run();
     if (!this._wired) { this._wired = true; const bump = () => { this.last = Date.now(); };
       for (const t of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) window.addEventListener(t, bump, { capture: true, passive: true });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); if (this.active) this.wakeLock(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
     else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
@@ -247,7 +247,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
     if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else if (xs) { this.xsStart(xs, rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
     requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('in'); el.focus({ preventScroll: true }); }));
-    try { if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then((l) => { if (this.active) this._wl = l; else l.release(); }, () => {}); } catch (e) { /* ekran może zgasnąć wg systemu */ } },
+    this.wakeLock(); },
+  /* blokada wygaszania ekranu na czas wygaszacza; przeglądarka zwalnia ją, gdy strona przestaje być widoczna, więc po powrocie prosimy ponownie (#38) */
+  wakeLock() { if (!this.active || document.hidden || (this._wl && !this._wl.released) || this._wlq) return;
+    try { if (!navigator.wakeLock || !navigator.wakeLock.request) return; this._wlq = true;
+      navigator.wakeLock.request('screen').then((l) => { this._wlq = false; if (!this.active) { l.release(); return; } this._wl = l; try { l.addEventListener('release', () => { if (this._wl === l) this._wl = null; }); } catch (e) { /* bez zdarzenia: sprawdzamy released */ } }, () => { this._wlq = false; });
+    } catch (e) { this._wlq = false; /* ekran może zgasnąć wg systemu */ } },
   clock() { clearTimeout(this._ck); const el = this.el; if (!el) return;
     if (el.classList.contains('gl')) { this.gl(true); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
     if (el.classList.contains('xs')) { this.xsDraw(); this._ck = setTimeout(() => this.clock(), 60000 - (Date.now() % 60000) + 50); return; }
