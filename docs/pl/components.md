@@ -270,7 +270,7 @@ Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle
 | `custom:nuvio-grid-card` | Karty w kolumnach; na wąskim ekranie mniej kolumn | `cards`, `columns` (1 do 6, 0 = automatycznie), `min_width`, `square`, `gap`, `glass`, `title`; dla karty `span` |
 | `custom:nuvio-stack-card` | Karty jedna pod drugą albo obok siebie w jednym szkle; obok siebie przechodzą w pion poniżej `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (np. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
-Kolejność (2.21.0): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem.
+Kolejność (2.21.0): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem. Od 2.21.0-beta.2 zwykłe kafle też są osobnymi kartami (bez obszarów siatki), więc kafle i kontenery można dowolnie przeplatać.
 
 **Pogoda** jako komponent ma przełącznik **Styl hero** (YAML `variant: hero`): duży biały tekst bezpośrednio na tapecie, bez karty, jak pogoda w nagłówku. Najlepiej wygląda przy wyłączonym **Tle panelu**.
 

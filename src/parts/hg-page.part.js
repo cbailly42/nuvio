@@ -221,7 +221,8 @@ class HGPage extends HTMLElement {
     this._syncPlay(); this._layout(); this._enter(); if (window.HGVLock) HGVLock.guard(this);
     requestAnimationFrame(() => requestAnimationFrame(hgOffFlush));   // karty z ukrytego widoku: nadrób zaległe zmiany stanu
   }
-  _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
+  /* adres widoku: ścieżka albo numer widoku (/dashboard-nuvio/0); przy numerze HA pokazuje tylko podłączony widok, więc podłączona strona jest swoja */
+  _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard') || (/^\d+$/.test(seg[2] || '') && this.isConnected); }
   _saveNav() {
     if (!this.isConnected || !this._panelEl) return;
     const R = (el) => { if (!el) return null; const b = el.getBoundingClientRect(); return b.width ? { x: b.left, y: b.top, w: b.width, h: b.height } : null; };
@@ -396,7 +397,7 @@ class HGPage extends HTMLElement {
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
     /* dodane komponenty (stos, siatka, karta YAML, #17): bez „dense”, bo szerokie kontenery przeskakiwały przed wcześniejsze karty; stoją w kolejności dodania i przeciągania */
-    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || HGL.get(sc + ':tiles').added.some((x) => x.c)); } catch (e) { return false; } })();
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || HGL.get(sc + ':tiles').added.length > 0); } catch (e) { return false; } })();
     el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';

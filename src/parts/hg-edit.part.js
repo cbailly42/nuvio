@@ -964,7 +964,9 @@ class HGTilesCard extends HGBase {
       return `<div class="hgg ${G.lay}">${G.n ? `<div class="hgg-h">${G.i ? H.icon(G.i) : ''}<b>${H.esc(G.n)}</b><small>${G.es.length}</small></div>` : ''}<div class="hgg-b">${G.es.map((e) => `<div class="tg2 one">${hgTileHtml(h, e, 's', tt && hgTypesFor(h, e).includes(tt) ? { t: tt } : {})}</div>`).join('')}</div></div>`; }
     if (this._config.single) return `<div class="tg2 one">${hgTileHtml(h, this._config.single.e, 's', this._config.single)}</div>`;
     const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
-    if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); return x && x.c && customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
+    if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); if (!x) return '';
+      if (!x.c) return h.states[x.e] ? `<div class="tg2 one">${hgTileHtml(h, x.e, 's', x)}</div>` : '';   /* zwykły kafel jako osobna karta panelu (#17) */
+      return customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
     const it = HGL.sort(L.added.filter((x) => (x.c ? !this._config.nocomp && customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
     return `<div class="tg2${L.order.length || it.some((x) => x.c) ? ' ord' : ''}" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
   }
@@ -1145,7 +1147,8 @@ const HG_EDIT = {
     const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
     let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
     /* dodane komponenty (nie proste kafle) to osobne karty panelu z kluczem „+klucz”: przesuwa się je między kartami domyślnymi (siatka z obszarami: jak dawniej, w bloku kafli) */
-    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : tl.added.filter((x) => x.c && customElements.get(x.c) && !tl.hidden.includes(x.e));
+    /* bez obszarów siatki każda dodana pozycja (komponent i zwykły kafel, #17) jest osobną kartą panelu, w kolejności kafli (tl.order), więc da się je przeplatać; z obszarami zostaje blok kafli */
+    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : HGL.sort(tl.added.filter((x) => (x.c ? customElements.get(x.c) : x.e) && !tl.hidden.includes(x.e)), (x) => x.e, tl.order);
     for (const x of solo) { const z = tl.size[x.e]; out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', one: x.e, _k: '+' + x.e, span: z === 'l' ? 'full' : z === 'm' ? 2 : 1, min_h: 0, _tiles: true }); }
     if (L.order.length) {
       if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
@@ -1160,8 +1163,8 @@ const HG_EDIT = {
         if (main) return { type: 'custom:hg-tiles-card', single: { e: main, t: cf.t, n: cf.n, i: cf.i }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; }
       return o; });
     for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
-    if (tl.added.some((x) => areas || !x.c)) { out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true, ...(areas ? {} : { nocomp: true }) });
-      const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */
+    if (areas && tl.added.length) out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true });
+    if (tl.added.length) { const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */   /* podpowiedź pod kafelkami */
     return out;
   },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },

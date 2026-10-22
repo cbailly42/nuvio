@@ -3275,7 +3275,7 @@
     "note": "Convenience lock, not security: it keeps casual hands out of a view on this dashboard. Anyone with a Home Assistant account can still see the same data elsewhere.",
     "settings_title": "PIN lock for views",
     "settings_hint": "Chosen views ask for the PIN before showing anything. Unlocked for 5 minutes in this browser tab.",
-    "needs_pin": "Set a PIN in PIN lock first (screensaver section above).",
+    "needs_pin": "Set a PIN first: type it below and save, then choose the views.",
     "locked": "Asks for PIN",
     "open": "Open"
   }

@@ -376,7 +376,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (!/^[0-9]{4,8}$/.test(v)) return p._eToast(hgT('wall.pin_invalid'));
     this.set({ pinH: this.hash(v), pinN: v.length }); p._eToast(hgT('wall.pin_saved')); return p._eLook(); },
   wire(p, S) { if (!this.admin(p)) return;
-    const pi = S.querySelector('[name=wl-pin]'); if (pi) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, S); } }); }
+    for (const pi of S.querySelectorAll('[name=wl-pin]')) { pi.addEventListener('input', () => { pi.value = pi.value.replace(/[^0-9]/g, '').slice(0, 8); }); pi.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.savePin(p, pi.closest('.wl-pin') || S); } }); }
     const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = H.pct(rg.value); this.set({ dim: rg.value / 100 }); });
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
@@ -388,14 +388,16 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.glAct && this.glAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); const on = !this.get().on; if (on) this.here(true); this.set({ on }); return p._eLook(); }   /* włączenie tutaj = włączony też na tym urządzeniu */
-    if (a === 'vl-t') { if (b.disabled || !window.HGVLock) return; HGVLock.toggle(b.dataset.v); return p._eLook(); }
+    /* blokada widoku: akcja musi zaczynać się od wl-, bo tylko takie trafiają tutaj z arkusza (beta.1: vl-t nie docierało nigdzie) */
+    if (a === 'wl-vlock') { if (!window.HGVLock) return; if (!HGVLock.pinH()) { p._eToast(hgT('vlock.needs_pin')); const i = (b.closest('section') || p._eSheetEl).querySelector('.vl-pin [name=wl-pin]'); if (i) i.focus(); return; }
+      HGVLock.toggle(b.dataset.v); return p._eLook(); }
     if (a === 'wl-here') { this.last = Date.now(); const v = !this.here(); this.here(v); if (!v) this.flag(false); this.sync(); return p._eLook(); }
     if (a === 'wl-idle') { this.last = Date.now(); this.set({ idle: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-lk') { if (b.disabled) return; this.set({ lk: !this.get().lk }); return p._eLook(); }
     if (a === 'wl-src') { this.set({ src: b.dataset.v }); return p._eLook(); }
     if (a === 'wl-lock') { this.set({ lock: !this.get().lock }); if (!this.get().lock) this.flag(false); return p._eLook(); }
     if (a === 'wl-lockafter') { this.set({ lockAfter: Number(b.dataset.v) }); return p._eLook(); }
-    if (a === 'wl-pin') return this.savePin(p, b.closest('section') || p._eSheetEl);
+    if (a === 'wl-pin') return this.savePin(p, b.closest('.wl-pin') || b.closest('section') || p._eSheetEl);
     if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(); } },
 });
 window.HGWall = HGWall;
