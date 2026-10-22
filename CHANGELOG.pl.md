@@ -4,6 +4,11 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane
+- Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Czujniki w Wh lub MWh są przeliczane, moc wpisana jako `3,4` działa, a nazwy dni są liczone w strefie czasowej Home Assistant. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).
+- Poprawka: słupki karty **Energia statystyki** wyrastają teraz przy pojawieniu się karty, tak jak w **Energia · tydzień**.
+- Dla współtwórców: wykres słupków dziennych i jego dymek, dotąd skopiowane w **Energia · tydzień**, **Energia statystyki** i nowej karcie prognozy, są teraz w jednym miejscu, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). Zobacz [DESIGN.md](DESIGN.md).
+
 ### 2.19.0
 - Nowość: Nuvio mówi po francusku. Wybierz **Français** w przełączniku języka albo zostaw język automatyczny, a Nuvio dopasuje się do przeglądarki. Dziękuję [@cbailly42](https://github.com/cbailly42) za tłumaczenie i pracę opisaną niżej ([#10](https://github.com/kczepiec/nuvio/pull/10)).
 - Zmiana: wszystkie teksty interfejsu są teraz w katalogach językowych z kluczami (`src/locales/en.json`, `pl.json`, `fr.json`). Pobierany jest tylko używany język, obok głównego pliku, więc nowy język nie powiększa pulpitu dla wszystkich. Język automatyczny nie trzyma się już języka, który kreator tylko pokazał, a którego nie wybrałeś.

@@ -1616,6 +1616,26 @@
       "show_hide_on_chart": "pokaż/ukryj na wykresie",
       "so_far": "(do teraz)",
       "the_inverter_sent_no": "W te dni falownik nie przesłał danych do HA"
+    },
+    "yield": {
+      "best_day": "Najlepszy dzień",
+      "choose_sensors": "Wybierz jeden czujnik na dzień",
+      "choose_sensors_hint": "Pierwszy czujnik to dziś, kolejne to następne dni",
+      "days_count_few": "{count} dni",
+      "days_count_many": "{count} dni",
+      "days_count_one": "{count} dzień",
+      "days_count_other": "{count} dnia",
+      "default_title": "Prognoza produkcji",
+      "levels": {
+        "good": "Dobry",
+        "average": "Średni",
+        "poor": "Słaby"
+      },
+      "per_kw": "{value} kWh na kW",
+      "picker_description": "Oczekiwana produkcja na kolejne dni, jeden czujnik na dzień, z dobrymi i słabymi dniami",
+      "picker_name": "Home Glass – Prognoza produkcji",
+      "reference_unavailable": "Moc odniesienia niedostępna, dni porównane z najlepszym dniem",
+      "reference_unavailable_hint": "Sprawdź moc odniesienia: liczba w kW albo encja w W lub kW z wartością większą od 0"
     }
   },
   "common": {
@@ -1865,6 +1885,8 @@
     "covers": "Rolety",
     "custom": "Własne",
     "custom_accent_colour": "Własny kolor akcentu",
+    "daily_bars_for_the": "Słupki dzienne na kolejne dni, dobre i słabe dni",
+    "daily_sensors": "Czujniki, jeden na dzień (pierwszy = dziś)",
     "dashboard_setting": "ustawienie pulpitu",
     "default": "Domyślne",
     "default_header_restored": "Przywrócono domyślny nagłówek",
@@ -2047,6 +2069,7 @@
     "narrow_panel": "Panel wąski",
     "needs_domains": "Wymaga {domains}",
     "network": "Sieć",
+    "next_7_days": "Następne 7 dni",
     "no_data": "Brak danych",
     "no_hidden_items_in": "Brak ukrytych elementów w tym widoku.",
     "no_icon": "bez ikony",
@@ -2076,6 +2099,7 @@
       "aspect_ratio_examples": "Proporcje (np. 16:9, 4:3, 1:1)",
       "away_label": "Etykieta „poza domem”",
       "bar_scale_end": "Koniec skali paska w jednostce czujnika (puste = największa wartość z wykresu)",
+      "capacity_kw": "Moc odniesienia w kW (liczba lub encja)",
       "chart_caption_examples": "Podpis wykresu (np. Prognoza, -24 h)",
       "cheapest_window_hours": "Najtańsze okno (godziny)",
       "child_name": "Imię dziecka (przy kilku dzieciach)",
@@ -2098,6 +2122,7 @@
       "forecast_source": "Wykres z prognozy (atrybut) zamiast historii",
       "forecast_value_field": "Pole wartości",
       "gap_px": "Odstęp (px)",
+      "good_day_from": "Próg dobrego dnia (kWh na kW)",
       "grid_columns": "Kolumny (1–6, puste = 3)",
       "ha_card_yaml": "YAML albo JSON karty z Home Assistant",
       "hide_chart_labels": "Ukryj podpisy pod wykresem",
@@ -2127,6 +2152,7 @@
       "page_address": "Adres strony (https://… albo /…)",
       "photo_address": "Zdjęcie (https://… lub /local/…)",
       "plant_name": "Nazwa rośliny",
+      "poor_day_below": "Próg słabego dnia (kWh na kW)",
       "range_hours": "Zakres (godziny)",
       "room": "Pokój",
       "room_name": "Nazwa pokoju",
@@ -2141,6 +2167,7 @@
       "tagline": "Hasło",
       "title": "Tytuł",
       "title_with_name": "Tytuł ({name} = imię)",
+      "unit": "Jednostka",
       "warning_threshold": "Próg ostrzeżenia",
       "width_ratio": "Proporcje szerokości (np. 2, 1)"
     },
@@ -2182,6 +2209,7 @@
     "price_sensor_with_hourly": "Czujnik ceny z cenami godzinowymi",
     "prices_empty_from_look": "Ceny (puste = z Wygląd → Nagłówek)",
     "prices_from_sensors_with": "Ceny z czujników z trendem na jutro",
+    "production_forecast": "Prognoza produkcji",
     "production_kwh": "Produkcja (kWh)",
     "production_kwh_optional": "Produkcja (kWh, opcjonalnie)",
     "production_today_kwh": "Produkcja dziś (kWh)",
