@@ -111,6 +111,10 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <td width="50%" valign="top"><img src="components/eprice.webp" alt="Electricity price" width="100%"><br><b>Electricity price</b> <code>custom:nuvio-eprice-card</code><br>Hourly prices today and tomorrow, cheapest window.</td>
 <td width="50%" valign="top"><img src="components/fuel.webp" alt="Fuel prices" width="100%"><br><b>Fuel prices</b> <code>custom:nuvio-fuel-card</code><br>Prices from sensors with a trend for tomorrow.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="components/yield.webp" alt="Production forecast" width="100%"><br><b>Production forecast</b> <code>custom:nuvio-yield-card</code><br>Expected energy for the coming days, good and poor days.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -368,15 +372,15 @@ forecast_entities:
 
 ## Production forecast
 
-**Production forecast** (`custom:nuvio-yield-card`) shows the expected energy for the coming days as bars, one sensor per day: the first sensor is today, the second tomorrow, and so on. Each day is rated **good**, **average** or **poor**. Tap a day for its date, value and rating.
+**Production forecast** (`custom:nuvio-yield-card`) shows the expected energy for the coming days as bars, one sensor per day: the first sensor is today, the second tomorrow, and so on. Each day is rated **good**, **average** or **poor**. Tap a day for its date, value and rating. Day names follow the Home Assistant time zone.
 
 | Option | Default | What it does |
 |---|---|---|
-| `entities` | | sensors in day order, the state is the energy of that day |
-| `capacity` | none | reference power in kW, a number (for example `3.4`) or an entity (W or kW). With it a day is rated by its energy per kW |
+| `entities` | | sensors in day order, the state is the energy of that day. Values in Wh, MWh or GWh are converted to kWh for the rating. An unavailable sensor shows as unavailable |
+| `capacity` | none | reference power in kW, a number (`3.4` or `"3,4"`) or an entity in W or kW (also Wp, kWp). With it a day is rated by its energy in kWh per kW. When the entity is unavailable or 0, the card says so under the chart and compares days with the best day |
 | `good` / `poor` | `3.5` / `1.5` | with `capacity`: kWh per kW from which a day is good, and below which it is poor. Without `capacity` a day is compared with the best day of the period (75% and more is good, under 40% is poor) |
 | `title`, `icon` | | header |
-| `unit` | unit of the first sensor | unit after the values |
+| `unit` | unit of the first sensor with a value | label after the values (values are shown in the unit of that sensor) |
 | `decimals` | `1` | decimal places |
 
 ```yaml

@@ -5,7 +5,7 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Niewydane
-- Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).
+- Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Czujniki w Wh lub MWh są przeliczane, moc wpisana jako `3,4` działa, a nazwy dni są liczone w strefie czasowej Home Assistant. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).
 
 ### 2.19.0
 - Nowość: Nuvio mówi po francusku. Wybierz **Français** w przełączniku języka albo zostaw język automatyczny, a Nuvio dopasuje się do przeglądarki. Dziękuję [@cbailly42](https://github.com/cbailly42) za tłumaczenie i pracę opisaną niżej ([#10](https://github.com/kczepiec/nuvio/pull/10)).

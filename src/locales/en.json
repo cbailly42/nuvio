@@ -1554,20 +1554,22 @@
       "the_inverter_sent_no": "The inverter sent no data to HA on these days"
     },
     "yield": {
-      "picker_name": "Home Glass – Production forecast",
-      "picker_description": "Expected production for the coming days, one sensor per day, with good and poor days",
-      "default_title": "Production forecast",
+      "best_day": "Best day",
       "choose_sensors": "Choose one sensor per day",
       "choose_sensors_hint": "The first sensor is today, the next ones the following days",
-      "best_day": "Best day",
-      "per_kw": "{value} kWh per kW",
+      "days_count_one": "{count} day",
+      "days_count_other": "{count} days",
+      "default_title": "Production forecast",
       "levels": {
         "good": "Good",
         "average": "Average",
         "poor": "Poor"
       },
-      "days_count_one": "{count} day",
-      "days_count_other": "{count} days"
+      "per_kw": "{value} kWh per kW",
+      "picker_description": "Expected production for the coming days, one sensor per day, with good and poor days",
+      "picker_name": "Home Glass – Production forecast",
+      "reference_unavailable": "Reference power unavailable, days compared with the best day",
+      "reference_unavailable_hint": "Check the reference power: a number in kW, or an entity in W or kW with a value above 0"
     }
   },
   "common": {
@@ -2050,7 +2052,7 @@
       "forecast_source": "Chart from a forecast (attribute) instead of history",
       "forecast_value_field": "Value field",
       "gap_px": "Gap (px)",
-      "good_day_from": "Good day from (kWh per kW)",
+      "good_day_from": "Good day threshold (kWh per kW)",
       "grid_columns": "Columns (1–6, empty = 3)",
       "ha_card_yaml": "YAML or JSON of a Home Assistant card",
       "hide_chart_labels": "Hide the labels under the chart",
@@ -2080,7 +2082,7 @@
       "page_address": "Page address (https://… or /…)",
       "photo_address": "Photo (https://… or /local/…)",
       "plant_name": "Plant name",
-      "poor_day_below": "Poor day below (kWh per kW)",
+      "poor_day_below": "Poor day threshold (kWh per kW)",
       "range_hours": "Range (hours)",
       "room": "Room",
       "room_name": "Room name",

@@ -1,16 +1,25 @@
 /* hg-yield-card: prognoza produkcji na kolejne dni, jeden czujnik na dzień (pierwszy = dziś), stan = energia dnia.
-   Ocena dnia: z mocą instalacji (capacity, liczba albo encja) uzysk na kW porównany z progami good / poor, bez niej względem najlepszego dnia okresu. */
+   Ocena dnia: z mocą instalacji (capacity, liczba albo encja) uzysk kWh na kW porównany z progami good / poor, bez niej względem najlepszego dnia okresu. */
+const HG_YIELD_LV = { good: 'var(--hg-accent)', average: 'color-mix(in srgb, currentColor 42%, transparent)', poor: '#FF8A3D' };
+const HG_YIELD_KWH = { Wh: 1e-3, kWh: 1, MWh: 1e3, GWh: 1e6 };   // energia czujnika -> kWh (inna jednostka: bez przeliczenia)
+const HG_YIELD_KW = { W: 1e-3, kW: 1, MW: 1e3 };                 // moc encji capacity -> kW (także Wp, kWp, MWp)
+/* liczba z konfiguracji: number albo tekst z kropką lub przecinkiem ("3,4"); inaczej null */
+const hgYieldNum = (v) => (typeof v === 'number' ? v : typeof v === 'string' && /^\s*-?\d+(?:[.,]\d+)?\s*$/.test(v) ? parseFloat(v.replace(',', '.')) : null);
 class HGYieldCard extends HGBase {
-  static getStubConfig(h) { const S = (h && h.states) || {}; return { entities: Object.keys(S).filter((e) => hgDom(e) === 'sensor' && S[e].attributes.device_class === 'energy' && hgNum(S[e])).slice(0, 7) }; }
+  static getStubConfig(h) { const S = (h && h.states) || {}; return { entities: Object.keys(S).filter((e) => hgDom(e) === 'sensor' && S[e].attributes.device_class === 'energy' && S[e].attributes.state_class !== 'total_increasing' && hgNum(S[e])).slice(0, 7) }; }
   defaults() { return { entities: [], title: null, icon: 'mdi:calendar-weather', capacity: null, good: 3.5, poor: 1.5, unit: null, decimals: 1 }; }
-  ents() { const c = this._config; return [...(c.entities || []), ...(typeof c.capacity === 'string' && c.capacity.includes('.') && !isFinite(+c.capacity) ? [c.capacity] : [])]; }
-  _extraSig() { return [this._sel, new Date().getDate()]; }
-  /* moc odniesienia w kW: liczba z konfiguracji albo stan encji (W zamieniane na kW) */
+  /* capacity jako encja (id z kropką, nie liczba) albo null */
+  _capEnt() { const v = this._config.capacity; return typeof v === 'string' && v.includes('.') && hgYieldNum(v) == null ? v.trim() : null; }
+  ents() { const e = this._capEnt(); return e ? [...this._config.entities, e] : this._config.entities; }
+  _extraSig() { return [this._sel, this._today().key]; }
+  /* dziś w strefie czasowej HA: klucz daty i północ UTC tego dnia (etykiety dni liczone w UTC, więc bez przesunięć strefy przeglądarki) */
+  _today() { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: HGStats.tz(this._hass), year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date()).map((x) => [x.type, x.value]));
+    return { key: `${p.year}-${p.month}-${p.day}`, t: Date.UTC(+p.year, +p.month - 1, +p.day) }; }
+  /* moc odniesienia w kW: { kw } gdy znana, { off: true } gdy ustawiona, ale nieczytelna (encja niedostępna, 0), null gdy brak */
   _cap() { const c = this._config, v = c.capacity; if (v == null || v === '') return null;
-    if (isFinite(+v)) return +v > 0 ? +v : null;
-    const s = H.st(this._hass, v); if (!H.ok(s) || !isFinite(parseFloat(s.state))) return null;
-    const n = parseFloat(s.state), u = String(s.attributes.unit_of_measurement || '').toLowerCase();
-    const kw = u === 'w' || u === 'wp' ? n / 1000 : u === 'mw' || u === 'mwp' ? n * 1000 : n; return kw > 0 ? kw : null; }
+    const e = this._capEnt(), n = e ? H.num(this._hass, e) : hgYieldNum(v);
+    const f = e ? HG_YIELD_KW[String((H.st(this._hass, e) || { attributes: {} }).attributes.unit_of_measurement || 'kW').replace(/p$/, '')] || 1 : 1;
+    return n != null && n * f > 0 ? { kw: n * f } : { off: true }; }
   css() {
     return U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2) var(--s3) var(--s2); container-type:inline-size; }
@@ -18,7 +27,10 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .sum{ display:flex; align-items:baseline; gap:var(--s2); flex-wrap:wrap; }
 .sum b{ font-size:calc(18u * var(--hg-fsv, 1)); font-weight:var(--hg-fw-num, 300); letter-spacing:-.01em; } .sum b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:#5A5E64; margin-left:3u; }
 .lv{ font-size:var(--fs-xs); font-weight:600; padding:3px 10px; border-radius:var(--hg-radius-pill, 999px); color:#111214; background:var(--c); white-space:nowrap; }
+.lv.average{ color:inherit; background:transparent; box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent); }
 .lg{ display:flex; gap:var(--s2); flex-wrap:wrap; font-size:var(--fs-xs); color:#5A5E64; } .lg span{ display:inline-flex; align-items:center; gap:4u; } .lg i{ width:6u; height:6u; border-radius:50%; background:var(--c); }
+.note{ font-size:var(--fs-xs); color:#8A8E94; display:flex; align-items:center; gap:5u; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.note i{ width:5u; height:5u; border-radius:50%; background:#C3C6CA; flex:none; }
 .ch{ position:relative; flex:1 0 auto; min-height:190px; display:grid; grid-template-columns:repeat(var(--n), 1fr); gap:2px; }
 .ch::after{ content:''; position:absolute; left:0; right:0; bottom:22px; height:1px; background:rgba(30,32,36,.14); pointer-events:none; }
 .d{ all:unset; box-sizing:border-box; cursor:pointer; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; border-radius:var(--r-sm); padding-top:3u; min-width:0; }
@@ -39,41 +51,43 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
 .tip b{ font-weight:600; } .tip i{ display:inline-block; width:6u; height:6u; border-radius:50%; margin-right:4u; background:var(--c); }
 .d:nth-child(-n+2) .tip{ left:0; transform:none; } .d:nth-last-child(-n+2) .tip{ left:auto; right:0; transform:none; }
 @container (max-width: 300px){ .ch{ min-height:150px; } .lg{ display:none; } .sum b{ font-size:calc(15u * var(--hg-fsv, 1)); } .d:not(.today):not(.best) .val{ display:none; } }
-@container (max-width: 380px){ .lv{ display:none; } }
+@container (max-width: 380px){ .lv{ display:none; } .ch.many .d:nth-child(even):not(.today):not(.best) .val{ display:none; } }
 @container (min-width: 560px){ .ch{ min-height:250px; } .d small .ln{ display:inline; } .d small .sn{ display:none; } }
 @media (prefers-reduced-motion:reduce){ .pr i{ animation:none; } .pr{ transition:none; } }
 `);
   }
   render() {
-    const c = this._config, h = this._hass, L = c.entities || [];
+    const c = this._config, h = this._hass, L = c.entities, D = this.defaults();
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title || hgT('cards.yield.default_title'))}</span><span class="sp"></span></div>`;
     if (!L.length) return `<ha-card class="glass">${hd}<div class="ph"><b>${hgT('cards.yield.choose_sensors')}</b>${hgT('cards.yield.choose_sensors_hint')}</div></ha-card>`;
-    const dec = c.decimals != null && c.decimals !== '' && isFinite(+c.decimals) ? +c.decimals : 1;
-    const s0 = L.map((e) => H.st(h, e)).find((s) => s), unit = c.unit || (s0 && s0.attributes.unit_of_measurement) || 'kWh';
-    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
-    const days = L.map((e, i) => { const s = H.st(h, e), n = H.ok(s) ? parseFloat(s.state) : NaN, d = new Date(d0); d.setDate(d0.getDate() + i);
-      return { e, d, has: isFinite(n), v: isFinite(n) ? Math.max(0, n) : 0 }; });
-    const ok = days.filter((x) => x.has), n = days.length, mx = Math.max(0.001, ...ok.map((x) => x.v));
-    const cap = this._cap(), good = isFinite(+c.good) && c.good !== '' ? +c.good : 3.5, poor = isFinite(+c.poor) && c.poor !== '' ? +c.poor : 1.5;
-    /* poziom dnia: [klucz, kolor]; uzysk na kW gdy znana moc, inaczej udział w najlepszym dniu */
-    const LV = { good: 'var(--hg-accent)', average: 'color-mix(in srgb, currentColor 42%, transparent)', poor: '#FF8A3D' };
-    const level = (v) => { const r = cap ? v / cap : v / mx, g = cap ? good : 0.75, p = cap ? poor : 0.4; return r >= g ? 'good' : r < p ? 'poor' : 'average'; };
-    days.forEach((x) => { x.lv = x.has ? level(x.v) : null; });
-    const best = ok.length ? ok.reduce((a, x) => (x.v > a.v ? x : a), ok[0]) : null;
-    const tot = ok.reduce((a, x) => a + x.v, 0), sel = this._sel;
-    const fv = (v) => H.fmt(v, dec), dayName = (x, i) => (i === 0 ? `<span class="ln">${hgT('common.today_lower')}</span><span class="sn">${H.DAYS[x.d.getDay()]}</span>` : H.DAYS[x.d.getDay()]);
-    const lvName = (k) => ({ good: hgT('cards.yield.levels.good'), average: hgT('cards.yield.levels.average'), poor: hgT('cards.yield.levels.poor') }[k]);
-    const cols = days.map((x, i) => {
-      const bar = !x.has ? `<i class="nd" title="${hgT('common.no_data')}"></i>` : `<i class="${x.v > 0 ? '' : 'z'}" style="animation-delay:${i * 35}ms"></i>`;
-      const hp = x.has ? (x.v / mx) * 100 : 0, lvl = x.lv ? lvName(x.lv) : hgT('common.no_data');
-      const tip = sel === i ? `<span class="tip">${H.esc(x.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' }))}<br>${x.has ? `<i></i><b>${fv(x.v)} ${H.esc(unit)}</b> · ${H.esc(lvl)}${cap ? `<br>${hgT('cards.yield.per_kw', { value: H.fmt(x.v / cap, 2) })}` : ''}` : hgT('common.no_data')}</span>` : '';
-      return `<button class="d ${sel === i ? 'sel' : ''} ${i === 0 ? 'today' : ''} ${best === x ? 'best' : ''}" data-act="day" data-i="${i}" style="--c:${x.lv ? LV[x.lv] : '#C3C6CA'}" aria-pressed="${sel === i}" aria-label="${H.lv(H.esc(x.d.toLocaleDateString(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long' })), x.has ? `${fv(x.v)} ${H.esc(unit)}, ${H.esc(lvl)}` : hgT('common.no_data'))}">${tip}<span class="bs"><span class="bw"><span class="pr" style="height:${hp}%">${x.has ? `<span class="val">${fv(x.v)}</span>` : ''}${bar}</span></span></span><small>${dayName(x, i)}</small></button>`;
+    const num = (v, d) => { const n = hgYieldNum(v); return n == null ? d : n; };
+    const dec = Math.min(6, Math.max(0, Math.round(num(c.decimals, D.decimals)))), good = num(c.good, D.good), poor = num(c.poor, D.poor);
+    const LN = { good: hgT('cards.yield.levels.good'), average: hgT('cards.yield.levels.average'), poor: hgT('cards.yield.levels.poor') };
+    const NA = hgT('common.unavailable'), ND = hgT('common.no_data');
+    const df = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }), t0 = this._today().t;
+    /* dzień: wartość w kWh (k), data, nazwy, brak danych z powodem */
+    const days = L.map((e, i) => { const s = H.st(h, e), n = H.num(h, e), u = s && s.attributes.unit_of_measurement, d = new Date(t0 + i * 864e5);
+      return { e, i, today: i === 0, u, has: n != null, k: n != null ? Math.max(0, n) * (HG_YIELD_KWH[u] || 1) : 0, why: s && s.state === 'unavailable' ? NA : ND, ds: df.format(d), dn: H.DAYS[d.getUTCDay()] }; });
+    const ok = days.filter((x) => x.has), mx = Math.max(0.001, ...ok.map((x) => x.k));
+    /* wyświetlana jednostka: z opcji albo pierwszego czujnika z wartością; wartości przeliczone z kWh na nią */
+    const su = (ok[0] || days.find((x) => x.u) || {}).u, unit = c.unit || su || 'kWh', uf = HG_YIELD_KWH[su] || 1, fv = (k) => H.fmt(k / uf, dec);
+    const cp = this._cap(), cap = cp && cp.kw;
+    const [div, g, p] = cap ? [cap, good, poor] : [mx, 0.75, 0.4];
+    days.forEach((x) => { const r = x.k / div; x.lv = x.has ? (r >= g ? 'good' : r < p ? 'poor' : 'average') : null; x.txt = x.has ? `${fv(x.k)} ${H.esc(unit)} · ${H.esc(LN[x.lv])}` : H.esc(x.why); });
+    const best = ok.reduce((a, x) => (!a || x.k > a.k ? x : a), null), top = best && best.k > 0 ? best : null;
+    const tot = ok.reduce((a, x) => a + x.k, 0), sel = this._sel;
+    const cols = days.map((x) => {
+      const bar = !x.has ? `<i class="nd" title="${H.esc(x.why)}"></i>` : `<i class="${x.k > 0 ? '' : 'z'}" style="animation-delay:${x.i * 35}ms"></i>`;
+      const tip = sel === x.i ? `<span class="tip">${H.esc(x.ds)}<br>${x.has ? `<i></i><b>${fv(x.k)} ${H.esc(unit)}</b> · ${H.esc(LN[x.lv])}${cap ? `<br>${hgT('cards.yield.per_kw', { value: H.fmt(x.k / cap, 2) })}` : ''}` : H.esc(x.why)}</span>` : '';
+      const dn = x.today ? `<span class="ln">${hgT('common.today_lower')}</span><span class="sn">${x.dn}</span>` : x.dn;
+      return `<button class="d${sel === x.i ? ' sel' : ''}${x.today ? ' today' : ''}${top === x ? ' best' : ''}" data-act="day" data-i="${x.i}" style="--c:${x.lv ? HG_YIELD_LV[x.lv] : '#C3C6CA'}" aria-pressed="${sel === x.i}" aria-label="${H.lv(H.esc(x.ds), x.txt)}">${tip}<span class="bs"><span class="bw"><span class="pr" style="height:${x.has ? (x.k / mx) * 100 : 0}%">${x.has ? `<span class="val">${fv(x.k)}</span>` : ''}${bar}</span></span></span><small>${dn}</small></button>`;
     }).join('');
-    const pill = best ? `<span class="lv" style="--c:${LV[best.lv]}">${H.lv(hgT('cards.yield.best_day'), H.esc(best === days[0] ? hgT('common.today_lower') : H.DAYS[best.d.getDay()]))}</span>` : '';
-    const lg = `<div class="lg">${['good', 'average', 'poor'].map((k) => `<span style="--c:${LV[k]}"><i></i>${H.esc(lvName(k))}</span>`).join('')}</div>`;
+    const pill = top ? `<span class="lv ${top.lv}" style="--c:${HG_YIELD_LV[top.lv]}">${H.lv(hgT('cards.yield.best_day'), H.esc(top.today ? hgT('common.today_lower') : top.dn))}</span>` : '';
+    const lg = `<div class="lg">${['good', 'average', 'poor'].map((k) => `<span style="--c:${HG_YIELD_LV[k]}"><i></i>${H.esc(LN[k])}</span>`).join('')}</div>`;
+    const note = cp && cp.off ? `<div class="note" title="${hgT('cards.yield.reference_unavailable_hint')}"><i></i>${hgT('cards.yield.reference_unavailable')}</div>` : '';
     return `<ha-card class="glass">${hd}
-      <div class="sum"><b>${ok.length ? fv(tot) : '–'}<em>${H.esc(unit)} · ${hgT('cards.yield.days_count', { count: n })}</em></b>${pill}</div>
-      ${lg}<div class="ch" style="--n:${n}">${cols}</div></ha-card>`;
+      <div class="sum"><b>${ok.length ? fv(tot) : '–'}<em>${H.esc(unit)} · ${hgT('cards.yield.days_count', { count: days.length })}</em></b>${pill}</div>
+      ${lg}<div class="ch${days.length > 7 ? ' many' : ''}" style="--n:${days.length}">${cols}</div>${note}</ha-card>`;
   }
   onAct(a, t) { if (a === 'day') { const i = Number(t.dataset.i); this._sel = this._sel === i ? null : i; this.rerender(); } }
   getGridOptions() { return { columns: 12, rows: 4 }; }
