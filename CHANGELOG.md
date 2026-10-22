@@ -4,6 +4,11 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- New: **Production forecast** card (`custom:nuvio-yield-card`). Pick one sensor per day (the first one is today) and the card shows the coming days as bars with the total, rating each day good, average or poor. Give your installed power in kW (a number or an entity) and the rating uses the energy per kW, with thresholds you can change; without it a day is compared with the best day of the period. Sensors in Wh or MWh are converted, a capacity written as `3,4` works, and day names follow the Home Assistant time zone. See [docs/components.md](docs/components.md#production-forecast).
+- Fixed: the bars of **Energy statistics** now grow in when the card appears, like those of **Energy · week**.
+- For contributors: the day bar chart and its tooltip, which were copied into **Energy · week**, **Energy statistics** and the new forecast card, now live in one place, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). See [DESIGN.md](DESIGN.md).
+
 ### 2.19.0
 - New: Nuvio speaks French. Pick **Français** in the language switch, or leave the language on automatic and Nuvio follows the browser. Thanks to [@cbailly42](https://github.com/cbailly42) for the translation and the work below ([#10](https://github.com/kczepiec/nuvio/pull/10)).
 - Changed: all interface texts now live in keyed language catalogs (`src/locales/en.json`, `pl.json`, `fr.json`). Only the language you use is downloaded, next to the main file, so adding a language no longer makes the dashboard bigger for everyone. The automatic language no longer sticks to a language the setup wizard showed but you never picked.

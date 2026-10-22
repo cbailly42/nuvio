@@ -1584,6 +1584,25 @@
       "show_hide_on_chart": "afficher/masquer sur le graphique",
       "so_far": "(en cours)",
       "the_inverter_sent_no": "L’onduleur n’a envoyé aucune donnée à HA ces jours-là"
+    },
+    "yield": {
+      "best_day": "Meilleur jour",
+      "choose_sensors": "Choisissez un capteur par jour",
+      "choose_sensors_hint": "Le premier capteur correspond à aujourd’hui, les suivants aux jours d’après",
+      "days_count_many": "{count} jours",
+      "days_count_one": "{count} jour",
+      "days_count_other": "{count} jours",
+      "default_title": "Prévision de production",
+      "levels": {
+        "good": "Bon",
+        "average": "Moyen",
+        "poor": "Faible"
+      },
+      "per_kw": "{value} kWh par kW",
+      "picker_description": "Production attendue pour les prochains jours, un capteur par jour, chaque jour classé bon, moyen ou faible",
+      "picker_name": "Home Glass – Prévision de production",
+      "reference_unavailable": "Puissance de référence indisponible, jours comparés au meilleur jour",
+      "reference_unavailable_hint": "Vérifiez la puissance de référence : un nombre en kW, ou une entité en W ou kW avec une valeur supérieure à 0"
     }
   },
   "common": {
@@ -1832,6 +1851,8 @@
     "covers": "Volets",
     "custom": "Personnalisé",
     "custom_accent_colour": "Couleur d’accent personnalisée",
+    "daily_bars_for_the": "Barres par jour pour les prochains jours, classées bon, moyen ou faible",
+    "daily_sensors": "Capteurs, un par jour (le premier = aujourd’hui)",
     "dashboard_setting": "réglage du tableau de bord",
     "default": "Par défaut",
     "default_header_restored": "En-tête par défaut restauré",
@@ -2013,6 +2034,7 @@
     "narrow_panel": "Panneau étroit",
     "needs_domains": "Nécessite {domains}",
     "network": "Réseau",
+    "next_7_days": "7 prochains jours",
     "no_data": "Aucune donnée",
     "no_hidden_items_in": "Aucun élément masqué dans cette vue.",
     "no_icon": "sans icône",
@@ -2042,6 +2064,7 @@
       "aspect_ratio_examples": "Proportions (ex. 16:9, 4:3, 1:1)",
       "away_label": "Libellé « Absent »",
       "bar_scale_end": "Fin de l’échelle de la barre dans l’unité du capteur (vide = valeur la plus élevée du graphique)",
+      "capacity_kw": "Puissance de référence en kW (nombre ou entité)",
       "chart_caption_examples": "Légende du graphique (ex. Prévision, -24 h)",
       "cheapest_window_hours": "Créneau le moins cher (heures)",
       "child_name": "Prénom de l’enfant (s’il y a plusieurs enfants)",
@@ -2064,6 +2087,7 @@
       "forecast_source": "Graphique à partir d’une prévision (attribut) au lieu de l’historique",
       "forecast_value_field": "Champ de valeur",
       "gap_px": "Espacement (px)",
+      "good_day_from": "Seuil d’un bon jour (kWh par kW)",
       "grid_columns": "Colonnes (1–6, vide = 3)",
       "ha_card_yaml": "YAML ou JSON d’une carte Home Assistant",
       "hide_chart_labels": "Masquer les libellés sous le graphique",
@@ -2093,6 +2117,7 @@
       "page_address": "Adresse de la page (https://… ou /…)",
       "photo_address": "Photo (https://… ou /local/…)",
       "plant_name": "Nom de la plante",
+      "poor_day_below": "Seuil d’un jour faible (kWh par kW)",
       "range_hours": "Plage (heures)",
       "room": "Pièce",
       "room_name": "Nom de la pièce",
@@ -2107,6 +2132,7 @@
       "tagline": "Slogan",
       "title": "Titre",
       "title_with_name": "Titre ({name} = prénom)",
+      "unit": "Unité",
       "warning_threshold": "Seuil d’avertissement",
       "width_ratio": "Proportions de largeur (ex. 2, 1)"
     },
@@ -2148,6 +2174,7 @@
     "price_sensor_with_hourly": "Capteur de prix avec prix horaires",
     "prices_empty_from_look": "Prix (vide = depuis Apparence → En-tête)",
     "prices_from_sensors_with": "Prix depuis des capteurs avec tendance pour demain",
+    "production_forecast": "Prévision de production",
     "production_kwh": "Production (kWh)",
     "production_kwh_optional": "Production (kWh, facultatif)",
     "production_today_kwh": "Production du jour (kWh)",

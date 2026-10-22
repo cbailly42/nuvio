@@ -111,6 +111,10 @@ Chaque carte s’utilise aussi seule sous la forme `custom:nuvio-<nom>-card` (pa
 <td width="50%" valign="top"><img src="../components/eprice.webp" alt="Prix de l’électricité" width="100%"><br><b>Prix de l’électricité</b> <code>custom:nuvio-eprice-card</code><br>Prix horaires d’aujourd’hui et de demain, créneau le moins cher.</td>
 <td width="50%" valign="top"><img src="../components/fuel.webp" alt="Prix des carburants" width="100%"><br><b>Prix des carburants</b> <code>custom:nuvio-fuel-card</code><br>Prix depuis des capteurs avec tendance pour demain.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="../components/yield.webp" alt="Prévision de production" width="100%"><br><b>Prévision de production</b> <code>custom:nuvio-yield-card</code><br>Énergie attendue pour les prochains jours, bons et faibles jours.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -364,4 +368,32 @@ forecast_entities:
   - sensor.solcast_pv_forecast_forecast_day_7
 # forecast_attribute: detailedHourly   # toutes les heures au lieu de toutes les 30 minutes
 # forecast_value: pv_estimate90        # variante optimiste (pv_estimate10 = pessimiste)
+```
+
+## Prévision de production
+
+**Prévision de production** (`custom:nuvio-yield-card`) affiche l’énergie attendue pour les prochains jours sous forme de barres, un capteur par jour : le premier capteur correspond à aujourd’hui, le deuxième à demain, et ainsi de suite. Chaque jour est classé **bon**, **moyen** ou **faible**. Touchez un jour pour voir sa date, sa valeur et son niveau. Les noms des jours suivent le fuseau horaire de Home Assistant.
+
+| Option | Par défaut | Rôle |
+|---|---|---|
+| `entities` | | capteurs dans l’ordre des jours, l’état est l’énergie du jour. Les valeurs en Wh, MWh ou GWh sont converties en kWh pour le classement. Un capteur indisponible est affiché comme indisponible |
+| `capacity` | aucune | puissance de référence en kW, un nombre (`3.4` ou `"3,4"`) ou une entité en W ou kW (aussi Wp, kWp). Avec elle, un jour est classé selon son énergie en kWh par kW. Si l’entité est indisponible ou vaut 0, la carte l’indique sous le graphique et compare les jours au meilleur jour |
+| `good` / `poor` | `3.5` / `1.5` | avec `capacity` : kWh par kW à partir desquels un jour est bon, et en dessous desquels il est faible. Sans `capacity`, un jour est comparé au meilleur jour de la période (75 % et plus : bon, moins de 40 % : faible) |
+| `title`, `icon` | | en-tête |
+| `unit` | unité du premier capteur ayant une valeur | libellé après les valeurs (les valeurs sont affichées dans l’unité de ce capteur) |
+| `decimals` | `1` | nombre de décimales |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # un capteur par jour, le premier est aujourd’hui
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW, ou une entité comme sensor.installed_power
+# good: 3.5          # kWh par kW à partir desquels un jour est bon
+# poor: 1.5          # kWh par kW en dessous desquels un jour est faible
 ```

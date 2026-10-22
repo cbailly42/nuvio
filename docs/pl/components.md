@@ -111,6 +111,10 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 <td width="50%" valign="top"><img src="../components/eprice.webp" alt="Cena prądu" width="100%"><br><b>Cena prądu</b> <code>custom:nuvio-eprice-card</code><br>Ceny godzinowe na dziś i jutro, najtańsze okno.</td>
 <td width="50%" valign="top"><img src="../components/fuel.webp" alt="Ceny paliw" width="100%"><br><b>Ceny paliw</b> <code>custom:nuvio-fuel-card</code><br>Ceny z czujników z trendem na jutro.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="../components/yield.webp" alt="Prognoza produkcji" width="100%"><br><b>Prognoza produkcji</b> <code>custom:nuvio-yield-card</code><br>Oczekiwana energia na kolejne dni, dobre i słabe dni.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -364,4 +368,32 @@ forecast_entities:
   - sensor.solcast_pv_forecast_forecast_day_7
 # forecast_attribute: detailedHourly   # co godzinę zamiast co 30 minut
 # forecast_value: pv_estimate90        # wariant optymistyczny (pv_estimate10 = pesymistyczny)
+```
+
+## Prognoza produkcji
+
+**Prognoza produkcji** (`custom:nuvio-yield-card`) pokazuje oczekiwaną energię na kolejne dni jako słupki, jeden czujnik na dzień: pierwszy czujnik to dziś, drugi jutro i tak dalej. Każdy dzień dostaje ocenę **dobry**, **średni** albo **słaby**. Dotknij dnia, aby zobaczyć datę, wartość i ocenę. Nazwy dni są liczone w strefie czasowej Home Assistant.
+
+| Opcja | Domyślnie | Co robi |
+|---|---|---|
+| `entities` | | czujniki w kolejności dni, stan to energia danego dnia. Wartości w Wh, MWh lub GWh są przeliczane na kWh do oceny. Niedostępny czujnik jest pokazany jako niedostępny |
+| `capacity` | brak | moc odniesienia w kW, liczba (`3.4` lub `"3,4"`) albo encja w W lub kW (także Wp, kWp). Z nią dzień jest oceniany według energii w kWh na kW. Gdy encja jest niedostępna albo ma 0, karta pokazuje to pod wykresem i porównuje dni z najlepszym dniem |
+| `good` / `poor` | `3.5` / `1.5` | z `capacity`: kWh na kW, od których dzień jest dobry, i poniżej których jest słaby. Bez `capacity` dzień jest porównywany z najlepszym dniem okresu (75% i więcej to dobry, poniżej 40% słaby) |
+| `title`, `icon` | | nagłówek |
+| `unit` | jednostka pierwszego czujnika z wartością | etykieta po wartościach (wartości są w jednostce tego czujnika) |
+| `decimals` | `1` | miejsca po przecinku |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # jeden czujnik na dzień, pierwszy to dziś
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW albo encja, na przykład sensor.installed_power
+# good: 3.5          # kWh na kW, od których dzień jest dobry
+# poor: 1.5          # kWh na kW, poniżej których dzień jest słaby
 ```
