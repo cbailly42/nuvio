@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.4
 - Added: **{time}** and **{date}** in the view title or subtitle show the current time and date in the interface language, with the 12 or 24 hour format from your Home Assistant profile, updated every minute. **Add a clock** in the view header editor adds **{time}** to the subtitle.
 - Added: a **Badge** column in **Settings > Views** counts lights, switches, fans, climate devices or people that are on (or media that is playing, or the entities you pick) and shows the number on the view tab when it is above 0.
 - Added: **Hide the sidebar when it is empty** in **Settings > Views**. When no view is shown in the sidebar, the sidebar and its Settings button disappear. Settings stay in the profile menu, behind the pencil and at any Nuvio address with **?nuvio_settings** (for people who may edit, and not on a view locked with a PIN).
