@@ -5,18 +5,68 @@
    battery / battery_soc jako listy (ta sama kolejność) albo batteries: [{ power, soc, name }]; dwie i więcej łączy szyna pod schematem. */
 const hgArr = (x) => (Array.isArray(x) ? x : x ? [x] : []).map((e) => (typeof e === 'string' ? e : e && (e.entity || e.power))).filter(Boolean);
 const HG_FLOW_RX = { grid: /grid|sie[cć]|net\b|meter|licznik|import|pob[oó]r|bilans/i, solar: /\bpv\b|pv_|solar|fotowolt|panel|inverter|falownik|produk/i, battery: /batter|akumul|magazyn|storage/i, home: /home|house|dom\b|zu[zż]yc|consum|load/i };
-/* zgadywanie encji dla nowej karty i widoku Energia: czujniki mocy po nazwie, poziom baterii z tego samego urządzenia co moc baterii */
-const hgFlowGuess = (h) => { const st = (h && h.states) || {}, R = h.entities || {};
-  const pw = Object.keys(st).filter((e) => e.startsWith('sensor.') && st[e].attributes.device_class === 'power' && isFinite(parseFloat(st[e].state)) && !(R[e] && (R[e].hidden || R[e].entity_category)));
+/* zgadywanie encji (gdy panel Energia HA ich nie podaje, patrz hgFlowDef): czujniki mocy po nazwie. Baterie wg urządzenia: tyle, ile urządzenie
+   ma czujników poziomu, i tylko urządzenia z poziomem (gniazdko „bateria” nie jest baterią). Moc i poziomy z urządzeń z device_tracker
+   (telefon, tablet, zegarek, samochód) są pomijane. Wynik w kształcie formularza galerii (battery / battery_soc). */
+const hgFlowGuess = (h) => { const st = (h && h.states) || {}, R = h.entities || {}, D = h.devices || {}, dev = (e) => (R[e] && R[e].device_id) || null;
+  const moving = new Set(Object.keys(st).filter((e) => e.startsWith('device_tracker.')).map(dev).filter(Boolean));   /* telefon, tablet, zegarek, samochód */
+  const pw = Object.keys(st).filter((e) => e.startsWith('sensor.') && st[e].attributes.device_class === 'power' && isFinite(parseFloat(st[e].state)) && !(R[e] && (R[e].hidden || R[e].entity_category)) && !moving.has(dev(e)));
   const nm = (e) => e + ' ' + (st[e].attributes.friendly_name || ''), pick = (k, not) => pw.find((e) => HG_FLOW_RX[k].test(nm(e)) && !(not || []).some((r) => HG_FLOW_RX[r].test(nm(e))));
-  const solar = pick('solar', ['battery']), bats = pw.filter((e) => HG_FLOW_RX.battery.test(nm(e))).slice(0, 4), grid = pw.find((e) => e !== solar && !bats.includes(e) && HG_FLOW_RX.grid.test(nm(e)) && !HG_FLOW_RX.battery.test(nm(e)));
-  const socs = Object.keys(st).filter((e) => e.startsWith('sensor.') && st[e].attributes.device_class === 'battery' && !/phone|telefon|iphone|pixel|watch|tablet/i.test(nm(e)));
-  return { grid: grid || null, solar: solar || null, batteries: bats.map((b, i) => ({ power: b, soc: hgFlowSoc(h, b, socs, i) })).map((b) => (b.soc ? b : { power: b.power })) }; };
-/* poziom naładowania dla mocy baterii: ta sama encja urządzenia, inaczej i-ty czujnik z nazwą baterii */
-const hgFlowSoc = (h, p, socs, i) => { const R = h.entities || {}, st = h.states, dev = R[p] && R[p].device_id;
-  return socs.find((e) => dev && R[e] && R[e].device_id === dev) || socs.filter((e) => HG_FLOW_RX.battery.test(e + ' ' + (st[e].attributes.friendly_name || '')))[i] || null; };
+  const solar = pick('solar', ['battery']), bpw = pw.filter((e) => e !== solar && HG_FLOW_RX.battery.test(nm(e))), grid = pw.find((e) => e !== solar && !bpw.includes(e) && HG_FLOW_RX.grid.test(nm(e)) && !HG_FLOW_RX.battery.test(nm(e)));
+  const socs = Object.keys(st).filter((e) => e.startsWith('sensor.') && st[e].attributes.device_class === 'battery' && !moving.has(dev(e)));
+  const G = new Map(); for (const e of bpw) { const k = dev(e) || e; if (!G.has(k)) G.set(k, []); G.get(k).push(e); }
+  const withSoc = [...G].filter(([k]) => socs.some((x) => dev(x) === k)), groups = withSoc.length ? withSoc : [...G];
+  const lbl = (e) => { const n = String(st[e].attributes.friendly_name || e), d = D[dev(e)], dn = d && (d.name_by_user || d.name); return dn && n.toLowerCase().startsWith(dn.toLowerCase()) ? n.slice(dn.length).trim() : n; };
+  /* tyle baterii na urządzenie, ile ma ono czujników poziomu (falownik z „Battery 1 / Battery 2”); moc do poziomu: najdłuższy wspólny początek etykiet,
+     przy remisie najkrótsza etykieta; bez poziomu na urządzeniu: jedna bateria, najkrótsza etykieta */
+  const cp = (a, b) => { a = a.toLowerCase(); b = b.toLowerCase(); let n = 0; while (n < a.length && a[n] === b[n]) n++; return n; }, short = (a, b) => lbl(a).length - lbl(b).length, pairs = [];
+  for (const [k, es] of groups) { const dS = socs.filter((x) => dev(x) && dev(x) === k), free = es.slice();
+    if (dS.length <= 1) { pairs.push([free.sort(short)[0], dS[0] || null]); continue; }
+    for (const x of dS) { if (!free.length) break; const m = free.slice().sort((a, b) => cp(lbl(b), lbl(x)) - cp(lbl(a), lbl(x)) || short(a, b))[0]; free.splice(free.indexOf(m), 1); pairs.push([m, x]); } }
+  /* poziom z innego urządzenia (moc na falowniku, poziom na BMS): tylko z urządzenia, które też mierzy moc (nie bateria czujnika Zigbee) */
+  const P4 = pairs.slice(0, 4), used = new Set(P4.map((q) => q[1]).filter(Boolean)), pwDev = new Set(pw.map(dev).filter(Boolean)), other = socs.filter((x) => pwDev.has(dev(x)));
+  const battery = P4.map((q) => q[0]), battery_soc = P4.map((q) => { if (q[1]) return q[1]; const m = other.find((x) => !used.has(x)); if (m) used.add(m); return m; }).filter(Boolean);
+  return { grid: grid || null, solar: solar || null, battery, battery_soc }; };
+/* formularz (galeria i karta widoku Energia) -> konfiguracja karty: baterie jako osobne obiekty, poziom z tego samego urządzenia co moc, inaczej wg kolejności */
+const hgFlowCfg = (v, h) => { const L = (x) => hgArr(x), o = Object.fromEntries(['grid', 'solar', 'grid_export', 'home'].filter((k) => L(v[k]).length).map((k) => [k, L(v[k]).length > 1 ? L(v[k]) : L(v[k])[0]]));
+  const P = L(v.battery), S = L(v.battery_soc), R = (h && h.entities) || {}, used = new Set();
+  const NM = v.names || {};   /* nazwy baterii z konfiguracji karty (YAML), wg czujnika mocy, inaczej poziomu */
+  const bs = P.map((p) => { const d = R[p] && R[p].device_id, m = d && S.find((e) => !used.has(e) && R[e] && R[e].device_id === d); if (m) used.add(m); return { power: p, soc: m || null }; });
+  for (const b of bs) if (!b.soc) { const m = S.find((e) => !used.has(e)); if (m) { used.add(m); b.soc = m; } }
+  for (const e of S) if (!used.has(e)) bs.push({ power: null, soc: e });
+  for (const b of bs) b.name = NM[b.power] || NM[b.soc] || null;
+  if (bs.length) o.batteries = bs.slice(0, 4).map((b) => Object.fromEntries(Object.entries(b).filter(([, x]) => x)));
+  for (const k of ['invert_grid', 'invert_battery']) if (v.o && v.o[k]) o[k] = true;   /* znak z panelu Energia HA (w galerii opcje nadpisuje formularz) */
+  return o; };
+/* konfiguracja karty -> wartości formularza (edycja karty z widoku: ten sam formularz co w galerii, wypełniony tym, co karta pokazuje) */
+const hgFlowFrom = (c) => { const B = Array.isArray(c.batteries) && c.batteries.length ? c.batteries.map((b) => (typeof b === 'string' ? { power: b } : { power: b.power || b.entity, soc: b.soc, name: b.name })) : null;
+  const names = Object.fromEntries((B || []).filter((b) => b.name && (b.power || b.soc)).map((b) => [b.power || b.soc, b.name]));
+  const o = {}; for (const k of ['invert_grid', 'invert_battery']) if (c[k]) o[k] = true;
+  return { grid: hgArr(c.grid), solar: hgArr(c.solar), grid_export: hgArr(c.grid_export), home: hgArr(c.home),
+    battery: B ? B.map((b) => b.power).filter(Boolean) : hgArr(c.battery), battery_soc: B ? B.map((b) => b.soc).filter(Boolean) : hgArr(c.battery_soc), names, o }; };
+/* moc z panelu Energia HA (energy/get_prefs, nowsze HA): stat_rate = encja mocy ze znakiem jak w karcie (sieć + pobór, bateria + rozładowanie),
+   tworzona przez HA także dla power_config; gdy jej nie ma: power_config (odwrócony znak -> invert_*, sieć z dwóch czujników -> grid + grid_export).
+   Bateria z dwóch osobnych czujników bez stat_rate: pomijana (karta ma jeden czujnik ze znakiem). null = brak danych o mocy. */
+const hgFlowPrefs = (h, src) => { if (!Array.isArray(src)) return null; const st = (h && h.states) || {}, ok = (e) => !!(e && st[e]);
+  const rate = (s) => { const pc = s.power_config || {}; if (ok(s.stat_rate)) return { e: s.stat_rate }; if (ok(pc.stat_rate)) return { e: pc.stat_rate }; if (ok(pc.stat_rate_inverted)) return { e: pc.stat_rate_inverted, inv: true };
+    if (ok(pc.stat_rate_from)) return { e: pc.stat_rate_from, to: ok(pc.stat_rate_to) ? pc.stat_rate_to : null }; return null; };
+  const v = { grid: [], grid_export: [], solar: [], battery: [], battery_soc: [], names: {}, o: {} }, G = [], B = [];
+  for (const s of src) { const r = rate(s); if (!r) continue;
+    if (s.type === 'grid') G.push(r);
+    else if (s.type === 'solar' && !r.inv && r.to === undefined) v.solar.push(r.e);
+    else if (s.type === 'battery' && r.to === undefined) B.push(Object.assign({ soc: ok(s.stat_soc) ? s.stat_soc : null, name: s.name || null }, r)); }
+  /* jeden przełącznik znaku na typ: przy mieszance zostają źródła bez odwrócenia */
+  const one = (L) => (L.every((r) => r.inv) ? L : L.filter((r) => !r.inv));
+  const g = one(G), b = one(B); if (g.length && g.every((r) => r.inv)) v.o.invert_grid = true; if (b.length && b.every((r) => r.inv)) v.o.invert_battery = true;
+  for (const r of g) { v.grid.push(r.e); if (r.to) v.grid_export.push(r.to); }
+  for (const r of b.slice(0, 4)) { v.battery.push(r.e); if (r.soc) v.battery_soc.push(r.soc); if (r.name) v.names[r.e] = r.name; }
+  return v.grid.length || v.solar.length || v.battery.length ? v : null; };
+/* wartości startowe formularza (galeria i widok Energia: to samo zachowanie bazowe): najpierw panel Energia HA, brakujące pola ze zgadywania */
+const hgFlowDef = (h, src) => { const g = hgFlowGuess(h), p = hgFlowPrefs(h, src) || {}, has = (x) => Array.isArray(x) && x.length;
+  return { grid: has(p.grid) ? p.grid : g.grid ? [g.grid] : null, solar: has(p.solar) ? p.solar : g.solar ? [g.solar] : null, grid_export: has(p.grid_export) ? p.grid_export : null,
+    battery: has(p.battery) ? p.battery : g.battery, battery_soc: has(p.battery) ? p.battery_soc : g.battery_soc, names: p.names || null, o: p.o && Object.keys(p.o).length ? p.o : null }; };
 class HGFlowCard extends HGBase {
-  static getStubConfig(h) { const g = hgFlowGuess(h); return Object.fromEntries(Object.entries(g).filter(([, v]) => v && (!Array.isArray(v) || v.length))); }
+  static getStubConfig(h) { return hgFlowCfg(hgFlowDef(h, typeof HGEnergyPrefs !== 'undefined' && HGEnergyPrefs._v && HGEnergyPrefs._v.src), h); }
   defaults() { return { title: null, icon: 'mdi:transmission-tower-export', grid: null, grid_export: null, solar: null, battery: null, battery_soc: null, batteries: null, home: null, invert_grid: false, invert_battery: false }; }
   /* baterie: [{ power, soc, name }] z batteries albo z list battery / battery_soc (najwyżej 4) */
   bats() { const c = this._config; if (Array.isArray(c.batteries) && c.batteries.length) return c.batteries.slice(0, 4).map((b) => (typeof b === 'string' ? { power: b } : { power: b.power || b.entity || null, soc: b.soc || null, name: b.name || null }));

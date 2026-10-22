@@ -10,7 +10,7 @@ const HGEnergyPrefs = {
       // HA 2025+: grid ma flow_from[]; starsze wersje: stat_energy_from bezpośrednio
       const cons = grid.flatMap((g) => (g.flow_from ? g.flow_from.map((f) => f.stat_energy_from) : [g.stat_energy_from])).filter(Boolean);
       const prices = grid.flatMap((g) => (g.flow_from ? g.flow_from : [g])).map((f) => f.number_energy_price).filter((x) => x != null);
-      const v = { consumption: cons, production: solar.map((s) => s.stat_energy_from).filter(Boolean),
+      const v = { src, consumption: cons, production: solar.map((s) => s.stat_energy_from).filter(Boolean),   // src: źródła w całości (moc stat_rate / power_config, poziom baterii stat_soc) dla karty przepływu
         price: prices.length && prices.every((x) => x === prices[0]) ? prices[0] : null };
       this._v = v; this._t = Date.now(); return v;
     }).finally(() => { this._p = null; });

@@ -4,6 +4,11 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Nowość: karta **Przepływ energii** wypełnia się z ustawień **panelu Energia** Home Assistanta, gdy podają one czujniki mocy (nowsze HA: moc sieci, paneli i baterii, poziom i nazwa baterii). Odwrócone liczniki i osobne czujniki poboru / oddawania są obsługiwane jak w HA. Czego tam brakuje, jest wykrywane jak dotąd, a własne wybory w ustawieniach karty zawsze mają pierwszeństwo.
+- Poprawka: karta **Przepływ energii** wstawiana domyślnie w widoku **Energia** mogła pokazywać kilka baterii zamiast jednej (np. wszystkie czujniki mocy „bateria” jednego SolarFlow i gniazdko nazwane „bateria”), z poziomami dobieranymi wg kolejności. Baterie są teraz wykrywane wg urządzenia: po jednej na każdy poziom naładowania, który urządzenie podaje (falownik z Battery 1 i Battery 2 daje dwie), każda z czujnikiem mocy o nazwie pasującej do poziomu albo z głównym czujnikiem mocy baterii, gdy urządzenie ma jeden poziom; urządzenia bez poziomu (np. gniazdko) są pomijane, gdy inne urządzenie go podaje. Nowa karta z galerii korzysta z tego samego wykrywania.
+- Ulepszenie: **Ustawienia** karty Przepływ energii w widoku Energia otwierają teraz ten sam formularz co galeria (sieć, panele, baterie, poziomy, oddawanie, dom, opcje znaku), wypełniony tym, co karta pokazuje; wybory zapisują się na wygenerowanej karcie.
+
 ### 2.22.0
 - Zmienione: zmiany ustawień w trybie edycji są szkicem. Widoki, tryb kiosku, nagłówek, pokoje, wygaszacz, PIN i Assist nie zapisują się i nie przeładowują pulpitu przy każdej zmianie; tanie podglądy (akcent, tekst nagłówka) widać od razu. **Gotowe** zapisuje wszystko jeden raz i przeładowuje najwyżej raz, **Anuluj** odrzuca szkic, a opuszczenie strony z niezapisanymi zmianami wymaga potwierdzenia.
 - Zmienione: **Ustawienia** mają nowy układ. Pasek boczny grupuje 13 stron (Ogólne, Wygląd, Pulpit, Tablet ścienny, System), ma wyszukiwarkę ustawień ze wszystkich stron, obsługę klawiatury i listę z przechodzeniem do strony na telefonie. Ustawienia PIN-u mają własną stronę **PIN i blokady**, jest nowa strona **O Nuvio**, a wykrywanie pracy klimatu jest zwinięte w bloku zaawansowanym. Wszystkie opcje i zapisane ustawienia są bez zmian.
