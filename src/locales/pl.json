@@ -142,7 +142,7 @@
         "turbo": "Turbo"
       },
       "hold_details": "Przytrzymaj: szczegóły",
-      "idle": "bezczynny",
+      "idle": "nie pracuje",
       "indoor": "Wnętrze",
       "indoor_temp": "wnętrze {temp}°",
       "lower_temperature": "Obniż temperaturę",
@@ -270,7 +270,7 @@
         "fan_only": "Wentyluje",
         "heat": "Grzeje",
         "heat_cool": "Auto",
-        "idle": "Bezczynny"
+        "idle": "Nie pracuje"
       },
       "lights_count_few": "{count} światła",
       "lights_count_many": "{count} świateł",
@@ -294,7 +294,8 @@
       "turn_off": "wyłącz",
       "turn_off_lights": "Wyłącz światła",
       "turn_on": "włącz",
-      "turn_on_lights": "Włącz światła"
+      "turn_on_lights": "Włącz światła",
+      "estimated": "szacunek"
     },
     "assist": {
       "ask_or_give_a": "Zapytaj albo wydaj polecenie",
@@ -2429,7 +2430,7 @@
     "header_and_navigation": "Nagłówek i nawigacja",
     "header_saved": "Zapisano nagłówek",
     "header_saved_reloading": "Zapisano nagłówek – odświeżanie…",
-    "heating_auto": "Automatycznie (termostat)",
+    "heating_auto": "Nie wybrano",
     "heating_state_sensor": "Stan rzeczywisty · {name}",
     "hidden_in_the_header": "Ukryte w nagłówku",
     "hourly_forecast_from_the": "Prognoza godzinowa: z encji pogody",
@@ -2477,7 +2478,17 @@
     "view_settings": "Ustawienia widoków",
     "weather_in_the_header": "Pogoda w nagłówku",
     "who_is_home_right": "Kto jest teraz w domu",
-    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu"
+    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu",
+    "clim_source": "Wykrywanie pracy · {name}",
+    "clim_src_auto": "Automatycznie",
+    "clim_src_entity": "Z encji",
+    "clim_src_room": "Z temperatury pokoju",
+    "clim_src_mode": "Pokazuj tylko tryb",
+    "clim_threshold": "Próg pracy",
+    "clim_room_temp": "Czujnik do szacunku · {name}",
+    "clim_room_temp_default": "Czujnik pokoju",
+    "clim_hysteresis": "Histereza (°)",
+    "clim_hint": "Automatycznie: najpierw encja stanu rzeczywistego, potem informacja z urządzenia (hvac_action), potem temperatura pokoju względem nastawy (szacunek, oznaczony ~). Bez nich widać tylko tryb. Próg: domyślnie 5 W dla mocy, 0 dla innych wartości."
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",

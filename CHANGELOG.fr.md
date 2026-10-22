@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Non publié
+- Modifié : Nuvio ne devine plus si un thermostat ou un climatiseur fonctionne. Chaque appareil de climat d’une pièce a une **Détection de l’activité** dans **Apparence > Pièces** : **Automatique** (par défaut), **Depuis une entité**, **Depuis la température de la pièce** ou **Afficher le mode seul**. Automatique utilise dans l’ordre : l’entité **État réel** (marche/arrêt, ou une valeur comme une puissance au-dessus du **Seuil de fonctionnement**, 5 W par défaut), ce qu’indique l’appareil lui-même (`hvac_action`), puis la température de la pièce par rapport à la consigne si vous choisissez un capteur de pièce distinct (estimation avec une hystérésis de 0,5° par défaut, marquée **~** avec une pastille atténuée). Sinon, la tuile n’affiche que le mode, par exemple **Chauffage** avec une pastille vide. En 2.21.1, la consigne était comparée à la température de l’appareil lui-même, si bien que les climatiseurs pilotés par télécommande IR affichaient **Au repos** en chauffant. Avec plusieurs appareils dans une pièce, la tuile Pièces affiche d’abord celui qui fonctionne à coup sûr, puis une estimation, puis un mode. Les réglages **État réel** existants continuent de fonctionner.
+
 ### 2.21.1
 - Merci à [@cbailly42](https://github.com/cbailly42) pour la correction du climat ([#22](https://github.com/kczepiec/nuvio/pull/22)).
 - Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.

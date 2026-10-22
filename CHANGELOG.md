@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Changed: Nuvio no longer guesses whether a thermostat or air conditioner is running. Each climate device in a room has **Activity detection** in **Appearance > Rooms**: **Automatic** (default), **From an entity**, **From room temperature** or **Show mode only**. Automatic uses, in this order: the **Actual state** entity (on/off, or a value such as power above the **Running threshold**, 5 W by default), what the device reports itself (`hvac_action`), and the room temperature against the setpoint when you pick a separate room sensor (an estimate with a 0.5° hysteresis by default, marked **~** with a dimmed dot). Otherwise the tile shows only the mode, for example **Heating** with an empty dot. In 2.21.1 the setpoint was compared with the device's own temperature, so IR remote air conditioners showed **Idle** while heating. With several devices in a room, the Rooms tile shows a device that is surely running first, then an estimate, then a mode. Existing **Actual state** choices keep working.
+
 ### 2.21.1
 - Thanks to [@cbailly42](https://github.com/cbailly42) for the climate fix ([#22](https://github.com/kczepiec/nuvio/pull/22)).
 - After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.

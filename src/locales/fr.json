@@ -289,7 +289,8 @@
       "turn_off": "éteindre",
       "turn_off_lights": "Éteindre les lumières",
       "turn_on": "allumer",
-      "turn_on_lights": "Allumer les lumières"
+      "turn_on_lights": "Allumer les lumières",
+      "estimated": "estimation"
     },
     "assist": {
       "ask_or_give_a": "Posez une question ou donnez un ordre",
@@ -2393,7 +2394,7 @@
     "header_and_navigation": "En-tête et navigation",
     "header_saved": "En-tête enregistré",
     "header_saved_reloading": "En-tête enregistré – rechargement…",
-    "heating_auto": "Automatique (thermostat)",
+    "heating_auto": "Aucune",
     "heating_state_sensor": "État réel · {name}",
     "hidden_in_the_header": "Masqué dans l’en-tête",
     "hourly_forecast_from_the": "Prévisions horaires : depuis l’entité météo",
@@ -2441,7 +2442,17 @@
     "view_settings": "Paramètres des vues",
     "weather_in_the_header": "Météo dans l’en-tête",
     "who_is_home_right": "Qui est à la maison en ce moment",
-    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille"
+    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille",
+    "clim_source": "Détection de l’activité · {name}",
+    "clim_src_auto": "Automatique",
+    "clim_src_entity": "Depuis une entité",
+    "clim_src_room": "Depuis la température de la pièce",
+    "clim_src_mode": "Afficher le mode seul",
+    "clim_threshold": "Seuil de fonctionnement",
+    "clim_room_temp": "Capteur pour l’estimation · {name}",
+    "clim_room_temp_default": "Capteur de la pièce",
+    "clim_hysteresis": "Hystérésis (°)",
+    "clim_hint": "Automatique : d’abord l’entité d’état réel, puis ce qu’indique l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (estimation, marquée ~). Sans elles, seul le mode est affiché. Seuil : 5 W par défaut pour une puissance, 0 pour les autres valeurs."
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",
