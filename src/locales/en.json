@@ -3037,6 +3037,9 @@
     "none_touch_only": "None, touch only",
     "not_detected": "Not detected",
     "now_until": "now, until {time}",
+    "on_this_device": "Screensaver on this device",
+    "on_this_device_off": "Off on this device. Other devices keep their own choice.",
+    "on_this_device_on": "Starts on this device after inactivity. Saved in this browser only.",
     "photo": "Photo",
     "photo_sources": {
       "bg": "Dashboard background",

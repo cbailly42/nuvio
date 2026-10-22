@@ -3085,6 +3085,9 @@
     "none_touch_only": "Aucun, toucher uniquement",
     "not_detected": "Non détecté",
     "now_until": "maintenant, jusqu’à {time}",
+    "on_this_device": "Écran de veille sur cet appareil",
+    "on_this_device_off": "Désactivé sur cet appareil. Les autres appareils gardent leur propre choix.",
+    "on_this_device_on": "Démarre sur cet appareil après inactivité. Enregistré uniquement dans ce navigateur.",
     "photo": "Photo",
     "photo_sources": {
       "bg": "Fond d’écran du tableau de bord",

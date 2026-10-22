@@ -3133,6 +3133,9 @@
     "none_touch_only": "Brak, tylko dotyk",
     "not_detected": "Nie wykryto",
     "now_until": "teraz, do {time}",
+    "on_this_device": "Wygaszacz na tym urządzeniu",
+    "on_this_device_off": "Wyłączony na tym urządzeniu. Inne urządzenia mają własny wybór.",
+    "on_this_device_on": "Włącza się na tym urządzeniu po bezczynności. Zapisane tylko w tej przeglądarce.",
     "photo": "Zdjęcie",
     "photo_sources": {
       "bg": "Tło dashboardu",
