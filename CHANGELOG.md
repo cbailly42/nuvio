@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.5
 - Fixed: **Hide the sidebar** (formerly **Hide the sidebar when it is empty**) did nothing while any view still had **Sidebar** on. It now hides the Nuvio sidebar and its Settings button on computers and tablets whatever the per-view switches say, and views that are not in the top tabs move to the profile menu.
 
 ### 2.21.4

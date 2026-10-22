@@ -4,7 +4,7 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.5
 - Corrigé : **Masquer la barre latérale** (anciennement **Masquer la barre latérale vide**) restait sans effet tant qu’une vue avait **Barre latérale** activée. L’option masque maintenant la barre latérale de Nuvio et son bouton Paramètres sur ordinateur et tablette quels que soient les interrupteurs des vues, et les vues absentes des onglets du haut passent dans le menu du profil.
 
 ### 2.21.4
