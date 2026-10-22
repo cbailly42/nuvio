@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.22.0
 - Changed: settings changes in edit mode are a draft. Views, kiosk mode, header, rooms, screensaver, PIN and Assist settings no longer save or reload the dashboard on every change; cheap previews (accent, header text) show at once. **Done** saves everything once and reloads at most once, **Cancel** discards the draft, and leaving the page with unsaved changes asks first.
 - Changed: **Settings** have a new layout. A sidebar groups 13 pages (General, Appearance, Dashboard, Wall tablet, System) with a search box that finds settings on every page, keyboard navigation and a drill-down list on phones. PIN settings have their own **PIN and locks** page, there is a new **About Nuvio** page, and per-climate activity detection is folded under an advanced block. Every option and stored setting is unchanged.
 
