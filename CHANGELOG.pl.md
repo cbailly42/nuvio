@@ -4,6 +4,12 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.21.0-beta.3
+- Nowość: **Stan rzeczywisty** dla każdego termostatu w pokoju, w **Wygląd > Pokoje** (tryb edycji): wybierz encję, która mówi, czy to urządzenie naprawdę pracuje (encja włącz/wyłącz, np. czujnik spalania pieca, albo liczbowa, np. moc palnika). Gdy w pokoju jest kilka urządzeń (np. klimatyzacja i piec), kafel Pokoje sprawdza wszystkie i pokazuje **Grzeje**, **Chłodzi** albo **Bezczynny** według tego, które naprawdę pracuje; karta termostatu korzysta z tego samego ustawienia.
+- Poprawka: termostaty, które nie podają, co robią (brak `hvac_action`, np. niektóre grzejniki łazienkowe), są uznawane za bezczynne, gdy pokój osiągnął nastawę, na kaflu Pokoje i w karcie termostatu.
+- Poprawka: karta termostatu pokazuje **· bezczynny** po trybie (np. **Grzanie do 7° · bezczynny**), gdy urządzenie w rzeczywistości nie grzeje.
+- Poprawka: kafle **Pokoje** pokazywały **Grzeje**, gdy termostat był w trybie grzania, nawet jeśli nie grzał (np. ochrona przed zamarzaniem 7 °C w pokoju 21 °C). Kafel pokazuje teraz to, co urządzenie naprawdę robi, i w takim przypadku **Bezczynny** z szarą kropką.
+
 ### 2.21.0-beta.2
 - Wersja testowa (beta).
 - Poprawka: przełączniki **Blokady widoków PIN-em** w Trybie tabletu ściennego nic nie robiły po kliknięciu. Ich akcja nie trafiała do ustawień tabletu, więc nic się nie przełączało ani nie zapisywało. Teraz przełączają się od razu i zapisują z układem; bez PIN-u pojawia się komunikat i pole do ustawienia PIN-u. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
