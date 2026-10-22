@@ -4,6 +4,10 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Zmienione: zmiany ustawień w trybie edycji są szkicem. Widoki, tryb kiosku, nagłówek, pokoje, wygaszacz, PIN i Assist nie zapisują się i nie przeładowują pulpitu przy każdej zmianie; tanie podglądy (akcent, tekst nagłówka) widać od razu. **Gotowe** zapisuje wszystko jeden raz i przeładowuje najwyżej raz, **Anuluj** odrzuca szkic, a opuszczenie strony z niezapisanymi zmianami wymaga potwierdzenia.
+- Zmienione: **Ustawienia** mają nowy układ. Pasek boczny grupuje 13 stron (Ogólne, Wygląd, Pulpit, Tablet ścienny, System), ma wyszukiwarkę ustawień ze wszystkich stron, obsługę klawiatury i listę z przechodzeniem do strony na telefonie. Ustawienia PIN-u mają własną stronę **PIN i blokady**, jest nowa strona **O Nuvio**, a wykrywanie pracy klimatu jest zwinięte w bloku zaawansowanym. Wszystkie opcje i zapisane ustawienia są bez zmian.
+
 ### 2.21.6
 - Poprawione: wygaszacz znów trzyma ekran włączony po wyłączeniu i włączeniu ekranu albo po przełączeniu aplikacji lub karty. Przeglądarka zwalnia blokadę wygaszania ekranu, gdy strona jest niewidoczna; Nuvio prosi o nią ponownie, gdy strona jest znowu widoczna, a wygaszacz włączony ([#38](https://github.com/kczepiec/nuvio/issues/38)).
 - Poprawione: karta **Roleta / brama** pokazywała 0 % lub 100 % i pasek pozycji dla rolet bez pozycji (brama albo garaż, które znają tylko otwórz, zamknij i stop). Teraz pokazuje stan słowny (Otwarte, Zamknięte, Otwieranie, Zamykanie) z delikatnym pulsowaniem w ruchu i bez paska. Ikona zależy od klasy urządzenia (brama, garaż, drzwi, okno, żaluzja, zasłona, roleta, markiza) zamiast zawsze rolety ([#36](https://github.com/kczepiec/nuvio/issues/36)).

@@ -12,6 +12,18 @@ strategy:
   language: pl        # dowolny dostępny kod języka (en, pl, fr …): domyślny język pulpitu (osobisty wybór w Ustawieniach i tak wygrywa)
 ```
 
+## Układ ustawień
+
+**Ustawienia** otworzysz z trybu edycji albo z menu użytkownika. Okno ustawień ma pasek boczny ze stronami w grupach:
+
+- **Ogólne**: Ogólne (język, wydajność)
+- **Wygląd**: Motyw (styl pulpitu, tło paneli, akcent), Tło (tło, przyciemnienie, galeria), Nagłówek (nagłówek i nawigacja)
+- **Pulpit**: Widoki i nawigacja (widoki, ustawienia widoków), Pokoje i klimat
+- **Tablet ścienny**: Wygaszacz, PIN i blokady (blokada wygaszacza PIN-em i blokada widoków PIN-em)
+- **System**: Assist, Użytkownicy, Integracje, Kopia i import, O Nuvio
+
+Wpisz tekst w polu wyszukiwania na górze paska bocznego, aby zobaczyć wszystkie pasujące ustawienia ze wszystkich stron; każda strona pokazuje liczbę trafień. Escape czyści wyszukiwanie. Na pasku bocznym strzałki, Home i End przenoszą między stronami. Na telefonie pasek boczny jest listą: stuknij stronę, aby ją otworzyć, a strzałką wstecz wróć do listy. Wykrywanie pracy każdego urządzenia klimatu w **Pokoje i klimat** jest zwinięte w bloku zaawansowanym, który otwiera się sam, gdy ustawiono własne źródło. Zmiany w trybie edycji są szkicem: nic się nie zapisuje i pulpit się nie przeładowuje, dopóki nie stukniesz **Gotowe**; wtedy zapis jest jeden, a przeładowanie najwyżej jedno. **Anuluj** odrzuca szkic. Wszystkie ustawienia zachowują zapisane klucze, więc obecne konfiguracje działają bez zmian.
+
 ## Język
 
 Nuvio jest dostępne w kilku językach: dziś po angielsku, po polsku i po francusku, a także w każdym języku dodanym jako katalog (zobacz niżej). Każdy wybiera swój język w **Ustawienia → Wygląd → Język** (*Automatycznie*, a potem po jednym przycisku na każdy dostępny język) albo pozycją języka w menu użytkownika, dostępną dla wszystkich, także bez dostępu do ustawień. Cały pulpit zmienia się od razu, bez przeładowania strony: nawigacja, karty, ustawienia, tryb edycji, komunikaty, liczby i daty. Wybór zapisuje się na tym urządzeniu i na Twoim koncie Home Assistant, więc działa też na innych urządzeniach.

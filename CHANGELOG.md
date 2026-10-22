@@ -4,6 +4,10 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Changed: settings changes in edit mode are a draft. Views, kiosk mode, header, rooms, screensaver, PIN and Assist settings no longer save or reload the dashboard on every change; cheap previews (accent, header text) show at once. **Done** saves everything once and reloads at most once, **Cancel** discards the draft, and leaving the page with unsaved changes asks first.
+- Changed: **Settings** have a new layout. A sidebar groups 13 pages (General, Appearance, Dashboard, Wall tablet, System) with a search box that finds settings on every page, keyboard navigation and a drill-down list on phones. PIN settings have their own **PIN and locks** page, there is a new **About Nuvio** page, and per-climate activity detection is folded under an advanced block. Every option and stored setting is unchanged.
+
 ### 2.21.6
 - Fixed: the screensaver keeps the screen on again after the screen was turned off and on, or after switching apps or tabs. Browsers release the screen wake lock when the page is hidden; Nuvio now asks for it again when the page is visible and the screensaver is on ([#38](https://github.com/kczepiec/nuvio/issues/38)).
 - Fixed: the **Cover / gate** card showed 0 % or 100 % and a position bar for covers without a position (a gate or garage door that only knows open, close and stop). It now shows the state in words (Open, Closed, Opening, Closing) with a gentle pulse while moving, and no bar. The icon follows the device class (gate, garage, door, window, blind, curtain, shade, awning) instead of always a shutter ([#36](https://github.com/kczepiec/nuvio/issues/36)).

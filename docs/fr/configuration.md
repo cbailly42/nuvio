@@ -12,6 +12,18 @@ strategy:
   language: fr        # tout code de langue disponible (en, pl, fr …) : langue par défaut du tableau de bord (un choix personnel dans les Paramètres reste prioritaire)
 ```
 
+## Organisation des paramètres
+
+Ouvrez **Paramètres** depuis le mode édition ou le menu utilisateur. La fenêtre des paramètres a une barre latérale avec des pages groupées :
+
+- **Général** : Général (langue, performances)
+- **Apparence** : Thème (style du tableau de bord, fond des panneaux, accent), Arrière-plan (arrière-plan, assombrissement, galerie), En-tête (en-tête et navigation)
+- **Tableau de bord** : Vues et navigation (vues, réglages des vues), Pièces et climat
+- **Tablette murale** : Économiseur d’écran, PIN et verrous (verrouillage PIN de l’économiseur et des vues)
+- **Système** : Assist, Utilisateurs, Intégrations, Sauvegarde et import, À propos de Nuvio
+
+Saisissez du texte dans le champ de recherche en haut de la barre latérale pour afficher tous les paramètres correspondants de toutes les pages ; chaque page indique son nombre de résultats. Échap efface la recherche. Dans la barre latérale, les flèches, Début et Fin passent d’une page à l’autre. Sur un téléphone, la barre latérale est une liste : touchez une page pour l’ouvrir et utilisez la flèche retour pour revenir. La détection d’activité de chaque appareil de climat dans **Pièces et climat** est repliée dans un bloc avancé qui s’ouvre tout seul quand une source personnalisée est définie. En mode édition, les changements sont un brouillon : rien n’est enregistré et le tableau de bord n’est pas rechargé avant que vous touchiez **Terminé**, qui enregistre une seule fois et recharge au plus une fois. **Annuler** abandonne le brouillon. Tous les paramètres gardent leurs clés enregistrées, les configurations existantes fonctionnent donc sans changement.
+
 ## Langue
 
 Nuvio est disponible en plusieurs langues : aujourd’hui en anglais, en polonais et en français, ainsi que dans toute langue ajoutée sous forme de catalogue (voir plus bas). Chaque personne choisit sa langue dans **Paramètres → Apparence → Langue** (*Automatique*, puis un bouton par langue disponible) ou avec l’élément de langue du menu utilisateur, accessible à tous, y compris aux personnes sans accès aux paramètres. Tout le tableau de bord change d’un coup, sans recharger la page : navigation, cartes, paramètres, mode édition, notifications, nombres et dates. Le choix est enregistré sur cet appareil et dans votre compte Home Assistant, et vous suit donc sur vos autres appareils.

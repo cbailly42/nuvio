@@ -609,7 +609,7 @@ class HGPage extends HTMLElement {
       { label: hgT('page.do_not_show'), icon: 'mdi:eye-off-outline', value: '-', checked: cur === '-' },
       { label: hgT('page.all_room_settings'), icon: 'mdi:cog-outline', value: '@set' }];
     const v = await hgOverlay.menu(t, items); if (v == null || v === cur) return;
-    if (v === '@set') { if (window.HGRoomsX) { HGRoomsX.open = a.id; } this._lkTab = 'rooms'; return this._eLook && this._eLook(); }
+    if (v === '@set') { if (window.HGRoomsX) { HGRoomsX.open = a.id; } this._lkTab = 'rooms'; this._lkDD = 'page'; return this._eLook && this._eLook(); }
     const W = HGL.data.wiz = Object.assign({}, HGL.data.wiz || {}), A = W.areas = JSON.parse(JSON.stringify(W.areas || {})), S = A.sensors = A.sensors || {}, o = Object.assign({}, S[a.id]);
     if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) S[a.id] = o; else delete S[a.id]; W.ts = Date.now();
     if (window.HGRoomsX && !HGRoomsX.dirty) HGRoomsX.draft = null;
