@@ -55,6 +55,7 @@ class HGAreasCard extends HGBase {
 .mt .lt{ color:var(--hg-accent-tx); } .mt .xp{ margin-left:auto; flex:none; width:16px; height:16px; opacity:.8; transition:transform .25s cubic-bezier(.2,0,0,1), opacity .25s; } @media (hover:hover) and (pointer:fine){ .tile:hover .xp{ opacity:1; transform:translate(2px,-2px); } }
 .dot{ width:7px; height:7px; border-radius:50%; flex:none; background:var(--c); }
 .cl{ display:inline-flex; align-items:center; gap:4u; flex:none; color:#3A3D42; }
+.cl.ce .dot{ opacity:.45; } .cl.cm .dot{ background:transparent; box-shadow:inset 0 0 0 1.5px #8A8F96; }   /* szacunek: przygaszona kropka; sam tryb: pusta, neutralna */
 .oth{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); margin-top:var(--s2); font-size:var(--fs-sm); color:#4A4E54; }
 .oth b{ font-weight:600; color:#2A2D31; margin-right:2u; display:inline-flex; align-items:center; height:32px; padding:0 var(--s2); border-radius:var(--r-md); background:var(--hg-glass-lite, var(--hg-glass-bg)); }
 .oth button{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s2) 0 10px; border-radius:var(--r-md); background:var(--hg-glass-lite, var(--hg-glass-bg)); border:1px solid var(--hg-glass-bd); color:#2A2D31; font-size:var(--fs-sm); font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition: background .2s, color .2s; }
@@ -73,10 +74,13 @@ class HGAreasCard extends HGBase {
       const env = HGAreas.env(h, a);
       const okL = a.lights.filter((e) => H.ok(h.states[e]));
       const on = a.lights.filter((e) => h.states[e].state === 'on').length;
-      // wszystkie włączone urządzenia klimatu pokoju (np. klimatyzacja + piec): pokazuje to, które naprawdę pracuje
-      const CL = a.sec.clim.map((e) => h.states[e]).filter((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off').map((s) => ({ s, st: hgClimAct(h, s, s.state, c.areas) }));
-      const PR = { heat: 3, cool: 3, dry: 2, fan_only: 2, idle: 1 }, top = CL.sort((x, y) => (PR[y.st] || 0) - (PR[x.st] || 0))[0], cl = top && top.s, cst = top && top.st;
-      const clm = cl && (cst === 'idle' ? HG_AC_MODE.off : HG_AC_MODE[cst] || HG_AC_MODE.cool);
+      // wszystkie włączone urządzenia klimatu pokoju (np. klimatyzacja + piec): potwierdzona praca > szacowana > sam tryb > bezczynność (hgClimRank)
+      const CL = a.sec.clim.map((e) => h.states[e]).filter((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off').map((s) => ({ s, i: hgClimInfo(h, s, s.state, c.areas, a.id) })).filter((x) => x.i);
+      const top = CL.sort((x, y) => hgClimRank(y.i) - hgClimRank(x.i))[0], cl = top && top.s, ci = top && top.i;
+      const clm = ci && (ci.act === 'idle' ? HG_AC_MODE.off : HG_AC_MODE[ci.act || ci.mode] || HG_AC_MODE.cool);
+      // etykieta: potwierdzone bez znaku, szacunek z „~” i przygaszoną kropką, sam tryb jako „Tryb: …” z pustą kropką (nie twierdzi, że pracuje)
+      const cll = ci && (ci.conf === 'mode' ? hgT('cards.areas.mode_label', { mode: (HG_AC_MODE[ci.mode] || {}).l || H.stateLabel(ci.mode) }) : (ci.conf === 'estimated' ? '~' : '') + (lbl(ci.act) || H.stateLabel(ci.act)));
+      const cla = ci && (ci.conf === 'estimated' ? cll.slice(1) + ' (' + hgT('cards.areas.estimated') + ')' : cll);
       // pokój bez niczego, co da się pokazać lub obsłużyć -> zwinięty do wiersza "Pozostałe"
       // obecność / ruch: tylko prawdziwe, dostępne czujniki pokoju (occupancy/presence ma pierwszeństwo przed motion)
       const prs = a.sec.mot.filter((e) => H.ok(h.states[e]));
@@ -85,9 +89,9 @@ class HGAreasCard extends HGBase {
       const pr = prs.length ? `<span class="pr ${prOn ? 'on' : ''}" role="img" aria-label="${H.esc(prOn ? (occ ? hgT('cards.areas.someone_is_in_the') : hgT('cards.areas.motion_detected')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion')))}" title="${prOn ? (occ ? hgT('cards.areas.presence') : hgT('common.motion')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion'))}">${H.icon(occ ? (prOn ? 'mdi:account' : 'mdi:account-outline') : 'mdi:motion-sensor')}</span>` : '';
       const envH = env.t != null || env.u != null ? `<div class="env">${env.t != null ? `<span class="t">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}°</span>` : ''}${env.u != null ? `<span class="u">${H.icon('mdi:water-percent')}${H.pct(H.fmt(env.u, 0))}</span>` : ''}</div>` : '';
       const mt = [on ? `<span class="lt">${hgT('cards.areas.lights_count', { count: on })}</span>` : '',
-        cl ? `<span class="cl"><i class="dot" style="--c:${clm.c}"></i>${H.esc(lbl(cst) || H.stateLabel(cst))}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
+        ci ? `<span class="cl ${ci.conf === 'mode' ? 'cm' : ci.conf === 'estimated' ? 'ce' : ''}"><i class="dot" style="--c:${clm.c}"></i>${H.esc(cll)}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
       const lb = okL.length ? `<button class="lb ${on ? 'on' : ''}" data-act="lights" data-a="${H.esc(a.id)}" aria-pressed="${!!on}" aria-label="${H.esc(on ? hgT('cards.areas.lights_turn_off_aria', { name: a.name }) : hgT('cards.areas.lights_turn_on_aria', { name: a.name }))}" title="${on ? hgT('cards.areas.turn_off_lights') : hgT('cards.areas.turn_on_lights')}">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</button>` : '';
-      const al = [a.name, ...env.txt, on ? hgT('cards.areas.lights_on_count', { count: on }) : '', prs.length ? (prOn ? (occ ? hgT('cards.areas.state_presence') : hgT('common.state_motion')) : '') : '', cl ? (lbl(cst) || cst) : ''].filter(Boolean).join(', ');
+      const al = [a.name, ...env.txt, on ? hgT('cards.areas.lights_on_count', { count: on }) : '', prs.length ? (prOn ? (occ ? hgT('cards.areas.state_presence') : hgT('common.state_motion')) : '') : '', ci ? cla : ''].filter(Boolean).join(', ');
       tiles.push(`<div class="tile lift ${on ? 'lit' : ''} ${HGL.szc(LZ[a.id])} ${a.mode ? 'hgm-' + a.mode : ''}" data-hgk="${H.esc(a.id)}" role="button" tabindex="0" data-act="open" data-a="${H.esc(a.id)}" aria-label="${H.esc(al)}">
         <span class="ic">${H.icon(a.icon)}</span><span class="tr">${pr}${lb}</span><b class="nm">${H.esc(a.name)}</b>${envH}<div class="mt">${mt}<span class="xp">${H.icon('mdi:arrow-top-right')}</span></div></div>`);
     }

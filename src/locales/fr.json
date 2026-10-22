@@ -289,7 +289,9 @@
       "turn_off": "éteindre",
       "turn_off_lights": "Éteindre les lumières",
       "turn_on": "allumer",
-      "turn_on_lights": "Allumer les lumières"
+      "turn_on_lights": "Allumer les lumières",
+      "mode_label": "Mode : {mode}",
+      "estimated": "estimé"
     },
     "assist": {
       "ask_or_give_a": "Posez une question ou donnez un ordre",
@@ -2393,7 +2395,7 @@
     "header_and_navigation": "En-tête et navigation",
     "header_saved": "En-tête enregistré",
     "header_saved_reloading": "En-tête enregistré – rechargement…",
-    "heating_auto": "Automatique (thermostat)",
+    "heating_auto": "Aucune (source suivante)",
     "heating_state_sensor": "État réel · {name}",
     "hidden_in_the_header": "Masqué dans l’en-tête",
     "hourly_forecast_from_the": "Prévisions horaires : depuis l’entité météo",
@@ -2441,7 +2443,17 @@
     "view_settings": "Paramètres des vues",
     "weather_in_the_header": "Météo dans l’en-tête",
     "who_is_home_right": "Qui est à la maison en ce moment",
-    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille"
+    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille",
+    "clim_source": "Source de l’état · {name}",
+    "clim_src_auto": "Automatique",
+    "clim_src_entity": "Entité",
+    "clim_src_room": "Température de la pièce",
+    "clim_src_mode": "Mode seul",
+    "clim_threshold": "Seuil de marche (5 W par défaut pour une puissance, 0 sinon)",
+    "clim_room_temp": "Température de la pièce · {name}",
+    "clim_room_temp_default": "Capteur de la pièce",
+    "clim_hysteresis": "Hystérésis (°)",
+    "clim_hint": "Automatique : l’entité, puis l’état indiqué par l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (marquée ~), sinon le mode seul."
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",
