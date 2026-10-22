@@ -270,6 +270,10 @@ Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle
 | `custom:nuvio-grid-card` | Karty w kolumnach; na wąskim ekranie mniej kolumn | `cards`, `columns` (1 do 6, 0 = automatycznie), `min_width`, `square`, `gap`, `glass`, `title`; dla karty `span` |
 | `custom:nuvio-stack-card` | Karty jedna pod drugą albo obok siebie w jednym szkle; obok siebie przechodzą w pion poniżej `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (np. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
+Kolejność (2.21.0): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem.
+
+**Pogoda** jako komponent ma przełącznik **Styl hero** (YAML `variant: hero`): duży biały tekst bezpośrednio na tapecie, bez karty, jak pogoda w nagłówku. Najlepiej wygląda przy wyłączonym **Tle panelu**.
+
 ## Karty ogólne i kontenery (0.16.0)
 
 Dwanaście kart zbudowanych wyłącznie ze wspólnych szklanych klocków, więc wyglądają jak projekt wzorcowy i działają z dowolną encją pasującej domeny. Każda dopasowuje się do szerokości: mała (do 220 px) chowa teksty pomocnicze, duża (od 420 px) pokazuje więcej szczegółów. Działają też w zwykłym widoku Home Assistant, gdzie same rozmywają tło. Gotowy pulpit złożony tylko z nich jest w [../examples/inspiration-dashboard.yaml](../examples/inspiration-dashboard.yaml) (działa z integracją demo HA).

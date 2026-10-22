@@ -218,7 +218,7 @@ class HGPage extends HTMLElement {
     this._hgHidden = false; this.style.display = '';
     const h = this._hgPend; this._hgPend = null;
     if (h) this.hass = h;
-    this._syncPlay(); this._layout(); this._enter();
+    this._syncPlay(); this._layout(); this._enter(); if (window.HGVLock) HGVLock.guard(this);
     requestAnimationFrame(() => requestAnimationFrame(hgOffFlush));   // karty z ukrytego widoku: nadrób zaległe zmiany stanu
   }
   _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
@@ -248,6 +248,7 @@ class HGPage extends HTMLElement {
     this._syncPlay();
     this._hglSub = this._hglSub || (() => { if (!this._editing && this._built && this._hass) this._paintTop(); if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
     HGL.subs.add(this._hglSub);
+    if (this._built && window.HGVLock) HGVLock.guard(this);
     this._onLang = this._onLang || (() => this._langChanged());
     window.addEventListener('hg-lang', this._onLang);
     hgBmPassThrough(true);
@@ -263,6 +264,7 @@ class HGPage extends HTMLElement {
      tytuły widoków: katalog spóźniony) -> HA generuje dashboard od nowa (config-refresh, HGLang.stale) */
   _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
+    if (window.HGVLock && HGVLock.page === this && HGVLock.el) HGVLock.close();
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
@@ -473,6 +475,7 @@ class HGPage extends HTMLElement {
       this._cards.push(el); this._cardWraps.push(w);
     }
     this._built = true; this._building = false; this._lsig = this._layoutSig();
+    if (window.HGVLock) HGVLock.guard(this);   /* blokada widoku PIN-em (#17) */
     if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
     this._sigTop = this._sigRail = this._sigHub = null;
     this._paintHead(); this._paintTools();
@@ -1121,6 +1124,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce){ .cw{ animation:none; } }
 .cw > *{ height:100%; }
 /* ukryty panel: visibility nie wystarcza (ha-card w kartach ma własne visibility:visible i przebijał się po animacji) -> także opacity 0 i bez rozmycia */
+:host([vlocked]) .panel, :host([vlocked]) .hub{ visibility:hidden !important; }   /* widok zablokowany PIN-em: treść ukryta pod pinpadem */
 :host([panel-hidden]) .panel{ visibility:hidden; opacity:0 !important; pointer-events:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
 /* w trakcie animacji: jedno rozmycie (sam panel), potomkowie bez backdrop-filter / animacji / przejść -> panel znika jako jedna warstwa */
 :host([panel-anim]) .panel{ transform-origin: 100% 50%; pointer-events:none; --hg-inner-bf: none; }

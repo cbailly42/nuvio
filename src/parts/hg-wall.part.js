@@ -152,16 +152,20 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
   lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
     this.locked = true; this.flag(true); clearTimeout(this._lk); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
-  pad() { const el = this.el; if (!el || el.classList.contains('pin')) return; const c = this.get();
-    let pp = el.querySelector('.nw-pp'); if (!pp) {
+  /* pinpad (przyciski, kropki, kłódka): ten sam dla wygaszacza i blokady widoku (hg-vlock) */
+  padEl(lbl, lockLbl) {
       const ic = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`, LK = 'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z';
       const BK = 'M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12';
       const L = ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ'], pos = (r, q) => { const x = q - 1, y = r - 1.5; return `--x:${x};--y:${y.toFixed(1)};--d:${Math.hypot(x, y * .9).toFixed(2)}`; }, key = (d) => `<button type="button" data-k="${d}" aria-label="${d}" style="${d ? pos(Math.floor((d - 1) / 3), (d - 1) % 3) : pos(3, 1)}">${d}<small>${d ? L[d - 1] || '' : ''}</small></button>`;
-      pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', hgT('wall.unlock_the_dashboard'));
+      const pp = document.createElement('div'); pp.className = 'nw-pp'; pp.setAttribute('role', 'group'); pp.setAttribute('aria-label', lbl);
       const LO = 'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10A2,2 0 0,1 6,8H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6H7A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17Z';
       pp.innerHTML = `<i class="nw-rip" aria-hidden="true"></i><div class="nw-pt"><span class="nw-li">${ic(LK).replace('<svg ', '<svg class="cl" ')}${ic(LO).replace('<svg ', '<svg class="op" ')}</span><span>${H.esc(hgT('wall.enter_pin'))}</span><div class="nw-dots" aria-live="polite"></div><small></small></div>
         <div class="nw-kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}<span class="gap"></span>${key(0)}<button type="button" class="fn" data-k="del" style="${pos(3, 2)}" aria-label="${H.esc(hgT('wall.delete'))}">${ic(BK)}</button></div>
-        <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(hgT('wall.lock'))}</span></button>`;
+        <button type="button" class="nw-lb" data-k="lock">${ic(LK)}<span>${H.esc(lockLbl)}</span></button>`;
+      return pp; },
+  pad() { const el = this.el; if (!el || el.classList.contains('pin')) return; const c = this.get();
+    let pp = el.querySelector('.nw-pp'); if (!pp) {
+      pp = this.padEl(hgT('wall.unlock_the_dashboard'), hgT('wall.lock'));
       pp.addEventListener('pointerdown', (e) => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; e.preventDefault(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 120); this.key(b.dataset.k); });
       el.appendChild(pp); }
     this._pin = ''; this.dots(c.pinN); el.classList.add('pin'); this.idlePad(); },
@@ -357,7 +361,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>`;
     return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
       <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
-      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}</section>`; },
+      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}${window.HGVLock ? HGVLock.html(HGVLock.views()) : ''}</section>`; },
   hereHtml() { const v = this.here();
     return `<button type="button" class="wl-sw" role="switch" data-hge="wl-here" aria-checked="${v}"><span>${hgT('wall.on_this_device')}<small>${v ? hgT('wall.on_this_device_on') : hgT('wall.on_this_device_off')}</small></span><i aria-hidden="true"></i></button>`; },
   lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgT('wall.at_once'));
@@ -384,6 +388,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.glAct && this.glAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); const on = !this.get().on; if (on) this.here(true); this.set({ on }); return p._eLook(); }   /* włączenie tutaj = włączony też na tym urządzeniu */
+    if (a === 'vl-t') { if (b.disabled || !window.HGVLock) return; HGVLock.toggle(b.dataset.v); return p._eLook(); }
     if (a === 'wl-here') { this.last = Date.now(); const v = !this.here(); this.here(v); if (!v) this.flag(false); this.sync(); return p._eLook(); }
     if (a === 'wl-idle') { this.last = Date.now(); this.set({ idle: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-lk') { if (b.disabled) return; this.set({ lk: !this.get().lk }); return p._eLook(); }

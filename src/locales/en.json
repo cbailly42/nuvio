@@ -3267,5 +3267,16 @@
     "summary_sub": "All set. You can change every choice later in edit mode.",
     "views": "Views",
     "views_sub": "Pick the views in the menu. Home is always on."
+  },
+  "vlock": {
+    "title": "Locked view",
+    "enter_pin": "Enter PIN to open this view",
+    "back": "Back",
+    "note": "Convenience lock, not security: it keeps casual hands out of a view on this dashboard. Anyone with a Home Assistant account can still see the same data elsewhere.",
+    "settings_title": "PIN lock for views",
+    "settings_hint": "Chosen views ask for the PIN before showing anything. Unlocked for 5 minutes in this browser tab.",
+    "needs_pin": "Set a PIN in PIN lock first (screensaver section above).",
+    "locked": "Asks for PIN",
+    "open": "Open"
   }
 }
