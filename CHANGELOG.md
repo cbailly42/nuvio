@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Fixed: air conditioners and thermostats that do not report `hvac_action` (for example IR remote air conditioners such as Tuya) showed **Idle** on the Rooms tile and **· idle** on the thermostat card while heating, because 2.21.1 compared the room temperature with the setpoint. Without `hvac_action` the mode is shown again; to show **Idle** for such a device, pick its **Actual state** entity in **Appearance > Rooms**.
+
 ### 2.21.1
 - Thanks to [@cbailly42](https://github.com/cbailly42) for the climate fix ([#22](https://github.com/kczepiec/nuvio/pull/22)).
 - After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.

@@ -18,8 +18,7 @@ const hgOnState = (s) => {
   const n = Number(s.state); return s.state !== '' && isFinite(n) ? n > 0 : null;
 };
 /* co urządzenie klimatu naprawdę robi: 'heat' | 'cool' | 'dry' | 'fan_only' | 'idle', null gdy wyłączone.
-   Kolejność: encja „stan rzeczywisty” z ustawień pokoju (np. stan pieca) > hvac_action > temperatura względem nastawy
-   (grzanie przy temperaturze ≥ nastawie, chłodzenie przy ≤ nastawie -> bezczynne) > sam tryb */
+   Kolejność: encja „stan rzeczywisty” z ustawień pokoju (np. stan pieca) > hvac_action > sam tryb */
 const HG_ACT = { heating: 'heat', preheating: 'heat', defrosting: 'heat', cooling: 'cool', drying: 'dry', fan: 'fan_only', idle: 'idle', off: 'idle' };
 const hgClimAct = (h, s, st = s && s.state, cfg) => {
   if (!s || !st || st === 'off' || st === 'unavailable' || st === 'unknown') return null;
@@ -28,7 +27,7 @@ const hgClimAct = (h, s, st = s && s.state, cfg) => {
   const se = typeof HGAreas !== 'undefined' && h ? HGAreas.stateOf(h, s.entity_id, cfg) : null, on = se ? hgOnState(h.states[se]) : null;
   if (on != null) return on ? mode : 'idle';
   if (ha) return HG_ACT[ha] || mode;
-  const cur = parseFloat(a.current_temperature), tg = parseFloat(a.temperature);
-  if (isFinite(cur) && isFinite(tg) && ((st === 'heat' && cur >= tg) || (st === 'cool' && cur <= tg))) return 'idle';
+  /* bez hvac_action i bez encji stanu rzeczywistego: sam tryb. Temperatura względem nastawy nie mówi, czy urządzenie pracuje
+     (pilot IR klimatyzacji mierzy temperaturę przy sobie, grzanie bywa nad nastawą); bezczynność tylko z hvac_action albo encji stanu */
   return mode;
 };

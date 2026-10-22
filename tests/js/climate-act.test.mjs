@@ -1,5 +1,5 @@
 /* 2.21.1 (PR #22): hgClimAct works out what a climate entity really does:
-   actual state entity > hvac_action > current vs target temperature > mode. */
+   actual state entity > hvac_action > mode (2.21.2: no setpoint guess). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -21,12 +21,18 @@ test('hvac_action wins over the mode', () => {
   assert.equal(act({ states: {} }, cl('heat', { hvac_action: 'heating' })), 'heat');
   assert.equal(act({ states: {} }, cl('auto', { hvac_action: 'cooling' })), 'cool');
 });
-test('without hvac_action the setpoint decides', () => {
+test('without hvac_action and without an actual state entity the mode decides, not the setpoint', () => {
   const { act } = load();
-  assert.equal(act({ states: {} }, cl('heat', { current_temperature: 21, temperature: 7 })), 'idle');
+  // IR remote air conditioners (e.g. Tuya): no hvac_action, current_temperature measured next to the remote
+  assert.equal(act({ states: {} }, cl('heat', { current_temperature: 27.5, temperature: 25 })), 'heat');
+  assert.equal(act({ states: {} }, cl('heat', { current_temperature: 21, temperature: 7 })), 'heat');
   assert.equal(act({ states: {} }, cl('heat', { current_temperature: 18, temperature: 21 })), 'heat');
-  assert.equal(act({ states: {} }, cl('cool', { current_temperature: 22, temperature: 24 })), 'idle');
+  assert.equal(act({ states: {} }, cl('cool', { current_temperature: 22, temperature: 24 })), 'cool');
   assert.equal(act({ states: {} }, cl('auto', {})), 'auto');
+});
+test('with an actual state entity a device without hvac_action can still be idle', () => {
+  const { act } = load('binary_sensor.burn');
+  assert.equal(act({ states: { 'binary_sensor.burn': { state: 'off' } } }, cl('heat', { current_temperature: 18, temperature: 21 })), 'idle');
 });
 test('the actual state entity overrides everything, text and unavailable fall through', () => {
   const h = (v) => ({ states: { 'sensor.p': { state: v } } });

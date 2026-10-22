@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane
+- Poprawka: klimatyzatory i termostaty, które nie podają `hvac_action` (np. klimatyzacje sterowane pilotem IR, takie jak Tuya), pokazywały **Bezczynny** na kaflu Pokoje i **· bezczynny** w karcie termostatu, choć grzały, bo 2.21.1 porównywało temperaturę w pokoju z nastawą. Bez `hvac_action` znów pokazywany jest tryb; żeby takie urządzenie mogło pokazać **Bezczynny**, wybierz jego encję **Stan rzeczywisty** w **Wygląd > Pokoje**.
+
 ### 2.21.1
 - Podziękowania dla [@cbailly42](https://github.com/cbailly42) za poprawkę klimatu ([#22](https://github.com/kczepiec/nuvio/pull/22)).
 - Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.

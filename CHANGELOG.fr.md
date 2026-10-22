@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Non publié
+- Corrigé : les climatiseurs et thermostats qui n’indiquent pas `hvac_action` (par exemple les climatiseurs pilotés par télécommande IR, comme Tuya) affichaient **Au repos** sur la tuile Pièces et **· au repos** sur la carte thermostat alors qu’ils chauffaient, car 2.21.1 comparait la température de la pièce à la consigne. Sans `hvac_action`, le mode est de nouveau affiché ; pour qu’un tel appareil puisse afficher **Au repos**, choisissez son entité **État réel** dans **Apparence > Pièces**.
+
 ### 2.21.1
 - Merci à [@cbailly42](https://github.com/cbailly42) pour la correction du climat ([#22](https://github.com/kczepiec/nuvio/pull/22)).
 - Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.
