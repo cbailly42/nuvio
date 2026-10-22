@@ -2502,8 +2502,8 @@
     "badge_persons": "Osoby w domu",
     "badge_custom": "Wybrane encje…",
     "badge_entities": "Encje do liczenia",
-    "rail_hide": "Ukryj pusty pasek boczny",
-    "rail_hide_desc": "Gdy żaden widok nie jest w pasku bocznym, znika też przycisk Ustawienia. Ustawienia zostają w menu profilu, pod ołówkiem i pod adresem {param}.",
+    "rail_hide": "Ukryj pasek boczny",
+    "rail_hide_desc": "Ukrywa pasek boczny razem z przyciskiem Ustawienia na komputerze i tablecie; przełączniki „Pasek boczny” przy widokach przestają wtedy działać. Widoki spoza zakładek u góry trafiają do menu profilu. Ustawienia zostają w menu profilu, pod ołówkiem i pod adresem {param}.",
     "badge_entities_ph": "light.kuchnia, switch.wentylator"
   },
   "looks": {

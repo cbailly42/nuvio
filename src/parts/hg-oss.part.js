@@ -133,8 +133,10 @@ async function hgGenerate(hass, opt) {
   /* pasek telefonu: wiz.phone = do 4 ścieżek wybranych w Wygląd → Widoki; reszta trafia do „Więcej” */
   const PH = wiz && Array.isArray(wiz.phone) && wiz.phone.length ? wiz.phone.map((p) => V.find((v) => v[0] === p)).filter(Boolean).slice(0, 4) : V.slice(0, 4);
   const RV = V.filter((v) => !VX[v[0]] || VX[v[0]].rail !== false).map((v, i) => [v, VX[v[0]] && isFinite(+VX[v[0]].ro) && VX[v[0]].ro !== '' && VX[v[0]].ro != null ? +VX[v[0]].ro : 100 + i]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
-  /* wiz.railHide: żaden widok nie jest w pasku bocznym -> pasek znika razem z Ustawieniami (droga powrotna: menu profilu, ołówek, ?nuvio_settings) */
-  const rail = wiz && wiz.railHide && !RV.length ? [] : [...RV.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
+  /* wiz.railHide: pasek boczny znika razem z Ustawieniami niezależnie od przełączników widoków; widoki spoza zakładek u góry trafiają do menu profilu
+     (droga powrotna do ustawień: menu profilu, ołówek, ?nuvio_settings) */
+  const railOff = !!(wiz && wiz.railHide);
+  const rail = railOff ? [] : [...RV.map(nav), set], phone = { main: PH.map(nav), more: [...V.filter((v) => !PH.includes(v)).map(nav), set] };
   /* pokoje: wiz.areas (Wygląd → Pokoje) = nazwy, ikony, kolejność, czujniki temp./wilg., pokoje własne z listą encji, CWU, schody */
   /* karty pokoi czytają wiz.areas na żywo (HGAreas.glob), więc zmiana w Wyglądzie działa bez przebudowy widoków */
   const areasCfg = { hide: (wiz && wiz.hiddenRooms) || [] };
@@ -143,7 +145,7 @@ async function hgGenerate(hass, opt) {
   const weather = wxE ? { entity: wxE, ...(WZ.forecast_sensor ? { forecast_sensor: WZ.forecast_sensor } : {}),  sun: M.sun, hours: 24, variant: 'hero', title: hgT('nav.outside') } : null;
   const brand = (hass.config && hass.config.location_name) || hgT('nav.home');
   const base = (view, title, sub, cards, panel, extra) => ({ type: 'custom:hg-page', view, brand, title, subtitle: sub, user: {}, tabs, rail, phone_nav: phone, rail_overflow: V.slice(5).map((v) => v[1]),
-    menu: [{ label: hgT('nav.profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: hgT('nav.settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
+    menu: [...(railOff ? V.slice(5).map((v) => ({ label: v[1], icon: v[2], action: { navigate: HG_P(v[0]) } })) : []), { label: hgT('nav.profile'), icon: 'mdi:account-circle-outline', action: { navigate: '/profile' } }, { label: hgT('nav.settings'), icon: 'mdi:cog-outline', action: { navigate: '/config/dashboard' } }],
     hub: HUB === false ? null : HUB && typeof HUB === 'object' && (HUB.persons || M.persons).length ? { title: HUB.title || hgT('nav.hub'), subtitle: HUB.subtitle ?? hgT('nav.hub_sub'), persons: HUB.persons || M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : M.persons.length ? { title: hgT('nav.hub'), subtitle: hgT('nav.hub_sub'), persons: M.persons.slice(0, 6), ...(want('family') ? { plus: { navigate: HG_P('family') } } : {}) } : null,
     back: { back: true, fallback: HG_P('dashboard') }, panel, cards, panel_backdrop: true, background: {}, _hgAuto: true, _hgLang: lang, _hgCode: HGI18n.code, _hgLangOpt: opt.language || '', ...(extra || {}) });
   const scroll = { scroll: true, columns: '1fr 1fr', auto_rows: 'auto', phone_columns: '1fr', tablet: { columns: '1fr 1fr' } };

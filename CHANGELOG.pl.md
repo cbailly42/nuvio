@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Poprawione: **Ukryj pasek boczny** (wcześniej **Ukryj pusty pasek boczny**) nic nie robił, dopóki choć jeden widok miał włączony **Pasek boczny**. Teraz ukrywa pasek boczny Nuvio razem z przyciskiem Ustawienia na komputerze i tablecie bez względu na przełączniki widoków, a widoki spoza zakładek u góry trafiają do menu profilu.
+
 ### 2.21.4
 - Dodane: **{time}** i **{date}** w tytule lub podtytule widoku pokazują bieżącą godzinę i datę w języku interfejsu, w formacie 12 lub 24 h z profilu Home Assistant, odświeżane co minutę. **Dodaj zegar** w edytorze nagłówka dopisuje **{time}** do podtytułu.
 - Dodane: kolumna **Licznik** w **Ustawienia > Widoki** liczy włączone światła, przełączniki, wentylatory, klimatyzację lub osoby w domu (albo odtwarzane media, albo wybrane encje) i pokazuje liczbę na zakładce widoku, gdy jest większa od 0.

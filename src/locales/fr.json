@@ -2466,8 +2466,8 @@
     "badge_persons": "Personnes à la maison",
     "badge_custom": "Entités choisies…",
     "badge_entities": "Entités à compter",
-    "rail_hide": "Masquer la barre latérale vide",
-    "rail_hide_desc": "Quand aucune vue n’est dans la barre latérale, le bouton Paramètres disparaît aussi. Les paramètres restent dans le menu du profil, derrière le crayon et à l’adresse {param}.",
+    "rail_hide": "Masquer la barre latérale",
+    "rail_hide_desc": "Masque la barre latérale et son bouton Paramètres sur ordinateur et tablette ; les interrupteurs Barre latérale des vues sont alors sans effet. Les vues absentes des onglets du haut passent dans le menu du profil. Les paramètres restent dans le menu du profil, derrière le crayon et à l’adresse {param}.",
     "badge_entities_ph": "light.cuisine, switch.ventilateur"
   },
   "looks": {
