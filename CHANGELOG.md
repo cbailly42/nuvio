@@ -4,7 +4,8 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.0-beta.1
+- Beta pre-release for testing. After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.
 - Fixed: a toggle inside a stack or grid added in the editor did not change its look after you turned the light on or off ([#16](https://github.com/kczepiec/nuvio/issues/16)). The panel passed new Home Assistant data to a container only when one of its own entities changed, and the list of those entities did not include the cards inside the container. Containers and other added components now get every update.
 - New: **Screensaver on this device** in **Wall tablet mode** ([#16](https://github.com/kczepiec/nuvio/issues/16)). The screensaver settings stay shared, but each device decides whether it runs, saved in that browser. Enabling the screensaver enables it on the device you use; other devices stay off unless you turn it on there (a tablet locked with the PIN before the update keeps it). After updating, check the switch on your wall tablet.
 - New: **Panel background** in **Appearance** turns off the shared glass panel behind the cards, for all views or only the current one ([#15](https://github.com/kczepiec/nuvio/issues/15)). The styles for `panel_backdrop: false` are no longer a test.
