@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Poprawione: na telefonach i wąskich tabletach ustawienia **Widoki i nawigacja** były ucięte z lewej i ściśnięte do połowy szerokości, a strona przewijała się w bok. Szeroka lista wyboru (pasek na telefonie) i dwukolumnowe karty widoków były szersze niż ekran, a po ukryciu paska bocznego strona trafiała do złego wiersza siatki. Ustawienia mają teraz jedną kolumnę na pełną szerokość, tabela widoków to karty jedna pod drugą ze wszystkimi polami, nic nie przewija się w bok, a pasek **Przywróć domyślne** / **Gotowe** jest nad dolną nawigacją i paskiem iPhone’a. Nowy `tools/mobile_check.py` sprawdza każdą stronę ustawień na iPhonie (WebKit), Androidzie (360 px) i tablecie 768 px przed każdym wydaniem.
+
 ### 2.22.0
 - Zmienione: zmiany ustawień w trybie edycji są szkicem. Widoki, tryb kiosku, nagłówek, pokoje, wygaszacz, PIN i Assist nie zapisują się i nie przeładowują pulpitu przy każdej zmianie; tanie podglądy (akcent, tekst nagłówka) widać od razu. **Gotowe** zapisuje wszystko jeden raz i przeładowuje najwyżej raz, **Anuluj** odrzuca szkic, a opuszczenie strony z niezapisanymi zmianami wymaga potwierdzenia.
 - Zmienione: **Ustawienia** mają nowy układ. Pasek boczny grupuje 13 stron (Ogólne, Wygląd, Pulpit, Tablet ścienny, System), ma wyszukiwarkę ustawień ze wszystkich stron, obsługę klawiatury i listę z przechodzeniem do strony na telefonie. Ustawienia PIN-u mają własną stronę **PIN i blokady**, jest nowa strona **O Nuvio**, a wykrywanie pracy klimatu jest zwinięte w bloku zaawansowanym. Wszystkie opcje i zapisane ustawienia są bez zmian.
