@@ -10,7 +10,7 @@ const HGUsers = window.__hgUsers || (window.__hgUsers = {
   head() { return `<h4 id="us-h">${H.icon('mdi:account-multiple-outline')}${hgT('users.shared_dashboard')}</h4>
       <small class="lk-hn">${hgT('users.intro')}</small>`; },
   html(p) { if (!this.admin(p)) return '';
-    const sec = (body) => `<section class="lk-g us" data-tab="users" aria-labelledby="us-h"><style>${typeof HG_WALL_CSS === 'string' ? HG_WALL_CSS : ''}${HG_US_CSS}</style>${this.head()}${body}</section>`;
+    const sec = (body) => `<section class="lk-g us" data-tab="users" data-pg="users" aria-labelledby="us-h"><style>${typeof HG_WALL_CSS === 'string' ? HG_WALL_CSS : ''}${HG_US_CSS}</style>${this.head()}${body}</section>`;
     if (!this.list) { this.prep(p); return sec(`<small class="lk-hn">${hgT('common.loading')}</small>`); }
     if (!this.doc) return sec(`<small class="us-warn">${H.icon('mdi:alert-circle-outline')}${hgT('users.shared_missing')}</small>`);
     const own = new Set(this.doc.own || []), me = p._hass.user.id, n = this.list.filter((u) => !own.has(u.id)).length;

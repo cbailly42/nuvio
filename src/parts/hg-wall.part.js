@@ -365,11 +365,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.kidHtml(c, h)}
-      ${this.lockHtml(c)}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>`;
-    return `<section class="lk-g wl" data-tab="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
+    return `<section class="lk-g wl" data-tab="wall" data-pg="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
       <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
-      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}${window.HGVLock ? HGVLock.html(HGVLock.views()) : ''}</section>`; },
+      <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}</section>
+      <section class="lk-g wl" data-tab="wall" data-pg="security" aria-labelledby="wls-h"><h4 id="wls-h">${H.icon('mdi:shield-lock-outline')}${hgT('settings.pin_and_locks')}</h4><small class="lk-hn">${hgT('settings.pin_and_locks_hint')}</small>
+      ${c.on ? this.lockHtml(c) : `<small class="wl-warn">${hgT('settings.pin_needs_screensaver')}</small>`}${window.HGVLock ? HGVLock.html(HGVLock.views()) : ''}</section>`; },
   hereHtml() { const v = this.here();
     return `<button type="button" class="wl-sw" role="switch" data-hge="wl-here" aria-checked="${v}"><span>${hgT('wall.on_this_device')}<small>${v ? hgT('wall.on_this_device_on') : hgT('wall.on_this_device_off')}</small></span><i aria-hidden="true"></i></button>`; },
   lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgT('wall.at_once'));
