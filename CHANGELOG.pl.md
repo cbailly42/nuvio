@@ -4,7 +4,8 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.20.0
+- Dziękuję [@cbailly42](https://github.com/cbailly42) za nową kartę i wspólny wykres słupkowy ([#14](https://github.com/kczepiec/nuvio/pull/14)).
 - Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Czujniki w Wh lub MWh są przeliczane, moc wpisana jako `3,4` działa, a nazwy dni są liczone w strefie czasowej Home Assistant. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).
 - Poprawka: słupki karty **Energia statystyki** wyrastają teraz przy pojawieniu się karty, tak jak w **Energia · tydzień**.
 - Dla współtwórców: wykres słupków dziennych i jego dymek, dotąd skopiowane w **Energia · tydzień**, **Energia statystyki** i nowej karcie prognozy, są teraz w jednym miejscu, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). Zobacz [DESIGN.md](DESIGN.md).

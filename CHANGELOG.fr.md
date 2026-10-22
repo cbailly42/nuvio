@@ -4,7 +4,8 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Non publié
+### 2.20.0
+- Merci à [@cbailly42](https://github.com/cbailly42) pour la nouvelle carte et le graphique en barres commun ([#14](https://github.com/kczepiec/nuvio/pull/14)).
 - Nouveau : carte **Prévision de production** (`custom:nuvio-yield-card`). Choisissez un capteur par jour (le premier est aujourd’hui) et la carte affiche les prochains jours en barres avec le total, en classant chaque jour bon, moyen ou faible. Indiquez la puissance installée en kW (un nombre ou une entité) et le classement utilise l’énergie par kW, avec des seuils modifiables ; sans elle, un jour est comparé au meilleur jour de la période. Les capteurs en Wh ou MWh sont convertis, une puissance écrite `3,4` fonctionne, et les noms des jours suivent le fuseau horaire de Home Assistant. Voir [docs/fr/components.md](docs/fr/components.md#prévision-de-production).
 - Corrigé : les barres de **Énergie statistiques** apparaissent maintenant en montant à l’affichage de la carte, comme celles de **Énergie · semaine**.
 - Pour les contributeurs : le graphique en barres par jour et son infobulle, jusqu’ici copiés dans **Énergie · semaine**, **Énergie statistiques** et la nouvelle carte de prévision, sont désormais à un seul endroit, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). Voir [DESIGN.md](DESIGN.md).
