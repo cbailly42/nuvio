@@ -141,6 +141,7 @@
         "turbo": "Turbo"
       },
       "hold_details": "Appui long : détails",
+      "idle": "au repos",
       "indoor": "Intérieur",
       "indoor_temp": "intérieur {temp}°",
       "lower_temperature": "Baisser la température",
@@ -265,7 +266,8 @@
         "dry": "Déshumidifie",
         "fan_only": "Ventile",
         "heat": "Chauffe",
-        "heat_cool": "Auto"
+        "heat_cool": "Auto",
+        "idle": "Au repos"
       },
       "lights_count_one": "{count} lumière",
       "lights_count_other": "{count} lumières",
@@ -2381,8 +2383,8 @@
     "edit": "Modifier",
     "enter_a_local_or": "Saisissez une URL /local/… ou https://…",
     "enter_a_room_name": "Saisissez un nom de pièce",
-    "entities_count_one": "{count} entité",
     "entities_count_many": "{count} entités",
+    "entities_count_one": "{count} entité",
     "entities_count_other": "{count} entités",
     "focal_point_of_the": "Point focal du fond d’écran actuel",
     "fuel_prices_are_hidden": "Les prix des carburants sont masqués dans l’en-tête. La liste des carburants reste enregistrée et réapparaît quand vous réactivez cette option.",
@@ -2391,6 +2393,8 @@
     "header_and_navigation": "En-tête et navigation",
     "header_saved": "En-tête enregistré",
     "header_saved_reloading": "En-tête enregistré – rechargement…",
+    "heating_auto": "Automatique (thermostat)",
+    "heating_state_sensor": "État réel · {name}",
     "hidden_in_the_header": "Masqué dans l’en-tête",
     "hourly_forecast_from_the": "Prévisions horaires : depuis l’entité météo",
     "household_in_the_header": "Foyer dans l’en-tête",

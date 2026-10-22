@@ -140,6 +140,7 @@
         "turbo": "Turbo"
       },
       "hold_details": "Hold: details",
+      "idle": "idle",
       "indoor": "Indoor",
       "indoor_temp": "indoor {temp}°",
       "lower_temperature": "Lower temperature",
@@ -262,7 +263,8 @@
         "dry": "Drying",
         "fan_only": "Fan",
         "heat": "Heating",
-        "heat_cool": "Auto"
+        "heat_cool": "Auto",
+        "idle": "Idle"
       },
       "lights_count_one": "{count} light",
       "lights_count_other": "{count} lights",
@@ -2355,6 +2357,8 @@
     "header_and_navigation": "Header and navigation",
     "header_saved": "Header saved",
     "header_saved_reloading": "Header saved – reloading…",
+    "heating_auto": "Automatic (thermostat)",
+    "heating_state_sensor": "Actual state · {name}",
     "hidden_in_the_header": "Hidden in the header",
     "hourly_forecast_from_the": "Hourly forecast: from the weather entity",
     "household_in_the_header": "Household in the header",
