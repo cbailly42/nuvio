@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Corrigé : dans l’économiseur **Horloge sur photo**, l’heure du prochain événement (et de la prochaine activité LiveKid) est de nouveau en pleine luminosité au lieu d’être atténuée comme les autres lignes. Un `};` en trop dans les styles de l’économiseur faisait ignorer cette règle par le navigateur ([#34](https://github.com/kczepiec/nuvio/issues/34)).
+
 ### 2.21.5
 - Corrigé : **Masquer la barre latérale** (anciennement **Masquer la barre latérale vide**) restait sans effet tant qu’une vue avait **Barre latérale** activée. L’option masque maintenant la barre latérale de Nuvio et son bouton Paramètres sur ordinateur et tablette quels que soient les interrupteurs des vues, et les vues absentes des onglets du haut passent dans le menu du profil.
 
