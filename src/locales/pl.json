@@ -2488,7 +2488,7 @@
     "clim_room_temp": "Czujnik do szacunku · {name}",
     "clim_room_temp_default": "Czujnik pokoju",
     "clim_hysteresis": "Histereza (°)",
-    "clim_hint": "Automatycznie: najpierw encja stanu rzeczywistego, potem informacja z urządzenia (hvac_action), potem temperatura pokoju względem nastawy (szacunek, oznaczony ~). Bez nich widać tylko tryb. Próg: domyślnie 5 W dla mocy, 0 dla innych wartości."
+    "clim_hint": "Automatycznie: najpierw encja stanu rzeczywistego, potem informacja z urządzenia (hvac_action), potem temperatura pokoju względem nastawy (szacunek). Bez nich widać tylko tryb. Próg: domyślnie 5 W dla mocy, 0 dla innych wartości."
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",

@@ -95,11 +95,11 @@ ha-card.glass > *{ flex-shrink:0; }
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
   _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
-  /* co urządzenie naprawdę robi (hgClimInfo): bezczynność tylko potwierdzona albo szacowana („~”), sam tryb nic nie dopisuje */
+  /* co urządzenie naprawdę robi (hgClimInfo): bezczynność tylko potwierdzona albo szacowana, sam tryb nic nie dopisuje */
   _ci(s, st) { return hgClimInfo(this._hass, s, st); }
   _idle(s, st) { const i = this._ci(s, st); return !!i && i.act === 'idle'; }
   _stat(st, t, s) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgT('common.off_fem'); const l = (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgT('cards.ac.mode_to_temp', { mode: m.l, temp: H.fmt(t) }), i = this._ci(s, st);
-    return i && i.act === 'idle' ? l + ' · ' + (i.conf === 'estimated' ? '~' : '') + hgT('cards.ac.idle') : l; }
+    return i && i.act === 'idle' ? l + ' · ' + hgT('cards.ac.idle') : l; }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
     const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button>`;

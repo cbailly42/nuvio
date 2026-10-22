@@ -119,9 +119,25 @@ test('Rooms tile mode-only label is the plain mode name', () => {
   const ac = readFileSync(new URL('../../src/parts/cards/areas-card.part.js', import.meta.url), 'utf8');
   assert.doesNotMatch(ac, /mode_label/);
   assert.match(ac, /ci\.conf === 'mode' \? \(HG_AC_MODE\[ci\.mode\] \|\| \{\}\)\.l \|\| H\.stateLabel\(ci\.mode\)/);
-  assert.match(ac, /\.cl\.cm \.dot\{ background:transparent;/);
+  assert.match(ac, /\.cl\.cm \.dot\{ background:transparent; box-shadow:inset 0 0 0 1\.5px var\(--c\); \}/);
+  // no '~' in visible labels, dot colour from the mode tokens, never HG_AC_MODE.off grey for a running or idle device
+  assert.doesNotMatch(ac, /'~'/);
+  assert.doesNotMatch(readFileSync(new URL('../../src/parts/cards/ac-card.part.js', import.meta.url), 'utf8'), /'~'/);
+  assert.match(ac, /hgClimCol\(/);
+  assert.doesNotMatch(ac, /HG_AC_MODE\.off/);
+  assert.match(ac, /ci\.act === 'idle' \? 'ci'/);
   for (const l of ['en', 'pl', 'fr']) {
     const d = JSON.parse(readFileSync(new URL(`../../src/locales/${l}.json`, import.meta.url), 'utf8'));
     assert.equal(d.cards.areas.mode_label, undefined, l);
   }
+});
+
+/* one colour map for the remote 'Mode' picker and the Rooms dot */
+test('hgClimCol: shared mode colours, auto from the setpoint, off grey', () => {
+  const { col, C } = (() => { const ctx = { hgT: (k) => k }; vm.createContext(ctx); vm.runInContext(src + '\nthis.col = hgClimCol; this.C = HG_CLIM_COL;', ctx); return ctx; })();
+  assert.equal(col('heat'), C.heat); assert.equal(col('cool'), C.cool); assert.equal(col('dry'), C.dry); assert.equal(col('fan_only'), C.fan_only); assert.equal(col('off'), C.off);
+  assert.equal(col('auto', 28, 16, 30), C.heat); assert.equal(col('heat_cool', 17, 16, 30), C.cool); assert.equal(col('auto', 23, 16, 30), C.mid); assert.equal(col('auto', null, 16, 30), C.mid);
+  const rc = readFileSync(new URL('../../src/parts/cards/remote-card.part.js', import.meta.url), 'utf8');
+  assert.match(rc, /_col\(st, t, mn, mx\) \{ return hgClimCol\(st, t, mn, mx\); \}/);
+  assert.doesNotMatch(rc, /hsl\(214 88% 56%\)|hsl\(24 92% 54%\)/);
 });
