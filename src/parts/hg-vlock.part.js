@@ -15,7 +15,7 @@ const HGVLock = window.__hgVLock || (window.__hgVLock = {
     page.setAttribute('vlocked', ''); this.page = page; this.view = v; if (!this.el) this.show(); },
   show() { const W = window.HGWall; if (!W) return; const n = W.get().pinN;
     const el = this.el = document.createElement('div'); el.className = 'nw pin vl'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('vlock.title')); el.tabIndex = -1;
-    el.innerHTML = `<style>${HG_WALL_SS}.nw.vl{ cursor:default; background:rgba(5,7,11,.82); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); } .nw.vl .vl-n{ position:absolute; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); margin:0; text-align:center; font-size:12px; opacity:.6; }</style><p class="vl-n">${H.esc(hgT('vlock.note'))}</p>`;
+    el.innerHTML = `<style>${HG_WALL_SS}.nw.vl{ cursor:default; background:rgba(5,7,11,.82); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); }</style>`;
     const pp = W.padEl(hgT('vlock.title'), hgT('vlock.back')); el.appendChild(pp);
     pp.querySelector('.nw-pt > span:not(.nw-li)').textContent = hgT('vlock.enter_pin');
     this._pin = ''; this._n = n;
@@ -44,7 +44,7 @@ const HGVLock = window.__hgVLock || (window.__hgVLock = {
   html(views) { const L = this.list(), has = !!this.pinH();
     const rows = views.map(([v, n]) => `<button type="button" class="wl-sw" role="switch" data-hge="wl-vlock" data-v="${H.esc(v)}" aria-checked="${L.includes(v)}"><span>${H.esc(n)}<small>${L.includes(v) ? hgT('vlock.locked') : hgT('vlock.open')}</small></span><i aria-hidden="true"></i></button>`).join('');
     return `<div class="wl-f" role="group" aria-labelledby="vl-h"><span id="vl-h">${hgT('vlock.settings_title')}<b class="wl-beta">${hgT('wall.beta')}</b></span>
-      <small class="lk-hn">${has ? hgT('vlock.settings_hint') : hgT('vlock.needs_pin')}</small>${has ? '' : this.pinHtml()}${rows}<small class="wl-warn">${hgT('vlock.note')}</small></div>`; },
+      <small class="lk-hn">${has ? hgT('vlock.settings_hint') : hgT('vlock.needs_pin')}</small>${has ? '' : this.pinHtml()}${rows}</div>`; },
   /* widoki do wyboru: włączone w dashboardzie, bez Panelu (blokada strony startowej zamknęłaby cały dashboard) */
   views() { const V = window.HGLookX && HGLookX.views ? HGLookX.views() : { order: [], on: new Set() }, CU = ((window.__hgL && window.__hgL.data && window.__hgL.data.wiz) || {}).custom || [];
     const nm = (v) => { const c = CU.find((x) => x.p === v); if (c) return c.n || v; const d = typeof HG_VIEW_DEF !== 'undefined' && HG_VIEW_DEF.find((x) => x[0] === v); return d ? String(d[1]) : v; };
