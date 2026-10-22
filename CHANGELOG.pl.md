@@ -5,6 +5,7 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Niewydane
+- Zmiana: okno szczegółowej pogody jest zwarte i mieści się na ekranie telefonu bez przewijania: cztery szczegóły w jednym rzędzie, mniejsze odstępy i wiersze, mniejszy łuk słońca, a na wąskich ekranach krótkie nazwy dni (Pn, Wt) zamiast uciętych.
 - Poprawka: klimatyzatory i termostaty, które nie podają `hvac_action` (np. klimatyzacje sterowane pilotem IR, takie jak Tuya), pokazywały **Bezczynny** na kaflu Pokoje i **· bezczynny** w karcie termostatu, choć grzały, bo 2.21.1 porównywało temperaturę w pokoju z nastawą. Bez `hvac_action` znów pokazywany jest tryb; żeby takie urządzenie mogło pokazać **Bezczynny**, wybierz jego encję **Stan rzeczywisty** w **Wygląd > Pokoje**.
 
 ### 2.21.1

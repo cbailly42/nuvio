@@ -5,6 +5,7 @@
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Non publié
+- Modifié : la fenêtre météo détaillée est compacte et tient sur un écran de téléphone sans défilement : les quatre détails sur une seule ligne, des marges et des lignes plus serrées, un arc solaire plus petit et, sur les écrans étroits, des noms de jours courts (Lun, Mar) au lieu de noms coupés.
 - Corrigé : les climatiseurs et thermostats qui n’indiquent pas `hvac_action` (par exemple les climatiseurs pilotés par télécommande IR, comme Tuya) affichaient **Au repos** sur la tuile Pièces et **· au repos** sur la carte thermostat alors qu’ils chauffaient, car 2.21.1 comparait la température de la pièce à la consigne. Sans `hvac_action`, le mode est de nouveau affiché ; pour qu’un tel appareil puisse afficher **Au repos**, choisissez son entité **État réel** dans **Apparence > Pièces**.
 
 ### 2.21.1

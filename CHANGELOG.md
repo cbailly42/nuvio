@@ -5,6 +5,7 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Changed: the detailed weather window is compact and fits a phone screen without scrolling: the four details sit in one row, rows and paddings are tighter, the sun arc is smaller and on narrow screens the days use short names (Mon, Tue) instead of cut names.
 - Fixed: air conditioners and thermostats that do not report `hvac_action` (for example IR remote air conditioners such as Tuya) showed **Idle** on the Rooms tile and **· idle** on the thermostat card while heating, because 2.21.1 compared the room temperature with the setpoint. Without `hvac_action` the mode is shown again; to show **Idle** for such a device, pick its **Actual state** entity in **Appearance > Rooms**.
 
 ### 2.21.1
