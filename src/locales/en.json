@@ -2353,8 +2353,6 @@
     "fuel_prices_in_the": "Fuel prices in the header",
     "ha_area": "HA area",
     "header_and_navigation": "Header and navigation",
-    "header_saved": "Header saved",
-    "header_saved_reloading": "Header saved – reloading…",
     "heating_auto": "None",
     "heating_state_sensor": "Actual state · {name}",
     "hidden_in_the_header": "Hidden in the header",
@@ -2387,11 +2385,9 @@
     "phone_label_default": "default",
     "price": "Price",
     "remove": "Remove",
-    "rooms_saved": "Rooms saved",
     "save_header": "Save header",
     "save_rooms": "Save rooms",
     "save_views": "Save views",
-    "saved_on_this_device": "Saved on this device only",
     "search_entity": "Search entity…",
     "show_name_in_header": "Show {name} in the header",
     "shown_in_the_header": "Shown in the header",
@@ -2599,15 +2595,8 @@
     "toast": {
       "copied": "Copied – paste into /config/www/custom-sidebar-config.yaml",
       "copy_manually": "Copy manually: {text}",
-      "kiosk_saved": "Kiosk settings saved – reloading…",
       "no_strategy": "This dashboard does not use the Nuvio strategy – add kiosk_mode in its YAML",
-      "save_failed": "Could not save ({error})",
-      "saved_local": "Saved locally only",
-      "saved_shared": "Saved. The change reaches this person right away.",
-      "view_created": "View created: {name} (reloading…)",
-      "view_deleted": "View deleted: {name}",
-      "view_saved": "View saved: {name} (reloading…)",
-      "views_saved": "Views saved – reloading…"
+      "save_failed": "Could not save ({error})"
     },
     "views": {
       "always_visible": "Always visible",
@@ -3339,6 +3328,7 @@
     "changelog": "What is new",
     "report": "Report a problem",
     "results_one": "{count} result",
-    "results_other": "{count} results"
+    "results_other": "{count} results",
+    "applies_on_save": "Saved in the draft. Changes are applied when you tap Done."
   }
 }

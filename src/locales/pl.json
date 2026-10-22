@@ -2425,8 +2425,6 @@
     "fuel_prices_in_the": "Ceny paliw w nagłówku",
     "ha_area": "Obszar HA",
     "header_and_navigation": "Nagłówek i nawigacja",
-    "header_saved": "Zapisano nagłówek",
-    "header_saved_reloading": "Zapisano nagłówek – odświeżanie…",
     "heating_auto": "Nie wybrano",
     "heating_state_sensor": "Stan rzeczywisty · {name}",
     "hidden_in_the_header": "Ukryte w nagłówku",
@@ -2459,11 +2457,9 @@
     "phone_label_default": "domyślna",
     "price": "Cena",
     "remove": "Usuń",
-    "rooms_saved": "Zapisano pokoje",
     "save_header": "Zapisz nagłówek",
     "save_rooms": "Zapisz pokoje",
     "save_views": "Zapisz widoki",
-    "saved_on_this_device": "Zapisano tylko na tym urządzeniu",
     "search_entity": "Szukaj encji…",
     "show_name_in_header": "Pokaż {name} w nagłówku",
     "shown_in_the_header": "Widoczne w nagłówku",
@@ -2671,15 +2667,8 @@
     "toast": {
       "copied": "Skopiowano – wklej do /config/www/custom-sidebar-config.yaml",
       "copy_manually": "Skopiuj ręcznie: {text}",
-      "kiosk_saved": "Zapisano ustawienia kiosku – odświeżanie…",
       "no_strategy": "Ten pulpit nie korzysta ze strategii Nuvio – dodaj kiosk_mode w jego YAML",
-      "save_failed": "Nie udało się zapisać ({error})",
-      "saved_local": "Zapisano tylko lokalnie",
-      "saved_shared": "Zapisano. Ta osoba zobaczy zmianę od razu.",
-      "view_created": "Utworzono widok: {name} (odświeżanie…)",
-      "view_deleted": "Usunięto widok: {name}",
-      "view_saved": "Zapisano widok: {name} (odświeżanie…)",
-      "views_saved": "Zapisano widoki – odświeżanie…"
+      "save_failed": "Nie udało się zapisać ({error})"
     },
     "views": {
       "always_visible": "Zawsze widoczny",
@@ -3447,6 +3436,7 @@
     "results_one": "{count} wynik",
     "results_few": "{count} wyniki",
     "results_many": "{count} wyników",
-    "results_other": "{count} wyniku"
+    "results_other": "{count} wyniku",
+    "applies_on_save": "Zapisano w szkicu. Zmiany zostaną zastosowane po stuknięciu Gotowe."
   }
 }

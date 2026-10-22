@@ -22,7 +22,7 @@ Open **Settings** from the edit mode or the user menu. The settings window has a
 - **Wall tablet**: Screensaver, PIN and locks (screensaver PIN lock and view PIN lock)
 - **System**: Assist, Users, Integrations, Backup and import, About Nuvio
 
-Type in the search box at the top of the sidebar to show every matching setting from all pages; each page shows how many matches it has. Press Escape to clear the search. In the sidebar, use the arrow keys, Home and End to move between pages. On a phone the sidebar is a list: tap a page to open it and use the back arrow to return. Activity detection for each climate device in **Rooms and climate** is folded under an advanced block that opens by itself when a custom source is set. All settings keep their stored keys, so existing configurations work unchanged.
+Type in the search box at the top of the sidebar to show every matching setting from all pages; each page shows how many matches it has. Press Escape to clear the search. In the sidebar, use the arrow keys, Home and End to move between pages. On a phone the sidebar is a list: tap a page to open it and use the back arrow to return. Activity detection for each climate device in **Rooms and climate** is folded under an advanced block that opens by itself when a custom source is set. Changes made in edit mode are a draft: nothing is saved and the dashboard is not reloaded until you tap **Done**, which saves once and reloads at most once. **Cancel** discards the draft. All settings keep their stored keys, so existing configurations work unchanged.
 
 ## Language
 

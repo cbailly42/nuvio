@@ -1019,6 +1019,17 @@ const HGE_CSS = `
 
 /* Ustawienia jako osobny panel z kartami: komputer = karty z lewej, telefon = przewijany pasek kart u góry */
 /* Ustawienia 2.0: strony w grupach (pasek boczny), sekcje przypisane atrybutem data-pg. Stare nazwy zakładek (data-tab, _lkTab) działają dalej. */
+/* Szkic ustawień w trybie edycji: zmiany tylko w HGL.data (pamięć), bez zapisu i bez przeładowania widoku.
+   Zapisz: jeden zapis (HGL.save + ewentualnie konfiguracja pulpitu) i co najwyżej jedno przeładowanie. Anuluj: szkic odrzucony. */
+const HGDraft = window.HGDraft = {
+  defer(page, o) { const d = page._eDraft = page._eDraft || { reload: false, dash: null }; if (o && o.reload) d.reload = true; if (o && o.dash) d.dash = o.dash; d.n = (d.n || 0) + 1; return d; },
+  pending(page) { return !!(page && page._eDraft && page._eDraft.n); },
+  discard(page) { page._eDraft = null; if (typeof HGLookX !== 'undefined') { HGLookX.pend = null; HGLookX.kpend = false; HGLookX.cv = null; HGLookX.dash = null; } },
+  /* zwraca 'reload' albo 'build'; błąd zapisu konfiguracji pulpitu przerywa (szkic zostaje) */
+  async commit(page, h) { const d = page._eDraft; page._eDraft = null; if (!d) return 'build';
+    if (d.dash && !window.__hgDryRun) await h.callWS({ type: 'lovelace/config/save', url_path: HG_DASH(), config: d.dash });
+    return d.reload ? 'reload' : 'build'; },
+};
 const HG_SET_PAGES = () => [
   ['general', 'mdi:tune-variant', hgT('settings.pg.general'), 'general'],
   ['theme', 'mdi:palette-outline', hgT('settings.pg.theme'), 'look'], ['bg', 'mdi:image-outline', hgT('settings.pg.bg'), 'look'], ['header', 'mdi:page-layout-header', hgT('settings.pg.header'), 'look'],
@@ -1029,6 +1040,11 @@ const HG_SET_PAGES = () => [
 const HG_SET_GROUPS = () => ({ general: hgT('settings.grp.general'), look: hgT('settings.grp.look'), dash: hgT('settings.grp.dash'), wall: hgT('settings.grp.wall'), sys: hgT('settings.grp.sys') });
 /* stare klucze zakładek (przed 2.22) -> strony */
 const HG_SET_LEGACY = { look: 'theme', head: 'header', bk: 'backup' };
+/* Wyszukiwarka ustawień: tylko widoczny, przetłumaczony tekst (bez <style>, <script>, <template>, <option>), bez znaków diakrytycznych, dopasowanie od początku słowa */
+const hgSetNorm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').toLowerCase();
+const hgSetWords = window.hgSetWords = (q) => hgSetNorm(q).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const hgSetMatch = window.hgSetMatch = (text, W) => { const T = hgSetNorm(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean); return W.length > 0 && W.every((w) => T.some((t) => t.startsWith(w))); };
+const hgSetText = (root) => { const o = []; const w = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) o.push(c.nodeValue); else if (c.nodeType === 1 && !/^(STYLE|SCRIPT|TEMPLATE|OPTION|SVG)$/i.test(c.tagName) && !c.hidden && c.getAttribute('aria-hidden') !== 'true') { for (const at of ['aria-label', 'placeholder', 'title']) { const v = c.getAttribute(at); if (v) o.push(v); } w(c); } } }; w(root); return o.join(' '); };
 const hgSetPage = window.hgSetPage = (k, has) => { const p = HG_SET_LEGACY[k] || k; return has && !has.has(p) ? [...has][0] || 'general' : p || 'general'; };
 const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-pg]:not([data-pg=${k}])`).join(', ')}, .lkt[data-at=__s] .lk-sc > [data-pg]:not(.hit), .lkt:not([data-at=__s]) .lk-nores{ display:none; }
 .lk-side{ display:flex; flex-direction:column; gap:10px; min-height:0; overflow:auto; }
@@ -1226,20 +1242,24 @@ const HG_EDIT = {
         if (m && m[1] !== HG_BUILD) this._eToast(hgT('edit.version_mismatch', { version: HG_BUILD.split('+')[0], server: m[1].split('+')[0] })); }).catch(() => {}); }
     if (this._editing || !this._canEdit()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
+    HGDraft.discard(this); this._eUnload = (e) => { if (this._eDirty()) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', this._eUnload);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
     this._eWire(); this._eDecorate(); this._eGhostSweep(); this._eHeadBtn(); this._eBar();
     clearInterval(this._eGh); this._eGh = setInterval(() => { if (!this._editing) return clearInterval(this._eGh); if (this._drag && this._drag.on) return; this._eGhostSweep(); this._eDecorate(); }, 700);
   },
-  _eDirty() { return this._editing && this._eSnap !== JSON.stringify(HGL.data); },
+  _eDirty() { return this._editing && (this._eSnap !== JSON.stringify(HGL.data) || HGDraft.pending(this)); },
   _editExit(save) {
     if (!this._editing) return;
     this._editing = false; HGL.editing = false; this.removeAttribute('editing'); clearInterval(this._eGh); for (const ct of this._eConts()) for (const g of ct.el.querySelectorAll(':scope > .hge-ghost')) g.classList.remove('hge-ghost');
-    if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
+    if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); HGDraft.discard(this); }
+    if (this._eUnload) { window.removeEventListener('beforeunload', this._eUnload); this._eUnload = null; }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); if (HGLang._pend) { HGLang._pend = 0; HGLang.refresh(this); } };
-    if (save) HGL.save(this._hass).then((w) => { try { this._eToast(w === 'ha' ? hgT('edit.layout_saved_synced_via') : hgT('edit.layout_saved_on_this')); } catch (e) { /* */ } fin(); }, fin); else fin();
+    if (save) HGL.save(this._hass).then(async (w) => { try { this._eToast(w === 'ha' ? hgT('edit.layout_saved_synced_via') : hgT('edit.layout_saved_on_this')); } catch (e) { /* */ }
+      let how = 'build'; try { how = await HGDraft.commit(this, this._hass); } catch (e) { this._eToast(hgT('oss.toast.save_failed', { error: String((e && e.message) || e) })); }
+      if (how === 'reload' && !window.__hgDryRun) { setTimeout(() => location.reload(), 400); return; } fin(); }, fin); else fin();
   },
   /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
      rozwija się po najechaniu / dotknięciu, przesunięcie lub dotyk zamyka, auto-zamknięcie pauzowane, identyczne komunikaty łączone (×n) */
@@ -1336,7 +1356,7 @@ const HG_EDIT = {
     this._eTrig = b;
     const a = b.dataset.hge;
     if (a === 'done') return this._editExit(true);
-    if (a === 'cancel') return this._editExit(false);
+    if (a === 'cancel') return !this._eDirty() || window.confirm(hgT('edit.discard_unsaved_layout_changes')) ? this._editExit(false) : undefined;
     if (a === 'reset') { const ps = this._pageScope(); const sc = new Set(this._eConts().map((c) => c.scope)); if (ps) { sc.add(ps); sc.add(ps + ':tiles'); }
       for (const s of sc) HGL.set(s, {}); this._eToast(hgT('edit.view_layout_reset_to')); return this._eRefresh(true); }
     if (a === 'hidden') return this._eSheet('hidden');
@@ -1716,12 +1736,12 @@ const HG_EDIT = {
     const ph = sh.querySelector('.lk-ph'); if (ph) { ph.querySelector('b').textContent = p[2]; ph.querySelector('small').textContent = HG_SET_GROUPS()[p[3]]; }
     const sc = sh.querySelector('.hs-sc'); if (sc) { sc.setAttribute('aria-labelledby', 'lkt-' + k); sc.scrollTop = 0; sc.classList.remove('sw'); void sc.offsetWidth; sc.classList.add('sw'); } },
   /* wyszukiwarka: dopasowanie wszystkich słów do treści sekcji i nazwy strony; wyniki z wielu stron naraz, licznik przy stronie */
-  _eSetFind(sh, q) { const W = String(q || '').toLocaleLowerCase(HG_LOC()).split(/\s+/).filter(Boolean), names = Object.fromEntries(HG_SET_PAGES().map((p) => [p[0], p[2]]));
+  _eSetFind(sh, q) { const W = hgSetWords(q), names = Object.fromEntries(HG_SET_PAGES().map((p) => [p[0], p[2]]));
     for (const n of sh.querySelectorAll('.lk-tabs .lk-n')) n.remove();
     if (!W.length) { for (const x of sh.querySelectorAll('.lk-sc > .hit')) x.classList.remove('hit'); sh.dataset.at = this._lkTab; return 0; }
     const cnt = {}; let all = 0;
-    for (const sec of sh.querySelectorAll('.lk-sc > [data-pg]')) { const t = ((names[sec.dataset.pg] || '') + ' ' + sec.textContent + ' ' + [...sec.querySelectorAll('[aria-label],[placeholder],[title]')].map((e) => (e.getAttribute('aria-label') || '') + ' ' + (e.getAttribute('placeholder') || '') + ' ' + (e.getAttribute('title') || '')).join(' ')).toLocaleLowerCase(HG_LOC());
-      const hit = W.every((w) => t.includes(w)); sec.classList.toggle('hit', hit); if (hit) { cnt[sec.dataset.pg] = (cnt[sec.dataset.pg] || 0) + 1; all++; } }
+    for (const sec of sh.querySelectorAll('.lk-sc > [data-pg]')) { const t = (names[sec.dataset.pg] || '') + ' ' + hgSetText(sec);
+      const hit = hgSetMatch(t, W); sec.classList.toggle('hit', hit); if (hit) { cnt[sec.dataset.pg] = (cnt[sec.dataset.pg] || 0) + 1; all++; } }
     for (const [k, n] of Object.entries(cnt)) { const b = sh.querySelector(`#lkt-${k}`); if (b) b.insertAdjacentHTML('beforeend', `<em class="lk-n" aria-label="${hgT('settings.results', { count: n })}">${n}</em>`); }
     sh.dataset.at = '__s'; sh.dataset.dd = 'page'; const ph = sh.querySelector('.lk-ph'); if (ph) { ph.querySelector('b').textContent = hgT('settings.results', { count: all }); ph.querySelector('small').textContent = q; }
     return all; },

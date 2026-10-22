@@ -41,3 +41,15 @@ test('search, drill-down and keyboard navigation are wired', () => {
 test('per-climate detection is a collapsible advanced block', () => {
   assert.match(rd('hg-lookr.part.js'), /<details class="lk-adv"\$\{src \? ' open' : ''\}>/);
 });
+test('search matches word prefixes of visible text, ignores CSS and diacritics', () => {
+  const a = ed.indexOf('const hgSetNorm'), b = ed.indexOf('\nconst hgSetText'); const ctx = { window: {} }; vm.createContext(ctx);
+  vm.runInContext(ed.slice(a, b) + '\nthis.W = hgSetWords; this.M = hgSetMatch;', ctx); const { W, M } = ctx;
+  assert.equal(M('Assist Skrót klawiszowy Podpowiedzi spinner opinion pipeline', W('pin')), false);
+  assert.equal(M('Blokada PIN-em', W('pin')), true);
+  assert.equal(M('PIN i blokady', W('PIN blok')), true);
+  assert.equal(M('Wygaszacz ścienny', W('scien')), true);
+  assert.equal(M('Złoto', W('zloto')), true);
+  assert.equal(M('Économiseur d’écran', W('econom')), true);
+  assert.equal(M('anything', W('')), false);
+  assert.match(ed, /STYLE\|SCRIPT\|TEMPLATE\|OPTION/, 'style text excluded');
+});

@@ -135,7 +135,7 @@ const HGRoomsX = window.HGRoomsX = {
       if (V) V.entities = [...new Set([...(V.entities || []), e])]; else A.assign = Object.assign({}, A.assign, { [e]: r }); this.q = ''; this.dirty = true; return page._eLook(); }
     if (a === 'rx-eu') { const e = b.dataset.e, V = (A.virtual || []).find((v) => v.id === r); if (V) V.entities = (V.entities || []).filter((x) => x !== e); if (A.assign && A.assign[e] === r) { A.assign = Object.assign({}, A.assign); delete A.assign[e]; } this.dirty = true; return page._eLook(); }
     if (a === 'rx-save') { const W = HGL.data.wiz = Object.assign({ ts: Date.now() }, HGL.data.wiz || {}); const hs = new Set(A.hide || []);
-      W.hiddenRooms = (W.hiddenRooms || []).filter((x) => hs.has(x)); W.areas = JSON.parse(JSON.stringify(A)); W.ts = Date.now(); this.dirty = false; await HGL.save(h); this.snap(page); this.draft = null; page._eToast(hgT('lookr.rooms_saved')); return page._eLook(); }
+      W.hiddenRooms = (W.hiddenRooms || []).filter((x) => hs.has(x)); W.areas = JSON.parse(JSON.stringify(A)); W.ts = Date.now(); this.dirty = false; HGDraft.defer(page); this.snap(page); this.draft = null; page._eToast(hgT('settings.applies_on_save')); return page._eLook(); }
     const H2 = this.hd;
     if (a === 'rx-hp') { H2.hubPos = b.dataset.k; this.hdirty = true; return page._eLook(); }
     if (a === 'rx-hub') { H2.hub = H2.hub === false ? {} : false; this.hdirty = true; return page._eLook(); }
@@ -152,10 +152,11 @@ const HGRoomsX = window.HGRoomsX = {
       const P = H2.phone.filter(Boolean); if (P.length) W.phone = [...new Set(P)]; else delete W.phone; W.ts = Date.now(); this.hdirty = false; this.hd = null; const pc = page._config || {};
       /* zmiany tylko w pasku domowników i cenach paliw: od razu na stronie; inne (pogoda, widoki, telefon) wymagają przebudowy */
       const hubOk = JSON.stringify(W.hub ?? null) === HB0 || (W.hub !== false && !!pc.hub), fuelOk = !!page._fuelEl || !(page._fuelList ? page._fuelList() : []).length, hubOnly = rest(W) === W0 && hubOk && fuelOk;
-      const r = await HGL.save(h); this.snap(page); if (r !== 'ha' && !window.__hgDryRun) page._eToast(hgT('lookr.saved_on_this_device'));
+      this.snap(page);
       /* sam tytuł lub podtytuł paska domowników: od razu na stronie, bez przeładowania (pasek czyta wiz.hub przy rysowaniu) */
-      if (hubOnly) { page._paintHub(true); if (page._fuelEl) page._paintFuel(true); page._eToast(hgT('lookr.header_saved')); return page._eLook(); }
-      page._eToast(hgT('lookr.header_saved_reloading')); if (!window.__hgDryRun) setTimeout(() => location.reload(), 600); return page._eLook(); }
+      /* szkic: podgląd paska domowników od razu (tani), zapis i ewentualne przeładowanie dopiero przy Zapisz */
+      if (hubOnly) { HGDraft.defer(page); page._paintHub(true); if (page._fuelEl) page._paintFuel(true); page._eToast(hgT('settings.applies_on_save')); return page._eLook(); }
+      HGDraft.defer(page, { reload: true }); page._eToast(hgT('settings.applies_on_save')); return page._eLook(); }
     if (a === 'rx-ga') { const u = (this._gu || '').trim(); if (!/^(\/|https?:\/\/)/.test(u) || /[\s"'()<>\\]/.test(u)) return page._eToast(hgT('lookr.enter_a_local_or'));
       page._eApp((X) => { X.gallery = [...(X.gallery || []).filter((g) => g.u !== u), { u, ...(this._gn ? { n: this._gn } : {}) }]; }); this._gu = this._gn = ''; return page._eLook(); }
     if (a === 'rx-gd') { page._eApp((X) => { X.gallery = (X.gallery || []).filter((_, i) => i !== +b.dataset.i); if (!X.gallery.length) delete X.gallery; }); return page._eLook(); }

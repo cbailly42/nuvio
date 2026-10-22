@@ -22,7 +22,7 @@ strategy:
 - **Tablet ścienny**: Wygaszacz, PIN i blokady (blokada wygaszacza PIN-em i blokada widoków PIN-em)
 - **System**: Assist, Użytkownicy, Integracje, Kopia i import, O Nuvio
 
-Wpisz tekst w polu wyszukiwania na górze paska bocznego, aby zobaczyć wszystkie pasujące ustawienia ze wszystkich stron; każda strona pokazuje liczbę trafień. Escape czyści wyszukiwanie. Na pasku bocznym strzałki, Home i End przenoszą między stronami. Na telefonie pasek boczny jest listą: stuknij stronę, aby ją otworzyć, a strzałką wstecz wróć do listy. Wykrywanie pracy każdego urządzenia klimatu w **Pokoje i klimat** jest zwinięte w bloku zaawansowanym, który otwiera się sam, gdy ustawiono własne źródło. Wszystkie ustawienia zachowują zapisane klucze, więc obecne konfiguracje działają bez zmian.
+Wpisz tekst w polu wyszukiwania na górze paska bocznego, aby zobaczyć wszystkie pasujące ustawienia ze wszystkich stron; każda strona pokazuje liczbę trafień. Escape czyści wyszukiwanie. Na pasku bocznym strzałki, Home i End przenoszą między stronami. Na telefonie pasek boczny jest listą: stuknij stronę, aby ją otworzyć, a strzałką wstecz wróć do listy. Wykrywanie pracy każdego urządzenia klimatu w **Pokoje i klimat** jest zwinięte w bloku zaawansowanym, który otwiera się sam, gdy ustawiono własne źródło. Zmiany w trybie edycji są szkicem: nic się nie zapisuje i pulpit się nie przeładowuje, dopóki nie stukniesz **Gotowe**; wtedy zapis jest jeden, a przeładowanie najwyżej jedno. **Anuluj** odrzuca szkic. Wszystkie ustawienia zachowują zapisane klucze, więc obecne konfiguracje działają bez zmian.
 
 ## Język
 

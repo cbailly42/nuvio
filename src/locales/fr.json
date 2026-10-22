@@ -2389,8 +2389,6 @@
     "fuel_prices_in_the": "Prix des carburants dans l’en-tête",
     "ha_area": "Pièce HA",
     "header_and_navigation": "En-tête et navigation",
-    "header_saved": "En-tête enregistré",
-    "header_saved_reloading": "En-tête enregistré – rechargement…",
     "heating_auto": "Aucune",
     "heating_state_sensor": "État réel · {name}",
     "hidden_in_the_header": "Masqué dans l’en-tête",
@@ -2423,11 +2421,9 @@
     "phone_label_default": "par défaut",
     "price": "Prix",
     "remove": "Retirer",
-    "rooms_saved": "Pièces enregistrées",
     "save_header": "Enregistrer l’en-tête",
     "save_rooms": "Enregistrer les pièces",
     "save_views": "Enregistrer les vues",
-    "saved_on_this_device": "Enregistré uniquement sur cet appareil",
     "search_entity": "Rechercher une entité…",
     "show_name_in_header": "Afficher {name} dans l’en-tête",
     "shown_in_the_header": "Affiché dans l’en-tête",
@@ -2635,15 +2631,8 @@
     "toast": {
       "copied": "Copié – collez dans /config/www/custom-sidebar-config.yaml",
       "copy_manually": "Copiez manuellement : {text}",
-      "kiosk_saved": "Paramètres du kiosque enregistrés – rechargement…",
       "no_strategy": "Ce tableau de bord n’utilise pas la stratégie Nuvio – ajoutez kiosk_mode dans son YAML",
-      "save_failed": "Enregistrement impossible ({error})",
-      "saved_local": "Enregistré localement uniquement",
-      "saved_shared": "Enregistré. Le changement s’applique immédiatement pour cette personne.",
-      "view_created": "Vue créée : {name} (rechargement…)",
-      "view_deleted": "Vue supprimée : {name}",
-      "view_saved": "Vue enregistrée : {name} (rechargement…)",
-      "views_saved": "Vues enregistrées – rechargement…"
+      "save_failed": "Enregistrement impossible ({error})"
     },
     "views": {
       "always_visible": "Toujours visible",
@@ -3393,6 +3382,7 @@
     "report": "Signaler un problème",
     "results_one": "{count} résultat",
     "results_many": "{count} résultats",
-    "results_other": "{count} résultats"
+    "results_other": "{count} résultats",
+    "applies_on_save": "Enregistré dans le brouillon. Les changements sont appliqués quand vous touchez Terminé."
   }
 }

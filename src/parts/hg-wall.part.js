@@ -193,7 +193,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     else this.msg(hgT('wall.wrong_pin'), true); },
   /* zapis do HA (frontend/set_user_data) z opóźnieniem – suwak przyciemnienia strzela wieloma zdarzeniami; bez tego load() po przeładowaniu nadpisywał lokalną zmianę danymi z serwera */
   set(p) { HGL.data.wall = Object.assign({}, (HGL.data && HGL.data.wall) || {}, this.get(), p); HGL._ls(); this.sync();
-    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
+    /* w trybie edycji: tylko szkic, zapis przy Gotowe */
+    if (HGL.editing) return; clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
   tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h);
     /* po przeładowaniu strony zablokowany ekran wraca od razu (przeładowanie nie omija blokady) */

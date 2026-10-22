@@ -36,7 +36,8 @@ const HGAssistUI = window.__hgAssistUI || (window.__hgAssistUI = {
     return { button: a.button !== false, key: a.key !== false, pipeline: typeof a.pipeline === 'string' ? a.pipeline : '', tts: a.tts === true, mic: a.mic !== false, suggestions: sg && sg.length ? sg : null }; },
   set(p) { HGL.data.assist = Object.assign({}, this.get(), p); HGL._ls(); this.apply();
     if (this.page && this.page._paintTop) { this.page._sigTop = null; this.page._paintTop(); }
-    clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
+    /* w trybie edycji: tylko szkic, zapis przy Gotowe */
+    if (HGL.editing) return; clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   cfg() { const c = this.get(); return { type: 'custom:hg-assist-card', embedded: true, title: 'Assist', pipeline: c.pipeline || null, tts: c.tts, mic: c.mic, show_pipeline: true, suggestions: c.suggestions }; },
   apply() { if (this.card) { const m = this.card._msgs, id = this.card._cid; this.card.setConfig(this.cfg()); this.card._msgs = m; this.card._cid = id; } },
   bind(h, page) { this.hass = h; if (this.page !== page) { this.page = page; if (this.L && page.shadowRoot && this.L.getRootNode() !== page.shadowRoot) page.shadowRoot.appendChild(this.L); }
