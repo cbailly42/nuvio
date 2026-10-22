@@ -4,7 +4,7 @@
    przy rozmyciu wyłączonym (Wydajność) zostaje gęste wypełnienie z motywu, żeby tekst był czytelny. Kolory przez '#' + … i rgb+a(…): tokenizer motywu ich nie zmienia. */
 const HG_LK_C = (r, g, b, a) => 'rgb' + `a(${r},${g},${b},${a})`;
 const HG_LK_X = (s) => '#' + s;
-const HG_LK_BG = (id) => ({ kind: 'image', v: HG_ASSET + 'nuvio-bg-' + id + '-wide.webp', v2p: HG_ASSET + 'nuvio-bg-' + id + '-portrait.webp' });
+const HG_LK_BG = (id) => ({ kind: 'image', v: HG_ASSET_P + 'nuvio-bg-' + id + '-wide.webp', v2p: HG_ASSET_P + 'nuvio-bg-' + id + '-portrait.webp' });
 const HG_LK_GR = (a, b) => ({ kind: 'gradient', v: HG_LK_X(a), v2: HG_LK_X(b) });
 /* g = [jasny, ciemny] wypełnienie szkła [karta, kafel, panel]; r = zaokrąglenia [--r-lg, --r-md, --r-sm]; bl = rozmycie szkła */
 const HG_LOOKS = [
