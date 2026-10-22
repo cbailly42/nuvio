@@ -78,8 +78,8 @@ class HGAreasCard extends HGBase {
       const CL = a.sec.clim.map((e) => h.states[e]).filter((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off').map((s) => ({ s, i: hgClimInfo(h, s, s.state, c.areas, a.id) })).filter((x) => x.i);
       const top = CL.sort((x, y) => hgClimRank(y.i) - hgClimRank(x.i))[0], cl = top && top.s, ci = top && top.i;
       const clm = ci && (ci.act === 'idle' ? HG_AC_MODE.off : HG_AC_MODE[ci.act || ci.mode] || HG_AC_MODE.cool);
-      // etykieta: potwierdzone bez znaku, szacunek z „~” i przygaszoną kropką, sam tryb jako „Tryb: …” z pustą kropką (nie twierdzi, że pracuje)
-      const cll = ci && (ci.conf === 'mode' ? hgT('cards.areas.mode_label', { mode: (HG_AC_MODE[ci.mode] || {}).l || H.stateLabel(ci.mode) }) : (ci.conf === 'estimated' ? '~' : '') + (lbl(ci.act) || H.stateLabel(ci.act)));
+      // etykieta: potwierdzone bez znaku, szacunek z „~” i przygaszoną kropką, sam tryb jako nazwa trybu (np. „Grzanie”) z pustą kropką (nie twierdzi, że pracuje)
+      const cll = ci && (ci.conf === 'mode' ? (HG_AC_MODE[ci.mode] || {}).l || H.stateLabel(ci.mode) : (ci.conf === 'estimated' ? '~' : '') + (lbl(ci.act) || H.stateLabel(ci.act)));
       const cla = ci && (ci.conf === 'estimated' ? cll.slice(1) + ' (' + hgT('cards.areas.estimated') + ')' : cll);
       // pokój bez niczego, co da się pokazać lub obsłużyć -> zwinięty do wiersza "Pozostałe"
       // obecność / ruch: tylko prawdziwe, dostępne czujniki pokoju (occupancy/presence ma pierwszeństwo przed motion)

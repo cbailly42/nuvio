@@ -113,3 +113,15 @@ test('climCfg: legacy key, new keys, room sensor fallback, own device excluded',
   assert.equal(A.climCfg(h, 'climate.x', { sensors: { r1: { temperature: '-' } } }, 'r1').temp, null);
   assert.equal(A.stateOf(h, 'climate.x', { sensors: { r1: { 'state:climate.x': 'b.s' } } }), 'b.s');
 });
+
+/* mode only: the Rooms tile shows just the mode name (e.g. "Heating"), no "Mode:" prefix, with an empty neutral dot */
+test('Rooms tile mode-only label is the plain mode name', () => {
+  const ac = readFileSync(new URL('../../src/parts/cards/areas-card.part.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(ac, /mode_label/);
+  assert.match(ac, /ci\.conf === 'mode' \? \(HG_AC_MODE\[ci\.mode\] \|\| \{\}\)\.l \|\| H\.stateLabel\(ci\.mode\)/);
+  assert.match(ac, /\.cl\.cm \.dot\{ background:transparent;/);
+  for (const l of ['en', 'pl', 'fr']) {
+    const d = JSON.parse(readFileSync(new URL(`../../src/locales/${l}.json`, import.meta.url), 'utf8'));
+    assert.equal(d.cards.areas.mode_label, undefined, l);
+  }
+});

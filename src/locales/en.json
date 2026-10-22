@@ -285,8 +285,7 @@
       "turn_off_lights": "Turn off lights",
       "turn_on": "turn on",
       "turn_on_lights": "Turn on lights",
-      "mode_label": "Mode: {mode}",
-      "estimated": "estimated"
+      "estimated": "estimate"
     },
     "assist": {
       "ask_or_give_a": "Ask or give a command",
@@ -2359,7 +2358,7 @@
     "header_and_navigation": "Header and navigation",
     "header_saved": "Header saved",
     "header_saved_reloading": "Header saved – reloading…",
-    "heating_auto": "None (next source)",
+    "heating_auto": "None",
     "heating_state_sensor": "Actual state · {name}",
     "hidden_in_the_header": "Hidden in the header",
     "hourly_forecast_from_the": "Hourly forecast: from the weather entity",
@@ -2408,16 +2407,16 @@
     "weather_in_the_header": "Weather in the header",
     "who_is_home_right": "Who is home right now",
     "your_own_images_saved": "Your own images saved in the layout: they show up under Background and in the screensaver",
-    "clim_source": "State source · {name}",
+    "clim_source": "Activity detection · {name}",
     "clim_src_auto": "Automatic",
-    "clim_src_entity": "Entity",
-    "clim_src_room": "Room temperature",
-    "clim_src_mode": "Mode only",
-    "clim_threshold": "Running threshold (default 5 W for power, 0 otherwise)",
-    "clim_room_temp": "Room temperature · {name}",
+    "clim_src_entity": "From an entity",
+    "clim_src_room": "From room temperature",
+    "clim_src_mode": "Show mode only",
+    "clim_threshold": "Running threshold",
+    "clim_room_temp": "Sensor for the estimate · {name}",
     "clim_room_temp_default": "Room sensor",
     "clim_hysteresis": "Hysteresis (°)",
-    "clim_hint": "Automatic: the entity, then the device report (hvac_action), then the room temperature against the setpoint (shown with ~), otherwise only the mode."
+    "clim_hint": "Automatic: the actual state entity first, then what the device reports (hvac_action), then the room temperature against the setpoint (an estimate, marked ~). Without these, only the mode is shown. Threshold: 5 W by default for power, 0 for other values."
   },
   "looks": {
     "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",
