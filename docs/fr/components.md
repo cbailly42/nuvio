@@ -290,7 +290,7 @@ Douze cartes construites uniquement à partir des blocs en verre partagés : el
 | `custom:nuvio-room-compact-card` | Température, humidité, un interrupteur et une réglette de luminosité | `name`, `temperature`, `humidity`, `entity` |
 | `custom:nuvio-actions-card` | Une pastille en verre de boutons ronds pour les scènes, scripts, services ou liens | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
 | `custom:nuvio-family-card` | Avatars, qui est à la maison, un bouton pour ajouter une personne | `persons` (vide = tout le monde) |
-| `custom:nuvio-cover-card` | Position d’un volet ou d’un portail sur une barre à faire glisser, ouvrir, arrêter, fermer | `entity` |
+| `custom:nuvio-cover-card` | Position d’un volet ou d’un portail sur une barre à faire glisser, ouvrir, arrêter, fermer ; sans position (portail, garage) l’état en toutes lettres ; icône selon la classe de l’appareil | `entity` |
 | `custom:nuvio-lock-card` | État de la serrure ; le déverrouillage demande une confirmation, ou le code quand la serrure en exige un | `entity`, `confirm` |
 | `custom:nuvio-fan-card` | Vitesse du ventilateur sur l’arc et modes préréglés en pastilles | `entity` |
 | `custom:nuvio-todo-card` | Une liste de tâches : ajouter une tâche, la cocher | `entity`, `show_done` |

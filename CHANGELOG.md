@@ -5,6 +5,7 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Fixed: the **Cover / gate** card showed 0 % or 100 % and a position bar for covers without a position (a gate or garage door that only knows open, close and stop). It now shows the state in words (Open, Closed, Opening, Closing) with a gentle pulse while moving, and no bar. The icon follows the device class (gate, garage, door, window, blind, curtain, shade, awning) instead of always a shutter ([#36](https://github.com/kczepiec/nuvio/issues/36)).
 - Fixed: views unlocked with the PIN stayed open for 5 minutes even after the screensaver started or **Lock screen** was used, so the next person at a wall tablet could open them without the PIN. The screensaver and **Lock screen** now close every unlocked view, and the view on screen asks for the PIN again after waking. The screensaver preview in settings does not relock ([#35](https://github.com/kczepiec/nuvio/issues/35)).
 - Changed: the PIN pad of a locked view and the view lock settings no longer show the note that the lock is a convenience, not security; the limitation is described in the documentation.
 - Fixed: in the **Clock on photo** screensaver the time of the next event (and of the next LiveKid activity) is shown at full brightness again instead of dimmed like the other rows. A stray `};` in the screensaver styles made the browser drop that rule ([#34](https://github.com/kczepiec/nuvio/issues/34)).

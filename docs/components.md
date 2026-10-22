@@ -290,7 +290,7 @@ Twelve cards built only from the shared glass blocks, so they look like the refe
 | `custom:nuvio-room-compact-card` | Temperature, humidity, a switch and a brightness ruler | `name`, `temperature`, `humidity`, `entity` |
 | `custom:nuvio-actions-card` | A glass pill of round buttons for scenes, scripts, services or links | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
 | `custom:nuvio-family-card` | Avatars, who is home, a button to add a person | `persons` (empty = everyone) |
-| `custom:nuvio-cover-card` | Cover or gate position on a draggable bar, open, stop, close | `entity` |
+| `custom:nuvio-cover-card` | Cover or gate position on a draggable bar, open, stop, close; without a position (gate, garage) the state in words; icon by device class | `entity` |
 | `custom:nuvio-lock-card` | Lock state; unlocking asks for confirmation, or for the code when the lock needs one | `entity`, `confirm` |
 | `custom:nuvio-fan-card` | Fan speed on the arc and preset modes as pills | `entity` |
 | `custom:nuvio-todo-card` | A to-do list: add a task, tick it off | `entity`, `show_done` |
