@@ -165,9 +165,12 @@ class HGPage extends HTMLElement {
     if (this._config._hgLang) { window.__hgLang = this._config._hgLang; window.__hgLangOpt = this._config._hgLangOpt || ''; }   /* język wybrany w strategii; opcja language ma pierwszeństwo przed kreatorem */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
-    this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
+    this._pbgSync();
     if (this._hass) this._build();
   }
+  /* tło panelu (#15): Wygląd > Tło panelu (app.pbg: false = bez tła wszędzie), wyjątek dla widoku (app.pbgv[widok] = 'on' | 'off'), panel_backdrop: false w YAML */
+  _pbgSync() { const c = this._config; if (!c) return; const A = (window.__hgL && window.__hgL.data && window.__hgL.data.app) || {}, v = c.view && A.pbgv && A.pbgv[c.view];
+    this.toggleAttribute('no-pbg', v === 'off' ? true : v === 'on' ? false : c.panel_backdrop === false || A.pbg === false); }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
     if (window.HGWall) { try { HGWall.tick(h, this); } catch (e) { /* */ } }
@@ -181,6 +184,7 @@ class HGPage extends HTMLElement {
     if (!this._config) return;
     if (this._config.redirect) { this._redirect(); return; }
     if (!this._built) this._build();
+    if (this._built) this._pbgSync();   /* zmiana w Wyglądzie na innym widoku */
     for (const el of this._cards) hgPass(el, h);
     if (this._wxEl) hgPass(this._wxEl, h);
     if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
@@ -450,6 +454,7 @@ class HGPage extends HTMLElement {
     this._cards = []; this._cardWraps = [];
     if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
     if (this._config._hgAuto && HGL.loaded && !HGL.failed && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    this._pbgSync();   /* układ z HA mógł dojść dopiero teraz (Wygląd: tło panelu) */
     const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
     if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
     for (const cc of LC) {
@@ -1118,7 +1123,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([panel-hidden]) .panel{ visibility:hidden; opacity:0 !important; pointer-events:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
 /* w trakcie animacji: jedno rozmycie (sam panel), potomkowie bez backdrop-filter / animacji / przejść -> panel znika jako jedna warstwa */
 :host([panel-anim]) .panel{ transform-origin: 100% 50%; pointer-events:none; --hg-inner-bf: none; }
-/* TEST panel_backdrop: false – panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
+/* panel bez tła (panel_backdrop: false albo Wygląd > Tło panelu): panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
 :host([no-pbg]) .panel{ background:none !important; border-color:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
   --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1)); }
 :host([no-pbg]) .panel{ padding:0 !important; border-width:0 !important; }

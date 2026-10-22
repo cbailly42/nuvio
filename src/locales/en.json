@@ -2096,6 +2096,7 @@
       "subtitle": "Subtitle",
       "tagline": "Tagline",
       "title": "Title",
+      "weather_hero": "Hero style: large white text on the wallpaper, no card",
       "title_with_name": "Title ({name} = first name)",
       "unit": "Unit",
       "warning_threshold": "Warning threshold",
@@ -2323,7 +2324,11 @@
     "with_chart": "With chart",
     "workout": "Workout",
     "your_whole_home_in": "Your whole home in one place",
-    "zoe": "Zoe"
+    "zoe": "Zoe",
+    "panel_backdrop": "Panel background",
+    "panel_backdrop_hint": "Off: cards float on the wallpaper, each with its own glass, without the shared frame.",
+    "panel_backdrop_view": "This view",
+    "panel_backdrop_as_all": "As everywhere"
   },
   "lookr": {
     "add_fuel": "Add fuel",

@@ -2131,6 +2131,7 @@
       "subtitle": "Sous-titre",
       "tagline": "Slogan",
       "title": "Titre",
+      "weather_hero": "Style hero : grand texte blanc sur le fond d’écran, sans carte",
       "title_with_name": "Titre ({name} = prénom)",
       "unit": "Unité",
       "warning_threshold": "Seuil d’avertissement",
@@ -2358,7 +2359,11 @@
     "with_chart": "Avec graphique",
     "workout": "Entraînement",
     "your_whole_home_in": "Toute votre maison au même endroit",
-    "zoe": "Zoé"
+    "zoe": "Zoé",
+    "panel_backdrop": "Fond du panneau",
+    "panel_backdrop_hint": "Désactivé : les cartes flottent sur le fond d’écran, chacune avec son propre verre, sans cadre commun.",
+    "panel_backdrop_view": "Cette vue",
+    "panel_backdrop_as_all": "Comme partout"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",

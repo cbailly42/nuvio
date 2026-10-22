@@ -2166,6 +2166,7 @@
       "subtitle": "Podtytuł",
       "tagline": "Hasło",
       "title": "Tytuł",
+      "weather_hero": "Styl hero: duży biały tekst na tapecie, bez karty",
       "title_with_name": "Tytuł ({name} = imię)",
       "unit": "Jednostka",
       "warning_threshold": "Próg ostrzeżenia",
@@ -2393,7 +2394,11 @@
     "with_chart": "Z wykresem",
     "workout": "Trening",
     "your_whole_home_in": "Cały dom w jednym miejscu",
-    "zoe": "Zosia"
+    "zoe": "Zosia",
+    "panel_backdrop": "Tło panelu",
+    "panel_backdrop_hint": "Wyłączone: karty leżą bezpośrednio na tapecie, każda z własnym szkłem, bez wspólnej ramki.",
+    "panel_backdrop_view": "Ten widok",
+    "panel_backdrop_as_all": "Jak wszędzie"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",
