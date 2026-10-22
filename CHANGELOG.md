@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Fixed: the screensaver keeps the screen on again after the screen was turned off and on, or after switching apps or tabs. Browsers release the screen wake lock when the page is hidden; Nuvio now asks for it again when the page is visible and the screensaver is on ([#38](https://github.com/kczepiec/nuvio/issues/38)).
+
 ### 2.21.5
 - Fixed: **Hide the sidebar** (formerly **Hide the sidebar when it is empty**) did nothing while any view still had **Sidebar** on. It now hides the Nuvio sidebar and its Settings button on computers and tablets whatever the per-view switches say, and views that are not in the top tabs move to the profile menu.
 

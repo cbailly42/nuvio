@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Corrigé : l’écran de veille garde de nouveau l’écran allumé après l’avoir éteint et rallumé, ou après un changement d’application ou d’onglet. Le navigateur libère le verrou de mise en veille quand la page est masquée ; Nuvio le redemande quand la page redevient visible et que l’écran de veille est affiché ([#38](https://github.com/kczepiec/nuvio/issues/38)).
+
 ### 2.21.5
 - Corrigé : **Masquer la barre latérale** (anciennement **Masquer la barre latérale vide**) restait sans effet tant qu’une vue avait **Barre latérale** activée. L’option masque maintenant la barre latérale de Nuvio et son bouton Paramètres sur ordinateur et tablette quels que soient les interrupteurs des vues, et les vues absentes des onglets du haut passent dans le menu du profil.
 

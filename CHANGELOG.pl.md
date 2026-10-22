@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Poprawione: wygaszacz znów trzyma ekran włączony po wyłączeniu i włączeniu ekranu albo po przełączeniu aplikacji lub karty. Przeglądarka zwalnia blokadę wygaszania ekranu, gdy strona jest niewidoczna; Nuvio prosi o nią ponownie, gdy strona jest znowu widoczna, a wygaszacz włączony ([#38](https://github.com/kczepiec/nuvio/issues/38)).
+
 ### 2.21.5
 - Poprawione: **Ukryj pasek boczny** (wcześniej **Ukryj pusty pasek boczny**) nic nie robił, dopóki choć jeden widok miał włączony **Pasek boczny**. Teraz ukrywa pasek boczny Nuvio razem z przyciskiem Ustawienia na komputerze i tablecie bez względu na przełączniki widoków, a widoki spoza zakładek u góry trafiają do menu profilu.
 
