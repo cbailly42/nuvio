@@ -4,6 +4,12 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Added: **{time}** and **{date}** in the view title or subtitle show the current time and date in the interface language, with the 12 or 24 hour format from your Home Assistant profile, updated every minute. **Add a clock** in the view header editor adds **{time}** to the subtitle.
+- Added: a **Badge** column in **Settings > Views** counts lights, switches, fans, climate devices or people that are on (or media that is playing, or the entities you pick) and shows the number on the view tab when it is above 0.
+- Added: **Hide the sidebar when it is empty** in **Settings > Views**. When no view is shown in the sidebar, the sidebar and its Settings button disappear. Settings stay in the profile menu, behind the pencil and at any Nuvio address with **?nuvio_settings** (for people who may edit, and not on a view locked with a PIN).
+- Fixed: the **Production forecast** card used one colour for every day after its thresholds were changed. Thresholds above 12 kWh per kW, or thresholds set without a reference power, are now read as kWh per day; thresholds entered the wrong way round are swapped; a decimal comma (3,5) is accepted in number fields of the card editor.
+
 ### 2.21.3
 - Changed: the climate dot on the **Rooms** tile has the colour of the mode (heating, cooling, drying, fan, auto), the same colours as in the **Mode** menu of the AC remote card, instead of grey: solid when the device is running, dimmed when it is not running or the state is an estimate, outlined when only the mode is known. The **~** before estimated states is gone from the Rooms tile and the thermostat card; screen readers still say **estimate**.
 

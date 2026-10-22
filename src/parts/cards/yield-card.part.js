@@ -5,6 +5,15 @@ const HG_YIELD_KWH = { Wh: 1e-3, kWh: 1, MWh: 1e3, GWh: 1e6 };   // energia czuj
 const HG_YIELD_KW = { W: 1e-3, kW: 1, MW: 1e3 };                 // moc encji capacity -> kW (także Wp, kWp, MWp)
 /* liczba z konfiguracji: number albo tekst z kropką lub przecinkiem ("3,4"); inaczej null */
 const hgYieldNum = (v) => (typeof v === 'number' ? v : typeof v === 'string' && /^\s*-?\d+(?:[.,]\d+)?\s*$/.test(v) ? parseFloat(v.replace(',', '.')) : null);
+/* progi oceny dnia: liczby (także "3,5"), poor <= good (zamienione, gdy wpisane odwrotnie).
+   abs = progi w kWh dnia zamiast kWh na kW: gdy nie ma mocy odniesienia, a progi są wpisane, albo gdy próg dobrego dnia
+   przekracza 12 kWh na kW (fizycznie niemożliwe w ciągu doby, czyli wpisano kWh dnia). Bez mocy i bez progów: względem najlepszego dnia. */
+const hgYieldTh = window.hgYieldTh = (c, cap, D = { good: 3.5, poor: 1.5 }) => {
+  const set = (v) => hgYieldNum(v) != null, n = (v, d) => (set(v) ? hgYieldNum(v) : d);
+  let good = n(c.good, D.good), poor = n(c.poor, D.poor); if (poor > good) [good, poor] = [poor, good];
+  const abs = (!cap && (set(c.good) || set(c.poor))) || (!!cap && good > 12);
+  return { good, poor, abs };
+};
 class HGYieldCard extends HGBase {
   static getStubConfig(h) { const S = (h && h.states) || {}; return { entities: Object.keys(S).filter((e) => hgDom(e) === 'sensor' && S[e].attributes.device_class === 'energy' && S[e].attributes.state_class !== 'total_increasing' && hgNum(S[e])).slice(0, 7) }; }
   defaults() { return { entities: [], title: null, icon: 'mdi:calendar-weather', capacity: null, good: 3.5, poor: 1.5, unit: null, decimals: 1 }; }
@@ -47,7 +56,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     const hd = `<div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title || hgT('cards.yield.default_title'))}</span><span class="sp"></span></div>`;
     if (!L.length) return `<ha-card class="glass">${hd}<div class="ph"><b>${hgT('cards.yield.choose_sensors')}</b>${hgT('cards.yield.choose_sensors_hint')}</div></ha-card>`;
     const num = (v, d) => { const n = hgYieldNum(v); return n == null ? d : n; };
-    const dec = Math.min(6, Math.max(0, Math.round(num(c.decimals, D.decimals)))), good = num(c.good, D.good), poor = num(c.poor, D.poor);
+    const dec = Math.min(6, Math.max(0, Math.round(num(c.decimals, D.decimals))));
     const LN = { good: hgT('cards.yield.levels.good'), average: hgT('cards.yield.levels.average'), poor: hgT('cards.yield.levels.poor') };
     const NA = hgT('common.unavailable'), ND = hgT('common.no_data');
     const df = new Intl.DateTimeFormat(HG_LOC(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }), t0 = this._today().t;
@@ -58,7 +67,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
     /* wyświetlana jednostka: z opcji albo pierwszego czujnika z wartością; wartości przeliczone z kWh na nią */
     const su = (ok[0] || days.find((x) => x.u) || {}).u, unit = c.unit || su || 'kWh', uf = HG_YIELD_KWH[su] || 1, fv = (k) => H.fmt(k / uf, dec);
     const cp = this._cap(), cap = cp && cp.kw;
-    const [div, g, p] = cap ? [cap, good, poor] : [mx, 0.75, 0.4];
+    const th = hgYieldTh(c, cap, D), [div, g, p] = th.abs ? [1, th.good, th.poor] : cap ? [cap, th.good, th.poor] : [mx, 0.75, 0.4];
     days.forEach((x) => { const r = x.k / div; x.lv = x.has ? (r >= g ? 'good' : r < p ? 'poor' : 'average') : null; x.txt = x.has ? `${fv(x.k)} ${H.esc(unit)} · ${H.esc(LN[x.lv])}` : H.esc(x.why); });
     const best = ok.reduce((a, x) => (!a || x.k > a.k ? x : a), null), top = best && best.k > 0 ? best : null;
     const tot = ok.reduce((a, x) => a + x.k, 0), sel = this._sel;

@@ -1,4 +1,12 @@
 /* ===================== PAGE (tło, pasek górny, nagłówek, szyna, panel, hub) ===================== */
+/* {time} i {date} w tytule / podtytule widoku: język interfejsu, format 12/24 h z profilu HA (time_format), odświeżane co minutę */
+const hgClockFill = window.hgClockFill = (s, h, now = new Date()) => {
+  s = String(s == null ? '' : s); if (!/\{(time|date)\}/.test(s)) return s;
+  const loc = typeof HG_LOC === 'function' ? HG_LOC() : undefined, tf = h && h.locale ? h.locale.time_format : null;
+  const t = new Intl.DateTimeFormat(loc, Object.assign({ hour: '2-digit', minute: '2-digit' }, tf === '12' ? { hour12: true } : tf === '24' ? { hour12: false } : {})).format(now);
+  const d = new Intl.DateTimeFormat(loc, { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+  return s.replace(/\{time\}/g, t).replace(/\{date\}/g, d);
+};
 const HG_SVG = {
   figma: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 2.8h3.5v6.1H8.5a3.05 3.05 0 0 1 0-6.1Z"/><path d="M12 2.8h3.5a3.05 3.05 0 0 1 0 6.1H12Z"/><path d="M8.5 8.9H12V15H8.5a3.05 3.05 0 0 1 0-6.1Z"/><circle cx="15.5" cy="11.95" r="3.05"/><path d="M8.5 15H12v3.05a3.05 3.05 0 1 1-3.5-3.05Z"/></svg>`,
 };
@@ -265,6 +273,7 @@ class HGPage extends HTMLElement {
      tytuły widoków: katalog spóźniony) -> HA generuje dashboard od nowa (config-refresh, HGLang.stale) */
   _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
+    clearTimeout(this._headT); this._headT = null;
     if (window.HGVLock && HGVLock.page === this && HGVLock.el) HGVLock.close();
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
@@ -475,6 +484,7 @@ class HGPage extends HTMLElement {
       w.appendChild(el); this._panelEl.appendChild(w);
       this._cards.push(el); this._cardWraps.push(w);
     }
+    this.toggleAttribute('norail', !(c.rail || []).length); this._navParam();
     this._built = true; this._building = false; this._lsig = this._layoutSig();
     if (window.HGVLock) HGVLock.guard(this);   /* blokada widoku PIN-em (#17) */
     if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
@@ -611,10 +621,20 @@ class HGPage extends HTMLElement {
   /* przed 2.10.0 nagłówek widoku Pokoje trafiał pod klucz 'null' (widok bez układu kart): odczyt stamtąd, dopóki nie zapisze się nowy */
   _headConf() { try { const S = HGL.data.s, sc = this._headScope(), h = ((S[sc] || {}).conf || {})._head; if (h) return h; return (sc === 'rooms:head' && ((S.null || {}).conf || {})._head) || {}; } catch (e) { return {}; } }
   _headPick(hd, k, def, room) { const md = this.getAttribute('mode'), ui = this._userInfo();
-    return String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''); }
+    const raw = String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '');
+    if (/\{(time|date)\}/.test(raw)) this._headClk = true;
+    return hgClockFill(raw.replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''), this._hass); }
+  /* zegar w nagłówku: przerysowanie na początku każdej minuty, tylko gdy tytuł albo podtytuł ma {time} / {date} */
+  /* ?nuvio_settings w adresie: otwiera Wygląd (tylko dla osób z prawem edycji, nie na widoku zablokowanym PIN-em); parametr usuwany z adresu */
+  _navParam() { let q; try { q = new URLSearchParams(location.search); } catch (e) { return; } if (!q.has('nuvio_settings')) return;
+    try { const u = new URL(location.href); u.searchParams.delete('nuvio_settings'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
+    setTimeout(() => { if (!this.isConnected || !this._canEdit || !this._canEdit()) return; if (window.HGVLock && HGVLock.page === this && HGVLock.el) return;
+      if (!this._editing && this._editEnter) this._editEnter(); if (this._editing && this._eLook) this._eLook(); }, 400); }
+  _headTick() { clearTimeout(this._headT); this._headT = null; if (!this._headClk || !this.isConnected) return;
+    this._headT = setTimeout(() => { this._headT = null; if (this.isConnected && !document.hidden) this._paintHead(); else this._headTick(); }, 60500 - (Date.now() % 60000)); }
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgT('page.header_hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
-    const c = this._config; if (!this._hass) return;
+    const c = this._config; if (!this._hass) return; this._headClk = false; queueMicrotask(() => this._headTick());
     if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
     const hd = this._headConf();
     const pick = (k, def) => this._headPick(hd, k, def);
@@ -1102,6 +1122,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .ri ha-icon, .ri svg{ width:15u; height:15u; }
 .ri:hover{ background:rgba(255,255,255,.14); }
 .rail{ position:relative; }
+:host(:not([mode=phone])[norail]) .rail{ visibility:hidden; pointer-events:none; }
 .ri{ position:relative; z-index:1; }
 .ri.act{ color:#1F2125; }
 .ri.act:hover{ background:none; }

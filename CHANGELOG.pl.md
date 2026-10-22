@@ -4,6 +4,12 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Dodane: **{time}** i **{date}** w tytule lub podtytule widoku pokazują bieżącą godzinę i datę w języku interfejsu, w formacie 12 lub 24 h z profilu Home Assistant, odświeżane co minutę. **Dodaj zegar** w edytorze nagłówka dopisuje **{time}** do podtytułu.
+- Dodane: kolumna **Licznik** w **Ustawienia > Widoki** liczy włączone światła, przełączniki, wentylatory, klimatyzację lub osoby w domu (albo odtwarzane media, albo wybrane encje) i pokazuje liczbę na zakładce widoku, gdy jest większa od 0.
+- Dodane: **Ukryj pusty pasek boczny** w **Ustawienia > Widoki**. Gdy żaden widok nie jest w pasku bocznym, znika pasek razem z przyciskiem Ustawienia. Ustawienia zostają w menu profilu, pod ołówkiem i pod dowolnym adresem Nuvio z **?nuvio_settings** (dla osób z prawem edycji, nie na widoku zablokowanym PIN-em).
+- Poprawione: karta **Prognoza produkcji** po zmianie progów malowała wszystkie dni jednym kolorem. Progi powyżej 12 kWh na kW albo progi bez mocy odniesienia są teraz liczone jako kWh na dzień, progi wpisane odwrotnie są zamieniane, a pola liczbowe edytora kart przyjmują przecinek (3,5).
+
 ### 2.21.3
 - Zmiana: kropka klimatu na kaflu **Pokoje** ma kolor trybu (grzanie, chłodzenie, osuszanie, wentylacja, auto), te same kolory co w menu **Tryb pracy** pilota klimatyzacji, zamiast szarego: pełna, gdy urządzenie pracuje, przygaszona, gdy nie pracuje albo stan jest szacunkiem, z samą obwódką, gdy znany jest tylko tryb. Znak **~** przed szacowanym stanem zniknął z kafla Pokoje i karty termostatu; czytnik ekranu nadal mówi **szacunek**.
 
