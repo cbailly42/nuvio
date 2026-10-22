@@ -4,20 +4,16 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### 2.21.0-beta.3
+### 2.21.1
+- Thanks to [@cbailly42](https://github.com/cbailly42) for the climate fix ([#22](https://github.com/kczepiec/nuvio/pull/22)).
+- After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.
 - New: **Actual state** for each thermostat of a room, in **Appearance > Rooms** (edit mode): pick an entity that tells whether that device really runs (an on/off entity such as a stove's combustion sensor, or a numeric one such as its burner power). With several devices in a room (for example a heat pump and a stove), the Rooms tile looks at all of them and shows **Heating**, **Cooling** or **Idle** from the one actually working; the thermostat card uses the same setting.
 - Fixed: thermostats that do not report what they are doing (no `hvac_action`, for example some towel radiators) now count as idle once the room has reached the setpoint, on the Rooms tile and the thermostat card.
 - Fixed: the thermostat card shows **· idle** after the mode (for example **Heating to 7° · idle**) when the device is not actually heating.
 - Fixed: the **Rooms** tiles showed **Heating** whenever a thermostat was in heat mode, even when it was not heating (for example a frost-protection setpoint of 7 °C in a 21 °C room). The tile now follows what the device is actually doing and shows **Idle** with a grey dot in that case.
-
-### 2.21.0-beta.2
-- Beta pre-release for testing.
 - Fixed: the **PIN lock for views** switches in Wall tablet mode did nothing when clicked. Their action was not passed to the wall tablet settings, so nothing was toggled or saved. They now switch at once and are saved with the layout; without a PIN, a message and a PIN field appear right there. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Fixed: normal tiles were always grouped in one block below stacks, grids, YAML cards and other components. Without grid areas every added tile is now its own card on the panel, so tiles and components can be mixed in any order by dragging; the existing tile order is kept. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Fixed: opening a view by its number (for example `/dashboard-nuvio/0`) left the cards invisible, because the page thought it was not shown and paused the entrance animation.
-
-### 2.21.0-beta.1
-- Beta pre-release for testing. After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.
 - Fixed: a toggle inside a stack or grid added in the editor did not change its look after you turned the light on or off ([#16](https://github.com/kczepiec/nuvio/issues/16)). The panel passed new Home Assistant data to a container only when one of its own entities changed, and the list of those entities did not include the cards inside the container. Containers and other added components now get every update.
 - New: **Screensaver on this device** in **Wall tablet mode** ([#16](https://github.com/kczepiec/nuvio/issues/16)). The screensaver settings stay shared, but each device decides whether it runs, saved in that browser. Enabling the screensaver enables it on the device you use; other devices stay off unless you turn it on there (a tablet locked with the PIN before the update keeps it). After updating, check the switch on your wall tablet.
 - New: **Panel background** in **Appearance** turns off the shared glass panel behind the cards, for all views or only the current one ([#15](https://github.com/kczepiec/nuvio/issues/15)). The styles for `panel_backdrop: false` are no longer a test.

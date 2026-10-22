@@ -4,20 +4,16 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### 2.21.0-beta.3
+### 2.21.1
+- Podziękowania dla [@cbailly42](https://github.com/cbailly42) za poprawkę klimatu ([#22](https://github.com/kczepiec/nuvio/pull/22)).
+- Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.
 - Nowość: **Stan rzeczywisty** dla każdego termostatu w pokoju, w **Wygląd > Pokoje** (tryb edycji): wybierz encję, która mówi, czy to urządzenie naprawdę pracuje (encja włącz/wyłącz, np. czujnik spalania pieca, albo liczbowa, np. moc palnika). Gdy w pokoju jest kilka urządzeń (np. klimatyzacja i piec), kafel Pokoje sprawdza wszystkie i pokazuje **Grzeje**, **Chłodzi** albo **Bezczynny** według tego, które naprawdę pracuje; karta termostatu korzysta z tego samego ustawienia.
 - Poprawka: termostaty, które nie podają, co robią (brak `hvac_action`, np. niektóre grzejniki łazienkowe), są uznawane za bezczynne, gdy pokój osiągnął nastawę, na kaflu Pokoje i w karcie termostatu.
 - Poprawka: karta termostatu pokazuje **· bezczynny** po trybie (np. **Grzanie do 7° · bezczynny**), gdy urządzenie w rzeczywistości nie grzeje.
 - Poprawka: kafle **Pokoje** pokazywały **Grzeje**, gdy termostat był w trybie grzania, nawet jeśli nie grzał (np. ochrona przed zamarzaniem 7 °C w pokoju 21 °C). Kafel pokazuje teraz to, co urządzenie naprawdę robi, i w takim przypadku **Bezczynny** z szarą kropką.
-
-### 2.21.0-beta.2
-- Wersja testowa (beta).
 - Poprawka: przełączniki **Blokady widoków PIN-em** w Trybie tabletu ściennego nic nie robiły po kliknięciu. Ich akcja nie trafiała do ustawień tabletu, więc nic się nie przełączało ani nie zapisywało. Teraz przełączają się od razu i zapisują z układem; bez PIN-u pojawia się komunikat i pole do ustawienia PIN-u. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Poprawka: zwykłe kafle były zawsze zebrane w jeden blok pod stosami, siatkami, kartami YAML i innymi komponentami. Bez obszarów siatki każdy dodany kafel jest teraz osobną kartą panelu, więc kafle i komponenty można dowolnie przeplatać przeciąganiem; dotychczasowa kolejność kafli zostaje. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Poprawka: widok otwarty po numerze (np. `/dashboard-nuvio/0`) miał niewidoczne karty, bo strona uznawała, że nie jest pokazana, i wstrzymywała animację wejścia.
-
-### 2.21.0-beta.1
-- Wersja testowa (beta). Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.
 - Poprawka: przełącznik w stosie albo siatce dodanych w edytorze nie zmieniał wyglądu po włączeniu lub wyłączeniu światła ([#16](https://github.com/kczepiec/nuvio/issues/16)). Panel przekazywał kontenerowi nowe dane z Home Assistant tylko wtedy, gdy zmieniła się jedna z jego własnych encji, a ta lista nie obejmowała kart w kontenerze. Kontenery i inne dodane komponenty dostają teraz każdą aktualizację.
 - Nowość: **Wygaszacz na tym urządzeniu** w **Trybie tabletu ściennego** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Ustawienia wygaszacza są nadal wspólne, ale każde urządzenie decyduje, czy wygaszacz działa, i zapisuje to w swojej przeglądarce. Włączenie wygaszacza włącza go na urządzeniu, którego używasz; inne urządzenia zostają wyłączone, dopóki go na nich nie włączysz (tablet zablokowany PIN-em przed aktualizacją go zachowuje). Po aktualizacji sprawdź przełącznik na tablecie na ścianie.
 - Nowość: **Tło panelu** w **Wyglądzie** wyłącza wspólny szklany panel za kartami, dla wszystkich widoków albo tylko bieżącego ([#15](https://github.com/kczepiec/nuvio/issues/15)). Style dla `panel_backdrop: false` nie są już testowe.

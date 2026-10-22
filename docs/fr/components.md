@@ -270,7 +270,7 @@ Grille, pile verticale et pile horizontale fonctionnent comme dans Home Assistan
 | `custom:nuvio-grid-card` | Cartes en colonnes ; moins de colonnes sur les écrans étroits | `cards`, `columns` (1 à 6, 0 = automatique), `min_width`, `square`, `gap`, `glass`, `title` ; par carte `span` |
 | `custom:nuvio-stack-card` | Cartes les unes sous les autres ou côte à côte dans un même verre ; côte à côte devient vertical sous `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (ex. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
-Ordre (2.21.0) : les conteneurs et les cartes YAML ajoutés dans l’éditeur restent là où vous les placez. Avant, le panneau comblait les trous avec des cartes plus petites, si bien qu’une pile ou une grille large pouvait passer au dessus de cartes ajoutées avant elle. Réorganisez par glisser déposer comme d’habitude. Depuis 2.21.0-beta.2, les tuiles simples sont aussi des cartes séparées (sans zones de grille), tuiles et conteneurs se mélangent dans n’importe quel ordre.
+Ordre (2.21.1) : les conteneurs et les cartes YAML ajoutés dans l’éditeur restent là où vous les placez. Avant, le panneau comblait les trous avec des cartes plus petites, si bien qu’une pile ou une grille large pouvait passer au dessus de cartes ajoutées avant elle. Réorganisez par glisser déposer comme d’habitude. Depuis 2.21.1, les tuiles simples sont aussi des cartes séparées (sans zones de grille), tuiles et conteneurs se mélangent dans n’importe quel ordre.
 
 **Météo** comme composant a un interrupteur **Style hero** (YAML `variant: hero`) : grand texte blanc directement sur le fond d’écran, sans carte, comme la météo de l’en tête. Idéal avec **Fond du panneau** désactivé.
 
@@ -323,7 +323,7 @@ Tous ces composants sont dans **+ Ajouter** en mode édition, avec un aperçu, u
 | Personne | `custom:nuvio-person-card` | personne, libellés à la maison et absent |
 | Enfant (LiveKid) | `custom:nuvio-kid-card` | titre, enfant (prénom) ou entité quand il y a plusieurs enfants ; les entités de l’intégration LiveKid sont trouvées automatiquement |
 
-**Apparence, Pièces** : renommez les pièces, choisissez leurs icônes et leur ordre, masquez des pièces, choisissez le capteur de température et d’humidité de chaque tuile de pièce (automatique, n’importe quel capteur ou aucun) et créez des pièces personnalisées avec n’importe quelles entités, indépendamment des pièces de Home Assistant. Les entités peuvent aussi être attribuées à la main aux pièces existantes.
+**Apparence, Pièces** : renommez les pièces, choisissez leurs icônes et leur ordre, masquez des pièces, choisissez le capteur de température et d’humidité de chaque tuile de pièce (automatique, n’importe quel capteur ou aucun) et créez des pièces personnalisées avec n’importe quelles entités, indépendamment des pièces de Home Assistant. Les entités peuvent aussi être attribuées à la main aux pièces existantes. Depuis 2.21.1, chaque thermostat de la pièce a aussi un choix **État réel** : une entité marche/arrêt ou numérique (par exemple le capteur de combustion ou la puissance d’un poêle) qui indique si l’appareil fonctionne vraiment ; la tuile Pièces et la carte thermostat affichent alors **Au repos** au lieu de **Chauffe** quand il ne fonctionne pas.
 
 **Apparence, En-tête et navigation** : titre et sous-titre du foyer (ou pas de bandeau du foyer), prix des carburants dans l’en-tête du tableau de bord et les quatre vues de la barre sur téléphone.
 
