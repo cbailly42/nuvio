@@ -4,6 +4,12 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.21.0-beta.3
+- New: **Actual state** for each thermostat of a room, in **Appearance > Rooms** (edit mode): pick an entity that tells whether that device really runs (an on/off entity such as a stove's combustion sensor, or a numeric one such as its burner power). With several devices in a room (for example a heat pump and a stove), the Rooms tile looks at all of them and shows **Heating**, **Cooling** or **Idle** from the one actually working; the thermostat card uses the same setting.
+- Fixed: thermostats that do not report what they are doing (no `hvac_action`, for example some towel radiators) now count as idle once the room has reached the setpoint, on the Rooms tile and the thermostat card.
+- Fixed: the thermostat card shows **· idle** after the mode (for example **Heating to 7° · idle**) when the device is not actually heating.
+- Fixed: the **Rooms** tiles showed **Heating** whenever a thermostat was in heat mode, even when it was not heating (for example a frost-protection setpoint of 7 °C in a 21 °C room). The tile now follows what the device is actually doing and shows **Idle** with a grey dot in that case.
+
 ### 2.21.0-beta.2
 - Beta pre-release for testing.
 - Fixed: the **PIN lock for views** switches in Wall tablet mode did nothing when clicked. Their action was not passed to the wall tablet settings, so nothing was toggled or saved. They now switch at once and are saved with the layout; without a PIN, a message and a PIN field appear right there. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)

@@ -131,11 +131,20 @@ const HGAreas = {
     if (a.id === '_none') { a.temp = null; a.hum = null; }
     const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
     a.lights = sec.light;
-    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+    const se = Object.keys(ov).filter((k) => k.startsWith('state:')).map((k) => ov[k]);   // encje stanu rzeczywistego urządzeń klimatu
+    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, ...se, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
   },
   /* czujniki temperatury / wilgotności do wyboru dla pokoju: najpierw z pokoju, potem pozostałe (bez ukrytych) */
-  cands(h, a, dc) { const reg = h.entities || {}, inR = new Set(a.ents || []), all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc && !(reg[e] && reg[e].hidden));
+  /* dc 'heating': encje włącz/wyłącz i liczbowe urządzenia klimatu (ce) i pokoju, najpierw te z urządzenia */
+  cands(h, a, dc, ce) { const reg = h.entities || {}, inR = new Set(a.ents || []);
+    if (dc === 'heating') {
+      const dev = ce && reg[ce] && reg[ce].device_id, ok = (e) => /^(binary_sensor|switch|input_boolean)\./.test(e) || (e.startsWith('sensor.') && h.states[e].state !== '' && isFinite(Number(h.states[e].state)));
+      const all = Object.keys(h.states).filter((e) => e !== ce && ok(e) && !(reg[e] && reg[e].hidden)), onDev = (e) => !!dev && reg[e] && reg[e].device_id === dev;
+      return [...all.filter(onDev), ...all.filter((e) => !onDev(e) && inR.has(e))]; }
+    const all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc && !(reg[e] && reg[e].hidden));
     return [...all.filter((e) => inR.has(e)), ...all.filter((e) => !inR.has(e))]; },
+  /* encja „stan rzeczywisty” przypisana urządzeniu klimatu w Wygląd → Pokoje (sensors[pokój]['state:climate.x']), null gdy brak */
+  stateOf(h, e, cfg) { const S = (this.glob(cfg || null) || {}).sensors || {}; for (const r in S) { const v = S[r] && S[r]['state:' + e]; if (v && h.states[v]) return v; } return null; },
   val(h, ref) {
     if (!ref) return null;
     const s = h.states[ref.e]; if (!H.ok(s)) return null;

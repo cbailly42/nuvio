@@ -142,6 +142,7 @@
         "turbo": "Turbo"
       },
       "hold_details": "Przytrzymaj: szczegóły",
+      "idle": "bezczynny",
       "indoor": "Wnętrze",
       "indoor_temp": "wnętrze {temp}°",
       "lower_temperature": "Obniż temperaturę",
@@ -268,7 +269,8 @@
         "dry": "Osusza",
         "fan_only": "Wentyluje",
         "heat": "Grzeje",
-        "heat_cool": "Auto"
+        "heat_cool": "Auto",
+        "idle": "Bezczynny"
       },
       "lights_count_few": "{count} światła",
       "lights_count_many": "{count} świateł",
@@ -2416,9 +2418,9 @@
     "edit": "Edytuj",
     "enter_a_local_or": "Podaj adres /local/… lub https://…",
     "enter_a_room_name": "Podaj nazwę pokoju",
-    "entities_count_one": "{count} encji",
     "entities_count_few": "{count} encji",
     "entities_count_many": "{count} encji",
+    "entities_count_one": "{count} encji",
     "entities_count_other": "{count} encji",
     "focal_point_of_the": "Punkt ostrości bieżącego tła",
     "fuel_prices_are_hidden": "Ceny paliw są ukryte w nagłówku. Lista paliw zostaje zapisana i wróci po włączeniu.",
@@ -2427,6 +2429,8 @@
     "header_and_navigation": "Nagłówek i nawigacja",
     "header_saved": "Zapisano nagłówek",
     "header_saved_reloading": "Zapisano nagłówek – odświeżanie…",
+    "heating_auto": "Automatycznie (termostat)",
+    "heating_state_sensor": "Stan rzeczywisty · {name}",
     "hidden_in_the_header": "Ukryte w nagłówku",
     "hourly_forecast_from_the": "Prognoza godzinowa: z encji pogody",
     "household_in_the_header": "Domownicy w nagłówku",
