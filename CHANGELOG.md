@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.6
 - Fixed: the screensaver keeps the screen on again after the screen was turned off and on, or after switching apps or tabs. Browsers release the screen wake lock when the page is hidden; Nuvio now asks for it again when the page is visible and the screensaver is on ([#38](https://github.com/kczepiec/nuvio/issues/38)).
 - Fixed: the **Cover / gate** card showed 0 % or 100 % and a position bar for covers without a position (a gate or garage door that only knows open, close and stop). It now shows the state in words (Open, Closed, Opening, Closing) with a gentle pulse while moving, and no bar. The icon follows the device class (gate, garage, door, window, blind, curtain, shade, awning) instead of always a shutter ([#36](https://github.com/kczepiec/nuvio/issues/36)).
 - Fixed: views unlocked with the PIN stayed open for 5 minutes even after the screensaver started or **Lock screen** was used, so the next person at a wall tablet could open them without the PIN. The screensaver and **Lock screen** now close every unlocked view, and the view on screen asks for the PIN again after waking. The screensaver preview in settings does not relock ([#35](https://github.com/kczepiec/nuvio/issues/35)).
