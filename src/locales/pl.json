@@ -2166,6 +2166,7 @@
       "subtitle": "Podtytuł",
       "tagline": "Hasło",
       "title": "Tytuł",
+      "weather_hero": "Styl hero: duży biały tekst na tapecie, bez karty",
       "title_with_name": "Tytuł ({name} = imię)",
       "unit": "Jednostka",
       "warning_threshold": "Próg ostrzeżenia",
@@ -2393,7 +2394,11 @@
     "with_chart": "Z wykresem",
     "workout": "Trening",
     "your_whole_home_in": "Cały dom w jednym miejscu",
-    "zoe": "Zosia"
+    "zoe": "Zosia",
+    "panel_backdrop": "Tło panelu",
+    "panel_backdrop_hint": "Wyłączone: karty leżą bezpośrednio na tapecie, każda z własnym szkłem, bez wspólnej ramki.",
+    "panel_backdrop_view": "Ten widok",
+    "panel_backdrop_as_all": "Jak wszędzie"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",
@@ -3133,6 +3138,9 @@
     "none_touch_only": "Brak, tylko dotyk",
     "not_detected": "Nie wykryto",
     "now_until": "teraz, do {time}",
+    "on_this_device": "Wygaszacz na tym urządzeniu",
+    "on_this_device_off": "Wyłączony na tym urządzeniu. Inne urządzenia mają własny wybór.",
+    "on_this_device_on": "Włącza się na tym urządzeniu po bezczynności. Zapisane tylko w tej przeglądarce.",
     "photo": "Zdjęcie",
     "photo_sources": {
       "bg": "Tło dashboardu",
@@ -3365,5 +3373,16 @@
     "summary_sub": "Wszystko gotowe. Każdy wybór zmienisz później w trybie edycji.",
     "views": "Widoki",
     "views_sub": "Wybierz widoki w menu. Panel jest zawsze włączony."
+  },
+  "vlock": {
+    "title": "Widok zablokowany",
+    "enter_pin": "Wpisz PIN, aby otworzyć ten widok",
+    "back": "Wróć",
+    "note": "Blokada dla wygody, nie zabezpieczenie: chroni widok przed przypadkowym użyciem w tym dashboardzie. Kto ma konto w Home Assistant, zobaczy te same dane gdzie indziej.",
+    "settings_title": "Blokada widoków PIN-em",
+    "settings_hint": "Wybrane widoki pytają o PIN, zanim cokolwiek pokażą. Po odblokowaniu otwarte przez 5 minut w tej karcie przeglądarki.",
+    "needs_pin": "Najpierw ustaw PIN w blokadzie PIN-em (sekcja wygaszacza powyżej).",
+    "locked": "Pyta o PIN",
+    "open": "Otwarty"
   }
 }

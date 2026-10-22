@@ -2131,6 +2131,7 @@
       "subtitle": "Sous-titre",
       "tagline": "Slogan",
       "title": "Titre",
+      "weather_hero": "Style hero : grand texte blanc sur le fond d’écran, sans carte",
       "title_with_name": "Titre ({name} = prénom)",
       "unit": "Unité",
       "warning_threshold": "Seuil d’avertissement",
@@ -2358,7 +2359,11 @@
     "with_chart": "Avec graphique",
     "workout": "Entraînement",
     "your_whole_home_in": "Toute votre maison au même endroit",
-    "zoe": "Zoé"
+    "zoe": "Zoé",
+    "panel_backdrop": "Fond du panneau",
+    "panel_backdrop_hint": "Désactivé : les cartes flottent sur le fond d’écran, chacune avec son propre verre, sans cadre commun.",
+    "panel_backdrop_view": "Cette vue",
+    "panel_backdrop_as_all": "Comme partout"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",
@@ -3085,6 +3090,9 @@
     "none_touch_only": "Aucun, toucher uniquement",
     "not_detected": "Non détecté",
     "now_until": "maintenant, jusqu’à {time}",
+    "on_this_device": "Écran de veille sur cet appareil",
+    "on_this_device_off": "Désactivé sur cet appareil. Les autres appareils gardent leur propre choix.",
+    "on_this_device_on": "Démarre sur cet appareil après inactivité. Enregistré uniquement dans ce navigateur.",
     "photo": "Photo",
     "photo_sources": {
       "bg": "Fond d’écran du tableau de bord",
@@ -3312,5 +3320,16 @@
     "summary_sub": "Tout est prêt. Vous pourrez modifier chaque choix plus tard en mode édition.",
     "views": "Vues",
     "views_sub": "Choisissez les vues du menu. Accueil est toujours activé."
+  },
+  "vlock": {
+    "title": "Vue verrouillée",
+    "enter_pin": "Saisissez le code PIN pour ouvrir cette vue",
+    "back": "Retour",
+    "note": "Verrou de confort, pas de sécurité : il évite l’usage accidentel d’une vue de ce tableau de bord. Toute personne ayant un compte Home Assistant peut voir les mêmes données ailleurs.",
+    "settings_title": "Verrouillage des vues par code PIN",
+    "settings_hint": "Les vues choisies demandent le code PIN avant d’afficher quoi que ce soit. Déverrouillées pendant 5 minutes dans cet onglet du navigateur.",
+    "needs_pin": "Définissez d’abord un code PIN dans Verrouillage par code PIN (section écran de veille ci-dessus).",
+    "locked": "Demande le PIN",
+    "open": "Ouverte"
   }
 }

@@ -342,7 +342,8 @@ const HG_COMP = [
     cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) }, { n: 'common.power_now', d: 'edit.value_with_a_bar' }),
   hgTO({ id: 'energy', i: 'mdi:lightning-bolt-outline', card: 'hg-energy-stats-card', slots: [hgTO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], req: 1 }, { l: 'edit.consumption_kwh' }), hgTO({ k: 'production', dom: ['sensor'], dc: ['energy'] }, { l: 'edit.production_kwh_optional' })],
     cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) }, { n: 'edit.energy_statistics', d: 'edit.consumption_and_production_today' }),
-  hgTO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'hg-weather-card', slots: [hgTO({ k: 'entity', dom: ['weather'], req: 1 }, { l: 'edit.forecast' })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}) }) }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
+  hgTO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'hg-weather-card', slots: [hgTO({ k: 'entity', dom: ['weather'], req: 1 }, { l: 'edit.forecast' })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}), ...((v.o || {}).hero ? { variant: 'hero' } : {}) }),
+    opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'hero', t: 'bool', l: hgTLazy('edit.options.weather_hero') }] }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
   hgTO({ id: 'people', i: 'mdi:account-group-outline', card: 'hg-people-card', slots: [hgTO({ k: 'persons', dom: ['person'], multi: 1, req: 1 }, { l: 'edit.people' })], cfg: (v) => ({ persons: v.persons }) }, { n: 'edit.household', d: 'edit.who_is_home_zones' }),
   hgTO({ id: 'alarm', i: 'mdi:shield-home-outline', card: 'hg-alarm-card', slots: [hgTO({ k: 'entity', dom: ['alarm_control_panel'], req: 1 }, { l: 'edit.alarm_panel' })], cfg: (v) => ({ entity: v.entity }) }, { n: 'edit.alarm', d: 'edit.arm_and_disarm_with' }),
   hgTO({ id: 'robots', i: 'mdi:robot-vacuum', card: 'hg-robots-card', slots: [hgTO({ k: 'entities', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }, { l: 'edit.robots' })], cfg: (v) => ({ entities: v.entities }) }, { n: 'edit.robots', d: 'edit.vacuums_and_mowers_status' }),
@@ -965,7 +966,7 @@ class HGTilesCard extends HGBase {
     const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
     if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); return x && x.c && customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
     const it = HGL.sort(L.added.filter((x) => (x.c ? !this._config.nocomp && customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
-    return `<div class="tg2${L.order.length ? ' ord' : ''}" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
+    return `<div class="tg2${L.order.length || it.some((x) => x.c) ? ' ord' : ''}" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
   }
   afterRender() { hgSlots(this); hgCmSlots(this); }
   onAct(act, t) { hgTileAct(this, act, t); }
@@ -1317,6 +1318,10 @@ const HG_EDIT = {
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
+    if (a === 'pbg' || a === 'pbgv') { const vw = this._config && this._config.view, v = b.dataset.v || '';
+      this._eApp((A) => { if (a === 'pbg') { if (v === 'off') A.pbg = false; else delete A.pbg; return; }
+        const M = Object.assign({}, A.pbgv || {}); if (v && vw) M[vw] = v; else delete M[vw]; if (Object.keys(M).length) A.pbgv = M; else delete A.pbgv; });
+      this._pbgSync(); return this._eLook(); }
     if (a === 'perfblur' || a === 'perfeco') { HGPerf.set(a === 'perfblur' ? 'blur' : 'eco', b.dataset.v || ''); return this._eLook(); }
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
@@ -1647,6 +1652,12 @@ const HG_EDIT = {
       <div class="lk-seg lk-lng" role="group" aria-label="${hgT('edit.language')}">${[['', hgT('common.automatic')], ...[...HGLang.LIST].sort((a, b) => (a[0] === 'en') - (b[0] === 'en'))].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },
   /* Wydajność (osobno na tym urządzeniu, HGPerf): rozmycie szkła i oszczędzanie baterii; „Automatycznie” pokazuje, co wybrano */
+  /* tło panelu (#15): wspólne dla dashboardu + wyjątek dla bieżącego widoku */
+  _ePbgHtml() { const A = HGApp.get(), g = A.pbg === false ? 'off' : 'on', vw = this._config && this._config.view, pv = (vw && A.pbgv && A.pbgv[vw]) || '';
+    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:card-outline')}${hgT('edit.panel_backdrop')}</h4><small class="lk-hn">${hgT('edit.panel_backdrop_hint')}</small>
+      ${seg('pbg', g, [['on', hgT('common.on_neut')], ['off', hgT('common.off_neut')]], hgT('edit.panel_backdrop'))}
+      ${vw ? `<small class="lk-hn">${hgT('edit.panel_backdrop_view')}</small>${seg('pbgv', pv, [['', hgT('edit.panel_backdrop_as_all')], ['on', hgT('common.on_neut')], ['off', hgT('common.off_neut')]], hgT('edit.panel_backdrop_view'))}` : ''}</section>`; },
   _ePerfHtml() {
     const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
     const BN = { full: hgT('edit.full'), light: hgT('edit.blur_light'), off: hgT('common.off_neut') };
@@ -1685,6 +1696,7 @@ const HG_EDIT = {
           <div class="lk-seg"><button data-hge="bgcol" data-k="color" aria-pressed="${!!bg && bg.kind === 'color'}">${hgT('edit.solid')}</button><button data-hge="bgcol" data-k="gradient" aria-pressed="${!!bg && bg.kind === 'gradient'}">${hgT('edit.gradient')}</button></div></div></section>
       <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:brightness-6')}${hgT('edit.dimming')}<em class="dv">${H.pct(dv)}</em></h4><small class="lk-hn">${hgT('edit.applies_to_the_background')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgT('edit.background_dimming')}"></section>
+      ${this._ePbgHtml()}
       ${this._eLangHtml()}
       ${this._ePerfHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}

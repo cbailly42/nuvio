@@ -4,6 +4,14 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Fixed: a toggle inside a stack or grid added in the editor did not change its look after you turned the light on or off ([#16](https://github.com/kczepiec/nuvio/issues/16)). The panel passed new Home Assistant data to a container only when one of its own entities changed, and the list of those entities did not include the cards inside the container. Containers and other added components now get every update.
+- New: **Screensaver on this device** in **Wall tablet mode** ([#16](https://github.com/kczepiec/nuvio/issues/16)). The screensaver settings stay shared, but each device decides whether it runs, saved in that browser. Enabling the screensaver enables it on the device you use; other devices stay off unless you turn it on there (a tablet locked with the PIN before the update keeps it). After updating, check the switch on your wall tablet.
+- New: **Panel background** in **Appearance** turns off the shared glass panel behind the cards, for all views or only the current one ([#15](https://github.com/kczepiec/nuvio/issues/15)). The styles for `panel_backdrop: false` are no longer a test.
+- New: the **Weather** component has a **Hero style** switch (`variant: hero`), and a standalone weather card with `variant: hero` now gets the hero styles ([#15](https://github.com/kczepiec/nuvio/issues/15)).
+- New: **PIN lock for views** (BETA) in **Wall tablet mode**: chosen views ask for the PIN before showing anything, with the same PIN pad as the screensaver ([#17](https://github.com/kczepiec/nuvio/issues/17)). It is a convenience lock, not security.
+- Fixed: stacks, grids and YAML cards added in the editor keep the order you set instead of jumping above earlier cards ([#17](https://github.com/kczepiec/nuvio/issues/17)).
+
 ### 2.20.0
 - Thanks to [@cbailly42](https://github.com/cbailly42) for the new card and the shared bar chart ([#14](https://github.com/kczepiec/nuvio/pull/14)).
 - New: **Production forecast** card (`custom:nuvio-yield-card`). Pick one sensor per day (the first one is today) and the card shows the coming days as bars with the total, rating each day good, average or poor. Give your installed power in kW (a number or an entity) and the rating uses the energy per kW, with thresholds you can change; without it a day is compared with the best day of the period. Sensors in Wh or MWh are converted, a capacity written as `3,4` works, and day names follow the Home Assistant time zone. See [docs/components.md](docs/components.md#production-forecast).

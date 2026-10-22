@@ -4,6 +4,14 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Nie wydane
+- Poprawka: przełącznik w stosie albo siatce dodanych w edytorze nie zmieniał wyglądu po włączeniu lub wyłączeniu światła ([#16](https://github.com/kczepiec/nuvio/issues/16)). Panel przekazywał kontenerowi nowe dane z Home Assistant tylko wtedy, gdy zmieniła się jedna z jego własnych encji, a ta lista nie obejmowała kart w kontenerze. Kontenery i inne dodane komponenty dostają teraz każdą aktualizację.
+- Nowość: **Wygaszacz na tym urządzeniu** w **Trybie tabletu ściennego** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Ustawienia wygaszacza są nadal wspólne, ale każde urządzenie decyduje, czy wygaszacz działa, i zapisuje to w swojej przeglądarce. Włączenie wygaszacza włącza go na urządzeniu, którego używasz; inne urządzenia zostają wyłączone, dopóki go na nich nie włączysz (tablet zablokowany PIN-em przed aktualizacją go zachowuje). Po aktualizacji sprawdź przełącznik na tablecie na ścianie.
+- Nowość: **Tło panelu** w **Wyglądzie** wyłącza wspólny szklany panel za kartami, dla wszystkich widoków albo tylko bieżącego ([#15](https://github.com/kczepiec/nuvio/issues/15)). Style dla `panel_backdrop: false` nie są już testowe.
+- Nowość: komponent **Pogoda** ma przełącznik **Styl hero** (`variant: hero`), a samodzielna karta pogody z `variant: hero` dostaje teraz style hero ([#15](https://github.com/kczepiec/nuvio/issues/15)).
+- Nowość: **Blokada widoków PIN-em** (BETA) w **Trybie tabletu ściennego**: wybrane widoki pytają o PIN, zanim cokolwiek pokażą, tym samym pinpadem co wygaszacz ([#17](https://github.com/kczepiec/nuvio/issues/17)). To blokada dla wygody, nie zabezpieczenie.
+- Poprawka: stosy, siatki i karty YAML dodane w edytorze trzymają ustawioną kolejność zamiast wskakiwać nad wcześniejsze karty ([#17](https://github.com/kczepiec/nuvio/issues/17)).
+
 ### 2.20.0
 - Dziękuję [@cbailly42](https://github.com/cbailly42) za nową kartę i wspólny wykres słupkowy ([#14](https://github.com/kczepiec/nuvio/pull/14)).
 - Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Czujniki w Wh lub MWh są przeliczane, moc wpisana jako `3,4` działa, a nazwy dni są liczone w strefie czasowej Home Assistant. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).

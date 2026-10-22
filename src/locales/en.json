@@ -2096,6 +2096,7 @@
       "subtitle": "Subtitle",
       "tagline": "Tagline",
       "title": "Title",
+      "weather_hero": "Hero style: large white text on the wallpaper, no card",
       "title_with_name": "Title ({name} = first name)",
       "unit": "Unit",
       "warning_threshold": "Warning threshold",
@@ -2323,7 +2324,11 @@
     "with_chart": "With chart",
     "workout": "Workout",
     "your_whole_home_in": "Your whole home in one place",
-    "zoe": "Zoe"
+    "zoe": "Zoe",
+    "panel_backdrop": "Panel background",
+    "panel_backdrop_hint": "Off: cards float on the wallpaper, each with its own glass, without the shared frame.",
+    "panel_backdrop_view": "This view",
+    "panel_backdrop_as_all": "As everywhere"
   },
   "lookr": {
     "add_fuel": "Add fuel",
@@ -3037,6 +3042,9 @@
     "none_touch_only": "None, touch only",
     "not_detected": "Not detected",
     "now_until": "now, until {time}",
+    "on_this_device": "Screensaver on this device",
+    "on_this_device_off": "Off on this device. Other devices keep their own choice.",
+    "on_this_device_on": "Starts on this device after inactivity. Saved in this browser only.",
     "photo": "Photo",
     "photo_sources": {
       "bg": "Dashboard background",
@@ -3259,5 +3267,16 @@
     "summary_sub": "All set. You can change every choice later in edit mode.",
     "views": "Views",
     "views_sub": "Pick the views in the menu. Home is always on."
+  },
+  "vlock": {
+    "title": "Locked view",
+    "enter_pin": "Enter PIN to open this view",
+    "back": "Back",
+    "note": "Convenience lock, not security: it keeps casual hands out of a view on this dashboard. Anyone with a Home Assistant account can still see the same data elsewhere.",
+    "settings_title": "PIN lock for views",
+    "settings_hint": "Chosen views ask for the PIN before showing anything. Unlocked for 5 minutes in this browser tab.",
+    "needs_pin": "Set a PIN in PIN lock first (screensaver section above).",
+    "locked": "Asks for PIN",
+    "open": "Open"
   }
 }

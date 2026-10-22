@@ -165,9 +165,12 @@ class HGPage extends HTMLElement {
     if (this._config._hgLang) { window.__hgLang = this._config._hgLang; window.__hgLangOpt = this._config._hgLangOpt || ''; }   /* język wybrany w strategii; opcja language ma pierwszeństwo przed kreatorem */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
-    this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
+    this._pbgSync();
     if (this._hass) this._build();
   }
+  /* tło panelu (#15): Wygląd > Tło panelu (app.pbg: false = bez tła wszędzie), wyjątek dla widoku (app.pbgv[widok] = 'on' | 'off'), panel_backdrop: false w YAML */
+  _pbgSync() { const c = this._config; if (!c) return; const A = (window.__hgL && window.__hgL.data && window.__hgL.data.app) || {}, v = c.view && A.pbgv && A.pbgv[c.view];
+    this.toggleAttribute('no-pbg', v === 'off' ? true : v === 'on' ? false : c.panel_backdrop === false || A.pbg === false); }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
     if (window.HGWall) { try { HGWall.tick(h, this); } catch (e) { /* */ } }
@@ -181,6 +184,7 @@ class HGPage extends HTMLElement {
     if (!this._config) return;
     if (this._config.redirect) { this._redirect(); return; }
     if (!this._built) this._build();
+    if (this._built) this._pbgSync();   /* zmiana w Wyglądzie na innym widoku */
     for (const el of this._cards) hgPass(el, h);
     if (this._wxEl) hgPass(this._wxEl, h);
     if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
@@ -214,7 +218,7 @@ class HGPage extends HTMLElement {
     this._hgHidden = false; this.style.display = '';
     const h = this._hgPend; this._hgPend = null;
     if (h) this.hass = h;
-    this._syncPlay(); this._layout(); this._enter();
+    this._syncPlay(); this._layout(); this._enter(); if (window.HGVLock) HGVLock.guard(this);
     requestAnimationFrame(() => requestAnimationFrame(hgOffFlush));   // karty z ukrytego widoku: nadrób zaległe zmiany stanu
   }
   _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
@@ -244,6 +248,7 @@ class HGPage extends HTMLElement {
     this._syncPlay();
     this._hglSub = this._hglSub || (() => { if (!this._editing && this._built && this._hass) this._paintTop(); if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
     HGL.subs.add(this._hglSub);
+    if (this._built && window.HGVLock) HGVLock.guard(this);
     this._onLang = this._onLang || (() => this._langChanged());
     window.addEventListener('hg-lang', this._onLang);
     hgBmPassThrough(true);
@@ -259,6 +264,7 @@ class HGPage extends HTMLElement {
      tytuły widoków: katalog spóźniony) -> HA generuje dashboard od nowa (config-refresh, HGLang.stale) */
   _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
+    if (window.HGVLock && HGVLock.page === this && HGVLock.el) HGVLock.close();
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
@@ -389,7 +395,8 @@ class HGPage extends HTMLElement {
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
-    const ord = (() => { try { const sc = this._pageScope(); return !!sc && HGL.get(sc).order.length > 0; } catch (e) { return false; } })();
+    /* dodane komponenty (stos, siatka, karta YAML, #17): bez „dense”, bo szerokie kontenery przeskakiwały przed wcześniejsze karty; stoją w kolejności dodania i przeciągania */
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || HGL.get(sc + ':tiles').added.some((x) => x.c)); } catch (e) { return false; } })();
     el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
@@ -450,6 +457,7 @@ class HGPage extends HTMLElement {
     this._cards = []; this._cardWraps = [];
     if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
     if (this._config._hgAuto && HGL.loaded && !HGL.failed && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    this._pbgSync();   /* układ z HA mógł dojść dopiero teraz (Wygląd: tło panelu) */
     const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
     if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
     for (const cc of LC) {
@@ -467,6 +475,7 @@ class HGPage extends HTMLElement {
       this._cards.push(el); this._cardWraps.push(w);
     }
     this._built = true; this._building = false; this._lsig = this._layoutSig();
+    if (window.HGVLock) HGVLock.guard(this);   /* blokada widoku PIN-em (#17) */
     if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
     this._sigTop = this._sigRail = this._sigHub = null;
     this._paintHead(); this._paintTools();
@@ -1115,10 +1124,11 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce){ .cw{ animation:none; } }
 .cw > *{ height:100%; }
 /* ukryty panel: visibility nie wystarcza (ha-card w kartach ma własne visibility:visible i przebijał się po animacji) -> także opacity 0 i bez rozmycia */
+:host([vlocked]) .panel, :host([vlocked]) .hub{ visibility:hidden !important; }   /* widok zablokowany PIN-em: treść ukryta pod pinpadem */
 :host([panel-hidden]) .panel{ visibility:hidden; opacity:0 !important; pointer-events:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
 /* w trakcie animacji: jedno rozmycie (sam panel), potomkowie bez backdrop-filter / animacji / przejść -> panel znika jako jedna warstwa */
 :host([panel-anim]) .panel{ transform-origin: 100% 50%; pointer-events:none; --hg-inner-bf: none; }
-/* TEST panel_backdrop: false – panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
+/* panel bez tła (panel_backdrop: false albo Wygląd > Tło panelu): panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
 :host([no-pbg]) .panel{ background:none !important; border-color:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
   --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1)); }
 :host([no-pbg]) .panel{ padding:0 !important; border-width:0 !important; }

@@ -162,7 +162,9 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   render() {
     const h = this._hass, c = this._config, w = h.states[c.entity];
-    if (c.variant === 'hero') return this._hero(w);
+    /* samodzielna karta z variant: hero (#15): atrybut hosta włącza styl hero tak jak w nagłówku strony */
+    if (c.variant === 'hero') { if (this.getAttribute('variant') !== 'hero') { this.setAttribute('variant', 'hero'); this._vOwn = true; } return this._hero(w); }
+    if (this._vOwn) { this._vOwn = false; this.removeAttribute('variant'); }
     const hd = (inner) => `<div class="hd"><button class="hdb" data-act="more" aria-label="${H.esc(hgT('cards.weather.title_details_aria', { title: c.title }))}">${H.icon('mdi:weather-partly-cloudy', 'ic')}<span class="tt">${H.esc(c.title)}</span></button>${inner || ''}</div>`;
     if (!H.ok(w)) return `<ha-card class="glass">${hd()}<div class="ph">${hgT('cards.weather.weather_unavailable')}</div></ha-card>`;
     const tn = this._tNow(), cond = [HGWx.cn(w.state)], mm = this._minmax(), night = this._night(new Date());
