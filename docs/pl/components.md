@@ -270,7 +270,7 @@ Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle
 | `custom:nuvio-grid-card` | Karty w kolumnach; na wąskim ekranie mniej kolumn | `cards`, `columns` (1 do 6, 0 = automatycznie), `min_width`, `square`, `gap`, `glass`, `title`; dla karty `span` |
 | `custom:nuvio-stack-card` | Karty jedna pod drugą albo obok siebie w jednym szkle; obok siebie przechodzą w pion poniżej `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (np. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
-Kolejność (2.21.0): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem. Od 2.21.0-beta.2 zwykłe kafle też są osobnymi kartami (bez obszarów siatki), więc kafle i kontenery można dowolnie przeplatać.
+Kolejność (2.21.1): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem. Od 2.21.1 zwykłe kafle też są osobnymi kartami (bez obszarów siatki), więc kafle i kontenery można dowolnie przeplatać.
 
 **Pogoda** jako komponent ma przełącznik **Styl hero** (YAML `variant: hero`): duży biały tekst bezpośrednio na tapecie, bez karty, jak pogoda w nagłówku. Najlepiej wygląda przy wyłączonym **Tle panelu**.
 
@@ -323,7 +323,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Osoba | `custom:nuvio-person-card` | osoba, etykiety w domu i poza domem |
 | Dziecko (LiveKid) | `custom:nuvio-kid-card` | tytuł, dziecko (imię) albo encja przy kilkorgu dzieci; encje integracji LiveKid są wykrywane same |
 
-**Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi.
+**Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi. Od 2.21.1 każdy termostat w pokoju ma też wybór **Stan rzeczywisty**: encję włącz/wyłącz albo liczbową (np. czujnik spalania lub moc palnika pieca), która mówi, czy urządzenie naprawdę pracuje; kafel Pokoje i karta termostatu pokazują wtedy **Bezczynny** zamiast **Grzeje**, gdy nie pracuje.
 
 **Wygląd, Nagłówek i nawigacja**: tytuł i podtytuł domowników (albo bez paska domowników), ceny paliw w nagłówku pulpitu i cztery widoki na pasku telefonu.
 

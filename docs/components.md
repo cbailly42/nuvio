@@ -270,7 +270,7 @@ Grid, vertical stack and horizontal stack work like in Home Assistant, but in Nu
 | `custom:nuvio-grid-card` | Cards in columns; fewer columns on narrow screens | `cards`, `columns` (1 to 6, 0 = automatic), `min_width`, `square`, `gap`, `glass`, `title`; per card `span` |
 | `custom:nuvio-stack-card` | Cards one below another or side by side in one glass; side by side turns vertical below `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (e.g. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
-Order (2.21.0): containers and YAML cards added in the editor stay where you put them. Before, the panel filled gaps with smaller cards, so a wide stack or grid could end up above cards added before it. Drag to reorder as usual. Since 2.21.0-beta.2 normal tiles are separate cards too (without grid areas), so tiles and containers can be mixed in any order.
+Order (2.21.1): containers and YAML cards added in the editor stay where you put them. Before, the panel filled gaps with smaller cards, so a wide stack or grid could end up above cards added before it. Drag to reorder as usual. Since 2.21.1 normal tiles are separate cards too (without grid areas), so tiles and containers can be mixed in any order.
 
 **Weather** as a component has a **Hero style** switch (YAML `variant: hero`): large white text right on the wallpaper, without a card, like the header weather. Best with **Panel background** off.
 
@@ -323,7 +323,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Person | `custom:nuvio-person-card` | person, home and away labels |
 | Child (LiveKid) | `custom:nuvio-kid-card` | title, child (name) or entity when there are several children; entities of the LiveKid integration are found automatically |
 
-**Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms.
+**Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms. Since 2.21.1 each thermostat of the room also has an **Actual state** choice: an on/off or numeric entity (for example a stove's combustion sensor or burner power) that tells whether the device really runs; the Rooms tile and the thermostat card then show **Idle** instead of **Heating** when it does not.
 
 **Appearance, Header and navigation**: household title and subtitle (or no household strip), fuel prices in the dashboard header, and the four views on the phone bar.
 

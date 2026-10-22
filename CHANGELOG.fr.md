@@ -4,20 +4,16 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### 2.21.0-beta.3
+### 2.21.1
+- Merci à [@cbailly42](https://github.com/cbailly42) pour la correction du climat ([#22](https://github.com/kczepiec/nuvio/pull/22)).
+- Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.
 - Nouveau : **État réel** pour chaque thermostat d’une pièce, dans **Apparence > Pièces** (mode édition) : choisissez une entité qui indique si cet appareil fonctionne vraiment (une entité marche/arrêt comme le capteur de combustion d’un poêle, ou numérique comme sa puissance). Avec plusieurs appareils dans une pièce (par exemple une climatisation réversible et un poêle), la tuile Pièces les regarde tous et affiche **Chauffe**, **Refroidit** ou **Au repos** d’après celui qui fonctionne réellement ; la carte thermostat utilise le même réglage.
 - Corrigé : les thermostats qui n’indiquent pas ce qu’ils font (pas d’attribut `hvac_action`, par exemple certains sèche-serviettes) sont considérés au repos dès que la pièce a atteint la consigne, sur la tuile Pièces et sur la carte thermostat.
 - Corrigé : la carte thermostat affiche **· au repos** après le mode (par exemple **Chauffage à 7° · au repos**) quand l’appareil ne chauffe pas réellement.
 - Corrigé : les tuiles **Pièces** affichaient **Chauffe** dès qu’un thermostat était en mode chauffage, même s’il ne chauffait pas (par exemple une consigne hors-gel de 7 °C dans une pièce à 21 °C). La tuile suit désormais ce que fait réellement l’appareil et affiche **Au repos** avec une pastille grise dans ce cas.
-
-### 2.21.0-beta.2
-- Préversion bêta pour les tests.
 - Corrigé : les interrupteurs du **Verrouillage des vues par code PIN** dans Mode tablette murale ne faisaient rien. Leur action n’était pas transmise aux réglages de la tablette, rien n’était basculé ni enregistré. Ils basculent maintenant tout de suite et sont enregistrés avec la disposition ; sans code PIN, un message et un champ pour le définir apparaissent. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Corrigé : les tuiles simples étaient toujours regroupées dans un bloc sous les piles, grilles, cartes YAML et autres composants. Sans zones de grille, chaque tuile ajoutée est maintenant une carte du panneau, tuiles et composants se mélangent dans n’importe quel ordre par glisser déposer ; l’ordre existant des tuiles est conservé. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
 - Corrigé : une vue ouverte par son numéro (par exemple `/dashboard-nuvio/0`) avait des cartes invisibles, car la page se croyait masquée et mettait en pause l’animation d’entrée.
-
-### 2.21.0-beta.1
-- Préversion bêta pour les tests. Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.
 - Corrigé : un interrupteur dans une pile ou une grille ajoutée dans l’éditeur ne changeait pas d’aspect après avoir allumé ou éteint la lumière ([#16](https://github.com/kczepiec/nuvio/issues/16)). Le panneau ne transmettait les nouvelles données de Home Assistant à un conteneur que lorsqu’une de ses propres entités changeait, et cette liste n’incluait pas les cartes du conteneur. Les conteneurs et les autres composants ajoutés reçoivent maintenant chaque mise à jour.
 - Nouveau : **Écran de veille sur cet appareil** dans **Mode tablette murale** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Les réglages restent partagés, mais chaque appareil décide si l’écran de veille fonctionne, enregistré dans son navigateur. Activer l’écran de veille l’active sur l’appareil utilisé ; les autres restent désactivés tant que vous ne l’y activez pas (une tablette verrouillée par code PIN avant la mise à jour le garde). Après la mise à jour, vérifiez l’interrupteur sur la tablette murale.
 - Nouveau : **Fond du panneau** dans **Apparence** désactive le panneau de verre commun derrière les cartes, pour toutes les vues ou seulement la vue affichée ([#15](https://github.com/kczepiec/nuvio/issues/15)). Les styles de `panel_backdrop: false` ne sont plus expérimentaux.
