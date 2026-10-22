@@ -118,8 +118,8 @@ const HGApp = window.__hgApp || (window.__hgApp = {
   /* dane wyglądu trafiają do CSS i atrybutów HTML: kolory tylko #RRGGBB, adres tła tylko /… lub https://… */
   get() { const a = HGL.data.app || {}, hx = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v), o = Object.assign({}, a);
     if (o.accent != null && !hx(o.accent)) delete o.accent; if (o.dim != null && !isFinite(Number(o.dim))) delete o.dim;
-    /* migracja: tła zapisane przez wersje < 0.3.4 (stare podfoldery backgrounds i bg) -> płaskie nuvio-bg-x.webp obok paczki */
-    const mig = (u) => (typeof u === 'string' && typeof HG_ASSET === 'string' ? u.replace(/^.*\/assets\/(?:backgrounds|bg)\/([a-z0-9-]+\.webp)(?:\?.*)?$/, (m, f) => HG_ASSET + 'nuvio-bg-' + f) : u);
+    /* wbudowane tła: stare podfoldery (< 0.3.4) i adresy zapisane z adresem serwera innego urządzenia -> bieżąca baza paczki (hgBgFix) */
+    const mig = (u) => (typeof hgBgFix === 'function' ? hgBgFix(u) : u);
     if (o.bg && typeof o.bg === 'object' && o.bg.kind === 'image') { const v = mig(o.bg.v), v2 = mig(o.bg.v2p); if (v !== o.bg.v || v2 !== o.bg.v2p) { o.bg = Object.assign({}, o.bg, { v, v2p: v2 }); if (HGL.data.app) HGL.data.app.bg = o.bg; } }
     const b = o.bg; if (b && typeof b === 'object') { const okC = b.kind === 'color' || b.kind === 'gradient' ? hx(b.v) && (b.v2 == null || hx(b.v2)) : typeof b.v === 'string' && /^(\/|https?:\/\/)/.test(b.v) && !/[\s"'()<>\\]/.test(b.v); if (!okC) delete o.bg; }
     return o; },
@@ -128,8 +128,9 @@ const HGApp = window.__hgApp || (window.__hgApp = {
   bgImg(b) { if (!b) return null;
     if (b.kind === 'color') return `linear-gradient(${b.v}, ${b.v})`;
     if (b.kind === 'gradient') return `linear-gradient(160deg, ${b.v}, ${b.v2 || ('#' + '000000')})`;
-    if (b.kind === 'image' && b.v) return `url('${String(b.v).replace(/'/g, '%27')}')`;
-    if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${String(b.v).replace(/'/g, '%27')}')`; return null; },
+    const fx = (u) => String(typeof hgBgFix === 'function' ? hgBgFix(u) : u).replace(/'/g, '%27');
+    if (b.kind === 'image' && b.v) return `url('${fx(b.v)}')`;
+    if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${fx(b.v)}')`; return null; },
   apply() {
     const a = this.get(); let st = document.getElementById('hg-app-style');
     if (!st) { st = document.createElement('style'); st.id = 'hg-app-style'; document.head.appendChild(st); }
