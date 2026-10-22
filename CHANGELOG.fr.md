@@ -4,7 +4,7 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Non publié
+### 2.21.3
 - Modifié : la pastille de climat de la tuile **Pièces** a la couleur du mode (chauffage, refroidissement, déshumidification, ventilation, auto), les mêmes couleurs que dans le menu **Mode** de la télécommande clim., au lieu du gris : pleine quand l’appareil fonctionne, atténuée quand il ne fonctionne pas ou que l’état est estimé, seulement entourée quand seul le mode est connu. Le **~** devant les états estimés disparaît de la tuile Pièces et de la carte thermostat ; les lecteurs d’écran disent toujours **estimation**.
 
 ### 2.21.2

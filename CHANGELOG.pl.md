@@ -4,7 +4,7 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.21.3
 - Zmiana: kropka klimatu na kaflu **Pokoje** ma kolor trybu (grzanie, chłodzenie, osuszanie, wentylacja, auto), te same kolory co w menu **Tryb pracy** pilota klimatyzacji, zamiast szarego: pełna, gdy urządzenie pracuje, przygaszona, gdy nie pracuje albo stan jest szacunkiem, z samą obwódką, gdy znany jest tylko tryb. Znak **~** przed szacowanym stanem zniknął z kafla Pokoje i karty termostatu; czytnik ekranu nadal mówi **szacunek**.
 
 ### 2.21.2

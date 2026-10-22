@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.21.3
 - Changed: the climate dot on the **Rooms** tile has the colour of the mode (heating, cooling, drying, fan, auto), the same colours as in the **Mode** menu of the AC remote card, instead of grey: solid when the device is running, dimmed when it is not running or the state is an estimate, outlined when only the mode is known. The **~** before estimated states is gone from the Rooms tile and the thermostat card; screen readers still say **estimate**.
 
 ### 2.21.2
