@@ -4,7 +4,8 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.21.2
+- Zmiana: okno szczegółowej pogody jest zwarte i mieści się na ekranie telefonu bez przewijania: cztery szczegóły w jednym rzędzie, mniejsze odstępy i wiersze, mniejszy łuk słońca, a na wąskich ekranach krótkie nazwy dni (Pn, Wt) zamiast uciętych.
 - Zmiana: Nuvio nie zgaduje już, czy termostat albo klimatyzacja pracuje. Każde urządzenie klimatu w pokoju ma **Wykrywanie pracy** w **Wygląd > Pokoje**: **Automatycznie** (domyślnie), **Z encji**, **Z temperatury pokoju** albo **Pokazuj tylko tryb**. Automatycznie oznacza kolejno: encję **Stan rzeczywisty** (włącz/wyłącz albo wartość, np. moc powyżej **Progu pracy**, domyślnie 5 W), informację z samego urządzenia (`hvac_action`) i temperaturę pokoju względem nastawy, jeśli wybierzesz osobny czujnik pokoju (szacunek z histerezą domyślnie 0,5°, oznaczony **~** i przygaszoną kropką). W pozostałych przypadkach kafel pokazuje sam tryb, np. **Grzanie** z pustą kropką. W 2.21.1 nastawa była porównywana z temperaturą samego urządzenia, więc klimatyzacje sterowane pilotem IR pokazywały **Bezczynny**, choć grzały. Gdy w pokoju jest kilka urządzeń, kafel Pokoje pokazuje najpierw to, które na pewno pracuje, potem szacunek, a na końcu tryb. Stan pracy nazywa się teraz **Nie pracuje** zamiast **Bezczynny**. Dotychczasowe ustawienia **Stanu rzeczywistego** działają dalej.
 
 ### 2.21.1
