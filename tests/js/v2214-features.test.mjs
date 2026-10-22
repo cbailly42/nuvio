@@ -29,7 +29,8 @@ test('badge option: mode + domain, custom entity list, invalid input dropped', (
 test('strategy: badge resolved from wiz.vx, sidebar hidden only with railHide and no rail views', () => {
   const s = rd('hg-oss.part.js');
   assert.match(s, /const tabBadge = \(p\) =>/);
-  assert.match(s, /wiz && wiz\.railHide && !RV\.length \? \[\]/);
+  assert.match(s, /const railOff = !!\(wiz && wiz\.railHide\);\n  const rail = railOff \? \[\]/, 'railHide hides the rail regardless of per-view switches');
+  assert.match(s, /menu: \[\.\.\.\(railOff \? V\.slice\(5\)/, 'views beyond the top tabs stay reachable from the profile menu');
   const p = rd('hg-page.part.js');
   assert.match(p, /toggleAttribute\('norail'/);
   assert.match(p, /_navParam\(\)/);

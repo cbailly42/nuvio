@@ -2430,8 +2430,8 @@
     "badge_persons": "People at home",
     "badge_custom": "Selected entities…",
     "badge_entities": "Entities to count",
-    "rail_hide": "Hide the sidebar when it is empty",
-    "rail_hide_desc": "When no view is shown in the sidebar, the Settings button disappears too. Settings stay in the profile menu, behind the pencil and at the {param} address.",
+    "rail_hide": "Hide the sidebar",
+    "rail_hide_desc": "Hides the sidebar with its Settings button on computers and tablets; the per-view Sidebar switches then have no effect. Views that are not in the top tabs move to the profile menu. Settings stay in the profile menu, behind the pencil and at the {param} address.",
     "badge_entities_ph": "light.kitchen, switch.fan"
   },
   "looks": {
