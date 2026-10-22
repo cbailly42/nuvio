@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Fixed: a built-in background chosen on one device showed as a plain colour on devices that open Home Assistant under another address (local IP, domain, Nabu Casa). The picture was saved with the full address of the first device; built-in backgrounds are now saved as a path next to the Nuvio files (for example `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), and backgrounds saved earlier with an address are corrected when the layout loads, for the dashboard and the screensaver. Uploaded pictures and your own addresses are not changed.
+
 ### 2.21.3
 - Changed: the climate dot on the **Rooms** tile has the colour of the mode (heating, cooling, drying, fan, auto), the same colours as in the **Mode** menu of the AC remote card, instead of grey: solid when the device is running, dimmed when it is not running or the state is an estimate, outlined when only the mode is known. The **~** before estimated states is gone from the Rooms tile and the thermostat card; screen readers still say **estimate**.
 

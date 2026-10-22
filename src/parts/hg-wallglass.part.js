@@ -106,7 +106,7 @@ Object.assign(HGWall, {
   glRender(root, G, h, o) { const B = G.bg, pv = !!o.pv, rm = G.rm === 'on';
     root.classList.toggle('rm', rm); root.classList.toggle('nh', !G.hint.on || pv); root.classList.toggle('pv', pv);
     root.style.cssText = `--c1:${B.c1};--c2:${B.c2};--c3:${B.c3};--o1:${B.o1};--o2:${B.o2};--oi:${B.oi};--rad:24;--nd:${B.night && this.glNight(h) ? (1 - B.nd).toFixed(2) : 1}${o.pu ? ';--pu:' + o.pu : ''}`;
-    const bg = root.querySelector('.ng-bg'); bg.classList.toggle('im', !!B.img); bg.style.setProperty('--im', B.img ? `url("${B.img}")` : 'none');
+    const bg = root.querySelector('.ng-bg'); bg.classList.toggle('im', !!B.img); bg.style.setProperty('--im', B.img ? `url("${typeof hgBgFix === 'function' ? hgBgFix(B.img) : B.img}")` : 'none');
     root.querySelector('.ng-sp').hidden = !B.sph || !!B.img; const orb = root.querySelector('.ng-orb'); orb.hidden = !B.orb; orb.classList.toggle('ia', B.orbA && !pv); orb.tabIndex = B.orbA && !pv ? 0 : -1; if (!B.orbA || pv) orb.setAttribute('aria-hidden', 'true'); else orb.removeAttribute('aria-hidden');
     const d = new Date(), dt = root.querySelector('.ng-dt'); dt.hidden = true; dt.textContent = this.gdate(G, d);
     const me = h.user && Object.keys(h.states).find((e) => e.startsWith('person.') && h.states[e].attributes.user_id === h.user.id), pic = me && h.states[me].attributes.entity_picture;
@@ -172,7 +172,7 @@ Object.assign(HGWall, {
     s += `<div class="wg-h">${L(hgT('wallglass.clock'))}</div><div class="wl-f"><span>${L(hgT('wallglass.clock_format'))}</span>${seg('min.h12', [['auto', hgT('wallglass.clock_format_as_in_ha')], ['24', '24 h'], ['12', '12 h']], G.min.h12)}</div>
       ${rg('min.cs', G.min.cs, 0.6, 1.4, 0.1, hgT('wallglass.clock_size'), this._pc)}<div class="wl-f"><span>${L(hgT('wallglass.position'))}</span>${seg('min.pos', [['left', hgT('wallglass.position_left')], ['center', hgT('wallglass.position_centre')]], G.min.pos)}</div>
       ${sw('min.date', G.min.date, hgT('wallglass.show_date'))}${sw('min.wx', G.min.wx, hgT('common.weather'))}${sw('min.np', G.min.np, hgT('wallglass.now_playing'))}`;
-    const B = G.bg, gal = (typeof hgBgList === 'function' ? hgBgList() : []).map((x) => [x[0] || HG_ASSET + 'nuvio-bg-default-wide.webp', x[1], x[3] || x[0] || HG_ASSET + 'nuvio-bg-default-wide.webp']).slice(0, 18);
+    const B = G.bg, gal = (typeof hgBgList === 'function' ? hgBgList() : []).map((x) => [x[0] || HG_ASSET_P + 'nuvio-bg-default-wide.webp', x[1], x[3] || x[0] || HG_ASSET_P + 'nuvio-bg-default-wide.webp']).slice(0, 18);
     s += `<div class="wg-h">${L(hgT('wallglass.background'))}</div><div class="wl-f"><span>${L(hgT('wallglass.background_gradient'))}</span><div class="wg-cl">${[['c1', hgT('wallglass.gradient_top')], ['c2', hgT('wallglass.gradient_bottom')], ['c3', hgT('wallglass.gradient_glow')]].map(([k, t]) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${L(t)}</label>`).join('')}</div></div>
       ${sw('bg.orb', B.orb, hgT('wallglass.assistant_orb'))}${B.orb ? `${sw('bg.orbA', B.orbA, hgT('wallglass.orb_opens_assist'), hgT('wallglass.orb_opens_assist_hint'))}<div class="wl-f"><span>${L(hgT('wallglass.orb_colours'))}</span><div class="wg-cl">${['o1', 'o2'].map((k, i) => `<label><input type="color" name="wg:bg.${k}" value="${B[k]}">${i + 1}</label>`).join('')}</div></div>${rg('bg.oi', B.oi, 0, 1, 0.05, hgT('wallglass.intensity'), this._pc)}` : ''}
       ${sw('bg.sph', B.sph, hgT('wallglass.background_sphere'))}

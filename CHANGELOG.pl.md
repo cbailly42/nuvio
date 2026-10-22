@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane
+- Poprawka: wbudowane tło wybrane na jednym urządzeniu było zwykłym kolorem na urządzeniach, które otwierają Home Assistant pod innym adresem (lokalny IP, domena, Nabu Casa). Zdjęcie zapisywało się z pełnym adresem pierwszego urządzenia; teraz wbudowane tła zapisują się jako ścieżka obok plików Nuvio (np. `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), a tła zapisane wcześniej z adresem są poprawiane przy wczytaniu układu, na pulpicie i w wygaszaczu. Wgrane zdjęcia i własne adresy zostają bez zmian.
+
 ### 2.21.3
 - Zmiana: kropka klimatu na kaflu **Pokoje** ma kolor trybu (grzanie, chłodzenie, osuszanie, wentylacja, auto), te same kolory co w menu **Tryb pracy** pilota klimatyzacji, zamiast szarego: pełna, gdy urządzenie pracuje, przygaszona, gdy nie pracuje albo stan jest szacunkiem, z samą obwódką, gdy znany jest tylko tryb. Znak **~** przed szacowanym stanem zniknął z kafla Pokoje i karty termostatu; czytnik ekranu nadal mówi **szacunek**.
 

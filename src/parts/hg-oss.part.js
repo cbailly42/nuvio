@@ -2,9 +2,15 @@
 const HG_ASSET = (() => { try { const u = import.meta.url; if (u) return u.replace(/[^/]*([?#].*)?$/, ''); } catch (e) { /* brak */ }
   try { const s = document.currentScript && document.currentScript.src; if (s) return s.replace(/[^/]*(\?.*)?$/, ''); } catch (e) { /* brak */ }
   const r = [...document.querySelectorAll('script[src*="home-glass"]')].map((x) => x.src)[0]; return r ? r.replace(/[^/]*(\?.*)?$/, '') : '/hacsfiles/home-glass/'; })();
+/* baza zasobów bez adresu serwera (np. /hacsfiles/nuvio/ albo /local/nuvio/): tak zapisywane są wbudowane tła, żeby działały
+   na każdym urządzeniu niezależnie od adresu, pod którym otwiera ono HA (IP, domena, Nabu Casa). Inny serwer (CDN): pełny adres */
+const HG_ASSET_P = window.HG_ASSET_P = (() => { try { const u = new URL(HG_ASSET, location.href); return u.origin === location.origin ? u.pathname : HG_ASSET; } catch (e) { return HG_ASSET; } })();
+/* wbudowane tło (nuvio-bg-*.webp, też stare assets/bg/ i assets/backgrounds/) zapisane z dowolnym adresem albo ścieżką -> bieżąca baza paczki.
+   Inne adresy (wgrane /api/image/serve, /local/…, https://…) bez zmian */
+const hgBgFix = window.hgBgFix = (u) => (typeof u === 'string' ? u.replace(/^(?:[a-z][a-z0-9+.-]*:\/\/[^/]+)?(?:\/[^?#\s]*)?\/(?:assets\/(?:backgrounds|bg)\/|nuvio-bg-)([a-z0-9-]+\.webp)(?:[?#].*)?$/i, (m, f) => HG_ASSET_P + 'nuvio-bg-' + f) : u);
 /* zapas z CDN (jsDelivr, przypięty do tagu działającej wersji): gdy plik obok paczki się nie wczyta; lokalny pierwszy (offline) */
-const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string' || !u.startsWith(HG_ASSET)) return '';
-  return 'https://cdn.jsdelivr.net/gh/kczepiec/nuvio@v' + v + '/dist/' + u.slice(HG_ASSET.length).replace(/[?#].*$/, ''); } catch (e) { return ''; } };
+const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string') return ''; const base = u.startsWith(HG_ASSET) ? HG_ASSET : u.startsWith(HG_ASSET_P) ? HG_ASSET_P : null; if (!base) return '';
+  return 'https://cdn.jsdelivr.net/gh/kczepiec/nuvio@v' + v + '/dist/' + u.slice(base.length).replace(/[?#].*$/, ''); } catch (e) { return ''; } };
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
 const HG_DASH = () => (location.pathname.split('/')[1] || 'home-glass');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
@@ -41,8 +47,8 @@ const HG_DEFAULT_BG_FB = window.HG_DEFAULT_BG_FB = { kind: 'gradient', v: '#' + 
 /* [id pliku, nazwa: hgTLazy (rozwiązywana przy użyciu, String(l) / szablon)] */
 const HG_BG_SET = window.HG_BG_SET = window.HG_BG_SET || [['dom-w-lesie', hgTLazy('backgrounds.dom_w_lesie')], ['domek-nad-woda', hgTLazy('backgrounds.domek_nad_woda')], ['gwiazdzista-noc', hgTLazy('backgrounds.gwiazdzista_noc')], ['zachod-slonca', hgTLazy('backgrounds.zachod_slonca')], ['las-o-zmierzchu', hgTLazy('backgrounds.las_o_zmierzchu')],
   ['jasny-salon', hgTLazy('backgrounds.jasny_salon')], ['drewniane-wnetrze', hgTLazy('backgrounds.drewniane_wnetrze')], ['kuchnia', hgTLazy('backgrounds.kuchnia')], ['mglisty-las', hgTLazy('backgrounds.mglisty_las')], ['nad-mgla', hgTLazy('backgrounds.nad_mgla')]]
-  .map(([id, l], i) => { const b = HG_ASSET + 'nuvio-bg-' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
-const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET + 'nuvio-bg-default-wide.webp', v2p: HG_ASSET + 'nuvio-bg-default-portrait.webp' };
+  .map(([id, l], i) => { const b = HG_ASSET_P + 'nuvio-bg-' + id; return i ? [b + '-wide.webp', l, b + '-portrait.webp', b + '-thumb.webp'] : ['', l, '', b + '-thumb.webp']; });
+const HG_DEFAULT_BG = window.HG_DEFAULT_BG = window.HG_DEFAULT_BG || { kind: 'image', v: HG_ASSET_P + 'nuvio-bg-default-wide.webp', v2p: HG_ASSET_P + 'nuvio-bg-default-portrait.webp' };
 
 /* język: pref (wybór) albo języki przeglądarki (każdy język z manifestu: pełny kod, sam język); nieobsługiwany -> angielski. h zostaje w podpisie dla zgodności wywołań */
 const hgLang = (h, pref) => { const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
