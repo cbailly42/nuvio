@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Changed: the climate dot on the **Rooms** tile has the colour of the mode (heating, cooling, drying, fan, auto), the same colours as in the **Mode** menu of the AC remote card, instead of grey: solid when the device is running, dimmed when it is not running or the state is an estimate, outlined when only the mode is known. The **~** before estimated states is gone from the Rooms tile and the thermostat card; screen readers still say **estimate**.
+
 ### 2.21.2
 - Changed: the detailed weather window is compact and fits a phone screen without scrolling: the four details sit in one row, rows and paddings are tighter, the sun arc is smaller and on narrow screens the days use short names (Mon, Tue) instead of cut names.
 - Changed: Nuvio no longer guesses whether a thermostat or air conditioner is running. Each climate device in a room has **Activity detection** in **Appearance > Rooms**: **Automatic** (default), **From an entity**, **From room temperature** or **Show mode only**. Automatic uses, in this order: the **Actual state** entity (on/off, or a value such as power above the **Running threshold**, 5 W by default), what the device reports itself (`hvac_action`), and the room temperature against the setpoint when you pick a separate room sensor (an estimate with a 0.5° hysteresis by default, marked **~** with a dimmed dot). Otherwise the tile shows only the mode, for example **Heating** with an empty dot. In 2.21.1 the setpoint was compared with the device's own temperature, so IR remote air conditioners showed **Idle** while heating. With several devices in a room, the Rooms tile shows a device that is surely running first, then an estimate, then a mode. Existing **Actual state** choices keep working.

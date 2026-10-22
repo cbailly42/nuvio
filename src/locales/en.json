@@ -2416,7 +2416,7 @@
     "clim_room_temp": "Sensor for the estimate · {name}",
     "clim_room_temp_default": "Room sensor",
     "clim_hysteresis": "Hysteresis (°)",
-    "clim_hint": "Automatic: the actual state entity first, then what the device reports (hvac_action), then the room temperature against the setpoint (an estimate, marked ~). Without these, only the mode is shown. Threshold: 5 W by default for power, 0 for other values."
+    "clim_hint": "Automatic: the actual state entity first, then what the device reports (hvac_action), then the room temperature against the setpoint (an estimate). Without these, only the mode is shown. Threshold: 5 W by default for power, 0 for other values."
   },
   "looks": {
     "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",

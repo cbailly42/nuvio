@@ -2452,7 +2452,7 @@
     "clim_room_temp": "Capteur pour l’estimation · {name}",
     "clim_room_temp_default": "Capteur de la pièce",
     "clim_hysteresis": "Hystérésis (°)",
-    "clim_hint": "Automatique : d’abord l’entité d’état réel, puis ce qu’indique l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (estimation, marquée ~). Sans elles, seul le mode est affiché. Seuil : 5 W par défaut pour une puissance, 0 pour les autres valeurs."
+    "clim_hint": "Automatique : d’abord l’entité d’état réel, puis ce qu’indique l’appareil (hvac_action), puis la température de la pièce par rapport à la consigne (estimation). Sans elles, seul le mode est affiché. Seuil : 5 W par défaut pour une puissance, 0 pour les autres valeurs."
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",

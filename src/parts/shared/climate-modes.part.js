@@ -60,3 +60,11 @@ const hgClimInfo = (h, s, st = s && s.state, cfg, rid) => {
 const hgClimAct = (h, s, st = s && s.state, cfg) => { const i = hgClimInfo(h, s, st, cfg); return i ? i.act || i.mode : null; };
 /* kolejność na kaflu pokoju: potwierdzona praca > szacowana praca > sam tryb > potwierdzona bezczynność > szacowana */
 const hgClimRank = (i) => (!i ? 0 : i.conf === 'mode' ? 3 : i.act === 'idle' ? (i.conf === 'confirmed' ? 2 : 1) : i.conf === 'confirmed' ? 5 : 4);
+/* kolory trybów: jedna mapa dla menu „Tryb pracy” pilota (remote-card) i kropki klimatu na kaflu Pokoje.
+   auto / heat_cool: kolor z nastawy (zimno, środek, ciepło), jak w pilocie */
+const HG_CLIM_COL = { off: '#8A9099', cool: 'hsl(214 88% 56%)', heat: 'hsl(24 92% 54%)', dry: 'hsl(178 52% 40%)', fan_only: 'hsl(205 18% 52%)', mid: 'hsl(262 62% 60%)' };
+const hgClimCol = (st, t, mn, mx) => {
+  if (HG_CLIM_COL[st]) return HG_CLIM_COL[st];
+  const f = t == null || !isFinite(t) || !(mx > mn) ? .5 : (t - mn) / (mx - mn);
+  return f < .4 ? HG_CLIM_COL.cool : f > .6 ? HG_CLIM_COL.heat : HG_CLIM_COL.mid;
+};
