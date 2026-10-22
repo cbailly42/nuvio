@@ -59,7 +59,7 @@ const HG_WALL_SS = `
 .nw-e li, .nw-k li{ position:relative; min-width:0; padding:1px 0 1px 12px; }
 .nw-e li::before, .nw-k li::before{ content:''; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:1.5px; background:var(--c); box-shadow:0 0 12px var(--c); }
 .nw-e .nw-et, .nw-k .nw-et{ display:flex; align-items:center; gap:6px; font-size:clamp(11px, 1.4vmin, 13px); font-weight:500; opacity:.75; font-variant-numeric:tabular-nums; }
-.nw-e .nw-et em, .nw-k .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }; text-shadow:none; opacity:1; }
+.nw-e .nw-et em, .nw-k .nw-et em{ font-style:normal; font-weight:700; font-size:.82em; letter-spacing:.04em; padding:0; background:none; color:#fff; text-shadow:0 1px 3px ${K(0,0,0,.6)}; text-transform:uppercase; }
 .nw-e li.nx .nw-et, .nw-k li.nx .nw-et{ opacity:1; }
 .nw-e .nw-en, .nw-k .nw-en{ display:block; margin-top:2px; font-size:clamp(14px, 1.9vmin, 17px); font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* dziecko (LiveKid, funkcja ukryta): przyjście / wyjście jak kolumny prognozy, plan zajęć jak lista wydarzeń */
