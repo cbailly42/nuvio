@@ -1078,6 +1078,13 @@ const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-p
 @media (max-width:820px){ .hge-sheet.lkt{ grid-template-columns:minmax(0, 1fr); grid-template-rows:auto auto minmax(0, 1fr) auto; } .lk-tabs{ flex-direction:row; overflow-x:auto; scrollbar-width:none; margin:0 -4px; } .lk-tabs::-webkit-scrollbar{ display:none; } .lk-tabs [role=tab]{ flex:none; min-height:40px; padding:0 12px; font-size:13px; border-radius:999px; } }
 :host([mode=phone]) .hge-sheet.lkt{ width:100vw; height:92vh; grid-template-columns:minmax(0, 1fr); grid-template-rows:auto auto minmax(0, 1fr) auto; }
 :host([mode=phone]) .lk-tabs{ flex-direction:row; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .lk-tabs [role=tab]{ flex:none; min-height:40px; padding:0 12px; font-size:13px; border-radius:999px; }
+/* #2.22.1 telefon i wąski tablet: jedna kolumna (lista albo strona) na pełną szerokość, bez przewijania w poziomie, pasek akcji nad dolną nawigacją */
+.lkt .lk-sc, .lkt .lk-side{ min-width:0; box-sizing:border-box; } .lkt .lk-sc{ overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
+.lkt .lk-sc > *, .lkt .lk-sc .lk-g, .lkt .lk-sc .lk-g > *{ min-width:0; max-width:100%; box-sizing:border-box; } .lkt .lk-sc .hgs-t{ min-width:0; max-width:100%; }
+@media (max-width:820px){ .hge-sheet.lkt{ grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr) auto; }
+  .hge-sheet.lkt > .lk-side, .hge-sheet.lkt > .lk-sc{ grid-row:2; grid-column:1; } .hge-sheet.lkt > .lk-ft{ grid-row:3; padding-bottom:max(10px, env(safe-area-inset-bottom)); } }
+:host([mode=phone]) .hge-sheet.lkt{ width:100%; max-width:100vw; height:92vh; height:calc(100dvh - max(56px, env(safe-area-inset-top) + 16px)); grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr) auto; }
+:host([mode=phone]) .hge-sheet.lkt > .lk-side, :host([mode=phone]) .hge-sheet.lkt > .lk-sc{ grid-row:2; grid-column:1; } :host([mode=phone]) .hge-sheet.lkt > .lk-ft{ grid-row:3; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
 `;
 const HG_LOOK_CSS = `
 .lk{ display:flex; flex-direction:column; max-height:min(86vh, calc(100dvh - 24px)); }
