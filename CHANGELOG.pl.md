@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Poprawione: widoki odblokowane PIN-em zostawały otwarte przez 5 minut także po włączeniu wygaszacza albo użyciu **Zablokuj ekran**, więc kolejna osoba przy tablecie ściennym mogła wejść w nie bez PIN-u. Wygaszacz i **Zablokuj ekran** zamykają teraz wszystkie odblokowane widoki, a widok na ekranie po wybudzeniu znowu pyta o PIN. Podgląd wygaszacza w ustawieniach niczego nie blokuje ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+
 ### 2.21.5
 - Poprawione: **Ukryj pasek boczny** (wcześniej **Ukryj pusty pasek boczny**) nic nie robił, dopóki choć jeden widok miał włączony **Pasek boczny**. Teraz ukrywa pasek boczny Nuvio razem z przyciskiem Ustawienia na komputerze i tablecie bez względu na przełączniki widoków, a widoki spoza zakładek u góry trafiają do menu profilu.
 

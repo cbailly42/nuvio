@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Fixed: views unlocked with the PIN stayed open for 5 minutes even after the screensaver started or **Lock screen** was used, so the next person at a wall tablet could open them without the PIN. The screensaver and **Lock screen** now close every unlocked view, and the view on screen asks for the PIN again after waking. The screensaver preview in settings does not relock ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+
 ### 2.21.5
 - Fixed: **Hide the sidebar** (formerly **Hide the sidebar when it is empty**) did nothing while any view still had **Sidebar** on. It now hides the Nuvio sidebar and its Settings button on computers and tablets whatever the per-view switches say, and views that are not in the top tabs move to the profile menu.
 
