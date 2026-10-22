@@ -294,7 +294,9 @@
       "turn_off": "wyłącz",
       "turn_off_lights": "Wyłącz światła",
       "turn_on": "włącz",
-      "turn_on_lights": "Włącz światła"
+      "turn_on_lights": "Włącz światła",
+      "mode_label": "Tryb: {mode}",
+      "estimated": "szacunkowo"
     },
     "assist": {
       "ask_or_give_a": "Zapytaj albo wydaj polecenie",
@@ -2429,7 +2431,7 @@
     "header_and_navigation": "Nagłówek i nawigacja",
     "header_saved": "Zapisano nagłówek",
     "header_saved_reloading": "Zapisano nagłówek – odświeżanie…",
-    "heating_auto": "Automatycznie (termostat)",
+    "heating_auto": "Brak (następne źródło)",
     "heating_state_sensor": "Stan rzeczywisty · {name}",
     "hidden_in_the_header": "Ukryte w nagłówku",
     "hourly_forecast_from_the": "Prognoza godzinowa: z encji pogody",
@@ -2477,7 +2479,17 @@
     "view_settings": "Ustawienia widoków",
     "weather_in_the_header": "Pogoda w nagłówku",
     "who_is_home_right": "Kto jest teraz w domu",
-    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu"
+    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu",
+    "clim_source": "Źródło stanu · {name}",
+    "clim_src_auto": "Automatycznie",
+    "clim_src_entity": "Encja",
+    "clim_src_room": "Temperatura pokoju",
+    "clim_src_mode": "Tylko tryb",
+    "clim_threshold": "Próg pracy (domyślnie 5 W dla mocy, 0 dla innych)",
+    "clim_room_temp": "Temperatura pokoju · {name}",
+    "clim_room_temp_default": "Czujnik pokoju",
+    "clim_hysteresis": "Histereza (°)",
+    "clim_hint": "Automatycznie: encja, potem stan zgłaszany przez urządzenie (hvac_action), potem temperatura pokoju względem nastawy (oznaczona ~), a w ostateczności tylko tryb."
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",
