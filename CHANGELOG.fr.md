@@ -4,7 +4,8 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Non publié
+### 2.21.0-beta.1
+- Préversion bêta pour les tests. Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.
 - Corrigé : un interrupteur dans une pile ou une grille ajoutée dans l’éditeur ne changeait pas d’aspect après avoir allumé ou éteint la lumière ([#16](https://github.com/kczepiec/nuvio/issues/16)). Le panneau ne transmettait les nouvelles données de Home Assistant à un conteneur que lorsqu’une de ses propres entités changeait, et cette liste n’incluait pas les cartes du conteneur. Les conteneurs et les autres composants ajoutés reçoivent maintenant chaque mise à jour.
 - Nouveau : **Écran de veille sur cet appareil** dans **Mode tablette murale** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Les réglages restent partagés, mais chaque appareil décide si l’écran de veille fonctionne, enregistré dans son navigateur. Activer l’écran de veille l’active sur l’appareil utilisé ; les autres restent désactivés tant que vous ne l’y activez pas (une tablette verrouillée par code PIN avant la mise à jour le garde). Après la mise à jour, vérifiez l’interrupteur sur la tablette murale.
 - Nouveau : **Fond du panneau** dans **Apparence** désactive le panneau de verre commun derrière les cartes, pour toutes les vues ou seulement la vue affichée ([#15](https://github.com/kczepiec/nuvio/issues/15)). Les styles de `panel_backdrop: false` ne sont plus expérimentaux.

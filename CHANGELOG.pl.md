@@ -4,7 +4,8 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Nie wydane
+### 2.21.0-beta.1
+- Wersja testowa (beta). Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.
 - Poprawka: przełącznik w stosie albo siatce dodanych w edytorze nie zmieniał wyglądu po włączeniu lub wyłączeniu światła ([#16](https://github.com/kczepiec/nuvio/issues/16)). Panel przekazywał kontenerowi nowe dane z Home Assistant tylko wtedy, gdy zmieniła się jedna z jego własnych encji, a ta lista nie obejmowała kart w kontenerze. Kontenery i inne dodane komponenty dostają teraz każdą aktualizację.
 - Nowość: **Wygaszacz na tym urządzeniu** w **Trybie tabletu ściennego** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Ustawienia wygaszacza są nadal wspólne, ale każde urządzenie decyduje, czy wygaszacz działa, i zapisuje to w swojej przeglądarce. Włączenie wygaszacza włącza go na urządzeniu, którego używasz; inne urządzenia zostają wyłączone, dopóki go na nich nie włączysz (tablet zablokowany PIN-em przed aktualizacją go zachowuje). Po aktualizacji sprawdź przełącznik na tablecie na ścianie.
 - Nowość: **Tło panelu** w **Wyglądzie** wyłącza wspólny szklany panel za kartami, dla wszystkich widoków albo tylko bieżącego ([#15](https://github.com/kczepiec/nuvio/issues/15)). Style dla `panel_backdrop: false` nie są już testowe.
