@@ -3381,7 +3381,7 @@
     "note": "Blokada dla wygody, nie zabezpieczenie: chroni widok przed przypadkowym użyciem w tym dashboardzie. Kto ma konto w Home Assistant, zobaczy te same dane gdzie indziej.",
     "settings_title": "Blokada widoków PIN-em",
     "settings_hint": "Wybrane widoki pytają o PIN, zanim cokolwiek pokażą. Po odblokowaniu otwarte przez 5 minut w tej karcie przeglądarki.",
-    "needs_pin": "Najpierw ustaw PIN w blokadzie PIN-em (sekcja wygaszacza powyżej).",
+    "needs_pin": "Najpierw ustaw PIN: wpisz go poniżej i zapisz, potem wybierz widoki.",
     "locked": "Pyta o PIN",
     "open": "Otwarty"
   }

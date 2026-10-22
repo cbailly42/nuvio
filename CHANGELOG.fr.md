@@ -4,6 +4,12 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.21.0-beta.2
+- Préversion bêta pour les tests.
+- Corrigé : les interrupteurs du **Verrouillage des vues par code PIN** dans Mode tablette murale ne faisaient rien. Leur action n’était pas transmise aux réglages de la tablette, rien n’était basculé ni enregistré. Ils basculent maintenant tout de suite et sont enregistrés avec la disposition ; sans code PIN, un message et un champ pour le définir apparaissent. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Corrigé : les tuiles simples étaient toujours regroupées dans un bloc sous les piles, grilles, cartes YAML et autres composants. Sans zones de grille, chaque tuile ajoutée est maintenant une carte du panneau, tuiles et composants se mélangent dans n’importe quel ordre par glisser déposer ; l’ordre existant des tuiles est conservé. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Corrigé : une vue ouverte par son numéro (par exemple `/dashboard-nuvio/0`) avait des cartes invisibles, car la page se croyait masquée et mettait en pause l’animation d’entrée.
+
 ### 2.21.0-beta.1
 - Préversion bêta pour les tests. Après la mise à jour, activez une fois **Écran de veille sur cet appareil** sur chaque appareil qui doit afficher l’écran de veille.
 - Corrigé : un interrupteur dans une pile ou une grille ajoutée dans l’éditeur ne changeait pas d’aspect après avoir allumé ou éteint la lumière ([#16](https://github.com/kczepiec/nuvio/issues/16)). Le panneau ne transmettait les nouvelles données de Home Assistant à un conteneur que lorsqu’une de ses propres entités changeait, et cette liste n’incluait pas les cartes du conteneur. Les conteneurs et les autres composants ajoutés reçoivent maintenant chaque mise à jour.

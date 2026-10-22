@@ -42,13 +42,15 @@ const HGVLock = window.__hgVLock || (window.__hgVLock = {
   close() { const el = this.el; this.el = null; this._pin = ''; if (el) { try { el.hidePopover(); } catch (e) { /* */ } el.remove(); } },
   /* ---- ustawienia: sekcja w Trybie tabletu (ten sam PIN) ---- */
   html(views) { const L = this.list(), has = !!this.pinH();
-    const rows = views.map(([v, n]) => `<button type="button" class="wl-sw" role="switch" data-hge="vl-t" data-v="${H.esc(v)}" aria-checked="${L.includes(v)}" ${has ? '' : 'disabled'}><span>${H.esc(n)}<small>${L.includes(v) ? hgT('vlock.locked') : hgT('vlock.open')}</small></span><i aria-hidden="true"></i></button>`).join('');
+    const rows = views.map(([v, n]) => `<button type="button" class="wl-sw" role="switch" data-hge="wl-vlock" data-v="${H.esc(v)}" aria-checked="${L.includes(v)}"><span>${H.esc(n)}<small>${L.includes(v) ? hgT('vlock.locked') : hgT('vlock.open')}</small></span><i aria-hidden="true"></i></button>`).join('');
     return `<div class="wl-f" role="group" aria-labelledby="vl-h"><span id="vl-h">${hgT('vlock.settings_title')}<b class="wl-beta">${hgT('wall.beta')}</b></span>
-      <small class="lk-hn">${has ? hgT('vlock.settings_hint') : hgT('vlock.needs_pin')}</small>${rows}<small class="wl-warn">${hgT('vlock.note')}</small></div>`; },
+      <small class="lk-hn">${has ? hgT('vlock.settings_hint') : hgT('vlock.needs_pin')}</small>${has ? '' : this.pinHtml()}${rows}<small class="wl-warn">${hgT('vlock.note')}</small></div>`; },
   /* widoki do wyboru: włączone w dashboardzie, bez Panelu (blokada strony startowej zamknęłaby cały dashboard) */
   views() { const V = window.HGLookX && HGLookX.views ? HGLookX.views() : { order: [], on: new Set() }, CU = ((window.__hgL && window.__hgL.data && window.__hgL.data.wiz) || {}).custom || [];
     const nm = (v) => { const c = CU.find((x) => x.p === v); if (c) return c.n || v; const d = typeof HG_VIEW_DEF !== 'undefined' && HG_VIEW_DEF.find((x) => x[0] === v); return d ? String(d[1]) : v; };
     return V.order.filter((v) => v !== 'dashboard' && V.on.has(v)).map((v) => [v, nm(v)]); },
+  /* bez PIN-u: pole do ustawienia PIN-u od razu tutaj (ten sam zapis co w blokadzie wygaszacza) */
+  pinHtml() { return `<div class="wl-pin vl-pin"><span class="hs-s">${H.icon('mdi:dialpad')}<input class="hs-in" name="wl-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="new-password" placeholder="••••" aria-label="${hgT('wall.new_pin')}"></span><button type="button" class="wl-tb" data-hge="wl-pin">${H.icon('mdi:content-save-outline')}<span>${hgT('common.save')}</span></button></div>`; },
   toggle(v) { const L = this.list(), i = L.indexOf(v); if (i >= 0) L.splice(i, 1); else L.push(v); HGWall.set({ vlock: L }); },
 });
 window.HGVLock = HGVLock;

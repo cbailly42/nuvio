@@ -4,6 +4,12 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.21.0-beta.2
+- Wersja testowa (beta).
+- Poprawka: przełączniki **Blokady widoków PIN-em** w Trybie tabletu ściennego nic nie robiły po kliknięciu. Ich akcja nie trafiała do ustawień tabletu, więc nic się nie przełączało ani nie zapisywało. Teraz przełączają się od razu i zapisują z układem; bez PIN-u pojawia się komunikat i pole do ustawienia PIN-u. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Poprawka: zwykłe kafle były zawsze zebrane w jeden blok pod stosami, siatkami, kartami YAML i innymi komponentami. Bez obszarów siatki każdy dodany kafel jest teraz osobną kartą panelu, więc kafle i komponenty można dowolnie przeplatać przeciąganiem; dotychczasowa kolejność kafli zostaje. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Poprawka: widok otwarty po numerze (np. `/dashboard-nuvio/0`) miał niewidoczne karty, bo strona uznawała, że nie jest pokazana, i wstrzymywała animację wejścia.
+
 ### 2.21.0-beta.1
 - Wersja testowa (beta). Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.
 - Poprawka: przełącznik w stosie albo siatce dodanych w edytorze nie zmieniał wyglądu po włączeniu lub wyłączeniu światła ([#16](https://github.com/kczepiec/nuvio/issues/16)). Panel przekazywał kontenerowi nowe dane z Home Assistant tylko wtedy, gdy zmieniła się jedna z jego własnych encji, a ta lista nie obejmowała kart w kontenerze. Kontenery i inne dodane komponenty dostają teraz każdą aktualizację.

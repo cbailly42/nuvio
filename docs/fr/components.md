@@ -270,7 +270,7 @@ Grille, pile verticale et pile horizontale fonctionnent comme dans Home Assistan
 | `custom:nuvio-grid-card` | Cartes en colonnes ; moins de colonnes sur les écrans étroits | `cards`, `columns` (1 à 6, 0 = automatique), `min_width`, `square`, `gap`, `glass`, `title` ; par carte `span` |
 | `custom:nuvio-stack-card` | Cartes les unes sous les autres ou côte à côte dans un même verre ; côte à côte devient vertical sous `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (ex. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
-Ordre (2.21.0) : les conteneurs et les cartes YAML ajoutés dans l’éditeur restent là où vous les placez. Avant, le panneau comblait les trous avec des cartes plus petites, si bien qu’une pile ou une grille large pouvait passer au dessus de cartes ajoutées avant elle. Réorganisez par glisser déposer comme d’habitude.
+Ordre (2.21.0) : les conteneurs et les cartes YAML ajoutés dans l’éditeur restent là où vous les placez. Avant, le panneau comblait les trous avec des cartes plus petites, si bien qu’une pile ou une grille large pouvait passer au dessus de cartes ajoutées avant elle. Réorganisez par glisser déposer comme d’habitude. Depuis 2.21.0-beta.2, les tuiles simples sont aussi des cartes séparées (sans zones de grille), tuiles et conteneurs se mélangent dans n’importe quel ordre.
 
 **Météo** comme composant a un interrupteur **Style hero** (YAML `variant: hero`) : grand texte blanc directement sur le fond d’écran, sans carte, comme la météo de l’en tête. Idéal avec **Fond du panneau** désactivé.
 

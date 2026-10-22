@@ -4,6 +4,12 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.21.0-beta.2
+- Beta pre-release for testing.
+- Fixed: the **PIN lock for views** switches in Wall tablet mode did nothing when clicked. Their action was not passed to the wall tablet settings, so nothing was toggled or saved. They now switch at once and are saved with the layout; without a PIN, a message and a PIN field appear right there. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Fixed: normal tiles were always grouped in one block below stacks, grids, YAML cards and other components. Without grid areas every added tile is now its own card on the panel, so tiles and components can be mixed in any order by dragging; the existing tile order is kept. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Fixed: opening a view by its number (for example `/dashboard-nuvio/0`) left the cards invisible, because the page thought it was not shown and paused the entrance animation.
+
 ### 2.21.0-beta.1
 - Beta pre-release for testing. After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.
 - Fixed: a toggle inside a stack or grid added in the editor did not change its look after you turned the light on or off ([#16](https://github.com/kczepiec/nuvio/issues/16)). The panel passed new Home Assistant data to a container only when one of its own entities changed, and the list of those entities did not include the cards inside the container. Containers and other added components now get every update.
