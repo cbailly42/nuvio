@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Poprawione: karta **Roleta / brama** pokazywała 0 % lub 100 % i pasek pozycji dla rolet bez pozycji (brama albo garaż, które znają tylko otwórz, zamknij i stop). Teraz pokazuje stan słowny (Otwarte, Zamknięte, Otwieranie, Zamykanie) z delikatnym pulsowaniem w ruchu i bez paska. Ikona zależy od klasy urządzenia (brama, garaż, drzwi, okno, żaluzja, zasłona, roleta, markiza) zamiast zawsze rolety ([#36](https://github.com/kczepiec/nuvio/issues/36)).
+
 ### 2.21.5
 - Poprawione: **Ukryj pasek boczny** (wcześniej **Ukryj pusty pasek boczny**) nic nie robił, dopóki choć jeden widok miał włączony **Pasek boczny**. Teraz ukrywa pasek boczny Nuvio razem z przyciskiem Ustawienia na komputerze i tablecie bez względu na przełączniki widoków, a widoki spoza zakładek u góry trafiają do menu profilu.
 

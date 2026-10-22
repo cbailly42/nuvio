@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Corrigé : la carte **Volet / portail** affichait 0 % ou 100 % et une barre de position pour les volets sans position (portail ou porte de garage qui ne connaissent qu’ouvrir, fermer et stop). Elle affiche maintenant l’état en toutes lettres (Ouvert, Fermé, Ouverture, Fermeture) avec une légère pulsation pendant le mouvement, sans barre. L’icône suit la classe de l’appareil (portail, garage, porte, fenêtre, store, rideau, toile, auvent) au lieu d’être toujours un volet ([#36](https://github.com/kczepiec/nuvio/issues/36)).
+
 ### 2.21.5
 - Corrigé : **Masquer la barre latérale** (anciennement **Masquer la barre latérale vide**) restait sans effet tant qu’une vue avait **Barre latérale** activée. L’option masque maintenant la barre latérale de Nuvio et son bouton Paramètres sur ordinateur et tablette quels que soient les interrupteurs des vues, et les vues absentes des onglets du haut passent dans le menu du profil.
 
