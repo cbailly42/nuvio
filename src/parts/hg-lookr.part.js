@@ -1,7 +1,19 @@
-/* liczniki na zakładkach (Wygląd → Widoki): etykiety z katalogu, klucz = tryb:domena */
-const HG_BADGE_OPTS = () => [['on:light', hgT('lookr.badge_lights')], ['on:switch', hgT('lookr.badge_switches')], ['on:fan', hgT('lookr.badge_fans')], ['active:media_player', hgT('lookr.badge_media')], ['on:climate', hgT('lookr.badge_climate')], ['on:person', hgT('lookr.badge_persons')], ['on:@', hgT('lookr.badge_custom')]];
+/* liczniki widoku (Wygląd → Widoki): kilka naraz; klucz = tryb:domena; ruch to binary_sensor z device_class, nie domena */
+const HG_BADGE_META = window.HG_BADGE_META = { 'on:light': { i: 'mdi:lightbulb' }, 'on:switch': { i: 'mdi:toggle-switch' }, 'on:fan': { i: 'mdi:fan' }, 'active:media_player': { i: 'mdi:play' }, 'on:climate': { i: 'mdi:thermostat' }, 'on:person': { i: 'mdi:account' }, 'on:motion': { i: 'mdi:run' }, 'on:@': { i: 'mdi:format-list-checks' } };
+const hgBadgeLabel = window.hgBadgeLabel = (k) => k === 'on:light' ? hgT('lookr.badge_lights') : k === 'on:switch' ? hgT('lookr.badge_switches') : k === 'on:fan' ? hgT('lookr.badge_fans') : k === 'active:media_player' ? hgT('lookr.badge_media') : k === 'on:climate' ? hgT('lookr.badge_climate') : k === 'on:person' ? hgT('lookr.badge_persons') : k === 'on:motion' ? hgT('lookr.badge_motion') : k === 'on:@' ? hgT('lookr.badge_custom') : hgT('lookr.badge');
+const HG_BADGE_OPTS = () => Object.entries(HG_BADGE_META).map(([k, o]) => [k, hgBadgeLabel(k), o.i]);
+const hgBadgeKey = window.hgBadgeKey = (b) => (b && Array.isArray(b.e) ? 'on:@' : b && b.d === 'binary_sensor' && b.dc ? 'on:motion' : b ? (b.m || 'on') + ':' + (b.d || '') : '');
 const hgBadgeOpt = window.hgBadgeOpt = (m, ents) => { if (!m) return null; if (m === 'on:@') { const e = String(ents || '').split(/[\s,]+/).filter((x) => /^[a-z_]+\.[a-z0-9_]+$/.test(x)); return e.length ? { m: 'on', e } : null; }
+  if (m === 'on:motion') return { m: 'on', d: 'binary_sensor', dc: ['motion', 'occupancy', 'presence']};
   const [k, d] = m.split(':'); return (k === 'on' || k === 'active') && /^[a-z_]+$/.test(d || '') ? { m: k, d } : null; };
+const hgBadgeEnts = window.hgBadgeEnts = (hass, b) => {
+  if (!b || !hass || !hass.states) return [];
+  const st = hass.states;
+  let e = Array.isArray(b.e) && b.e.length ? b.e.filter((x) => st[x]) : /^[a-z_]+$/.test(b.d || '') ? Object.keys(st).filter((x) => x.startsWith(b.d + '.')) : [];
+  if (b.dc && b.dc.length) e = e.filter((x) => st[x] && st[x].attributes && b.dc.includes(st[x].attributes.device_class));
+  if (b.d === 'light' && !Array.isArray(b.e)) e = e.filter((x) => { const a = st[x] && st[x].attributes, m = a && a.entity_id; return !(Array.isArray(m) && m.some((y) => y !== x && st[y])); });
+  return e; };
+const hgBadgeIcon = window.hgBadgeIcon = (b) => (HG_BADGE_META[hgBadgeKey(b)] || { i: 'mdi:circle-small' }).i;
 /* --- Wygląd: Pokoje (nazwy, ikony, kolejność, czujniki temp./wilg., pokoje własne), Nagłówek (domownicy, ceny paliw, pasek telefonu), Galeria teł ---
    wszystko w HGL.data.wiz (areas, hub, fuel, phone) i HGL.data.app.gallery, więc eksport/import przenosi to bez zmian */
 const HGRoomsX = window.HGRoomsX = {
@@ -62,11 +74,12 @@ const HGRoomsX = window.HGRoomsX = {
           <label class="rx-fl"><em>${hgT('lookr.change_tomorrow')}</em><select data-rx="fc" data-i="${i}" title="${H.esc(f.change ? H.name(h, f.change) : '')}"><option value="">${hgT('lookr.no_trend')}</option>${og1(f.change)}</select></label></div>`; }).join('')}</div><button class="lx-hbtn" data-hge="rx-fa" style="align-self:flex-start">${H.icon('mdi:plus')}${hgT('lookr.add_fuel')}</button></div>
       ${hub.hub !== false ? `<div class="rx-f"><span>${hgT('lookr.household_strip_position')}</span><div class="rx-fu">${[['left', hgT('lookr.left')], ['right', hgT('lookr.next_to_the_panel')]].map(([k, l]) => `<button class="lx-hbtn${hub.hubPos === k ? ' ok' : ''}" data-hge="rx-hp" data-k="${k}">${l}</button>`).join('')}</div></div>` : ''}
       <div class="rx-f"><span>${hgT('lookr.weather_in_the_header')}</span><div class="rx-fu"><select data-rx="wxe"><option value="">${hgT('lookr.automatic_with_forecast')}</option>${Object.keys(h.states).filter((e) => e.startsWith('weather.')).map((e) => `<option value="${H.esc(e)}"${hub.wx.entity === e ? ' selected' : ''}>${H.esc(H.name(h, e))}${(+h.states[e].attributes.supported_features & 3) ? '' : ' ' + hgT('lookr.no_forecast')}</option>`).join('')}</select>
-        <select data-rx="wxf"><option value="">${hgT('lookr.hourly_forecast_from_the')}</option>${Object.keys(h.states).filter((e) => Array.isArray(h.states[e].attributes.forecast)).map((e) => `<option value="${H.esc(e)}"${hub.wx.forecast_sensor === e ? ' selected' : ''}>${H.esc(H.name(h, e))}</option>`).join('')}</select></div></div>
+        <select data-rx="wxf"><option value="">${hgT('lookr.hourly_forecast_from_the')}</option>${Object.keys(h.states).filter((e) => Array.isArray(h.states[e].attributes.forecast)).map((e) => `<option value="${H.esc(e)}"${hub.wx.forecast_sensor === e ? ' selected' : ''}>${H.esc(H.name(h, e))}</option>`).join('')}</select>
+        <select data-rx="wxs" aria-label="${hgT('lookr.weather_size')}"><option value="">${hgT('lookr.size_m')}</option><option value="s"${hub.wx.size === 's' ? ' selected' : ''}>${hgT('lookr.size_s')}</option><option value="l"${hub.wx.size === 'l' ? ' selected' : ''}>${hgT('lookr.size_l')}</option></select></div></div>
       <button class="lk-mini lx-ap" data-hge="rx-hsave" ${this.hdirty ? '' : 'disabled'}>${hgT('lookr.save_header')}</button></section>
       <section class="lk-g lx rx" data-tab="views" data-pg="views"><h4>${H.icon('mdi:view-dashboard-edit-outline')}${hgT('lookr.view_settings')}</h4><small class="lk-hn">${hgT('lookr.sidebar_icon_short_phone')}</small>
       <div class="rx-vt" role="table"><div class="rx-vx rx-vh" role="row"><span>${hgT('lookr.view')}</span><span>${hgT('lookr.icon')}</span><span>${hgT('lookr.phone_label')}</span><span>${hgT('lookr.columns_desktop')}</span><span>${hgT('lookr.columns_tablet')}</span><span>${hgT('lookr.sidebar')}</span><span>${hgT('lookr.order')}</span><span>${hgT('lookr.badge')}</span></div>${vs.map((v) => { const o = hub.vx[v] || {}, n = (x) => `<select data-rx="vx" data-v="${H.esc(v)}" data-k="${x}"><option value="">${hgT('lookr.auto')}</option>${[1, 2, 3, 4, 5, 6].map((i) => `<option${+o[x] === i ? ' selected' : ''}>${i}</option>`).join('')}</select>`, c = (l, x) => `<label class="rx-vc"><em>${l}</em>${x}</label>`;
-        return `<div class="rx-vx" role="row"><b title="${H.esc(v)}">${H.icon(o.i || 'mdi:view-dashboard-outline')}<span>${H.esc(vn(v))}</span></b>${c(hgT('lookr.icon'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="i" value="${H.esc(o.i || '')}" placeholder="mdi:…">`)}${c(hgT('lookr.phone_label'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="sl" maxlength="12" value="${H.esc(o.sl || '')}" placeholder="${hgT('lookr.phone_label_default')}">`)}${c(hgT('lookr.columns_desktop'), n('cd'))}${c(hgT('lookr.columns_tablet'), n('ct'))}${c(hgT('lookr.sidebar'), `<button class="lx-sw" role="switch" data-hge="rx-vr" data-v="${H.esc(v)}" aria-checked="${o.rail !== false}" aria-label="${hgT('lookr.sidebar')}"><i></i></button>`)}${c(hgT('lookr.order'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="ro" inputmode="numeric" value="${H.esc(o.ro ?? '')}" placeholder="#">`)}${c(hgT('lookr.badge'), this.badgeUI(h, v, o.badge))}</div>`; }).join('')}</div>
+        return `<div class="rx-vx" role="row"><b title="${H.esc(v)}">${H.icon(o.i || 'mdi:view-dashboard-outline')}<span>${H.esc(vn(v))}</span></b>${c(hgT('lookr.icon'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="i" value="${H.esc(o.i || '')}" placeholder="mdi:…">`)}${c(hgT('lookr.phone_label'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="sl" maxlength="12" value="${H.esc(o.sl || '')}" placeholder="${hgT('lookr.phone_label_default')}">`)}${c(hgT('lookr.columns_desktop'), n('cd'))}${c(hgT('lookr.columns_tablet'), n('ct'))}${c(hgT('lookr.sidebar'), `<button class="lx-sw" role="switch" data-hge="rx-vr" data-v="${H.esc(v)}" aria-checked="${o.rail !== false}" aria-label="${hgT('lookr.sidebar')}"><i></i></button>`)}${c(hgT('lookr.order'), `<input data-rx="vx" data-v="${H.esc(v)}" data-k="ro" inputmode="numeric" value="${H.esc(o.ro ?? '')}" placeholder="#">`)}${c(hgT('lookr.badge'), this.badgeUI(h, v, o))}</div>`; }).join('')}</div>
       <div class="hd-vr rx-rh"><span class="lx-t"><b>${hgT('lookr.rail_hide')}</b><small>${hgT('lookr.rail_hide_desc', { param: '?nuvio_settings' })}</small></span><button class="lx-sw" role="switch" data-hge="rx-rh" aria-checked="${!!hub.railHide}" aria-label="${hgT('lookr.rail_hide')}"><i></i></button></div>
       <div class="rx-f"><span>${hgT('lookr.phone_bar_4_views')}</span><div class="rx-fu rx-ph">${[0, 1, 2, 3].map(sel).join('')}</div></div>
       <button class="lk-mini lx-ap" data-hge="rx-hsave" ${this.hdirty ? '' : 'disabled'}>${hgT('lookr.save_views')}</button></section>
@@ -84,6 +97,9 @@ const HGRoomsX = window.HGRoomsX = {
       .rx-vx:not(.rx-vh):hover{ background:color-mix(in srgb, currentColor 4%, transparent); } .rx-vh{ font-size:11.5px; font-weight:600; opacity:.6; text-transform:none; padding-top:0; } .rx-vh > span{ white-space:normal; line-height:1.2; }
       .rx-vx > b{ display:flex; align-items:center; gap:8px; font-weight:600; min-width:0; } .rx-vx > b span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .rx-vx > b ha-icon{ width:18px; height:18px; flex:none; color:var(--hg-accent-tx, #63D71E); }
       .rx-vc{ display:flex; flex-direction:column; min-width:0; } .rx-vc em{ display:none; } .rx-vc input, .rx-vc select{ width:100%; min-width:0; box-sizing:border-box; text-overflow:ellipsis; }
+      .rx-bgs{ display:flex; flex-wrap:wrap; gap:4px; } .rx-bg{ all:unset; cursor:pointer; box-sizing:border-box; display:inline-flex; align-items:center; gap:4px; max-width:100%; padding:4px 8px; border-radius:999px; font:inherit; font-size:12px; line-height:1.2; background:var(--hg-tile-bg); opacity:.72; }
+      .rx-bg ha-icon{ width:14px; height:14px; flex:none; } .rx-bg span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .rx-bg.on{ opacity:1; box-shadow:inset 0 0 0 1.5px var(--hg-accent); color:var(--hg-accent-tx); }
+      .rx-bg:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .rx-bge{ display:flex; flex-direction:column; gap:4px; margin-top:6px; } .rx-bge .lx-hbtn{ align-self:flex-start; }
       @container hgsh (max-width:820px){ .rx-vh{ display:none; } .rx-vx{ grid-template-columns:repeat(2, minmax(0, 1fr)); padding:12px; background:color-mix(in srgb, currentColor 4%, transparent); } .rx-vx > b{ grid-column:1 / -1; } .rx-vc em{ display:block; font-style:normal; font-size:11.5px; opacity:.6; margin:0 0 4px 2px; } .rx-vc > *{ min-width:0; max-width:100%; } }
       @container hgsh (max-width:360px){ .rx-vx{ grid-template-columns:minmax(0, 1fr); } }
       .rx-fcs{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap:8px; } .rx-fc{ display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:16px; background:color-mix(in srgb, currentColor 4%, transparent); min-width:0; }
@@ -110,21 +126,36 @@ const HGRoomsX = window.HGRoomsX = {
     if (k === 'fl' || k === 'fe' || k === 'fc') { const f = H2.fuel[+n.dataset.i]; f[{ fl: 'label', fe: 'entity', fc: 'change' }[k]] = v || undefined; return this.mark(page, 1); }
     if (k === 'ph') { H2.phone[+n.dataset.i] = v; return this.mark(page, 1); }
     if (k === 'wxe' || k === 'wxf') { H2.wx[k === 'wxe' ? 'entity' : 'forecast_sensor'] = v || undefined; return this.mark(page, 1); }
-    if (k === 'vbm' || k === 'vbe') { const o = H2.vx[n.dataset.v] = Object.assign({}, H2.vx[n.dataset.v]), S = n.closest('.rx-vc'), m = S.querySelector('[data-rx=vbm]').value, ei = S.querySelector('[data-rx=vbe]');
-      ei.hidden = m !== 'on:@'; const b = hgBadgeOpt(m, ei.value); if (b) o.badge = b; else delete o.badge; if (!Object.keys(o).length) delete H2.vx[n.dataset.v]; return this.mark(page, 1); }
+    if (k === 'wxs') { H2.wx.size = v === 's' || v === 'l' ? v : undefined; return this.mark(page, 1); }
     if (k === 'vx' || k === 'vxr') { const o = H2.vx[n.dataset.v] = Object.assign({}, H2.vx[n.dataset.v]); if (k === 'vxr') { if (n.checked) delete o.rail; else o.rail = false; } else if (v === '') delete o[n.dataset.k]; else o[n.dataset.k] = ['cd', 'ct', 'ro'].includes(n.dataset.k) ? +v : v; if (!Object.keys(o).length) delete H2.vx[n.dataset.v]; return this.mark(page, 1); }
     if (k === 'bpx' || k === 'bpy') { const S = page._eSheetEl, x = S.querySelector('[data-rx=bpx]').value, y = S.querySelector('[data-rx=bpy]').value, pv = S.querySelector('.rx-pv'); if (pv) pv.textContent = `${H.pct(x)} ${H.pct(y)}`;
       page._eApp((X) => { if (X.bg && X.bg.kind === 'image') X.bg = Object.assign({}, X.bg, { pos: `${x}% ${y}%` }); }); } },
   /* zapis z Ustawień jest już na serwerze: Anuluj w trybie edycji nie może go cofnąć (migawka edycji dostaje nowy wiz) */
-  /* licznik na zakładce widoku: tryb + domena albo własna lista encji (wiz.vx[widok].badge = { m, d } lub { m, e: [...] }) */
-  badgeUI(h, v, b) { const cur = b ? (b.e ? 'on:@' : b.m + ':' + b.d) : '', ve = H.esc(v);
-    return `<select data-rx="vbm" data-v="${ve}" aria-label="${hgT('lookr.badge')}"><option value="">${hgT('lookr.badge_none')}</option>${HG_BADGE_OPTS().map(([k, l]) => `<option value="${k}"${cur === k ? ' selected' : ''}>${l}</option>`).join('')}</select>`
-      + `<input data-rx="vbe" data-v="${ve}" list="rx-vbl" placeholder="${hgT('lookr.badge_entities_ph')}" aria-label="${hgT('lookr.badge_entities')}" value="${H.esc(b && b.e ? b.e.join(', ') : '')}"${cur === 'on:@' ? '' : ' hidden'} style="margin-top:4px">`; },
+  /* liczniki widoku: wiz.vx[widok].badges = lista { m, d } | { m, d, dc } | { m, e }; stary .badge jest czytany */
+  badgeList(o) { if (!o) return []; return Array.isArray(o.badges) ? o.badges.filter(Boolean) : o.badge ? [o.badge] : []; },
+  badgeUI(h, v, o) { const list = this.badgeList(o), on = new Set(list.map((b) => hgBadgeKey(b))), ve = H.esc(v), cust = list.find((b) => Array.isArray(b.e)), ents = (cust && cust.e) || [];
+    const tog = HG_BADGE_OPTS().map(([k, l, ic]) => `<button type="button" class="rx-bg${on.has(k) ? ' on' : ''}" data-hge="rx-bg" data-v="${ve}" data-k="${k}" aria-pressed="${on.has(k)}" title="${H.esc(l)}">${H.icon(ic)}<span>${H.esc(l)}</span></button>`).join('');
+    const rows = on.has('on:@') ? `<div class="rx-bge">${ents.map((e) => `<div class="rx-e"><span>${H.icon((h.states[e] && h.states[e].attributes.icon) || 'mdi:circle-small')}${H.esc(h.states[e] ? H.name(h, e) : e)}</span><button type="button" class="lx-a" data-hge="rx-bx" data-v="${ve}" data-e="${H.esc(e)}" aria-label="${hgT('lookr.remove')}">${H.icon('mdi:close')}</button></div>`).join('')}<button type="button" class="lx-hbtn" data-hge="rx-ba" data-v="${ve}">${H.icon('mdi:plus')}${hgT('common.add')}</button></div>` : '';
+    return `<div class="rx-bgs" role="group" aria-label="${hgT('lookr.badge')}">${tog}</div>${rows}`; },
+  /* zapis: badges zamiast badge; pusta lista „wybrane encje” odpada */
+  vxClean(vx) { const out = {}; for (const [k, o0] of Object.entries(vx || {})) { const o = Object.assign({}, o0), list = Array.isArray(o.badges) ? o.badges : o.badge ? [o.badge] : null;
+      if (list) { const badges = list.filter((b) => b && (b.m === 'on' || b.m === 'active') && (!Array.isArray(b.e) || b.e.length)); if (badges.length) o.badges = badges; else delete o.badges; delete o.badge; }
+      if (Object.keys(o).length) out[k] = o; } return out; },
   snap(page) { if (!page._eSnap) return; try { const o = JSON.parse(page._eSnap); o.wiz = JSON.parse(JSON.stringify(HGL.data.wiz || null)); page._eSnap = JSON.stringify(o); } catch (e) {} },
   ord(h) { const A = this.A(), ids = this.rooms(h).map((a) => a.id); return ids; },
   async act(page, b, a) { const h = page._hass, A = this.A(), r = b.dataset.r;
     if (a === 'rx-rh') { const H2 = this.hd; if (!H2) return; H2.railHide = !H2.railHide; b.setAttribute('aria-checked', String(H2.railHide)); return this.mark(page, 1); }
     if (a === 'rx-vr') { const H2 = this.hd; if (!H2) return; const o = H2.vx[b.dataset.v] = Object.assign({}, H2.vx[b.dataset.v]); if (o.rail === false) delete o.rail; else o.rail = false; b.setAttribute('aria-checked', String(o.rail !== false)); return this.mark(page, 1); }
+    if (a === 'rx-bg') { const H2 = this.hd, v = b.dataset.v, k = b.dataset.k; if (!H2 || !v || !k) return; const o = H2.vx[v] = Object.assign({}, H2.vx[v] || {});
+      const list = this.badgeList(o).map((x) => Object.assign({}, x, Array.isArray(x.e) ? { e: x.e.slice() } : {})); const i = list.findIndex((x) => hgBadgeKey(x) === k);
+      if (i >= 0) list.splice(i, 1); else { const nb = k === 'on:@' ? { m: 'on', e: [] } : hgBadgeOpt(k); if (nb) list.push(nb); }
+      if (list.length) { o.badges = list; delete o.badge; } else { delete o.badges; delete o.badge; } if (!Object.keys(o).length) delete H2.vx[v]; this.hdirty = true; return page._eLook(); }
+    if (a === 'rx-ba') { const v = b.dataset.v, H2 = this.hd; if (!H2 || !v) return; const cur = ((this.badgeList(H2.vx[v]).find((x) => Array.isArray(x.e)) || {}).e) || [];
+      page._eRepl = { badge: v, excl: cur.slice(), doms: ['light', 'switch', 'fan', 'input_boolean', 'binary_sensor', 'sensor', 'climate', 'media_player', 'person', 'cover', 'lock', 'vacuum', 'humidifier', 'alarm_control_panel', 'device_tracker', 'water_heater'] };
+      page._eTrig = b; const back = () => { page._eRepl = null; page._lkTab = 'views'; page._eLook(); }; return page._eGo(back, () => page._eSheet('add', null, 'badge')); }
+    if (a === 'rx-bx') { const H2 = this.hd, v = b.dataset.v, e = b.dataset.e; if (!H2 || !v || !e) return; const o = H2.vx[v] = Object.assign({}, H2.vx[v] || {});
+      const list = this.badgeList(o).map((x) => Object.assign({}, x, Array.isArray(x.e) ? { e: x.e.slice() } : {})); const c = list.find((x) => Array.isArray(x.e)); if (c) c.e = c.e.filter((x) => x !== e);
+      o.badges = list; delete o.badge; this.hdirty = true; return page._eLook(); }
     if (a === 'rx-op') { this.open = this.open === r ? null : r; this.q = ''; return page._eLook(); }
     if (a === 'rx-up' || a === 'rx-dn') { const o = this.ord(h), i = o.indexOf(r), j = i + (a === 'rx-up' ? -1 : 1); if (i < 0 || j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]];
       if (Array.isArray(A.rooms)) { const inR = new Set(A.rooms); A.rooms = o.filter((x) => inR.has(x)); } A.order = o; this.dirty = true; return page._eLook(); }
@@ -149,7 +180,7 @@ const HGRoomsX = window.HGRoomsX = {
       if (H2.hub === false) W.hub = false; else { const P0 = W.hub && W.hub.persons; if (H2.hub.title || H2.hub.subtitle || P0) W.hub = { ...(H2.hub.title ? { title: H2.hub.title } : {}), ...(H2.hub.subtitle ? { subtitle: H2.hub.subtitle } : {}), ...(P0 ? { persons: P0 } : {}) }; else delete W.hub; }
       const F = H2.fuel.filter((f) => f.entity).map((f) => ({ label: f.label || H.name(h, f.entity), entity: f.entity, ...(f.change ? { change: f.change } : {}), ...(f.off ? { off: true } : {}) })); if (F.length) W.fuel = F; else delete W.fuel; if (H2.fuelOff) W.fuelOff = true; else delete W.fuelOff;
       const WX = Object.fromEntries(Object.entries(H2.wx || {}).filter(([, x]) => x)); if (Object.keys(WX).length) W.weather = WX; else delete W.weather;
-      if (H2.hubPos === 'right') W.hubPos = 'right'; else delete W.hubPos; if (Object.keys(H2.vx || {}).length) W.vx = H2.vx; else delete W.vx; if (H2.railHide) W.railHide = true; else delete W.railHide;
+      if (H2.hubPos === 'right') W.hubPos = 'right'; else delete W.hubPos; const VX2 = this.vxClean(H2.vx); if (Object.keys(VX2).length) W.vx = VX2; else delete W.vx; if (H2.railHide) W.railHide = true; else delete W.railHide;
       const P = H2.phone.filter(Boolean); if (P.length) W.phone = [...new Set(P)]; else delete W.phone; W.ts = Date.now(); this.hdirty = false; this.hd = null; const pc = page._config || {};
       /* zmiany tylko w pasku domowników i cenach paliw: od razu na stronie; inne (pogoda, widoki, telefon) wymagają przebudowy */
       const hubOk = JSON.stringify(W.hub ?? null) === HB0 || (W.hub !== false && !!pc.hub), fuelOk = !!page._fuelEl || !(page._fuelList ? page._fuelList() : []).length, hubOnly = rest(W) === W0 && hubOk && fuelOk;
@@ -162,4 +193,9 @@ const HGRoomsX = window.HGRoomsX = {
       page._eApp((X) => { X.gallery = [...(X.gallery || []).filter((g) => g.u !== u), { u, ...(this._gn ? { n: this._gn } : {}) }]; }); this._gu = this._gn = ''; return page._eLook(); }
     if (a === 'rx-gd') { page._eApp((X) => { X.gallery = (X.gallery || []).filter((_, i) => i !== +b.dataset.i); if (!X.gallery.length) delete X.gallery; }); return page._eLook(); }
   },
+  pickEnt(page, e) { const v = page._eRepl && page._eRepl.badge; page._eRepl = null; if ((page._eStk || []).length) page._eStk.pop(); const H2 = this.hd;
+    if (H2 && v && /^[a-z_]+\.[a-z0-9_]+$/.test(e || '')) { const o = H2.vx[v] = Object.assign({}, H2.vx[v] || {});
+      const list = this.badgeList(o).map((x) => Object.assign({}, x, Array.isArray(x.e) ? { e: x.e.slice() } : {})); let c = list.find((x) => Array.isArray(x.e));
+      if (!c) { c = { m: 'on', e: [] }; list.push(c); } if (!c.e.includes(e)) c.e.push(e); o.badges = list; delete o.badge; this.hdirty = true; }
+    page._lkTab = 'views'; page._eNav('b'); page._eLook(); },
 };

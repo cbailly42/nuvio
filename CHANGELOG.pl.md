@@ -4,6 +4,11 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane
+- Dodane: pogoda w nagłówku i karta Pogoda mają rozmiar tekstu: mały, średni albo duży. Pogoda w nagłówku podąża też za powiększeniem pulpitu, więc na tablecie w poziomie prognoza godzinowa może urosnąć ponad dawny limit.
+- Poprawione: ilość deszczu na pogodzie w nagłówku, na przykład 17 mm, jest biała na zdjęciu, więc da się ją odczytać.
+- Dodane: widok może liczyć kilka rzeczy naraz (światła, przełączniki, wentylatory, media, klimatyzację, osoby, ruch i wybrane encje). Zakładka pokazuje sumę. Bieżący widok pokazuje też ikonę i liczbę pod tytułem i ukrywa chip przy 0. Włączone światła pomija grupę świateł, gdy jej lampy istnieją. Wybrane encje korzystają z wyszukiwarki encji.
+
 ### 2.22.3
 - Poprawione: wygaszacz Szkło Minimal nadal pokazywał kółko z inicjałem w prawym górnym rogu, gdy przełącznik **Górny pasek → Awatar** był wyłączony — na wygaszaczu i w podglądzie ([#52](https://github.com/kczepiec/nuvio/issues/52)).
 - Poprawione: wiersz **Discord** w menu użytkownika pokazuje znak Discord obok nazwy, tak jak Profil i Ustawienia pokazują ikonę. Home Assistant nie ma już tej ikony marki, więc menu rysuje ją samo.

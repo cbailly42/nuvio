@@ -5,7 +5,9 @@ class HGWeatherCard extends HGBase {
   _hsrc() { if ((this._hourly || []).length) return this._hourly; const s = this._config.forecast_sensor && this._hass && this._hass.states[this._config.forecast_sensor], f = s && s.attributes.forecast; return Array.isArray(f) ? f.filter((x) => x && x.datetime) : []; }
   _extraSig() { return [this._hv || 0, this._dv || 0, Math.floor(Date.now() / 600000)]; }
   setConfig(c) { const o = this._config; if (o && this._u && ((c && c.entity) || '') !== o.entity) { for (const u of this._u) u(); this._u = null; this._hourly = this._daily = this._hf = this._df = null; }
-    super.setConfig(c); if (this._hass && !this._u) this._subscribe(); }
+    super.setConfig(c); this._wxSize(); if (this._hass && !this._u) this._subscribe(); }
+  /* S 0.8 / M 1 / L 1.6; puste = M. --wx-u i sufity clampów mnożą to przez zoom pulpitu */
+  _wxSize() { const s = this._config && this._config.size; if (s === 's') this.style.setProperty('--wx-scale', '0.8'); else if (s === 'l') this.style.setProperty('--wx-scale', '1.6'); else this.style.removeProperty('--wx-scale'); }
   set hass(h) { const first = !this._hass; this._hass = h; if (first || !this._u) this._subscribe(); this._update(); }
   get hass() { return this._hass; }
   connectedCallback() { super.connectedCallback(); if (this._hass) this._subscribe(); }
@@ -20,6 +22,7 @@ class HGWeatherCard extends HGBase {
   }
   css() {
     return U(`
+:host{ --k: calc(var(--hg-u, var(--hg-u0, 1.3px)) * var(--wx-scale, 1)); }
 ha-card.glass{ display:flex; flex-direction:column; justify-content:space-between; gap:6u; padding:var(--s2) var(--s3) var(--s2); min-width:0; overflow:hidden; container-type:inline-size; }
 .hd .tt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hd .ic{ color:var(--hg-accent-tx); }
@@ -61,7 +64,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   .sun{ grid-template-columns:1fr auto; } .sun .arw{ display:none; } .sun img{ width:18px; height:18px; } }
 @container (max-width: 400px){ .sun .st small{ display:none; } }
 /* wariant „hero”: na zdjęciu, bez tła/ramki; typografia jak ekran blokady iOS (biały tekst, warstwowy miękki cień) */
-:host([variant=hero]){ display:block; --wx-u: var(--hg-u0, 1.3px); }
+:host([variant=hero]){ display:block; --wx-u: calc(var(--hg-u0, 1.3px) * var(--hg-zoom, 1) * var(--wx-scale, 1)); }
 .hero{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:none; border:0; padding:0; margin:0; color:#fff; text-align:left; cursor:pointer;
   text-shadow:0 2px 24px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.2); font-variant-numeric:tabular-nums; -webkit-tap-highlight-color:transparent; outline:none; isolation:isolate; }
 /* bardzo miękkie przyciemnienie za blokiem (bez widocznej krawędzi) – czytelność na jasnym niebie */
@@ -70,20 +73,20 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 .hero.anim{ animation:hgwxin .7s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes hgwxin{ from{ opacity:0; transform:translateY(6px); } }
 @media (prefers-reduced-motion: reduce){ .hero.anim{ animation:none; } }
-.hero .big{ display:flex; align-items:flex-start; font-size:clamp(72px, calc(var(--wx-u) * 73), 140px); font-weight:100; line-height:.9; letter-spacing:-.04em; font-feature-settings:'tnum' 1; }
+.hero .big{ display:flex; align-items:flex-start; font-size:clamp(72px, calc(var(--wx-u) * 73), calc(140px * var(--hg-zoom, 1) * var(--wx-scale, 1))); font-weight:100; line-height:.9; letter-spacing:-.04em; font-feature-settings:'tnum' 1; }
 .hero .big sup{ font-size:.36em; font-weight:200; line-height:1; margin:.06em 0 0 .04em; letter-spacing:0; }
 /* ikona wyrównana do wysokości wersalików liczby */
 .hero .big img{ width:.6em; height:.6em; margin:.02em 0 0 .14em; filter:drop-shadow(0 2px 10px rgba(0,0,0,.22)); }
-.hero .cd2{ font-size:clamp(16px, calc(var(--wx-u) * 14.6), 28px); font-weight:500; letter-spacing:.01em; line-height:1.2; }
-.hero .mm{ display:flex; gap:1.1em; font-size:clamp(13px, calc(var(--wx-u) * 12), 23px); font-weight:400; line-height:1.2; }
+.hero .cd2{ font-size:clamp(16px, calc(var(--wx-u) * 14.6), calc(28px * var(--hg-zoom, 1) * var(--wx-scale, 1))); font-weight:500; letter-spacing:.01em; line-height:1.2; }
+.hero .mm{ display:flex; gap:1.1em; font-size:clamp(13px, calc(var(--wx-u) * 12), calc(23px * var(--hg-zoom, 1) * var(--wx-scale, 1))); font-weight:400; line-height:1.2; }
 .hero .mm span{ display:inline-flex; align-items:baseline; gap:.25em; } .hero .mm i{ font-style:normal; font-weight:200; opacity:.75; }
-.hero .nx{ display:flex; margin-top:8px; font-size:clamp(12px, calc(var(--wx-u) * 11.3), 21px); }
+.hero .nx{ display:flex; margin-top:8px; font-size:clamp(12px, calc(var(--wx-u) * 11.3), calc(21px * var(--hg-zoom, 1) * var(--wx-scale, 1))); }
 .hero .hc{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:0 1em; min-width:2.6em; }
 .hero .hc:first-child{ padding-left:0; align-items:flex-start; } .hero .hc + .hc{ border-left:1px solid rgba(255,255,255,.18); }
 .hero .hc small{ font-size:.78em; font-weight:500; letter-spacing:.06em; text-transform:uppercase; opacity:.6; }
 .hero .hc img{ width:1.9em; height:1.9em; margin:-.15em 0; }
 .hero .hc b{ font-weight:400; }
-.hero .hc em{ font-style:normal; font-size:.78em; font-weight:400; color:var(--hg-accent-faint); line-height:1; }
+.hero .hc em{ font-style:normal; font-size:.78em; font-weight:400; color:rgba(255,255,255,.9); line-height:1; }
 /* wariant kompaktowy (tablet pionowo / telefon): chip obok cen paliw */
 .chip{ display:inline-flex; align-items:center; gap:6px; box-sizing:border-box; height:var(--chip-h, 100%); min-height:var(--chip-h, 32px); padding:0 var(--chip-pr, 12px) 0 var(--chip-pl, 6px); border-radius:var(--chip-r, 12px); position:relative; isolation:isolate; background:transparent;
   border: var(--glass-border, 1px solid transparent); box-shadow: var(--glass-shadow, none); color:#1E2023; font-size:var(--fs-sm); white-space:nowrap; cursor:pointer; font-variant-numeric:tabular-nums; }

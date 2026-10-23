@@ -346,7 +346,8 @@ const HG_COMP = [
   hgTO({ id: 'energy', i: 'mdi:lightning-bolt-outline', card: 'hg-energy-stats-card', slots: [hgTO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], req: 1 }, { l: 'edit.consumption_kwh' }), hgTO({ k: 'production', dom: ['sensor'], dc: ['energy'] }, { l: 'edit.production_kwh_optional' })],
     cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) }, { n: 'edit.energy_statistics', d: 'edit.consumption_and_production_today' }),
   hgTO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'hg-weather-card', slots: [hgTO({ k: 'entity', dom: ['weather'], req: 1 }, { l: 'edit.forecast' })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}), ...((v.o || {}).hero ? { variant: 'hero' } : {}) }),
-    opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'hero', t: 'bool', l: hgTLazy('edit.options.weather_hero') }] }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
+    opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'hero', t: 'bool', l: hgTLazy('edit.options.weather_hero') },
+      { k: 'size', t: 'sel', l: hgTLazy('edit.options.weather_size'), choices: () => [['', hgT('lookr.size_m')], ['s', hgT('lookr.size_s')], ['l', hgT('lookr.size_l')]] }] }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
   hgTO({ id: 'people', i: 'mdi:account-group-outline', card: 'hg-people-card', slots: [hgTO({ k: 'persons', dom: ['person'], multi: 1, req: 1 }, { l: 'edit.people' })], cfg: (v) => ({ persons: v.persons }) }, { n: 'edit.household', d: 'edit.who_is_home_zones' }),
   hgTO({ id: 'alarm', i: 'mdi:shield-home-outline', card: 'hg-alarm-card', slots: [hgTO({ k: 'entity', dom: ['alarm_control_panel'], req: 1 }, { l: 'edit.alarm_panel' })], cfg: (v) => ({ entity: v.entity }) }, { n: 'edit.alarm', d: 'edit.arm_and_disarm_with' }),
   hgTO({ id: 'robots', i: 'mdi:robot-vacuum', card: 'hg-robots-card', slots: [hgTO({ k: 'entities', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }, { l: 'edit.robots' })], cfg: (v) => ({ entities: v.entities }) }, { n: 'edit.robots', d: 'edit.vacuums_and_mowers_status' }),
@@ -858,6 +859,7 @@ const HG_COMP_EDIT = {
       <label class="hs-fl"><span>${hgT('edit.icon_e_g_mdi')}</span><span class="hs-s">${H.icon(R.i || C.i)}<input class="hs-in" name="i" value="${H.esc(R.i)}" placeholder="mdi:…" autocomplete="off"></span></label>
       ${(C.opts || []).map((o) => { const val = (R.v.o || {})[o.k] ?? '', l = String(o.l), a = `data-o="${o.k}"`;
         if (o.t === 'room') { const m = HGAreas.model(h); return hgForm.field(l, hgForm.select([['', hgT('edit.from_address_area')], ...m.list.map((x) => [x.id, x.name])], val, a)); }
+        if (o.t === 'sel') return hgForm.field(l, hgForm.select(typeof o.choices === 'function' ? o.choices() : (o.choices || []), val, a));
         if (o.t === 'txt') return hgForm.field(l, hgForm.area({ value: val, ph: o.ph, a, code: !!o.code }));
         if (o.t === 'bool') return hgForm.toggle(l, !!val, a);
         return hgForm.field(l, hgForm.text({ value: val, ph: o.ph, a, num: o.t === 'num' })); }).join('')}
@@ -1417,6 +1419,7 @@ const HG_EDIT = {
     if (a === 'addback') return (this._eStk || []).length ? this._eBack() : this._eSheet('add', null, this._eSc);
     if (a === 'pick') { const sc = b.dataset.sc; const tt = b.dataset.t && b.dataset.t !== 'def' ? b.dataset.t : ''; this._eSet(sc, (L) => { L.hidden = L.hidden.filter((x) => x !== b.dataset.e); if (!L.added.some((x) => x.e === b.dataset.e)) L.added.push(tt ? { e: b.dataset.e, t: tt } : { e: b.dataset.e }); });
       this._eSheet(false); this._eToast(hgT('edit.added_name', { name: b.dataset.n || b.dataset.e })); return this._eRefresh(sc.endsWith(':tiles')); }
+    if (a === 'repl' && this._eRepl && this._eRepl.badge && window.HGRoomsX) return HGRoomsX.pickEnt(this, b.dataset.e);
     if (a === 'repl' && this._eRepl && this._eRepl.comp) return this._eCompPick(b.dataset.e);
     if (a === 'repl') { const R = this._eRepl; this._eRepl = null; const nv = b.dataset.e; this._eCfgSet(R, nv); this._eSheet(false); this._eToast(R.add ? hgT('edit.entity_added') : hgT('edit.entity_changed'));
       const k2 = R.S.kind === 'added' ? nv : R.k, pg = R.sc === this._pageScope(); const re = () => { const ct = this._eConts().find((c) => c.scope === R.sc); if (ct) setTimeout(() => this._eCfg(ct, k2), 120); };
@@ -1828,7 +1831,7 @@ const HG_EDIT = {
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */
   _eGo(back, fn) { const S = this._eSheetEl, sc = S && S.querySelector('.hge-sheet .hs-sc'), t = this._eTrig;
-    const key = t && t.dataset ? ['hge', 'c', 'k', 'i', 'e', 't'].filter((x) => t.dataset[x] != null).map((x) => `[data-${x}="${CSS.escape(t.dataset[x])}"]`).join('') : '';
+    const key = t && t.dataset ? ['hge', 'c', 'k', 'i', 'e', 't', 'v'].filter((x) => t.dataset[x] != null).map((x) => `[data-${x}="${CSS.escape(t.dataset[x])}"]`).join('') : '';
     (this._eStk = this._eStk || []).push({ back, top: sc ? sc.scrollTop : 0, key, form: this._eFormGet() }); this._eNav('f'); fn(); this._eFocusTitle(); },
   /* stan formularza kroku (pola i przełączniki aria-pressed), odtwarzany po powrocie, gdy krok czyta wartości z DOM */
   _eBk(t) { return ['hge', 'c', 'k', 'i', 'e', 't', 'v', 'w', 'z'].filter((x) => t.dataset[x] != null).map((x) => `[data-${x}="${CSS.escape(t.dataset[x])}"]`).join(''); },
@@ -1881,7 +1884,7 @@ const HG_EDIT = {
     if (!scOver) this._eRepl = null;
     const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eSc = sc;
     const rooms = sc === 'rooms' && !this._eRepl;
-    L.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet" role="dialog" aria-modal="true" aria-label="${hgT('edit.add_tile')}"><div class="hs-h"><b>${this._eRepl ? hgT('edit.change_entity') : rooms ? hgT('edit.add_room') : sc.startsWith('room:') ? hgT('edit.add_to_room') : hgT('edit.add_tile')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
+    L.innerHTML = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet" role="dialog" aria-modal="true" aria-label="${this._eRepl && this._eRepl.badge ? hgT('edit.add_entity') : hgT('edit.add_tile')}"><div class="hs-h"><b>${this._eRepl ? (this._eRepl.badge ? hgT('edit.add_entity') : hgT('edit.change_entity')) : rooms ? hgT('edit.add_room') : sc.startsWith('room:') ? hgT('edit.add_to_room') : hgT('edit.add_tile')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
       <label class="hs-s">${H.icon('mdi:magnify')}<input type="search" placeholder="${rooms ? hgT('edit.search_areas') : hgT('edit.search_by_name_room')}" aria-label="${hgT('common.search')}" autocomplete="off"><button class="hs-clr" type="button" hidden aria-label="${hgT('edit.clear')}">${H.icon('mdi:close')}</button></label>
       ${rooms ? '' : `<div class="hs-f" role="group" aria-label="${hgT('edit.type')}">${[['all', hgT('edit.all')], ['light', hgT('edit.lights')], ['tog', hgT('edit.switches')], ['val', hgT('edit.sensors')], ['clim', hgT('edit.climate')], ['media', hgT('common.media')], ['cam', hgT('edit.cameras')], ['cover', hgT('edit.covers')], ['run', hgT('edit.scenes_and_scripts')]].map(([f, l]) => `<button data-hge="filter" data-f="${f}" aria-pressed="${f === 'all'}">${l}</button>`).join('')}</div>`}
       ${rooms ? '' : '<div class="hs-pv" aria-live="polite"></div>'}<div class="hs-l" role="list"></div></div>`;
@@ -1927,7 +1930,7 @@ const HG_EDIT = {
     const sh = arr; this._eArr = arr;
     const pv = L.querySelector('.hs-pv'); if (pv) { const fx = this._eF === 'all' ? null : this._eF;
       pv.innerHTML = sh.length ? `<small>${hgT('edit.preview')}${fx ? ' · ' + H.esc(fx === 'light' ? hgT('edit.light') : (HG_KIND_LBL[fx] || '')) : ''}</small><div class="tg2">${hgTileHtml(h, sh[0].e)}</div>` : ''; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); }
-    const row = (x) => `<button class="hs-r" role="listitem" data-hge="${this._eRepl ? 'repl' : 'pick'}" data-sc="${H.esc(sc)}" data-e="${H.esc(x.e)}" data-n="${H.esc(x.nm)}"><span class="hs-i">${H.icon(x.s.attributes.icon || HG_DOM_ICON2[x.e.split('.')[0]] || 'mdi:circle-outline')}</span><span class="hs-t"><b>${H.esc(x.nm)}</b><small>${H.esc([HG_KIND_LBL[x.k], x.an, this._eRepl && shown.has(x.e) ? hgT('edit.already_in_view') : '', H.ok(x.s) ? H.T(h, x.s) : hgT('common.state_unavailable')].filter(Boolean).join(' · '))}</small></span><span class="hs-p">${H.icon(this._eRepl ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>`;
+    const row = (x) => `<button class="hs-r" role="listitem" data-hge="${this._eRepl ? 'repl' : 'pick'}" data-sc="${H.esc(sc)}" data-e="${H.esc(x.e)}" data-n="${H.esc(x.nm)}"><span class="hs-i">${H.icon(x.s.attributes.icon || HG_DOM_ICON2[x.e.split('.')[0]] || 'mdi:circle-outline')}</span><span class="hs-t"><b>${H.esc(x.nm)}</b><small>${H.esc([HG_KIND_LBL[x.k], x.an, this._eRepl && shown.has(x.e) ? hgT('edit.already_in_view') : '', H.ok(x.s) ? H.T(h, x.s) : hgT('common.state_unavailable')].filter(Boolean).join(' · '))}</small></span><span class="hs-p">${H.icon(this._eRepl && !this._eRepl.badge ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>`;
     /* leniwe renderowanie: porcje po 60, kolejne przy przewijaniu (bez limitu) */
     if (this._eIO) this._eIO.disconnect();
     if (!sh.length) { lst.innerHTML = `<p class="hs-e">${this._eRepl ? hgT('edit.no_matching_entities') : hgT('edit.no_matching_entities_those')}</p>`; return; }
