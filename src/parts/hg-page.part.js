@@ -154,7 +154,7 @@ class HGPage extends HTMLElement {
        zatrzymujemy cały gest dotyku na granicy strony; przy otwartym oknie lub arkuszu blokujemy każdy gest */
     const sw = (e) => { if (e.type === 'touchstart') this._noSwipe = e.touches.length > 1 || this._swBlock(e); if (this._noSwipe) e.stopPropagation(); if (e.type === 'touchend' && !e.touches.length) setTimeout(() => { this._noSwipe = false; }, 0); };
     for (const ty of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) this.shadowRoot.addEventListener(ty, sw, { passive: true });
-    const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingPaint) { this._pendingPaint = false; this._sigTop = this._sigHub = null; this._paintTop(); this._paintHub(); } }, 60); };
+    const up = () => { clearTimeout(this._tt); this._tt = setTimeout(() => { this._touching = false; if (this._pendingPaint) { this._pendingPaint = false; this._sigTop = this._sigHub = null; this._paintTop(); this._paintHub(); if (this._bdgEl) this._paintBadges(); } }, 60); };
     this.shadowRoot.addEventListener('pointerdown', (e) => { if (e.composedPath().some((n) => n.classList && (n.classList.contains('top') || n.classList.contains('hub')))) { this._touching = true; clearTimeout(this._tt); this._tt = setTimeout(up, 1500); } }, { passive: true });
     this.shadowRoot.addEventListener('pointerup', up, { passive: true });
     this.shadowRoot.addEventListener('pointercancel', up, { passive: true });
@@ -205,7 +205,7 @@ class HGPage extends HTMLElement {
     if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
     // górny pasek / hub zależą tylko od kilku encji -> przerysuj tylko gdy zmienił się ich obiekt stanu
     const w = this._watch();
-    if (!old || old.user !== h.user || w.some((e) => old.states[e] !== h.states[e])) { this._paintTop(); this._paintHub(); }
+    if (!old || old.user !== h.user || w.some((e) => old.states[e] !== h.states[e])) { this._paintTop(); this._paintHub(); if (this._bdgEl) this._paintBadges(); }
     if (this._fuelEl && (!old || this._fuelEnts().some((e) => old.states[e] !== h.states[e]))) this._paintFuel();
     if (this._config.room_head && this._built) this._paintHead();
   }
@@ -213,7 +213,9 @@ class HGPage extends HTMLElement {
     if (this._w) return this._w;
     const c = this._config, ui = this._userInfo();
     const set = new Set([ui.person].filter(Boolean));
-    for (const t of c.tabs) for (const e of (t.badge && (t.badge.count_on || t.badge.count_active)) || []) set.add(e);
+    const addB = (b) => { if (!b) return; for (const e of [...(b.count_on || []), ...(b.count_active || [])]) set.add(e); for (const c of b.chips || []) addB(c); };
+    for (const t of c.tabs || []) addB(t.badge);
+    for (const b of c.badges || []) addB(b);
     for (const p of (c.hub && c.hub.persons) || []) set.add(p);
     return (this._w = [...set]);
   }
@@ -642,19 +644,21 @@ class HGPage extends HTMLElement {
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgT('page.header_hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
     const c = this._config; if (!this._hass) return; this._headClk = false; queueMicrotask(() => this._headTick());
-    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
+    if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._bdgEl = null; this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
     const hd = this._headConf();
     const pick = (k, def) => this._headPick(hd, k, def);
     const ttl = pick('t', c.title ?? hgT('common.welcome', { name: '{name}' })), hic = /^mdi:[a-z0-9-]+$/.test(hd.i || '') ? H.icon(hd.i, 'hdi') : '';
     this._headVis(hd);
-    this._headEl.innerHTML = `<h1 title="${H.esc(ttl)}">${hic}${H.esc(ttl)}</h1>${hd.nos ? '' : `<p>${H.esc(pick('s', c.subtitle ?? hgT('page.default_subtitle')))}</p>`}${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgT('common.fuel_prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
+    this._headEl.innerHTML = `<h1 title="${H.esc(ttl)}">${hic}${H.esc(ttl)}</h1>${hd.nos ? '' : `<p>${H.esc(pick('s', c.subtitle ?? hgT('page.default_subtitle')))}</p>`}<div class="bdgs" role="list" aria-label="${hgT('lookr.badge')}" hidden></div>${c.fuel || c.weather ? `<div class="hrow">${c.weather ? '<div class="wxs"></div>' : ''}${c.fuel ? `<div class="fuel" role="list" aria-label="${hgT('common.fuel_prices')}"></div>` : ''}</div>` : ''}${c.weather ? '<div class="wxh"></div>' : ''}`;
     this._fuelEl = this._headEl.querySelector('.fuel'); this._paintFuel(true);
+    this._bdgEl = this._headEl.querySelector('.bdgs'); this._paintBadges(true);
     this._placeWx();
   }
   /* pogoda na zewnątrz: szeroki układ -> bez tła na zdjęciu pod powitaniem (.wxh); tablet/telefon -> chip obok cen paliw (.wxs) */
   _placeWx() {
     const c = this._config; if (!c || !c.weather || !this._headEl) return;
-    if (!this._wxEl) { this._wxEl = document.createElement('hg-weather-card'); this._wxEl.setConfig(c.weather); this._wxEl.setAttribute('variant', 'hero'); }
+    if (!this._wxEl) { this._wxEl = document.createElement('hg-weather-card'); this._wxEl.setAttribute('variant', 'hero'); }
+    const prev = this._wxEl._config; if (!prev || prev.entity !== c.weather.entity || prev.size !== c.weather.size || prev.forecast_sensor !== c.weather.forecast_sensor) this._wxEl.setConfig(c.weather);
     const wide = this.getAttribute('mode') === 'wide', t = this._headEl.querySelector(wide ? '.wxh' : '.wxs'); if (!t) return;
     if (this._wxEl.hasAttribute('compact') === wide) this._wxEl.toggleAttribute('compact', !wide);
     if (this._wxEl.parentNode !== t) t.appendChild(this._wxEl);
@@ -683,17 +687,20 @@ class HGPage extends HTMLElement {
     if (force) el._hgHtml = null;
     this._setHTML(el, chips.join(''));
   }
+  /* ile encji z licznika jest „włączonych”; media osobno (playing). Chip w nagłówku znika przy 0 */
+  _bdgN(c) { if (!c || !this._hass) return 0; if (c.count_active) return c.count_active.filter((e) => hgMpActive(H.st(this._hass, e))).length;
+    return (c.count_on || []).filter((e) => { const s = H.st(this._hass, e); return s && !['off', 'unavailable', 'unknown', 'idle', 'standby', 'paused', 'not_home'].includes(s.state); }).length; }
+  _paintBadges(force) { const el = this._bdgEl; if (!el || !this._hass) return; const bits = [];
+    for (const c of (this._config && this._config.badges) || []) { const n = this._bdgN(c); if (n <= 0) continue;
+      const name = typeof hgBadgeLabel === 'function' ? hgBadgeLabel(c.k) : hgT('lookr.badge'), ic = c.icon || ((window.HG_BADGE_META || {})[c.k] || {}).i || 'mdi:circle-small';
+      bits.push(`<span class="bdg" role="listitem" title="${H.esc(name)}" aria-label="${H.esc(name + ' ' + n)}">${H.icon(ic)}<b>${n}</b></span>`); }
+    el.hidden = !bits.length; if (force) el._hgHtml = null; this._setHTML(el, bits.join('')); }
   _paintTop(force) {
     if (!this._built || !this._hass) return;
     const c = this._config, ui = this._userInfo(), brand = c.brand ?? hgT('page.home');
     const path = location.pathname;
     const nCount = Object.keys(this._notif).length;
-    const badgeOf = (t) => {
-      if (!t.badge) return 0;
-      if (t.badge.count_active) return t.badge.count_active.filter((e) => hgMpActive(H.st(this._hass, e))).length;
-      if (t.badge.count_on) return t.badge.count_on.filter((e) => { const s = H.st(this._hass, e); return s && !['off', 'unavailable', 'unknown', 'idle', 'standby', 'paused', 'not_home'].includes(s.state); }).length;
-      return 0;
-    };
+    const badgeOf = (t) => !t.badge ? 0 : t.badge.chips ? t.badge.chips.reduce((n, c) => n + this._bdgN(c), 0) : this._bdgN(t.badge);
     const tabs = c.tabs.map((t) => ({ ...t, act: path === t.path || (t.match && hgMatch(t.match, path)), b: badgeOf(t) }));
     const sig = JSON.stringify([!!this._editing, this._canEdit(), tabs.map((t) => [t.act, t.b]), nCount, ui, this._menuOpen, ui.person && H.st(this._hass, ui.person) ? H.st(this._hass, ui.person).attributes.entity_picture : '', !!(window.HGAssistUI && HGAssistUI.get().button)]);
     if (!force && sig === this._sigTop) return; this._sigTop = sig;
@@ -1098,6 +1105,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .head .rp{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:15px; font-size:13.5px; font-weight:600; color:#fff; background:rgba(0,0,0,.28); }
 .head .rp i{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.6); } .head .rp.on i{ background:var(--hg-accent); box-shadow:0 0 0 3px var(--hg-accent-soft); }
 .head .rp ha-icon{ width:15px; height:15px; } .head .rp.lt ha-icon{ color:var(--hg-accent-tx); } .head .rp.op ha-icon{ color:var(--hg-accent-tx); }
+.head .bdgs{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .head .bdgs[hidden]{ display:none; }
+.head .bdg{ display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 10px; border-radius:13px; font-size:13px; font-weight:600; color:#fff; background:rgba(0,0,0,.28); font-variant-numeric:tabular-nums; }
+.head .bdg ha-icon{ width:15px; height:15px; } .head .bdg b{ font-weight:600; }
+:host([mode=wide]) .head:has(.bdgs:not([hidden])) .wxh{ top:152u; }
 .head h1{ margin:0; font-size:24u; font-weight:600; letter-spacing:-.015em; line-height:1.18; text-shadow: 0 1px 12px rgba(0,0,0,.18); }
 .fuel{ display:flex; gap:5u; margin-top:9u; flex-wrap:wrap; } .fuel[hidden]{ display:none; }
 .hrow{ display:flex; align-items:stretch; gap:5u; min-width:0; } .hrow .fuel{ margin-top:0; min-width:0; } .hrow{ margin-top:9u; }

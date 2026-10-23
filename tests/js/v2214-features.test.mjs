@@ -25,6 +25,31 @@ test('badge option: mode + domain, custom entity list, invalid input dropped', (
   assert.equal(W.hgBadgeOpt('on:@', ''), null);
   assert.equal(W.hgBadgeOpt(''), null);
   assert.equal(W.hgBadgeOpt('x:light'), null);
+  assert.deepEqual({ ...W.hgBadgeOpt('on:motion'), dc: [...W.hgBadgeOpt('on:motion').dc] }, { m: 'on', d: 'binary_sensor', dc: ['motion', 'occupancy', 'presence'] });
+});
+test('badge entities: motion device class, light group skipped when a member exists', () => {
+  const src = rd('hg-lookr.part.js');
+  const W = run(grab(src, 'hgBadgeEnts', ' };'));
+  const hass = { states: {
+    'light.lamp': { state: 'on', attributes: {} },
+    'light.group': { state: 'on', attributes: { entity_id: ['light.lamp', 'light.other'] } },
+    'light.orphan': { state: 'on', attributes: { entity_id: ['light.missing'] } },
+    'binary_sensor.m': { state: 'on', attributes: { device_class: 'motion' } },
+    'binary_sensor.occ': { state: 'off', attributes: { device_class: 'occupancy' } },
+    'binary_sensor.d': { state: 'on', attributes: { device_class: 'door' } },
+  } };
+  assert.deepEqual([...W.hgBadgeEnts(hass, { m: 'on', d: 'light' })], ['light.lamp', 'light.orphan']);
+  assert.deepEqual([...W.hgBadgeEnts(hass, { m: 'on', d: 'binary_sensor', dc: ['motion', 'occupancy', 'presence'] })], ['binary_sensor.m', 'binary_sensor.occ']);
+  assert.deepEqual([...W.hgBadgeEnts(hass, { m: 'on', e: ['light.group', 'light.lamp', 'light.nope'] })], ['light.group', 'light.lamp']);
+});
+test('hero weather follows zoom and the rain amount is white', () => {
+  const w = rd('cards/weather-card.part.js');
+  assert.match(w, /--wx-u: calc\(var\(--hg-u0, 1\.3px\) \* var\(--hg-zoom, 1\) \* var\(--wx-scale, 1\)\)/);
+  assert.match(w, /calc\(21px \* var\(--hg-zoom, 1\) \* var\(--wx-scale, 1\)\)/);
+  assert.match(w, /\.hero \.hc em\{[^}]*rgba\(255,255,255,\.9\)/);
+  const s = rd('hg-oss.part.js');
+  assert.match(s, /hgBadgeEnts\(hass/);
+  assert.match(s, /badges: \(tabBadge\(view\) \|\| \{\}\)\.chips \|\| \[\]/);
 });
 test('strategy: badge resolved from wiz.vx, sidebar hidden only with railHide and no rail views', () => {
   const s = rd('hg-oss.part.js');
