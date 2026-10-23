@@ -256,6 +256,7 @@ class HGPage extends HTMLElement {
   }
   connectedCallback() {
     if (this._config && this._config.redirect) { this._redirTo = null; return this._redirect(); }
+    hgKmScreen.page(1);
     if (!this._hgChild && this._config) HGShell.adopt(this);
     window.addEventListener('resize', this._onResize);
     window.addEventListener('location-changed', this._onLoc);
@@ -288,6 +289,7 @@ class HGPage extends HTMLElement {
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
     if (this._config && this._config.redirect) return;
+    hgKmScreen.page(-1);
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('location-changed', this._onLoc);
     window.removeEventListener('popstate', this._onLoc);

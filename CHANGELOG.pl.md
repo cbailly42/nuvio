@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane
+- Dodane: gdy tryb kiosku jest włączony, ekran zostaje włączony na pulpicie Nuvio, tak jak przy oglądaniu filmu. Obejmuje to ukryty nagłówek, ukryty panel, kiosk dla osób, które nie są administratorami, oraz parametry adresu `kiosk`, `hide_header` i `hide_sidebar`. Po wyłączeniu trybu kiosku ekran może zgasnąć. Gdy ekran zgaśnie albo opuścisz aplikację, Nuvio prosi o pozostawienie go włączonego po powrocie.
+
 ### 2.22.4
 - Dodane: pogoda w nagłówku i karta Pogoda mają rozmiar tekstu: mały, średni albo duży. Pogoda w nagłówku podąża też za powiększeniem pulpitu, więc na tablecie w poziomie prognoza godzinowa może urosnąć ponad dawny limit.
 - Poprawione: ilość deszczu na pogodzie w nagłówku, na przykład 17 mm, jest biała na zdjęciu, więc da się ją odczytać.
