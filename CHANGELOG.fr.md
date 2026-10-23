@@ -4,7 +4,7 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Non publié
+### 2.22.4
 - Ajouté : la météo de l’en-tête et une carte Météo ont une taille de texte, Petit, Moyen ou Grand. La météo de l’en-tête suit aussi le zoom du tableau de bord, donc sur une tablette en paysage la prévision horaire peut dépasser l’ancien plafond.
 - Corrigé : la quantité de pluie sur la météo de l’en-tête, par exemple 17 mm, est blanche sur la photo, donc elle reste lisible.
 - Ajouté : une vue peut compter plusieurs choses à la fois (lumières, interrupteurs, ventilateurs, médias, climatisation, personnes, mouvement et entités choisies). L’onglet affiche la somme. La vue en cours affiche aussi une icône et un nombre sous le titre, et masque une pastille à 0. Lumières allumées ignore un groupe de lumières lorsque ses lampes existent. Entités choisies utilise le sélecteur d’entités avec recherche.
