@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Non publié
+- Ajouté : lorsque le mode kiosque est actif, l’écran reste allumé sur le tableau de bord Nuvio, comme pendant la lecture d’une vidéo. Cela couvre un en-tête masqué, une barre latérale masquée, le kiosque pour les personnes qui ne sont pas administrateurs, et les paramètres d’adresse `kiosk`, `hide_header` et `hide_sidebar`. Désactiver le mode kiosque permet à l’écran de se mettre en veille. Si l’écran s’éteint ou si vous quittez l’application, Nuvio redemande de le garder allumé au retour.
+
 ### 2.22.4
 - Ajouté : la météo de l’en-tête et une carte Météo ont une taille de texte, Petit, Moyen ou Grand. La météo de l’en-tête suit aussi le zoom du tableau de bord, donc sur une tablette en paysage la prévision horaire peut dépasser l’ancien plafond.
 - Corrigé : la quantité de pluie sur la météo de l’en-tête, par exemple 17 mm, est blanche sur la photo, donc elle reste lisible.

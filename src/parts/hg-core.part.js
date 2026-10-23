@@ -112,6 +112,52 @@ const HG_LOC = () => HGI18n.locale(hgCurLang());
 /* Kiosk Mode (HACS) wyłączony z menu użytkownika: ?disable_km działa tylko, gdy jest w adresie, więc do końca sesji karty dopinamy go do nawigacji */
 const hgKmOff = (v) => { try { if (v === undefined) return sessionStorage.getItem('home-glass:km-off') === '1'; if (v) sessionStorage.setItem('home-glass:km-off', '1'); else sessionStorage.removeItem('home-glass:km-off'); } catch (e) { /* bez sessionStorage */ } return !!v; };
 const hgKmPath = (p) => { if (!hgKmOff() || typeof p !== 'string' || !p.startsWith('/') || /[?&]disable_km\b/.test(p)) return p; const [a, hs] = p.split('#'); return a + (a.includes('?') ? '&' : '?') + 'disable_km' + (hs !== undefined ? '#' + hs : ''); };
+/* Ekran zostaje włączony w trybie kiosku (Screen Wake Lock, ten sam mechanizm co YouTube w trakcie odtwarzania).
+   Tylko gdy Kiosk Mode naprawdę obowiązuje ten widok: ukryty nagłówek lub panel w konfiguracji, albo ?kiosk / ?hide_header / ?hide_sidebar,
+   pulpit Nuvio jest podłączony i nikt nie wyłączył kiosku (?disable_km, menu). Reguły tylko dla nie-administratorów nie trzymają ekranu administratora.
+   Przeglądarka sama puszcza blokadę, gdy karta znika; po powrocie prosimy znowu. */
+const hgKmScreen = {
+  n: 0, wl: null, q: false,
+  page(d) { this.n = Math.max(0, this.n + d); this.arm(); },
+  blocked() { return this.n < 1 || document.hidden || hgKmOff() || /[?&]disable_km\b/.test(location.search) || !window.KioskMode; },
+  flag(v) { return v === true; },
+  hit(o) { return !!(o && (this.flag(o.kiosk) || this.flag(o.hide_header) || this.flag(o.hide_sidebar))); },
+  /* admin: true / false / null (hass jeszcze nie dotarł). null nie włącza reguł samych dla nie-administratorów */
+  wants(km, admin) {
+    if (!km || typeof km !== 'object') return false;
+    if (admin === false) return this.hit(km.non_admin_settings) || (!km.non_admin_settings && this.hit(km));
+    return this.hit(km);
+  },
+  query() { const p = new URLSearchParams(location.search); return ['kiosk', 'hide_header', 'hide_sidebar'].some((k) => { const v = p.get(k); return v != null && v !== 'false' && v !== '0'; }); },
+  admin() { const u = window.__hgHass && window.__hgHass.user; return u ? !!u.is_admin : null; },
+  tree() {
+    try {
+      const m = document.querySelector('home-assistant')?.shadowRoot?.querySelector('home-assistant-main');
+      if (!m || !m.shadowRoot) return null;
+      const host = m.shadowRoot.querySelector('partial-panel-resolver');
+      const scope = (host && host.shadowRoot) || m.shadowRoot;
+      const panel = scope.querySelector('ha-panel-lovelace') || m.shadowRoot.querySelector('ha-panel-lovelace');
+      if (!panel) return null;
+      const hui = (panel.shadowRoot && panel.shadowRoot.querySelector('hui-root')) || panel.querySelector('hui-root');
+      return hui ? { panel, hui } : null;
+    } catch (e) { return null; }
+  },
+  cfg() { const r = this.tree(); if (!r) return null; const l = (r.hui && r.hui.lovelace) || r.panel.lovelace; return (l && l.config && l.config.kiosk_mode) || null; },
+  headerHidden() { const r = this.tree(); const h = r && r.hui.shadowRoot && r.hui.shadowRoot.querySelector('.header'); try { return !!h && getComputedStyle(h).display === 'none'; } catch (e) { return false; } },
+  on() { return !this.blocked() && (this.query() || this.wants(this.cfg(), this.admin()) || this.headerHidden()); },
+  drop() { const l = this.wl; this.wl = null; if (l && !l.released) try { const r = l.release(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* blokada już puszczona */ } },
+  arm() {
+    if (!this.on()) { this.drop(); return; }
+    if ((this.wl && !this.wl.released) || this.q) return;
+    try {
+      if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+      this.q = true;
+      navigator.wakeLock.request('screen').then((l) => { this.q = false; if (!this.on()) { try { const r = l.release(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* */ } return; } this.wl = l;
+        try { l.addEventListener('release', () => { if (this.wl === l) this.wl = null; }); } catch (e) { /* bez zdarzenia: sprawdzamy released */ } }, () => { this.q = false; });
+    } catch (e) { this.q = false; /* ekran może zgasnąć wg systemu */ }
+  },
+};
+if (!window.__hgKmScreen) { window.__hgKmScreen = 1; document.addEventListener('visibilitychange', () => { if (!document.hidden) hgKmScreen.arm(); }); setInterval(() => hgKmScreen.arm(), 1200); }
 const H = {
   st: (hass, e) => (hass && e ? hass.states[e] : undefined),
   ok: (s) => !!s && !['unavailable', 'unknown'].includes(s.state),
