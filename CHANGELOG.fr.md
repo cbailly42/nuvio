@@ -4,7 +4,7 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Non publié
+### 2.22.5
 - Ajouté : lorsque le mode kiosque est actif, l’écran reste allumé sur le tableau de bord Nuvio, comme pendant la lecture d’une vidéo. Cela couvre un en-tête masqué, une barre latérale masquée, le kiosque pour les personnes qui ne sont pas administrateurs, et les paramètres d’adresse `kiosk`, `hide_header` et `hide_sidebar`. Désactiver le mode kiosque permet à l’écran de se mettre en veille. Si l’écran s’éteint ou si vous quittez l’application, Nuvio redemande de le garder allumé au retour.
 
 ### 2.22.4

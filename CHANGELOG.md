@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.22.5
 - Added: while Kiosk Mode is on, the screen stays awake on the Nuvio dashboard, the same way it stays on while a video plays. This covers a hidden header, a hidden sidebar, kiosk for people who are not admins, and the address parameters `kiosk`, `hide_header` and `hide_sidebar`. Turn kiosk mode off and the screen can sleep again. If the screen turns off or you leave the app, Nuvio asks to keep it on again when you come back.
 
 ### 2.22.4
