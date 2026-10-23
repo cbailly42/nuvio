@@ -4,7 +4,7 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
+### 2.22.4
 - Added: the header weather and a Weather card have a text size, Small, Medium or Large. The header hero also follows the dashboard zoom, so on a landscape tablet the hourly forecast can grow past the old cap.
 - Fixed: the rain amount on the header weather, such as 17 mm, is white on the photo, so it stays readable.
 - Added: a view can count several things at once (lights, switches, fans, media, climate, people, motion, and selected entities). The tab shows the sum. The current view also shows an icon and a count under the title, and hides a chip at 0. Lights on skips a light group when its lamps exist. Selected entities uses the searchable entity picker.

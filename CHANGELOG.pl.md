@@ -4,7 +4,7 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.22.4
 - Dodane: pogoda w nagłówku i karta Pogoda mają rozmiar tekstu: mały, średni albo duży. Pogoda w nagłówku podąża też za powiększeniem pulpitu, więc na tablecie w poziomie prognoza godzinowa może urosnąć ponad dawny limit.
 - Poprawione: ilość deszczu na pogodzie w nagłówku, na przykład 17 mm, jest biała na zdjęciu, więc da się ją odczytać.
 - Dodane: widok może liczyć kilka rzeczy naraz (światła, przełączniki, wentylatory, media, klimatyzację, osoby, ruch i wybrane encje). Zakładka pokazuje sumę. Bieżący widok pokazuje też ikonę i liczbę pod tytułem i ukrywa chip przy 0. Włączone światła pomija grupę świateł, gdy jej lampy istnieją. Wybrane encje korzystają z wyszukiwarki encji.

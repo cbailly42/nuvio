@@ -658,7 +658,7 @@ class HGPage extends HTMLElement {
   _placeWx() {
     const c = this._config; if (!c || !c.weather || !this._headEl) return;
     if (!this._wxEl) { this._wxEl = document.createElement('hg-weather-card'); this._wxEl.setAttribute('variant', 'hero'); }
-    const prev = this._wxEl._config; if (!prev || prev.entity !== c.weather.entity || prev.size !== c.weather.size || prev.forecast_sensor !== c.weather.forecast_sensor) this._wxEl.setConfig(c.weather);
+    const w = c.weather, prev = this._wxEl._config; if (!prev || prev.entity !== w.entity || prev.size !== w.size || prev.forecast_sensor !== w.forecast_sensor) this._wxEl.setConfig(w);
     const wide = this.getAttribute('mode') === 'wide', t = this._headEl.querySelector(wide ? '.wxh' : '.wxs'); if (!t) return;
     if (this._wxEl.hasAttribute('compact') === wide) this._wxEl.toggleAttribute('compact', !wide);
     if (this._wxEl.parentNode !== t) t.appendChild(this._wxEl);
