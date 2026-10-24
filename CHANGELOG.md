@@ -4,7 +4,8 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### 2.24.0-beta.1
+### 2.24.0-beta.2
+- Fixed: after the editor split the dashboard could fail to build with `this._applyLayout is not a function`, because that method had moved to the lazily loaded editor chunk while the page calls it on every render. It is back in the bundle, and the editor chunk now loads through a script element whose address comes from `import.meta.url`, so a missing or broken chunk can never throw into the dashboard.
 - Improved: performance pass from the code review. The media cards bound their cover-colour cache to 200 entries (it used to grow for the whole session), the clock card patches only its time and date text instead of re-rendering the card every 15 s (every second with seconds shown), the page header compares plain values instead of serialising the user object on every state update, and the stale-bundle check uses a conditional request (`If-None-Match`, answered with 304) instead of downloading the whole bundle on every page load.
 - Improved: the layout editor is a separate chunk. Settings sheets, drag and drop and every editor method are built as `nuvio-edit.js` and imported the first time edit mode starts, so a plain dashboard visit downloads 113 KB less (bundle 1408 to 1295 KB, editor 123 KB on demand). Edit buttons work as before: the first click fetches the chunk and opens the editor.
 - New: the **Energy flow** card fills itself from the **Energy dashboard** settings of Home Assistant when they list power sensors (recent HA: grid, solar and battery power, battery level and name). Inverted meters and separate import / export sensors are handled as in HA. Anything missing there is detected as before, and your own choices in the card settings always win.

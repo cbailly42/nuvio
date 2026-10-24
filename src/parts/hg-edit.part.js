@@ -794,14 +794,62 @@ const hgSetMatch = window.hgSetMatch = (text, W) => { const T = hgSetNorm(text).
 const hgSetText = (root) => { const o = []; const w = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) o.push(c.nodeValue); else if (c.nodeType === 1 && !/^(STYLE|SCRIPT|TEMPLATE|OPTION|SVG)$/i.test(c.tagName) && !c.hidden && c.getAttribute('aria-hidden') !== 'true') { for (const at of ['aria-label', 'placeholder', 'title']) { const v = c.getAttribute(at); if (v) o.push(v); } w(c); } } }; w(root); return o.join(' '); };
 const hgSetPage = window.hgSetPage = (k, has) => { const p = HG_SET_LEGACY[k] || k; return has && !has.has(p) ? [...has][0] || 'general' : p || 'general'; };
 
+/* Layout of the page (_build calls it on every render): it belongs to the bundle, not to the lazily loaded editor chunk. */
+Object.assign(HGPage.prototype, {
+  _applyLayout(cards) {
+    const sc = this._pageScope(); this._lkeys = this._keys(cards);
+    if (!sc) return cards.map((cc, i) => Object.assign({}, cc, { _k: this._lkeys[i] }));
+    const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
+    let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
+    /* dodane komponenty (nie proste kafle) to osobne karty panelu z kluczem „+klucz”: przesuwa się je między kartami domyślnymi (siatka z obszarami: jak dawniej, w bloku kafli) */
+    /* bez obszarów siatki każda dodana pozycja (komponent i zwykły kafel, #17) jest osobną kartą panelu, w kolejności kafli (tl.order), więc da się je przeplatać; z obszarami zostaje blok kafli */
+    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : HGL.sort(tl.added.filter((x) => (x.c ? customElements.get(x.c) : x.e) && !tl.hidden.includes(x.e)), (x) => x.e, tl.order);
+    for (const x of solo) { const z = tl.size[x.e]; out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', one: x.e, _k: '+' + x.e, span: z === 'l' ? 'full' : z === 'm' ? 2 : 1, min_h: 0, _tiles: true }); }
+    if (L.order.length) {
+      if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
+        const ord = L.order.filter((k) => byK.has(k)); if (ord.length === out.length) out = ord.map((k, i) => { used.add(k); return Object.assign({}, byK.get(k), { area: slot[i] }); }); }
+      else out = HGL.sort(out, (c) => c._k, L.order);
+    }
+    out = out.map((c) => { const cf = L.conf[c._k]; if (!cf) return c; const o = hgSetMerge(c, cf.set);
+      if (cf.n) { o.title = cf.n; o.name = cf.n; } if (cf.i) o.icon = cf.i;
+      if (cf.t && cf.t.startsWith('g-')) { const st = this._hass && this._hass.states, es = []; for (const v of Object.values(o)) if (Array.isArray(v)) for (const y of v) { const e = typeof y === 'string' ? y : y && y.entity; if (e && st && st[e] && !es.includes(e)) es.push(e); }
+        if (es.length) return { type: 'custom:hg-tiles-card', group: { es, lay: cf.t, n: cf.n || o.title || o.name || HG_GRP_LBL[String(o.type || '').replace(/^custom:(hg|nuvio)-|-card$/g, '')] || '', i: cf.i || o.icon || '' }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; return o; }
+      if (cf.t && cf.t !== 'card') { const main = Object.entries(o).map(([, v]) => (typeof v === 'string' && this._hass && this._hass.states[v] ? v : Array.isArray(v) && typeof v[0] === 'string' && this._hass && this._hass.states[v[0]] ? v[0] : null)).find(Boolean);
+        if (main) return { type: 'custom:hg-tiles-card', single: { e: main, t: cf.t, n: cf.n, i: cf.i }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; }
+      return o; });
+    for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
+    if (areas && tl.added.length) out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true });
+    if (tl.added.length) { const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */   /* podpowiedź pod kafelkami */
+    return out;
+  }
+});
+
 /* The editor (settings sheets, drag and drop and every _e* method) lives in its own chunk, dist/nuvio-edit.js, imported the first time
-   someone enters edit mode; a plain dashboard visit never downloads it. The chunk re-applies the page methods, then says hello. */
-const HGEditLoad = window.__hgEditLoad || (window.__hgEditLoad = (() => { let p = null;
-  return () => (p = p || import(/* webpackIgnore: true */ (typeof HG_ASSET === 'string' ? HG_ASSET : '') + 'nuvio-edit.js')); })());
+   someone enters edit mode; a plain dashboard visit never downloads it. The address is resolved against this module (import.meta.url),
+   never against the page, and the chunk is loaded with a script element so a broken chunk cannot throw into the dashboard. */
+const HGEditLoad = window.__hgEditLoad || (window.__hgEditLoad = (() => {
+  let p = null;
+  const modUrl = (() => { try { return import.meta.url; } catch (e) { return ''; } })();
+  const base = () => {
+    try { if (modUrl) return new URL('.', modUrl).href; } catch (e) { /* niepoprawny adres modułu */ }
+    const el = document.currentScript && document.currentScript.src;
+    if (el) { try { return new URL('.', el).href; } catch (e) { /* bez adresu skryptu */ } }
+    return (typeof HG_ASSET === 'string' && HG_ASSET) || '/local/nuvio/';
+  };
+  return () => (p = p || new Promise((res, rej) => {
+    const url = base() + 'nuvio-edit.js';
+    const t = document.createElement('script');
+    t.type = 'module'; t.src = url; t.onload = () => res();
+    t.onerror = () => { try { t.remove(); } catch (e) { /* już usunięty */ } rej(new Error('nuvio-edit: ' + url)); };
+    (document.head || document.documentElement).appendChild(t);
+  })); })());
 window.addEventListener('hg-edit-ready', () => {
   HGPage.prototype._editEnter = HGPage.prototype._editEnterReal; delete HGPage.prototype._editEnterReal;
   for (const pg of document.querySelectorAll('hg-page, nuvio-page')) if (pg._hgWantEdit) { pg._hgWantEdit = false; if (pg._editEnter) pg._editEnter(); }
 });
-/* until the chunk arrives: remember the intent and fetch it */
+/* until the chunk arrives: remember the intent and fetch it; a failure resets the intent and leaves the dashboard alone */
 HGPage.prototype._editEnterReal = HGPage.prototype._editEnter;
-HGPage.prototype._editEnter = function () { this._hgWantEdit = true; return HGEditLoad().catch(() => { this._hgWantEdit = false; }); };
+HGPage.prototype._editEnter = function () {
+  this._hgWantEdit = true;
+  return HGEditLoad().catch((e) => { this._hgWantEdit = false; try { console.warn('Nuvio:', e && e.message); } catch (_) { /* brak konsoli */ } });
+};

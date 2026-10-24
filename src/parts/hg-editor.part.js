@@ -406,32 +406,6 @@ const HG_EDIT = {
   _keys(cards) { const seen = {}; return cards.map((cc) => { const b = `${String(cc.type || '').replace('custom:', '')}|${cc._hgid || cc.entity || (cc.entities && cc.entities[0]) || cc.title || cc.area || ''}`; seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}#${seen[b]}` : b; }); },
   _pageScope() { const v = this._config.view; return ['rooms', 'pokoj'].includes(v) ? null : v; },
   /* bazowe karty z CFG + nadpisania: kolejność (zamiana obszarów siatki albo kolejność DOM), ukryte, rozmiar, kafle dodane */
-  _applyLayout(cards) {
-    const sc = this._pageScope(); this._lkeys = this._keys(cards);
-    if (!sc) return cards.map((cc, i) => Object.assign({}, cc, { _k: this._lkeys[i] }));
-    const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
-    let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
-    /* dodane komponenty (nie proste kafle) to osobne karty panelu z kluczem „+klucz”: przesuwa się je między kartami domyślnymi (siatka z obszarami: jak dawniej, w bloku kafli) */
-    /* bez obszarów siatki każda dodana pozycja (komponent i zwykły kafel, #17) jest osobną kartą panelu, w kolejności kafli (tl.order), więc da się je przeplatać; z obszarami zostaje blok kafli */
-    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : HGL.sort(tl.added.filter((x) => (x.c ? customElements.get(x.c) : x.e) && !tl.hidden.includes(x.e)), (x) => x.e, tl.order);
-    for (const x of solo) { const z = tl.size[x.e]; out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', one: x.e, _k: '+' + x.e, span: z === 'l' ? 'full' : z === 'm' ? 2 : 1, min_h: 0, _tiles: true }); }
-    if (L.order.length) {
-      if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
-        const ord = L.order.filter((k) => byK.has(k)); if (ord.length === out.length) out = ord.map((k, i) => { used.add(k); return Object.assign({}, byK.get(k), { area: slot[i] }); }); }
-      else out = HGL.sort(out, (c) => c._k, L.order);
-    }
-    out = out.map((c) => { const cf = L.conf[c._k]; if (!cf) return c; const o = hgSetMerge(c, cf.set);
-      if (cf.n) { o.title = cf.n; o.name = cf.n; } if (cf.i) o.icon = cf.i;
-      if (cf.t && cf.t.startsWith('g-')) { const st = this._hass && this._hass.states, es = []; for (const v of Object.values(o)) if (Array.isArray(v)) for (const y of v) { const e = typeof y === 'string' ? y : y && y.entity; if (e && st && st[e] && !es.includes(e)) es.push(e); }
-        if (es.length) return { type: 'custom:hg-tiles-card', group: { es, lay: cf.t, n: cf.n || o.title || o.name || HG_GRP_LBL[String(o.type || '').replace(/^custom:(hg|nuvio)-|-card$/g, '')] || '', i: cf.i || o.icon || '' }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; return o; }
-      if (cf.t && cf.t !== 'card') { const main = Object.entries(o).map(([, v]) => (typeof v === 'string' && this._hass && this._hass.states[v] ? v : Array.isArray(v) && typeof v[0] === 'string' && this._hass && this._hass.states[v[0]] ? v[0] : null)).find(Boolean);
-        if (main) return { type: 'custom:hg-tiles-card', single: { e: main, t: cf.t, n: cf.n, i: cf.i }, area: c.area, span: c.span, min_h: Math.min(c.min_h ?? 60, 60), _k: c._k }; }
-      return o; });
-    for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
-    if (areas && tl.added.length) out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true });
-    if (tl.added.length) { const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */   /* podpowiedź pod kafelkami */
-    return out;
-  },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },
   /* edycja: admin (wspólny dashboard) albo osoba z własnym układem (HGShared.own) */
   _canEdit() { return HGL.canEdit(this._hass); },
