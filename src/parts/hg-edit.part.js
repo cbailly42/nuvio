@@ -390,14 +390,9 @@ const HG_COMP = [
     hgTO({ k: 'grid_export', dom: ['sensor'], dc: ['power'], multi: 1, auto: 'none' }, { l: 'edit.grid_export_separate_sensors' }),
     hgTO({ k: 'home', dom: ['sensor'], dc: ['power'], multi: 1, auto: 'none' }, { l: 'edit.home_usage_empty_from' })],
     opts: [{ k: 'invert_grid', t: 'bool', l: hgTLazy('edit.options.invert_grid_sign') }, { k: 'invert_battery', t: 'bool', l: hgTLazy('edit.options.invert_battery_sign') }],
-    /* baterie jako osobne obiekty: poziom z tego samego urządzenia co moc, inaczej wg kolejności */
-    cfg: (v, h) => { const L = (x) => hgArr(x), o = Object.fromEntries(['grid', 'solar', 'grid_export', 'home'].filter((k) => L(v[k]).length).map((k) => [k, L(v[k]).length > 1 ? L(v[k]) : L(v[k])[0]]));
-      const P = L(v.battery), S = L(v.battery_soc), R = (h && h.entities) || {}, used = new Set();
-      const bs = P.map((p) => { const d = R[p] && R[p].device_id, m = d && S.find((e) => !used.has(e) && R[e] && R[e].device_id === d); if (m) used.add(m); return { power: p, soc: m || null }; });
-      for (const b of bs) if (!b.soc) { const m = S.find((e) => !used.has(e)); if (m) { used.add(m); b.soc = m; } }
-      for (const e of S) if (!used.has(e)) bs.push({ power: null, soc: e });
-      if (bs.length) o.batteries = bs.slice(0, 4).map((b) => Object.fromEntries(Object.entries(b).filter(([, x]) => x)));
-      return o; } }, { n: 'edit.energy_flow', d: 'edit.grid_solar_batteries_and' }),
+    /* wspólne z widokiem Energia (cards/flow-card): wartości startowe, konfiguracja i odczyt z konfiguracji karty widoku */
+    /* def: panel Energia HA wczytany przy wejściu w edycję */
+    def: (h) => hgFlowDef(h, HGEnergyPrefs._v && HGEnergyPrefs._v.src), cfg: (v, h) => hgFlowCfg(v, h), from: (c) => hgFlowFrom(c), own: ['grid', 'solar', 'grid_export', 'home', 'battery', 'battery_soc', 'batteries'] }, { n: 'edit.energy_flow', d: 'edit.grid_solar_batteries_and' }),
   hgTO({ id: 'net', i: 'mdi:lan', card: 'hg-net-card', modes: [['wan', hgTLazy('edit.modes.internet'), 'mdi:web'], ['gw', hgTLazy('edit.modes.gateway'), 'mdi:router-network'], ['wlan', hgTLazy('edit.modes.wi_fi'), 'mdi:wifi'], ['dev', hgTLazy('edit.modes.devices'), 'mdi:devices'], ['cl', hgTLazy('edit.modes.clients'), 'mdi:account-network-outline']], slots: [],
     opts: [{ k: 'title', l: hgTLazy('edit.options.title') }], cfg: (v) => ({ section: v.mode || 'wan', net: {} }) }, { n: 'edit.network', d: 'edit.internet_gateway_wi_fi' }),
   hgTO({ id: 'sensors', i: 'mdi:motion-sensor', card: 'hg-sensors-card', slots: [hgTO({ k: 'include', dom: ['binary_sensor', 'sensor'], multi: 1 }, { l: 'edit.extra_sensors' }), hgTO({ k: 'exclude', dom: ['binary_sensor', 'sensor'], multi: 1 }, { l: 'edit.skip_sensors' })],
@@ -829,6 +824,7 @@ const HG_COMP_EDIT = {
   _eCompDef(C) { const h = this._hass, v = {};
     for (const sl of C.slots) { let cs = hgSlotCands(h, sl); if (sl.auto === 'none') continue; if (sl.rank) { const m = cs.filter((e) => sl.rank.test(e + ' ' + H.name(h, e))); cs = sl.auto === 'rank' ? m : [...m, ...cs.filter((e) => !m.includes(e))]; } if (!cs.length) { if (sl.req) return null; continue; }
       v[sl.k] = sl.multi ? cs.slice(0, sl.all ? cs.length : sl.one || (sl.k === 'entities' && C.id === 'power') ? 1 : 4).map((e) => (sl.obj ? { entity: e, name: H.name(h, e), ...(h.states[e].attributes.icon ? { icon: h.states[e].attributes.icon } : {}) } : e)) : cs[0]; }
+    if (C.def) for (const [k, x] of Object.entries(C.def(h) || {})) if (x != null) v[k] = x;   // własne wartości startowe komponentu (np. przepływ energii: baterie wg urządzenia); brak wartości = jak dotąd
     return v; },
   /* krok 2: formularz komponentu (dodawanie i edycja – ten sam arkusz) */
   _eComp(cid, st) {
@@ -916,7 +912,9 @@ const HG_COMP_EDIT = {
       return this._eToast(F.i != null ? hgT('edit.saved_name', { name: hgKidName(kc) }) : hgT('edit.added_to_container_name', { name: hgKidName(kc) })); }
     if (a === 'cok' && R.pageK) { if (R._xBad) return; const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '', cfg = hgCompCfg(C, R.v, h);
       /* pełne nadpisanie karty widoku: typ Nuvio, karty i opcje; wyczyszczone opcje jako null (usuwane przy scalaniu) */
-      const set = { type: 'custom:' + hgCompCard(C, R.v) }; for (const q of C.opts || []) if (q.k !== 'flat' && q.k !== 'nodiv') set[q.k] = null; if (C.id !== 'grid') { set.glass = null; set.divider = null; } Object.assign(set, cfg);
+      const set = { type: 'custom:' + hgCompCard(C, R.v) }; for (const q of C.opts || []) if (q.k !== 'flat' && q.k !== 'nodiv') set[q.k] = null; if (!C.from && C.id !== 'grid') { set.glass = null; set.divider = null; }
+      for (const q of C.own || []) set[q] = null;   /* pola, którymi rządzi formularz: wyczyszczone w formularzu znikają też z bazowej konfiguracji */
+      Object.assign(set, cfg);
       this._eSet(sc, (L) => { const cf = L.conf[R.pageK] = Object.assign({}, L.conf[R.pageK]); cf.set = Object.assign({}, cf.set || {}, set); if (n) cf.n = n; else delete cf.n; if (i) cf.i = i; else delete cf.i; delete cf.t;
         if (R.z && R.z !== this._eBaseZ(sc, R.pageK)) L.size[R.pageK] = R.z; else delete L.size[R.pageK]; });
       this._eSheet(false); this._eToast(hgT('edit.saved_name', { name: n || C.n })); this._eCompR = null; return this._eRefresh(true); }
@@ -1254,6 +1252,7 @@ const HG_EDIT = {
     if (this._editing || !this._canEdit()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     HGDraft.discard(this); this._eUnload = (e) => { if (this._eDirty()) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', this._eUnload);
+    if (this._hass) HGEnergyPrefs.get(this._hass).catch(() => {});   /* panel Energia HA gotowy dla wartości startowych galerii (przepływ energii) */
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
@@ -1598,6 +1597,9 @@ const HG_EDIT = {
     /* stos / siatka z konfiguracji widoku (także vertical-stack, horizontal-stack, grid z HA): ten sam formularz, zapis jako nadpisanie karty (conf.set) */
     { const L0 = HGL.get(ct.scope), cc0 = ct.scope === this._pageScope() && !L0.added.some((y) => y.e === k) ? (this._config.cards || [])[(this._lkeys || []).indexOf(k)] : null;
       const cf0 = L0.conf[k] || {}, cc = cc0 && hgFromHA(hgSetMerge(cc0, cf0.set)), ty = String((cc && cc.type) || ''), cid = /-grid-card$/.test(ty) ? 'grid' : /-stack-card$/.test(ty) ? (cc.direction === 'horizontal' ? 'hstack' : 'vstack') : null;
+      /* karta z widoku, którą galeria umie zbudować i odczytać (C.from): ten sam formularz co w galerii, wypełniony konfiguracją karty, zapis jako nadpisanie */
+      const Cf = cc && !cid && HG_COMP.find((c) => c.from && c.card && c.card.replace(/^(hg|nuvio)-/, '') === ty.replace(/^custom:/, '').replace(/^(hg|nuvio)-/, ''));
+      if (Cf) { const v = Cf.from(cc); this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(Cf.id, { cid: Cf.id, sc: ct.scope, pageK: k, v, t: '', n: cf0.n || '', i: cf0.i || '', z: L0.size[k] || this._eBaseZ(ct.scope, k) }); return; }
       if (cid) { const C = HG_COMP.find((c) => c.id === cid), o = {};
         for (const q of C.opts || []) { const v = q.k === 'flat' ? cc.glass === false : q.k === 'nodiv' ? cc.divider === false : cc[q.k]; if (v != null && v !== '' && v !== false) o[q.k] = Array.isArray(v) ? v.join(', ') : v; }
         this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(cid, { cid, sc: ct.scope, pageK: k, v: { cards: JSON.parse(JSON.stringify(cc.cards || [])), o }, t: '', n: cf0.n || '', i: cf0.i || '', z: L0.size[k] || this._eBaseZ(ct.scope, k) }); return kids(); } }
