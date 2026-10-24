@@ -187,8 +187,9 @@ class HGPage extends HTMLElement {
   _pbgSync() { const c = this._config; if (!c) return; const A = (window.__hgL && window.__hgL.data && window.__hgL.data.app) || {}, v = c.view && A.pbgv && A.pbgv[c.view];
     this.toggleAttribute('no-pbg', v === 'off' ? true : v === 'on' ? false : c.panel_backdrop === false || A.pbg === false); }
   set hass(h) {
-    window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
+    window.__hgHass = h; window.__hgPage = this;   /* język kart (hgCurLang) znany zanim karty dostaną hass; bieżąca strona dla poleceń z HA (#47) */
     if (window.HGWall) { try { HGWall.tick(h, this); } catch (e) { /* */ } }
+    if (window.HGDeviceCmd) { try { HGDeviceCmd.tick(h); } catch (e) { /* */ } }   /* polecenia z automatyzacji: zdarzenie nuvio_command i encja input_text */
     if (window.HGAssistUI) { try { HGAssistUI.bind(h, this); } catch (e) { /* */ } }   /* okno Assist: hass dla rozmowy i skrót klawiszowy */   /* tryb tabletu ściennego: bezczynność i czujnik ruchu */
     if (typeof HGTheme !== 'undefined') HGTheme.pick(h);
     // root ukryty (widoczny inny widok dashboardu): tylko zapamiętaj i przekaż dalej

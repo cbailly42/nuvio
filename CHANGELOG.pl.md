@@ -4,9 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Niewydane
+### 2.23.0
+- Dodane: tablet na ścianie słucha poleceń z Home Assistant bez browser_mod ([#47](https://github.com/kczepiec/nuvio/issues/47)). **Wygląd → Tryb tabletu ściennego → Polecenia z Home Assistant** nadaje temu tabletowi nazwę, zapisaną w jego przeglądarce, i przyjmuje dwa źródła: zdarzenie `nuvio_command` z polami `device`, `action` i `view` (konto administratora) oraz encję pomocnika `input_text` z tymi samymi wartościami w atrybutach `device`, `action` i `view` (każde konto, także bez uprawnień administratora). Akcje to `wake`, `screensaver`, `lock` (włącza wygaszacz i pyta o PIN, gdy blokada PIN-em jest włączona) i `navigate` ze ścieżką albo tytułem widoku — dzięki temu dzwonek albo ruch przy furtce może wybudzić tablet i otworzyć **Kamery**. Pomocnik trzyma ostatnie polecenie, więc Nuvio wykonuje je raz na zmianę i raz po przeładowaniu strony, nigdy dwa razy to samo.
 - Dodane: gdy tryb kiosku jest włączony, ekran zostaje włączony na pulpicie Nuvio, tak jak przy oglądaniu filmu. Obejmuje to ukryty nagłówek, ukryty panel, kiosk dla osób, które nie są administratorami, oraz parametry adresu `kiosk`, `hide_header` i `hide_sidebar`. Po wyłączeniu trybu kiosku ekran może zgasnąć. Gdy ekran zgaśnie albo opuścisz aplikację, Nuvio prosi o pozostawienie go włączonego po powrocie.
-
 ### 2.22.4
 - Dodane: pogoda w nagłówku i karta Pogoda mają rozmiar tekstu: mały, średni albo duży. Pogoda w nagłówku podąża też za powiększeniem pulpitu, więc na tablecie w poziomie prognoza godzinowa może urosnąć ponad dawny limit.
 - Poprawione: ilość deszczu na pogodzie w nagłówku, na przykład 17 mm, jest biała na zdjęciu, więc da się ją odczytać.

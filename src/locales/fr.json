@@ -3388,5 +3388,20 @@
     "results_many": "{count} résultats",
     "results_other": "{count} résultats",
     "applies_on_save": "Enregistré dans le brouillon. Les changements sont appliqués quand vous touchez Terminé."
+  },
+  "cmdc": {
+    "device_cleared": "Nom supprimé : la tablette ignore les commandes",
+    "device_empty_hint": "Sans nom, cette tablette ignore les commandes. Proposition : {device}",
+    "device_hint": "Commandes pour « {device} ». Chaque automatisation choisit la tablette par ce nom ; chaque navigateur garde le sien.",
+    "device_name": "Nom de cette tablette",
+    "device_saved": "Cette tablette répond à « {device} »",
+    "entity": "Entité auxiliaire des commandes",
+    "entity_cleared": "Auxiliaire des commandes supprimé",
+    "entity_hint": "Un auxiliaire input_text qui reçoit les commandes ; il fonctionne aussi sur un compte sans droits d’administrateur.",
+    "entity_hint_noadmin": "Un auxiliaire input_text qui reçoit les commandes. Ce compte ne peut pas écouter d’événements, l’auxiliaire est donc la seule voie.",
+    "entity_saved": "Auxiliaire des commandes : {entity}",
+    "sender_note": "Depuis une automatisation : un événement nuvio_command avec device, action (wake, screensaver, lock, navigate) et view, ou l’auxiliaire avec les mêmes valeurs dans ses attributs device, action et view.",
+    "show_view": "Afficher {view}",
+    "test": "Essayer sur cette tablette"
   }
 }
