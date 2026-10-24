@@ -4,8 +4,8 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
-### Unreleased
-- Improved: the volume bar of the media cards now reads **− · slider · + · 🔊 30 %**, instead of mute on the left and a louder button on the right. Tap the **🔊 30 %** pill to mute (it then shows only a highlighted muted speaker), and hold − or + to keep changing the volume, with the mouse or a finger. The level shown follows each step at once, even when the speaker reports its volume late or in jumps, and the commands sent to it are spaced out.
+### 2.22.5
+- Added: commands from Home Assistant for a wall tablet ([#47](https://github.com/kczepiec/nuvio/issues/47)): `nuvio_command` events and an `input_text` helper wake the screen, show the screensaver, lock it or open a view.
 - Added: while Kiosk Mode is on, the screen stays awake on the Nuvio dashboard, the same way it stays on while a video plays. This covers a hidden header, a hidden sidebar, kiosk for people who are not admins, and the address parameters `kiosk`, `hide_header` and `hide_sidebar`. Turn kiosk mode off and the screen can sleep again. If the screen turns off or you leave the app, Nuvio asks to keep it on again when you come back.
 
 ### 2.22.4

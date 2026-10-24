@@ -4,10 +4,8 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
-### Unreleased
-- Ulepszenie: pasek głośności w kartach multimediów ma teraz układ **− · suwak · + · 🔊 30 %** zamiast wyciszenia po lewej i przycisku głośniej po prawej. Dotknięcie pigułki **🔊 30 %** wycisza (pokazuje wtedy tylko podświetlony przekreślony głośnik), a przytrzymanie − lub + zmienia głośność płynnie, myszą i palcem. Pokazany poziom nadąża za każdym krokiem od razu, także gdy głośnik zgłasza głośność z opóźnieniem lub skokami, a polecenia do głośnika są wysyłane z odstępem.
-
-### Niewydane
+### 2.22.5
+- Dodane: polecenia z Home Assistant dla tabletu na ścianie ([#47](https://github.com/kczepiec/nuvio/issues/47)): zdarzenia `nuvio_command` i encja pomocnika `input_text` budzą ekran, włączają wygaszacz, blokują go albo otwierają widok.
 - Dodane: gdy tryb kiosku jest włączony, ekran zostaje włączony na pulpicie Nuvio, tak jak przy oglądaniu filmu. Obejmuje to ukryty nagłówek, ukryty panel, kiosk dla osób, które nie są administratorami, oraz parametry adresu `kiosk`, `hide_header` i `hide_sidebar`. Po wyłączeniu trybu kiosku ekran może zgasnąć. Gdy ekran zgaśnie albo opuścisz aplikację, Nuvio prosi o pozostawienie go włączonego po powrocie.
 
 ### 2.22.4
@@ -46,7 +44,9 @@ Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgod
 - Dodane: kolumna **Licznik** w **Ustawienia > Widoki** liczy włączone światła, przełączniki, wentylatory, klimatyzację lub osoby w domu (albo odtwarzane media, albo wybrane encje) i pokazuje liczbę na zakładce widoku, gdy jest większa od 0.
 - Dodane: **Ukryj pusty pasek boczny** w **Ustawienia > Widoki**. Gdy żaden widok nie jest w pasku bocznym, znika pasek razem z przyciskiem Ustawienia. Ustawienia zostają w menu profilu, pod ołówkiem i pod dowolnym adresem Nuvio z **?nuvio_settings** (dla osób z prawem edycji, nie na widoku zablokowanym PIN-em).
 - Poprawione: karta **Prognoza produkcji** po zmianie progów malowała wszystkie dni jednym kolorem. Progi powyżej 12 kWh na kW albo progi bez mocy odniesienia są teraz liczone jako kWh na dzień, progi wpisane odwrotnie są zamieniane, a pola liczbowe edytora kart przyjmują przecinek (3,5).
-### Niewydane
+### 2.22.5
+- Poprawka: wbudowane tło wybrane na jednym urządzeniu było zwykłym kolorem na urządzeniach, które otwierają Home Assistant pod innym adresem (lokalny IP, domena, Nabu Casa). Zdjęcie zapisywało się z pełnym adresem pierwszego urządzenia; teraz wbudowane tła zapisują się jako ścieżka obok plików Nuvio (np. `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), a tła zapisane wcześniej z adresem są poprawiane przy wczytaniu układu, na pulpicie i w wygaszaczu. Wgrane zdjęcia i własne adresy zostają bez zmian.
+
 - Poprawka: wbudowane tło wybrane na jednym urządzeniu było zwykłym kolorem na urządzeniach, które otwierają Home Assistant pod innym adresem (lokalny IP, domena, Nabu Casa). Zdjęcie zapisywało się z pełnym adresem pierwszego urządzenia; teraz wbudowane tła zapisują się jako ścieżka obok plików Nuvio (np. `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), a tła zapisane wcześniej z adresem są poprawiane przy wczytaniu układu, na pulpicie i w wygaszaczu. Wgrane zdjęcia i własne adresy zostają bez zmian.
 
 ### 2.21.3
