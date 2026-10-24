@@ -1,3 +1,4 @@
+
 /* i18n integration: language from the manifest, waiting for the catalog (HGLang.set, strategy, standalone cards), card rerender, HG_LOC, no PL/EN gateway left */
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
@@ -160,7 +161,7 @@ test('hgAgoRel formats with HG_LOC()', () => {
 });
 
 test('edit mode: language switch repaints the edit bar, Look sheet and cards only once the catalog is active', async () => {
-  const d = deferred(), m = mk({ fetch: d.fetch, parts: ['hg-edit.part.js'], names: ['HG_EDIT'], globals: { HGPage: class {}, HG_TOGGLE_DOM: stub(), HG_FLOW_RX: stub() } });
+  const d = deferred(), m = mk({ fetch: d.fetch, parts: ['hg-edit.part.js', 'hg-editor.part.js'], names: ['HG_EDIT'], globals: { HGPage: class {}, HG_TOGGLE_DOM: stub(), HG_FLOW_RX: stub() } });
   const seen = [], page = { _editing: true, _hass: null };
   for (const f of ['_eBar', '_eLook', '_eRefresh', '_eToast']) page[f] = () => { seen.push(f + ':' + m.HGI18n.code); };
   const p = m.HG_EDIT._eCtl.call(page, { dataset: { hge: 'lang', l: 'pl' } });
