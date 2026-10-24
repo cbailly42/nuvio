@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Unreleased
+- Dodano: **Tryb tabletu ściennego → Widok po wybudzeniu**: Ostatnio używany widok (domyślnie), Panel albo dowolny włączony widok. Gdy włącza się wygaszacz, dashboard wraca pod nim do tego widoku, więc to on jest widoczny po wybudzeniu ekranu. Pomijane w trybie edycji, w podglądzie i gdy widok jest już otwarty. Widok zablokowany PIN-em nadal pyta o PIN po wybudzeniu.
+
 ### 2.23.0
 - Dodane: tablet na ścianie słucha poleceń z Home Assistant bez browser_mod ([#47](https://github.com/kczepiec/nuvio/issues/47)). **Wygląd → Tryb tabletu ściennego → Polecenia z Home Assistant** nadaje temu tabletowi nazwę, zapisaną w jego przeglądarce, i przyjmuje dwa źródła: zdarzenie `nuvio_command` z polami `device`, `action` i `view` (konto administratora) oraz encję pomocnika `input_text` z tymi samymi wartościami w atrybutach `device`, `action` i `view` (każde konto, także bez uprawnień administratora). Akcje to `wake`, `screensaver`, `lock` (włącza wygaszacz i pyta o PIN, gdy blokada PIN-em jest włączona) i `navigate` ze ścieżką albo tytułem widoku — dzięki temu dzwonek albo ruch przy furtce może wybudzić tablet i otworzyć **Kamery**. Pomocnik trzyma ostatnie polecenie, więc Nuvio wykonuje je raz na zmianę i raz po przeładowaniu strony, nigdy dwa razy to samo.
 - Dodane: gdy tryb kiosku jest włączony, ekran zostaje włączony na pulpicie Nuvio, tak jak przy oglądaniu filmu. Obejmuje to ukryty nagłówek, ukryty panel, kiosk dla osób, które nie są administratorami, oraz parametry adresu `kiosk`, `hide_header` i `hide_sidebar`. Po wyłączeniu trybu kiosku ekran może zgasnąć. Gdy ekran zgaśnie albo opuścisz aplikację, Nuvio prosi o pozostawienie go włączonego po powrocie.

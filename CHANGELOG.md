@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Added: **Wall tablet mode → View shown on wake**: Last view used (default), Home or any enabled view. When the screensaver starts, the dashboard goes back to that view behind it, so it is the one you see when you wake the screen. Skipped in edit mode, in the preview and when the view is already open. A view locked with a PIN still asks for it on wake.
+
 ### 2.23.0
 - Added: a wall tablet obeys commands from Home Assistant without browser_mod ([#47](https://github.com/kczepiec/nuvio/issues/47)). **Appearance → Wall tablet mode → Commands from Home Assistant** gives this tablet a name, kept in its own browser, and accepts two senders: an event `nuvio_command` with `device`, `action` and `view` (administrator accounts), and an `input_text` helper with the same values in its `device`, `action` and `view` attributes (any account, including one without administrator rights). Actions are `wake`, `screensaver`, `lock` (shows the screensaver and asks for the PIN when the PIN lock is on) and `navigate` with a view path or title, so a doorbell or motion at the gate can wake the tablet and open **Cameras**. A helper holds the last command, so Nuvio runs it once per change and once after a reload, never twice for the same command.
 - Added: while Kiosk Mode is on, the screen stays awake on the Nuvio dashboard, the same way it stays on while a video plays. This covers a hidden header, a hidden sidebar, kiosk for people who are not admins, and the address parameters `kiosk`, `hide_header` and `hide_sidebar`. Turn kiosk mode off and the screen can sleep again. If the screen turns off or you leave the app, Nuvio asks to keep it on again when you come back.
