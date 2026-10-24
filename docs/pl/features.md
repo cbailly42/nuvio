@@ -21,6 +21,7 @@ Wygaszacz dla tabletu na ścianie. Jest **domyślnie wyłączony**; administrato
 
 - **Włącz po bezczynności**: 30 s, 1, 2, 5, 10 lub 30 min bez dotyku, myszy i klawiatury (domyślnie 2 min).
 - **Przyciemnienie**: od 0 do 90 %, jak ciemny jest ekran pod zegarem (domyślnie 50 %).
+- **Widok po wybudzeniu**: *Ostatnio używany widok* (domyślnie), *Panel* albo dowolny włączony widok. Gdy włącza się wygaszacz, dashboard przechodzi pod nim na ten widok, więc to on jest widoczny po wybudzeniu ekranu. Nie w trybie edycji ani w podglądzie; widok zablokowany PIN-em pyta o PIN po wybudzeniu.
 - **Zdjęcie**: tło Twojego dashboardu, pokaz slajdów wbudowanych teł (płynne przejście co 45 s) albo własny adres obrazu (`https://…` lub `/local/…`).
 - **Czujnik ruchu**: dowolny `binary_sensor`; czujniki ruchu, obecności i zajętości są na początku listy. Gdy przejdzie w stan `on` w czasie wygaszacza, ekran się wybudza. Bez czujnika budzi tylko dotyk.
 - **Wybudzanie**: dotyk, klawisz lub przewinięcie. Pierwszy dotyk tylko budzi ekran i nie naciska kafla pod spodem.

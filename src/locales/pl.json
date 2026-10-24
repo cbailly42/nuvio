@@ -3190,6 +3190,9 @@
     "touch_to_unlock": "Dotknij ekranu, aby odblokować",
     "try_again_in": "Spróbuj za {seconds} s",
     "unlock_the_dashboard": "Odblokuj panel",
+    "wake_view": "Widok po wybudzeniu",
+    "wake_view_hint": "Gdy włącza się wygaszacz, dashboard wraca do tego widoku, więc to on jest widoczny po wybudzeniu ekranu.",
+    "wake_view_last": "Ostatnio używany widok",
     "wall_tablet_mode": "Tryb tabletu ściennego",
     "wrong_pin": "Nieprawidłowy PIN"
   },

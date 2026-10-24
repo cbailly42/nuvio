@@ -21,6 +21,7 @@ A screensaver for a tablet on the wall. It is **off by default**; admins turn it
 
 - **Start after inactivity**: 30 s, 1, 2, 5, 10 or 30 min without touch, mouse or keyboard input (default 2 min).
 - **Dimming**: 0 to 90 %, how dark the screen gets under the clock (default 50 %).
+- **View shown on wake**: *Last view used* (default), *Home* or any enabled view. When the screensaver starts, the dashboard switches to that view behind it, so it is the one you see when you wake the screen. Not in edit mode or in the preview; a view locked with a PIN asks for it on wake.
 - **Photo**: your dashboard background, a slideshow of the bundled backgrounds (crossfade every 45 s) or your own image URL (`https://…` or `/local/…`).
 - **Motion sensor**: pick any `binary_sensor`; motion, occupancy and presence sensors are listed first. When it turns `on` while the screensaver is showing, the screen wakes. Without a sensor, only touch wakes it.
 - **Wake**: touch, key press or scroll. The first touch only wakes the screen and does not press the tile underneath.

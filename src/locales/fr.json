@@ -3141,6 +3141,9 @@
     "touch_to_unlock": "Touchez l’écran pour déverrouiller",
     "try_again_in": "Réessayez dans {seconds} s",
     "unlock_the_dashboard": "Déverrouiller le tableau de bord",
+    "wake_view": "Vue affichée au réveil",
+    "wake_view_hint": "Quand l’écran de veille s’active, le tableau de bord revient sur cette vue : c’est elle que vous voyez en réveillant l’écran.",
+    "wake_view_last": "Dernière vue utilisée",
     "wall_tablet_mode": "Mode tablette murale",
     "wrong_pin": "Code PIN incorrect"
   },

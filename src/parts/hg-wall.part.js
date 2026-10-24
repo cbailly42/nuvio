@@ -137,7 +137,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
-      lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false }; },
+      lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false,
+      home: typeof w.home === 'string' && /^[a-z0-9_-]{1,40}$/.test(w.home) ? w.home : '' }; },
+  /* ---- widok po starcie wygaszacza: przejście pod zasłoną, po wybudzeniu dashboard jest już na wybranym widoku ---- */
+  goHome() { const v = this.get().home;
+    if (!v || !this.active || !this.canShow() || this.page._config.view === v || !window.HGVLock || !HGVLock.views(true).some(([k]) => k === v)) return;
+    H.navigate(HG_P(v)); },
   /* ---- blokada PIN-em (BETA): wygaszacz zablokowany po lockAfter s; dotknięcie pokazuje pinpad. Wygoda w kiosku, nie zabezpieczenie konta HA: zapisany jest tylko skrót PIN-u. ---- */
   LOCKS: [0, 60, 300, 900, 1800],
   /* ---- wygaszacz na tym urządzeniu (#16): ustawienia są wspólne, ale włączenie zapisuje się w tej przeglądarce (localStorage).
@@ -248,6 +253,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
     if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else if (xs) { this.xsStart(xs, rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
     requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('in'); el.focus({ preventScroll: true }); }));
+    if (!test && c.home) this._hv = setTimeout(() => this.goHome(), 1500);   /* po wejściu zasłony (1,4 s) */
     this.wakeLock(); },
   /* blokada wygaszania ekranu na czas wygaszacza; przeglądarka zwalnia ją, gdy strona przestaje być widoczna, więc po powrocie prosimy ponownie (#38) */
   wakeLock() { if (!this.active || document.hidden || (this._wl && !this._wl.released) || this._wlq) return;
@@ -339,7 +345,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ochrona przed wypaleniem: zegar co minutę lekko zmienia położenie */
   drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
-  wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
+  wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); clearTimeout(this._hv); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
     clearTimeout(this._ck); clearTimeout(this._bdq); clearTimeout(this._glq); this._glq = null; clearTimeout(this._ghT); this._gsh = null; this._ghold = false; clearInterval(this._sl); clearInterval(this._dr); if (this._ro) { this._ro.disconnect(); this._ro = null; } try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
@@ -361,6 +367,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       ${BD.top}${BD.board}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgT('wall.start_after_inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
       <div class="wl-f"><span>${hgT('wall.dimming')}<em class="wl-dv">${H.pct(dv)}</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgT('wall.screensaver_dimming')}"></div>
+      ${this.homeHtml(c)}
       ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgT('wall.photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, t]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${t}</button>`).join('')}</div>
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgT('wall.image_url_hint')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgT('wall.screensaver_image_url')}"></span>` : ''}</div>` : ''}
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
@@ -372,6 +379,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}</section>
       <section class="lk-g wl" data-tab="wall" data-pg="security" aria-labelledby="wls-h"><h4 id="wls-h">${H.icon('mdi:shield-lock-outline')}${hgT('settings.pin_and_locks')}</h4><small class="lk-hn">${hgT('settings.pin_and_locks_hint')}</small>
       ${c.on ? this.lockHtml(c) : `<small class="wl-warn">${hgT('settings.pin_needs_screensaver')}</small>`}${window.HGVLock ? HGVLock.html(HGVLock.views()) : ''}</section>`; },
+  homeHtml(c) { const L = window.HGVLock ? HGVLock.views(true) : [];
+    return `<label class="wl-f"><span>${hgT('wall.wake_view')}</span><select name="wl-home"><option value="">${hgT('wall.wake_view_last')}</option>${L.map(([k, n]) => `<option value="${H.esc(k)}"${k === c.home ? ' selected' : ''}>${H.esc(n)}</option>`).join('')}</select><small class="lk-hn">${hgT('wall.wake_view_hint')}</small></label>`; },
   hereHtml() { const v = this.here();
     return `<button type="button" class="wl-sw" role="switch" data-hge="wl-here" aria-checked="${v}"><span>${hgT('wall.on_this_device')}<small>${v ? hgT('wall.on_this_device_on') : hgT('wall.on_this_device_off')}</small></span><i aria-hidden="true"></i></button>`; },
   lockHtml(c) { const L = (s) => (s ? this.fmt(s) : hgT('wall.at_once'));
@@ -391,6 +400,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     if (typeof HGDeviceCmd !== 'undefined') HGDeviceCmd.wire(p, S);
+    const hv = S.querySelector('[name=wl-home]'); if (hv) hv.addEventListener('change', () => this.set({ home: hv.value }));
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
