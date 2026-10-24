@@ -4,6 +4,10 @@ const hgMpActive = (s) => !!s && (['playing', 'paused', 'buffering'].includes(s.
 /* ===== „Teraz gra”: jeden wygląd odtwarzacza dla Multimediów i pokoju =====
    okładka jako tło (z przyciemnieniem), linia kontekstu (pokój · źródło · stan), duży tytuł, wykonawca, postęp z czasami,
    losowo / poprzedni / odtwarzaj / następny / powtarzanie, głośność z − i +, chipy: źródło, dźwięk, pokoje (grupowanie). */
+/* głośność w toku (− / +, także przytrzymanie) wg encji: { v, t }. Pokazywana od razu, zanim HA potwierdzi (głośniki raportują z opóźnieniem
+   i skokami); wygasa 2,5 s po ostatnim kroku albo gdy stan HA ją osiągnie */
+const HG_NP_VOL = new Map();
+const hgNpPend = (e, cur) => { const p = HG_NP_VOL.get(e); if (!p) return null; if (Date.now() - p.t > 2500 || (cur != null && Math.abs(cur - p.v) < 0.005 && Date.now() - p.t > 300)) { HG_NP_VOL.delete(e); return null; } return p.v; };
 const HG_NP_COL = new Map();   // kolor okładki (średni) wg adresu obrazu: wpisywany w style przy renderze, więc łatanie DOM go nie gubi
 const HG_NP_W = '#' + 'fff', HG_NP_K = '#' + '16181B';   /* stałe kolory (tło z okładki jest zawsze ciemne): poza zamianą kolorów motywu ciemnego */
 const HG_NP_CSS = `
@@ -41,16 +45,27 @@ ha-card.np > *:not(.npbg){ position:relative; }
 ha-card.np .npv input[type=range]::-webkit-slider-runnable-track{ height:6px !important; box-shadow:none !important; background:linear-gradient(90deg, ${HG_NP_W} 0 var(--v, 50%), rgba(255,255,255,.28) var(--v, 50%) 100%) !important; }
 ha-card.np .npv input[type=range]::-moz-range-track{ background:rgba(255,255,255,.28); } ha-card.np .npv input[type=range]::-moz-range-progress{ background:${HG_NP_W}; }
 .npo{ display:flex; flex-direction:column; align-items:center; line-height:1.05; min-width:3.4em; } .npo output{ font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.npmb{ display:inline-flex; align-items:center; gap:5px; flex:none; height:36px; padding:0 12px; border:0; border-radius:999px; background:rgba(255,255,255,.16); color:${HG_NP_W}; font:inherit; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+/* stała szerokość „100 %”: zmiana poziomu nie przesuwa suwaka; wyciszone = sama ikona na środku, podświetlona (zwykła ikona i tekst ukryte, ale zajmują miejsce) */
+.npml{ display:grid; justify-items:center; } .npml > *{ grid-area:1 / 1; visibility:hidden; } .npml > output{ visibility:visible; }
+.npmb{ position:relative; } .npmb.on > ha-icon, .npmb.on .npml > output{ visibility:hidden; } .npmc{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.npmb ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; flex:none; display:flex; } .npmb.on{ background:${HG_NP_W}; color:${HG_NP_K}; } .npmb:active{ transform:scale(.96); }
+@media (hover:hover){ .npmb:not(.on):hover{ background:rgba(255,255,255,.26); } }
+.npv .npb{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; }
 .npo small{ font-size:10px; font-weight:500; color:var(--np-mt); }
 .npx{ display:flex; gap:8px; flex-wrap:wrap; }
 ha-card.np.off .npbg{ filter:grayscale(1); opacity:.5; }
 ha-card.np.idle{ min-height:0; }
-@container (max-width: 240px){ .npv{ gap:4px; } .npv .npb{ width:30px; height:30px; } .npv input[type=range]{ min-width:36px; } .npv > :not(.npb):not(input){ display:none; } }
+@container (max-width: 240px){ .npv{ gap:4px; } .npv .npb{ width:30px; height:30px; } .npv input[type=range]{ min-width:36px; } .npv > :not(.npb):not(input):not(.npmb){ display:none; } .npmb{ width:30px; height:30px; padding:0; justify-content:center; } .npmb .npml{ display:none; } }
 @container (max-width: 420px){ .npb.sm.opt{ display:none; } .npx .npc span{ display:none; } .npx .npc{ width:36px; padding:0; justify-content:center; } .npv{ flex-basis:100%; } }
 @media (prefers-reduced-motion: reduce){ .npr i, .npbg{ transition:none; } }
 `;
 const hgNP = {
   F: { PAUSE: 1, VOL_SET: 4, MUTE: 8, PREV: 16, NEXT: 32, ON: 128, OFF: 256, VOL_STEP: 1024, SOURCE: 2048, STOP: 4096, PLAY: 16384, SHUFFLE: 32768, SOUND: 65536, REPEAT: 262144, GROUP: 524288 },
+  /* głośność od razu na karcie: suwak i poziom w pigułce / obok, bez przebudowy (bez skoku układu) */
+  paintVol(card, e, v) { const R = card && card.$; if (!R) return; const p = Math.round(v * 100);
+    for (const i of R.querySelectorAll('input[data-act="vol"]')) { if (i.dataset.e !== e) continue; i.value = p; i.style.setProperty('--v', p + '%'); const w = i.closest('.npv'), o = w && w.querySelector('.npml > output, .npo output'); if (o) o.textContent = H.pct(p); }
+    clearTimeout(card._npExp); card._npExp = setTimeout(() => card._update && card._update(true), 2600); },   // po wygaśnięciu: wartość, którą HA naprawdę zgłasza
   tm(x) { x = Math.max(0, Math.round(x)); const hh = Math.floor(x / 3600), m = Math.floor(x / 60) % 60, ss = String(x % 60).padStart(2, '0'); return hh ? `${hh}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; },
   /* html karty: o = { name, room } */
   html(h, e, o = {}) {
@@ -73,10 +88,12 @@ const hgNP = {
       f & F.NEXT ? B('npnext', 'mdi:skip-next', hgT('common.next_track')) : '',
       f & F.REPEAT ? B('nprep', rep === 'one' ? 'mdi:repeat-once' : rep === 'all' ? 'mdi:repeat' : 'mdi:repeat-off', hgT('shared.media.repeat'), `sm opt ${rep !== 'off' ? 'on' : ''}`) : '',
     ].join('') : '';
-    const vp = at.volume_level != null ? Math.round(at.volume_level * 100) : null, mu = !!at.is_volume_muted;
-    const vol = off ? '' : (f & F.VOL_SET) && vp != null ? `<div class="npv">${B(f & F.MUTE ? 'npmu' : 'npvd', f & F.MUTE ? (mu || vp === 0 ? 'mdi:volume-off' : 'mdi:volume-low') : 'mdi:volume-minus', f & F.MUTE ? (mu ? hgT('shared.media.unmute') : hgT('shared.media.mute')) : hgT('shared.media.volume_down'), '', f & F.MUTE ? ` aria-pressed="${mu}"` : '')}
-        <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgT('shared.media.volume_aria', { name: nm }))}">${B('npvu', 'mdi:volume-high', hgT('shared.media.volume_up'))}
-        <span class="npo"><output>${H.pct(vp)}</output><small>${hgT('shared.media.volume_label')}</small></span></div>`
+    const pv = hgNpPend(e, at.volume_level), vp = pv != null ? Math.round(pv * 100) : at.volume_level != null ? Math.round(at.volume_level * 100) : null, mu = !!at.is_volume_muted;
+    /* − · suwak · + · pigułka „🔊 30 %”: przyciski kroku symetrycznie po obu stronach suwaka, dotknięcie pigułki wycisza (bez wyciszenia: sam poziom) */
+    const vol = off ? '' : (f & F.VOL_SET) && vp != null ? `<div class="npv">${B('npvd', 'mdi:volume-minus', hgT('shared.media.volume_down'))}
+        <input type="range" min="0" max="100" step="1" value="${vp}" style="--v:${vp}%" data-act="vol" data-e="${E}" aria-label="${H.esc(hgT('shared.media.volume_aria', { name: nm }))}">${B('npvu', 'mdi:volume-plus', hgT('shared.media.volume_up'))}
+        ${f & F.MUTE ? `<button class="npmb ${mu ? 'on' : ''}" data-act="npmu" data-e="${E}" aria-pressed="${mu}" aria-label="${mu ? hgT('shared.media.unmute') : hgT('shared.media.mute')}" title="${mu ? hgT('shared.media.unmute') : hgT('shared.media.mute')}">${H.icon(vp === 0 ? 'mdi:volume-off' : 'mdi:volume-high')}${mu ? `<span class="npmc">${H.icon('mdi:volume-off')}</span>` : ''}<span class="npml"><span aria-hidden="true">${H.pct(100)}</span><output>${H.pct(vp)}</output></span></button>`
+          : `<span class="npo"><output>${H.pct(vp)}</output><small>${hgT('shared.media.volume_label')}</small></span>`}</div>`
       : (f & F.VOL_STEP) ? `<div class="npv">${B('npvd', 'mdi:volume-minus', hgT('shared.media.volume_down'))}${B('npvu', 'mdi:volume-plus', hgT('shared.media.volume_up'))}</div>` : '';
     const C = (a, ic, l, on) => `<button class="npc ${on ? 'on' : ''}" data-act="${a}" data-e="${E}" aria-label="${H.esc(l)}" title="${H.esc(l)}">${H.icon(ic)}<span>${H.esc(l)}</span></button>`;
     const grp = (at.group_members || []).length > 1;
@@ -96,6 +113,15 @@ const hgNP = {
   /* po renderze: tykanie postępu i kolor z okładki (raz na obraz) */
   after(card) {
     clearInterval(card._npT); card._npT = 0; const R = card.$;
+    /* przytrzymanie − / + (mysz i dotyk): po 450 ms krok co 250 ms, do puszczenia; przewinięcie (pointercancel) przerywa */
+    if (R && !R._npHold) { R._npHold = true;
+      R.addEventListener('input', (ev) => { const t = ev.composedPath()[0]; if (t && t.dataset && t.dataset.act === 'vol') { HG_NP_VOL.delete(t.dataset.e); clearTimeout(card._npExp); } }, true);   // suwak przejmuje: bez powrotu do wartości z − / +
+      R.addEventListener('contextmenu', (ev) => { if (ev.composedPath().some((n) => n.dataset && /^npv[du]$/.test(n.dataset.act || ''))) ev.preventDefault(); });
+      R.addEventListener('pointerdown', (ev) => { const b = ev.composedPath().find((n) => n.dataset && /^npv[du]$/.test(n.dataset.act || '')); if (!b || ev.button > 0) return;
+        let iv = 0; const go = () => { b._npRep = true; hgNP.act(card, b.dataset.act, b); b._npRep = false; };
+        const t = setTimeout(() => { go(); iv = setInterval(go, 250); }, 450);
+        const stop = (e2) => { clearTimeout(t); clearInterval(iv); for (const k of ['pointerup', 'pointercancel']) window.removeEventListener(k, stop, true); if (iv && e2.type === 'pointerup') card._npHeld = Date.now(); };
+        for (const k of ['pointerup', 'pointercancel']) window.addEventListener(k, stop, true); }); }
     if (R.querySelector('.npg[data-pl="1"]')) card._npT = setInterval(() => { if (document.hidden || card._off) return; for (const g of R.querySelectorAll('.npg[data-pl="1"]')) { const d = +g.dataset.dur, p = Math.min(d, +g.dataset.pos + (Date.now() - +g.dataset.t) / 1000);
       g.querySelector('i').style.setProperty('--p', (p / d).toFixed(4)); const n = g.querySelectorAll('.npn span'); n[0].textContent = hgNP.tm(p); n[1].textContent = '-' + hgNP.tm(d - p); } }, 1000);
     for (const bg of R.querySelectorAll('.npbg[data-pic]')) { const u = bg.dataset.pic; if (HG_NP_COL.has(u)) continue; HG_NP_COL.set(u, '');
@@ -115,7 +141,13 @@ const hgNP = {
     if (a === 'npsh') return m('shuffle_set', { shuffle: !at.shuffle }), true;
     if (a === 'nprep') return m('repeat_set', { repeat: { off: 'all', all: 'one', one: 'off' }[at.repeat || 'off'] || 'off' }), true;
     if (a === 'npmu') return m('volume_mute', { is_volume_muted: !at.is_volume_muted }), true;
-    if (a === 'npvd' || a === 'npvu') { const d = a === 'npvu' ? 1 : -1; if ((f & F.VOL_SET) && at.volume_level != null) m('volume_set', { volume_level: Math.max(0, Math.min(1, Math.round((at.volume_level + d * 0.05) * 100) / 100)) }); else m(d > 0 ? 'volume_up' : 'volume_down'); return true; }
+    if (a === 'npvd' || a === 'npvu') { if (!el._npRep && Date.now() - (card._npHeld || 0) < 400) return true;   // klik kończący przytrzymanie: kroki już wysłane
+      const d = a === 'npvu' ? 1 : -1, pv = hgNpPend(e, null), base = pv != null ? pv : at.volume_level;   // kolejne kroki od wartości w toku, nie od opóźnionego stanu
+      if (!((f & F.VOL_SET) && base != null)) { m(d > 0 ? 'volume_up' : 'volume_down'); return true; }
+      const v = Math.max(0, Math.min(1, Math.round((base + d * 0.05) * 100) / 100)); HG_NP_VOL.set(e, { v, t: Date.now() }); hgNP.paintVol(card, e, v);
+      /* wysyłka najwyżej co 350 ms (ostatnia wartość zawsze dochodzi): przytrzymanie nie zasypuje głośnika poleceniami */
+      const Q = card._npQ = card._npQ || {}, q = Q[e] = Q[e] || { t: 0, k: 0 }, go = () => { q.t = Date.now(); q.k = 0; const x = HG_NP_VOL.get(e); m('volume_set', { volume_level: x ? x.v : v }); };
+      if (Date.now() - q.t >= 350) go(); else if (!q.k) q.k = setTimeout(go, 350 - (Date.now() - q.t)); return true; }
     if (a === 'npw') return m(['off', 'standby'].includes(s.state) ? 'turn_on' : 'turn_off'), true;
     if (a === 'npsrc') { hgOverlay.menu(el, (at.source_list || []).map((x) => ({ label: x, value: x, checked: x === at.source }))).then((v) => { if (v != null) m('select_source', { source: v }); }); return true; }
     if (a === 'npsnd') { hgOverlay.menu(el, (at.sound_mode_list || []).map((x) => ({ label: x, value: x, checked: x === at.sound_mode }))).then((v) => { if (v != null) m('select_sound_mode', { sound_mode: v }); }); return true; }

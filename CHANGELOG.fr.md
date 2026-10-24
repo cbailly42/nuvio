@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Amélioré : la barre de volume des cartes multimédia affiche **− · curseur · + · 🔊 30 %**, au lieu du muet à gauche et d’un bouton pour monter le son à droite. Touchez la pastille **🔊 30 %** pour couper le son (elle n’affiche alors plus que le haut-parleur barré, en surbrillance), et maintenez − ou + pour faire varier le volume en continu, à la souris comme au doigt. Le niveau affiché suit chaque pas immédiatement, même quand l’enceinte renvoie son volume en retard ou par paliers, et les commandes envoyées à l’enceinte sont espacées.
+
 ### Non publié
 - Ajouté : lorsque le mode kiosque est actif, l’écran reste allumé sur le tableau de bord Nuvio, comme pendant la lecture d’une vidéo. Cela couvre un en-tête masqué, une barre latérale masquée, le kiosque pour les personnes qui ne sont pas administrateurs, et les paramètres d’adresse `kiosk`, `hide_header` et `hide_sidebar`. Désactiver le mode kiosque permet à l’écran de se mettre en veille. Si l’écran s’éteint ou si vous quittez l’application, Nuvio redemande de le garder allumé au retour.
 
