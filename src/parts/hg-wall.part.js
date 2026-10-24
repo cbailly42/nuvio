@@ -366,7 +366,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.kidHtml(c, h)}
-      <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>`;
+      <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>${typeof HGDeviceCmd !== 'undefined' ? HGDeviceCmd.html(p) : ''}`;
     return `<section class="lk-g wl" data-tab="wall" data-pg="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
       <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
       <button type="button" class="wl-sw" role="switch" data-hge="wl-on" aria-checked="${c.on}"><span>${hgT('wall.screensaver_switch')}<small>${c.on ? hgT('common.on_masc') : hgT('common.off_masc')}</small></span><i aria-hidden="true"></i></button>${c.on ? this.hereHtml() : ''}${body}</section>
@@ -390,6 +390,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const rg = S.querySelector('[name=wl-dim]'); if (rg) rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value / 0.9 + '%'); S.querySelector('.wl-dv').textContent = H.pct(rg.value); this.set({ dim: rg.value / 100 }); });
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
+    if (typeof HGDeviceCmd !== 'undefined') HGDeviceCmd.wire(p, S);
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
@@ -408,6 +409,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (a === 'wl-lock') { this.set({ lock: !this.get().lock }); if (!this.get().lock) this.flag(false); return p._eLook(); }
     if (a === 'wl-lockafter') { this.set({ lockAfter: Number(b.dataset.v) }); return p._eLook(); }
     if (a === 'wl-pin') return this.savePin(p, b.closest('.wl-pin') || b.closest('section') || p._eSheetEl);
-    if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(true); } },
+    if (a === 'wl-test') { this.hass = this.hass || p._hass; this.page = this.page || p; this.show(true); return; }
+    if (a === 'wl-cmdnav' && typeof HGDeviceCmd !== 'undefined') return HGDeviceCmd.act(p, b, a); },
 });
 window.HGWall = HGWall;

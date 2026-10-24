@@ -3334,5 +3334,20 @@
     "results_one": "{count} result",
     "results_other": "{count} results",
     "applies_on_save": "Saved in the draft. Changes are applied when you tap Done."
+  },
+  "cmdc": {
+    "device_cleared": "Name removed: this tablet ignores commands",
+    "device_empty_hint": "Without a name this tablet ignores commands. Suggested: {device}",
+    "device_hint": "Commands for \"{device}\". Every automation picks the tablet by this name; each browser keeps its own.",
+    "device_name": "Name of this tablet",
+    "device_saved": "This tablet answers to \"{device}\"",
+    "entity": "Command helper entity",
+    "entity_cleared": "Command helper removed",
+    "entity_hint": "An input_text helper that receives the commands; it works on accounts without admin rights too.",
+    "entity_hint_noadmin": "An input_text helper that receives the commands. This account cannot listen for events, so the helper is the only way.",
+    "entity_saved": "Command helper: {entity}",
+    "sender_note": "From an automation: an event nuvio_command with device, action (wake, screensaver, lock, navigate) and view, or the helper with the same values in its device, action and view attributes.",
+    "show_view": "Show {view}",
+    "test": "Test on this tablet"
   }
 }
