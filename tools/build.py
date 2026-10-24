@@ -117,7 +117,7 @@ CARDS = [
     'cards/kid-card.part.js',
 ]
 # the editor chunk (hg-editor.part.js) is built on its own: a module imported the first time someone enters edit mode
-EDIT = ['hg-editor.part.js']
+EDIT = ['hg-editor.part.js', 'hg-editor-tail.part.js']
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-vlock.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-cmd.part.js', 'hg-users.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re

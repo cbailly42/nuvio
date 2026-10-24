@@ -386,14 +386,9 @@ const HG_COMP = [
     hgTO({ k: 'grid_export', dom: ['sensor'], dc: ['power'], multi: 1, auto: 'none' }, { l: 'edit.grid_export_separate_sensors' }),
     hgTO({ k: 'home', dom: ['sensor'], dc: ['power'], multi: 1, auto: 'none' }, { l: 'edit.home_usage_empty_from' })],
     opts: [{ k: 'invert_grid', t: 'bool', l: hgTLazy('edit.options.invert_grid_sign') }, { k: 'invert_battery', t: 'bool', l: hgTLazy('edit.options.invert_battery_sign') }],
-    /* baterie jako osobne obiekty: poziom z tego samego urządzenia co moc, inaczej wg kolejności */
-    cfg: (v, h) => { const L = (x) => hgArr(x), o = Object.fromEntries(['grid', 'solar', 'grid_export', 'home'].filter((k) => L(v[k]).length).map((k) => [k, L(v[k]).length > 1 ? L(v[k]) : L(v[k])[0]]));
-      const P = L(v.battery), S = L(v.battery_soc), R = (h && h.entities) || {}, used = new Set();
-      const bs = P.map((p) => { const d = R[p] && R[p].device_id, m = d && S.find((e) => !used.has(e) && R[e] && R[e].device_id === d); if (m) used.add(m); return { power: p, soc: m || null }; });
-      for (const b of bs) if (!b.soc) { const m = S.find((e) => !used.has(e)); if (m) { used.add(m); b.soc = m; } }
-      for (const e of S) if (!used.has(e)) bs.push({ power: null, soc: e });
-      if (bs.length) o.batteries = bs.slice(0, 4).map((b) => Object.fromEntries(Object.entries(b).filter(([, x]) => x)));
-      return o; } }, { n: 'edit.energy_flow', d: 'edit.grid_solar_batteries_and' }),
+    /* wspólne z widokiem Energia (cards/flow-card): wartości startowe, konfiguracja i odczyt z konfiguracji karty widoku */
+    /* def: panel Energia HA wczytany przy wejściu w edycję */
+    def: (h) => hgFlowDef(h, HGEnergyPrefs._v && HGEnergyPrefs._v.src), cfg: (v, h) => hgFlowCfg(v, h), from: (c) => hgFlowFrom(c), own: ['grid', 'solar', 'grid_export', 'home', 'battery', 'battery_soc', 'batteries'] }, { n: 'edit.energy_flow', d: 'edit.grid_solar_batteries_and' }),
   hgTO({ id: 'net', i: 'mdi:lan', card: 'hg-net-card', modes: [['wan', hgTLazy('edit.modes.internet'), 'mdi:web'], ['gw', hgTLazy('edit.modes.gateway'), 'mdi:router-network'], ['wlan', hgTLazy('edit.modes.wi_fi'), 'mdi:wifi'], ['dev', hgTLazy('edit.modes.devices'), 'mdi:devices'], ['cl', hgTLazy('edit.modes.clients'), 'mdi:account-network-outline']], slots: [],
     opts: [{ k: 'title', l: hgTLazy('edit.options.title') }], cfg: (v) => ({ section: v.mode || 'wan', net: {} }) }, { n: 'edit.network', d: 'edit.internet_gateway_wi_fi' }),
   hgTO({ id: 'sensors', i: 'mdi:motion-sensor', card: 'hg-sensors-card', slots: [hgTO({ k: 'include', dom: ['binary_sensor', 'sensor'], multi: 1 }, { l: 'edit.extra_sensors' }), hgTO({ k: 'exclude', dom: ['binary_sensor', 'sensor'], multi: 1 }, { l: 'edit.skip_sensors' })],
@@ -789,16 +784,15 @@ const HG_SET_PAGES = () => [
   ['wall', 'mdi:tablet-dashboard', hgT('settings.pg.wall'), 'wall'], ['security', 'mdi:shield-lock-outline', hgT('settings.pg.security'), 'wall'],
   ['assist', 'mdi:microphone-message', hgT('settings.pg.assist'), 'sys'], ['users', 'mdi:account-multiple-outline', hgT('settings.pg.users'), 'sys'], ['integrations', 'mdi:puzzle-outline', hgT('settings.pg.integrations'), 'sys'],
   ['backup', 'mdi:backup-restore', hgT('settings.pg.backup'), 'sys'], ['about', 'mdi:information-outline', hgT('settings.pg.about'), 'sys']];
+const HG_SET_GROUPS = () => ({ general: hgT('settings.grp.general'), look: hgT('settings.grp.look'), dash: hgT('settings.grp.dash'), wall: hgT('settings.grp.wall'), sys: hgT('settings.grp.sys') });
+/* stare klucze zakładek (przed 2.22) -> strony */
+const HG_SET_LEGACY = { look: 'theme', head: 'header', bk: 'backup' };
+/* Wyszukiwarka ustawień: tylko widoczny, przetłumaczony tekst (bez <style>, <script>, <template>, <option>), bez znaków diakrytycznych, dopasowanie od początku słowa */
 const hgSetNorm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').toLowerCase();
 const hgSetWords = window.hgSetWords = (q) => hgSetNorm(q).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 const hgSetMatch = window.hgSetMatch = (text, W) => { const T = hgSetNorm(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean); return W.length > 0 && W.every((w) => T.some((t) => t.startsWith(w))); };
 const hgSetText = (root) => { const o = []; const w = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) o.push(c.nodeValue); else if (c.nodeType === 1 && !/^(STYLE|SCRIPT|TEMPLATE|OPTION|SVG)$/i.test(c.tagName) && !c.hidden && c.getAttribute('aria-hidden') !== 'true') { for (const at of ['aria-label', 'placeholder', 'title']) { const v = c.getAttribute(at); if (v) o.push(v); } w(c); } } }; w(root); return o.join(' '); };
 const hgSetPage = window.hgSetPage = (k, has) => { const p = HG_SET_LEGACY[k] || k; return has && !has.has(p) ? [...has][0] || 'general' : p || 'general'; };
-const HG_THUMB_T = new Set(['tog', 'btn', 'compact', 'minimal', 'val', 'chart', 'run', 'cover', 'media']);
-const HG_SCHEMA = { '': 'n', card: 'n', compact: 'c', minimal: 'm', clim: 'k', cam: 'v', media: 'p' };
-/* karty grupowe (wiele encji): układ całego zestawu; pojedyncze kafelki mają własne style */
-const HG_GRP_LBL = hgTO({}, { players: 'common.media', cameras: 'edit.cameras', scenes: 'edit.scenes', people: 'edit.household', persons: 'edit.household', lights: 'edit.lights', robots: 'edit.robots', power: 'edit.power', covers: 'edit.covers' });
-const HG_GRP_TYPES = [hgTO(['card'], { 1: 'edit.group_types.card' }), hgTO(['g-list'], { 1: 'edit.group_types.list' }), hgTO(['g-grid'], { 1: 'edit.group_types.grid' }), hgTO(['g-car'], { 1: 'edit.group_types.carousel' }), hgTO(['g-clist'], { 1: 'edit.group_types.compact_list' })];   /* [typ, etykieta]; etykieta to getter – język przy użyciu */
 
 /* The editor (settings sheets, drag and drop and every _e* method) lives in its own chunk, dist/nuvio-edit.js, imported the first time
    someone enters edit mode; a plain dashboard visit never downloads it. The chunk re-applies the page methods, then says hello. */

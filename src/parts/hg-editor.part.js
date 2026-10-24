@@ -1,7 +1,6 @@
-/* ===== Tryb edycji układu (admin): kolejność (przeciąganie + FLIP), ukrywanie/przywracanie, rozmiar S/M/L, dodawanie kafli z encji HA.
-   Układ: nadpisania na bazie CFG z build.py, per zakres (widok / „rooms” / „room:<id>” / „<widok>:tiles”).
-   Zapis: dane użytkownika HA (websocket frontend/set_user_data, klucz home_glass_layout – synchronizacja między urządzeniami),
-   kopia w localStorage (home-glass:layout) jako zapas / natychmiastowy odczyt. */
+/* ===== Layout editor, loaded as a separate chunk (perf/editor-split): settings sheets, drag and drop, hiding and restoring cards,
+   S/M/L sizes, adding tiles from Home Assistant entities. dist/nuvio-edit.js is imported the first time someone enters edit mode.
+   Overrides on top of CFG, per scope (view / "rooms" / "room:<id>" / "<view>:tiles"); the layout itself is saved in Home Assistant user data. */
 const HG_COMP_EDIT = {
   _eHeadBtn() { const hd = this._headEl; if (!hd || hd.querySelector('.hge-hd')) return; const h1 = hd.querySelector('h1'); if (!h1) return;
     const b = document.createElement('button'); b.className = 'hge-hd'; b.dataset.hge = 'headedit'; b.setAttribute('aria-label', hgT('edit.edit_view_header')); b.title = hgT('edit.edit_view_header'); b.innerHTML = H.icon('mdi:pencil'); hd.insertBefore(b, h1.nextSibling); },
@@ -78,6 +77,7 @@ const HG_COMP_EDIT = {
   _eCompDef(C) { const h = this._hass, v = {};
     for (const sl of C.slots) { let cs = hgSlotCands(h, sl); if (sl.auto === 'none') continue; if (sl.rank) { const m = cs.filter((e) => sl.rank.test(e + ' ' + H.name(h, e))); cs = sl.auto === 'rank' ? m : [...m, ...cs.filter((e) => !m.includes(e))]; } if (!cs.length) { if (sl.req) return null; continue; }
       v[sl.k] = sl.multi ? cs.slice(0, sl.all ? cs.length : sl.one || (sl.k === 'entities' && C.id === 'power') ? 1 : 4).map((e) => (sl.obj ? { entity: e, name: H.name(h, e), ...(h.states[e].attributes.icon ? { icon: h.states[e].attributes.icon } : {}) } : e)) : cs[0]; }
+    if (C.def) for (const [k, x] of Object.entries(C.def(h) || {})) if (x != null) v[k] = x;   // własne wartości startowe komponentu (np. przepływ energii: baterie wg urządzenia); brak wartości = jak dotąd
     return v; },
   /* krok 2: formularz komponentu (dodawanie i edycja – ten sam arkusz) */
   _eComp(cid, st) {
@@ -165,7 +165,9 @@ const HG_COMP_EDIT = {
       return this._eToast(F.i != null ? hgT('edit.saved_name', { name: hgKidName(kc) }) : hgT('edit.added_to_container_name', { name: hgKidName(kc) })); }
     if (a === 'cok' && R.pageK) { if (R._xBad) return; const sc = R.sc || this._eGalSc, n = R.n, i = /^mdi:[a-z0-9-]+$/.test(R.i || '') ? R.i : '', cfg = hgCompCfg(C, R.v, h);
       /* pełne nadpisanie karty widoku: typ Nuvio, karty i opcje; wyczyszczone opcje jako null (usuwane przy scalaniu) */
-      const set = { type: 'custom:' + hgCompCard(C, R.v) }; for (const q of C.opts || []) if (q.k !== 'flat' && q.k !== 'nodiv') set[q.k] = null; if (C.id !== 'grid') { set.glass = null; set.divider = null; } Object.assign(set, cfg);
+      const set = { type: 'custom:' + hgCompCard(C, R.v) }; for (const q of C.opts || []) if (q.k !== 'flat' && q.k !== 'nodiv') set[q.k] = null; if (!C.from && C.id !== 'grid') { set.glass = null; set.divider = null; }
+      for (const q of C.own || []) set[q] = null;   /* pola, którymi rządzi formularz: wyczyszczone w formularzu znikają też z bazowej konfiguracji */
+      Object.assign(set, cfg);
       this._eSet(sc, (L) => { const cf = L.conf[R.pageK] = Object.assign({}, L.conf[R.pageK]); cf.set = Object.assign({}, cf.set || {}, set); if (n) cf.n = n; else delete cf.n; if (i) cf.i = i; else delete cf.i; delete cf.t;
         if (R.z && R.z !== this._eBaseZ(sc, R.pageK)) L.size[R.pageK] = R.z; else delete L.size[R.pageK]; });
       this._eSheet(false); this._eToast(hgT('edit.saved_name', { name: n || C.n })); this._eCompR = null; return this._eRefresh(true); }
@@ -250,10 +252,6 @@ const HGE_CSS = `
 /* Ustawienia 2.0: strony w grupach (pasek boczny), sekcje przypisane atrybutem data-pg. Stare nazwy zakładek (data-tab, _lkTab) działają dalej. */
 /* Szkic ustawień w trybie edycji: zmiany tylko w HGL.data (pamięć), bez zapisu i bez przeładowania widoku.
    Zapisz: jeden zapis (HGL.save + ewentualnie konfiguracja pulpitu) i co najwyżej jedno przeładowanie. Anuluj: szkic odrzucony. */
-const HG_SET_GROUPS = () => ({ general: hgT('settings.grp.general'), look: hgT('settings.grp.look'), dash: hgT('settings.grp.dash'), wall: hgT('settings.grp.wall'), sys: hgT('settings.grp.sys') });
-/* stare klucze zakładek (przed 2.22) -> strony */
-const HG_SET_LEGACY = { look: 'theme', head: 'header', bk: 'backup' };
-/* Wyszukiwarka ustawień: tylko widoczny, przetłumaczony tekst (bez <style>, <script>, <template>, <option>), bez znaków diakrytycznych, dopasowanie od początku słowa */
 const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-pg]:not([data-pg=${k}])`).join(', ')}, .lkt[data-at=__s] .lk-sc > [data-pg]:not(.hit), .lkt:not([data-at=__s]) .lk-nores{ display:none; }
 .lk-side{ display:flex; flex-direction:column; gap:10px; min-height:0; overflow:auto; }
 .lk-q{ display:flex; align-items:center; gap:8px; min-height:42px; padding:0 12px; border-radius:14px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); }
@@ -351,6 +349,11 @@ const HG_LOOK_CSS = `
 /* podgląd: karty w podglądzie omijają zamrożenie edycji i rysują się od razu */
 function hgPvLive(pv) { const go = (r) => { for (const x of r.querySelectorAll('*')) { if (x.rerender && !x._hgPv) { x._hgPv = true; try { x.rerender(); } catch (e) { /* karta bez konfiguracji */ } } if (x.shadowRoot) go(x.shadowRoot); } }; go(pv); requestAnimationFrame(() => go(pv)); }
 /* wybór stylu: karty z miniaturą danego stylu (ten sam komponent w „+ Dodaj” i w ustawieniach) */
+const HG_THUMB_T = new Set(['tog', 'btn', 'compact', 'minimal', 'val', 'chart', 'run', 'cover', 'media']);
+const HG_SCHEMA = { '': 'n', card: 'n', compact: 'c', minimal: 'm', clim: 'k', cam: 'v', media: 'p' };
+/* karty grupowe (wiele encji): układ całego zestawu; pojedyncze kafelki mają własne style */
+const HG_GRP_LBL = hgTO({}, { players: 'common.media', cameras: 'edit.cameras', scenes: 'edit.scenes', people: 'edit.household', persons: 'edit.household', lights: 'edit.lights', robots: 'edit.robots', power: 'edit.power', covers: 'edit.covers' });
+const HG_GRP_TYPES = [hgTO(['card'], { 1: 'edit.group_types.card' }), hgTO(['g-list'], { 1: 'edit.group_types.list' }), hgTO(['g-grid'], { 1: 'edit.group_types.grid' }), hgTO(['g-car'], { 1: 'edit.group_types.carousel' }), hgTO(['g-clist'], { 1: 'edit.group_types.compact_list' })];   /* [typ, etykieta]; etykieta to getter – język przy użyciu */
 function hgStyleCards(h, e, opts, cur, act, room) {
   return `<div class="hs-sty" role="radiogroup" aria-label="${hgT('edit.style')}">${opts.map(([t, l]) => { const sel = cur === t;
     const th = t === 'card' && opts === HG_GRP_TYPES ? `<div class="hs-th grp g-card" aria-hidden="true"><b></b><i></i><i></i><i></i><i></i></div>` : t.startsWith('g-') ? `<div class="hs-th grp ${t}" aria-hidden="true"><i></i><i></i><i></i><i></i></div>` : e && h.states[e] && HG_THUMB_T.has(t) && !room ? `<div class="hs-th tile" aria-hidden="true"><div class="tg2">${hgTileHtml(h, e, 's', { t }).replace(/<(\/?)button\b/g, '<$1span').replace(/ (data-act|data-e|data-hgk)="[^"]*"/g, '')}</div></div>`
@@ -453,6 +456,7 @@ const HG_EDIT = {
     if (this._editing || !this._canEdit()) return;
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     HGDraft.discard(this); this._eUnload = (e) => { if (this._eDirty()) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', this._eUnload);
+    if (this._hass) HGEnergyPrefs.get(this._hass).catch(() => {});   /* panel Energia HA gotowy dla wartości startowych galerii (przepływ energii) */
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
@@ -797,6 +801,9 @@ const HG_EDIT = {
     /* stos / siatka z konfiguracji widoku (także vertical-stack, horizontal-stack, grid z HA): ten sam formularz, zapis jako nadpisanie karty (conf.set) */
     { const L0 = HGL.get(ct.scope), cc0 = ct.scope === this._pageScope() && !L0.added.some((y) => y.e === k) ? (this._config.cards || [])[(this._lkeys || []).indexOf(k)] : null;
       const cf0 = L0.conf[k] || {}, cc = cc0 && hgFromHA(hgSetMerge(cc0, cf0.set)), ty = String((cc && cc.type) || ''), cid = /-grid-card$/.test(ty) ? 'grid' : /-stack-card$/.test(ty) ? (cc.direction === 'horizontal' ? 'hstack' : 'vstack') : null;
+      /* karta z widoku, którą galeria umie zbudować i odczytać (C.from): ten sam formularz co w galerii, wypełniony konfiguracją karty, zapis jako nadpisanie */
+      const Cf = cc && !cid && HG_COMP.find((c) => c.from && c.card && c.card.replace(/^(hg|nuvio)-/, '') === ty.replace(/^custom:/, '').replace(/^(hg|nuvio)-/, ''));
+      if (Cf) { const v = Cf.from(cc); this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(Cf.id, { cid: Cf.id, sc: ct.scope, pageK: k, v, t: '', n: cf0.n || '', i: cf0.i || '', z: L0.size[k] || this._eBaseZ(ct.scope, k) }); return; }
       if (cid) { const C = HG_COMP.find((c) => c.id === cid), o = {};
         for (const q of C.opts || []) { const v = q.k === 'flat' ? cc.glass === false : q.k === 'nodiv' ? cc.divider === false : cc[q.k]; if (v != null && v !== '' && v !== false) o[q.k] = Array.isArray(v) ? v.join(', ') : v; }
         this._eGalSc = ct.scope; this._eGalCt = ct; this._eComp(cid, { cid, sc: ct.scope, pageK: k, v: { cards: JSON.parse(JSON.stringify(cc.cards || [])), o }, t: '', n: cf0.n || '', i: cf0.i || '', z: L0.size[k] || this._eBaseZ(ct.scope, k) }); return kids(); } }
@@ -1140,6 +1147,7 @@ const HG_EDIT = {
     more();
   },
 };
-/* the editor arrived late (perf/editor-split): its methods join the page now, and the dashboard rebuilds so the edit controls appear */
-/* the editor is a separate chunk (perf/editor-split): the page rebuilds when it arrives, so edit buttons appear without a reload */
+
+/* The methods join the page first, then the bundle gets told: a plain dashboard only ever loads this file when edit mode starts. */
+Object.assign(HGPage.prototype, HG_EDIT, HG_COMP_EDIT);
 document.dispatchEvent(new CustomEvent('hg-edit-ready', { bubbles: true, composed: true }));
