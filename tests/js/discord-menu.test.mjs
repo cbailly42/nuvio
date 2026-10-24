@@ -51,7 +51,7 @@ test('user menu draws a Discord mark instead of an empty ha-icon', () => {
 });
 
 test('About page links to the same Discord invite', () => {
-  const s = rd('../../src/parts/hg-editor.part.js');   /* the editor moved to its own chunk (perf/editor-split) */
+  const s = rd('../../src/parts/hg-edit.part.js');
   const a = s.indexOf('_eAboutHtml()');
   const body = s.slice(a, s.indexOf('_eLook()', a));
   assert.ok(body.includes(`href="${INVITE}"`));

@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 const P = new URL('../../src/parts/', import.meta.url), read = (f) => readFileSync(new URL(f, P), 'utf8');
-const EDTEXT = ['hg-edit.part.js', 'hg-editor.part.js'].map((f) => read(f)).join('\n');
 const oss = read('hg-oss.part.js');
 const grab = (name) => { const m = oss.match(new RegExp('const ' + name + ' = window\\.' + name + ' = [\\s\\S]*?;\\n')); assert.ok(m, name); return m[0]; };
 const load = (asset, href) => {
@@ -37,7 +36,7 @@ test('every built-in background source uses the path base and every reader norma
   assert.match(oss, /v: HG_ASSET_P \+ 'nuvio-bg-default-wide\.webp', v2p: HG_ASSET_P \+ 'nuvio-bg-default-portrait/);
   assert.match(read('hg-looks.part.js'), /v: HG_ASSET_P \+ 'nuvio-bg-' \+ id \+ '-wide\.webp', v2p: HG_ASSET_P/);
   assert.doesNotMatch(read('hg-wallglass.part.js'), /HG_ASSET \+ 'nuvio-bg-/);
-  const ed = EDTEXT;
+  const ed = read('hg-edit.part.js');
   assert.match(ed, /const mig = \(u\) => \(typeof hgBgFix === 'function' \? hgBgFix\(u\) : u\);/);
   assert.match(ed, /const fx = \(u\) => String\(typeof hgBgFix === 'function' \? hgBgFix\(u\) : u\)/);
   assert.match(read('hg-wallglass.part.js'), /hgBgFix\(B\.img\)/);

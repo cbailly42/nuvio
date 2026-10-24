@@ -1,12 +1,10 @@
-
 /* #53: a container query does not style the container. flex-basis:100% on the cover buttons
    without flex-wrap on .hgtl itself draws the open / stop / close row past the tile on a phone. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const rd = (f) => readFileSync(new URL('../../src/parts/' + f, import.meta.url), 'utf8');
-const src = ['hg-edit.part.js', 'hg-editor.part.js'].map(rd).join('\n');
+const src = readFileSync(new URL('../../src/parts/hg-edit.part.js', import.meta.url), 'utf8');
 const css = src.slice(src.indexOf('const HG_TILE_CSS'), src.indexOf('const hgTileAct'));
 const narrow = css.split('@container (max-width: 330px)')[1].split('@container (max-width: 210px)')[0];
 
