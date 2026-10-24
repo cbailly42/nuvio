@@ -5,9 +5,18 @@ import { readFileSync, readdirSync } from 'node:fs';
 import vm from 'node:vm';
 const dir = new URL('../../src/parts/', import.meta.url);
 const rd = (p) => readFileSync(new URL(p, dir), 'utf8');
+const EDTEXT = ['hg-edit.part.js', 'hg-editor.part.js'].map((f) => readFileSync(new URL('../../src/parts/' + f, import.meta.url), 'utf8')).join('\n');
+
 const all = () => { const out = []; const walk = (u) => { for (const e of readdirSync(u, { withFileTypes: true })) { if (e.isDirectory()) walk(new URL(e.name + '/', u)); else if (e.name.endsWith('.js')) out.push(readFileSync(new URL(e.name, u), 'utf8')); } }; walk(dir); return out.join('\n'); };
-const ed = rd('hg-edit.part.js');
-const load = () => { const a = ed.indexOf('const HG_SET_PAGES'), b = ed.indexOf('\n', ed.indexOf('const hgSetPage')); const ctx = { window: {}, hgT: (k) => k }; vm.createContext(ctx); vm.runInContext(ed.slice(a, b) + '\nthis.P = HG_SET_PAGES(); this.G = HG_SET_GROUPS(); this.L = HG_SET_LEGACY; this.f = hgSetPage;', ctx); return ctx; };
+const ed = EDTEXT;
+/* after the editor split the page list (hg-edit.part.js) and the search helpers (hg-editor.part.js) are separate files: join those blocks */
+const block = (from, to) => { const i = ed.indexOf(from), j = ed.indexOf(to); return i >= 0 && j > i ? ed.slice(i, j) : ''; };
+const load = () => { /* the page list and the search helpers live in hg-edit.part.js; HG_EDIT itself is in the editor chunk now */
+  /* HG_EDIT and HG_COMP_EDIT live in the editor chunk now: read the page list and the search helpers only, stubbing the editor object */
+  /* HG_EDIT and HG_COMP_EDIT now live in the editor chunk; the page list and the search helpers are what this test needs */
+  const loc0 = ed.indexOf('const HG_SET_PAGES');
+  const src = ed.slice(loc0, ed.indexOf('Object.assign(HGPage', loc0)) + '\nthis.P = HG_SET_PAGES(); this.G = HG_SET_GROUPS(); this.L = HG_SET_LEGACY; this.f = hgSetPage;';
+  const ctx = { window: { addEventListener() {} }, HGPage: { prototype: {} }, document: { querySelectorAll: () => [] }, hgT: (k) => k, hgTO: (o, m) => { for (const [k, v] of Object.entries(m)) o[k] = v; return o; } }; vm.createContext(ctx); vm.runInContext(src, ctx); return ctx; };
 const EXPECT = ['general', 'theme', 'bg', 'header', 'views', 'rooms', 'wall', 'security', 'assist', 'users', 'integrations', 'backup', 'about'];
 
 test('sidebar has every page in a known group, in order', () => {
@@ -42,7 +51,7 @@ test('per-climate detection is a collapsible advanced block', () => {
   assert.match(rd('hg-lookr.part.js'), /<details class="lk-adv"\$\{src \? ' open' : ''\}>/);
 });
 test('search matches word prefixes of visible text, ignores CSS and diacritics', () => {
-  const a = ed.indexOf('const hgSetNorm'), b = ed.indexOf('\nconst hgSetText'); const ctx = { window: {} }; vm.createContext(ctx);
+  const a = ed.indexOf('const hgSetNorm'), b = ed.indexOf('\nconst hgSetText'); const ctx = { window: {}, hgT: (k) => k }; vm.createContext(ctx);
   vm.runInContext(ed.slice(a, b) + '\nthis.W = hgSetWords; this.M = hgSetMatch;', ctx); const { W, M } = ctx;
   assert.equal(M('Assist Skrót klawiszowy Podpowiedzi spinner opinion pipeline', W('pin')), false);
   assert.equal(M('Blokada PIN-em', W('pin')), true);

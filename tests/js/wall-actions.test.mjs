@@ -5,11 +5,13 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 const P = new URL('../../src/parts/', import.meta.url);
 const read = (f) => readFileSync(new URL(f, P), 'utf8');
+const EDTEXT = ['hg-edit.part.js', 'hg-editor.part.js'].map((f) => read(f)).join('\n');
+
 const files = readdirSync(P).filter((f) => /^hg-(wall|vlock).*\.part\.js$/.test(f));
 const acts = new Set(); for (const f of files) for (const m of read(f).matchAll(/data-hge="([a-z][a-z0-9-]*)"/g)) acts.add(m[1]);
 
 test('the settings sheet routes wl-* actions to HGWall.act', () => {
-  assert.match(read('hg-edit.part.js'), /a\.startsWith\('wl-'\) && window\.HGWall\) return HGWall\.act\(this, b, a\)/);
+  assert.match(EDTEXT, /a\.startsWith\('wl-'\) && window\.HGWall\) return HGWall\.act\(this, b, a\)/);
 });
 test('every wall / view lock action is routed (wl- prefix)', () => {
   assert.ok(acts.has('wl-vlock'), 'view lock switch action');

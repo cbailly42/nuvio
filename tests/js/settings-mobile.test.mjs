@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const rd = (p) => readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-const ed = rd('src/parts/hg-edit.part.js'), lr = rd('src/parts/hg-lookr.part.js');
+const EDTEXT = ['hg-edit.part.js', 'hg-editor.part.js'].map((f) => rd('src/parts/' + f)).join('\n');
+const ed = EDTEXT, lr = rd('src/parts/hg-lookr.part.js');
 test('narrow settings use one column with the sidebar and the page in the same row', () => {
   assert.match(ed, /@media \(max-width:820px\)\{ \.hge-sheet\.lkt\{ grid-template-columns:minmax\(0, 1fr\); grid-template-rows:auto minmax\(0, 1fr\) auto; \}\s*\.hge-sheet\.lkt > \.lk-side, \.hge-sheet\.lkt > \.lk-sc\{ grid-row:2; grid-column:1; \}/);
   assert.match(ed, /:host\(\[mode=phone\]\) \.hge-sheet\.lkt > \.lk-side, :host\(\[mode=phone\]\) \.hge-sheet\.lkt > \.lk-sc\{ grid-row:2; grid-column:1; \}/);

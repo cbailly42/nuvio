@@ -116,6 +116,8 @@ CARDS = [
     'cards/webpage-card.part.js',
     'cards/kid-card.part.js',
 ]
+# the editor chunk (hg-editor.part.js) is built on its own: a module imported the first time someone enters edit mode
+EDIT = ['hg-editor.part.js', 'hg-editor-tail.part.js']
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-vlock.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-cmd.part.js', 'hg-users.part.js', 'hg-assist.part.js']
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
@@ -192,6 +194,7 @@ def main():
             if os.path.exists(os.path.join(R, 'src', f)): shutil.copy(os.path.join(R, 'src', f), w)
         subprocess.run([sys.executable, os.path.join(w, 'theme_tokens.py')], check=True, cwd=w)
         js = '\n'.join(open(os.path.join(w, 'www', p)).read() for p in PARTS)
+        ed = '\n'.join(open(os.path.join(w, 'www', p)).read() for p in EDIT)
         ver = json.load(open(os.path.join(R, 'package.json')))['version'] if os.path.exists(os.path.join(R, 'package.json')) else '0.0.0'
         tags = brand_tags(js); js = brand(js, tags)
         # i18n: compile the catalogs, turn the static keys into integer indexes, embed the manifest and English (spec 3.1 bis); before the hash, which covers all of it.
@@ -201,6 +204,13 @@ def main():
             manifest, en, idx, cats = i18n_compile.compile_locales(os.path.join(R, 'src', 'locales'), text=lambda t: brand(t, tags))
             js = i18n_compile.rewrite_keys(js, idx)
         except ValueError as e: sys.exit('i18n: %s – see python3 tools/i18n_check.py (dist/ left unchanged)' % e)
+        # the editor chunk is branded and compacted exactly like the bundle, then wrapped as a module whose default export applies it
+        ed = brand(ed, tags)
+        try: ed = i18n_compile.rewrite_keys(ed, idx)
+        except ValueError as e: sys.exit('i18n: %s (editor chunk) – see python3 tools/i18n_check.py' % e)
+        left = i18n_compile.remaining_literals(ed)
+        if left: sys.exit('i18n: literal keys left in the editor chunk: ' + ', '.join(sorted(set(left))[:20]))
+        ed = "export default function init() {\n'use strict';\n" + ed + "\n}\n"
         for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
             if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))
             js = js.replace(ph, json.dumps(val, ensure_ascii=False, separators=(',', ':')))
@@ -218,15 +228,17 @@ def main():
         # serving an old copy. The loader asks nuvio-version.json (no-store, unique URL) which core is current.
         h = v.split('+')[1]
         core = 'nuvio-core.%s.js' % h
+        ed, edmini = minify(ed)   # same esbuild pass: comments out, strings (CSS, HTML) untouched
         js, mini = minify(js)   # may still fail (syntax error): before anything is written
         os.makedirs(dd, exist_ok=True)
         i18n_compile.write_locales(dd, cats)
         open(os.path.join(dd, core), 'w').write(js)
+        open(os.path.join(dd, 'nuvio-edit.js'), 'w').write(ed)
         for f in os.listdir(dd):
             if re.fullmatch(r'nuvio-core\.[0-9a-f]+\.js', f) and f != core: os.remove(os.path.join(dd, f))
         json.dump({'build': v, 'core': core, 'locales': {m['code']: m['file'] for m in manifest if m['file']}}, open(os.path.join(dd, 'nuvio-version.json'), 'w'))
         open(os.path.join(dd, 'nuvio.js'), 'w').write(LOADER.replace('__V__', v).replace('__CORE__', core))
-        print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB', '(minified)' if mini else '(NOT minified: run npm install for esbuild)')
+        print('built dist/nuvio.js (loader) +', core, v, len(js) // 1024, 'KB', '(+ nuvio-edit.js', len(ed) // 1024, 'KB, loaded on first edit)', '(minified)' if mini and edmini else '(NOT minified: run npm install for esbuild)')
     finally:
         shutil.rmtree(w, ignore_errors=True)
 if __name__ == '__main__': main()
