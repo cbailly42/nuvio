@@ -5,6 +5,7 @@
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### 2.22.5
+- Ajouté : commandes de Home Assistant pour la tablette murale ([#47](https://github.com/kczepiec/nuvio/issues/47)) : les événements `nuvio_command` et un auxiliaire `input_text` réveillent l’écran, affichent l’économiseur, le verrouillent ou ouvrent une vue.
 - Ajouté : lorsque le mode kiosque est actif, l’écran reste allumé sur le tableau de bord Nuvio, comme pendant la lecture d’une vidéo. Cela couvre un en-tête masqué, une barre latérale masquée, le kiosque pour les personnes qui ne sont pas administrateurs, et les paramètres d’adresse `kiosk`, `hide_header` et `hide_sidebar`. Désactiver le mode kiosque permet à l’écran de se mettre en veille. Si l’écran s’éteint ou si vous quittez l’application, Nuvio redemande de le garder allumé au retour.
 
 ### 2.22.4
@@ -43,7 +44,9 @@ Toutes les modifications notables de Nuvio sont listées ici, des plus récentes
 - Ajouté : une colonne **Pastille** dans **Paramètres > Vues** compte les lumières, interrupteurs, ventilateurs, climatiseurs ou personnes allumés ou présents (ou les médias en lecture, ou les entités choisies) et affiche le nombre sur l’onglet de la vue s’il dépasse 0.
 - Ajouté : **Masquer la barre latérale vide** dans **Paramètres > Vues**. Quand aucune vue n’est dans la barre latérale, la barre et son bouton Paramètres disparaissent. Les paramètres restent dans le menu du profil, derrière le crayon et à toute adresse Nuvio avec **?nuvio_settings** (pour les personnes autorisées à modifier, pas sur une vue verrouillée par PIN).
 - Corrigé : la carte **Prévision de production** colorait tous les jours de la même couleur après un changement de seuils. Les seuils au-dessus de 12 kWh par kW, ou sans puissance de référence, sont lus en kWh par jour ; des seuils inversés sont échangés ; les champs numériques de l’éditeur acceptent la virgule (3,5).
-### Non publié
+### 2.22.5
+- Corrigé : un fond intégré choisi sur un appareil s’affichait comme une couleur unie sur les appareils qui ouvrent Home Assistant à une autre adresse (IP locale, domaine, Nabu Casa). L’image était enregistrée avec l’adresse complète du premier appareil ; les fonds intégrés sont désormais enregistrés comme un chemin à côté des fichiers Nuvio (par exemple `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), et les fonds enregistrés avant avec une adresse sont corrigés au chargement de la disposition, sur le tableau de bord et dans l’économiseur d’écran. Les images importées et vos propres adresses ne changent pas.
+
 - Corrigé : un fond intégré choisi sur un appareil s’affichait comme une couleur unie sur les appareils qui ouvrent Home Assistant à une autre adresse (IP locale, domaine, Nabu Casa). L’image était enregistrée avec l’adresse complète du premier appareil ; les fonds intégrés sont désormais enregistrés comme un chemin à côté des fichiers Nuvio (par exemple `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), et les fonds enregistrés avant avec une adresse sont corrigés au chargement de la disposition, sur le tableau de bord et dans l’économiseur d’écran. Les images importées et vos propres adresses ne changent pas.
 
 ### 2.21.3
