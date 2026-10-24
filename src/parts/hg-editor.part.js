@@ -1142,4 +1142,4 @@ const HG_EDIT = {
 };
 /* the editor arrived late (perf/editor-split): its methods join the page now, and the dashboard rebuilds so the edit controls appear */
 /* the editor is a separate chunk (perf/editor-split): the page rebuilds when it arrives, so edit buttons appear without a reload */
-window.dispatchEvent(new CustomEvent('hg-edit-ready', { bubbles: true, composed: true }));
+document.dispatchEvent(new CustomEvent('hg-edit-ready', { bubbles: true, composed: true }));
