@@ -8,7 +8,7 @@ function env() {
   const calls = [], ev = {}, tl = [];
   const H = {
     call: (h, d, s, data) => { calls.push([d, s, data]); return H.fail ? Promise.reject(new Error('x')) : Promise.resolve(); },
-    haptic: () => {}, icon: (i) => `<i ${i}>`, esc: (s) => String(s), name: (h, e, fb) => fb, fail: false,
+    haptic: () => {}, icon: (i) => `<i ${i}>`, esc: (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'), name: (h, e, fb) => fb, fail: false,
   };
   const window = { addEventListener: (t, f) => { ev[t] = f; }, removeEventListener: (t) => { delete ev[t]; } };
   const globals = { window, document: {}, H, hgT: (k, a) => { tl.push([k, a]); return k; }, K: (r, g, b, a) => `rgba(${r},${g},${b},${a})`, HGWall: {}, setTimeout, clearTimeout };
@@ -185,6 +185,79 @@ test('tap: hold wykonuje dopiero po przytrzymaniu, puszczenie wcześniej anuluje
   await new Promise((r) => setTimeout(r, 60));
   assert.deepEqual(calls, [['cover', 'open_cover', { entity_id: 'cover.g' }]]);
   assert.equal(ev.pointerup, undefined);
+});
+
+test('act: błędny data-i (brak, NaN, -1, 1.5, poza zakresem) jest no-opem; poprawny działa', () => {
+  const { Q } = env();
+  let cfg = Q.norm([{ e: 'cover.g', a: 'open' }, { e: 'switch.s', a: 'toggle' }]), sets = 0, looks = 0;
+  Q.wall = () => ({ get: () => ({ qa: cfg }), set: (x) => { sets++; cfg = x.qa; }, admin: () => true });
+  const p = { _eLook() { looks++; } };
+  const before = JSON.stringify(cfg);
+  for (const act of ['wl-qa-del', 'wl-qa-act', 'wl-qa-hold']) {
+    for (const i of [undefined, 'abc', '-1', '1.5', '2', '99', '']) {
+      const dataset = i === undefined ? { v: 'close' } : { i, v: 'close' };
+      assert.equal(Q.act(p, { dataset }, act), true, `${act} i=${i}`);
+    }
+    assert.equal(Q.act(p, {}, act), true, `${act} bez dataset`);
+  }
+  assert.equal(sets, 0);
+  assert.equal(looks, 0);
+  assert.equal(JSON.stringify(cfg), before);
+  Q.act(p, { dataset: { i: '1' } }, 'wl-qa-del');
+  assert.deepEqual(cfg.map((x) => x.e), ['cover.g']);
+  assert.equal(sets, 1);
+  Q.act(p, { dataset: { i: '0', v: 'close' } }, 'wl-qa-act');
+  assert.equal(cfg[0].a, 'close');
+});
+
+test('html: nazwy z HA i wpisane przez użytkownika są escapowane (wiersz i datalist)', () => {
+  const { Q, H } = env();
+  const evil = '"><img src=x onerror=alert(1)>';
+  H.name = (h, e) => h.states[e].attributes.friendly_name;
+  let cfg = Q.norm([{ e: 'cover.g', a: 'open' }, { e: 'switch.s', a: 'toggle', n: '"><b onclick=1>', ic: 'mdi:gate' }]);
+  Q.wall = () => ({ get: () => ({ qa: cfg }), admin: () => true });
+  const p = { _hass: { states: { 'cover.g': st('closed', { friendly_name: evil }), 'switch.s': st('on', { friendly_name: evil }), 'light.l': st('on', { friendly_name: evil }) } } };
+  const h = Q.html(p);
+  assert.doesNotMatch(h, /<img|<b onclick/);
+  assert.match(h, /<b>&quot;&gt;&lt;img src=x onerror=alert\(1\)&gt;<\/b>/);
+  assert.match(h, /<b>&quot;&gt;&lt;b onclick=1&gt;<\/b>/);
+  assert.match(h, /value="mdi:gate"/);
+  cfg = [];
+  const d = Q.html(p);
+  assert.doesNotMatch(d, /<img/);
+  assert.match(d, /<option value="light\.l">&quot;&gt;&lt;img src=x onerror=alert\(1\)&gt;<\/option>/);
+});
+
+test('entities: friendly_name nie-tekstowy nie rzuca', () => {
+  const { Q } = env();
+  const h = { states: { 'light.a': st('on', { friendly_name: 42 }), 'light.b': st('on', { friendly_name: { x: 1 } }), 'light.c': st('on', { friendly_name: 'Zeta' }), 'lock.x': st('locked') } };
+  let out;
+  assert.doesNotThrow(() => { out = Q.entities(h); });
+  assert.deepEqual(out.map((x) => x[0]).sort(), ['light.a', 'light.b', 'light.c']);
+  assert.ok(out.every((x) => typeof x[1] === 'string'));
+  assert.equal(out.find((x) => x[0] === 'light.a')[1], '42');
+});
+
+test('wire: id z niedozwolonymi znakami daje komunikat, sukces czyści pole', () => {
+  const { Q } = env();
+  let cfg = [];
+  Q.wall = () => ({ get: () => ({ qa: cfg }), set: (x) => { cfg = x.qa; }, admin: () => true });
+  const toasts = [];
+  const p = { _eLook() {}, _eToast: (t) => toasts.push(t) };
+  const add = { value: '', L: {}, addEventListener(t, f) { add.L[t] = f; } };
+  Q.wire(p, { querySelector: (s) => (s === '[name=wl-qa-add]' ? add : null), querySelectorAll: () => [] });
+  for (const bad of ['light.my-lamp', 'light', 'light.', 'LIGHT.Ok Lamp', 'switch.a.b']) {
+    add.value = bad; add.L.change();
+    assert.equal(add.value, '', bad);
+  }
+  assert.deepEqual(toasts, ['wallqa.unsupported', 'wallqa.unsupported', 'wallqa.unsupported', 'wallqa.unsupported', 'wallqa.unsupported']);
+  assert.equal(cfg.length, 0);
+  add.value = '  Light.Lamp  '; add.L.change();
+  assert.equal(add.value, '');
+  assert.deepEqual(cfg.map((x) => x.e), ['light.lamp']);
+  assert.equal(toasts.length, 5);
+  add.value = '   '; add.L.change();
+  assert.equal(toasts.length, 5);
 });
 
 test('integracja: hg-wall ma zaczepy HGWallQA (get/wk/show/tick/lockNow)', () => {
@@ -432,7 +505,7 @@ test('kod alarmu: nigdzie poza this._c.buf (źródło nie zapisuje kodu)', () =>
 
 test('textPanel: pole kodu nie jest zapamiętywane ani poprawiane przez przeglądarkę', () => {
   const pp = { setAttribute() {}, classList: { add() {} } };
-  const { HGWallQA } = loadParts(['hg-wallqa.part.js'], { window: {}, document: { createElement: () => pp }, H: { esc: String, icon: String }, hgT: (k) => k, K: () => '', HGWall: {}, setTimeout, clearTimeout }, ['HGWallQA']);
+  const { HGWallQA } = loadParts(['hg-wallqa.part.js'], { window: {}, document: { createElement: () => pp }, H: { esc: (x) => String(x), icon: String }, hgT: (k) => k, K: () => '', HGWall: {}, setTimeout, clearTimeout }, ['HGWallQA']);
   HGWallQA.textPanel('Dom');
   assert.match(pp.innerHTML, /type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false"/);
 });

@@ -295,7 +295,7 @@ const HGWallQA = {
   entities(h) {
     const out = [];
     for (const [id, s] of Object.entries((h && h.states) || {})) {
-      if (this.actions(id).length) out.push([id, (s.attributes && s.attributes.friendly_name) || id]);
+      if (this.actions(id).length) out.push([id, String((s && s.attributes && s.attributes.friendly_name) || id)]);
     }
     return out.sort((x, y) => x[1].localeCompare(y[1])).slice(0, 500);
   },
@@ -322,8 +322,9 @@ const HGWallQA = {
       const go = () => {
         const e = add.value.trim().toLowerCase();
         if (!e) return;
-        const A = this.actions(e);
-        if (!A.length) { add.value = ''; p._eToast(hgT('wallqa.unsupported')); return; }
+        const A = /^[a-z_]+\.[a-z0-9_]+$/.test(e) ? this.actions(e) : [];
+        add.value = '';
+        if (!A.length) { p._eToast(hgT('wallqa.unsupported')); return; }
         this.edit(p, (L) => { if (L.length < this.MAX) L.push({ e, a: A[0], ic: '', n: '', hold: this.hold(e) }); });
       };
       add.addEventListener('change', go);
@@ -341,7 +342,9 @@ const HGWallQA = {
   /* kolejność warunków ma znaczenie: obce akcje (np. wl-test) wracają false, zanim ruszymy wall() */
   act(p, b, a) {
     if (!/^wl-qa-/.test(a || '') || !this.wall().admin(p)) return false;
-    const i = Number(b.dataset.i);
+    /* data-i musi być całkowitym indeksem istniejącej pozycji ('', NaN, -1, 1.5, poza zakresem → bez zmian) */
+    const r = b.dataset && b.dataset.i, i = /^[0-9]{1,3}$/.test(r) ? Number(r) : -1;
+    if (!Number.isInteger(i) || i < 0 || i >= this.wall().get().qa.length) return true;
     if (a === 'wl-qa-del') this.edit(p, (L) => { L.splice(i, 1); });
     else if (a === 'wl-qa-act') this.edit(p, (L) => { if (L[i] && this.actions(L[i].e).includes(b.dataset.v)) L[i].a = b.dataset.v; });
     else if (a === 'wl-qa-hold') this.edit(p, (L) => { if (L[i]) L[i].hold = !L[i].hold; });
