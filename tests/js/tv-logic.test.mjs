@@ -147,3 +147,21 @@ test('tokenId: iss z ładunku JWT, błędne dane dają null', () => {
   assert.equal(L.tokenId(jwt({ iss: ID, iat: 1, exp: 2 })), ID);
   for (const bad of ['', null, undefined, 'abc', 'a.b', 'a.!!!.c', jwt({ exp: 1 }), jwt({ iss: 5 }), jwt({ iss: '' }), 'a.' + Buffer.from('[1]').toString('base64url') + '.c']) assert.equal(L.tokenId(bad), null, String(bad));
 });
+
+test('needsConfirm: telewizor pyta o zgodę tylko przy http i hoście spoza sieci prywatnej (host z surowego tekstu i po normalizacji URL)', () => {
+  for (const ha of ['http://ha.example.com:8123', 'http://8.8.8.8', 'http://ha.example.com', 'http://172.15.0.1:8123', 'http://[::1]:8123', 'http://localhost:8123', 'http://3232235777:8123', 'http://0xC0A80101:8123', 'http://192.168.1.2.evil.com', 'http://tv.local.evil.com'])
+    assert.equal(L.needsConfirm(ha), true, ha);
+  for (const ha of ['http://10.0.8.5:8123', 'http://172.16.0.9:8123', 'http://192.168.1.2', 'http://169.254.1.1:8123', 'http://ha.local:8123', 'http://Salon.LOCAL', 'http://192.168.1.2:8123/api'])
+    assert.equal(L.needsConfirm(ha), false, ha);
+  for (const ha of ['https://ha.example.com', 'https://10.0.8.5', 'https://ha.local', '', null, undefined, 'ftp://x', 'ha.local']) assert.equal(L.needsConfirm(ha), false, String(ha));
+});
+
+test('outcome: status odpowiedzi telewizora na POST /pair', () => {
+  assert.equal(L.outcome(200), 'ok'); assert.equal(L.outcome(403), 'wrong'); assert.equal(L.outcome(429), 'limit');
+  for (const s of [400, 404, 500, 204, 201, 302, 0, undefined, null]) assert.equal(L.outcome(s), 'rejected', String(s));
+});
+
+test('direct: bezpośrednie wysłanie fetch tylko ze strony http', () => {
+  assert.equal(L.direct('http:'), true);
+  for (const x of ['https:', '', null, undefined, 'file:']) assert.equal(L.direct(x), false, String(x));
+});

@@ -3489,6 +3489,7 @@
     "act_disarm": "Rozbrój"
   },
   "tv": {
+    "accepted": "Telewizor przyjął dane, czekam na jego połączenie.",
     "address": "Adres telewizora",
     "address_hint": "Widoczny na telewizorze, na przykład 10.0.8.117:8798. Możesz też wkleić tu link z kodu QR.",
     "beta": "Beta",
@@ -3506,8 +3507,11 @@
     "err_create": "Nie udało się utworzyć tokenu w Home Assistant.",
     "err_ha": "Wpisz adres zaczynający się od http:// lub https://.",
     "err_id": "Token został utworzony, ale nie udało się go rozpoznać, więc nic nie wysłano. Usuń go z listy poniżej i spróbuj ponownie.",
+    "err_limit": "Zbyt wiele prób. Poczekaj chwilę i użyj nowego kodu z ekranu telewizora.",
     "err_private": "Dozwolone są tylko adresy w sieci domowej (10.x, 172.16 do 31.x, 192.168.x, 169.254.x albo .local).",
+    "err_rejected": "Telewizor odrzucił dane.",
     "err_send": "Nie udało się wysłać danych do telewizora. Niewykorzystany token został usunięty.",
+    "err_wrong": "Zły kod. Sprawdź kod na telewizorze.",
     "expired": "Token nie został wysłany na czas i został usunięty. Naciśnij Sparuj, aby zacząć od nowa.",
     "ha": "Adres Home Assistant",
     "ha_hint": "Zostanie wysłany do telewizora. Zmień go, jeśli telewizor łączy się z Home Assistant pod innym adresem.",
