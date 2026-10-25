@@ -1037,7 +1037,7 @@ const HG_SET_PAGES = () => [
   ['theme', 'mdi:palette-outline', hgT('settings.pg.theme'), 'look'], ['bg', 'mdi:image-outline', hgT('settings.pg.bg'), 'look'], ['header', 'mdi:page-layout-header', hgT('settings.pg.header'), 'look'],
   ['views', 'mdi:view-carousel-outline', hgT('settings.pg.views'), 'dash'], ['rooms', 'mdi:sofa-outline', hgT('settings.pg.rooms'), 'dash'],
   ['wall', 'mdi:tablet-dashboard', hgT('settings.pg.wall'), 'wall'], ['security', 'mdi:shield-lock-outline', hgT('settings.pg.security'), 'wall'],
-  ['assist', 'mdi:microphone-message', hgT('settings.pg.assist'), 'sys'], ['users', 'mdi:account-multiple-outline', hgT('settings.pg.users'), 'sys'], ['integrations', 'mdi:puzzle-outline', hgT('settings.pg.integrations'), 'sys'],
+  ['assist', 'mdi:microphone-message', hgT('settings.pg.assist'), 'sys'], ['users', 'mdi:account-multiple-outline', hgT('settings.pg.users'), 'sys'], ['tv', 'mdi:television', hgT('settings.pg.tv'), 'sys'], ['integrations', 'mdi:puzzle-outline', hgT('settings.pg.integrations'), 'sys'],
   ['backup', 'mdi:backup-restore', hgT('settings.pg.backup'), 'sys'], ['about', 'mdi:information-outline', hgT('settings.pg.about'), 'sys']];
 const HG_SET_GROUPS = () => ({ general: hgT('settings.grp.general'), look: hgT('settings.grp.look'), dash: hgT('settings.grp.dash'), wall: hgT('settings.grp.wall'), sys: hgT('settings.grp.sys') });
 /* stare klucze zakładek (przed 2.22) -> strony */
@@ -1386,6 +1386,7 @@ const HG_EDIT = {
     if (a === 'lk-look' && window.HGLooks) return HGLooks.act(this, b, a);
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
+    if (a.startsWith('tv-') && window.HGTv) return HGTv.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
     if (a === 'pbg' || a === 'pbgv') { const vw = this._config && this._config.view, v = b.dataset.v || '';
       this._eApp((A) => { if (a === 'pbg') { if (v === 'off') A.pbg = false; else delete A.pbg; return; }
@@ -1803,6 +1804,7 @@ const HG_EDIT = {
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
       ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGUsers ? HGUsers.html(this) : ''}
+      ${window.HGTv ? HGTv.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
       ${this._eAboutHtml()}
       <p class="lk-nores" role="status">${hgT('settings.no_results')}</p>
@@ -1828,6 +1830,7 @@ const HG_EDIT = {
     if (window.HGWall) HGWall.wire(this, S);
     if (window.HGRoomsX) HGRoomsX.wire(this, S);
     if (window.HGAssistUI) HGAssistUI.wire(this, S);
+    if (window.HGTv) HGTv.wire(this, S);
     this._eSetWire(S);
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */

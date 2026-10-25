@@ -8,7 +8,7 @@ const rd = (p) => readFileSync(new URL(p, dir), 'utf8');
 const all = () => { const out = []; const walk = (u) => { for (const e of readdirSync(u, { withFileTypes: true })) { if (e.isDirectory()) walk(new URL(e.name + '/', u)); else if (e.name.endsWith('.js')) out.push(readFileSync(new URL(e.name, u), 'utf8')); } }; walk(dir); return out.join('\n'); };
 const ed = rd('hg-edit.part.js');
 const load = () => { const a = ed.indexOf('const HG_SET_PAGES'), b = ed.indexOf('\n', ed.indexOf('const hgSetPage')); const ctx = { window: {}, hgT: (k) => k }; vm.createContext(ctx); vm.runInContext(ed.slice(a, b) + '\nthis.P = HG_SET_PAGES(); this.G = HG_SET_GROUPS(); this.L = HG_SET_LEGACY; this.f = hgSetPage;', ctx); return ctx; };
-const EXPECT = ['general', 'theme', 'bg', 'header', 'views', 'rooms', 'wall', 'security', 'assist', 'users', 'integrations', 'backup', 'about'];
+const EXPECT = ['general', 'theme', 'bg', 'header', 'views', 'rooms', 'wall', 'security', 'assist', 'users', 'tv', 'integrations', 'backup', 'about'];
 
 test('sidebar has every page in a known group, in order', () => {
   const { P, G } = load();
