@@ -25,6 +25,18 @@ const HGTvLogic = {
     if (m) { const a = Number(m[1]), b = Number(m[2]); return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254); }
     return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.local$/.test(h);
   },
+  /* czy telewizor zapyta o zgodę na połączenie bez szyfrowania: adres HA przez http i host spoza sieci prywatnej.
+     Host jest czytany z surowego tekstu i po normalizacji URL (np. 3232235777 staje się 192.168.1.1); prywatny tylko gdy oba odczyty są prywatne */
+  needsConfirm(ha) {
+    const raw = /^http:\/\/([^/:?#]+)/i.exec(String(ha || ''));
+    if (!raw) return false;
+    let u; try { u = new URL(String(ha)); } catch (e) { return true; }
+    return !(HGTvLogic.isPrivateHost(raw[1]) && HGTvLogic.isPrivateHost(u.hostname));
+  },
+  /* wynik POST /pair z odpowiedzi telewizora: 200 przyjęto, 403 zły kod, 429 za dużo prób lub przerwa, reszta (400, 404, inne) odrzucono */
+  outcome(status) { return status === 200 ? 'ok' : status === 403 ? 'wrong' : status === 429 ? 'limit' : 'rejected'; },
+  /* strona serwowana przez http: może wysłać fetch do telewizora bez nowej karty (strona https jest blokowana jako mieszana treść) */
+  direct: (protocol) => protocol === 'http:',
   /* adres Home Assistant: http albo https, bez danych logowania (user:pass@), wynik bez końcowego ukośnika albo null */
   haUrl(text) {
     let u; try { u = new URL(String(text || '').trim()); } catch (e) { return null; }

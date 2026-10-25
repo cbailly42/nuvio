@@ -3381,6 +3381,7 @@
     "act_disarm": "Disarm"
   },
   "tv": {
+    "accepted": "Accepted by the TV, waiting for it to connect.",
     "address": "TV address",
     "address_hint": "Shown on the TV, for example 10.0.8.117:8798. You can also paste the QR link here.",
     "beta": "Beta",
@@ -3398,8 +3399,11 @@
     "err_create": "Could not create a token in Home Assistant.",
     "err_ha": "Enter an address starting with http:// or https://.",
     "err_id": "The token was created but could not be identified, so nothing was sent. Remove it from the list below and try again.",
+    "err_limit": "Too many attempts. Wait a moment and use the new code shown on the TV.",
     "err_private": "Only addresses on your home network are accepted (10.x, 172.16 to 31.x, 192.168.x, 169.254.x or .local).",
+    "err_rejected": "The TV rejected the data.",
     "err_send": "Could not send the data to the TV. The unused token was removed.",
+    "err_wrong": "Wrong code. Check the code on the TV.",
     "expired": "The token was not sent in time and was removed. Press Pair to start again.",
     "ha": "Home Assistant address",
     "ha_hint": "Sent to the TV. Change it if the TV reaches Home Assistant at a different address.",

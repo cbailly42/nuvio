@@ -3435,6 +3435,7 @@
     "act_disarm": "Désarmer"
   },
   "tv": {
+    "accepted": "Accepté par le téléviseur, en attente de sa connexion.",
     "address": "Adresse du téléviseur",
     "address_hint": "Affichée sur le téléviseur, par exemple 10.0.8.117:8798. Vous pouvez aussi coller ici le lien du code QR.",
     "beta": "Bêta",
@@ -3452,8 +3453,11 @@
     "err_create": "Impossible de créer un jeton dans Home Assistant.",
     "err_ha": "Saisissez une adresse commençant par http:// ou https://.",
     "err_id": "Le jeton a été créé mais n’a pas pu être identifié, donc rien n’a été envoyé. Supprimez-le dans la liste ci-dessous et réessayez.",
+    "err_limit": "Trop de tentatives. Patientez un instant et utilisez le nouveau code affiché sur le téléviseur.",
     "err_private": "Seules les adresses de votre réseau domestique sont acceptées (10.x, 172.16 à 31.x, 192.168.x, 169.254.x ou .local).",
+    "err_rejected": "Le téléviseur a refusé les données.",
     "err_send": "Impossible d’envoyer les données au téléviseur. Le jeton inutilisé a été supprimé.",
+    "err_wrong": "Code incorrect. Vérifiez le code sur le téléviseur.",
     "expired": "Le jeton n’a pas été envoyé à temps et a été supprimé. Appuyez sur Jumeler pour recommencer.",
     "ha": "Adresse de Home Assistant",
     "ha_hint": "Envoyée au téléviseur. Modifiez-la si le téléviseur joint Home Assistant à une autre adresse.",

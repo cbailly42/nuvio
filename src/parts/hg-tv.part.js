@@ -4,16 +4,19 @@
    (4) połączenie potwierdza znacznik nuvio_tv_seen, który telewizor zapisuje w danych użytkownika HA (frontend/set_user_data).
    Gdy przeglądarka zablokuje okno (window.open daje null): token powstaje po pierwszym kliknięciu i czeka w pamięci, a drugie kliknięcie (przycisk tv-send) wysyła formularz
    synchronicznie z target=_blank. Niewysłany token jest kasowany po 2 minutach, po zamknięciu panelu i po ponownym otwarciu panelu.
+   Gdy sama strona jest serwowana przez http: (typowy Home Assistant w sieci domowej), nie ma karty ani formularza: po utworzeniu tokenu idzie fetch POST (CORS) prosto do telewizora,
+   a odpowiedź 200, 403, 429 lub inna (albo wynik nieznany przy TypeError i przerwaniu) wybiera dalszy ciąg (sendDirect). Przy https: karta zamyka się sama po potwierdzeniu znacznikiem.
    Czyste funkcje: hg-tvlogic.part.js. Wartości pól trzyma obiekt (s), bo _eLook() kasuje wpisany tekst. Token żyje tylko w zmiennej lokalnej pair(), w this.ready między dwoma kliknięciami i w polu formularza w pamięci. ===== */
 const HGTv = window.__hgTv || (window.__hgTv = {
   FIELDS: [['tv-addr', 'addr'], ['tv-code', 'code'], ['tv-ha', 'ha']],
   WIN: 'nuvio-tv-pair', HOLD_MS: 120000,
-  /* czas oczekiwania na znacznik: przy adresie http telewizor najpierw pyta o zgodę na połączenie bez szyfrowania (klik pilotem), więc dwa razy dłużej */
-  WAIT_MS: 60000, WAIT_HTTP_MS: 120000, POLL_MS: 3000,
+  /* czas oczekiwania na znacznik: przy adresie HA http spoza sieci prywatnej telewizor najpierw pyta o zgodę na połączenie bez szyfrowania (klik pilotem), więc dwa razy dłużej;
+     w sieci prywatnej pomija to pytanie, więc 60 s. Znacznik sprawdzamy co POLL_MS, wysyłka fetch ma limit FETCH_MS */
+  WAIT_MS: 60000, WAIT_HTTP_MS: 120000, POLL_MS: 1000, FETCH_MS: 8000,
   s: { addr: '', code: '', ha: '' }, err: {}, status: 'idle', list: null, seen: {}, listErr: false, loading: false, rid: 0, wait: 60000, _sheet: undefined, ready: null,
   clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
   now: () => new Date(),
-  working() { return this.status === 'working' || this.status === 'waiting' || this.status === 'ready'; },
+  working() { return this.status === 'working' || this.status === 'accepted' || this.status === 'waiting' || this.status === 'ready'; },
   redraw(p) { if (p._eSheetEl && p._eSheetEl.querySelector('.lk')) p._eLook(); },
   fmt(iso) { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleString(HG_LOC(), { dateStyle: 'medium', timeStyle: 'short' }); },
   errText(k) {
@@ -29,6 +32,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     switch (this.status) {
       case 'working': return hgT('tv.working');
       case 'ready': return hgT('tv.ready');
+      case 'accepted': return hgT('tv.accepted');
       case 'waiting': return hgT('tv.waiting', { seconds: this.wait / 1000 });
       case 'done': return H.icon('mdi:check-circle') + hgT('tv.connected');
       case 'timeout': return hgT('tv.timeout');
@@ -36,6 +40,9 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       case 'err_create': return hgT('tv.err_create');
       case 'err_id': return hgT('tv.err_id');
       case 'err_send': return hgT('tv.err_send');
+      case 'err_wrong': return hgT('tv.err_wrong');
+      case 'err_limit': return hgT('tv.err_limit');
+      case 'err_rejected': return hgT('tv.err_rejected');
       default: return '';
     }
   },
@@ -104,7 +111,8 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     if (w) { try { w.opener = null; } catch (e) { /* okno z innego źródła, opener i tak niedostępny */ } }
     return w || null;
   },
-  shut(w) { try { if (w) w.close(); } catch (e) { /* nic do zrobienia */ } },
+  /* zamyka kartę tylko gdy mamy uchwyt i nie jest już zamknięta (użytkownik mógł ją zamknąć sam) */
+  shut(w) { try { if (w && !w.closed) w.close(); } catch (e) { /* nic do zrobienia */ } },
   /* ukryty formularz w pamięci: POST, potem usunięty; token nigdzie indziej nie trafia.
      target to nazwa karty z openTab (bez rel, bo noopener zerwałby nazwane okno) albo _blank w drugim kliknięciu (wtedy rel=noopener). */
   send(A, code, ha, token, target) {
@@ -130,7 +138,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     if (!ha) E.ha = 'bad';
     this.err = E; this.status = 'idle';
     if (Object.keys(E).length || window.__hgDryRun) return p._eLook();
-    const w = this.openTab();
+    const direct = HGTvLogic.direct(location.protocol), w = direct ? null : this.openTab();
     const h = p._hass; this.status = 'working'; p._eLook();
     let token = null, id = null, name = '';
     try {
@@ -139,6 +147,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     } catch (e) { this.shut(w); return this.fail(p, 'err_create'); }
     try { id = HGTvLogic.tokenId(token) || HGTvLogic.idByName(await h.callWS({ type: 'auth/refresh_tokens' }), name); } catch (e) { id = null; }
     if (!id) { token = null; this.shut(w); return this.fail(p, 'err_id'); }
+    if (direct) return this.sendDirect(p, A, code, ha, token, id);
     if (!w) {
       this.ready = { A, code, ha, token, id }; token = null; this.status = 'ready'; p._eLook();
       this.hold(p, this.ready).catch(() => undefined);
@@ -146,7 +155,26 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     }
     try { this.send(A, code, ha, token, this.WIN); } catch (e) { token = null; this.shut(w); await this.drop(h, id); return this.fail(p, 'err_send'); }
     token = null; this.wait = this.waitMs(ha); this.status = 'waiting'; p._eLook();
-    return this.poll(p, id);
+    return this.poll(p, id, w);
+  },
+  /* strona przez http: POST fetch prosto do telewizora, bez karty i bez formularza; token jest wyłącznie w treści żądania.
+     Telewizor odpowiada z nagłówkiem CORS: 200 przyjęto, 403 zły kod, 429 za dużo prób, reszta odrzucono (w trzech ostatnich token kasujemy).
+     Wyjątek (TypeError, przerwanie po FETCH_MS) to wynik nieznany: żądanie mogło dotrzeć (stara aplikacja bez nagłówka CORS), więc czekamy na znacznik jak przy karcie */
+  async post(A, code, ha, token) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), this.FETCH_MS);
+    try {
+      const r = await fetch('http://' + A.host + ':' + A.port + '/pair', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, url: ha, token }).toString(),
+        mode: 'cors', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal,
+      });
+      return HGTvLogic.outcome(r.status);
+    } catch (e) { return 'unknown'; } finally { clearTimeout(t); }
+  },
+  async sendDirect(p, A, code, ha, token, id) {
+    const out = await this.post(A, code, ha, token); token = null;
+    if (out === 'wrong' || out === 'limit' || out === 'rejected') { await this.drop(p._hass, id); return this.fail(p, 'err_' + out); }
+    this.wait = this.waitMs(ha); this.status = out === 'ok' ? 'accepted' : 'waiting'; p._eLook();
+    return this.poll(p, id, null);
   },
   /* drugie kliknięcie po zablokowanej karcie: formularz wychodzi synchronicznie w tym kliknięciu (świeży gest), przed jakimkolwiek await */
   sendReady(p) {
@@ -154,7 +182,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     this.ready = null;
     try { this.send(r.A, r.code, r.ha, r.token, '_blank'); } catch (e) { r.token = null; this.drop(p._hass, r.id); return this.fail(p, 'err_send'); }
     r.token = null; this.wait = this.waitMs(r.ha); this.status = 'waiting'; p._eLook();
-    return this.poll(p, r.id);
+    return this.poll(p, r.id, null);
   },
   /* trzyma niewysłany token najwyżej 2 minuty; zamknięcie panelu albo koniec czasu kasuje go także w HA, wysłanie (this.ready zmienione) kończy pętlę */
   async hold(p, r) {
@@ -166,15 +194,16 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     if (this.ready !== r) return undefined;
     this.discard(p, 'expired'); this.invalidate(); return this.redraw(p);
   },
-  waitMs(ha) { return String(ha).startsWith('http://') ? this.WAIT_HTTP_MS : this.WAIT_MS; },
-  /* co POLL_MS do limitu this.wait (60 s, przy http 120 s; ustawia go wołający przed pokazaniem statusu) czeka na wpis id tokenu w nuvio_tv_seen; zamknięcie panelu przerywa (token zostaje na liście), brak wpisu usuwa token */
-  async poll(p, id) {
+  waitMs(ha) { return HGTvLogic.needsConfirm(ha) ? this.WAIT_HTTP_MS : this.WAIT_MS; },
+  /* co POLL_MS do limitu this.wait (60 s, przy http spoza sieci prywatnej 120 s; ustawia go wołający przed pokazaniem statusu) czeka na wpis id tokenu w nuvio_tv_seen;
+     potwierdzenie zamyka kartę w, jeśli ją mamy; zamknięcie panelu przerywa (token zostaje na liście, karta otwarta), brak wpisu usuwa token (karta zostaje, użytkownik czyta stronę błędu telewizora) */
+  async poll(p, id, w) {
     const h = p._hass, c = this.clock, t0 = c.now(), limit = this.wait, quit = () => { this.status = 'idle'; };
     while (c.now() - t0 < limit) {
       await c.sleep(this.POLL_MS);
       if (!p._eSheetEl) return quit();
       try { this.seen = HGTvLogic.parseSeen((await h.callWS({ type: 'frontend/get_user_data', key: HGTvLogic.SEEN_KEY })).value); } catch (e) { continue; }
-      if (this.seen[id]) { this.status = 'done'; this.invalidate(); return this.redraw(p); }
+      if (this.seen[id]) { this.shut(w); this.status = 'done'; this.invalidate(); return this.redraw(p); }
     }
     if (!p._eSheetEl) return quit();
     await this.drop(h, id);
