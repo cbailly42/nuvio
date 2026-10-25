@@ -648,11 +648,11 @@ ha-card.wmc{ gap:var(--s2); }
     if (UNI.length) blocks.push(`<div class="blk ${this._showUn ? "" : "unb"}"><ha-card class="glass ${this._showUn ? "" : "quiet"}"><button class="unh" data-act="unv" aria-expanded="${!!this._showUn}">${hgT('common.unavailable')} · ${UNI.length}${H.icon(this._showUn ? 'mdi:chevron-up' : 'mdi:chevron-down')}</button>
       ${this._showUn ? UNI.map((x) => `<button class="row un" ${x.d ? `data-act="dev" data-d="${H.esc(x.d)}"` : `data-act="more" data-e="${H.esc(x.e)}"`} style="width:100%"><span class="ri">${H.icon(x.i)}</span><span class="tx"><b>${H.esc(x.n)}</b><span>${hgT('common.unavailable')}</span></span></button>`).join('') : ''}</ha-card></div>`);
     // tryb edycji: encje dodane do pokoju (klimat/kamera jako osadzone karty, reszta jako kafelki)
-    for (const x of RL.added) if (x.c) blocks.push(`<div class="blk" style="align-self:start;--hg-min-h:0px" data-hgk="${H.esc(x.e)}">${hgCmHtml(x).replace(/ data-hgk="[^"]*"/, '')}</div>`); else if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
+    for (const x of RL.added) if (x.c) blocks.push(`<div class="blk" data-hgk="${H.esc(x.e)}" style="align-self:start;--hg-min-h:0px">${hgCmHtml(x).replace(/ data-hgk="[^"]*"/, '')}</div>`); else if (h.states[x.e]) { const k = HG_TILE_KIND(x.e);
       blocks.push(`<div class="blk" data-hgk="${H.esc(x.e)}">${k === 'clim' ? `<div class="acslot" data-ac="${H.esc(x.e)}"></div>` : k === 'cam' ? `<div class="camslot" data-cam="${H.esc(x.e)}"></div>` : `<div class="tg2 one">${hgTileHtml(h, x.e).replace(/ data-hgk="[^"]*"/, '')}</div>`}</div>`); }
     // klucze bloków (stałe między renderami): encja/urządzenie z pierwszego atrybutu albo rodzaj sekcji
     const seenK = {};
-    const keyed = blocks.map((b) => { const m0 = b.match(/^\s*<div class="blk[^"]*" data-hgk="([^"]+)"/); let k = m0 && m0[1];
+    const keyed = blocks.map((b) => { const m0 = b.match(/^\s*<div class="blk[^"]*"(?:\s+[\w-]+="[^"]*")*?\s+data-hgk="([^"]+)"/);   /* data-hgk także po innych atrybutach (np. style): inaczej dodany komponent dostawał klucz „b” */ let k = m0 && m0[1];
       if (!k) { const m1 = b.match(/data-(?:ac|cam|d)="([^"]+)"/) || b.match(/class="sh">[\s\S]*?<\/ha-icon>([^<]+)/) || b.match(/data-e="([^"]+)"/) || b.match(/class="(cwu|stw|chips|unh)/); k = m1 ? m1[1].trim() : 'b'; }
       seenK[k] = (seenK[k] || 0) + 1; if (seenK[k] > 1) k += '#' + seenK[k];
       const html = m0 ? b : b.replace(/^(\s*<div class="blk[^"]*")/, `$1 data-hgk="${H.esc(k)}"`);
