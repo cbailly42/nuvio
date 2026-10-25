@@ -3463,6 +3463,9 @@
   },
   "wallqa": {
     "group": "Szybkie przyciski",
-    "hold_to": "Przytrzymaj, aby potwierdzić: {name}"
+    "hold_to": "Przytrzymaj, aby potwierdzić: {name}",
+    "enter_code": "Wpisz kod alarmu",
+    "confirm": "OK",
+    "cancel": "Anuluj"
   }
 }

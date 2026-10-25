@@ -3409,6 +3409,9 @@
   },
   "wallqa": {
     "group": "Boutons rapides",
-    "hold_to": "Maintenir pour confirmer : {name}"
+    "hold_to": "Maintenir pour confirmer : {name}",
+    "enter_code": "Saisissez le code de l’alarme",
+    "confirm": "OK",
+    "cancel": "Annuler"
   }
 }

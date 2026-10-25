@@ -3355,6 +3355,9 @@
   },
   "wallqa": {
     "group": "Quick buttons",
-    "hold_to": "Hold to confirm: {name}"
+    "hold_to": "Hold to confirm: {name}",
+    "enter_code": "Enter the alarm code",
+    "confirm": "OK",
+    "cancel": "Cancel"
   }
 }

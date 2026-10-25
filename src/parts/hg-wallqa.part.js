@@ -126,7 +126,7 @@ const HGWallQA = {
     return true;
   },
   press(w, b, i) {
-    this.close();
+    this.cancelHold();
     const it = w.get().qa[i];
     b.classList.add('hd');
     const end = () => {
@@ -187,11 +187,94 @@ const HGWallQA = {
       if (it && b.dataset.on !== on) b.dataset.on = on;
     }
   },
-  ask() {},
-  close() {
+  /* panel kodu jak pinpad wygaszacza (HGWall.padEl), ale kod żyje tylko w this._c.buf (i w chwilowym polu tekstowym) i idzie do HA jako code */
+  ask(w, i, it, fmt) {
+    const el = w && w.el;
+    if (!el || w.locked) return;
+    this.close(w);
+    const nm = it.n || H.name(w.hass, it.e, it.e);
+    const pp = fmt === 'text' ? this.textPanel(nm) : w.padEl(nm, hgT('wallqa.cancel'));
+    pp.classList.add('qc');
+    const lead = pp.querySelector('.nw-pt > span:nth-of-type(2)');
+    if (lead) lead.textContent = hgT('wallqa.enter_code');
+    if (fmt !== 'text') pp.insertAdjacentHTML('beforeend', `<button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button>`);
+    this._c = { i, buf: '', fmt, pin: !el.classList.contains('pin') };
+    el.classList.add('pin');
+    /* dotyk w panel nie dochodzi do HGWall.wk (nie budzi wygaszacza) */
+    pp.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      const b = e.target.closest && e.target.closest('button');
+      if (!b) return;
+      e.preventDefault();
+      w.last = Date.now();
+      this.key(w, b.dataset.k);
+    });
+    const inp = pp.querySelector('.nw-qi');
+    if (inp) {
+      /* klawisze w polu nie docierają do keydown na nakładce (ten budzi wygaszacz i robi preventDefault) */
+      inp.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        this.timer(w);
+        if (e.key === 'Enter') { e.preventDefault(); this.key(w, 'ok'); }
+        if (e.key === 'Escape') { e.preventDefault(); this.key(w, 'cancel'); }
+      });
+    }
+    el.appendChild(pp);
+    this.dots(w);
+    this.timer(w);
+    if (inp) inp.focus();
+  },
+  textPanel(nm) {
+    const pp = document.createElement('div');
+    pp.className = 'nw-pp';
+    pp.setAttribute('role', 'group');
+    pp.setAttribute('aria-label', nm);
+    pp.innerHTML = `<div class="nw-pt"><span class="nw-li">${H.icon('mdi:shield-lock')}</span><span></span></div><input class="nw-qi" type="password" autocomplete="off" aria-label="${H.esc(hgT('wallqa.enter_code'))}"><button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button><button type="button" class="nw-lb" data-k="lock"><span>${H.esc(hgT('wallqa.cancel'))}</span></button>`;
+    return pp;
+  },
+  dots(w) {
+    const d = w && w.el && w.el.querySelector('.nw-pp.qc .nw-dots');
+    if (d) d.innerHTML = '<i class="on"></i>'.repeat((this._c || { buf: '' }).buf.length);
+  },
+  /* 20 s bez dotyku zamyka panel */
+  timer(w) {
+    clearTimeout(this._ct);
+    this._ct = setTimeout(() => this.close(w), 20000);
+  },
+  key(w, k) {
+    const c = this._c;
+    if (!c) return;
+    const inp = w && w.el && w.el.querySelector('.nw-pp.qc .nw-qi');
+    if (c.fmt === 'text' && inp) c.buf = inp.value;
+    const r = this.codeKey(c.buf, k === 'lock' ? 'cancel' : k);
+    c.buf = r.buf;
+    if (r.cancel) { this.close(w); return; }
+    this.dots(w);
+    this.timer(w);
+    if (r.submit) { const { i } = c, code = c.buf; this.close(w); this.exec(w, i, code); }
+  },
+  /* przerywa oczekujące przytrzymanie (timer + nasłuch pointerup/pointercancel) */
+  cancelHold() {
     clearTimeout(this._ht);
     if (this._end) this._end();
     this._end = null;
+  },
+  /* zamyka przytrzymanie i panel kodu; nie rzuca nawet gdy w/w.el to null (lockNow woła to bardzo wcześnie) */
+  close(w) {
+    this.cancelHold();
+    clearTimeout(this._ct);
+    const c = this._c;
+    this._c = null;
+    if (c) c.buf = '';
+    const el = w && w.el;
+    if (!el) return;
+    const pp = el.querySelector('.nw-pp.qc');
+    if (!pp) return;
+    const inp = pp.querySelector('.nw-qi');
+    if (inp) inp.value = '';
+    pp.remove();
+    if (c && c.pin) el.classList.remove('pin');
+    if (el.focus) el.focus({ preventScroll: true });
   },
 };
 window.HGWallQA = HGWallQA;

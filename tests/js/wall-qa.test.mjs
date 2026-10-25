@@ -261,3 +261,168 @@ test('integracja: wake() wygaszacza zamyka przytrzymanie (HGWallQA.close)', () =
   const s = readFileSync(new URL('../../src/parts/hg-wall.part.js', import.meta.url), 'utf8');
   assert.match(s, /  wake\(why\) \{[^\n]*HGWallQA\.close\(this\)/);
 });
+
+test('ask/close: panel kodu otwiera się i zamyka bez śladu kodu', () => {
+  const { Q } = env();
+  Q._c = { i: 0, buf: '1234', fmt: 'number' };
+  Q.close({ el: null });
+  assert.equal(Q._c, null);
+});
+
+test('close: nigdy nie rzuca (brak w, brak el) i najpierw anuluje przytrzymanie', async () => {
+  const { Q, calls, ev } = env();
+  Q.HOLD = 20;
+  const order = [];
+  const real = Q.cancelHold;
+  Q.cancelHold = function () { order.push('cancelHold'); return real.apply(this, arguments); };
+  Q.tap(mk({ e: 'cover.g', a: 'open', hold: true }), evOn(btn()));
+  for (const w of [undefined, null, {}, { el: null }]) assert.doesNotThrow(() => Q.close(w));
+  assert.equal(order[0], 'cancelHold');
+  assert.equal(ev.pointerup, undefined);
+  await wait(50);
+  assert.equal(calls.length, 0);
+});
+
+test('press: drugie przytrzymanie anuluje nasłuch i timer pierwszego', async () => {
+  const { Q, calls, ev } = env();
+  Q.HOLD = 20;
+  const ends = [];
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  const b1 = btn(), b2 = btn();
+  b1.classList = { add() {}, remove() { ends.push('b1'); } };
+  Q.press(w, b1, 0);
+  const first = ev.pointerup;
+  Q.press(w, b2, 0);
+  assert.deepEqual(ends, ['b1']);
+  assert.notEqual(ev.pointerup, first);
+  await wait(60);
+  assert.equal(calls.length, 1);
+});
+
+test('key: submit wysyła kod do exec i czyści bufor, cancel nic nie wysyła', () => {
+  const { Q } = env();
+  const sent = [];
+  Q.exec = (w, i, code) => sent.push([i, code]);
+  Q.close = () => { Q._c = null; };
+  Q.dots = () => {}; Q.timer = () => {};
+  Q._c = { i: 1, buf: '', fmt: 'number' };
+  Q.key({}, '4'); Q.key({}, '2'); Q.key({}, 'ok');
+  assert.deepEqual(sent, [[1, '42']]);
+  assert.equal(Q._c, null);
+  Q._c = { i: 1, buf: '9', fmt: 'number' };
+  Q.key({}, 'lock');
+  assert.equal(sent.length, 1);
+  assert.equal(Q._c, null);
+});
+
+test('key: tekst czyta wartość z pola, pusty kod nie jest wysyłany', () => {
+  const { Q } = env();
+  const sent = [];
+  Q.exec = (w, i, code) => sent.push([i, code]);
+  Q.timer = () => {};
+  const inp = { value: 'abC9' };
+  const w = { el: { querySelector: (s) => (s === '.nw-pp.qc .nw-qi' ? inp : null), classList: { remove() {} } } };
+  Q._c = { i: 2, buf: '', fmt: 'text' };
+  Q.key(w, 'ok');
+  assert.deepEqual(sent, [[2, 'abC9']]);
+  assert.equal(Q._c, null);
+  inp.value = '';
+  Q._c = { i: 2, buf: '', fmt: 'text' };
+  Q.key(w, 'ok');
+  assert.equal(sent.length, 1);
+  assert.notEqual(Q._c, null);
+  Q.close(w);
+});
+
+/* mini DOM: wystarcza, by przejść ask → pointerdown → key → close bez przeglądarki */
+function fakeDom() {
+  const mkEl = () => {
+    const cls = new Set(), L = {};
+    return { L, classList: { add: (c) => cls.add(c), remove: (c) => cls.delete(c), contains: (c) => cls.has(c) }, children: [], dataset: {}, textContent: '' };
+  };
+  const el = mkEl(), pp = mkEl(), lead = mkEl(), inp = mkEl(), dots = mkEl();
+  el.focused = 0; el.focus = () => { el.focused++; };
+  pp.remove = () => { el.children = el.children.filter((c) => c !== pp); };
+  pp.addEventListener = (t, f) => { pp.L[t] = f; };
+  pp.insertAdjacentHTML = (_p, h) => { pp.html = (pp.html || '') + h; };
+  inp.addEventListener = (t, f) => { inp.L[t] = f; };
+  inp.focus = () => { inp.focused = true; };
+  inp.value = '';
+  pp.querySelector = (s) => (s === '.nw-pt > span:nth-of-type(2)' ? lead : s === '.nw-qi' ? inp : null);
+  el.appendChild = (c) => { el.children.push(c); };
+  el.querySelector = (s) => {
+    if (!el.children.includes(pp)) return null;
+    if (s === '.nw-pp.qc') return pp;
+    if (s === '.nw-pp.qc .nw-qi') return inp;
+    if (s === '.nw-pp.qc .nw-dots') return dots;
+    return null;
+  };
+  return { el, pp, lead, inp, dots };
+}
+
+test('ask: panel liczbowy – pin, napis, pointerdown nie budzi, klawisze i zamknięcie', () => {
+  const { Q } = env();
+  const d = fakeDom(), sent = [];
+  Q.exec = (w, i, code) => sent.push([i, code]);
+  Q.timer = () => {};
+  const w = { el: d.el, locked: false, hass: {}, padEl: (nm, lk) => { w.padArgs = [nm, lk]; return d.pp; } };
+  d.pp.querySelector = (s) => (s === '.nw-pt > span:nth-of-type(2)' ? d.lead : null);
+  Q.ask(w, 1, { e: 'alarm_control_panel.d', n: 'Dom' }, 'number');
+  assert.deepEqual(w.padArgs, ['Dom', 'wallqa.cancel']);
+  assert.equal(d.lead.textContent, 'wallqa.enter_code');
+  assert.ok(d.pp.classList.contains('qc'));
+  assert.ok(d.el.classList.contains('pin'));
+  assert.match(d.pp.html, /data-k="ok"/);
+  let stopped = 0, prevented = 0;
+  const down = (k) => d.pp.L.pointerdown({ stopPropagation: () => stopped++, preventDefault: () => prevented++, target: { closest: () => (k ? { dataset: { k } } : null) } });
+  down(null);
+  assert.equal(stopped, 1); assert.equal(prevented, 0);
+  down('4'); down('2');
+  assert.equal(Q._c.buf, '42');
+  assert.equal(d.dots.innerHTML.split('<i').length - 1, 2);
+  down('del');
+  assert.equal(Q._c.buf, '4');
+  down('lock');
+  assert.equal(Q._c, null);
+  assert.equal(d.el.classList.contains('pin'), false);
+  assert.equal(d.el.children.length, 0);
+  assert.equal(sent.length, 0);
+  assert.equal(d.el.focused, 1);
+});
+
+test('ask: panel tekstowy – Enter wysyła, Escape anuluje, klawisze nie propagują do saver', () => {
+  const { Q } = env();
+  const d = fakeDom(), sent = [];
+  Q.exec = (w, i, code) => sent.push([i, code]);
+  Q.timer = () => {};
+  const w = { el: d.el, locked: false, hass: {} };
+  Q.textPanel = () => d.pp;
+  Q.ask(w, 0, { e: 'alarm_control_panel.d' }, 'text');
+  assert.ok(d.inp.focused);
+  const k = (key) => { const e = { key, stopPropagation() { this.s = 1; }, preventDefault() {} }; d.inp.L.keydown(e); return e; };
+  d.inp.value = 'Sekret1';
+  assert.equal(k('a').s, 1);
+  assert.equal(sent.length, 0);
+  k('Enter');
+  assert.deepEqual(sent, [[0, 'Sekret1']]);
+  assert.equal(Q._c, null);
+  Q.ask(w, 0, { e: 'alarm_control_panel.d' }, 'text');
+  d.inp.value = 'x';
+  k('Escape');
+  assert.equal(sent.length, 1);
+  assert.equal(Q._c, null);
+});
+
+test('ask: zablokowany saver albo brak el – bez panelu', () => {
+  const { Q } = env();
+  const d = fakeDom();
+  Q.ask({ el: d.el, locked: true, padEl: () => d.pp, hass: {} }, 0, { e: 'alarm_control_panel.d' }, 'number');
+  assert.equal(Q._c == null, true);
+  assert.equal(d.el.children.length, 0);
+  assert.doesNotThrow(() => Q.ask({ el: null, locked: false }, 0, { e: 'alarm_control_panel.d' }, 'number'));
+});
+
+test('kod alarmu: nigdzie poza this._c.buf (źródło nie zapisuje kodu)', () => {
+  const s = readFileSync(new URL('../../src/parts/hg-wallqa.part.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(s, /localStorage|sessionStorage|console\.|dataset\.(buf|code)|data-(code|buf)/);
+});
