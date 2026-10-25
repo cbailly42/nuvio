@@ -61,3 +61,12 @@ Admins can export and import the whole Nuvio layout from **Appearance → Layout
 - **Import** accepts a file (picker or drag and drop) or pasted JSON. The file is validated and a summary shows the number of views, widgets, sections and entities, with entities missing on this instance highlighted. Pick the parts to import and **Replace** or **Merge**.
 - Before importing, the current layout is kept as a backup; **Restore previous** in the notification (or in the Layout backup section) undoes the import with one click.
 - The file is versioned (`format`, `schema`, `nuvio`, `exported`). Older raw layout data is converted automatically; files from a newer schema or damaged files are rejected with a clear message.
+
+## Nuvio TV
+
+**Settings > System > TV** pairs the Nuvio TV app without typing a token. The page is part of the settings panel, so administrators and users with their own layout see it.
+
+- Type the TV address (`10.0.8.117:8798`) and the 6 digit code shown on the TV, or paste the link from its QR code into the address field. The Home Assistant address is filled with the current one and can be changed.
+- **Pair** creates a long-lived access token named *Nuvio TV date time* and sends it with the address to the TV over your home network, in a form that opens in a tab Nuvio opens at the moment of the click (this keeps browsers from blocking it). If your browser blocks the tab anyway, the token is created and a second button **Open the TV page and send** appears: press it within 2 minutes, after that the unsent token is removed. Only addresses on your home network are accepted: 10.x, 172.16 to 31.x, 192.168.x, 169.254.x and `.local`. The data crosses the network without encryption.
+- The TV confirms by writing a marker (`nuvio_tv_seen`) to your Home Assistant user data. Nuvio checks it every 3 seconds for up to 60 seconds, then shows *TV connected* or removes the unused token.
+- The list shows your Nuvio TV tokens with the date added and the time the TV last connected. **Remove** deletes the token, and the TV returns to its pairing screen.

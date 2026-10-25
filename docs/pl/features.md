@@ -61,3 +61,12 @@ Administrator może wyeksportować i zaimportować cały układ Nuvio w **Wyglą
 - **Importuj** przyjmuje plik (wybór lub przeciągnięcie) albo wklejony JSON. Plik jest sprawdzany, a podsumowanie pokazuje liczbę widoków, widżetów, sekcji i encji oraz wyróżnia encje, których brak na tej instancji. Wybierz części do importu oraz **Zastąp** albo **Połącz**.
 - Przed importem bieżący układ jest zapisywany jako kopia; **Przywróć poprzedni** w powiadomieniu (albo w sekcji Kopia układu) cofa import jednym kliknięciem.
 - Plik ma wersję (`format`, `schema`, `nuvio`, `exported`). Starsze surowe dane układu są konwertowane automatycznie, a pliki z nowszego schematu lub uszkodzone są odrzucane z jasnym komunikatem.
+
+## Nuvio TV
+
+**Ustawienia > System > Telewizor** paruje aplikację Nuvio TV bez wpisywania tokenu. Strona jest częścią panelu ustawień, więc widzą ją administratorzy i osoby z własnym układem.
+
+- Wpisz adres telewizora (`10.0.8.117:8798`) i 6-cyfrowy kod z jego ekranu albo wklej link z kodu QR do pola adresu. Adres Home Assistant jest wypełniony bieżącym i można go zmienić.
+- **Sparuj** tworzy token długoterminowy o nazwie *Nuvio TV data godzina* i wysyła go z adresem do telewizora przez sieć domową, formularzem, który otwiera się w karcie otwieranej przez Nuvio w chwili kliknięcia (dzięki temu przeglądarki jej nie blokują). Jeśli przeglądarka zablokuje kartę mimo to, token jest tworzony i pojawia się drugi przycisk **Otwórz stronę TV i wyślij**: naciśnij go w ciągu 2 minut, po tym czasie niewysłany token jest usuwany. Przyjmowane są tylko adresy z sieci domowej: 10.x, 172.16 do 31.x, 192.168.x, 169.254.x i `.local`. Dane przechodzą przez sieć bez szyfrowania.
+- Telewizor potwierdza, zapisując znacznik (`nuvio_tv_seen`) w danych użytkownika Home Assistant. Nuvio sprawdza go co 3 sekundy do 60 sekund, po czym pokazuje *Telewizor połączony* albo usuwa niewykorzystany token.
+- Lista pokazuje tokeny Nuvio TV z datą dodania i czasem ostatniego połączenia telewizora. **Usuń** kasuje token, a telewizor wraca do ekranu parowania.
