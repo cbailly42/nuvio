@@ -31,7 +31,7 @@ test('build.py: części logiki i strony są w PAGE po hg-users, przed hg-assist
 
 test('katalogi: strona tv i przestrzeń tv.* mają te same klucze w en, pl i fr', () => {
   const en = cat('en');
-  assert.equal(Object.keys(en.tv).length, 36);
+  assert.equal(Object.keys(en.tv).length, 37);
   for (const c of ['pl', 'fr']) {
     const d = cat(c);
     assert.deepEqual(Object.keys(d.tv), Object.keys(en.tv), c);
@@ -39,6 +39,7 @@ test('katalogi: strona tv i przestrzeń tv.* mają te same klucze w en, pl i fr'
     assert.deepEqual(d.tv.created.match(/\{[a-z]+\}/g), ['{when}'], c);
   }
   assert.equal(cat('pl').tv.connected, 'Telewizor połączony');
+  assert.deepEqual(['en', 'pl', 'fr'].map((c) => cat(c).tv.beta), ['Beta', 'Beta', 'Bêta']);
 });
 
 test('token nie jest zapisywany ani logowany przez stronę', () => {
@@ -49,4 +50,14 @@ test('brak długich myślników w nowych plikach i w tekstach tv (DESIGN.md)', (
   const dash = /[\u2013\u2014]/;
   assert.doesNotMatch(tv, dash); assert.doesNotMatch(logic, dash);
   for (const c of ['en', 'pl', 'fr']) { const d = cat(c); assert.doesNotMatch(JSON.stringify([d.tv, d.settings.pg.tv]), dash, c); }
+});
+
+test('znaczek Beta przy tytule strony: tylko tokeny projektu, bez stałych px dla promienia i czcionki', () => {
+  const css = tv.slice(tv.indexOf('const HG_TV_CSS'));
+  const rule = css.split('\n').find((l) => l.startsWith('.tv-beta')) || '';
+  assert.match(rule, /border-radius:var\(--hg-radius-pill\)/);
+  assert.match(rule, /font-size:var\(--hg-fs-1\)/);
+  assert.match(rule, /color-mix\(in srgb, var\(--hg-accent\) 18%, transparent\)/);
+  assert.match(rule, /color:var\(--hg-accent-tx, var\(--hg-accent\)\)/);
+  assert.doesNotMatch(rule, /#[0-9a-f]{3,6}\b|rgba?\(/i);
 });

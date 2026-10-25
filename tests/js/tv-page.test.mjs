@@ -84,6 +84,15 @@ test('html: sekcja strony tv z polami, przyciskiem i listą tokenów telewizoró
   assert.match(h, /value="https:\/\/ha\.example\.com"/);
 });
 
+test('html: tytuł strony ma znaczek Beta z katalogu, jako zwykły tekst w nagłówku bez dodatkowej roli', () => {
+  const { HGTv, p, log } = env();
+  const h = HGTv.html(p);
+  const head = h.match(/<h4 id="tv-h">([\s\S]*?)<\/h4>/)[1];
+  assert.match(head, /<b class="tv-beta">tv\.beta<\/b>/);
+  assert.doesNotMatch(head, /role=/);
+  assert.equal(log.hgt.some(([k]) => k === 'tv.beta'), true);
+});
+
 test('html: lista bez wpisu znacznika pokazuje "jeszcze nie widziany", błąd odczytu daje ponowienie', async () => {
   const a = env();
   a.HGTv.html(a.p); await tick(); await tick();

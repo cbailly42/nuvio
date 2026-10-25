@@ -3491,6 +3491,7 @@
   "tv": {
     "address": "Adres telewizora",
     "address_hint": "Widoczny na telewizorze, na przykład 10.0.8.117:8798. Możesz też wkleić tu link z kodu QR.",
+    "beta": "Beta",
     "code": "Kod",
     "code_hint": "6 cyfr widocznych na telewizorze.",
     "connected": "Telewizor połączony",

@@ -3383,6 +3383,7 @@
   "tv": {
     "address": "TV address",
     "address_hint": "Shown on the TV, for example 10.0.8.117:8798. You can also paste the QR link here.",
+    "beta": "Beta",
     "code": "Code",
     "code_hint": "The 6 digits shown on the TV.",
     "connected": "TV connected",

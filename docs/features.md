@@ -64,7 +64,7 @@ Admins can export and import the whole Nuvio layout from **Appearance → Layout
 
 ## Nuvio TV
 
-**Settings > System > TV** pairs the Nuvio TV app without typing a token. The page is part of the settings panel, so administrators and users with their own layout see it.
+**Settings > System > TV** pairs the Nuvio TV app without typing a token. The page is marked Beta. The page is part of the settings panel, so administrators and users with their own layout see it.
 
 - Type the TV address (`10.0.8.117:8798`) and the 6 digit code shown on the TV, or paste the link from its QR code into the address field. The Home Assistant address is filled with the current one and can be changed.
 - **Pair** creates a long-lived access token named *Nuvio TV date time* and sends it with the address to the TV over your home network, in a form that opens in a tab Nuvio opens at the moment of the click (this keeps browsers from blocking it). If your browser blocks the tab anyway, the token is created and a second button **Open the TV page and send** appears: press it within 2 minutes, after that the unsent token is removed. Only addresses on your home network are accepted: 10.x, 172.16 to 31.x, 192.168.x, 169.254.x and `.local`. The data crosses the network without encryption.

@@ -67,7 +67,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     const fld = (k, label, hint, ph, extra) => hgForm.field(label, hgForm.text({ value: this.s[k], ph, a: `name="tv-${k}" aria-label="${H.esc(label)}" ${extra}${dis}` }), { hint })
       + (this.errText(k) ? `<small class="nf-err" role="alert">${this.errText(k)}</small>` : '');
     return `<section class="lk-g tv" data-tab="tv" data-pg="tv" aria-labelledby="tv-h"><style>${HG_TV_CSS}</style>
-      <h4 id="tv-h">${H.icon('mdi:television')}${hgT('tv.title')}</h4>
+      <h4 id="tv-h">${H.icon('mdi:television')}${hgT('tv.title')}<b class="tv-beta">${hgT('tv.beta')}</b></h4>
       <small class="lk-hn">${hgT('tv.intro')}</small>
       ${fld('addr', hgT('tv.address'), hgT('tv.address_hint'), '10.0.8.117:8798', 'inputmode="url" autocapitalize="off" spellcheck="false"')}
       ${fld('code', hgT('tv.code'), hgT('tv.code_hint'), '123456', 'inputmode="numeric" maxlength="6" pattern="[0-9]*"')}
@@ -200,6 +200,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
 const HG_TV_CSS = `
 .lk-mini.tv-go{ height:var(--hg-btn-touch); padding:0 22px; align-self:flex-start; }
 .tv-st{ min-height:20px; font-size:var(--hg-fs-2); line-height:1.4; display:flex; gap:6px; align-items:flex-start; } .tv-st ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; flex:none; color:var(--hg-accent-tx, var(--hg-accent)); }
+.tv-beta{ flex:none; margin-left:8px; padding:2px 8px; border-radius:var(--hg-radius-pill); font-size:var(--hg-fs-1); font-weight:700; letter-spacing:.08em; background:color-mix(in srgb, var(--hg-accent) 18%, transparent); color:var(--hg-accent-tx, var(--hg-accent)); vertical-align:middle; }
 .tv-lh{ margin-top:8px; }
 .tv-l{ display:flex; flex-direction:column; gap:6px; }
 .tv-r{ display:flex; align-items:center; gap:8px; padding:8px 4px 8px 12px; border-radius:var(--hg-radius-in); background:color-mix(in srgb, var(--hg-accent) 8%, transparent); }
