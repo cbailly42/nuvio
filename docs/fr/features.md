@@ -21,6 +21,7 @@ Un écran de veille pour une tablette fixée au mur. Il est **désactivé par d�
 
 - **Démarrer après inactivité** : 30 s, 1, 2, 5, 10 ou 30 min sans toucher, souris ni clavier (2 min par défaut).
 - **Assombrissement** : de 0 à 90 %, à quel point l’écran s’assombrit sous l’horloge (50 % par défaut).
+- **Vue affichée au réveil** : *Dernière vue utilisée* (par défaut), *Accueil* ou n’importe quelle vue activée. Quand l’écran de veille s’active, le tableau de bord passe sur cette vue derrière lui : c’est elle que vous voyez en réveillant l’écran. Ni en mode édition ni pendant l’aperçu ; une vue verrouillée par PIN demande le code au réveil.
 - **Photo** : votre fond d’écran du tableau de bord, un diaporama des fonds d’écran fournis (fondu enchaîné toutes les 45 s) ou l’URL de votre propre image (`https://…` ou `/local/…`).
 - **Détecteur de mouvement** : choisissez n’importe quel `binary_sensor` ; les détecteurs de mouvement, d’occupation et de présence apparaissent en premier. Quand il passe à `on` pendant que l’écran de veille est affiché, l’écran se réveille. Sans capteur, seul le toucher le réveille.
 - **Réveil** : toucher, appui sur une touche ou défilement. Le premier toucher réveille seulement l’écran et n’actionne pas la tuile située dessous.
