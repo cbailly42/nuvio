@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Added: **Wall tablet mode → View shown on wake**: Last view used (default), Home or any enabled view. When the screensaver starts, the dashboard goes back to that view behind it, so it is the one you see when you wake the screen. Skipped in edit mode, in the preview and when the view is already open. A view locked with a PIN still asks for it on wake.
+
 ### 2.23.1
 - Restored: the code base of 2.23.0 as released, with the Energy flow work of 2.22.5 / #57. The editor split and the review fixes that followed are withdrawn: a dashboard built from them failed to render (`this._applyLayout is not a function`) and left every view empty.
 - New: the **Energy flow** card fills itself from the **Energy dashboard** settings of Home Assistant when they list power sensors (recent HA: grid, solar and battery power, battery level and name). Inverted meters and separate import / export sensors are handled as in HA. Anything missing there is detected as before, and your own choices in the card settings always win.

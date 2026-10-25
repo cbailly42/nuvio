@@ -88,7 +88,7 @@ const HG_NT_SS = `
     bdHtml(c, h) { const r = _bh.call(this, c, h); r.top += this.ntHtml(h); return r; },
     pkOp(id, op, k) { if (id !== 'ntf') return _po.call(this, id, op, k); const S = this.ntSel(); wr(LS, op === 'add' ? [...new Set([...S, k])] : S.filter((x) => x !== k)); this.ntSub(this.hass); return true; },
     tick(h, page) { _tk.call(this, h, page); this.ntSub(h); },
-    show() { _sh.call(this); if (!this.el) return; if (!this.el.querySelector('.nb-nt')) { const d = document.createElement('div'); d.className = 'nb-nt'; d.hidden = true; d.setAttribute('aria-live', 'polite'); const bot = this.el.querySelector('.nwb .nb-bot'); if (bot) bot.prepend(d); else this.el.appendChild(d); }
+    show(test) { _sh.call(this, test); if (!this.el) return; if (!this.el.querySelector('.nb-nt')) { const d = document.createElement('div'); d.className = 'nb-nt'; d.hidden = true; d.setAttribute('aria-live', 'polite'); const bot = this.el.querySelector('.nwb .nb-bot'); if (bot) bot.prepend(d); else this.el.appendChild(d); }
       const st = document.createElement('style'); st.textContent = HG_NT_SS; this.el.prepend(st);
       this.ntWire(this.el); this.ntRender(); clearInterval(this._ntT); this._ntT = setInterval(() => this.ntTimes(), 30000); },
     ntTimes() { if (!this.el) return clearInterval(this._ntT); const L = this.ntList(); for (const t of this.el.querySelectorAll('.nt-c')) { const x = L.find((n) => n.id === t.dataset.id), tm = t.querySelector('time'); if (x && tm) tm.textContent = this.ntAgo(x.ts); } },
