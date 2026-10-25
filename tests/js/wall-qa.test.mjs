@@ -156,7 +156,7 @@ test('exec: bez hass nic nie robi', async () => {
   assert.equal(calls.length, 0);
 });
 
-const btn = () => ({ dataset: { qi: '0' }, classList: { add() {}, remove() {} } });
+const btn = () => ({ dataset: { qi: '0' }, isConnected: true, classList: { add() {}, remove() {} } });
 const evOn = (b) => ({ type: 'pointerdown', target: { closest: (s) => (s === '.nw-qb' ? b : null) } });
 
 test('tap: dotknięcie bez hold wykonuje akcję od razu', async () => {
@@ -207,4 +207,57 @@ test('plan/actions: tylko własne właściwości (constructor, toString, __proto
   assert.deepEqual(Q.actions('constructor.x'), []);
   assert.deepEqual(Q.actions('__proto__.x'), []);
   assert.deepEqual(Q.norm([{ e: 'switch.a', a: 'toString' }, { e: 'constructor.x', a: 'name' }]), []);
+});
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+test('hold: odłączony przycisk nie wykonuje akcji po czasie przytrzymania', async () => {
+  const { Q, calls, ev } = env();
+  Q.HOLD = 20;
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  const b = btn();
+  Q.tap(w, evOn(b));
+  b.isConnected = false;
+  await wait(50);
+  assert.equal(calls.length, 0);
+  assert.equal(ev.pointerup, undefined);
+});
+
+test('hold: zablokowany wygaszacz nie wykonuje akcji', async () => {
+  const { Q, calls } = env();
+  Q.HOLD = 20;
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  Q.tap(w, evOn(btn()));
+  w.locked = true;
+  await wait(50);
+  assert.equal(calls.length, 0);
+});
+
+test('hold: zmiana pozycji konfiguracji w trakcie przytrzymania anuluje akcję', async () => {
+  const { Q, calls } = env();
+  Q.HOLD = 20;
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  Q.tap(w, evOn(btn()));
+  w.get = () => ({ qa: [{ e: 'cover.g', a: 'close', hold: true }] });
+  await wait(50);
+  assert.equal(calls.length, 0);
+});
+
+test('close: anuluje oczekujące przytrzymanie i zdejmuje nasłuch pointerup', async () => {
+  const { Q, calls, ev } = env();
+  Q.HOLD = 20;
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  Q.tap(w, evOn(btn()));
+  assert.equal(typeof ev.pointerup, 'function');
+  Q.close(w);
+  assert.equal(ev.pointerup, undefined);
+  assert.equal(ev.pointercancel, undefined);
+  await wait(50);
+  assert.equal(calls.length, 0);
+  Q.close(w);
+});
+
+test('integracja: wake() wygaszacza zamyka przytrzymanie (HGWallQA.close)', () => {
+  const s = readFileSync(new URL('../../src/parts/hg-wall.part.js', import.meta.url), 'utf8');
+  assert.match(s, /  wake\(why\) \{[^\n]*HGWallQA\.close\(this\)/);
 });

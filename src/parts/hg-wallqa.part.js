@@ -126,15 +126,25 @@ const HGWallQA = {
     return true;
   },
   press(w, b, i) {
-    clearTimeout(this._ht);
+    this.close();
+    const it = w.get().qa[i];
     b.classList.add('hd');
     const end = () => {
       clearTimeout(this._ht);
+      if (this._end === end) this._end = null;
       b.classList.remove('hd');
       for (const t of ['pointerup', 'pointercancel']) window.removeEventListener(t, end, true);
     };
+    this._end = end;
     for (const t of ['pointerup', 'pointercancel']) window.addEventListener(t, end, true);
-    this._ht = setTimeout(() => { end(); H.haptic('medium'); this.exec(w, i); }, this.HOLD);
+    this._ht = setTimeout(() => {
+      end();
+      /* saver zamknięty/zablokowany albo konfiguracja zmieniona w trakcie przytrzymania: bez akcji */
+      const cur = w.get().qa[i];
+      if (!b.isConnected || w.locked || !it || !cur || cur.e !== it.e || cur.a !== it.a) return;
+      H.haptic('medium');
+      this.exec(w, i);
+    }, this.HOLD);
   },
   layer(w) {
     const h = w.hass;
@@ -178,6 +188,10 @@ const HGWallQA = {
     }
   },
   ask() {},
-  close() {},
+  close() {
+    clearTimeout(this._ht);
+    if (this._end) this._end();
+    this._end = null;
+  },
 };
 window.HGWallQA = HGWallQA;
