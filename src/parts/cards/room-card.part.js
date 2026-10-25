@@ -669,7 +669,8 @@ ha-card.wmc{ gap:var(--s2); }
   afterRender() {
     clearInterval(this._stT); this._stT = 0;
     hgNP.after(this);
-    if (this._stFade) this._stT = setInterval(() => { const el = this.$.querySelector('.stf'), r = Math.ceil((this._stFade - Date.now()) / 1000);
+    if (this._stFade) this._stT = setInterval(() => { if (document.hidden || this._off) return;   // ukryta karta/zakładka: po powrocie najbliższy tick policzy sekundy i dokończy odliczanie
+      const el = this.$.querySelector('.stf'), r = Math.ceil((this._stFade - Date.now()) / 1000);
       if (!el || r <= 0) { clearInterval(this._stT); this._stT = 0; this._stFade = null; if (el) el.textContent = hgT('cards.room.turning_off'); return; } el.textContent = hgT('cards.room.turning_off_in_s', { seconds: r }); const n = this.$.querySelector('.stn'); if (n) n.textContent = r; }, 1000);
     const h = this._hass, keep = new Set();
     for (const slot of this.$.querySelectorAll('.acslot[data-ac]')) {
