@@ -3092,6 +3092,9 @@
     "touch_to_unlock": "Touch the screen to unlock",
     "try_again_in": "Try again in {seconds} s",
     "unlock_the_dashboard": "Unlock the dashboard",
+    "wake_view": "View shown on wake",
+    "wake_view_hint": "When the screensaver starts, the dashboard goes back to this view, so it is the one you see when you wake the screen.",
+    "wake_view_last": "Last view used",
     "wall_tablet_mode": "Wall tablet mode",
     "wrong_pin": "Wrong PIN"
   },
