@@ -54,7 +54,7 @@ const HGCamFS = {
         box.appendChild(img); const lb = el.querySelector('.bar i'); if (lb) lb.textContent = hgT('cards.camera.preview');
         const tick = () => { const s = H.st(this.card ? this.card._hass : card._hass, card._ent ? card._ent() : c.entity); if (!s || !s.attributes.entity_picture) return;
           const u = s.attributes.entity_picture, pre = new Image(); pre.onload = () => { if (pre.naturalWidth >= 16) img.src = pre.src; }; pre.src = u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(); };
-        tick(); this._pv = setInterval(() => { if (this.el === el) tick(); }, 2000); return;
+        tick(); this._pv = setInterval(() => { if (this.el === el && !document.hidden) tick(); }, 2000);   // karta ukryta: bez pobierania migawki, po powrocie najbliższy tick odświeża obraz return;
       }
       const fe = c.fs_entity && H.ok(card._hass.states[c.fs_entity]) ? c.fs_entity : (card._ent ? card._ent() : c.entity);   // pełny ekran: strumień główny (main), kafel: sub/podgląd
       const live = helpers.createCardElement({ type: 'picture-entity', entity: fe, camera_view: 'live', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' } });
