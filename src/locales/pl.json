@@ -3460,5 +3460,9 @@
     "sender_note": "Z automatyzacji: zdarzenie nuvio_command z polami device, action (wake, screensaver, lock, navigate) i view albo pomocnik z tymi samymi wartościami w atrybutach device, action i view.",
     "show_view": "Pokaż: {view}",
     "test": "Wypróbuj na tym tablecie"
+  },
+  "wallqa": {
+    "group": "Szybkie przyciski",
+    "hold_to": "Przytrzymaj, aby potwierdzić: {name}"
   }
 }

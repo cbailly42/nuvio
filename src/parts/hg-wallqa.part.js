@@ -38,7 +38,15 @@ const HGWallQA = {
   },
   ICON: { script: 'mdi:script-text-play', scene: 'mdi:palette', button: 'mdi:gesture-tap-button', input_button: 'mdi:gesture-tap-button', switch: 'mdi:toggle-switch', light: 'mdi:lightbulb', fan: 'mdi:fan', input_boolean: 'mdi:toggle-switch', cover: 'mdi:window-shutter', alarm_control_panel: 'mdi:shield-home' },
   dom(e) { return String(e || '').split('.')[0]; },
-  actions(e) { return Object.keys(this.DOM[this.dom(e)] || {}); },
+  /* tylko własne właściwości tabeli DOM: 'constructor', 'toString', '__proto__' nie są domeną ani akcją */
+  svc(e, a) {
+    const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k), d = this.dom(e);
+    return own(this.DOM, d) && own(this.DOM[d], a) ? this.DOM[d][a] : null;
+  },
+  actions(e) {
+    const d = this.dom(e);
+    return Object.prototype.hasOwnProperty.call(this.DOM, d) ? Object.keys(this.DOM[d]) : [];
+  },
   /* roleta i alarm domyślnie wymagają przytrzymania (przypadkowy dotyk nie otwiera bramy) */
   hold(e) { return ['cover', 'alarm_control_panel'].includes(this.dom(e)); },
   norm(list) {
@@ -68,7 +76,7 @@ const HGWallQA = {
   },
   /* wywołanie usługi dla pozycji; need = trzeba najpierw zapytać o kod (alarm z code_format; rozbrajanie, a uzbrajanie gdy code_arm_required) */
   plan(item, s, code) {
-    const d = this.dom(item.e), svc = (this.DOM[d] || {})[item.a];
+    const d = this.dom(item.e), svc = this.svc(item.e, item.a);
     if (!svc) return null;
     const at = (s && s.attributes) || {};
     const fmt = d === 'alarm_control_panel' && (at.code_format === 'number' || at.code_format === 'text') ? at.code_format : '';
@@ -85,5 +93,91 @@ const HGWallQA = {
     if (/^[0-9]$/.test(k) && buf.length < 12) return { buf: buf + k };
     return { buf };
   },
+  /* stan pozycji na przycisku: busy → ok/err, potem wygasa */
+  mark(w, i, s) {
+    const b = w.el && w.el.querySelector(`.nw-qb[data-qi="${i}"]`);
+    if (!b) return;
+    this._mt = this._mt || {};
+    clearTimeout(this._mt[i]);
+    b.dataset.st = s;
+    if (s !== 'busy') this._mt[i] = setTimeout(() => { delete b.dataset.st; }, s === 'err' ? 2000 : 1200);
+  },
+  /* wykonanie bez wybudzania wygaszacza; alarm z kodem najpierw pyta o kod (ask) */
+  exec(w, i, code) {
+    const it = w.get().qa[i];
+    if (!it || !w.hass) return Promise.resolve(false);
+    const p = this.plan(it, w.hass.states[it.e], code);
+    if (!p) return Promise.resolve(false);
+    if (p.need && !code) { this.ask(w, i, it, p.fmt); return Promise.resolve(false); }
+    this.mark(w, i, 'busy');
+    return Promise.resolve()
+      .then(() => H.call(w.hass, p.domain, p.service, p.data))
+      .then(() => { this.mark(w, i, 'ok'); return true; }, () => { H.haptic('heavy'); this.mark(w, i, 'err'); return false; });
+  },
+  /* pointerdown z HGWall.wk: true = obsłużone (bez budzenia) */
+  tap(w, e) {
+    const b = e.target && e.target.closest && e.target.closest('.nw-qb');
+    if (!b) return false;
+    w.last = Date.now();
+    const i = Number(b.dataset.qi), it = w.get().qa[i];
+    if (!it) return true;
+    if (!it.hold) { H.haptic('light'); this.exec(w, i); return true; }
+    this.press(w, b, i);
+    return true;
+  },
+  press(w, b, i) {
+    clearTimeout(this._ht);
+    b.classList.add('hd');
+    const end = () => {
+      clearTimeout(this._ht);
+      b.classList.remove('hd');
+      for (const t of ['pointerup', 'pointercancel']) window.removeEventListener(t, end, true);
+    };
+    for (const t of ['pointerup', 'pointercancel']) window.addEventListener(t, end, true);
+    this._ht = setTimeout(() => { end(); H.haptic('medium'); this.exec(w, i); }, this.HOLD);
+  },
+  layer(w) {
+    const h = w.hass;
+    return w.get().qa.map((it, i) => {
+      const nm = it.n || H.name(h, it.e, it.e), lb = it.hold ? hgT('wallqa.hold_to', { name: nm }) : nm;
+      const on = this.isOn(it.e, h && h.states[it.e]) ? 1 : 0;
+      return `<button type="button" class="nw-qb" data-qi="${i}" data-on="${on}" aria-label="${H.esc(lb)}">${H.icon(it.ic || this.ICON[this.dom(it.e)])}<i class="nw-qr" aria-hidden="true"></i></button>`;
+    }).join('');
+  },
+  fill(w, L) {
+    const list = w.get().qa;
+    L.dataset.k = JSON.stringify(list);
+    L.style.setProperty('--nw-qh', `${this.HOLD}ms`);
+    L.innerHTML = `<style>${HG_QA_CSS}</style>${this.layer(w)}`;
+  },
+  /* warstwa przycisków w .nw (wspólna dla stylów photo/board/glass); wywołane w show() przed wstawieniem do body */
+  mount(w, el) {
+    this._c = null;
+    clearTimeout(this._ct);
+    clearTimeout(this._ht);
+    if (!w.get().qa.length) return;
+    const L = document.createElement('div');
+    L.className = 'nw-qa';
+    L.setAttribute('role', 'group');
+    L.setAttribute('aria-label', hgT('wallqa.group'));
+    this.fill(w, L);
+    el.appendChild(L);
+  },
+  /* przy każdej zmianie hass/konfiguracji: odbuduj przy zmianie listy, inaczej tylko data-on */
+  paint(w) {
+    const el = w.el;
+    if (!el) return;
+    const list = w.get().qa, L = el.querySelector('.nw-qa');
+    if (!L) { if (list.length) this.mount(w, el); return; }
+    if (!list.length) { L.remove(); return; }
+    if (L.dataset.k !== JSON.stringify(list)) { this.fill(w, L); return; }
+    for (const b of L.querySelectorAll('.nw-qb')) {
+      const it = list[Number(b.dataset.qi)];
+      const on = it && this.isOn(it.e, w.hass && w.hass.states[it.e]) ? '1' : '0';
+      if (it && b.dataset.on !== on) b.dataset.on = on;
+    }
+  },
+  ask() {},
+  close() {},
 };
 window.HGWallQA = HGWallQA;

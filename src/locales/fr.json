@@ -3406,5 +3406,9 @@
     "sender_note": "Depuis une automatisation : un événement nuvio_command avec device, action (wake, screensaver, lock, navigate) et view, ou l’auxiliaire avec les mêmes valeurs dans ses attributs device, action et view.",
     "show_view": "Afficher {view}",
     "test": "Essayer sur cette tablette"
+  },
+  "wallqa": {
+    "group": "Boutons rapides",
+    "hold_to": "Maintenir pour confirmer : {name}"
   }
 }

@@ -122,3 +122,89 @@ test('build: hg-wallqa jest po hg-wall w PAGE', () => {
   const s = readFileSync(new URL('../../tools/build.py', import.meta.url), 'utf8');
   assert.match(s, /'hg-wall\.part\.js', 'hg-wallqa\.part\.js'/);
 });
+
+const mk = (item, states) => ({ hass: { states: states || {} }, get: () => ({ qa: [item] }), last: 0, el: null, locked: false });
+
+test('exec: wywołuje usługę z białej listy i zwraca true', async () => {
+  const { Q, calls } = env();
+  const w = mk({ e: 'script.zgas', a: 'press', hold: false });
+  assert.equal(await Q.exec(w, 0), true);
+  assert.deepEqual(calls, [['script', 'turn_on', { entity_id: 'script.zgas' }]]);
+});
+
+test('exec: błąd usługi nie rzuca, zwraca false', async () => {
+  const { Q, H } = env();
+  H.fail = true;
+  assert.equal(await Q.exec(mk({ e: 'switch.a', a: 'toggle', hold: false }), 0), false);
+});
+
+test('exec: alarm z kodem najpierw pyta o kod, potem wysyła go jako code', async () => {
+  const { Q, calls } = env();
+  const asked = [];
+  Q.ask = (...a) => asked.push(a);
+  const w = mk({ e: 'alarm_control_panel.d', a: 'disarm', hold: true }, { 'alarm_control_panel.d': st('armed_away', { code_format: 'number' }) });
+  assert.equal(await Q.exec(w, 0), false);
+  assert.equal(calls.length, 0);
+  assert.equal(asked.length, 1);
+  assert.equal(await Q.exec(w, 0, '1234'), true);
+  assert.deepEqual(calls, [['alarm_control_panel', 'alarm_disarm', { entity_id: 'alarm_control_panel.d', code: '1234' }]]);
+});
+
+test('exec: bez hass nic nie robi', async () => {
+  const { Q, calls } = env();
+  assert.equal(await Q.exec({ hass: null, get: () => ({ qa: [{ e: 'switch.a', a: 'on', hold: false }] }) }, 0), false);
+  assert.equal(calls.length, 0);
+});
+
+const btn = () => ({ dataset: { qi: '0' }, classList: { add() {}, remove() {} } });
+const evOn = (b) => ({ type: 'pointerdown', target: { closest: (s) => (s === '.nw-qb' ? b : null) } });
+
+test('tap: dotknięcie bez hold wykonuje akcję od razu', async () => {
+  const { Q, calls } = env();
+  const w = mk({ e: 'switch.a', a: 'toggle', hold: false });
+  assert.equal(Q.tap(w, evOn(btn())), true);
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(calls.length, 1);
+  assert.ok(w.last > 0);
+});
+
+test('tap: poza przyciskiem zwraca false', () => {
+  const { Q } = env();
+  assert.equal(Q.tap(mk({ e: 'switch.a', a: 'on', hold: false }), { type: 'pointerdown', target: { closest: () => null } }), false);
+});
+
+test('tap: hold wykonuje dopiero po przytrzymaniu, puszczenie wcześniej anuluje', async () => {
+  const { Q, calls, ev } = env();
+  Q.HOLD = 30;
+  const w = mk({ e: 'cover.g', a: 'open', hold: true });
+  Q.tap(w, evOn(btn()));
+  ev.pointerup();
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(calls.length, 0);
+  Q.tap(w, evOn(btn()));
+  await new Promise((r) => setTimeout(r, 60));
+  assert.deepEqual(calls, [['cover', 'open_cover', { entity_id: 'cover.g' }]]);
+  assert.equal(ev.pointerup, undefined);
+});
+
+test('integracja: hg-wall ma zaczepy HGWallQA (get/wk/show/tick/lockNow)', () => {
+  const s = readFileSync(new URL('../../src/parts/hg-wall.part.js', import.meta.url), 'utf8');
+  assert.match(s, /qa: typeof HGWallQA !== 'undefined' \? HGWallQA\.norm\(/);
+  assert.match(s, /qaTap\(e\)/);
+  assert.match(s, /this\.qaTap\(e\)/);
+  assert.match(s, /HGWallQA\.mount\(this, el\)/);
+  assert.match(s, /HGWallQA\.paint\(this\)/);
+  assert.match(s, /HGWallQA\.close\(this\)/);
+});
+
+test('plan/actions: tylko własne właściwości (constructor, toString, __proto__ → null)', () => {
+  const { Q } = env();
+  assert.equal(Q.plan({ e: 'constructor.x', a: 'name' }), null);
+  assert.equal(Q.plan({ e: '__proto__.x', a: 'toString' }), null);
+  assert.equal(Q.plan({ e: 'switch.a', a: 'toString' }), null);
+  assert.equal(Q.plan({ e: 'switch.a', a: '__proto__' }), null);
+  assert.equal(Q.plan({ e: 'switch.a', a: 'constructor' }), null);
+  assert.deepEqual(Q.actions('constructor.x'), []);
+  assert.deepEqual(Q.actions('__proto__.x'), []);
+  assert.deepEqual(Q.norm([{ e: 'switch.a', a: 'toString' }, { e: 'constructor.x', a: 'name' }]), []);
+});

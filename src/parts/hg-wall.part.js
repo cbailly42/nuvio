@@ -138,7 +138,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
       lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false,
-      home: typeof w.home === 'string' && /^[a-z0-9_-]{1,40}$/.test(w.home) ? w.home : '' }; },
+      home: typeof w.home === 'string' && /^[a-z0-9_-]{1,40}$/.test(w.home) ? w.home : '',
+      qa: typeof HGWallQA !== 'undefined' ? HGWallQA.norm(w.qa) : [] }; },
   /* ---- widok po starcie wygaszacza: przejście pod zasłoną, po wybudzeniu dashboard jest już na wybranym widoku ---- */
   goHome() { const v = this.get().home;
     if (!v || !this.active || !this.canShow() || this.page._config.view === v || !window.HGVLock || !HGVLock.views(true).some(([k]) => k === v)) return;
@@ -155,7 +156,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); }
     return ((h2 >>> 0).toString(36) + (h1 >>> 0).toString(36)); },
   flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
-  lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
+  lockNow() { if (typeof HGWallQA !== 'undefined') HGWallQA.close(this); if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
     this.locked = true; this.flag(true); clearTimeout(this._lk); if (window.HGVLock) HGVLock.mark(); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
   /* pinpad (przyciski, kropki, kłódka): ten sam dla wygaszacza i blokady widoku (hg-vlock) */
   padEl(lbl, lockLbl) {
@@ -201,7 +202,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     /* w trybie edycji: tylko szkic, zapis przy Gotowe */
     if (HGL.editing) return; clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
-  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h);
+  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h); if (this.active && typeof HGWallQA !== 'undefined') HGWallQA.paint(this);
     /* po przeładowaniu strony zablokowany ekran wraca od razu (przeładowanie nie omija blokady) */
     if (!this._rs) { const t0 = this._rs0 || (this._rs0 = Date.now());   /* ustawienia z HA mogą dojść chwilę później: czekamy na nie do 20 s */
       if (!this.flag()) this._rs = true; else if (this.lockOn()) { if (page && page.isConnected) { this._rs = true; if (!this.active) this.lockNow(); } else if (!this._rsT) this._rsT = setTimeout(() => { this._rsT = null; if (this.page && this.hass) this.tick(this.hass, this.page); }, 500); } else if (Date.now() - t0 > 20000) { this._rs = true; this.flag(false); } } },
@@ -233,6 +234,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       if (l.length) return [...new Set(l)]; }
     const B = A.bg || window.HG_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.HG_DEFAULT_BG_FB || {}).v || '#16202B'}, ${(window.HG_DEFAULT_BG_FB || {}).v2 || '#05070A'})`]; },
   /* ---- nakładka ---- */
+  qaTap(e) { return typeof HGWallQA !== 'undefined' && HGWallQA.tap(this, e); },
   show(test) { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     /* #35: wygaszacz zamyka widoki odblokowane PIN-em (poza podglądem z ustawień); po wybudzeniu bieżący widok znów pyta o PIN */
     if (!test && window.HGVLock) HGVLock.mark();
@@ -245,10 +247,11 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
-    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && this.glTap && this.glTap(e)) { this.last = Date.now(); return; } this.wake('touch'); };
+    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && ((this.glTap && this.glTap(e)) || this.qaTap(e))) { this.last = Date.now(); return; } this.wake('touch'); };
     el.addEventListener('pointerdown', wk);
     el.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); if (!this.locked) return this.wake('key');
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
+    if (typeof HGWallQA !== 'undefined') HGWallQA.mount(this, el);
     document.body.appendChild(el);
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
     if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else if (xs) { this.xsStart(xs, rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
