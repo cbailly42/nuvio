@@ -3352,5 +3352,31 @@
     "sender_note": "From an automation: an event nuvio_command with device, action (wake, screensaver, lock, navigate) and view, or the helper with the same values in its device, action and view attributes.",
     "show_view": "Show {view}",
     "test": "Test on this tablet"
+  },
+  "wallqa": {
+    "group": "Quick buttons",
+    "hold_to": "Hold to confirm: {name}",
+    "enter_code": "Enter the alarm code",
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "title": "Quick buttons",
+    "hint": "Up to 3 buttons on the screensaver. A tap runs the action without waking the dashboard. They are hidden while the screensaver is locked with a PIN.",
+    "add": "Add an entity",
+    "remove": "Remove",
+    "unsupported": "This entity type is not supported",
+    "icon": "Icon (mdi:…)",
+    "icon_invalid": "Use an icon like mdi:gate",
+    "name": "Name",
+    "hold": "Hold to confirm",
+    "act_press": "Run",
+    "act_toggle": "Toggle",
+    "act_on": "Turn on",
+    "act_off": "Turn off",
+    "act_open": "Open",
+    "act_close": "Close",
+    "act_arm_away": "Arm away",
+    "act_arm_home": "Arm home",
+    "act_arm_night": "Arm night",
+    "act_disarm": "Disarm"
   }
 }

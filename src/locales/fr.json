@@ -3406,5 +3406,31 @@
     "sender_note": "Depuis une automatisation : un événement nuvio_command avec device, action (wake, screensaver, lock, navigate) et view, ou l’auxiliaire avec les mêmes valeurs dans ses attributs device, action et view.",
     "show_view": "Afficher {view}",
     "test": "Essayer sur cette tablette"
+  },
+  "wallqa": {
+    "group": "Boutons rapides",
+    "hold_to": "Maintenir pour confirmer : {name}",
+    "enter_code": "Saisissez le code de l’alarme",
+    "confirm": "OK",
+    "cancel": "Annuler",
+    "title": "Boutons rapides",
+    "hint": "Jusqu’à 3 boutons sur l’écran de veille. Un appui lance l’action sans réveiller le tableau de bord. Ils sont masqués quand l’écran de veille est verrouillé par un code PIN.",
+    "add": "Ajouter une entité",
+    "remove": "Supprimer",
+    "unsupported": "Ce type d’entité n’est pas pris en charge",
+    "icon": "Icône (mdi:…)",
+    "icon_invalid": "Utilisez une icône comme mdi:gate",
+    "name": "Nom",
+    "hold": "Maintenir pour confirmer",
+    "act_press": "Lancer",
+    "act_toggle": "Basculer",
+    "act_on": "Allumer",
+    "act_off": "Éteindre",
+    "act_open": "Ouvrir",
+    "act_close": "Fermer",
+    "act_arm_away": "Armer (absent)",
+    "act_arm_home": "Armer (présent)",
+    "act_arm_night": "Armer (nuit)",
+    "act_disarm": "Désarmer"
   }
 }

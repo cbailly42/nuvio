@@ -3460,5 +3460,31 @@
     "sender_note": "Z automatyzacji: zdarzenie nuvio_command z polami device, action (wake, screensaver, lock, navigate) i view albo pomocnik z tymi samymi wartościami w atrybutach device, action i view.",
     "show_view": "Pokaż: {view}",
     "test": "Wypróbuj na tym tablecie"
+  },
+  "wallqa": {
+    "group": "Szybkie przyciski",
+    "hold_to": "Przytrzymaj, aby potwierdzić: {name}",
+    "enter_code": "Wpisz kod alarmu",
+    "confirm": "OK",
+    "cancel": "Anuluj",
+    "title": "Szybkie przyciski",
+    "hint": "Do 3 przycisków na wygaszaczu. Dotknięcie wykonuje akcję bez wybudzania pulpitu. Są ukryte, gdy wygaszacz jest zablokowany PIN-em.",
+    "add": "Dodaj encję",
+    "remove": "Usuń",
+    "unsupported": "Ten typ encji nie jest obsługiwany",
+    "icon": "Ikona (mdi:…)",
+    "icon_invalid": "Użyj ikony w stylu mdi:gate",
+    "name": "Nazwa",
+    "hold": "Przytrzymaj, aby potwierdzić",
+    "act_press": "Uruchom",
+    "act_toggle": "Przełącz",
+    "act_on": "Włącz",
+    "act_off": "Wyłącz",
+    "act_open": "Otwórz",
+    "act_close": "Zamknij",
+    "act_arm_away": "Uzbrój (poza domem)",
+    "act_arm_home": "Uzbrój (w domu)",
+    "act_arm_night": "Uzbrój (noc)",
+    "act_disarm": "Rozbrój"
   }
 }

@@ -23,6 +23,8 @@ const HG_WALL_CSS = `
 .wl-ok{ font-size:12px; font-weight:600; color:var(--hg-accent-tx, var(--hg-accent)); display:inline-flex; align-items:center; gap:4px; } .wl-ok ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; }
 .wl-f > span em.wl-ok{ background:none; padding:0; color:var(--hg-accent-tx, var(--hg-accent)); }
 .wl-warn{ font-size:12.5px; opacity:.8; }
+.wl-qr{ display:flex; flex-direction:column; gap:6px; } .wl-qh{ display:flex; align-items:center; gap:8px; min-width:0; } .wl-qh b{ font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .wl-qh small{ flex:1; min-width:0; opacity:.65; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-qh .wl-tb{ flex:none; align-self:center; width:32px; height:32px; padding:0; justify-content:center; }
 @media (max-width:520px){ .wl-seg.six{ grid-template-columns:repeat(3, 1fr); } }
 .wl-sw:disabled{ cursor:default; opacity:.55; } .wl-sw:disabled i{ opacity:.6; }
 @media (prefers-reduced-motion:reduce){ .wl-sw i, .wl-sw i::after, .wl-seg button{ transition:none; } }
@@ -138,7 +140,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
       lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false,
-      home: typeof w.home === 'string' && /^[a-z0-9_-]{1,40}$/.test(w.home) ? w.home : '' }; },
+      home: typeof w.home === 'string' && /^[a-z0-9_-]{1,40}$/.test(w.home) ? w.home : '',
+      qa: typeof HGWallQA !== 'undefined' ? HGWallQA.norm(w.qa) : [] }; },
   /* ---- widok po starcie wygaszacza: przejście pod zasłoną, po wybudzeniu dashboard jest już na wybranym widoku ---- */
   goHome() { const v = this.get().home;
     if (!v || !this.active || !this.canShow() || this.page._config.view === v || !window.HGVLock || !HGVLock.views(true).some(([k]) => k === v)) return;
@@ -155,7 +158,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); }
     return ((h2 >>> 0).toString(36) + (h1 >>> 0).toString(36)); },
   flag(v) { const k = 'home-glass:wall-locked'; try { if (v === undefined) return localStorage.getItem(k) === '1'; if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) { /* pamięć zablokowana */ } return false; },
-  lockNow() { if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
+  lockNow() { if (typeof HGWallQA !== 'undefined') HGWallQA.close(this); if (!this.lockOn()) return; if (!this.active) { if (!this.page) return; this.show(); }
     this.locked = true; this.flag(true); clearTimeout(this._lk); if (window.HGVLock) HGVLock.mark(); if (this.el) { this.el.classList.add('lk'); this.el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); } },
   /* pinpad (przyciski, kropki, kłódka): ten sam dla wygaszacza i blokady widoku (hg-vlock) */
   padEl(lbl, lockLbl) {
@@ -211,7 +214,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); if (this.active) this.wakeLock(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } if (typeof HGWallQA !== 'undefined') HGWallQA.paint(this); } },
   arm(ms) { clearTimeout(this._t); const c = this.run(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -233,6 +236,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       if (l.length) return [...new Set(l)]; }
     const B = A.bg || window.HG_DEFAULT_BG, x = one(B); return [x || `linear-gradient(160deg, ${(window.HG_DEFAULT_BG_FB || {}).v || '#16202B'}, ${(window.HG_DEFAULT_BG_FB || {}).v2 || '#05070A'})`]; },
   /* ---- nakładka ---- */
+  qaTap(e) { return typeof HGWallQA !== 'undefined' && HGWallQA.tap(this, e); },
   show(test) { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     /* #35: wygaszacz zamyka widoki odblokowane PIN-em (poza podglądem z ustawień); po wybudzeniu bieżący widok znów pyta o PIN */
     if (!test && window.HGVLock) HGVLock.mark();
@@ -245,10 +249,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
-    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && this.glTap && this.glTap(e)) { this.last = Date.now(); return; } this.wake('touch'); };
+    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && ((this.glTap && this.glTap(e)) || this.qaTap(e))) { this.last = Date.now(); return; }
+      if (typeof HGWallQA !== 'undefined' && HGWallQA.open()) { this.last = Date.now(); HGWallQA.close(this); return; } this.wake('touch'); };
     el.addEventListener('pointerdown', wk);
     el.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); if (!this.locked) return this.wake('key');
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());
+    if (typeof HGWallQA !== 'undefined') HGWallQA.mount(this, el);
     document.body.appendChild(el);
     try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* bez Popover API: wystarczy z-index */ }
     if (gl) { this.glStart(rm); this.clock(); } else if (bd) { this.bdStart(rm); this.clock(); } else if (xs) { this.xsStart(xs, rm); this.clock(); } else { this.clock(); this.photos(rm); this.drift(rm); }
@@ -345,7 +351,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   /* ochrona przed wypaleniem: zegar co minutę lekko zmienia położenie */
   drift(rm) { const g = this.el.querySelector('.nw-g'), mv = () => { const v = Math.min(innerWidth, innerHeight) * 0.025; g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
     mv(); this._dr = setInterval(mv, 60000); },
-  wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); clearTimeout(this._hv); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
+  wake(why) { if (!this.active || !this.el) return; if (this.locked && why !== 'pin' && why !== 'off') return; const el = this.el; this.locked = false; clearTimeout(this._lk); clearTimeout(this._pt); clearTimeout(this._hv); if (typeof HGWallQA !== 'undefined') HGWallQA.close(this); this.active = false; this.el = null; this.last = Date.now(); this._ms = undefined;
     clearTimeout(this._ck); clearTimeout(this._bdq); clearTimeout(this._glq); this._glq = null; clearTimeout(this._ghT); this._gsh = null; this._ghold = false; clearInterval(this._sl); clearInterval(this._dr); if (this._ro) { this._ro.disconnect(); this._ro = null; } try { if (this._wl) this._wl.release(); } catch (e) { /* bez znaczenia */ } this._wl = null;
     el.classList.remove('in'); el.classList.add('out'); el.style.pointerEvents = 'auto';   /* nakładka zostaje na czas wygaszenia: dotknięcie nie „przebija” się do kafla pod spodem */
     setTimeout(() => { try { el.hidePopover(); } catch (e) { /* bez Popover API */ } el.remove(); }, why === 'pin' ? 700 : 450);
@@ -373,6 +379,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.kidHtml(c, h)}
+      ${typeof HGWallQA !== 'undefined' ? HGWallQA.html(p) : ''}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>${typeof HGDeviceCmd !== 'undefined' ? HGDeviceCmd.html(p) : ''}`;
     return `<section class="lk-g wl" data-tab="wall" data-pg="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
       <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
@@ -400,12 +407,14 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     if (typeof HGDeviceCmd !== 'undefined') HGDeviceCmd.wire(p, S);
+    if (typeof HGWallQA !== 'undefined') HGWallQA.wire(p, S);
     const hv = S.querySelector('[name=wl-home]'); if (hv) hv.addEventListener('change', () => this.set({ home: hv.value }));
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
       this.set({ url: v }); }); },
   act(p, b, a) { if (!this.admin(p)) return;
+    if (typeof HGWallQA !== 'undefined' && HGWallQA.act(p, b, a)) return;
     if (this.glAct && this.glAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); const on = !this.get().on; if (on) this.here(true); this.set({ on }); return p._eLook(); }   /* włączenie tutaj = włączony też na tym urządzeniu */
