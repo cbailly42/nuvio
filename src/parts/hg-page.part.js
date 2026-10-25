@@ -562,11 +562,12 @@ class HGPage extends HTMLElement {
     };
     flip(this._topEl.querySelector('.ind'), p.tab);
     flip(this._railEl.querySelector('.rind'), p.rail);
-    // treść: tylko krótkie przenikanie kart (bez panelu, bez rozmycia, bez kolejkowania); na dotyku bez przejścia
+    // treść: nagłówek przenika, karty tylko lekko wjeżdżają (bez panelu, bez rozmycia, bez kolejkowania); na dotyku bez przejścia.
+    // Karty bez opacity: animowane opacity na .cw robi z niego backdrop root i blur kart (backdrop-filter) znika na czas przejścia.
     if (hgTouch()) return;
     const o = { duration: 150, easing: 'ease-out' };
     this._headEl.animate([{ opacity: 0 }, { opacity: 1 }], o);
-    this._cardWraps.forEach((w) => w.animate([{ opacity: 0 }, { opacity: 1 }], o));
+    this._cardWraps.forEach((w) => w.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }], o));
   }
   /* animacje ciągłe tylko w widocznym widoku i karcie przeglądarki (--hg-play dziedziczone do kart) */
   _syncPlay() {
@@ -1175,7 +1176,8 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
   box-shadow: 0 20u 50u rgba(10,20,30,.18); }
 .cw{ min-width:0; min-height:0; contain: layout style; container-type:inline-size; animation: hgCwIn .6s cubic-bezier(.2,0,0,1) both; }
 .cw:nth-child(2){ animation-delay:.06s } .cw:nth-child(3){ animation-delay:.12s } .cw:nth-child(4){ animation-delay:.18s } .cw:nth-child(5){ animation-delay:.24s } .cw:nth-child(n+6){ animation-delay:.3s }
-@keyframes hgCwIn{ from{ opacity:0; transform:translateY(10px) } }
+/* tylko transform: opacity w animacji (a przy fill both także po jej końcu) robi z .cw backdrop root i blur kart w środku nie działa */
+@keyframes hgCwIn{ from{ transform:translateY(10px) } }
 :host([lite]) .cw{ animation:none; }
 @media (prefers-reduced-motion: reduce){ .cw{ animation:none; } }
 .cw > *{ height:100%; }
