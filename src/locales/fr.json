@@ -3469,7 +3469,7 @@
     "send_open": "Ouvrir la page du téléviseur et envoyer",
     "timeout": "Le téléviseur n’a pas répondu. Vérifiez le code affiché à l’écran et réessayez. Le jeton inutilisé a été supprimé.",
     "title": "Jumeler un téléviseur",
-    "waiting": "En attente de la connexion du téléviseur, jusqu’à 60 secondes. Regardez l’écran du téléviseur.",
+    "waiting": "En attente de la connexion du téléviseur, jusqu’à {seconds} secondes. Regardez l’écran du téléviseur.",
     "working": "Création d’un jeton et envoi au téléviseur…"
   }
 }

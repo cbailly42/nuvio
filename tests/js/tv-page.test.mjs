@@ -14,14 +14,15 @@ const SESSION = row({ id: 'cur', type: 'normal', client_name: 'Nuvio TV sesja', 
 
 /* minimalny document: ukryty formularz w pamięci, submit zapisuje wysłane pola (brak biblioteki DOM w tests/js) */
 function fakeDocument() {
-  const sent = [];
+  const sent = [], atSubmit = [];
   const mk = (tag) => ({ tag, attrs: {}, children: [], parent: null,
     setAttribute(k, v) { this.attrs[k] = String(v); }, appendChild(c) { c.parent = this; this.children.push(c); return c; },
     remove() { if (this.parent) this.parent.children = this.parent.children.filter((x) => x !== this); this.parent = null; },
-    submit() { sent.push({ action: this.attrs.action, method: this.attrs.method, target: this.attrs.target, rel: this.attrs.rel, fields: Object.fromEntries(this.children.map((c) => [c.attrs.name, c.attrs.value])) }); } });
+    submit() { atSubmit.push(body.innerHTML); sent.push({ action: this.attrs.action, method: this.attrs.method, target: this.attrs.target, rel: this.attrs.rel, fields: Object.fromEntries(this.children.map((c) => [c.attrs.name, c.attrs.value])) }); } });
   const body = mk('body');
-  Object.defineProperty(body, 'innerHTML', { get() { return JSON.stringify(this.children); } });
-  return { sent, document: { createElement: mk, body } };
+  const ser = (n) => ({ tag: n.tag, attrs: n.attrs, children: n.children.map(ser) });
+  Object.defineProperty(body, 'innerHTML', { get() { return JSON.stringify(this.children.map(ser)); } });
+  return { sent, atSubmit, document: { createElement: mk, body } };
 }
 
 function env(o = {}) {
@@ -160,7 +161,7 @@ test('zablokowana karta: token powstaje, ale formularz wychodzi dopiero w drugim
   assert.equal(HGTv.status, 'ready'); assert.equal(fd.sent.length, 0);
   const h = HGTv.html(p);
   assert.match(h, /tv\.ready/); assert.match(h, /data-hge="tv-send"/); assert.match(h, /data-hge="tv-pair" disabled/);
-  assert.equal(h.includes(SECRET), false); assert.equal(fd.document.body.innerHTML.includes(SECRET), false);
+  assert.equal(h.includes(SECRET), false); assert.deepEqual(fd.document.body.children, []);
   await HGTv.act(p, {}, 'tv-pair');                                          /* ponowny Sparuj w trakcie nie tworzy drugiego tokenu */
   assert.equal(types().filter((t) => t === 'auth/long_lived_access_token').length, 1);
   const run = HGTv.act(p, {}, 'tv-send');
@@ -345,16 +346,63 @@ test('tryb próbny (__hgDryRun): walidacja działa, HA i formularz nietknięte',
   assert.deepEqual(log.ws, []); assert.equal(fd.sent.length, 0); assert.deepEqual(log.opens, []);
 });
 
-test('bezpieczeństwo: token nie trafia do DOM, HTML strony, komunikatów ani parametrów tłumaczeń', async () => {
-  const { HGTv, p, fill, fd, log } = env({ seenAfter: 2 });
-  const htmls = [HGTv.html(p)]; await tick(); await tick();
-  p._eLook = () => { log.looks++; htmls.push(HGTv.html(p)); };
+/* każdy render strony (html() i wywołania _eLook) trafia do htmls z etykietą kroku; kontrola pozytywna: detektor widzi token w formularzu w chwili wysyłki */
+async function leakRun(o, mid) {
+  const e = env(o), { HGTv, p, log, fd, fill, open } = e, htmls = [], snap = () => htmls.push(HGTv.html(p));
+  await open(); snap();                                                      /* przed wysłaniem */
+  p._eLook = () => { log.looks++; snap(); };
   fill('10.0.8.117:8798', '482913');
-  await HGTv.act(p, {}, 'tv-pair');
-  htmls.push(HGTv.html(p));
-  assert.equal(fd.sent[0].fields.token, JWT);
-  for (const [name, text] of [['body', fd.document.body.innerHTML], ['html', htmls.join('\n')], ['toasts', JSON.stringify(log.toasts)], ['hgT', JSON.stringify(log.hgt)]]) {
-    assert.equal(text.includes(SECRET), false, name);
+  if (mid) await mid(e, snap);
+  await HGTv.act(p, {}, 'tv-pair'); snap();
+  return { ...e, htmls, stages: htmls.map((h) => (/tv\.(working|waiting|connected|timeout|ready|expired)/.exec(h) || [])[1]).filter(Boolean) };
+}
+const noLeak = (r) => {
+  assert.equal(r.fd.sent.length >= 1, true);
+  assert.equal(r.fd.sent[0].fields.token, JWT);                              /* token był wysłany w polu formularza */
+  assert.equal(r.fd.atSubmit[0].includes(SECRET), true);                     /* i widać go w body tylko w chwili wysyłki: detektor działa */
+  assert.equal(r.fd.document.body.innerHTML.includes(SECRET), false);
+  r.htmls.forEach((h, n) => assert.equal(h.includes(SECRET), false, 'html #' + n));
+  for (const [name, text] of [['toasts', JSON.stringify(r.log.toasts)], ['hgT', JSON.stringify(r.log.hgt)], ['stan', JSON.stringify(r.HGTv)]]) assert.equal(text.includes(SECRET), false, name);
+};
+
+test('bezpieczeństwo: token nie trafia do HTML strony, komunikatów ani parametrów tłumaczeń (przed wysyłką, w trakcie odpytywania, po sukcesie)', async () => {
+  const r = await leakRun({ seenAfter: 2 });
+  assert.equal(r.stages.includes('working'), true); assert.equal(r.stages.includes('waiting'), true); assert.equal(r.stages.at(-1), 'connected');
+  noLeak(r);
+});
+
+test('bezpieczeństwo: token nie trafia do HTML ani komunikatów po przekroczeniu czasu (i po usunięciu tokenu)', async () => {
+  const r = await leakRun({});
+  assert.equal(r.stages.includes('waiting'), true); assert.equal(r.stages.at(-1), 'timeout');
+  noLeak(r);
+});
+
+test('bezpieczeństwo: token nie trafia do HTML ani komunikatów w trybie zablokowanej karty (gotowy, drugie kliknięcie, usuwanie z listy)', async () => {
+  const r = await leakRun({ blocked: true, manualHold: true, seenAfter: 1 });
+  r.fd.sent.length = 0; r.fd.atSubmit.length = 0;
+  assert.equal(r.stages.at(-1), 'ready'); r.htmls.forEach((h) => assert.equal(h.includes(SECRET), false));
+  await r.HGTv.act(r.p, {}, 'tv-send'); r.htmls.push(r.HGTv.html(r.p));
+  assert.equal(r.fd.sent.length, 1); assert.equal(r.fd.sent[0].fields.token, JWT); assert.equal(r.fd.atSubmit[0].includes(SECRET), true);
+  assert.equal(r.stages.concat(r.htmls.map((h) => (/tv\.(connected)/.exec(h) || [])[1])).includes('connected'), true);
+  await tick(); await tick();                                                /* lista wczytuje się po sukcesie */
+  await r.HGTv.act(r.p, { dataset: { id: OLD } }, 'tv-del'); r.htmls.push(r.HGTv.html(r.p));
+  assert.equal(r.log.toasts.at(-1), 'tv.deleted');
+  r.htmls.forEach((h, n) => assert.equal(h.includes(SECRET), false, 'html #' + n));
+  for (const text of [JSON.stringify(r.log.toasts), JSON.stringify(r.log.hgt), r.fd.document.body.innerHTML, JSON.stringify(r.HGTv)]) assert.equal(text.includes(SECRET), false);
+});
+
+test('bezpieczeństwo: token nie trafia do HTML ani komunikatów przy błędzie wysyłki i wygaśnięciu niewysłanego tokenu', async () => {
+  const a = env({ blocked: true, manualHold: true }); await a.open(); a.fill('10.0.8.117:8798', '482913');
+  const htmls = []; a.p._eLook = () => htmls.push(a.HGTv.html(a.p));
+  await a.HGTv.act(a.p, {}, 'tv-pair'); await a.pump(121); htmls.push(a.HGTv.html(a.p));
+  assert.equal(a.HGTv.status, 'expired'); assert.equal(htmls.some((h) => h.includes('tv.ready')), true); assert.equal(htmls.at(-1).includes('tv.expired'), true);
+  const b = env(); await b.open(); b.fill('10.0.8.117:8798', '482913'); b.fd.document.createElement = () => { throw new Error('blocked'); };
+  const hb = []; b.p._eLook = () => hb.push(b.HGTv.html(b.p));
+  await b.HGTv.act(b.p, {}, 'tv-pair'); hb.push(b.HGTv.html(b.p));
+  assert.equal(b.HGTv.status, 'err_send');
+  for (const [x, hs] of [[a, htmls], [b, hb]]) {
+    hs.forEach((h) => assert.equal(h.includes(SECRET), false));
+    for (const text of [JSON.stringify(x.log.toasts), JSON.stringify(x.log.hgt), x.fd.document.body.innerHTML, JSON.stringify(x.HGTv)]) assert.equal(text.includes(SECRET), false);
   }
 });
 
@@ -404,4 +452,100 @@ test('wire: wklejony link rozdziela pola w miejscu, Enter uruchamia parowanie', 
   fields['tv-code'].ev.keydown({ key: 'Enter', preventDefault() { prevented = true; } });
   fields['tv-code'].ev.keydown({ key: 'a', preventDefault() { assert.fail('only Enter is handled'); } });
   assert.equal(prevented, true); assert.equal(paired, 1);
+});
+
+const gateRefresh = (p, st) => {
+  const ws = p._hass.callWS; const gate = {};
+  p._hass.callWS = (m) => {
+    if (m.type === 'auth/refresh_tokens' && gate.armed) { gate.armed = false; const snap = st.tokens.map((t) => ({ ...t })); return new Promise((r) => { gate.release = () => r(snap); }); }
+    return ws(m);
+  };
+  return gate;
+};
+
+test('lista: usunięcie w trakcie trwającego wczytywania nigdy nie pokazuje usuniętego tokenu (spóźniona odpowiedź jest odrzucana)', async () => {
+  const { HGTv, p, log, st, open } = env();
+  await open();
+  assert.match(HGTv.html(p), /Nuvio TV 2026-10-24 20:00/);
+  const gate = gateRefresh(p, st);
+  const htmls = []; p._eLook = () => { log.looks++; htmls.push(HGTv.html(p)); };
+  st.confirm = new Promise((r) => { gate.confirm = r; });
+  const del = HGTv.act(p, { dataset: { id: OLD } }, 'tv-del'); await tick();    /* okno potwierdzenia otwarte, lista nadal widoczna */
+  gate.armed = true;
+  await HGTv.act(p, {}, 'tv-reload'); await tick();                              /* wczytywanie startuje, odpowiedź (z OLD) czeka */
+  assert.equal(typeof gate.release, 'function');
+  gate.confirm(true); await del; await tick();                                   /* usunięcie kończy się, zanim przyjdzie stara odpowiedź */
+  assert.equal(st.tokens.some((t) => t.id === OLD), false);
+  gate.release(); await tick(); await tick(); await tick();                      /* spóźniona odpowiedź z usuniętym tokenem */
+  htmls.push(HGTv.html(p)); await tick(); await tick(); htmls.push(HGTv.html(p));
+  const afterDelete = htmls.slice(1);
+  afterDelete.forEach((h, n) => assert.equal(h.includes('Nuvio TV 2026-10-24 20:00'), false, 'html #' + n));
+  assert.equal((HGTv.list || []).some((t) => t.id === OLD), false);
+  assert.match(HGTv.html(p), /tv\.list_empty/);
+});
+
+test('lista: nowsze wczytanie wygrywa ze starszym, które kończy się później', async () => {
+  const { HGTv, p, st, open } = env();
+  await open();
+  const gate = gateRefresh(p, st);
+  gate.armed = true;
+  await HGTv.act(p, {}, 'tv-reload'); HGTv.html(p); await tick();                /* wczytanie 1 czeka z listą [OLD] */
+  const first = gate.release;
+  st.tokens = [];
+  await HGTv.act(p, {}, 'tv-reload'); HGTv.html(p); await tick(); await tick(); await tick();   /* wczytanie 2 kończy z pustą listą */
+  assert.deepEqual(HGTv.list, []);
+  first(); await tick(); await tick();
+  assert.deepEqual(HGTv.list, []);
+  assert.doesNotMatch(HGTv.html(p), /Nuvio TV 2026-10-24 20:00/);
+});
+
+const HTTP_HA = 'http://ha.local:8123';
+
+test('czas oczekiwania: stałe nazwane, https 60 s, http 120 s', () => {
+  const { HGTv } = env();
+  assert.equal(HGTv.WAIT_MS, 60000); assert.equal(HGTv.WAIT_HTTP_MS, 120000); assert.equal(HGTv.POLL_MS, 3000);
+});
+
+test('czas oczekiwania: http czeka dłużej niż 60 s i potwierdza po 100 s, komunikat podaje 120 sekund', async () => {
+  const { HGTv, p, fill, sleeps, log, types, open } = env({ seenAfter: 34 });
+  await open();
+  const htmls = []; p._eLook = () => { log.looks++; htmls.push(HGTv.statusText()); };   /* statusText zamiast html(): render nie uruchamia dodatkowego wczytywania listy */
+  fill('10.0.8.117:8798', '482913', HTTP_HA);
+  await HGTv.act(p, {}, 'tv-pair');
+  assert.equal(sleeps.length, 34); assert.equal(sleeps.reduce((a, b) => a + b, 0), 102000);
+  assert.equal(sleeps.every((ms) => ms === 3000), true);
+  assert.equal(HGTv.status, 'done'); assert.equal(types().includes('auth/delete_refresh_token'), false);
+  assert.equal(htmls.some((h) => h.includes('tv.waiting{"seconds":120}')), true);
+});
+
+test('czas oczekiwania: https kończy po 60 s, usuwa token, komunikat podaje 60 sekund', async () => {
+  const { HGTv, p, fill, sleeps, st, log, open } = env({ seenAfter: 21 });
+  await open();
+  const htmls = []; p._eLook = () => { log.looks++; htmls.push(HGTv.statusText()); };
+  fill('10.0.8.117:8798', '482913', 'https://ha.example.com');
+  await HGTv.act(p, {}, 'tv-pair');
+  assert.equal(sleeps.length, 20); assert.equal(log.seenPolls, 20);
+  assert.equal(HGTv.status, 'timeout'); assert.deepEqual(log.ws.at(-1), { type: 'auth/delete_refresh_token', refresh_token_id: ID });
+  assert.equal(st.tokens.some((t) => t.id === ID), false);
+  assert.equal(htmls.some((h) => h.includes('tv.waiting{"seconds":60}')), true);
+});
+
+test('czas oczekiwania: http bez znacznika kończy dopiero po 120 s i usuwa token', async () => {
+  const { HGTv, p, fill, sleeps, st, log, open } = env();
+  await open();
+  fill('10.0.8.117:8798', '482913', HTTP_HA);
+  await HGTv.act(p, {}, 'tv-pair');
+  assert.equal(sleeps.length, 40); assert.equal(log.seenPolls, 40);
+  assert.equal(HGTv.status, 'timeout'); assert.deepEqual(log.ws.at(-1), { type: 'auth/delete_refresh_token', refresh_token_id: ID });
+  assert.equal(st.tokens.some((t) => t.id === ID), false);
+});
+
+test('czas oczekiwania: http po drugim kliknięciu (zablokowana karta) też czeka 120 s', async () => {
+  const { HGTv, p, fill, sleeps, log, open } = env({ blocked: true, manualHold: true, seenAfter: 34 });
+  await open();
+  fill('10.0.8.117:8798', '482913', HTTP_HA);
+  await HGTv.act(p, {}, 'tv-pair');
+  await HGTv.act(p, {}, 'tv-send');
+  assert.equal(sleeps.filter((ms) => ms === 3000).length, 34); assert.equal(HGTv.status, 'done');
+  assert.equal(log.ws.some((m) => m.type === 'auth/delete_refresh_token'), false);
 });

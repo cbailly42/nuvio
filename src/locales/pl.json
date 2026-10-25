@@ -3523,7 +3523,7 @@
     "send_open": "Otwórz stronę TV i wyślij",
     "timeout": "TV nie odpowiedział. Sprawdź kod na ekranie i spróbuj ponownie. Niewykorzystany token został usunięty.",
     "title": "Sparuj telewizor",
-    "waiting": "Czekam, aż telewizor się połączy, do 60 sekund. Patrz na ekran telewizora.",
+    "waiting": "Czekam, aż telewizor się połączy, do {seconds} sekund. Patrz na ekran telewizora.",
     "working": "Tworzę token i wysyłam go do telewizora…"
   }
 }

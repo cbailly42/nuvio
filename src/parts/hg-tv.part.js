@@ -8,7 +8,9 @@
 const HGTv = window.__hgTv || (window.__hgTv = {
   FIELDS: [['tv-addr', 'addr'], ['tv-code', 'code'], ['tv-ha', 'ha']],
   WIN: 'nuvio-tv-pair', HOLD_MS: 120000,
-  s: { addr: '', code: '', ha: '' }, err: {}, status: 'idle', list: null, seen: {}, listErr: false, loading: false, _sheet: undefined, ready: null,
+  /* czas oczekiwania na znacznik: przy adresie http telewizor najpierw pyta o zgodę na połączenie bez szyfrowania (klik pilotem), więc dwa razy dłużej */
+  WAIT_MS: 60000, WAIT_HTTP_MS: 120000, POLL_MS: 3000,
+  s: { addr: '', code: '', ha: '' }, err: {}, status: 'idle', list: null, seen: {}, listErr: false, loading: false, rid: 0, wait: 60000, _sheet: undefined, ready: null,
   clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
   now: () => new Date(),
   working() { return this.status === 'working' || this.status === 'waiting' || this.status === 'ready'; },
@@ -27,7 +29,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     switch (this.status) {
       case 'working': return hgT('tv.working');
       case 'ready': return hgT('tv.ready');
-      case 'waiting': return hgT('tv.waiting');
+      case 'waiting': return hgT('tv.waiting', { seconds: this.wait / 1000 });
       case 'done': return H.icon('mdi:check-circle') + hgT('tv.connected');
       case 'timeout': return hgT('tv.timeout');
       case 'expired': return hgT('tv.expired');
@@ -37,13 +39,16 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       default: return '';
     }
   },
+  /* lista do ponownego wczytania; trwające wczytywanie traci ważność (jego spóźniona odpowiedź jest odrzucana, bo mogła zawierać już usunięty token) */
+  invalidate() { this.rid += 1; this.loading = false; this.list = null; },
   async prep(p) {
-    if (this.loading) return; this.loading = true; const h = p._hass;
+    if (this.loading) return; this.loading = true; const h = p._hass, my = ++this.rid;
     try {
       const list = HGTvLogic.tokens(await h.callWS({ type: 'auth/refresh_tokens' }));
       let seen = {}; try { seen = HGTvLogic.parseSeen((await h.callWS({ type: 'frontend/get_user_data', key: HGTvLogic.SEEN_KEY })).value); } catch (e) { seen = {}; }
+      if (my !== this.rid) return;
       this.list = list; this.seen = seen; this.listErr = false;
-    } catch (e) { this.list = null; this.listErr = true; }
+    } catch (e) { if (my !== this.rid) return; this.list = null; this.listErr = true; }
     this.loading = false; this.redraw(p);
   },
   listHtml() {
@@ -55,7 +60,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       <button type="button" class="tv-x" data-hge="tv-del" data-id="${H.esc(t.id)}" aria-label="${H.esc(hgT('tv.delete'))}">${H.icon('mdi:trash-can-outline')}</button></div>`).join('')}</div>`;
   },
   html(p) {
-    if (this._sheet !== p._eSheetEl) { this._sheet = p._eSheetEl; this.discard(p, 'idle'); if (!this.working()) { this.status = 'idle'; this.err = {}; } this.list = null; this.listErr = false; }
+    if (this._sheet !== p._eSheetEl) { this._sheet = p._eSheetEl; this.discard(p, 'idle'); if (!this.working()) { this.status = 'idle'; this.err = {}; } this.invalidate(); this.listErr = false; }
     if (!this.s.ha) this.s.ha = location.origin;
     if (this.list === null && !this.listErr) this.prep(p);
     const dis = this.working() ? ' disabled' : '';
@@ -110,7 +115,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     try { f.submit(); } finally { f.remove(); }
   },
   async drop(h, id) { try { await h.callWS({ type: 'auth/delete_refresh_token', refresh_token_id: id }); } catch (e) { /* niewykorzystany token zostanie na liście, można go usunąć ręcznie */ } },
-  fail(p, status) { this.status = status; this.list = null; this.redraw(p); },
+  fail(p, status) { this.status = status; this.invalidate(); this.redraw(p); },
   /* niewysłany token z this.ready znika z pamięci i z HA; status ustawia wołający */
   discard(p, status) {
     const r = this.ready; if (!r) return;
@@ -140,7 +145,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       return undefined;
     }
     try { this.send(A, code, ha, token, this.WIN); } catch (e) { token = null; this.shut(w); await this.drop(h, id); return this.fail(p, 'err_send'); }
-    token = null; this.status = 'waiting'; p._eLook();
+    token = null; this.wait = this.waitMs(ha); this.status = 'waiting'; p._eLook();
     return this.poll(p, id);
   },
   /* drugie kliknięcie po zablokowanej karcie: formularz wychodzi synchronicznie w tym kliknięciu (świeży gest), przed jakimkolwiek await */
@@ -148,7 +153,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     const r = this.ready; if (!r) return undefined;
     this.ready = null;
     try { this.send(r.A, r.code, r.ha, r.token, '_blank'); } catch (e) { r.token = null; this.drop(p._hass, r.id); return this.fail(p, 'err_send'); }
-    r.token = null; this.status = 'waiting'; p._eLook();
+    r.token = null; this.wait = this.waitMs(r.ha); this.status = 'waiting'; p._eLook();
     return this.poll(p, r.id);
   },
   /* trzyma niewysłany token najwyżej 2 minuty; zamknięcie panelu albo koniec czasu kasuje go także w HA, wysłanie (this.ready zmienione) kończy pętlę */
@@ -159,16 +164,17 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       if (this.ready === r && !p._eSheetEl) return this.discard(p, 'idle');
     }
     if (this.ready !== r) return undefined;
-    this.discard(p, 'expired'); this.list = null; return this.redraw(p);
+    this.discard(p, 'expired'); this.invalidate(); return this.redraw(p);
   },
-  /* co 3 s do 60 s czeka na wpis id tokenu w nuvio_tv_seen; zamknięcie panelu przerywa (token zostaje na liście), brak wpisu usuwa token */
+  waitMs(ha) { return String(ha).startsWith('http://') ? this.WAIT_HTTP_MS : this.WAIT_MS; },
+  /* co POLL_MS do limitu this.wait (60 s, przy http 120 s; ustawia go wołający przed pokazaniem statusu) czeka na wpis id tokenu w nuvio_tv_seen; zamknięcie panelu przerywa (token zostaje na liście), brak wpisu usuwa token */
   async poll(p, id) {
-    const h = p._hass, c = this.clock, t0 = c.now(), quit = () => { this.status = 'idle'; };
-    while (c.now() - t0 < 60000) {
-      await c.sleep(3000);
+    const h = p._hass, c = this.clock, t0 = c.now(), limit = this.wait, quit = () => { this.status = 'idle'; };
+    while (c.now() - t0 < limit) {
+      await c.sleep(this.POLL_MS);
       if (!p._eSheetEl) return quit();
       try { this.seen = HGTvLogic.parseSeen((await h.callWS({ type: 'frontend/get_user_data', key: HGTvLogic.SEEN_KEY })).value); } catch (e) { continue; }
-      if (this.seen[id]) { this.status = 'done'; this.list = null; return this.redraw(p); }
+      if (this.seen[id]) { this.status = 'done'; this.invalidate(); return this.redraw(p); }
     }
     if (!p._eSheetEl) return quit();
     await this.drop(h, id);
@@ -179,26 +185,26 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     const t = this.list.find((x) => x.id === id);
     if (!(await hgOverlay.alert(hgT('tv.delete_title', { name: t.client_name }), hgT('tv.delete_text'), hgT('tv.delete')))) return;
     try { if (!window.__hgDryRun) await p._hass.callWS({ type: 'auth/delete_refresh_token', refresh_token_id: id }); p._eToast(hgT('tv.deleted')); } catch (e) { p._eToast(hgT('tv.delete_failed')); }
-    this.list = null; return p._eLook();
+    this.invalidate(); return p._eLook();
   },
   act(p, b, a) {
     switch (a) {
       case 'tv-pair': return this.pair(p);
       case 'tv-send': return this.sendReady(p);
       case 'tv-del': return this.del(p, b.dataset.id);
-      case 'tv-reload': this.list = null; this.listErr = false; return p._eLook();
+      case 'tv-reload': this.invalidate(); this.listErr = false; return p._eLook();
       default: return undefined;
     }
   },
 });
 const HG_TV_CSS = `
-.lk-mini.tv-go{ height:44px; padding:0 22px; align-self:flex-start; }
-.tv-st{ min-height:20px; font-size:13px; line-height:1.4; display:flex; gap:6px; align-items:flex-start; } .tv-st ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; flex:none; color:var(--hg-accent-tx, var(--hg-accent)); }
+.lk-mini.tv-go{ height:var(--hg-btn-touch); padding:0 22px; align-self:flex-start; }
+.tv-st{ min-height:20px; font-size:var(--hg-fs-2); line-height:1.4; display:flex; gap:6px; align-items:flex-start; } .tv-st ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; flex:none; color:var(--hg-accent-tx, var(--hg-accent)); }
 .tv-lh{ margin-top:8px; }
 .tv-l{ display:flex; flex-direction:column; gap:6px; }
-.tv-r{ display:flex; align-items:center; gap:8px; padding:8px 4px 8px 12px; border-radius:14px; background:color-mix(in srgb, var(--hg-accent) 8%, transparent); }
-.tv-r > span{ flex:1; min-width:0; } .tv-r b{ display:block; overflow-wrap:anywhere; font-weight:600; } .tv-r small{ display:block; opacity:.65; font-size:12px; }
-.tv-x{ all:unset; cursor:pointer; flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:50%; } .tv-x:hover{ background:rgba(255,255,255,.08); }
+.tv-r{ display:flex; align-items:center; gap:8px; padding:8px 4px 8px 12px; border-radius:var(--hg-radius-in); background:color-mix(in srgb, var(--hg-accent) 8%, transparent); }
+.tv-r > span{ flex:1; min-width:0; } .tv-r b{ display:block; overflow-wrap:anywhere; font-weight:600; } .tv-r small{ display:block; opacity:.65; font-size:var(--hg-fs-1); }
+.tv-x{ all:unset; cursor:pointer; flex:none; width:var(--hg-btn-touch); height:var(--hg-btn-touch); display:grid; place-items:center; border-radius:var(--hg-radius-pill); } .tv-x:hover{ background:color-mix(in srgb, var(--hg-accent) 14%, transparent); }
 .tv-x:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .tv-x ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
 `;
 window.HGTv = HGTv;

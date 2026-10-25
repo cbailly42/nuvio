@@ -3415,7 +3415,7 @@
     "send_open": "Open the TV page and send",
     "timeout": "The TV did not respond. Check the code on the screen and try again. The unused token was removed.",
     "title": "Pair a TV",
-    "waiting": "Waiting for the TV to connect, up to 60 seconds. Look at the TV screen.",
+    "waiting": "Waiting for the TV to connect, up to {seconds} seconds. Look at the TV screen.",
     "working": "Creating a token and sending it to the TV…"
   }
 }

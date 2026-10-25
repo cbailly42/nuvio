@@ -6,7 +6,7 @@ const HGTvLogic = {
   parseLink(text) {
     let u; try { u = new URL(String(text || '').trim()); } catch (e) { return null; }
     const code = u.searchParams.get('c');
-    if (u.protocol !== 'http:' || u.pathname !== '/pair' || !u.port || !code) return null;
+    if (u.protocol !== 'http:' || u.username || u.password || u.pathname !== '/pair' || !u.port || !code) return null;
     return { addr: u.hostname + ':' + u.port, code: code.trim() };
   },
   /* adres telewizora host:port, host to IPv4 albo nazwa, port 1 do 65535; wynik { host, port } albo null */
@@ -25,10 +25,10 @@ const HGTvLogic = {
     if (m) { const a = Number(m[1]), b = Number(m[2]); return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254); }
     return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.local$/.test(h);
   },
-  /* adres Home Assistant: http albo https, wynik bez końcowego ukośnika albo null */
+  /* adres Home Assistant: http albo https, bez danych logowania (user:pass@), wynik bez końcowego ukośnika albo null */
   haUrl(text) {
     let u; try { u = new URL(String(text || '').trim()); } catch (e) { return null; }
-    if ((u.protocol !== 'http:' && u.protocol !== 'https:') || !u.hostname) return null;
+    if ((u.protocol !== 'http:' && u.protocol !== 'https:') || !u.hostname || u.username || u.password) return null;
     return u.origin + u.pathname.replace(/\/+$/, '');
   },
   /* wolna nazwa tokenu: Nuvio TV RRRR-MM-DD GG:MM, przy kolizji z listą names sufiks " 2", " 3" */
@@ -41,19 +41,21 @@ const HGTvLogic = {
   },
   /* nazwy wszystkich długoterminowych tokenów (tylko wśród nich nazwa musi być unikalna) */
   longNames: (list) => (Array.isArray(list) ? list : []).filter((t) => t && t.type === 'long_lived_access_token' && typeof t.client_name === 'string').map((t) => t.client_name),
-  /* tokeny telewizorów do pokazania: długoterminowe, nazwa od "Nuvio TV", nie bieżąca sesja, najnowsze pierwsze */
+  /* nazwa telewizora: dokładnie "Nuvio TV" albo "Nuvio TV " i dalszy ciąg (nie "Nuvio TVx") */
+  isTvName: (n) => typeof n === 'string' && (n === HGTvLogic.PREFIX || n.startsWith(HGTvLogic.PREFIX + ' ')),
+  /* tokeny telewizorów do pokazania: długoterminowe, nazwa "Nuvio TV" (całe słowo), nie bieżąca sesja, najnowsze pierwsze */
   tokens: (list) => (Array.isArray(list) ? list : [])
-    .filter((t) => t && t.type === 'long_lived_access_token' && !t.is_current && typeof t.id === 'string' && typeof t.client_name === 'string' && t.client_name.startsWith(HGTvLogic.PREFIX))
+    .filter((t) => t && t.type === 'long_lived_access_token' && !t.is_current && typeof t.id === 'string' && HGTvLogic.isTvName(t.client_name))
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
   idByName(list, name) {
     const t = (Array.isArray(list) ? list : []).find((x) => x && x.type === 'long_lived_access_token' && x.client_name === name);
     return t && typeof t.id === 'string' ? t.id : null;
   },
-  /* wartość znacznika nuvio_tv_seen: obiekt id tokenu -> czas ISO; wszystko inne odrzucone */
+  /* wartość znacznika nuvio_tv_seen: obiekt id tokenu HA (32 znaki szesnastkowe) -> czas ISO; wszystko inne odrzucone */
   parseSeen(value) {
     const out = {};
     if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
-    for (const [k, v] of Object.entries(value)) if (typeof v === 'string' && !Number.isNaN(Date.parse(v))) out[k] = v;
+    for (const [k, v] of Object.entries(value)) if (/^[0-9a-fA-F]{32}$/.test(k) && typeof v === 'string' && !Number.isNaN(Date.parse(v))) out[k] = v;
     return out;
   },
   /* id tokenu odświeżania to pole iss tokenu JWT (ładunek base64url, bez sprawdzania podpisu) */
