@@ -23,6 +23,8 @@ const HG_WALL_CSS = `
 .wl-ok{ font-size:12px; font-weight:600; color:var(--hg-accent-tx, var(--hg-accent)); display:inline-flex; align-items:center; gap:4px; } .wl-ok ha-icon{ --mdc-icon-size:16px; width:16px; height:16px; }
 .wl-f > span em.wl-ok{ background:none; padding:0; color:var(--hg-accent-tx, var(--hg-accent)); }
 .wl-warn{ font-size:12.5px; opacity:.8; }
+.wl-qr{ display:flex; flex-direction:column; gap:6px; } .wl-qh{ display:flex; align-items:center; gap:8px; min-width:0; } .wl-qh b{ font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .wl-qh small{ flex:1; min-width:0; opacity:.65; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-qh .wl-tb{ flex:none; align-self:center; width:32px; height:32px; padding:0; justify-content:center; }
 @media (max-width:520px){ .wl-seg.six{ grid-template-columns:repeat(3, 1fr); } }
 .wl-sw:disabled{ cursor:default; opacity:.55; } .wl-sw:disabled i{ opacity:.6; }
 @media (prefers-reduced-motion:reduce){ .wl-sw i, .wl-sw i::after, .wl-seg button{ transition:none; } }
@@ -376,6 +378,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
       ${this.kidHtml(c, h)}
+      ${typeof HGWallQA !== 'undefined' ? HGWallQA.html(p) : ''}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>${typeof HGDeviceCmd !== 'undefined' ? HGDeviceCmd.html(p) : ''}`;
     return `<section class="lk-g wl" data-tab="wall" data-pg="wall" aria-labelledby="wl-h"><style>${HG_WALL_CSS}${typeof HG_WB_CSS !== 'undefined' ? HG_WB_CSS : ''}</style><h4 id="wl-h">${H.icon('mdi:tablet-dashboard')}${hgT('wall.wall_tablet_mode')}</h4>
       <small class="lk-hn">${hgT('wall.intro')} ${HGL.mode === 'shared' ? hgT('wall.applies_shared') : hgT('wall.applies_user')}</small>
@@ -403,12 +406,14 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     if (typeof HGDeviceCmd !== 'undefined') HGDeviceCmd.wire(p, S);
+    if (typeof HGWallQA !== 'undefined') HGWallQA.wire(p, S);
     const hv = S.querySelector('[name=wl-home]'); if (hv) hv.addEventListener('change', () => this.set({ home: hv.value }));
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
       this.set({ url: v }); }); },
   act(p, b, a) { if (!this.admin(p)) return;
+    if (typeof HGWallQA !== 'undefined' && HGWallQA.act(p, b, a)) return;
     if (this.glAct && this.glAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); const on = !this.get().on; if (on) this.here(true); this.set({ on }); return p._eLook(); }   /* włączenie tutaj = włączony też na tym urządzeniu */

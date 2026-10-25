@@ -5,15 +5,15 @@ import { readFileSync } from 'node:fs';
 import { loadParts } from './harness.mjs';
 
 function env() {
-  const calls = [], ev = {};
+  const calls = [], ev = {}, tl = [];
   const H = {
     call: (h, d, s, data) => { calls.push([d, s, data]); return H.fail ? Promise.reject(new Error('x')) : Promise.resolve(); },
     haptic: () => {}, icon: (i) => `<i ${i}>`, esc: (s) => String(s), name: (h, e, fb) => fb, fail: false,
   };
   const window = { addEventListener: (t, f) => { ev[t] = f; }, removeEventListener: (t) => { delete ev[t]; } };
-  const globals = { window, document: {}, H, hgT: (k) => k, K: (r, g, b, a) => `rgba(${r},${g},${b},${a})`, HGWall: {}, setTimeout, clearTimeout };
+  const globals = { window, document: {}, H, hgT: (k, a) => { tl.push([k, a]); return k; }, K: (r, g, b, a) => `rgba(${r},${g},${b},${a})`, HGWall: {}, setTimeout, clearTimeout };
   const { HGWallQA } = loadParts(['hg-wallqa.part.js'], globals, ['HGWallQA']);
-  return { Q: HGWallQA, calls, ev, H };
+  return { Q: HGWallQA, calls, ev, H, tl };
 }
 const st = (state, attributes) => ({ state, attributes: attributes || {} });
 
@@ -341,6 +341,7 @@ function fakeDom() {
     return { L, classList: { add: (c) => cls.add(c), remove: (c) => cls.delete(c), contains: (c) => cls.has(c) }, children: [], dataset: {}, textContent: '' };
   };
   const el = mkEl(), pp = mkEl(), lead = mkEl(), inp = mkEl(), dots = mkEl();
+  dots.setAttribute = (k, v) => { dots.attrs = Object.assign(dots.attrs || {}, { [k]: v }); };
   el.focused = 0; el.focus = () => { el.focused++; };
   pp.remove = () => { el.children = el.children.filter((c) => c !== pp); };
   pp.addEventListener = (t, f) => { pp.L[t] = f; };
@@ -361,7 +362,7 @@ function fakeDom() {
 }
 
 test('ask: panel liczbowy – pin, napis, pointerdown nie budzi, klawisze i zamknięcie', () => {
-  const { Q } = env();
+  const { Q, tl } = env();
   const d = fakeDom(), sent = [];
   Q.exec = (w, i, code) => sent.push([i, code]);
   Q.timer = () => {};
@@ -379,7 +380,9 @@ test('ask: panel liczbowy – pin, napis, pointerdown nie budzi, klawisze i zamk
   assert.equal(stopped, 1); assert.equal(prevented, 0);
   down('4'); down('2');
   assert.equal(Q._c.buf, '42');
-  assert.equal(d.dots.innerHTML.split('<i').length - 1, 2);
+  assert.equal(d.dots.innerHTML.split('class="on"').length - 1, 2);
+  assert.equal(d.dots.attrs['aria-label'], 'wall.pin_entered');
+  assert.deepEqual(tl.filter((x) => x[0] === 'wall.pin_entered').pop()[1], { count: 2, total: 4 });
   down('del');
   assert.equal(Q._c.buf, '4');
   down('lock');
@@ -425,4 +428,112 @@ test('ask: zablokowany saver albo brak el – bez panelu', () => {
 test('kod alarmu: nigdzie poza this._c.buf (źródło nie zapisuje kodu)', () => {
   const s = readFileSync(new URL('../../src/parts/hg-wallqa.part.js', import.meta.url), 'utf8');
   assert.doesNotMatch(s, /localStorage|sessionStorage|console\.|dataset\.(buf|code)|data-(code|buf)/);
+});
+
+test('textPanel: pole kodu nie jest zapamiętywane ani poprawiane przez przeglądarkę', () => {
+  const pp = { setAttribute() {}, classList: { add() {} } };
+  const { HGWallQA } = loadParts(['hg-wallqa.part.js'], { window: {}, document: { createElement: () => pp }, H: { esc: String, icon: String }, hgT: (k) => k, K: () => '', HGWall: {}, setTimeout, clearTimeout }, ['HGWallQA']);
+  HGWallQA.textPanel('Dom');
+  assert.match(pp.innerHTML, /type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false"/);
+});
+
+test('edit: dodawanie, usuwanie i zmiana akcji idą przez norm (limit 3)', () => {
+  const { Q } = env();
+  let cfg = [], looks = 0;
+  const wall = { get: () => ({ qa: cfg }), set: (p) => { cfg = p.qa; }, admin: () => true };
+  Q.wall = () => wall;
+  const p = { _eLook() { looks++; }, _eToast() {} };
+  Q.edit(p, (L) => L.push({ e: 'cover.g', a: 'open', ic: '', n: '', hold: true }));
+  assert.equal(cfg.length, 1);
+  Q.edit(p, (L) => { L[0].a = 'close'; });
+  assert.equal(cfg[0].a, 'close');
+  Q.edit(p, (L) => L.push({ e: 'lock.x', a: 'toggle' }));
+  assert.equal(cfg.length, 1);
+  Q.edit(p, (L) => L.splice(0, 1));
+  assert.equal(cfg.length, 0);
+  assert.equal(looks, 4);
+});
+
+test('act: obsługuje wyłącznie wl-qa-*', () => {
+  const { Q } = env();
+  assert.equal(Q.act({}, {}, 'wl-test'), false);
+  assert.equal(Q.act({}, {}, undefined), false);
+});
+
+test('act: usuń, zmiana akcji (tylko dozwolonej) i przytrzymanie; nie-admin nic nie zmienia', () => {
+  const { Q } = env();
+  let cfg = Q.norm([{ e: 'cover.g', a: 'open' }, { e: 'switch.s', a: 'toggle' }]), admin = true;
+  Q.wall = () => ({ get: () => ({ qa: cfg }), set: (p) => { cfg = p.qa; }, admin: () => admin });
+  const p = { _eLook() {} };
+  const b = (i, v) => ({ dataset: { i: String(i), v } });
+  assert.equal(Q.act(p, b(0, 'close'), 'wl-qa-act'), true);
+  assert.equal(cfg[0].a, 'close');
+  Q.act(p, b(0, 'arm_away'), 'wl-qa-act');
+  assert.equal(cfg[0].a, 'close');
+  Q.act(p, b(1), 'wl-qa-hold');
+  assert.equal(cfg[1].hold, true);
+  admin = false;
+  assert.equal(Q.act(p, b(0), 'wl-qa-del'), false);
+  assert.equal(cfg.length, 2);
+  admin = true;
+  Q.act(p, b(0), 'wl-qa-del');
+  assert.deepEqual(cfg.map((x) => x.e), ['switch.s']);
+});
+
+test('html: tylko admin; wiersze, liczba kolumn akcji, pole dodawania znika przy limicie', () => {
+  const { Q } = env();
+  let cfg = [], admin = false;
+  Q.wall = () => ({ get: () => ({ qa: cfg }), admin: () => admin });
+  const p = { _hass: { states: { 'cover.g': st('closed', { friendly_name: 'Brama' }), 'lock.x': st('locked'), 'switch.a': st('on') } } };
+  assert.equal(Q.html(p), '');
+  admin = true;
+  let h = Q.html(p);
+  assert.match(h, /wl-qa-add/);
+  assert.match(h, /<option value="cover\.g">Brama<\/option>/);
+  assert.doesNotMatch(h, /lock\.x/);
+  cfg = Q.norm([{ e: 'cover.g', a: 'open' }]);
+  h = Q.html(p);
+  assert.match(h, /class="wl-seg" role="group" style="--n:3"/);
+  assert.match(h, /data-hge="wl-qa-act" data-i="0" data-v="close" aria-pressed="false"/);
+  assert.match(h, /data-hge="wl-qa-act" data-i="0" data-v="open" aria-pressed="true"/);
+  cfg = Q.norm([{ e: 'switch.a', a: 'on' }, { e: 'switch.a', a: 'off' }, { e: 'switch.a', a: 'toggle' }]);
+  assert.doesNotMatch(Q.html(p), /wl-qa-add/);
+});
+
+test('wire: dodawanie encji (obsługiwana / nie), nazwa i ikona przez norm', () => {
+  const { Q } = env();
+  let cfg = [];
+  Q.wall = () => ({ get: () => ({ qa: cfg }), set: (x) => { cfg = x.qa; }, admin: () => true });
+  const toasts = [];
+  const p = { _eLook() {}, _eToast: (t) => toasts.push(t) };
+  const mk = (extra) => { const o = Object.assign({ L: {}, dataset: {}, addEventListener(t, f) { o.L[t] = f; } }, extra); return o; };
+  const add = mk({ value: ' Cover.G ' }), nm = mk({ dataset: { i: '0' }, value: '  Brama  ' }), ic = mk({ dataset: { i: '0' }, value: 'mdi:gate' });
+  const S = { querySelector: (s) => (s === '[name=wl-qa-add]' ? add : null), querySelectorAll: (s) => (s === '[name=wl-qa-n]' ? [nm] : s === '[name=wl-qa-ic]' ? [ic] : []) };
+  Q.wire(p, S);
+  add.L.change();
+  assert.deepEqual(cfg, [{ e: 'cover.g', a: 'open', ic: '', n: '', hold: true }]);
+  add.value = 'lock.x'; add.L.change();
+  assert.equal(add.value, '');
+  assert.deepEqual(toasts, ['wallqa.unsupported']);
+  assert.equal(cfg.length, 1);
+  nm.L.change();
+  assert.equal(cfg[0].n, 'Brama');
+  ic.L.change();
+  assert.equal(cfg[0].ic, 'mdi:gate');
+  ic.value = 'zle'; ic.L.change();
+  assert.equal(cfg[0].ic, 'mdi:gate');
+  assert.equal(toasts[1], 'wallqa.icon_invalid');
+  let enter = 0;
+  add.value = 'switch.a'; add.L.keydown({ key: 'Enter', preventDefault() { enter++; } });
+  assert.equal(enter, 1);
+  assert.equal(cfg.length, 2);
+});
+
+test('integracja: hg-wall deleguje html/wire/act do HGWallQA, data-hge zaczyna się od wl-', () => {
+  const s = readFileSync(new URL('../../src/parts/hg-wall.part.js', import.meta.url), 'utf8');
+  assert.match(s, /HGWallQA\.html\(p\)/);
+  assert.match(s, /HGWallQA\.wire\(p, S\)/);
+  assert.match(s, /HGWallQA\.act\(p, b, a\)/);
+  const q = readFileSync(new URL('../../src/parts/hg-wallqa.part.js', import.meta.url), 'utf8');
+  for (const m of q.matchAll(/data-hge="([^"]+)"/g)) assert.match(m[1], /^wl-/);
 });

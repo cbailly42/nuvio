@@ -229,12 +229,16 @@ const HGWallQA = {
     pp.className = 'nw-pp';
     pp.setAttribute('role', 'group');
     pp.setAttribute('aria-label', nm);
-    pp.innerHTML = `<div class="nw-pt"><span class="nw-li">${H.icon('mdi:shield-lock')}</span><span></span></div><input class="nw-qi" type="password" autocomplete="off" aria-label="${H.esc(hgT('wallqa.enter_code'))}"><button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button><button type="button" class="nw-lb" data-k="lock"><span>${H.esc(hgT('wallqa.cancel'))}</span></button>`;
+    pp.innerHTML = `<div class="nw-pt"><span class="nw-li">${H.icon('mdi:shield-lock')}</span><span></span></div><input class="nw-qi" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" aria-label="${H.esc(hgT('wallqa.enter_code'))}"><button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button><button type="button" class="nw-lb" data-k="lock"><span>${H.esc(hgT('wallqa.cancel'))}</span></button>`;
     return pp;
   },
   dots(w) {
     const d = w && w.el && w.el.querySelector('.nw-pp.qc .nw-dots');
-    if (d) d.innerHTML = '<i class="on"></i>'.repeat((this._c || { buf: '' }).buf.length);
+    if (!d) return;
+    /* jak HGWall.dots: długość kodu nie jest znana, więc pokazujemy min. 4 pola; etykieta dla czytników ekranu */
+    const n = (this._c || { buf: '' }).buf.length, N = Math.max(4, n);
+    d.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="--i:${i}"></i>`).join('');
+    d.setAttribute('aria-label', hgT('wall.pin_entered', { count: n, total: N }));
   },
   /* 20 s bez dotyku zamyka panel */
   timer(w) {
@@ -275,6 +279,73 @@ const HGWallQA = {
     pp.remove();
     if (c && c.pin) el.classList.remove('pin');
     if (el.focus) el.focus({ preventScroll: true });
+  },
+  /* ---- ustawienia (sekcja w arkuszu wygaszacza, tylko admin; hooki w HGWall.html/wire/act) ---- */
+  wall() { return HGWall; },
+  /* wszystkie zmiany listy: kopia → mutacja → norm → zapis → odświeżenie arkusza (do ustawień trafia wyłącznie wynik norm: bez kodu) */
+  edit(p, fn) {
+    const W = this.wall(), L = W.get().qa.map((x) => Object.assign({}, x));
+    fn(L);
+    W.set({ qa: this.norm(L) });
+    if (p._eLook) p._eLook();
+  },
+  actLabel(a) {
+    return { press: hgT('wallqa.act_press'), toggle: hgT('wallqa.act_toggle'), on: hgT('wallqa.act_on'), off: hgT('wallqa.act_off'), open: hgT('wallqa.act_open'), close: hgT('wallqa.act_close'), arm_away: hgT('wallqa.act_arm_away'), arm_home: hgT('wallqa.act_arm_home'), arm_night: hgT('wallqa.act_arm_night'), disarm: hgT('wallqa.act_disarm') }[a] || a;
+  },
+  entities(h) {
+    const out = [];
+    for (const [id, s] of Object.entries((h && h.states) || {})) {
+      if (this.actions(id).length) out.push([id, (s.attributes && s.attributes.friendly_name) || id]);
+    }
+    return out.sort((x, y) => x[1].localeCompare(y[1])).slice(0, 500);
+  },
+  rowHtml(it, i, h) {
+    const acts = this.actions(it.e), nm = H.name(h, it.e, it.e);
+    return `<div class="wl-qr"><div class="wl-qh"><b>${H.esc(it.n || nm)}</b><small>${H.esc(it.e)}</small><button type="button" class="wl-tb" data-hge="wl-qa-del" data-i="${i}" aria-label="${H.esc(hgT('wallqa.remove'))}">${H.icon('mdi:close')}</button></div>
+      <div class="wl-seg" role="group" style="--n:${acts.length}">${acts.map((a) => `<button type="button" data-hge="wl-qa-act" data-i="${i}" data-v="${a}" aria-pressed="${it.a === a}">${H.esc(this.actLabel(a))}</button>`).join('')}</div>
+      <span class="hs-s lk-url">${H.icon('mdi:form-textbox')}<input class="hs-in" name="wl-qa-n" data-i="${i}" maxlength="24" value="${H.esc(it.n)}" placeholder="${H.esc(nm)}" aria-label="${H.esc(hgT('wallqa.name'))}" autocomplete="off"></span>
+      <span class="hs-s lk-url">${H.icon('mdi:emoticon-outline')}<input class="hs-in" name="wl-qa-ic" data-i="${i}" maxlength="64" value="${H.esc(it.ic)}" placeholder="${H.esc(this.ICON[this.dom(it.e)])}" aria-label="${H.esc(hgT('wallqa.icon'))}" autocomplete="off" spellcheck="false"></span>
+      <button type="button" class="wl-sw" role="switch" data-hge="wl-qa-hold" data-i="${i}" aria-checked="${it.hold}"><span>${H.esc(hgT('wallqa.hold'))}</span><i aria-hidden="true"></i></button></div>`;
+  },
+  html(p) {
+    const W = this.wall();
+    if (!W.admin(p)) return '';
+    const list = W.get().qa, h = p._hass;
+    const add = list.length < this.MAX
+      ? `<span class="hs-s lk-url">${H.icon('mdi:plus')}<input class="hs-in" name="wl-qa-add" list="wl-qa-ents" placeholder="cover.garage" autocomplete="off" spellcheck="false" aria-label="${H.esc(hgT('wallqa.add'))}"></span><datalist id="wl-qa-ents">${this.entities(h).map(([id, n]) => `<option value="${H.esc(id)}">${H.esc(n)}</option>`).join('')}</datalist>`
+      : '';
+    return `<div class="wl-f" role="group" aria-labelledby="wl-qa"><span id="wl-qa">${H.esc(hgT('wallqa.title'))}</span><small>${H.esc(hgT('wallqa.hint'))}</small>${list.map((it, i) => this.rowHtml(it, i, h)).join('')}${add}</div>`;
+  },
+  wire(p, S) {
+    const add = S.querySelector('[name=wl-qa-add]');
+    if (add) {
+      const go = () => {
+        const e = add.value.trim().toLowerCase();
+        if (!e) return;
+        const A = this.actions(e);
+        if (!A.length) { add.value = ''; p._eToast(hgT('wallqa.unsupported')); return; }
+        this.edit(p, (L) => { if (L.length < this.MAX) L.push({ e, a: A[0], ic: '', n: '', hold: this.hold(e) }); });
+      };
+      add.addEventListener('change', go);
+      add.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
+    }
+    for (const n of S.querySelectorAll('[name=wl-qa-n]')) n.addEventListener('change', () => this.edit(p, (L) => { const x = L[Number(n.dataset.i)]; if (x) x.n = n.value; }));
+    for (const ic of S.querySelectorAll('[name=wl-qa-ic]')) {
+      ic.addEventListener('change', () => {
+        const v = ic.value.trim();
+        if (v && !/^mdi:[a-z0-9-]{1,60}$/.test(v)) { p._eToast(hgT('wallqa.icon_invalid')); return; }
+        this.edit(p, (L) => { const x = L[Number(ic.dataset.i)]; if (x) x.ic = v; });
+      });
+    }
+  },
+  /* kolejność warunków ma znaczenie: obce akcje (np. wl-test) wracają false, zanim ruszymy wall() */
+  act(p, b, a) {
+    if (!/^wl-qa-/.test(a || '') || !this.wall().admin(p)) return false;
+    const i = Number(b.dataset.i);
+    if (a === 'wl-qa-del') this.edit(p, (L) => { L.splice(i, 1); });
+    else if (a === 'wl-qa-act') this.edit(p, (L) => { if (L[i] && this.actions(L[i].e).includes(b.dataset.v)) L[i].a = b.dataset.v; });
+    else if (a === 'wl-qa-hold') this.edit(p, (L) => { if (L[i]) L[i].hold = !L[i].hold; });
+    return true;
   },
 };
 window.HGWallQA = HGWallQA;
