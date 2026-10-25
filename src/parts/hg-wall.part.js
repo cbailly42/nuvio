@@ -204,7 +204,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     /* w trybie edycji: tylko szkic, zapis przy Gotowe */
     if (HGL.editing) return; clearTimeout(this._sv); this._sv = setTimeout(() => { this._sv = null; HGL.save(this.hass || window.__hgHass).catch(() => {}); }, 400); },
   /* ---- silnik bezczynności ---- */
-  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h); if (this.active && typeof HGWallQA !== 'undefined') HGWallQA.paint(this);
+  tick(h, page) { this.hass = h; this.page = page; this.sync(); this.motion(h);
     /* po przeładowaniu strony zablokowany ekran wraca od razu (przeładowanie nie omija blokady) */
     if (!this._rs) { const t0 = this._rs0 || (this._rs0 = Date.now());   /* ustawienia z HA mogą dojść chwilę później: czekamy na nie do 20 s */
       if (!this.flag()) this._rs = true; else if (this.lockOn()) { if (page && page.isConnected) { this._rs = true; if (!this.active) this.lockNow(); } else if (!this._rsT) this._rsT = setTimeout(() => { this._rsT = null; if (this.page && this.hass) this.tick(this.hass, this.page); }, 500); } else if (Date.now() - t0 > 20000) { this._rs = true; this.flag(false); } } },
@@ -214,7 +214,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); if (this.active) this.wakeLock(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
+    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } if (typeof HGWallQA !== 'undefined') HGWallQA.paint(this); } },
   arm(ms) { clearTimeout(this._t); const c = this.run(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -249,7 +249,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
-    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && ((this.glTap && this.glTap(e)) || this.qaTap(e))) { this.last = Date.now(); return; } this.wake('touch'); };
+    const wk = (e) => { e.preventDefault(); e.stopPropagation(); if (this.locked) { if (e.target && e.target.closest && e.target.closest('.ng-orb.ia')) this._apin = 1; return this.pad(); } if (e.type === 'pointerdown' && ((this.glTap && this.glTap(e)) || this.qaTap(e))) { this.last = Date.now(); return; }
+      if (typeof HGWallQA !== 'undefined' && HGWallQA.open()) { this.last = Date.now(); HGWallQA.close(this); return; } this.wake('touch'); };
     el.addEventListener('pointerdown', wk);
     el.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); if (!this.locked) return this.wake('key');
       if (!el.classList.contains('pin')) return this.pad(); if (/^[0-9]$/.test(e.key)) this.key(e.key); else if (e.key === 'Backspace') this.key('del'); else if (e.key === 'Escape') this.unpad(); }); el.addEventListener('wheel', wk, { passive: false }); el.addEventListener('contextmenu', (e) => e.preventDefault());

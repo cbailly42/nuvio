@@ -266,8 +266,73 @@ test('integracja: hg-wall ma zaczepy HGWallQA (get/wk/show/tick/lockNow)', () =>
   assert.match(s, /qaTap\(e\)/);
   assert.match(s, /this\.qaTap\(e\)/);
   assert.match(s, /HGWallQA\.mount\(this, el\)/);
-  assert.match(s, /HGWallQA\.paint\(this\)/);
   assert.match(s, /HGWallQA\.close\(this\)/);
+  /* repaint dokładnie raz, w aktywnej gałęzi sync() (tick woła sync) */
+  assert.equal((s.match(/HGWallQA\.paint\(this\)/g) || []).length, 1);
+  const sync = s.slice(s.indexOf('  sync() {'), s.indexOf('  arm(ms)'));
+  assert.match(sync, /this\.active && this\.el\) \{[^]*HGWallQA\.paint\(this\)/);
+  const tick = s.slice(s.indexOf('  tick(h, page)'), s.indexOf('  sync() {'));
+  assert.doesNotMatch(tick, /HGWallQA\.paint/);
+  /* dotyk tła przy otwartym panelu kodu zamyka panel zamiast budzić (po gałęzi locked i dotyku w przycisk, przed wake('touch')) */
+  const wk = s.slice(s.indexOf('const wk = (e)'), s.indexOf("el.addEventListener('pointerdown', wk)"));
+  assert.match(wk, /HGWallQA\.open\(\)[^]*HGWallQA\.close\(this\)[^]*return;[^]*this\.wake\('touch'\)/);
+  assert.ok(wk.indexOf('this.qaTap(e)') < wk.indexOf('HGWallQA.open()'));
+  assert.doesNotMatch(s, /HGWallQA\._c/);
+});
+
+test('mount: zablokowany saver (lockAfter=0) nie montuje warstwy, ale czyści stan i przytrzymanie', () => {
+  const { Q } = env();
+  let cancels = 0, appended = 0;
+  Q.cancelHold = () => { cancels++; };
+  Q._c = { buf: '1' };
+  const el = { appendChild: () => { appended++; }, querySelector: () => null };
+  Q.mount({ locked: true, el, get: () => ({ qa: Q.norm([{ e: 'switch.a', a: 'toggle' }]) }) }, el);
+  assert.equal(appended, 0);
+  assert.equal(Q._c, null);
+  assert.equal(cancels, 1);
+  Q.mount({ locked: false, el, get: () => ({ qa: [] }) }, el);
+  assert.equal(appended, 0);
+  assert.equal(cancels, 2);
+});
+
+test('paint: zablokowany saver usuwa warstwę i nie montuje ponownie; po odblokowaniu wraca', () => {
+  const { Q } = env();
+  let removed = 0, mounted = 0, layer = { remove() { removed++; } };
+  const list = Q.norm([{ e: 'switch.a', a: 'toggle' }]);
+  const el = { querySelector: (s) => (s === '.nw-qa' ? layer : null) };
+  const w = { el, locked: true, get: () => ({ qa: list }) };
+  Q.mount = () => { mounted++; };
+  Q.paint(w);
+  assert.equal(removed, 1);
+  assert.equal(mounted, 0);
+  layer = null;
+  Q.paint(w);
+  assert.equal(mounted, 0);
+  w.locked = false;
+  Q.paint(w);
+  assert.equal(mounted, 1);
+});
+
+test('open: true tylko gdy panel kodu jest otwarty', () => {
+  const { Q } = env();
+  assert.equal(Q.open(), false);
+  Q._c = { buf: '' };
+  assert.equal(Q.open(), true);
+  Q._c = null;
+  assert.equal(Q.open(), false);
+});
+
+test('ask: w panelu liczbowym OK jest przed Anuluj', () => {
+  const { Q } = env();
+  const d = fakeDom(), order = [];
+  const keys = (h) => [...h.matchAll(/data-k="([^"]+)"/g)].map((m) => m[1]);
+  const lock = { insertAdjacentHTML: (pos, h) => { assert.equal(pos, 'beforebegin'); order.unshift(...keys(h)); } };
+  order.push('lock');
+  d.pp.querySelector = (s) => (s === '.nw-lb' ? lock : s === '.nw-pt > span:nth-of-type(2)' ? d.lead : null);
+  d.pp.insertAdjacentHTML = () => { order.push('WRONG-beforeend'); };
+  Q.timer = () => {};
+  Q.ask({ el: d.el, locked: false, hass: {}, padEl: () => d.pp }, 0, { e: 'alarm_control_panel.d' }, 'number');
+  assert.deepEqual(order, ['ok', 'lock']);
 });
 
 test('plan/actions: tylko własne właściwości (constructor, toString, __proto__ → null)', () => {

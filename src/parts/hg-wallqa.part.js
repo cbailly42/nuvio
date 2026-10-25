@@ -164,8 +164,9 @@ const HGWallQA = {
   mount(w, el) {
     this._c = null;
     clearTimeout(this._ct);
-    clearTimeout(this._ht);
-    if (!w.get().qa.length) return;
+    this.cancelHold();
+    /* zablokowany saver (też lockAfter = 0, gdzie locked ustawia się tuż przed mount) nie pokazuje przycisków */
+    if (w.locked || !w.get().qa.length) return;
     const L = document.createElement('div');
     L.className = 'nw-qa';
     L.setAttribute('role', 'group');
@@ -178,8 +179,8 @@ const HGWallQA = {
     const el = w.el;
     if (!el) return;
     const list = w.get().qa, L = el.querySelector('.nw-qa');
-    if (!L) { if (list.length) this.mount(w, el); return; }
-    if (!list.length) { L.remove(); return; }
+    if (!L) { if (list.length && !w.locked) this.mount(w, el); return; }
+    if (!list.length || w.locked) { L.remove(); return; }
     if (L.dataset.k !== JSON.stringify(list)) { this.fill(w, L); return; }
     for (const b of L.querySelectorAll('.nw-qb')) {
       const it = list[Number(b.dataset.qi)];
@@ -197,7 +198,11 @@ const HGWallQA = {
     pp.classList.add('qc');
     const lead = pp.querySelector('.nw-pt > span:nth-of-type(2)');
     if (lead) lead.textContent = hgT('wallqa.enter_code');
-    if (fmt !== 'text') pp.insertAdjacentHTML('beforeend', `<button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button>`);
+    if (fmt !== 'text') {
+      /* OK przed Anuluj (kolejność fokusu i czytania): wstawiamy przed pierwszym .nw-lb */
+      const ok = `<button type="button" class="nw-lb" data-k="ok"><span>${H.esc(hgT('wallqa.confirm'))}</span></button>`, lb = pp.querySelector('.nw-lb');
+      if (lb) lb.insertAdjacentHTML('beforebegin', ok); else pp.insertAdjacentHTML('beforeend', ok);
+    }
     this._c = { i, buf: '', fmt, pin: !el.classList.contains('pin') };
     el.classList.add('pin');
     /* dotyk w panel nie dochodzi do HGWall.wk (nie budzi wygaszacza) */
@@ -257,6 +262,8 @@ const HGWallQA = {
     this.timer(w);
     if (r.submit) { const { i } = c, code = c.buf; this.close(w); this.exec(w, i, code); }
   },
+  /* czy panel kodu jest otwarty (hook dotyku tła w HGWall) */
+  open() { return !!this._c; },
   /* przerywa oczekujące przytrzymanie (timer + nasłuch pointerup/pointercancel) */
   cancelHold() {
     clearTimeout(this._ht);
