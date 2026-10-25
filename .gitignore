@@ -5,3 +5,5 @@ tests/out/
 .ha-test/
 node_modules/
 dist/.*/
+.DS_Store
+docs/superpowers/*

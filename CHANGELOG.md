@@ -5,6 +5,10 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Improved: performance. The check for a newer bundle no longer downloads the whole ~1.4 MB file on every page load: it sends a conditional request and the server answers 304 when nothing changed. The Clock card updates only its time text instead of redrawing the card, the header repaint compares plain values instead of serialising the user object on every state update, and the cover colour cache of the media cards is bounded.
+- Improved: the camera snapshot refresh, the Timer card and the Room card countdown pause while the tab is hidden or the card is off-screen, and catch up on the next tick.
+- Improved: the seven largest built-in backgrounds are recompressed (about 3.1 MB to 2.4 MB in total, same size and file names). Details are a little softer in a few photos.
+- Removed: the unused editor split chunks (`hg-editor.part.js`, `hg-editor-tail.part.js`) that were not part of the build.
 - Added: **Wall tablet mode → View shown on wake**: Last view used (default), Home or any enabled view. When the screensaver starts, the dashboard goes back to that view behind it, so it is the one you see when you wake the screen. Skipped in edit mode, in the preview and when the view is already open. A view locked with a PIN still asks for it on wake.
 
 ### 2.23.1

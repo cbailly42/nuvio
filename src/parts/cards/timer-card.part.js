@@ -18,7 +18,7 @@ class HGTimerCard extends HGBase {
       <div class="bt">${act ? hgUI.pill(hgT('common.pause'), { act: 'pause', icon: 'mdi:pause' }) : hgUI.pill(pau ? hgT('common.resume') : hgT('cards.timer.start'), { act: 'start', icon: 'mdi:play', on: true })}${act || pau ? hgUI.pill(hgT('common.cancel'), { act: 'cancel', icon: 'mdi:stop' }) : ''}</div></div></ha-card>`; }
   /* odliczanie: przerysowanie co sekundę tylko wtedy, gdy minutnik działa */
   afterRender() { const s = H.st(this._hass, this._config.entity), on = !!s && s.state === 'active' && this.isConnected;
-    if (on && !this._tk) this._tk = setInterval(() => (this.isConnected ? this.rerender() : (clearInterval(this._tk), (this._tk = 0))), 1000);
+    if (on && !this._tk) this._tk = setInterval(() => (this.isConnected ? (document.hidden || this._off || this.rerender()) : (clearInterval(this._tk), (this._tk = 0))), 1000);
     if (!on && this._tk) { clearInterval(this._tk); this._tk = 0; } }
   disconnectedCallback() { if (this._tk) { clearInterval(this._tk); this._tk = 0; } }
   connectedCallback() { super.connectedCallback(); if (this._html != null) this.rerender(); }
