@@ -5,6 +5,7 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Fixed: the blur of the cards (glass) was missing or showed up late after a view change, most visibly when you switch views with **Panel background** off. The card entry animation faded the opacity of each card wrapper, which cut the cards off from the photo behind them and, because the animation kept its end state, kept the blur off afterwards. Cards now slide in without any opacity change, so the blur is there from the first frame.
 - Improved: performance. The check for a newer bundle no longer downloads the whole ~1.4 MB file on every page load: it sends a conditional request and the server answers 304 when nothing changed. The Clock card updates only its time text instead of redrawing the card, the header repaint compares plain values instead of serialising the user object on every state update, and the cover colour cache of the media cards is bounded.
 - Improved: the camera snapshot refresh, the Timer card and the Room card countdown pause while the tab is hidden or the card is off-screen, and catch up on the next tick.
 - Improved: the seven largest built-in backgrounds are recompressed (about 3.1 MB to 2.4 MB in total, same size and file names). Details are a little softer in a few photos.

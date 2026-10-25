@@ -5,6 +5,7 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Unreleased
+- Poprawka: rozmycie kart (szkło) nie działało do czasu przerysowania pulpitu, najwyraźniej przy zmianie widoku z wyłączonym **Tłem panelu**. Animacja wejścia kart zmieniała przezroczystość każdego opakowania karty, przez co karty były odcięte od zdjęcia za nimi, a ponieważ animacja zostawiała stan końcowy, blur pozostawał wyłączony także potem. Karty wjeżdżają teraz bez zmiany przezroczystości, więc rozmycie jest od pierwszej klatki.
 - Ulepszenie: wydajność. Sprawdzanie, czy jest nowszy bundle, nie pobiera już przy każdym wejściu całego pliku (~1,4 MB): wysyła warunkowe zapytanie, a serwer odpowiada 304, gdy nic się nie zmieniło. Karta Zegar odświeża tylko tekst czasu zamiast przerysowywać całą kartę, przerysowanie nagłówka porównuje proste wartości zamiast serializować obiekt użytkownika przy każdej zmianie stanu, a pamięć kolorów okładek w kartach multimediów ma limit.
 - Ulepszenie: odświeżanie migawki kamery, karta Timer i odliczanie w karcie Pokój wstrzymują się, gdy karta przeglądarki jest ukryta albo karta jest poza ekranem, i nadrabiają przy następnym tyknięciu.
 - Ulepszenie: siedem największych wbudowanych teł jest przekompresowanych (razem z ok. 3,1 MB do 2,4 MB, te same wymiary i nazwy plików). Na kilku zdjęciach drobne detale są trochę łagodniejsze.
