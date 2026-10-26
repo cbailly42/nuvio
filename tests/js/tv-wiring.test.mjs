@@ -43,14 +43,14 @@ test('build.py: części logiki i strony są w PAGE po hg-users, przed hg-assist
 });
 
 test('katalogi: strona tv i przestrzeń tv.* mają te same klucze w en, pl i fr', () => {
+  const base = (keys) =>
+    [...new Set(keys.map((k) => k.replace(/_(zero|one|two|few|many|other)$/, '')))].sort();
   const en = cat('en');
-  assert.equal(Object.keys(en.tv).length, Object.keys(cat('pl').tv).length);
-  assert.equal(Object.keys(en.tv).length, Object.keys(cat('fr').tv).length);
   assert.ok(Object.keys(en.tv).length >= 44);
   for (const k of ['accepted', 'err_wrong', 'err_limit', 'err_rejected', 'plain_title', 'plain_text', 'plain_ok']) for (const c of ['en', 'pl', 'fr']) assert.equal(typeof cat(c).tv[k], 'string', c + '.' + k);
   for (const c of ['pl', 'fr']) {
     const d = cat(c);
-    assert.deepEqual(Object.keys(d.tv), Object.keys(en.tv), c);
+    assert.deepEqual(base(Object.keys(d.tv)), base(Object.keys(en.tv)), c);
     assert.equal(typeof d.settings.pg.tv, 'string', c);
     assert.deepEqual(d.tv.created.match(/\{[a-z]+\}/g), ['{when}'], c);
   }
