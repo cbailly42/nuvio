@@ -4,6 +4,10 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.26.1
+- Naprawiono: **pokój** — ruch/obecność oraz drzwi/okna są osobnymi sekcjami, które można usunąć lub ukryć w edytorze pokoju, tak jak pozostałe sekcje.
+- Naprawiono: **treść TV** nie zostawia osobnego kafelka komponentu z edycji, gdy te same encje pokrywa profil urządzenia (jeden kafelek oczyszczacza/zamka zamiast duplikatów).
+
 ### 2.26.0-beta.6
 - Naprawiono: **treść TV** nie zostawia osobnego kafelka komponentu z edycji, gdy te same encje pokrywa profil urządzenia (jeden kafelek oczyszczacza/zamka zamiast duplikatów).
 

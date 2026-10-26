@@ -4,6 +4,10 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.1
+- Corrigé : **pièce** — les chips présence/mouvement et portes/fenêtres forment des sections distinctes, qu’on peut supprimer ou masquer dans l’éditeur de pièce, comme les autres sections.
+- Corrigé : **contenu TV** ne conserve plus une tuile de composant d’édition séparée lorsque les mêmes entités sont déjà couvertes par un profil d’appareil (une seule tuile purificateur/serrure).
+
 ### 2.26.0-beta.6
 - Corrigé : **contenu TV** ne conserve plus une tuile de composant d’édition séparée lorsque les mêmes entités sont déjà couvertes par un profil d’appareil (une seule tuile purificateur/serrure).
 

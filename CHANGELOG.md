@@ -4,6 +4,10 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.1
+- Fixed: **room** presence/motion and door/window chips are separate sections, so they can be removed or hidden in the room editor like the other room sections.
+- Fixed: **TV content** no longer keeps a separate edit-mode component tile when the same entities are covered by a device profile (one purifier/lock tile instead of duplicates).
+
 ### 2.26.0-beta.6
 - Fixed: **TV content** no longer keeps a separate edit-mode component tile when the same entities are covered by a device profile (one purifier/lock tile instead of duplicates).
 
