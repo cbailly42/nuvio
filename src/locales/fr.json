@@ -3194,6 +3194,28 @@
     },
     "widgets_under_the_clock": "Widgets sous l’horloge"
   },
+  "wallclock": {
+    "heading": "Apparence de l’horloge",
+    "preview": "Aperçu",
+    "font": "Police",
+    "font_system": "Système",
+    "font_serif": "Serif",
+    "font_mono": "Mono",
+    "font_rounded": "Arrondie",
+    "font_own": "Personnalisée",
+    "font_url": "Adresse de la police",
+    "font_url_hint": "/local/… ou https://… (woff2, ttf)",
+    "size": "Taille",
+    "weight": "Épaisseur",
+    "colour": "Couleur",
+    "color_white": "Blanc",
+    "color_accent": "Accent",
+    "color_custom": "Personnalisée",
+    "colour_pick": "Choisir une couleur",
+    "shadow": "Ombre",
+    "opacity": "Opacité",
+    "reset": "Rétablir les valeurs par défaut"
+  },
   "wallglass": {
     "add_person": "Ajouter une personne",
     "after_sunset": "Après le coucher du soleil",

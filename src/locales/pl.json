@@ -3244,6 +3244,28 @@
     },
     "widgets_under_the_clock": "Widżety pod zegarem"
   },
+  "wallclock": {
+    "heading": "Wygląd zegara",
+    "preview": "Podgląd",
+    "font": "Czcionka",
+    "font_system": "Systemowa",
+    "font_serif": "Szeryfowa",
+    "font_mono": "Monospace",
+    "font_rounded": "Zaokrąglona",
+    "font_own": "Własna",
+    "font_url": "Adres czcionki",
+    "font_url_hint": "/local/… albo https://… (woff2, ttf)",
+    "size": "Rozmiar",
+    "weight": "Grubość",
+    "colour": "Kolor",
+    "color_white": "Biały",
+    "color_accent": "Akcent",
+    "color_custom": "Własny",
+    "colour_pick": "Wybierz kolor",
+    "shadow": "Cień",
+    "opacity": "Przezroczystość",
+    "reset": "Przywróć domyślne"
+  },
   "wallglass": {
     "add_person": "Dodaj osobę",
     "after_sunset": "Po zachodzie słońca",
