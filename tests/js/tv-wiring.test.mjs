@@ -19,7 +19,20 @@ test('hg-edit: lista stron, render, akcje tv- i wire są podpięte', () => {
 
 test('hg-tv: każda akcja data-hge ma prefiks tv- i jest obsłużona w act()', () => {
   const hges = [...new Set([...tv.matchAll(/data-hge="([a-z-]+)"/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(hges, ['tv-del', 'tv-pair', 'tv-reload', 'tv-send']);
+  assert.deepEqual(hges, [
+    'tv-cdn',
+    'tv-cup',
+    'tv-del',
+    'tv-lreload',
+    'tv-lsave',
+    'tv-lsync',
+    'tv-pair',
+    'tv-reload',
+    'tv-rent',
+    'tv-room',
+    'tv-rop',
+    'tv-send',
+  ]);
   for (const a of hges) assert.match(tv, new RegExp("case '" + a + "':"));
   assert.match(tv, /window\.HGTv = HGTv;/);
 });
@@ -31,7 +44,9 @@ test('build.py: części logiki i strony są w PAGE po hg-users, przed hg-assist
 
 test('katalogi: strona tv i przestrzeń tv.* mają te same klucze w en, pl i fr', () => {
   const en = cat('en');
-  assert.equal(Object.keys(en.tv).length, 44);
+  assert.equal(Object.keys(en.tv).length, Object.keys(cat('pl').tv).length);
+  assert.equal(Object.keys(en.tv).length, Object.keys(cat('fr').tv).length);
+  assert.ok(Object.keys(en.tv).length >= 44);
   for (const k of ['accepted', 'err_wrong', 'err_limit', 'err_rejected', 'plain_title', 'plain_text', 'plain_ok']) for (const c of ['en', 'pl', 'fr']) assert.equal(typeof cat(c).tv[k], 'string', c + '.' + k);
   for (const c of ['pl', 'fr']) {
     const d = cat(c);

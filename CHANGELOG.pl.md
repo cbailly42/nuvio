@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.26.0-beta.6
+- Naprawiono: **treść TV** nie zostawia osobnego kafelka komponentu z edycji, gdy te same encje pokrywa profil urządzenia (jeden kafelek oczyszczacza/zamka zamiast duplikatów).
+
 ### 2.26.0-beta.5
 - Ulepszono: **treść TV** — wiersze pokoi zapisują uporządkowane `items` (encje, binary_sensor, profile urządzeń, komponenty z edycji), żeby Nuvio TV mógł oddać zawartość pokoju z dashboardu, nie tylko płaską whitelistę.
 

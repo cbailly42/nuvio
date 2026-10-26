@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.6
+- Fixed: **TV content** no longer keeps a separate edit-mode component tile when the same entities are covered by a device profile (one purifier/lock tile instead of duplicates).
+
 ### 2.26.0-beta.5
 - Improved: **TV content** room rows store ordered `items` (entities, binary sensors, device profiles, edit-mode components) so Nuvio TV can mirror dashboard room contents, not only a flat entity whitelist.
 
