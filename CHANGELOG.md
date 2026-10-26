@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.27.0
+- Added: **clock appearance** for the wall tablet screensaver (issue #41). Appearance → Wall tablet mode has a live preview and controls for font (system, serif, mono, rounded or your own font from a `/local/…` or `https://…` address), size, weight, colour (white, accent or your own), shadow and opacity. The settings apply to the clock on photo, Night, Aurora, Flip and Minimal (glass) styles. The default values keep the current look, and **Reset to style defaults** restores them.
+
 ### 2.26.1
 - Fixed: **room** presence/motion and door/window chips are separate sections, so they can be removed or hidden in the room editor like the other room sections.
 - Fixed: **TV content** no longer keeps a separate edit-mode component tile when the same entities are covered by a device profile (one purifier/lock tile instead of duplicates).

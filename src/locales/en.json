@@ -3144,6 +3144,28 @@
     },
     "widgets_under_the_clock": "Widgets under the clock"
   },
+  "wallclock": {
+    "heading": "Clock appearance",
+    "preview": "Preview",
+    "font": "Font",
+    "font_system": "System",
+    "font_serif": "Serif",
+    "font_mono": "Mono",
+    "font_rounded": "Rounded",
+    "font_own": "Own",
+    "font_url": "Font address",
+    "font_url_hint": "/local/… or https://… (woff2, ttf)",
+    "size": "Size",
+    "weight": "Weight",
+    "colour": "Colour",
+    "color_white": "White",
+    "color_accent": "Accent",
+    "color_custom": "Own",
+    "colour_pick": "Pick a colour",
+    "shadow": "Shadow",
+    "opacity": "Opacity",
+    "reset": "Reset to style defaults"
+  },
   "wallglass": {
     "add_person": "Add person",
     "after_sunset": "After sunset",

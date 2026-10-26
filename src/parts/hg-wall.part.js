@@ -243,9 +243,11 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('wall.screensaver')); el.tabIndex = -1;
     el.style.setProperty('--nw-dim', c.dim);
+    if (this.ckApply) this.ckApply(el);
     const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board()), xs = !gl && !bd && this.xs ? this.xs() : '';
     el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : xs ? this.xsShell(xs) : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`;
+    if (this.ckCss) el.insertAdjacentHTML('beforeend', this.ckCss(c));   /* na końcu: nadpisuje reguły stylów (np. Nocny, Zorza) o tej samej specyficzności */
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
     this.locked = false; clearTimeout(this._lk); el.style.setProperty('--nw-lki', `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path d=\'M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z\'/></svg>')}")`);
     if (this.lockOn()) { if (!c.lockAfter) this.locked = true; else this._lk = setTimeout(() => this.lockNow(), c.lockAfter * 1000); }
@@ -378,6 +380,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
         ${c.src === 'url' ? `<span class="hs-s lk-url">${H.icon('mdi:link-variant')}<input class="hs-in" name="wl-url" placeholder="${hgT('wall.image_url_hint')}" value="${H.esc(c.url)}" autocomplete="off" aria-label="${hgT('wall.screensaver_image_url')}"></span>` : ''}</div>` : ''}
       <div class="wl-f" role="group" aria-labelledby="wl-ms"><span id="wl-ms">${hgT('wall.motion_sensor_wake')}</span>${this.pk('sens', [c.sensor ? { k: c.sensor, l: (h.states[c.sensor] && H.name(h, c.sensor, c.sensor)) || c.sensor, s: c.sensor } : { k: '', l: hgT('wall.none_touch_only'), ic: 'mdi:gesture-tap', fix: true }],
         sens.filter(([e]) => e !== c.sensor).map(([e, n]) => ({ k: e, l: n, s: e })), { one: true, add: c.sensor ? hgT('common.change') : hgT('wall.choose_sensor'), ic: 'mdi:motion-sensor' })}</div>
+      ${this.ckHtml ? this.ckHtml(c) : ''}
       ${this.kidHtml(c, h)}
       ${typeof HGWallQA !== 'undefined' ? HGWallQA.html(p) : ''}
       <button type="button" class="wl-tb" data-hge="wl-test">${H.icon('mdi:play-circle-outline')}<span>${hgT('wall.preview_screensaver')}</span></button>${typeof HGDeviceCmd !== 'undefined' ? HGDeviceCmd.html(p) : ''}`;
@@ -408,6 +411,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.glWire) this.glWire(p, S);
     if (typeof HGDeviceCmd !== 'undefined') HGDeviceCmd.wire(p, S);
     if (typeof HGWallQA !== 'undefined') HGWallQA.wire(p, S);
+    if (this.ckWire) this.ckWire(p, S);
     const hv = S.querySelector('[name=wl-home]'); if (hv) hv.addEventListener('change', () => this.set({ home: hv.value }));
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
@@ -416,6 +420,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   act(p, b, a) { if (!this.admin(p)) return;
     if (typeof HGWallQA !== 'undefined' && HGWallQA.act(p, b, a)) return;
     if (this.glAct && this.glAct(p, b, a)) return;
+    if (a.startsWith('wl-ck-') && this.ckAct && this.ckAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); const on = !this.get().on; if (on) this.here(true); this.set({ on }); return p._eLook(); }   /* włączenie tutaj = włączony też na tym urządzeniu */
     /* blokada widoku: akcja musi zaczynać się od wl-, bo tylko takie trafiają tutaj z arkusza (beta.1: vl-t nie docierało nigdzie) */
