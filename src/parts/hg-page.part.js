@@ -327,7 +327,7 @@ class HGPage extends HTMLElement {
     /* skala tabletu ograniczona też wysokością, żeby niskie okno nie rozciągało paneli */
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620, Hh / 640)); }
     const z = this._zoom();
-    if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
+    if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); if (this._headEl && this._config && !this._config.room_head && this._hass) this._headVis(this._headConf()); }
     this.style.setProperty('--hg-u0', u.toFixed(4) + 'px');
     this.style.setProperty('--hg-zoom', z);
     if (this._panel) this._panelGrid(mode);
