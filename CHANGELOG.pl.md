@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.26.0-beta.1
+- Dodano: **treść telewizora** w Ustawienia → System → Telewizor: wybór kamer (z kolejnością), pokoi (opcjonalnie podzbiór encji), scen/skryptów i paneli alarmu widocznych na sparowanych aplikacjach Nuvio TV. Wybór jest zapisany w danych użytkownika Home Assistant jako `nuvio_tv_layout`. Bez zapisu telewizor pokazuje wszystko z Home Assistant; pusta sekcja pozostaje ukryta. Po zapisie przeładuj lub połącz ponownie telewizor ([#83](https://github.com/kczepiec/nuvio/pull/83)).
+
 ### 2.25.1
 - Poprawka: **parowanie telewizora** tworzy krótszy token dostępu (365 dni zamiast 10 lat), pyta o zgodę przed wysłaniem tokenu do telewizora przez nieszyfrowany `http://` i buduje adres telewizora tylko ze sprawdzonego `host:port` (schemat i ścieżka są odrzucane) ([#81](https://github.com/kczepiec/nuvio/pull/81)).
 - Poprawka: komponent dodany na stronie **pokoju** (stos, siatka, karta HA, …) znów otwiera własny formularz w trybie edycji, a nie ustawienia sekcji ([#80](https://github.com/kczepiec/nuvio/pull/80)).

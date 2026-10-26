@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.1
+- Added: **TV content** under Settings → System → TV: choose which cameras (with order), rooms (optionally a subset of entities), scenes/scripts and alarm panels appear on paired Nuvio TV apps. The selection is stored in Home Assistant user data as `nuvio_tv_layout`. With nothing saved, the TV shows everything from Home Assistant; an empty section stays hidden. Reload or reconnect the TV after saving ([#83](https://github.com/kczepiec/nuvio/pull/83)).
+
 ### 2.25.1
 - Fixed: **TV pairing** creates a shorter-lived access token (365 days instead of 10 years), asks for confirmation before sending the token to the TV over cleartext `http://`, and builds the TV address only from a validated `host:port` (schemes and paths are rejected) ([#81](https://github.com/kczepiec/nuvio/pull/81)).
 - Fixed: a component added on a **room** page (stack, grid, HA card, …) opens its own form in edit mode again, instead of the section settings ([#80](https://github.com/kczepiec/nuvio/pull/80)).

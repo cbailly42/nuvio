@@ -88,7 +88,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
         const id = a.id === '_none' ? HGTvLogic.OTHER_ROOM : a.id;
         const items = a.ents.filter((e) => this.ROOM_DOMS.includes(e.slice(0, e.indexOf('.')))).map((e) => ({ id: e, name: nm(e) }));
         if (!items.length) continue;
-        rooms.push({ id, name: a.id === '_none' ? hgT('tv.layout_other') : a.name, ents: items });
+        rooms.push({ id, name: a.id === '_none' ? hgT('tv.layout_unassigned') : a.name, ents: items });
       }
     }
     return { cameras, scenes, alarms, rooms };
@@ -154,12 +154,12 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     }).join('');
     const sceneRows = cat.scenes.map((x) => this.layRow(x.name, d.scenes.includes(x.id), 'tv-sc', x.id)).join('');
     const alarmRows = cat.alarms.map((x) => this.layRow(x.name, d.alarms.includes(x.id), 'tv-al', x.id)).join('');
-    const empty = (rows, key) => rows || `<small class="lk-hn">${hgT(key)}</small>`;
+    const empty = (rows, msg) => rows || `<small class="lk-hn">${msg}</small>`;
     return `<div class="tv-lay">
-      <h5>${H.icon('mdi:cctv')}${hgT('tv.layout_cameras')}</h5>${empty(camRows, 'tv.layout_no_cameras')}
-      <h5>${H.icon('mdi:floor-plan')}${hgT('tv.layout_rooms')}</h5>${empty(roomRows, 'tv.layout_no_rooms')}
-      <h5>${H.icon('mdi:palette')}${hgT('tv.layout_scenes')}</h5>${empty(sceneRows, 'tv.layout_no_scenes')}
-      <h5>${H.icon('mdi:shield-home')}${hgT('tv.layout_alarms')}</h5>${empty(alarmRows, 'tv.layout_no_alarms')}
+      <h5>${H.icon('mdi:cctv')}${hgT('tv.layout_cameras')}</h5>${empty(camRows, hgT('tv.layout_no_cameras'))}
+      <h5>${H.icon('mdi:floor-plan')}${hgT('tv.layout_rooms')}</h5>${empty(roomRows, hgT('tv.layout_no_rooms'))}
+      <h5>${H.icon('mdi:palette')}${hgT('tv.layout_scenes')}</h5>${empty(sceneRows, hgT('tv.layout_no_scenes'))}
+      <h5>${H.icon('mdi:shield-home')}${hgT('tv.layout_alarms')}</h5>${empty(alarmRows, hgT('tv.layout_no_alarms'))}
       <button type="button" class="lk-mini tv-go" data-hge="tv-lsave" ${this.layoutSaving ? 'disabled' : ''}>${hgT('tv.layout_save')}</button>
       ${this.layoutSaved ? `<small class="tv-lok" role="status">${hgT('tv.layout_saved')}</small>` : ''}
     </div>`;

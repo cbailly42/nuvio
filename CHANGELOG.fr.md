@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.1
+- Ajouté : **contenu TV** dans Paramètres → Système → Téléviseur : choisissez les caméras (avec ordre), pièces (éventuellement un sous-ensemble d’entités), scènes/scripts et panneaux d’alarme visibles sur les applications Nuvio TV jumelées. Le choix est enregistré dans les données utilisateur Home Assistant sous `nuvio_tv_layout`. Sans réglage, le téléviseur montre tout depuis Home Assistant ; une section vide reste masquée. Après enregistrement, rechargez ou reconnectez le téléviseur ([#83](https://github.com/kczepiec/nuvio/pull/83)).
+
 ### 2.25.1
 - Corrigé : le **jumelage TV** crée un jeton d’accès plus court (365 jours au lieu de 10 ans), demande confirmation avant d’envoyer le jeton au téléviseur en `http://` en clair, et construit l’adresse du téléviseur uniquement à partir d’un `hôte:port` validé (schéma et chemin refusés) ([#81](https://github.com/kczepiec/nuvio/pull/81)).
 - Corrigé : un composant ajouté sur une page de **pièce** (pile, grille, carte HA, …) rouvre son propre formulaire en mode édition, au lieu des paramètres de section ([#80](https://github.com/kczepiec/nuvio/pull/80)).
