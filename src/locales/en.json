@@ -3239,7 +3239,10 @@
       "analog": "Analog clock",
       "aurora": "Aurora",
       "flip": "Flip clock",
-      "night": "Night"
+      "night": "Night",
+      "stars": "Stars",
+      "words": "Word clock",
+      "sunrise": "Sunrise"
     }
   },
   "weather": {

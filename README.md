@@ -30,7 +30,7 @@ Nuvio is a glass-style dashboard for Home Assistant: pages, navigation, cards an
 - **Edit in place.** Drag and drop, resize tiles, add components from a gallery, change accent colour and background.
 - **Many cards, one look.** Over 70 cards for lights, climate, energy, media, cameras, people and more, each also usable on its own in a regular dashboard. See [Components](docs/components.md).
 - **Shared by default.** An administrator sets up one dashboard for everyone, and any person can be given their own layout. See [Features guide](docs/features.md#shared-dashboard).
-- **Wall tablet mode.** Seven screensavers (clock on photo, board, minimal, analog, flip, aurora and night) with previews and an optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
+- **Wall tablet mode.** Ten screensavers (clock on photo, board, minimal, analog, flip, aurora, night, stars, word clock and sunrise) with previews and an optional PIN lock. See [Wall tablet mode](docs/features.md#wall-tablet-mode).
 - **Layout backup.** Export and import the whole layout as versioned JSON. See [Layout backup](docs/features.md#layout-backup).
 - **Polish, English and French.** Switch language at any time, without reloading; more languages can be added as a single JSON file. See [Language](docs/configuration.md#language).
 - **Light and dark mode**, touch friendly, keyboard friendly in edit mode, and aware of reduced motion.

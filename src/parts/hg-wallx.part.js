@@ -71,7 +71,12 @@ Object.assign(HGWall, {
   XS: [['analog', hgTLazy('wallx.styles.analog'), true], ['flip', hgTLazy('wallx.styles.flip'), false], ['aurora', hgTLazy('wallx.styles.aurora'), false], ['night', hgTLazy('wallx.styles.night'), false]],
   xs() { const s = ((window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}).style; return this.XS.some((x) => x[0] === s) ? s : ''; },
   xsPic(k) { const x = this.XS.find((y) => y[0] === k); return !!(x && x[2]); },
+  /* rejestr stylów dodanych w osobnych plikach: xsDef(klucz, nazwa, tło ze zdjęcia, { cls, css, body(), draw(root, T, d, rm), start?(el, rm) }) */
+  XSDef: {},
+  xsDef(k, name, pic, def) { this.XSDef[k] = def; this.XS.push([k, name, pic]); this.GAL.push([k, name]); },
   xsShell(k) { const bg = this.xsPic(k) ? '<div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>' : '';
+    const def = this.XSDef[k]; if (def) return `<style>${HG_WALL_SS}${HG_WX_SS}${def.css || ''}</style>${bg}<div class="nx nx-${def.cls}">${def.body()}</div>
+      <p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`;
     const dt = '<p class="nx-dt"></p>', wx = '<div class="nx-wx" hidden></div>';
     const body = k === 'analog' ? `<div class="nx-face" role="img"><i class="nx-hd nx-hh"></i><i class="nx-hd nx-mm"></i><i class="nx-hd nx-ss"></i><i class="nx-cap"></i></div><div class="nx-side">${dt}${wx}</div>`
       : k === 'flip' ? `<div class="nx-fr"><div class="nx-fc"><b data-p="h"></b><small hidden></small></div><div class="nx-fc"><b data-p="m"></b></div></div>${dt}${wx}`
@@ -82,14 +87,15 @@ Object.assign(HGWall, {
     const s = new Date(); el.querySelector('.nx').style.setProperty('--sd', ((s.getSeconds() + s.getMilliseconds() / 1000) * 6).toFixed(2));
     if (this.xsPic(k)) this.photos(rm);
     const g = el.querySelector('.nx-in'), mv = () => { const v = Math.min(innerWidth, innerHeight) * (k === 'night' ? 0.07 : 0.02); g.style.setProperty('--nw-x', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); g.style.setProperty('--nw-y', ((Math.random() * 2 - 1) * v).toFixed(0) + 'px'); };
-    mv(); this._dr = setInterval(mv, 60000); },
+    mv(); this._dr = setInterval(mv, 60000); if (this.XSDef[k] && this.XSDef[k].start) this.XSDef[k].start(el, rm); },
   /* godzina w częściach (bez pory dnia), pora dnia osobno: zegar klapkowy ma osobne karty na godziny i minuty */
   xsTime(d) { const p = this.tf().formatToParts(d), v = (t) => (p.find((x) => x.type === t) || {}).value || '';
     return { h: v('hour'), m: v('minute'), ap: v('dayPeriod'), t: p.filter((x) => x.type !== 'dayPeriod').map((x) => x.value).join('').trim() }; },
   xsDraw() { const el = this.el, h = this.hass; if (!el || !el.classList.contains('xs')) return; const k = el.dataset.xs, root = el.querySelector('.nx'); if (!root) return;
     const d = new Date(), T = this.xsTime(d), rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dt = root.querySelector('.nx-dt'); if (dt) dt.textContent = new Intl.DateTimeFormat(HG_LOC(), k === 'flip' || k === 'night' ? { weekday: 'long', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
-    if (k === 'analog') { const mins = d.getHours() * 60 + d.getMinutes(), f = root.querySelector('.nx-face');   /* kąt rośnie przez cały dzień: wskazówka nie cofa się o pełny obrót co godzinę */
+    if (this.XSDef[k]) this.XSDef[k].draw(root, T, d, rm);
+    else if (k === 'analog') { const mins = d.getHours() * 60 + d.getMinutes(), f = root.querySelector('.nx-face');   /* kąt rośnie przez cały dzień: wskazówka nie cofa się o pełny obrót co godzinę */
       root.style.setProperty('--rm', mins * 6 + 'deg'); root.style.setProperty('--rh', mins * 0.5 + 'deg'); f.setAttribute('aria-label', T.t); }
     else if (k === 'flip') { const set = (b, v) => { if (b.textContent === v) return; if (!b.textContent || rm) { b.textContent = v; return; }
         b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); setTimeout(() => { b.textContent = v; }, 280); setTimeout(() => b.classList.remove('go'), 600); };
