@@ -272,12 +272,25 @@ const HGTv = window.__hgTv || (window.__hgTv = {
             const pk = (prof && HGTvLogic.PROFILE_KINDS.includes(prof.id)) ? prof.id : 'device';
             const list = (ents || []).filter((e) => typeof e === 'string' && seen.has(e));
             if (!list.length && ents) {
-              /* encje profilu mogą być już na liście items jako entity — zbierz je */
+              /* encje profilu moga byc juz na liscie items jako entity - zbierz je */
             }
             const all = (ents || []).filter((e) => typeof e === 'string' && HGTvLogic.isEntityId(e));
             if (!all.length) continue;
-            /* usuń płaskie entity items dla tych encji i włóż profil na początek po schodach */
-            const keep = items.filter((it) => !(it.t === 'entity' || it.t === 'binary') || !all.includes(it.id));
+            /* usuń płaskie entity/binary i kompy HGL, ktore pokrywaja te encje - jeden kafelek profilu */
+            const touches = (cfg) => {
+              if (!cfg || typeof cfg !== 'object') return false;
+              for (const k of ['entity', 'e', 'heater']) if (typeof cfg[k] === 'string' && all.includes(cfg[k])) return true;
+              for (const k of ['entities', 'scripts', 'persons', 'include', 'switches']) {
+                const v = cfg[k];
+                if (Array.isArray(v) && v.some((id) => typeof id === 'string' && all.includes(id))) return true;
+              }
+              return false;
+            };
+            const keep = items.filter((it) => {
+              if (it.t === 'entity' || it.t === 'binary') return !all.includes(it.id);
+              if (it.t === 'comp') return !touches(it.cfg);
+              return true;
+            });
             items.length = 0;
             items.push(...keep);
             const insertAt = items.findIndex((it) => it.t !== 'profile');
