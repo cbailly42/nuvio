@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.2
+- Improved: **TV content** starts from the Nuvio dashboard room (same entities as the room card, including hidden sections and added tiles). **Sync from dashboard** refreshes the lists; saving the dashboard layout also updates `nuvio_tv_layout` room entity lists when a TV layout already exists.
+
 ### 2.26.0-beta.1
 - Added: **TV content** under Settings → System → TV: choose which cameras (with order), rooms (optionally a subset of entities), scenes/scripts and alarm panels appear on paired Nuvio TV apps. The selection is stored in Home Assistant user data as `nuvio_tv_layout`. With nothing saved, the TV shows everything from Home Assistant; an empty section stays hidden. Reload or reconnect the TV after saving ([#83](https://github.com/kczepiec/nuvio/pull/83)).
 

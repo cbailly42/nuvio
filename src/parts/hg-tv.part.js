@@ -10,8 +10,8 @@
    Czyste funkcje: hg-tvlogic.part.js. Wartości pól trzyma obiekt (s), bo _eLook() kasuje wpisany tekst. Token żyje tylko w zmiennej lokalnej pair(), w this.ready między dwoma kliknięciami i w polu formularza w pamięci. ===== */
 const HGTv = window.__hgTv || (window.__hgTv = {
   FIELDS: [['tv-addr', 'addr'], ['tv-code', 'code'], ['tv-ha', 'ha']],
-  /* domeny encji w pokoju na TV (zgodne z nuvio-tv buildLayout) */
-  ROOM_DOMS: ['light', 'climate', 'cover', 'media_player', 'switch', 'sensor'],
+  /* domeny encji w pokoju na TV (zgodne z nuvio-tv buildLayout; input_boolean → switch) */
+  ROOM_DOMS: ['light', 'climate', 'cover', 'media_player', 'switch', 'input_boolean', 'sensor'],
   WIN: 'nuvio-tv-pair', HOLD_MS: 120000,
   /* czas oczekiwania na znacznik: przy adresie HA http spoza sieci prywatnej telewizor najpierw pyta o zgodę na połączenie bez szyfrowania (klik pilotem), więc dwa razy dłużej;
      w sieci prywatnej pomija to pytanie, więc 60 s. Znacznik sprawdzamy co POLL_MS, wysyłka fetch ma limit FETCH_MS */
@@ -74,44 +74,156 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     } catch (e) { if (my !== this.layoutRid) return; this.draft = null; this.layoutErr = true; }
     this.layoutLoading = false; this.redraw(p);
   },
-  /* katalog dostępnych pozycji z HA; pokoje z HGAreas (id _none → __other__) */
+  /* domeny dopuszczalne w whitelist pokoju TV (katalog + sensory binarne / zamki itd.) */
+  TV_ROOM_DOMS: ['light', 'climate', 'cover', 'media_player', 'switch', 'input_boolean', 'sensor', 'binary_sensor', 'fan', 'lock', 'camera', 'humidifier', 'vacuum', 'valve', 'siren'],
+  /* encje pokoju jak na dashboardzie: HGAreas (room_hide/assign) + HGL room:<id> (hidden/order/added); nie używać HGRoomCard.ents().
+     Klucze bloków = HG_SEC[1] (jak w HGRoomCard.render) albo id encji / chips. */
+  dashboardRoomEntities(h, areaId) {
+    const aid = areaId === HGTvLogic.OTHER_ROOM ? '_none' : areaId;
+    const okDom = (e) => this.TV_ROOM_DOMS.includes(e.slice(0, e.indexOf('.')));
+    let a = null;
+    try {
+      if (typeof HGAreas !== 'undefined' && HGAreas.model) {
+        const m = HGAreas.model(h, typeof HGAreas.glob === 'function' ? HGAreas.glob() : undefined);
+        a = (m.byId && m.byId[aid]) || null;
+      }
+    } catch (e) { a = null; }
+    if (!a || !a.sec) {
+      const cat = this.catalog(h).rooms.find((r) => r.id === areaId);
+      return cat ? cat.ents.map((x) => x.id).filter(okDom) : [];
+    }
+    const RL = (typeof HGL !== 'undefined' && HGL.get) ? HGL.get('room:' + aid) : { order: [], hidden: [], added: [] };
+    const hid = new Set(RL.hidden || []);
+    /* bez HG_SEC (testy): klucz = id sekcji; produkcja używa HG_SEC[1] jak zapis układu */
+    const secs = (typeof HG_SEC !== 'undefined' && Array.isArray(HG_SEC))
+      ? HG_SEC.map((x) => [x[0], x[1]])
+      : ['light', 'clim', 'media', 'cover', 'sw', 'sens', 'mot', 'door', 'cam', 'rob', 'misc'].map((k) => [k, k]);
+    const S = a.sec, blocks = [];
+    const push = (sid, key, ents) => {
+      const list = (ents || []).filter((e) => typeof e === 'string');
+      if (!list.length) return;
+      if (sid === 'clim' || sid === 'media' || sid === 'cam' || sid === 'rob') for (const e of list) blocks.push({ k: e, ents: [e] });
+      else blocks.push({ k: key, ents: list });
+    };
+    for (const [sid, key] of secs) {
+      if (sid === 'misc' || sid === 'mot' || sid === 'door') continue;
+      push(sid, key, S[sid]);
+    }
+    const chips = [...(S.mot || []), ...(S.door || [])].filter((e) => typeof e === 'string');
+    if (chips.length) blocks.push({ k: 'chips', ents: chips });
+    for (const g of S.misc || []) {
+      if (!g || typeof g !== 'object') continue;
+      const ents = (g.ents || []).filter((e) => typeof e === 'string');
+      if (ents.length) blocks.push({ k: g.d || ents[0], ents });
+    }
+    for (const x of RL.added || []) if (x && typeof x.e === 'string') blocks.push({ k: x.e, ents: [x.e] });
+    const sort = (typeof HGL !== 'undefined' && HGL.sort) ? (items, key, order) => HGL.sort(items, key, order) : (items) => items;
+    const visible = sort(blocks.filter((b) => !hid.has(b.k)), (b) => b.k, RL.order || []);
+    const out = [], seen = new Set();
+    for (const b of visible) for (const e of b.ents) {
+      if (!okDom(e) || seen.has(e)) continue;
+      seen.add(e); out.push(e);
+    }
+    return out;
+  },
+  /* katalog jak nuvio-tv buildLayout: obszar z rejestru encji/urządzenia; bez obszaru → __other__ (nie HGAreas._none, które pomija sensory) */
   catalog(h) {
-    const st = h.states || {}, coll = new Intl.Collator(HG_LOC());
+    const st = h.states || {}, reg = h.entities || {}, dev = h.devices || {}, areasReg = h.areas || {};
+    const coll = new Intl.Collator(HG_LOC());
     const nm = (e) => H.name(h, e, e);
-    const ents = (pred) => Object.keys(st).filter(pred).sort((a, b) => coll.compare(nm(a), nm(b))).map((id) => ({ id, name: nm(id) }));
+    const sortIds = (ids) => ids.slice().sort((a, b) => coll.compare(nm(a), nm(b)));
+    const ents = (pred) => sortIds(Object.keys(st).filter(pred)).map((id) => ({ id, name: nm(id) }));
     const cameras = ents((e) => e.startsWith('camera.'));
     const scenes = ents((e) => e.startsWith('scene.') || e.startsWith('script.'));
     const alarms = ents((e) => e.startsWith('alarm_control_panel.'));
+    const buckets = new Map();
+    for (const e of Object.keys(st)) {
+      const dom = e.slice(0, e.indexOf('.'));
+      if (!this.ROOM_DOMS.includes(dom)) continue;
+      const r = reg[e];
+      if (r && (r.hidden || r.entity_category)) continue;
+      const deviceArea = r && r.device_id && dev[r.device_id] ? dev[r.device_id].area_id : null;
+      const candidate = (r && r.area_id) || deviceArea || null;
+      const areaId = candidate && areasReg[candidate] ? candidate : HGTvLogic.OTHER_ROOM;
+      const list = buckets.get(areaId) || [];
+      list.push(e);
+      buckets.set(areaId, list);
+    }
     const rooms = [];
-    if (typeof HGAreas !== 'undefined' && HGAreas.model) {
-      for (const a of HGAreas.model(h).list) {
-        const id = a.id === '_none' ? HGTvLogic.OTHER_ROOM : a.id;
-        const items = a.ents.filter((e) => this.ROOM_DOMS.includes(e.slice(0, e.indexOf('.')))).map((e) => ({ id: e, name: nm(e) }));
-        if (!items.length) continue;
-        rooms.push({ id, name: a.id === '_none' ? hgT('tv.layout_unassigned') : a.name, ents: items });
-      }
+    for (const a of Object.values(areasReg)) {
+      const list = buckets.get(a.area_id);
+      if (!list || !list.length) continue;
+      rooms.push({ id: a.area_id, name: a.name, ents: sortIds(list).map((id) => ({ id, name: nm(id) })) });
+    }
+    const other = buckets.get(HGTvLogic.OTHER_ROOM);
+    if (other && other.length) {
+      rooms.push({
+        id: HGTvLogic.OTHER_ROOM,
+        name: hgT('tv.layout_unassigned'),
+        ents: sortIds(other).map((id) => ({ id, name: nm(id) })),
+      });
     }
     return { cameras, scenes, alarms, rooms };
   },
-  /* brak zapisanego layoutu → wszystko zaznaczone; zapisany → listy z dokumentu */
+  /* wiersz pokoju: whitelist z dashboardu (gdy brak ręcznej listy) */
+  roomDraftRow(h, id, entities) {
+    const ents = entities && entities.length ? entities.slice() : this.dashboardRoomEntities(h, id);
+    const row = { id };
+    if (ents.length) row.entities = ents;
+    return row;
+  },
+  /* brak zapisanego layoutu → kamery/sceny/alarmy z katalogu, pokoje z curacją dashboardu;
+     zapisany → listy z dokumentu; brak whitelist w pokoju → uzupełnij z dashboardu.
+     Starsze zapisy bez __other__ dostają pokój „bez obszaru”, żeby sensory bez area nie znikały z TV. */
   seedDraft(h, parsed) {
     const cat = this.catalog(h);
     if (!parsed) {
       return {
         v: 1,
         cameras: cat.cameras.map((x) => x.id),
-        rooms: cat.rooms.map((r) => ({ id: r.id })),
+        rooms: cat.rooms.map((r) => this.roomDraftRow(h, r.id)),
         scenes: cat.scenes.map((x) => x.id),
         alarms: cat.alarms.map((x) => x.id),
       };
     }
+    const rooms = parsed.rooms.map((r) => this.roomDraftRow(h, r.id, r.entities));
+    if (cat.rooms.some((r) => r.id === HGTvLogic.OTHER_ROOM) && !rooms.some((r) => r.id === HGTvLogic.OTHER_ROOM)) {
+      rooms.push(this.roomDraftRow(h, HGTvLogic.OTHER_ROOM));
+    }
     return {
       v: 1,
       cameras: parsed.cameras.slice(),
-      rooms: parsed.rooms.map((r) => ({ id: r.id, entities: r.entities ? r.entities.slice() : undefined })),
+      rooms,
       scenes: parsed.scenes.slice(),
       alarms: parsed.alarms.slice(),
     };
+  },
+  /* nadpisz entities pokoi w draftcie z dashboardu (kolejność jak w katalogu) */
+  syncDraftFromDashboard(h) {
+    const d = this.draft; if (!d) return;
+    const cat = this.catalog(h), byId = new Map(d.rooms.map((r) => [r.id, r])), ordered = [];
+    for (const r of cat.rooms) {
+      if (!byId.has(r.id)) continue;
+      ordered.push(this.roomDraftRow(h, r.id));
+      byId.delete(r.id);
+    }
+    for (const r of byId.values()) ordered.push(this.roomDraftRow(h, r.id));
+    d.rooms = ordered;
+    this.layoutSaved = false;
+  },
+  /* po zapisie układu dashboardu: odśwież tylko rooms[].entities w istniejącym nuvio_tv_layout */
+  async pushDashboardRooms(h) {
+    if (!h || !h.connection || window.__hgDryRun) return;
+    let parsed;
+    try {
+      const r = await h.callWS({ type: 'frontend/get_user_data', key: HGTvLogic.LAYOUT_KEY });
+      parsed = HGTvLogic.parseLayout(r && r.value);
+    } catch (e) { return; }
+    if (!parsed) return;
+    const rooms = parsed.rooms.map((r) => this.roomDraftRow(h, r.id));
+    const value = HGTvLogic.normLayout(Object.assign({}, parsed, { rooms }));
+    try { await h.callWS({ type: 'frontend/set_user_data', key: HGTvLogic.LAYOUT_KEY, value }); } catch (e) { return; }
+    if (this.draft) this.draft = this.seedDraft(h, value);
   },
   listHtml() {
     if (this.listErr) return `<small class="nf-err" role="alert">${hgT('tv.list_failed')}</small><button type="button" class="lk-mini tv-go" data-hge="tv-reload">${hgT('tv.retry')}</button>`;
@@ -160,7 +272,10 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       <h5>${H.icon('mdi:floor-plan')}${hgT('tv.layout_rooms')}</h5>${empty(roomRows, hgT('tv.layout_no_rooms'))}
       <h5>${H.icon('mdi:palette')}${hgT('tv.layout_scenes')}</h5>${empty(sceneRows, hgT('tv.layout_no_scenes'))}
       <h5>${H.icon('mdi:shield-home')}${hgT('tv.layout_alarms')}</h5>${empty(alarmRows, hgT('tv.layout_no_alarms'))}
-      <button type="button" class="lk-mini tv-go" data-hge="tv-lsave" ${this.layoutSaving ? 'disabled' : ''}>${hgT('tv.layout_save')}</button>
+      <div class="tv-lact">
+        <button type="button" class="lk-mini tv-go" data-hge="tv-lsync" ${this.layoutSaving ? 'disabled' : ''}>${hgT('tv.layout_sync')}</button>
+        <button type="button" class="lk-mini tv-go" data-hge="tv-lsave" ${this.layoutSaving ? 'disabled' : ''}>${hgT('tv.layout_save')}</button>
+      </div>
       ${this.layoutSaved ? `<small class="tv-lok" role="status">${hgT('tv.layout_saved')}</small>` : ''}
     </div>`;
   },
@@ -373,6 +488,11 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     } catch (e) { p._eToast(hgT('tv.layout_save_failed')); }
     this.layoutSaving = false; return p._eLook();
   },
+  async syncLayoutFromDashboard(p) {
+    if (!this.draft || this.layoutSaving) return;
+    this.syncDraftFromDashboard(p._hass);
+    return this.saveLayout(p);
+  },
   act(p, b, a) {
     switch (a) {
       case 'tv-pair': return this.pair(p);
@@ -380,6 +500,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       case 'tv-del': return this.del(p, b.dataset.id);
       case 'tv-reload': this.invalidate(); this.listErr = false; return p._eLook();
       case 'tv-lreload': this.layoutInvalidate(); return p._eLook();
+      case 'tv-lsync': return this.syncLayoutFromDashboard(p);
       case 'tv-lsave': return this.saveLayout(p);
       case 'tv-cam': this.togList('cameras', b.dataset.id); return p._eLook();
       case 'tv-sc': this.togList('scenes', b.dataset.id); return p._eLook();
@@ -413,5 +534,6 @@ const HG_TV_CSS = `
 .tv-sw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .tv-ord{ display:flex; flex:none; gap:2px; } .tv-ob{ all:unset; cursor:pointer; width:36px; height:36px; display:grid; place-items:center; border-radius:var(--hg-radius-pill); } .tv-ob:hover{ background:color-mix(in srgb, var(--hg-accent) 14%, transparent); } .tv-ob:disabled{ opacity:.35; cursor:default; } .tv-ob ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
 .tv-lok{ color:var(--hg-accent-tx, var(--hg-accent)); font-size:var(--hg-fs-1); }
+.tv-lact{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
 `;
 window.HGTv = HGTv;
