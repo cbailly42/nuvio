@@ -22,6 +22,36 @@ const HGTvLogic = {
     return out;
   },
   emptyLayout: () => ({ v: 1, cameras: [], rooms: [], scenes: [], alarms: [] }),
+  PROFILE_KINDS: ['stairs', 'washer', 'cwu', 'purifier', 'kettle', 'fountain', 'fryer', 'device'],
+  /* jeden element uporządkowanej zawartości pokoju (encje / profile / komponenty z edycji) */
+  parseItem(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || typeof raw.t !== 'string') return null;
+    if (raw.t === 'entity' || raw.t === 'binary') {
+      if (!HGTvLogic.isEntityId(raw.id)) return null;
+      return { t: raw.t, id: raw.id };
+    }
+    if (raw.t === 'profile') {
+      if (!HGTvLogic.PROFILE_KINDS.includes(raw.kind) || !raw.cfg || typeof raw.cfg !== 'object' || Array.isArray(raw.cfg)) return null;
+      const cfg = {};
+      for (const [k, v] of Object.entries(raw.cfg)) {
+        if (typeof k !== 'string' || k.length > 64) continue;
+        if (typeof v === 'string' && (HGTvLogic.isEntityId(v) || v.length <= 128)) cfg[k] = v;
+        else if (Array.isArray(v)) {
+          const ids = HGTvLogic.uniqIds(v, (s) => typeof s === 'string' && s.length <= 128);
+          if (ids.length) cfg[k] = ids;
+        }
+      }
+      return { t: 'profile', kind: raw.kind, cfg };
+    }
+    if (raw.t === 'comp') {
+      if (typeof raw.comp !== 'string' || !/^[a-z][a-z0-9_]{0,31}$/.test(raw.comp)) return null;
+      const item = { t: 'comp', comp: raw.comp, cfg: (raw.cfg && typeof raw.cfg === 'object' && !Array.isArray(raw.cfg)) ? raw.cfg : {} };
+      if (typeof raw.name === 'string' && raw.name.trim() && raw.name.trim().length <= 128) item.name = raw.name.trim();
+      if (typeof raw.icon === 'string' && /^mdi:[a-z0-9-]+$/i.test(raw.icon)) item.icon = raw.icon;
+      return item;
+    }
+    return null;
+  },
   /* wartość nuvio_tv_layout: obiekt v:1 albo null (brak / zły dokument = TV pokazuje wszystko) */
   parseLayout(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value) || value.v !== 1) return null;
@@ -42,6 +72,14 @@ const HGTvLogic = {
         if (Array.isArray(r.entities)) {
           const ents = HGTvLogic.uniqIds(r.entities, HGTvLogic.isEntityId);
           if (ents.length) row.entities = ents;
+        }
+        if (Array.isArray(r.items)) {
+          const items = [];
+          for (const raw of r.items) {
+            const it = HGTvLogic.parseItem(raw);
+            if (it) items.push(it);
+          }
+          if (items.length) row.items = items;
         }
         rooms.push(row);
       }
