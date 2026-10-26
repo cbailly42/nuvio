@@ -1906,6 +1906,8 @@
     "gauge": "Jauge",
     "general_controls_for_any": "Commandes génériques pour toute entité",
     "glance": "Coup d’œil",
+    "glass_opacity": "Opacité du verre",
+    "glass_opacity_hint": "Des valeurs plus basses rendent les cartes plus transparentes. Le minimum de 30 % garantit la lisibilité du texte lorsque le flou est désactivé.",
     "glass_blur": "Flou du verre",
     "good": "Bonne",
     "good_night": "Bonne nuit",
