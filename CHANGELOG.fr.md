@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.4
+- Corrigé : **contenu TV** — les tuiles de pièces utilisent la liste d’entités du tableau de bord même si elles ne sont pas dans la zone Home Assistant correspondante (pièces virtuelles et appareils réaffectés). Les lignes de pièces dans `nuvio_tv_layout` enregistrent aussi le nom affiché du tableau de bord.
+
 ### 2.26.0-beta.3
 - Corrigé : la liste et l’ordre des pièces du **contenu TV** suivent la grille Nuvio (Apparence → Pièces + disposition masquée/ordre/ajoutées), et non toutes les zones Home Assistant. La synchronisation et l’enregistrement de la disposition réécrivent l’ensemble des pièces ; « Autre » à la TV seulement si le tableau de bord montre *Sans pièce*.
 
