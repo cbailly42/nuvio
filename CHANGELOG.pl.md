@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.26.0-beta.3
+- Poprawka: **treść telewizora** — lista i kolejność pokoi jak na siatce Nuvio (Wygląd → Pokoje + układ ukryte/kolejność/dodane), a nie wszystkie obszary Home Assistant. Synchronizacja z dashboardem i zapis układu przepisują cały zestaw pokoi; „Inne” na TV tylko gdy dashboard pokazuje *Bez pokoju*.
+
 ### 2.26.0-beta.2
 - Ulepszono: **treść telewizora** startuje od pokoju z dashboardu Nuvio (te same encje co karta pokoju, z ukrytymi sekcjami i dodanymi kafelkami). **Synchronizuj z dashboardem** odświeża listy; zapis układu dashboardu też aktualizuje listy encji pokoi w `nuvio_tv_layout`, gdy układ TV już istnieje.
 

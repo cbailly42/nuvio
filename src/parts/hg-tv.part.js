@@ -76,6 +76,31 @@ const HGTv = window.__hgTv || (window.__hgTv = {
   },
   /* domeny dopuszczalne w whitelist pokoju TV (katalog + sensory binarne / zamki itd.) */
   TV_ROOM_DOMS: ['light', 'climate', 'cover', 'media_player', 'switch', 'input_boolean', 'sensor', 'binary_sensor', 'fan', 'lock', 'camera', 'humidifier', 'vacuum', 'valve', 'siren'],
+  /* siatka pokoi jak hg-areas-card._rooms: wiz.areas + HGL scope „rooms” (kolejność, ukryte, dodane, nazwy).
+     _none → __other__ (id TV). Bez modelu HGAreas → fallback catalog().rooms. */
+  dashboardRooms(h) {
+    let m = null;
+    try {
+      if (typeof HGAreas !== 'undefined' && HGAreas.model) {
+        m = HGAreas.model(h, typeof HGAreas.glob === 'function' ? HGAreas.glob() : undefined);
+      }
+    } catch (e) { m = null; }
+    if (!m || !m.byId) return this.catalog(h).rooms.map((r) => ({ id: r.id, name: r.name }));
+    const L = (typeof HGL !== 'undefined' && HGL.get) ? HGL.get('rooms') : { order: [], hidden: [], added: [], conf: {} };
+    const hid = new Set(L.hidden || []);
+    const base = Array.isArray(m.rooms) ? m.rooms.slice() : (m.list || []);
+    const inBase = new Set(base.map((a) => a.id));
+    const add = (L.added || []).map((x) => x && m.byId[x.e]).filter((a) => a && !inBase.has(a.id));
+    const sort = (typeof HGL !== 'undefined' && HGL.sort) ? (items, key, order) => HGL.sort(items, key, order) : (items) => items;
+    const rooms = sort([...base, ...add].filter((a) => a && !hid.has(a.id)), (a) => a.id, L.order || []);
+    return rooms.map((a) => {
+      const cf = (L.conf && L.conf[a.id]) || {};
+      return {
+        id: a.id === '_none' ? HGTvLogic.OTHER_ROOM : a.id,
+        name: cf.n || a.name || a.id,
+      };
+    });
+  },
   /* encje pokoju jak na dashboardzie: HGAreas (room_hide/assign) + HGL room:<id> (hidden/order/added); nie używać HGRoomCard.ents().
      Klucze bloków = HG_SEC[1] (jak w HGRoomCard.render) albo id encji / chips. */
   dashboardRoomEntities(h, areaId) {
@@ -165,6 +190,19 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     }
     return { cameras, scenes, alarms, rooms };
   },
+  /* wybór encji w checklistie pokoju: najpierw curacja dashboardu, potem reszta z katalogu HA */
+  roomEntityChoices(h, roomId) {
+    const nm = (e) => H.name(h, e, e);
+    const dash = this.dashboardRoomEntities(h, roomId);
+    const cat = this.catalog(h).rooms.find((r) => r.id === roomId);
+    const seen = new Set(dash);
+    const out = dash.map((id) => ({ id, name: nm(id) }));
+    for (const e of (cat && cat.ents) || []) {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id); out.push(e);
+    }
+    return out;
+  },
   /* wiersz pokoju: whitelist z dashboardu (gdy brak ręcznej listy) */
   roomDraftRow(h, id, entities) {
     const ents = entities && entities.length ? entities.slice() : this.dashboardRoomEntities(h, id);
@@ -172,23 +210,22 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     if (ents.length) row.entities = ents;
     return row;
   },
-  /* brak zapisanego layoutu → kamery/sceny/alarmy z katalogu, pokoje z curacją dashboardu;
-     zapisany → listy z dokumentu; brak whitelist w pokoju → uzupełnij z dashboardu.
-     Starsze zapisy bez __other__ dostają pokój „bez obszaru”, żeby sensory bez area nie znikały z TV. */
+  /* brak zapisanego layoutu → kamery/sceny/alarmy z katalogu HA, pokoje = siatka dashboardu;
+     zapisany → kamery/sceny/alarmy z dokumentu; pokoje: zachowaj whitelist encji dla id nadal na dashboardzie,
+     zestaw i kolejność pokoi zawsze jak dashboard (ukryte na siatce znikają z TV). */
   seedDraft(h, parsed) {
     const cat = this.catalog(h);
+    const dash = this.dashboardRooms(h);
+    const prev = new Map((parsed && parsed.rooms || []).map((r) => [r.id, r]));
+    const rooms = dash.map((r) => this.roomDraftRow(h, r.id, prev.get(r.id) && prev.get(r.id).entities));
     if (!parsed) {
       return {
         v: 1,
         cameras: cat.cameras.map((x) => x.id),
-        rooms: cat.rooms.map((r) => this.roomDraftRow(h, r.id)),
+        rooms,
         scenes: cat.scenes.map((x) => x.id),
         alarms: cat.alarms.map((x) => x.id),
       };
-    }
-    const rooms = parsed.rooms.map((r) => this.roomDraftRow(h, r.id, r.entities));
-    if (cat.rooms.some((r) => r.id === HGTvLogic.OTHER_ROOM) && !rooms.some((r) => r.id === HGTvLogic.OTHER_ROOM)) {
-      rooms.push(this.roomDraftRow(h, HGTvLogic.OTHER_ROOM));
     }
     return {
       v: 1,
@@ -198,20 +235,13 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       alarms: parsed.alarms.slice(),
     };
   },
-  /* nadpisz entities pokoi w draftcie z dashboardu (kolejność jak w katalogu) */
+  /* pełna synchronizacja pokoi z siatki dashboardu (set + kolejność + encje) */
   syncDraftFromDashboard(h) {
     const d = this.draft; if (!d) return;
-    const cat = this.catalog(h), byId = new Map(d.rooms.map((r) => [r.id, r])), ordered = [];
-    for (const r of cat.rooms) {
-      if (!byId.has(r.id)) continue;
-      ordered.push(this.roomDraftRow(h, r.id));
-      byId.delete(r.id);
-    }
-    for (const r of byId.values()) ordered.push(this.roomDraftRow(h, r.id));
-    d.rooms = ordered;
+    d.rooms = this.dashboardRooms(h).map((r) => this.roomDraftRow(h, r.id));
     this.layoutSaved = false;
   },
-  /* po zapisie układu dashboardu: odśwież tylko rooms[].entities w istniejącym nuvio_tv_layout */
+  /* po zapisie układu dashboardu: odśwież set/kolejność/encje pokoi w istniejącym nuvio_tv_layout */
   async pushDashboardRooms(h) {
     if (!h || !h.connection || window.__hgDryRun) return;
     let parsed;
@@ -220,7 +250,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       parsed = HGTvLogic.parseLayout(r && r.value);
     } catch (e) { return; }
     if (!parsed) return;
-    const rooms = parsed.rooms.map((r) => this.roomDraftRow(h, r.id));
+    const rooms = this.dashboardRooms(h).map((r) => this.roomDraftRow(h, r.id));
     const value = HGTvLogic.normLayout(Object.assign({}, parsed, { rooms }));
     try { await h.callWS({ type: 'frontend/set_user_data', key: HGTvLogic.LAYOUT_KEY, value }); } catch (e) { return; }
     if (this.draft) this.draft = this.seedDraft(h, value);
@@ -252,13 +282,15 @@ const HGTv = window.__hgTv || (window.__hgTv = {
         <button type="button" class="tv-ob" data-hge="tv-cdn" data-id="${H.esc(id)}" ${i < d.cameras.length - 1 ? '' : 'disabled'} aria-label="${H.esc(hgT('tv.layout_down'))}">${H.icon('mdi:chevron-down')}</button></span>` : '';
       return this.layRow(c.name, on, 'tv-cam', id, ord);
     }).join('');
-    const roomRows = cat.rooms.map((r) => {
+    const dashRooms = this.dashboardRooms(p._hass);
+    const roomRows = dashRooms.map((r) => {
       const row = d.rooms.find((x) => x.id === r.id), on = !!row, op = this.openRoom === r.id;
       const entSet = row && row.entities ? new Set(row.entities) : null;
+      const roomEnts = this.roomEntityChoices(p._hass, r.id);
       const head = `<div class="tv-lr"><button type="button" class="tv-sw" role="switch" data-hge="tv-room" data-id="${H.esc(r.id)}" aria-checked="${on}" aria-label="${H.esc(r.name)}"><i></i></button>
-        <button type="button" class="tv-rop" data-hge="tv-rop" data-id="${H.esc(r.id)}" aria-expanded="${op}"><b>${H.esc(r.name)}</b><small>${hgT('tv.layout_ents', { count: r.ents.length })}</small></button></div>`;
+        <button type="button" class="tv-rop" data-hge="tv-rop" data-id="${H.esc(r.id)}" aria-expanded="${op}"><b>${H.esc(r.name)}</b><small>${hgT('tv.layout_ents', { count: roomEnts.length })}</small></button></div>`;
       if (!op || !on) return head;
-      const ents = r.ents.map((e) => {
+      const ents = roomEnts.map((e) => {
         const eOn = !entSet || entSet.has(e.id);
         return this.layRow(e.name, eOn, 'tv-rent', e.id, '').replace('data-hge="tv-rent"', `data-hge="tv-rent" data-r="${H.esc(r.id)}"`);
       }).join('');
@@ -459,13 +491,12 @@ const HGTv = window.__hgTv || (window.__hgTv = {
   togRoomEnt(p, roomId, entId) {
     const d = this.draft; if (!d) return;
     const row = d.rooms.find((r) => r.id === roomId); if (!row) return;
-    const cat = this.catalog(p._hass).rooms.find((r) => r.id === roomId);
-    const all = (cat && cat.ents.map((e) => e.id)) || [];
+    const all = this.roomEntityChoices(p._hass, roomId).map((e) => e.id);
     let set = new Set(row.entities || all);
     if (set.has(entId)) set.delete(entId); else set.add(entId);
     const next = all.filter((e) => set.has(e));
     if (!next.length) { d.rooms = d.rooms.filter((r) => r.id !== roomId); this.openRoom = null; }
-    else if (next.length === all.length) delete row.entities;
+    else if (next.length === all.length) row.entities = this.dashboardRoomEntities(p._hass, roomId);
     else row.entities = next;
     this.layoutSaved = false; return p._eLook();
   },
