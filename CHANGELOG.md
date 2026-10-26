@@ -5,6 +5,9 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased
+- Added: **title size** for the view header per device (phone, tablet, wide): Small, Medium (default, the current look), Large and XL. XL is clock-sized, so `{time}` can be read across a room. Set in the header editor, with a live preview.
+- Added: **Show weather in the header** switch on the Look page. Turn it off when a Weather card already shows the forecast (default on).
+- Added: **Glass opacity** slider in Appearance, next to Glass blur. It makes large glass cards more see-through and leaves the blur as it is. Default 100 is the current look, and text stays readable when blur is off.
 - Added: three wall tablet screensavers: **Stars** (twinkling night sky with the clock), **Word clock** (the time lit up letter by letter, English words for now) and **Sunrise** (a sky that follows the real time of day, with a sun or moon arc).
 
 ### 2.27.0
