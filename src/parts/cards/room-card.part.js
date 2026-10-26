@@ -586,15 +586,16 @@ ha-card.wmc{ gap:var(--s2); }
     if (isSt) blocks.push(this._stairs(ST));
     if (isCw) { blocks.push(this._cwu(CW)); if (CW.up) blocks.push(this._cwuUp(CW.up)); }
     // stan pokoju: obecność / ruch i drzwi / okna jako chipy
-    const CH = [...S.mot, ...S.door].filter(ok);
-    if (CH.length) blocks.push(`<div class="blk"><ha-card class="glass chips">${CH.map((e) => { const s = h.states[e], dc = s.attributes.device_class, on = s.state === 'on', isD = S.door.includes(e), nm = this._nm(e, hgT('common.sensor'));
+    // każda grupa (ruch/obecność, drzwi/okna) to osobny blok z data-hgk sekcji, dzięki czemu edytor pozwala usunąć lub ukryć encję
+    const chipBlk = (k, CH) => { if (!CH.length) return; const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass chips">${CH.map((e) => { const s = h.states[e], dc = s.attributes.device_class, on = s.state === 'on', isD = S.door.includes(e), nm = this._nm(e, hgT('common.sensor'));
       const occ = ['occupancy', 'presence'].includes(dc), lab = isD ? (on ? hgT('common.state_open') : hgT('cards.room.closed')) : on ? (occ ? hgT('cards.room.presence') : hgT('common.state_motion')) : (occ ? hgT('cards.room.no_presence') : hgT('cards.room.state_no_motion'));
       const ic = isD ? (dc === 'window' ? (on ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : on ? 'mdi:door-open' : 'mdi:door-closed') : occ ? (on ? 'mdi:account' : 'mdi:account-outline') : on ? 'mdi:motion-sensor' : 'mdi:motion-sensor-off';
       const t = /^(obecność|ruch|czujnik|presence|occupancy|motion|sensor)$/i.test(nm) ? (occ ? hgT('cards.room.title_presence') : hgT('common.motion')) : nm, st = isD ? (on ? hgT('cards.room.open') : hgT('cards.room.state_closed_cap')) : on ? hgT('cards.room.detected') : (occ ? hgT('cards.room.state_no_presence_cap') : hgT('cards.room.state_no_motion_cap'));
       const mn = Math.max(0, Math.round((Date.now() - new Date(s.last_changed)) / 60000)), dur = mn < 1 ? hgT('cards.room.a_moment') : mn < 60 ? `${mn} min` : mn < 1440 ? `${Math.floor(mn / 60)} h` : `${hgT('cards.room.days_count', { count: Math.floor(mn / 1440) })}`;
       const rel = isNaN(mn) ? '' : mn < 1 ? hgT('common.just_now') : on ? hgT('cards.room.for', { dur }) : hgT('cards.room.ago', { dur });
       const kind = isD ? 'door' + (dc === 'window' ? ' win' : '') : occ ? 'occ' : 'mot';
-      return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(H.lv(t, st + (rel ? ', ' + rel : '')))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`);
+      return `<button class="sc k-${kind.split(' ')[0]} ${kind.includes('win') ? 'k-win' : ''} ${on ? (isD ? 'opn' : 'act') : ''}" data-act="more" data-e="${H.esc(e)}" aria-label="${H.esc(H.lv(t, st + (rel ? ', ' + rel : '')))}"><span class="sb"><i class="rg"></i><i class="rg r2"></i>${H.icon(ic)}</span><span class="st2"><b>${H.esc(t)}</b><span><em>${H.esc(st)}</em>${rel ? `<small>${H.esc(rel)}</small>` : ''}</span></span></button>`; }).join('')}</ha-card></div>`); };
+    chipBlk('mot', S.mot.filter(ok)); chipBlk('door', S.door.filter(ok));
     const blk = (k, rows, n) => { const d = HG_SEC.find((x) => x[0] === k); blocks.push(`<div class="blk" data-hgk="${H.esc(d[1])}"><ha-card class="glass"><div class="sh">${H.icon(d[2])}${d[3]}<i>${n}</i></div>${rows}</ha-card></div>`); };
     const dimm = (s) => (s.attributes.supported_color_modes || []).some((x) => x !== 'onoff') || s.attributes.brightness != null;
     // światła
