@@ -176,3 +176,58 @@ test('direct: bezpośrednie wysłanie fetch tylko ze strony http', () => {
   assert.equal(L.direct('http:'), true);
   for (const x of ['https:', '', null, undefined, 'file:']) assert.equal(L.direct(x), false, String(x));
 });
+
+test('LAYOUT_KEY i emptyLayout', () => {
+  assert.equal(L.LAYOUT_KEY, 'nuvio_tv_layout');
+  assert.equal(L.OTHER_ROOM, '__other__');
+  assert.deepEqual(L.emptyLayout(), { v: 1, cameras: [], rooms: [], scenes: [], alarms: [] });
+});
+
+test('parseLayout: brak lub zły dokument → null; v:1 → znormalizowany układ', () => {
+  for (const bad of [null, undefined, '', 5, [], { v: 2 }, { cameras: ['camera.a'] }, { v: 1, cameras: 'x' }]) {
+    if (bad && typeof bad === 'object' && !Array.isArray(bad) && bad.v === 1) {
+      assert.deepEqual(L.parseLayout(bad), { v: 1, cameras: [], rooms: [], scenes: [], alarms: [] });
+    } else {
+      assert.equal(L.parseLayout(bad), null, String(bad));
+    }
+  }
+  assert.deepEqual(L.parseLayout({ v: 1 }), { v: 1, cameras: [], rooms: [], scenes: [], alarms: [] });
+  assert.deepEqual(L.parseLayout({
+    v: 1,
+    cameras: ['camera.salon', 'camera.salon', 'zly', 3, 'light.x'],
+    scenes: ['scene.film', 'script.noc'],
+    alarms: ['alarm_control_panel.dom'],
+    rooms: [
+      { id: 'salon', entities: ['light.lampa', 'light.lampa', 'nie'] },
+      { id: 'salon' },
+      { id: L.OTHER_ROOM },
+      { id: 'kuchnia' },
+      null,
+      { id: '../evil' },
+    ],
+    extra: true,
+  }), {
+    v: 1,
+    cameras: ['camera.salon', 'light.x'],
+    rooms: [
+      { id: 'salon', entities: ['light.lampa'] },
+      { id: L.OTHER_ROOM },
+      { id: 'kuchnia' },
+    ],
+    scenes: ['scene.film', 'script.noc'],
+    alarms: ['alarm_control_panel.dom'],
+  });
+});
+
+test('parseLayout: pusty entities w pokoju = cały pokój (bez pola entities)', () => {
+  assert.deepEqual(L.parseLayout({ v: 1, rooms: [{ id: 'a', entities: [] }, { id: 'b' }] }), {
+    v: 1, cameras: [], rooms: [{ id: 'a' }, { id: 'b' }], scenes: [], alarms: [],
+  });
+});
+
+test('normLayout: zawsze obiekt v:1 gotowy do zapisu', () => {
+  assert.deepEqual(L.normLayout(null), L.emptyLayout());
+  assert.deepEqual(L.normLayout({ cameras: ['camera.a', 'camera.a'], rooms: [{ id: 'x' }] }), {
+    v: 1, cameras: ['camera.a'], rooms: [{ id: 'x' }], scenes: [], alarms: [],
+  });
+});

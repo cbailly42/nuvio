@@ -1,9 +1,54 @@
-/* ===== Telewizor: czyste funkcje parowania (bez DOM i bez Home Assistant). Używa ich hg-tv.part.js, testy w tests/js/tv-logic.test.mjs. ===== */
+/* ===== Telewizor: czyste funkcje parowania i układu treści (bez DOM i bez Home Assistant). Używa ich hg-tv.part.js, testy w tests/js/tv-logic.test.mjs. ===== */
 const HGTvLogic = {
   SEEN_KEY: 'nuvio_tv_seen',
+  LAYOUT_KEY: 'nuvio_tv_layout',
   PREFIX: 'Nuvio TV',
+  /* id pokoju „bez obszaru” po stronie TV (nuvio-tv OTHER_ROOM_ID) */
+  OTHER_ROOM: '__other__',
   /* dni ważności tokenu długoterminowego (HA lifespan); telewizor trzyma token na stałe, więc nie kasujemy go po sparowaniu */
   LIFESPAN: 365,
+  /* encja HA: domain.object_id */
+  isEntityId: (s) => typeof s === 'string' && /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/i.test(s),
+  /* area_id albo __other__ */
+  isRoomId: (s) => typeof s === 'string' && (s === HGTvLogic.OTHER_ROOM || /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(s)),
+  /* unikalna lista stringów spełniających pred; kolejność zachowana */
+  uniqIds(list, ok) {
+    const out = [], seen = new Set();
+    if (!Array.isArray(list)) return out;
+    for (const x of list) {
+      if (!ok(x) || seen.has(x)) continue;
+      seen.add(x); out.push(x);
+    }
+    return out;
+  },
+  emptyLayout: () => ({ v: 1, cameras: [], rooms: [], scenes: [], alarms: [] }),
+  /* wartość nuvio_tv_layout: obiekt v:1 albo null (brak / zły dokument = TV pokazuje wszystko) */
+  parseLayout(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || value.v !== 1) return null;
+    const cameras = HGTvLogic.uniqIds(value.cameras, HGTvLogic.isEntityId);
+    const scenes = HGTvLogic.uniqIds(value.scenes, HGTvLogic.isEntityId);
+    const alarms = HGTvLogic.uniqIds(value.alarms, HGTvLogic.isEntityId);
+    const rooms = [];
+    const seenR = new Set();
+    if (Array.isArray(value.rooms)) {
+      for (const r of value.rooms) {
+        if (!r || typeof r !== 'object' || Array.isArray(r) || !HGTvLogic.isRoomId(r.id) || seenR.has(r.id)) continue;
+        seenR.add(r.id);
+        const row = { id: r.id };
+        if (Array.isArray(r.entities)) {
+          const ents = HGTvLogic.uniqIds(r.entities, HGTvLogic.isEntityId);
+          if (ents.length) row.entities = ents;
+        }
+        rooms.push(row);
+      }
+    }
+    return { v: 1, cameras, rooms, scenes, alarms };
+  },
+  /* normalizacja przed zapisem: tylko znane pola, unikalne id */
+  normLayout(draft) {
+    const p = HGTvLogic.parseLayout(draft && typeof draft === 'object' ? Object.assign({ v: 1 }, draft) : null);
+    return p || HGTvLogic.emptyLayout();
+  },
   /* link z kodu QR http://IP:PORT/pair?c=KOD, wynik { addr, code } albo null */
   parseLink(text) {
     let u; try { u = new URL(String(text || '').trim()); } catch (e) { return null; }

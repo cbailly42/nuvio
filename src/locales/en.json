@@ -3424,6 +3424,25 @@
     "timeout": "The TV did not respond. Check the code on the screen and try again. The unused token was removed.",
     "title": "Pair a TV",
     "waiting": "Waiting for the TV to connect, up to {seconds} seconds. Look at the TV screen.",
-    "working": "Creating a token and sending it to the TV…"
+    "working": "Creating a token and sending it to the TV…",
+    "layout_title": "TV content",
+    "layout_intro": "Choose what the paired TVs show. An empty section stays hidden. Changes apply after the TV reloads.",
+    "layout_cameras": "Cameras",
+    "layout_rooms": "Rooms",
+    "layout_scenes": "Scenes and scripts",
+    "layout_alarms": "Alarm",
+    "layout_other": "Other",
+    "layout_ents": "{count} entities",
+    "layout_ents_hint": "Leave all selected to show the whole room. Uncheck items to limit the room on the TV.",
+    "layout_up": "Move up",
+    "layout_down": "Move down",
+    "layout_save": "Save TV content",
+    "layout_saved": "TV content saved",
+    "layout_save_failed": "Could not save TV content.",
+    "layout_failed": "Could not load TV content settings.",
+    "layout_no_cameras": "No cameras in Home Assistant.",
+    "layout_no_rooms": "No rooms with devices for the TV.",
+    "layout_no_scenes": "No scenes or scripts.",
+    "layout_no_alarms": "No alarm panels."
   }
 }

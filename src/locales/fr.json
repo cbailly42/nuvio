@@ -3478,6 +3478,25 @@
     "timeout": "Le téléviseur n’a pas répondu. Vérifiez le code affiché à l’écran et réessayez. Le jeton inutilisé a été supprimé.",
     "title": "Jumeler un téléviseur",
     "waiting": "En attente de la connexion du téléviseur, jusqu’à {seconds} secondes. Regardez l’écran du téléviseur.",
-    "working": "Création d’un jeton et envoi au téléviseur…"
+    "working": "Création d’un jeton et envoi au téléviseur…",
+    "layout_title": "Contenu du téléviseur",
+    "layout_intro": "Choisissez ce que montrent les téléviseurs jumelés. Une section vide reste masquée. Les changements s’appliquent après rechargement du téléviseur.",
+    "layout_cameras": "Caméras",
+    "layout_rooms": "Pièces",
+    "layout_scenes": "Scènes et scripts",
+    "layout_alarms": "Alarme",
+    "layout_other": "Autre",
+    "layout_ents": "{count} entités",
+    "layout_ents_hint": "Laissez tout sélectionné pour afficher toute la pièce. Décochez des éléments pour limiter le contenu sur le téléviseur.",
+    "layout_up": "Monter",
+    "layout_down": "Descendre",
+    "layout_save": "Enregistrer le contenu TV",
+    "layout_saved": "Contenu TV enregistré",
+    "layout_save_failed": "Impossible d’enregistrer le contenu TV.",
+    "layout_failed": "Impossible de charger les réglages du contenu TV.",
+    "layout_no_cameras": "Aucune caméra dans Home Assistant.",
+    "layout_no_rooms": "Aucune pièce avec des appareils pour le téléviseur.",
+    "layout_no_scenes": "Aucune scène ni script.",
+    "layout_no_alarms": "Aucun panneau d’alarme."
   }
 }

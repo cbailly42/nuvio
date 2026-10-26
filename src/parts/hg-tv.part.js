@@ -10,11 +10,15 @@
    Czyste funkcje: hg-tvlogic.part.js. Wartości pól trzyma obiekt (s), bo _eLook() kasuje wpisany tekst. Token żyje tylko w zmiennej lokalnej pair(), w this.ready między dwoma kliknięciami i w polu formularza w pamięci. ===== */
 const HGTv = window.__hgTv || (window.__hgTv = {
   FIELDS: [['tv-addr', 'addr'], ['tv-code', 'code'], ['tv-ha', 'ha']],
+  /* domeny encji w pokoju na TV (zgodne z nuvio-tv buildLayout) */
+  ROOM_DOMS: ['light', 'climate', 'cover', 'media_player', 'switch', 'sensor'],
   WIN: 'nuvio-tv-pair', HOLD_MS: 120000,
   /* czas oczekiwania na znacznik: przy adresie HA http spoza sieci prywatnej telewizor najpierw pyta o zgodę na połączenie bez szyfrowania (klik pilotem), więc dwa razy dłużej;
      w sieci prywatnej pomija to pytanie, więc 60 s. Znacznik sprawdzamy co POLL_MS, wysyłka fetch ma limit FETCH_MS */
   WAIT_MS: 60000, WAIT_HTTP_MS: 120000, POLL_MS: 1000, FETCH_MS: 8000,
   s: { addr: '', code: '', ha: '' }, err: {}, status: 'idle', list: null, seen: {}, listErr: false, loading: false, rid: 0, wait: 60000, _sheet: undefined, ready: null,
+  /* layout treści TV (nuvio_tv_layout): draft === null = jeszcze nie wczytany */
+  draft: null, layoutErr: false, layoutLoading: false, layoutSaving: false, layoutSaved: false, layoutRid: 0, openRoom: null,
   clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
   now: () => new Date(),
   working() { return this.status === 'working' || this.status === 'accepted' || this.status === 'waiting' || this.status === 'ready'; },
@@ -49,6 +53,7 @@ const HGTv = window.__hgTv || (window.__hgTv = {
   },
   /* lista do ponownego wczytania; trwające wczytywanie traci ważność (jego spóźniona odpowiedź jest odrzucana, bo mogła zawierać już usunięty token) */
   invalidate() { this.rid += 1; this.loading = false; this.list = null; },
+  layoutInvalidate() { this.layoutRid += 1; this.layoutLoading = false; this.draft = null; this.layoutErr = false; this.layoutSaved = false; this.openRoom = null; },
   async prep(p) {
     if (this.loading) return; this.loading = true; const h = p._hass, my = ++this.rid;
     try {
@@ -59,6 +64,55 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     } catch (e) { if (my !== this.rid) return; this.list = null; this.listErr = true; }
     this.loading = false; this.redraw(p);
   },
+  async prepLayout(p) {
+    if (this.layoutLoading) return; this.layoutLoading = true; const h = p._hass, my = ++this.layoutRid;
+    try {
+      const r = await h.callWS({ type: 'frontend/get_user_data', key: HGTvLogic.LAYOUT_KEY });
+      if (my !== this.layoutRid) return;
+      this.draft = this.seedDraft(h, HGTvLogic.parseLayout(r && r.value));
+      this.layoutErr = false; this.layoutSaved = false;
+    } catch (e) { if (my !== this.layoutRid) return; this.draft = null; this.layoutErr = true; }
+    this.layoutLoading = false; this.redraw(p);
+  },
+  /* katalog dostępnych pozycji z HA; pokoje z HGAreas (id _none → __other__) */
+  catalog(h) {
+    const st = h.states || {}, coll = new Intl.Collator(HG_LOC());
+    const nm = (e) => H.name(h, e, e);
+    const ents = (pred) => Object.keys(st).filter(pred).sort((a, b) => coll.compare(nm(a), nm(b))).map((id) => ({ id, name: nm(id) }));
+    const cameras = ents((e) => e.startsWith('camera.'));
+    const scenes = ents((e) => e.startsWith('scene.') || e.startsWith('script.'));
+    const alarms = ents((e) => e.startsWith('alarm_control_panel.'));
+    const rooms = [];
+    if (typeof HGAreas !== 'undefined' && HGAreas.model) {
+      for (const a of HGAreas.model(h).list) {
+        const id = a.id === '_none' ? HGTvLogic.OTHER_ROOM : a.id;
+        const items = a.ents.filter((e) => this.ROOM_DOMS.includes(e.slice(0, e.indexOf('.')))).map((e) => ({ id: e, name: nm(e) }));
+        if (!items.length) continue;
+        rooms.push({ id, name: a.id === '_none' ? hgT('tv.layout_other') : a.name, ents: items });
+      }
+    }
+    return { cameras, scenes, alarms, rooms };
+  },
+  /* brak zapisanego layoutu → wszystko zaznaczone; zapisany → listy z dokumentu */
+  seedDraft(h, parsed) {
+    const cat = this.catalog(h);
+    if (!parsed) {
+      return {
+        v: 1,
+        cameras: cat.cameras.map((x) => x.id),
+        rooms: cat.rooms.map((r) => ({ id: r.id })),
+        scenes: cat.scenes.map((x) => x.id),
+        alarms: cat.alarms.map((x) => x.id),
+      };
+    }
+    return {
+      v: 1,
+      cameras: parsed.cameras.slice(),
+      rooms: parsed.rooms.map((r) => ({ id: r.id, entities: r.entities ? r.entities.slice() : undefined })),
+      scenes: parsed.scenes.slice(),
+      alarms: parsed.alarms.slice(),
+    };
+  },
   listHtml() {
     if (this.listErr) return `<small class="nf-err" role="alert">${hgT('tv.list_failed')}</small><button type="button" class="lk-mini tv-go" data-hge="tv-reload">${hgT('tv.retry')}</button>`;
     if (this.list === null) return `<small class="lk-hn">${hgT('common.loading')}</small>`;
@@ -67,10 +121,54 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       <small>${this.seen[t.id] ? hgT('tv.seen', { when: this.fmt(this.seen[t.id]) }) : hgT('tv.not_seen')}</small></span>
       <button type="button" class="tv-x" data-hge="tv-del" data-id="${H.esc(t.id)}" aria-label="${H.esc(hgT('tv.delete'))}">${H.icon('mdi:trash-can-outline')}</button></div>`).join('')}</div>`;
   },
+  /* wiersz checklisty: przełącznik + opcjonalne strzałki kolejności kamer */
+  layRow(label, on, act, id, extra) {
+    return `<div class="tv-lr"><button type="button" class="tv-sw" role="switch" data-hge="${act}" data-id="${H.esc(id)}" aria-checked="${on}" aria-label="${H.esc(label)}"><i></i></button>
+      <span class="tv-lt"><b>${H.esc(label)}</b></span>${extra || ''}</div>`;
+  },
+  layoutHtml(p) {
+    if (this.layoutErr) return `<small class="nf-err" role="alert">${hgT('tv.layout_failed')}</small><button type="button" class="lk-mini tv-go" data-hge="tv-lreload">${hgT('tv.retry')}</button>`;
+    if (this.draft === null) return `<small class="lk-hn">${hgT('common.loading')}</small>`;
+    const cat = this.catalog(p._hass), d = this.draft;
+    const camSet = new Set(d.cameras);
+    const ordered = d.cameras.filter((id) => cat.cameras.some((c) => c.id === id))
+      .concat(cat.cameras.map((c) => c.id).filter((id) => !camSet.has(id)));
+    const camRows = ordered.map((id, i) => {
+      const c = cat.cameras.find((x) => x.id === id); if (!c) return '';
+      const on = camSet.has(id);
+      const ord = on ? `<span class="tv-ord"><button type="button" class="tv-ob" data-hge="tv-cup" data-id="${H.esc(id)}" ${i ? '' : 'disabled'} aria-label="${H.esc(hgT('tv.layout_up'))}">${H.icon('mdi:chevron-up')}</button>
+        <button type="button" class="tv-ob" data-hge="tv-cdn" data-id="${H.esc(id)}" ${i < d.cameras.length - 1 ? '' : 'disabled'} aria-label="${H.esc(hgT('tv.layout_down'))}">${H.icon('mdi:chevron-down')}</button></span>` : '';
+      return this.layRow(c.name, on, 'tv-cam', id, ord);
+    }).join('');
+    const roomRows = cat.rooms.map((r) => {
+      const row = d.rooms.find((x) => x.id === r.id), on = !!row, op = this.openRoom === r.id;
+      const entSet = row && row.entities ? new Set(row.entities) : null;
+      const head = `<div class="tv-lr"><button type="button" class="tv-sw" role="switch" data-hge="tv-room" data-id="${H.esc(r.id)}" aria-checked="${on}" aria-label="${H.esc(r.name)}"><i></i></button>
+        <button type="button" class="tv-rop" data-hge="tv-rop" data-id="${H.esc(r.id)}" aria-expanded="${op}"><b>${H.esc(r.name)}</b><small>${hgT('tv.layout_ents', { count: r.ents.length })}</small></button></div>`;
+      if (!op || !on) return head;
+      const ents = r.ents.map((e) => {
+        const eOn = !entSet || entSet.has(e.id);
+        return this.layRow(e.name, eOn, 'tv-rent', e.id, '').replace('data-hge="tv-rent"', `data-hge="tv-rent" data-r="${H.esc(r.id)}"`);
+      }).join('');
+      return head + `<div class="tv-re">${ents}<small class="lk-hn">${hgT('tv.layout_ents_hint')}</small></div>`;
+    }).join('');
+    const sceneRows = cat.scenes.map((x) => this.layRow(x.name, d.scenes.includes(x.id), 'tv-sc', x.id)).join('');
+    const alarmRows = cat.alarms.map((x) => this.layRow(x.name, d.alarms.includes(x.id), 'tv-al', x.id)).join('');
+    const empty = (rows, key) => rows || `<small class="lk-hn">${hgT(key)}</small>`;
+    return `<div class="tv-lay">
+      <h5>${H.icon('mdi:cctv')}${hgT('tv.layout_cameras')}</h5>${empty(camRows, 'tv.layout_no_cameras')}
+      <h5>${H.icon('mdi:floor-plan')}${hgT('tv.layout_rooms')}</h5>${empty(roomRows, 'tv.layout_no_rooms')}
+      <h5>${H.icon('mdi:palette')}${hgT('tv.layout_scenes')}</h5>${empty(sceneRows, 'tv.layout_no_scenes')}
+      <h5>${H.icon('mdi:shield-home')}${hgT('tv.layout_alarms')}</h5>${empty(alarmRows, 'tv.layout_no_alarms')}
+      <button type="button" class="lk-mini tv-go" data-hge="tv-lsave" ${this.layoutSaving ? 'disabled' : ''}>${hgT('tv.layout_save')}</button>
+      ${this.layoutSaved ? `<small class="tv-lok" role="status">${hgT('tv.layout_saved')}</small>` : ''}
+    </div>`;
+  },
   html(p) {
-    if (this._sheet !== p._eSheetEl) { this._sheet = p._eSheetEl; this.discard(p, 'idle'); if (!this.working()) { this.status = 'idle'; this.err = {}; } this.invalidate(); this.listErr = false; }
+    if (this._sheet !== p._eSheetEl) { this._sheet = p._eSheetEl; this.discard(p, 'idle'); if (!this.working()) { this.status = 'idle'; this.err = {}; } this.invalidate(); this.listErr = false; this.layoutInvalidate(); }
     if (!this.s.ha) this.s.ha = location.origin;
     if (this.list === null && !this.listErr) this.prep(p);
+    if (this.draft === null && !this.layoutErr) this.prepLayout(p);
     const dis = this.working() ? ' disabled' : '';
     const fld = (k, label, hint, ph, extra) => hgForm.field(label, hgForm.text({ value: this.s[k], ph, a: `name="tv-${k}" aria-label="${H.esc(label)}" ${extra}${dis}` }), { hint })
       + (this.errText(k) ? `<small class="nf-err" role="alert">${this.errText(k)}</small>` : '');
@@ -86,6 +184,9 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       ${this.status === 'ready' ? `<button type="button" class="lk-mini tv-go" data-hge="tv-send">${hgT('tv.send_open')}</button>` : ''}
       <h4 class="tv-lh">${H.icon('mdi:television-classic')}${hgT('tv.list_title')}</h4>
       ${this.listHtml()}
+      <h4 class="tv-lh">${H.icon('mdi:view-dashboard-edit-outline')}${hgT('tv.layout_title')}</h4>
+      <small class="lk-hn">${hgT('tv.layout_intro')}</small>
+      ${this.layoutHtml(p)}
     </section>`;
   },
   /* wartości pól z DOM do obiektu; wklejony link z QR rozdziela się na adres i kod */
@@ -226,12 +327,68 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     try { if (!window.__hgDryRun) await p._hass.callWS({ type: 'auth/delete_refresh_token', refresh_token_id: id }); p._eToast(hgT('tv.deleted')); } catch (e) { p._eToast(hgT('tv.delete_failed')); }
     this.invalidate(); return p._eLook();
   },
+  /* przełącznik na liście stringów w draft */
+  togList(key, id) {
+    const d = this.draft; if (!d) return;
+    const i = d[key].indexOf(id);
+    if (i >= 0) d[key].splice(i, 1); else d[key].push(id);
+    this.layoutSaved = false;
+  },
+  togRoom(p, id) {
+    const d = this.draft; if (!d) return;
+    const i = d.rooms.findIndex((r) => r.id === id);
+    if (i >= 0) { d.rooms.splice(i, 1); if (this.openRoom === id) this.openRoom = null; }
+    else d.rooms.push({ id });
+    this.layoutSaved = false; return p._eLook();
+  },
+  togRoomEnt(p, roomId, entId) {
+    const d = this.draft; if (!d) return;
+    const row = d.rooms.find((r) => r.id === roomId); if (!row) return;
+    const cat = this.catalog(p._hass).rooms.find((r) => r.id === roomId);
+    const all = (cat && cat.ents.map((e) => e.id)) || [];
+    let set = new Set(row.entities || all);
+    if (set.has(entId)) set.delete(entId); else set.add(entId);
+    const next = all.filter((e) => set.has(e));
+    if (!next.length) { d.rooms = d.rooms.filter((r) => r.id !== roomId); this.openRoom = null; }
+    else if (next.length === all.length) delete row.entities;
+    else row.entities = next;
+    this.layoutSaved = false; return p._eLook();
+  },
+  moveCam(p, id, dir) {
+    const d = this.draft; if (!d) return;
+    const i = d.cameras.indexOf(id); if (i < 0) return;
+    const j = i + dir; if (j < 0 || j >= d.cameras.length) return;
+    const t = d.cameras[i]; d.cameras[i] = d.cameras[j]; d.cameras[j] = t;
+    this.layoutSaved = false; return p._eLook();
+  },
+  async saveLayout(p) {
+    if (!this.draft || this.layoutSaving) return;
+    const value = HGTvLogic.normLayout(this.draft);
+    this.layoutSaving = true; this.layoutSaved = false; p._eLook();
+    try {
+      if (!window.__hgDryRun) await p._hass.callWS({ type: 'frontend/set_user_data', key: HGTvLogic.LAYOUT_KEY, value });
+      this.draft = this.seedDraft(p._hass, value);
+      this.layoutSaved = true;
+      p._eToast(hgT('tv.layout_saved'));
+    } catch (e) { p._eToast(hgT('tv.layout_save_failed')); }
+    this.layoutSaving = false; return p._eLook();
+  },
   act(p, b, a) {
     switch (a) {
       case 'tv-pair': return this.pair(p);
       case 'tv-send': return this.sendReady(p);
       case 'tv-del': return this.del(p, b.dataset.id);
       case 'tv-reload': this.invalidate(); this.listErr = false; return p._eLook();
+      case 'tv-lreload': this.layoutInvalidate(); return p._eLook();
+      case 'tv-lsave': return this.saveLayout(p);
+      case 'tv-cam': this.togList('cameras', b.dataset.id); return p._eLook();
+      case 'tv-sc': this.togList('scenes', b.dataset.id); return p._eLook();
+      case 'tv-al': this.togList('alarms', b.dataset.id); return p._eLook();
+      case 'tv-room': return this.togRoom(p, b.dataset.id);
+      case 'tv-rop': this.openRoom = this.openRoom === b.dataset.id ? null : b.dataset.id; return p._eLook();
+      case 'tv-rent': return this.togRoomEnt(p, b.dataset.r, b.dataset.id);
+      case 'tv-cup': return this.moveCam(p, b.dataset.id, -1);
+      case 'tv-cdn': return this.moveCam(p, b.dataset.id, 1);
       default: return undefined;
     }
   },
@@ -246,5 +403,15 @@ const HG_TV_CSS = `
 .tv-r > span{ flex:1; min-width:0; } .tv-r b{ display:block; overflow-wrap:anywhere; font-weight:600; } .tv-r small{ display:block; opacity:.65; font-size:var(--hg-fs-1); }
 .tv-x{ all:unset; cursor:pointer; flex:none; width:var(--hg-btn-touch); height:var(--hg-btn-touch); display:grid; place-items:center; border-radius:var(--hg-radius-pill); } .tv-x:hover{ background:color-mix(in srgb, var(--hg-accent) 14%, transparent); }
 .tv-x:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; } .tv-x ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
+.tv-lay{ display:flex; flex-direction:column; gap:4px; } .tv-lay h5{ display:flex; align-items:center; gap:6px; margin:12px 0 4px; font-size:var(--hg-fs-2); font-weight:600; } .tv-lay h5 ha-icon{ --mdc-icon-size:18px; width:18px; height:18px; }
+.tv-lr{ display:flex; align-items:center; gap:8px; min-height:var(--hg-btn-touch); padding:2px 0; }
+.tv-lt{ flex:1; min-width:0; } .tv-lt b{ font-weight:500; overflow-wrap:anywhere; }
+.tv-rop{ all:unset; cursor:pointer; flex:1; min-width:0; } .tv-rop b{ display:block; font-weight:600; } .tv-rop small{ display:block; opacity:.65; font-size:var(--hg-fs-1); }
+.tv-re{ margin:0 0 4px 40px; display:flex; flex-direction:column; gap:2px; }
+.tv-sw{ all:unset; cursor:pointer; flex:none; width:44px; height:26px; border-radius:999px; background:rgba(120,120,128,.30); position:relative; } .tv-sw[aria-checked=true]{ background:var(--hg-accent, #63D71E); }
+.tv-sw i{ position:absolute; top:2px; left:2px; width:22px; height:22px; border-radius:50%; background:#fff; transition:transform .2s; } .tv-sw[aria-checked=true] i{ transform:translateX(18px); }
+.tv-sw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+.tv-ord{ display:flex; flex:none; gap:2px; } .tv-ob{ all:unset; cursor:pointer; width:36px; height:36px; display:grid; place-items:center; border-radius:var(--hg-radius-pill); } .tv-ob:hover{ background:color-mix(in srgb, var(--hg-accent) 14%, transparent); } .tv-ob:disabled{ opacity:.35; cursor:default; } .tv-ob ha-icon{ --mdc-icon-size:20px; width:20px; height:20px; }
+.tv-lok{ color:var(--hg-accent-tx, var(--hg-accent)); font-size:var(--hg-fs-1); }
 `;
 window.HGTv = HGTv;

@@ -3420,6 +3420,25 @@
     "timeout": "De tv reageerde niet. Controleer de code op het scherm en probeer opnieuw. Het ongebruikte token is verwijderd.",
     "title": "Een tv koppelen",
     "waiting": "Wachten tot de tv verbinding maakt, maximaal {seconds} seconden. Kijk op het scherm van de tv.",
-    "working": "Token aanmaken en naar de tv sturen…"
+    "working": "Token aanmaken en naar de tv sturen…",
+    "layout_title": "Tv-inhoud",
+    "layout_intro": "Kies wat gekoppelde tv’s tonen. Een lege sectie blijft verborgen. Wijzigingen gelden na herladen van de tv.",
+    "layout_cameras": "Camera’s",
+    "layout_rooms": "Kamers",
+    "layout_scenes": "Scènes en scripts",
+    "layout_alarms": "Alarm",
+    "layout_other": "Overig",
+    "layout_ents": "{count} entiteiten",
+    "layout_ents_hint": "Laat alles aangevinkt om de hele kamer te tonen. Vink items uit om de inhoud op de tv te beperken.",
+    "layout_up": "Omhoog",
+    "layout_down": "Omlaag",
+    "layout_save": "Tv-inhoud opslaan",
+    "layout_saved": "Tv-inhoud opgeslagen",
+    "layout_save_failed": "Kon de tv-inhoud niet opslaan.",
+    "layout_failed": "Kon de tv-inhoudsinstellingen niet laden.",
+    "layout_no_cameras": "Geen camera’s in Home Assistant.",
+    "layout_no_rooms": "Geen kamers met apparaten voor de tv.",
+    "layout_no_scenes": "Geen scènes of scripts.",
+    "layout_no_alarms": "Geen alarmpanelen."
   }
 }
