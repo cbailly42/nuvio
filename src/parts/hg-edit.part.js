@@ -88,6 +88,7 @@ const HGL = window.__hgL || (window.__hgL = {
         res.s = res.s || {}; res.ts = this.data.ts; delete res.uid; this.data = res;
       }
       this._base = this._snap(this.data); this._ls(); this.failed = false; this.notify();
+      try { if (typeof HGTv !== 'undefined' && HGTv.pushDashboardRooms) HGTv.pushDashboardRooms(h); } catch (e) { /* treść TV odświeży się przy następnym syncu */ }
       return 'ha';
     } catch (e) { this._ls(); return 'local'; }
   },

@@ -49,9 +49,14 @@ function env(o = {}) {
       'script.noc': { entity_id: 'script.noc', state: 'off', attributes: { friendly_name: 'Noc' } },
       'alarm_control_panel.dom': { entity_id: 'alarm_control_panel.dom', state: 'disarmed', attributes: { friendly_name: 'Dom' } },
       'light.lampa': { entity_id: 'light.lampa', state: 'off', attributes: { friendly_name: 'Lampa' } },
+      'sensor.pogoda_temp': { entity_id: 'sensor.pogoda_temp', state: '21', attributes: { friendly_name: 'Temp', unit_of_measurement: '°C' } },
     },
     areas: o.areas || { salon: { area_id: 'salon', name: 'Salon' } },
-    entities: o.entities || { 'light.lampa': { entity_id: 'light.lampa', area_id: 'salon' }, 'camera.brama': { entity_id: 'camera.brama', area_id: 'salon' } },
+    entities: o.entities || {
+      'light.lampa': { entity_id: 'light.lampa', area_id: 'salon' },
+      'camera.brama': { entity_id: 'camera.brama', area_id: 'salon' },
+      'sensor.pogoda_temp': { entity_id: 'sensor.pogoda_temp', area_id: null },
+    },
     devices: o.devices || {},
     callWS: async (msg) => {
     log.ws.push(msg); log.order.push('ws:' + msg.type);
@@ -78,10 +83,33 @@ function env(o = {}) {
   const fields = { 'tv-addr': { value: '' }, 'tv-code': { value: '' }, 'tv-ha': { value: '' } };
   const sheet = { querySelector: (sel) => (sel === '.lk' ? {} : fields[sel.slice(6, -1)] || null) };
   const p = { _hass: hass, _eSheetEl: sheet, _eToast: (t) => log.toasts.push(t), _eLook: () => { log.looks++; } };
+  const emptySec = () => ({ light: [], clim: [], media: [], cover: [], sw: [], sens: [], mot: [], door: [], cam: [], rob: [], misc: [] });
   const HGAreas = {
-    model: (h) => ({
-      list: [{ id: 'salon', name: 'Salon', ents: Object.keys(h.states || {}).filter((e) => (h.entities[e] || {}).area_id === 'salon') }],
-    }),
+    model: (h) => {
+      const salonEnts = Object.keys(h.states || {}).filter((e) => (h.entities[e] || {}).area_id === 'salon');
+      const noneEnts = Object.keys(h.states || {}).filter((e) => e.startsWith('light.') && !(h.entities[e] || {}).area_id);
+      const salonSec = emptySec();
+      for (const e of salonEnts) {
+        if (e.startsWith('light.')) salonSec.light.push(e);
+        else if (e.startsWith('camera.')) salonSec.cam.push(e);
+        else if (e.startsWith('sensor.')) salonSec.sens.push(e);
+      }
+      if (o.hideSensSection) salonSec.sens = []; /* ukryta sekcja czujników na dashboardzie */
+      const byId = {
+        salon: { id: 'salon', name: 'Salon', ents: salonEnts, sec: o.salonSec || salonSec },
+        _none: { id: '_none', name: 'Bez pokoju', ents: noneEnts, sec: { ...emptySec(), light: noneEnts } },
+      };
+      return { list: Object.values(byId), byId };
+    },
+    glob: () => ({}),
+  };
+  const HGL = {
+    get: (sc) => (o.hgl && o.hgl[sc]) || { order: [], hidden: o.hiddenBlocks || [], added: [], names: {}, conf: {}, size: {} },
+    sort: (items, key, order) => {
+      if (!order || !order.length) return items;
+      const ix = new Map(order.map((k, i) => [k, i]));
+      return items.map((x, i) => [x, i]).sort((a, b) => ((ix.has(key(a[0])) ? ix.get(key(a[0])) : 1e3 + a[1]) - (ix.has(key(b[0])) ? ix.get(key(b[0])) : 1e3 + b[1]))).map((x) => x[0]);
+    },
   };
   const globals = {
     window: { open: openFn, ...(o.window || {}) }, document: fd.document, location: { origin: o.proto === 'http:' ? 'http://ha.local:8123' : 'https://ha.example.com', protocol: o.proto || 'https:' }, HG_LOC: () => 'en',
@@ -89,7 +117,7 @@ function env(o = {}) {
     setTimeout: (fn, ms) => { log.timers.push({ fn, ms, cleared: false }); return log.timers.length - 1; },
     clearTimeout: (i) => { if (log.timers[i]) log.timers[i].cleared = true; },
     H: { esc, icon: (i) => `<ha-icon icon="${i}"></ha-icon>`, name: (h, e, fb) => (h.states[e] && h.states[e].attributes.friendly_name) || fb || e },
-    HGAreas,
+    HGAreas, HGL,
     hgT: (k, a) => { log.hgt.push([k, a]); return k + (a ? JSON.stringify(a) : ''); },
     hgOverlay: { alert: async (...a) => { log.alerts.push(a); return st.confirm; } },
     HTMLElement: class {}, customElements: { get: () => null, define() {} },
@@ -866,7 +894,7 @@ test('https: zablokowana karta (drugie kliknięcie, _blank) nie ma uchwytu, wię
 });
 
 /* ===== layout treści TV (nuvio_tv_layout) ===== */
-test('layout: brak klucza zaznacza wszystko z katalogu; zapis idzie do set_user_data z LAYOUT_KEY', async () => {
+test('layout: brak klucza zaznacza wszystko z katalogu; pokoje z curacją dashboardu; zapis idzie do LAYOUT_KEY', async () => {
   const { HGTv, p, open, st, log } = env();
   await open();
   assert.equal(HGTv.draft !== null, true);
@@ -874,16 +902,58 @@ test('layout: brak klucza zaznacza wszystko z katalogu; zapis idzie do set_user_
   assert.ok(HGTv.draft.scenes.includes('scene.film') && HGTv.draft.scenes.includes('script.noc'));
   assert.deepEqual(HGTv.draft.alarms, ['alarm_control_panel.dom']);
   assert.ok(HGTv.draft.rooms.some((r) => r.id === 'salon'));
+  assert.ok(HGTv.draft.rooms.some((r) => r.id === '__other__'), 'sensor bez obszaru → pokój __other__');
+  const salon = HGTv.draft.rooms.find((r) => r.id === 'salon');
+  assert.ok(salon.entities && salon.entities.includes('light.lampa'));
+  assert.ok(salon.entities.includes('camera.brama'));
+  const cat = HGTv.catalog(p._hass);
+  const other = cat.rooms.find((r) => r.id === '__other__');
+  assert.ok(other && other.ents.some((e) => e.id === 'sensor.pogoda_temp'));
   const h = HGTv.html(p);
   assert.match(h, /tv\.layout_title/);
   assert.match(h, /data-hge="tv-lsave"/);
+  assert.match(h, /data-hge="tv-lsync"/);
   assert.doesNotMatch(h, /SYNTHETIC|eyJhbGci/);
   await HGTv.act(p, {}, 'tv-lsave');
   const set = log.ws.find((m) => m.type === 'frontend/set_user_data');
   assert.equal(set.key, 'nuvio_tv_layout');
   assert.equal(set.value.v, 1);
   assert.deepEqual(st.layout.cameras.sort(), ['camera.brama', 'camera.ogrod']);
+  assert.ok(st.layout.rooms.some((r) => r.id === '__other__'));
   assert.ok(log.toasts.some((t) => t.startsWith('tv.layout_saved')));
+});
+
+test('layout: dashboardRoomEntities pomija ukryty blok sekcji (np. Czujniki)', () => {
+  const sec = {
+    light: ['light.biuro_1', 'light.biuro_2', 'light.biuro_3', 'light.biuro_4'],
+    clim: [], media: [], cover: [], sw: [], sens: ['sensor.biuro_temp'], mot: [], door: [], cam: [], rob: [], misc: [],
+  };
+  const hass = {
+    states: Object.fromEntries([...sec.light, 'sensor.biuro_temp'].map((id) => [id, { entity_id: id, state: 'on', attributes: {} }])),
+  };
+  const HG_SEC = [
+    ['light', 'Światła'], ['clim', 'Klimatyzacja'], ['media', 'Media'], ['cover', 'Rolety'], ['sw', 'Przełączniki'],
+    ['sens', 'Czujniki'], ['mot', 'Ruch i obecność'], ['door', 'Drzwi i okna'], ['cam', 'Kamery'], ['rob', 'Roboty'], ['misc', 'Inne'],
+  ];
+  const { HGTv } = loadParts(['ui/form.part.js', 'hg-tvlogic.part.js', 'hg-tv.part.js'], {
+    window: {}, document: fakeDocument().document, location: { origin: 'https://ha.example.com', protocol: 'https:' }, HG_LOC: () => 'en',
+    H: { esc, icon: () => '', name: (_h, e) => e }, HG_SEC,
+    HGAreas: { model: () => ({ byId: { biuro: { id: 'biuro', name: 'Biuro', ents: [...sec.light, 'sensor.biuro_temp'], sec } } }), glob: () => ({}) },
+    HGL: { get: () => ({ order: [], hidden: ['Czujniki'], added: [] }), sort: (items) => items },
+    hgT: (k) => k, hgOverlay: { alert: async () => true }, HTMLElement: class {}, customElements: { get: () => null, define() {} },
+  }, ['HGTv']);
+  const ids = HGTv.dashboardRoomEntities(hass, 'biuro');
+  assert.deepEqual(ids, ['light.biuro_1', 'light.biuro_2', 'light.biuro_3', 'light.biuro_4']);
+  assert.equal(ids.includes('sensor.biuro_temp'), false);
+});
+
+test('layout: stary zapis bez __other__ dostaje pokój bez obszaru przy wczytaniu', async () => {
+  const { HGTv, open } = env({
+    layout: { v: 1, cameras: ['camera.brama'], rooms: [{ id: 'salon' }], scenes: [], alarms: [] },
+  });
+  await open();
+  assert.ok(HGTv.draft.rooms.some((r) => r.id === 'salon'));
+  assert.ok(HGTv.draft.rooms.some((r) => r.id === '__other__'));
 });
 
 test('layout: zapisany dokument ładuje checklistę; odznaczenie kamery i zapis filtruje listę', async () => {

@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.2
+- Amélioré : le **contenu TV** part de la pièce du tableau de bord Nuvio (mêmes entités que la carte de pièce, sections masquées et tuiles ajoutées comprises). **Synchroniser depuis le tableau de bord** rafraîchit les listes ; l’enregistrement de la disposition du tableau de bord met aussi à jour les listes d’entités des pièces dans `nuvio_tv_layout` lorsqu’une disposition TV existe déjà.
+
 ### 2.26.0-beta.1
 - Ajouté : **contenu TV** dans Paramètres → Système → Téléviseur : choisissez les caméras (avec ordre), pièces (éventuellement un sous-ensemble d’entités), scènes/scripts et panneaux d’alarme visibles sur les applications Nuvio TV jumelées. Le choix est enregistré dans les données utilisateur Home Assistant sous `nuvio_tv_layout`. Sans réglage, le téléviseur montre tout depuis Home Assistant ; une section vide reste masquée. Après enregistrement, rechargez ou reconnectez le téléviseur ([#83](https://github.com/kczepiec/nuvio/pull/83)).
 
