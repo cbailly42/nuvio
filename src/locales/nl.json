@@ -3217,7 +3217,10 @@
       "analog": "Analoge klok",
       "aurora": "Noorderlicht",
       "flip": "Klapklok",
-      "night": "Nacht"
+      "night": "Nacht",
+      "stars": "Sterren",
+      "words": "Woordklok",
+      "sunrise": "Zonsopgang"
     }
   },
   "weather": {

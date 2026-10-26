@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased
+- Added: three wall tablet screensavers: **Stars** (twinkling night sky with the clock), **Word clock** (the time lit up letter by letter, English words for now) and **Sunrise** (a sky that follows the real time of day, with a sun or moon arc).
+
 ### 2.27.0
 - Added: **clock appearance** for the wall tablet screensaver (issue #41). Appearance → Wall tablet mode has a live preview and controls for font (system, serif, mono, rounded or your own font from a `/local/…` or `https://…` address), size, weight, colour (white, accent or your own), shadow and opacity. The settings apply to the clock on photo, Night, Aurora, Flip and Minimal (glass) styles. The default values keep the current look, and **Reset to style defaults** restores them.
 

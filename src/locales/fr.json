@@ -3290,7 +3290,10 @@
       "analog": "Horloge analogique",
       "aurora": "Aurore boréale",
       "flip": "Horloge à palettes",
-      "night": "Nuit"
+      "night": "Nuit",
+      "stars": "Étoiles",
+      "words": "Horloge en lettres",
+      "sunrise": "Lever de soleil"
     }
   },
   "weather": {

@@ -3341,7 +3341,10 @@
       "analog": "Zegar analogowy",
       "aurora": "Zorza",
       "flip": "Zegar klapkowy",
-      "night": "Nocny"
+      "night": "Nocny",
+      "stars": "Gwiazdy",
+      "words": "Zegar słowny",
+      "sunrise": "Wschód słońca"
     }
   },
   "weather": {
