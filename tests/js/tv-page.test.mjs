@@ -141,6 +141,35 @@ test('walidacja: adres spoza sieci prywatnej blokuje wysyłkę', async () => {
   assert.deepEqual(log.ws, []); assert.equal(fd.sent.length, 0); assert.deepEqual(log.opens, []);
 });
 
+test('zgoda http: przed utworzeniem tokenu pyta o wysyłkę bez szyfrowania; anulowanie zamyka kartę i nic nie wysyła', async () => {
+  const { HGTv, p, fill, log, fd, tab, open, st } = env();
+  await open();
+  st.confirm = false;
+  fill('10.0.8.117:8798', '482913');
+  const run = HGTv.act(p, {}, 'tv-pair');
+  assert.deepEqual(log.opens, [['', 'nuvio-tv-pair']]);                     /* karta otwarta synchronicznie przed dialogiem */
+  await run;
+  assert.equal(log.alerts.length, 1);
+  assert.equal(log.alerts[0][0], 'tv.plain_title');
+  assert.equal(log.alerts[0][1], 'tv.plain_text');
+  assert.equal(log.alerts[0][2], 'tv.plain_ok');
+  assert.deepEqual(log.ws, []); assert.equal(fd.sent.length, 0); assert.equal(log.fetches.length, 0);
+  assert.equal(HGTv.status, 'idle');
+  assert.equal(tab.closed, true); assert.equal(tab.closeCalls, 1);
+});
+
+test('zgoda http: potwierdzenie pozwala utworzyć token; dialog jest przed pierwszym wywołaniem HA', async () => {
+  const { HGTv, p, fill, log, open } = env({ seenAfter: 1 });
+  await open();
+  fill('10.0.8.117:8798', '482913');
+  const run = HGTv.act(p, {}, 'tv-pair');
+  assert.equal(log.order[0], 'open');
+  await run;
+  assert.equal(log.alerts.some((a) => a[0] === 'tv.plain_title'), true);
+  assert.equal(log.order.indexOf('open') < log.order.findIndex((x) => x.startsWith('ws:')), true);
+  assert.equal(HGTv.status, 'done');
+});
+
 test('parowanie: karta TV jest otwierana synchronicznie w kliknięciu, przed pierwszym wywołaniem HA, a formularz trafia w tę kartę', async () => {
   const { HGTv, p, fill, fd, log, tab, open } = env({ seenAfter: 1 });
   await open();
@@ -264,7 +293,7 @@ test('parowanie: unikalna nazwa, token, formularz POST, odpytywanie co 1 s i pot
   fill('10.0.8.117:8798', '482913');
   await HGTv.act(p, {}, 'tv-pair');
   assert.deepEqual(types().slice(0, 3), ['auth/refresh_tokens', 'auth/long_lived_access_token', 'frontend/get_user_data']);
-  assert.deepEqual(log.ws[1], { type: 'auth/long_lived_access_token', client_name: 'Nuvio TV 2026-10-25 14:30 2', lifespan: 3650 });
+  assert.deepEqual(log.ws[1], { type: 'auth/long_lived_access_token', client_name: 'Nuvio TV 2026-10-25 14:30 2', lifespan: 365 });
   assert.equal(fd.sent.length, 1);
   assert.deepEqual(fd.sent[0], { action: 'http://10.0.8.117:8798/pair', method: 'post', target: 'nuvio-tv-pair', rel: undefined, fields: { code: '482913', url: 'https://ha.example.com', token: JWT } });
   assert.deepEqual(sleeps, [1000, 1000, 1000]);
@@ -585,6 +614,16 @@ test('czas oczekiwania: http z hostem publicznym po drugim kliknięciu (zablokow
 const httpEnv = (o = {}) => env({ proto: 'http:', ...o });
 const until = async (f) => { for (let i = 0; i < 60 && !f(); i++) await tick(); };
 const stateText = (e) => JSON.stringify([e.log.toasts, e.log.hgt, e.HGTv]);
+
+test('http: anulowanie zgody nic nie wysyła (bez fetch i bez tokenu)', async () => {
+  const { HGTv, p, log, fd, fill, open, st } = httpEnv();
+  await open(); st.confirm = false;
+  fill('10.0.8.117:8798', '482913', HTTP_HA);
+  await HGTv.act(p, {}, 'tv-pair');
+  assert.deepEqual(log.opens, []); assert.deepEqual(fd.sent, []); assert.equal(log.fetches.length, 0);
+  assert.deepEqual(log.ws, []); assert.equal(HGTv.status, 'idle');
+  assert.equal(log.alerts[0][0], 'tv.plain_title');
+});
 
 test('http: bez window.open i bez formularza, fetch z dokładnym adresem, nagłówkami i treścią, token tylko w treści', async () => {
   const e = httpEnv({ seenAfter: 2 }), { HGTv, p, log, fd, fill, open, st } = e;

@@ -35,7 +35,18 @@ test('parseAddr: IPv4 albo nazwa z portem 1 do 65535', () => {
   assert.deepEqual(L.parseAddr(' tv.local:1 '), { host: 'tv.local', port: 1 });
   assert.deepEqual(L.parseAddr('salon-tv:65535'), { host: 'salon-tv', port: 65535 });
   for (const bad of ['', '10.0.8.117', '10.0.8.117:0', '10.0.8.117:65536', '10.0.8.256:8798', '10.0.8:8798', '10.0.8.1.1:8798', '010.0.8.1:8798',
-    'http://10.0.8.117:8798', '10.0.8.117:80a', '-tv:8798', 'tv-:8798', 'tv..local:8798', '10.0.8.117:8798/pair', 'a b:8798', null]) assert.equal(L.parseAddr(bad), null, String(bad));
+    'http://10.0.8.117:8798', 'https://10.0.8.117:8798', '10.0.8.117:8798/pair', '10.0.8.117:8798/pair?c=1', '10.0.8.117:8798#x',
+    '10.0.8.117:80a', '-tv:8798', 'tv-:8798', 'tv..local:8798', 'a b:8798', null]) assert.equal(L.parseAddr(bad), null, String(bad));
+});
+
+test('pairUrl: tylko zwalidowany host:port, bez schematu i ścieżki w wyniku', () => {
+  assert.equal(L.pairUrl({ host: '10.0.8.117', port: 8798 }), 'http://10.0.8.117:8798/pair');
+  assert.equal(L.pairUrl({ host: 'tv.local', port: 1 }), 'http://tv.local:1/pair');
+  assert.equal(L.pairUrl({ host: '8.8.8.8', port: 8798 }), 'http://8.8.8.8:8798/pair'); /* format OK; sieć prywatną sprawdza pair() */
+  assert.equal(L.LIFESPAN, 365);
+  for (const bad of [null, undefined, {}, { host: '10.0.8.117' }, { host: '10.0.8.117', port: '8798' }, { host: '10.0.8.117', port: 8798.5 },
+    { host: 'http://10.0.8.117', port: 8798 }, { host: '10.0.8.117/pair', port: 8798 }, { host: '10.0.8.117', port: 0 },
+    { host: '10.0.8.117', port: 65536 }, { host: '', port: 8798 }]) assert.equal(L.pairUrl(bad), null, JSON.stringify(bad));
 });
 
 test('adres: obejścia (host z dopiskiem, @, IPv6, localhost, IP dziesiętny i szesnastkowy, port 0 i 65536, kropka na końcu)', () => {

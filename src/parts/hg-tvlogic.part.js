@@ -2,6 +2,8 @@
 const HGTvLogic = {
   SEEN_KEY: 'nuvio_tv_seen',
   PREFIX: 'Nuvio TV',
+  /* dni ważności tokenu długoterminowego (HA lifespan); telewizor trzyma token na stałe, więc nie kasujemy go po sparowaniu */
+  LIFESPAN: 365,
   /* link z kodu QR http://IP:PORT/pair?c=KOD, wynik { addr, code } albo null */
   parseLink(text) {
     let u; try { u = new URL(String(text || '').trim()); } catch (e) { return null; }
@@ -9,7 +11,8 @@ const HGTvLogic = {
     if (u.protocol !== 'http:' || u.username || u.password || u.pathname !== '/pair' || !u.port || !code) return null;
     return { addr: u.hostname + ':' + u.port, code: code.trim() };
   },
-  /* adres telewizora host:port, host to IPv4 albo nazwa, port 1 do 65535; wynik { host, port } albo null */
+  /* adres telewizora host:port, host to IPv4 albo nazwa, port 1 do 65535; wynik { host, port } albo null.
+     Odrzuca schemat (http://…), ścieżkę (/pair), dane logowania, IPv6 i port poza 1..65535. */
   parseAddr(text) {
     const m = /^([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*):([0-9]{1,5})$/.exec(String(text || '').trim());
     if (!m) return null;
@@ -17,6 +20,13 @@ const HGTvLogic = {
     if (port < 1 || port > 65535) return null;
     if (/^[0-9.]+$/.test(host)) { const o = host.split('.'); if (o.length !== 4 || o.some((x) => !/^(0|[1-9][0-9]{0,2})$/.test(x) || Number(x) > 255)) return null; }
     return { host, port };
+  },
+  /* jedyny punkt budowy URL parowania: ponownie sprawdza host:port (bez schematu i ścieżki), wynik http://host:port/pair albo null */
+  pairUrl(A) {
+    if (!A || typeof A.host !== 'string' || !Number.isInteger(A.port)) return null;
+    const again = HGTvLogic.parseAddr(A.host + ':' + A.port);
+    if (!again || again.host !== A.host || again.port !== A.port) return null;
+    return 'http://' + again.host + ':' + again.port + '/pair';
   },
   validCode: (s) => /^[0-9]{6}$/.test(String(s || '').trim()),
   /* 10.x, 172.16 do 31.x, 192.168.x, 169.254.x i nazwy .local */

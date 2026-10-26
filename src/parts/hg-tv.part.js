@@ -6,6 +6,7 @@
    synchronicznie z target=_blank. Niewysłany token jest kasowany po 2 minutach, po zamknięciu panelu i po ponownym otwarciu panelu.
    Gdy sama strona jest serwowana przez http: (typowy Home Assistant w sieci domowej), nie ma karty ani formularza: po utworzeniu tokenu idzie fetch POST (CORS) prosto do telewizora,
    a odpowiedź 200, 403, 429 lub inna (albo wynik nieznany przy TypeError i przerwaniu) wybiera dalszy ciąg (sendDirect). Przy https: karta zamyka się sama po potwierdzeniu znacznikiem.
+   Przed utworzeniem tokenu (po synchronicznym openTab) jawna zgoda na wysyłkę po http:// do TV. Adres TV buduje wyłącznie HGTvLogic.pairUrl (walidacja host:port, bez schematu i ścieżki).
    Czyste funkcje: hg-tvlogic.part.js. Wartości pól trzyma obiekt (s), bo _eLook() kasuje wpisany tekst. Token żyje tylko w zmiennej lokalnej pair(), w this.ready między dwoma kliknięciami i w polu formularza w pamięci. ===== */
 const HGTv = window.__hgTv || (window.__hgTv = {
   FIELDS: [['tv-addr', 'addr'], ['tv-code', 'code'], ['tv-ha', 'ha']],
@@ -114,10 +115,12 @@ const HGTv = window.__hgTv || (window.__hgTv = {
   /* zamyka kartę tylko gdy mamy uchwyt i nie jest już zamknięta (użytkownik mógł ją zamknąć sam) */
   shut(w) { try { if (w && !w.closed) w.close(); } catch (e) { /* nic do zrobienia */ } },
   /* ukryty formularz w pamięci: POST, potem usunięty; token nigdzie indziej nie trafia.
-     target to nazwa karty z openTab (bez rel, bo noopener zerwałby nazwane okno) albo _blank w drugim kliknięciu (wtedy rel=noopener). */
+     target to nazwa karty z openTab (bez rel, bo noopener zerwałby nazwane okno) albo _blank w drugim kliknięciu (wtedy rel=noopener).
+     action tylko z pairUrl (host:port już sprawdzone; schemat i ścieżka odrzucone). */
   send(A, code, ha, token, target) {
+    const url = HGTvLogic.pairUrl(A); if (!url) throw new Error('bad addr');
     const f = document.createElement('form');
-    f.setAttribute('action', 'http://' + A.host + ':' + A.port + '/pair'); f.setAttribute('method', 'post'); f.setAttribute('target', target); if (target === '_blank') f.setAttribute('rel', 'noopener'); f.hidden = true;
+    f.setAttribute('action', url); f.setAttribute('method', 'post'); f.setAttribute('target', target); if (target === '_blank') f.setAttribute('rel', 'noopener'); f.hidden = true;
     for (const [n, v] of [['code', code], ['url', ha], ['token', token]]) { const i = document.createElement('input'); i.setAttribute('type', 'hidden'); i.setAttribute('name', n); i.setAttribute('value', v); f.appendChild(i); }
     document.body.appendChild(f);
     try { f.submit(); } finally { f.remove(); }
@@ -129,21 +132,27 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     const r = this.ready; if (!r) return;
     this.ready = null; r.token = null; this.status = status; this.drop(p._hass, r.id);
   },
+  /* jawna zgoda na wysyłkę tokenu po http:// do TV (sieć domowa, bez szyfrowania); anulowanie nie tworzy tokenu */
+  async consentPlain() {
+    return !!(await hgOverlay.alert(hgT('tv.plain_title'), hgT('tv.plain_text'), hgT('tv.plain_ok')));
+  },
   async pair(p) {
     if (this.working()) return;
     this.sync(p);
     const s = this.s, A = HGTvLogic.parseAddr(s.addr), ha = HGTvLogic.haUrl(s.ha), code = s.code.trim(), E = {};
-    if (!A) E.addr = 'bad'; else if (!HGTvLogic.isPrivateHost(A.host)) E.addr = 'private';
+    if (!A || !HGTvLogic.pairUrl(A)) E.addr = 'bad'; else if (!HGTvLogic.isPrivateHost(A.host)) E.addr = 'private';
     if (!HGTvLogic.validCode(code)) E.code = 'bad';
     if (!ha) E.ha = 'bad';
     this.err = E; this.status = 'idle';
     if (Object.keys(E).length || window.__hgDryRun) return p._eLook();
+    /* openTab synchronicznie przed zgodą i await, żeby zachować gest; przy anulowaniu zamykamy pustą kartę */
     const direct = HGTvLogic.direct(location.protocol), w = direct ? null : this.openTab();
+    if (!(await this.consentPlain())) { this.shut(w); return undefined; }
     const h = p._hass; this.status = 'working'; p._eLook();
     let token = null, id = null, name = '';
     try {
       name = HGTvLogic.freeName(HGTvLogic.longNames(await h.callWS({ type: 'auth/refresh_tokens' })), this.now());
-      token = await h.callWS({ type: 'auth/long_lived_access_token', client_name: name, lifespan: 3650 });
+      token = await h.callWS({ type: 'auth/long_lived_access_token', client_name: name, lifespan: HGTvLogic.LIFESPAN });
     } catch (e) { this.shut(w); return this.fail(p, 'err_create'); }
     try { id = HGTvLogic.tokenId(token) || HGTvLogic.idByName(await h.callWS({ type: 'auth/refresh_tokens' }), name); } catch (e) { id = null; }
     if (!id) { token = null; this.shut(w); return this.fail(p, 'err_id'); }
@@ -161,9 +170,10 @@ const HGTv = window.__hgTv || (window.__hgTv = {
      Telewizor odpowiada z nagłówkiem CORS: 200 przyjęto, 403 zły kod, 429 za dużo prób, reszta odrzucono (w trzech ostatnich token kasujemy).
      Wyjątek (TypeError, przerwanie po FETCH_MS) to wynik nieznany: żądanie mogło dotrzeć (stara aplikacja bez nagłówka CORS), więc czekamy na znacznik jak przy karcie */
   async post(A, code, ha, token) {
+    const url = HGTvLogic.pairUrl(A); if (!url) return 'rejected';
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), this.FETCH_MS);
     try {
-      const r = await fetch('http://' + A.host + ':' + A.port + '/pair', {
+      const r = await fetch(url, {
         method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, url: ha, token }).toString(),
         mode: 'cors', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal,
       });
