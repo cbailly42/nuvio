@@ -225,6 +225,30 @@ test('parseLayout: pusty entities w pokoju = cały pokój (bez pola entities)', 
   });
 });
 
+test('parseLayout: items entity/binary/profile/comp; śmieci odrzucane', () => {
+  const p = L.parseLayout({
+    v: 1,
+    rooms: [{
+      id: 'biuro',
+      items: [
+        { t: 'entity', id: 'light.a' },
+        { t: 'binary', id: 'binary_sensor.door' },
+        { t: 'profile', kind: 'stairs', cfg: { bl: 'light.dol', junk: 3 } },
+        { t: 'comp', comp: 'button', name: ' AdGuard ', cfg: { entity: 'switch.x' } },
+        { t: 'profile', kind: 'nope', cfg: {} },
+        { t: 'comp', comp: 'Bad!' },
+        null,
+      ],
+    }],
+  });
+  assert.deepEqual(p.rooms[0].items, [
+    { t: 'entity', id: 'light.a' },
+    { t: 'binary', id: 'binary_sensor.door' },
+    { t: 'profile', kind: 'stairs', cfg: { bl: 'light.dol' } },
+    { t: 'comp', comp: 'button', name: 'AdGuard', cfg: { entity: 'switch.x' } },
+  ]);
+});
+
 test('normLayout: zawsze obiekt v:1 gotowy do zapisu', () => {
   assert.deepEqual(L.normLayout(null), L.emptyLayout());
   assert.deepEqual(L.normLayout({ cameras: ['camera.a', 'camera.a'], rooms: [{ id: 'x' }] }), {

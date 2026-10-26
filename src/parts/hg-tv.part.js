@@ -203,13 +203,105 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     }
     return out;
   },
-  /* wiersz pokoju: nazwa + whitelist z dashboardu (gdy brak ręcznej listy) */
+  /* uporządkowana zawartość pokoju jak na dashboardzie: profile + encje/binary + komponenty HGL */
+  dashboardRoomContents(h, areaId) {
+    const aid = areaId === HGTvLogic.OTHER_ROOM ? '_none' : areaId;
+    const items = [];
+    const entityIds = [];
+    const seen = new Set();
+    const pushEntity = (id) => {
+      if (!HGTvLogic.isEntityId(id) || seen.has(id)) return;
+      if (!this.TV_ROOM_DOMS.includes(id.slice(0, id.indexOf('.')))) return;
+      seen.add(id);
+      entityIds.push(id);
+      items.push({ t: id.startsWith('binary_sensor.') ? 'binary' : 'entity', id });
+    };
+    /* schody z wiz.areas */
+    try {
+      const G = typeof HGAreas !== 'undefined' && HGAreas.glob ? HGAreas.glob() : null;
+      const ST = G && G.stairs;
+      if (ST && ST.room === aid) {
+        const cfg = {};
+        for (const [k, v] of Object.entries({
+          bl: ST.bottom && ST.bottom.light, bm: ST.bottom && ST.bottom.motion,
+          tl: ST.top && ST.top.light, tm: ST.top && ST.top.motion,
+          group: ST.group, automation: ST.automation,
+        })) if (typeof v === 'string' && HGTvLogic.isEntityId(v)) cfg[k] = v;
+        items.push({ t: 'profile', kind: 'stairs', cfg });
+        for (const id of Object.values(cfg)) { seen.add(id); entityIds.push(id); }
+      }
+    } catch (e) { /* brak glob */ }
+    /* encje z sekcji dashboardu (bez already-seen ze schodów) */
+    for (const id of this.dashboardRoomEntities(h, areaId)) {
+      if (seen.has(id)) continue;
+      pushEntity(id);
+    }
+    /* komponenty dodane w edycji (nadpisują / uzupełniają) */
+    try {
+      const RL = (typeof HGL !== 'undefined' && HGL.get) ? HGL.get('room:' + aid) : { added: [] };
+      for (const x of RL.added || []) {
+        if (!x || typeof x !== 'object') continue;
+        if (x.c || x.comp) {
+          const comp = typeof x.comp === 'string' ? x.comp : 'unknown';
+          const cfg = (x.cfg && typeof x.cfg === 'object') ? x.cfg : ((x.v && typeof x.v === 'object') ? x.v : {});
+          const item = { t: 'comp', comp, cfg };
+          if (typeof x.n === 'string' && x.n.trim()) item.name = x.n.trim();
+          if (typeof x.i === 'string' && /^mdi:/i.test(x.i)) item.icon = x.i;
+          items.push(item);
+          const ent = cfg.entity || cfg.e || (typeof x.e === 'string' && HGTvLogic.isEntityId(x.e) ? x.e : null);
+          if (typeof ent === 'string' && HGTvLogic.isEntityId(ent) && !seen.has(ent)) {
+            seen.add(ent); entityIds.push(ent);
+          }
+        } else if (typeof x.e === 'string' && HGTvLogic.isEntityId(x.e)) {
+          pushEntity(x.e);
+        }
+      }
+    } catch (e) { /* brak HGL */ }
+    /* profile urządzeń z HGDev (oczyszczacz, pralka, …) gdy dostępne */
+    try {
+      if (typeof HGDev !== 'undefined' && HGDev.groups && typeof HGAreas !== 'undefined' && HGAreas.model) {
+        const m = HGAreas.model(h, typeof HGAreas.glob === 'function' ? HGAreas.glob() : undefined);
+        const a = m && m.byId && m.byId[aid];
+        if (a && a.sec) {
+          const skip = new Set();
+          const { devs } = HGDev.groups(h, a, skip);
+          for (const { d, ents } of devs) {
+            const prof = HGDev.prof(h, d, ents);
+            const kind = prof ? prof.id : 'device';
+            if (!HGTvLogic.PROFILE_KINDS.includes(kind === 'purifier' || kind === 'kettle' || kind === 'fountain' || kind === 'fryer' || kind === 'washer' || kind === 'device' ? kind : 'device')) continue;
+            const pk = (prof && HGTvLogic.PROFILE_KINDS.includes(prof.id)) ? prof.id : 'device';
+            const list = (ents || []).filter((e) => typeof e === 'string' && seen.has(e));
+            if (!list.length && ents) {
+              /* encje profilu mogą być już na liście items jako entity — zbierz je */
+            }
+            const all = (ents || []).filter((e) => typeof e === 'string' && HGTvLogic.isEntityId(e));
+            if (!all.length) continue;
+            /* usuń płaskie entity items dla tych encji i włóż profil na początek po schodach */
+            const keep = items.filter((it) => !(it.t === 'entity' || it.t === 'binary') || !all.includes(it.id));
+            items.length = 0;
+            items.push(...keep);
+            const insertAt = items.findIndex((it) => it.t !== 'profile');
+            const profile = { t: 'profile', kind: pk, cfg: { deviceId: d, entities: all } };
+            if (insertAt < 0) items.push(profile); else items.splice(insertAt, 0, profile);
+            for (const e of all) if (!seen.has(e)) { seen.add(e); entityIds.push(e); }
+          }
+        }
+      }
+    } catch (e) { /* HGDev opcjonalny */ }
+    return { items, entities: entityIds };
+  },
+  /* wiersz pokoju: nazwa + items/entities z dashboardu (gdy brak ręcznej listy encji) */
   roomDraftRow(h, id, entities) {
     const dash = this.dashboardRooms(h).find((r) => r.id === id);
-    const ents = entities && entities.length ? entities.slice() : this.dashboardRoomEntities(h, id);
+    const contents = this.dashboardRoomContents(h, id);
+    const ents = entities && entities.length ? entities.slice() : contents.entities;
     const row = { id };
     if (dash && dash.name) row.name = dash.name;
     if (ents.length) row.entities = ents;
+    if (!(entities && entities.length) && contents.items.length) row.items = contents.items;
+    else if (ents.length) {
+      row.items = ents.map((eid) => ({ t: eid.startsWith('binary_sensor.') ? 'binary' : 'entity', id: eid }));
+    }
     return row;
   },
   /* brak zapisanego layoutu → kamery/sceny/alarmy z katalogu HA, pokoje = siatka dashboardu;
@@ -219,7 +311,11 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     const cat = this.catalog(h);
     const dash = this.dashboardRooms(h);
     const prev = new Map((parsed && parsed.rooms || []).map((r) => [r.id, r]));
-    const rooms = dash.map((r) => this.roomDraftRow(h, r.id, prev.get(r.id) && prev.get(r.id).entities));
+    const rooms = dash.map((r) => {
+      const p = prev.get(r.id);
+      /* przy sync pełnym zawsze świeże items; przy seed z prev zachowaj ręczną whitelistę entities jeśli była */
+      return this.roomDraftRow(h, r.id, p && p.entities);
+    });
     if (!parsed) {
       return {
         v: 1,
@@ -237,13 +333,13 @@ const HGTv = window.__hgTv || (window.__hgTv = {
       alarms: parsed.alarms.slice(),
     };
   },
-  /* pełna synchronizacja pokoi z siatki dashboardu (set + kolejność + encje) */
+  /* pełna synchronizacja pokoi z siatki dashboardu (set + kolejność + encje + items) */
   syncDraftFromDashboard(h) {
     const d = this.draft; if (!d) return;
     d.rooms = this.dashboardRooms(h).map((r) => this.roomDraftRow(h, r.id));
     this.layoutSaved = false;
   },
-  /* po zapisie układu dashboardu: odśwież set/kolejność/encje pokoi w istniejącym nuvio_tv_layout */
+  /* po zapisie układu dashboardu: odśwież set/kolejność/encje/items pokoi w istniejącym nuvio_tv_layout */
   async pushDashboardRooms(h) {
     if (!h || !h.connection || window.__hgDryRun) return;
     let parsed;
