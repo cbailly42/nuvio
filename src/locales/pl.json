@@ -3532,6 +3532,25 @@
     "timeout": "TV nie odpowiedział. Sprawdź kod na ekranie i spróbuj ponownie. Niewykorzystany token został usunięty.",
     "title": "Sparuj telewizor",
     "waiting": "Czekam, aż telewizor się połączy, do {seconds} sekund. Patrz na ekran telewizora.",
-    "working": "Tworzę token i wysyłam go do telewizora…"
+    "working": "Tworzę token i wysyłam go do telewizora…",
+    "layout_title": "Treść telewizora",
+    "layout_intro": "Wybierz, co pokazują sparowane telewizory. Pusta sekcja pozostaje ukryta. Zmiany widać po ponownym załadowaniu TV.",
+    "layout_cameras": "Kamery",
+    "layout_rooms": "Pokoje",
+    "layout_scenes": "Sceny i skrypty",
+    "layout_alarms": "Alarm",
+    "layout_other": "Inne",
+    "layout_ents": "{count} encji",
+    "layout_ents_hint": "Zostaw wszystkie zaznaczone, aby pokazać cały pokój. Odznacz pozycje, aby ograniczyć zawartość na TV.",
+    "layout_up": "W górę",
+    "layout_down": "W dół",
+    "layout_save": "Zapisz treść TV",
+    "layout_saved": "Treść TV zapisana",
+    "layout_save_failed": "Nie udało się zapisać treści TV.",
+    "layout_failed": "Nie udało się wczytać ustawień treści TV.",
+    "layout_no_cameras": "Brak kamer w Home Assistant.",
+    "layout_no_rooms": "Brak pokoi z urządzeniami dla TV.",
+    "layout_no_scenes": "Brak scen i skryptów.",
+    "layout_no_alarms": "Brak paneli alarmu."
   }
 }

@@ -28,7 +28,7 @@ function fakeDocument() {
 function env(o = {}) {
   const log = { ws: [], toasts: [], looks: 0, alerts: [], hgt: [], seenPolls: 0, order: [], opens: [], fetches: [], timers: [] };
   const fd = fakeDocument();
-  const st = { tokens: [row(), SESSION], marker: {}, seenAfter: Infinity, createResult: JWT, confirm: true, createFails: false, ...o };
+  const st = { tokens: [row(), SESSION], marker: {}, layout: null, layoutFails: false, seenAfter: Infinity, createResult: JWT, confirm: true, createFails: false, ...o };
   /* karta TV: window.open('', nazwa) daje uchwyt albo null (zablokowana) albo wyjątek; kolejność wywołań w log.order */
   const tab = { opener: 'dashboard', closed: false, closeCalls: 0, close() { this.closeCalls++; if (o.closeThrows) throw new Error('cross origin'); this.closed = true; } };
   /* fetch telewizora: o.fetchAs = status (domyślnie 200), 'typeerror' (stara aplikacja bez nagłówka CORS albo telewizor niedostępny) albo 'hang' (czeka na przerwanie przez AbortController) */
@@ -41,7 +41,19 @@ function env(o = {}) {
     });
   };
   const openFn = (url, name) => { log.order.push('open'); log.opens.push([url, name]); if (o.openThrows) throw new Error('blocked'); return o.blocked ? null : tab; };
-  const hass = { callWS: async (msg) => {
+  const hass = {
+    states: o.states || {
+      'camera.brama': { entity_id: 'camera.brama', state: 'idle', attributes: { friendly_name: 'Brama' } },
+      'camera.ogrod': { entity_id: 'camera.ogrod', state: 'idle', attributes: { friendly_name: 'Ogród' } },
+      'scene.film': { entity_id: 'scene.film', state: 'scening', attributes: { friendly_name: 'Film' } },
+      'script.noc': { entity_id: 'script.noc', state: 'off', attributes: { friendly_name: 'Noc' } },
+      'alarm_control_panel.dom': { entity_id: 'alarm_control_panel.dom', state: 'disarmed', attributes: { friendly_name: 'Dom' } },
+      'light.lampa': { entity_id: 'light.lampa', state: 'off', attributes: { friendly_name: 'Lampa' } },
+    },
+    areas: o.areas || { salon: { area_id: 'salon', name: 'Salon' } },
+    entities: o.entities || { 'light.lampa': { entity_id: 'light.lampa', area_id: 'salon' }, 'camera.brama': { entity_id: 'camera.brama', area_id: 'salon' } },
+    devices: o.devices || {},
+    callWS: async (msg) => {
     log.ws.push(msg); log.order.push('ws:' + msg.type);
     switch (msg.type) {
       case 'auth/refresh_tokens': return st.tokens;
@@ -49,7 +61,16 @@ function env(o = {}) {
         if (st.createFails) throw { code: 'unknown_error' };
         st.tokens = [...st.tokens, row({ id: ID, client_name: msg.client_name, created_at: '2026-10-25T13:30:00.000000+00:00' })];
         return st.createResult;
-      case 'frontend/get_user_data': log.seenPolls++; return { value: log.seenPolls >= st.seenAfter ? { ...st.marker, [ID]: '2026-10-25T13:31:00.000Z' } : st.marker };
+      case 'frontend/get_user_data':
+        if (msg.key === 'nuvio_tv_layout') {
+          if (st.layoutFails) throw new Error('layout');
+          return { value: st.layout };
+        }
+        log.seenPolls++;
+        return { value: log.seenPolls >= st.seenAfter ? { ...st.marker, [ID]: '2026-10-25T13:31:00.000Z' } : st.marker };
+      case 'frontend/set_user_data':
+        if (msg.key === 'nuvio_tv_layout') { st.layout = msg.value; return {}; }
+        throw new Error('unexpected set_user_data ' + msg.key);
       case 'auth/delete_refresh_token': st.tokens = st.tokens.filter((t) => t.id !== msg.refresh_token_id); return {};
       default: throw new Error('unexpected ' + msg.type);
     }
@@ -57,12 +78,18 @@ function env(o = {}) {
   const fields = { 'tv-addr': { value: '' }, 'tv-code': { value: '' }, 'tv-ha': { value: '' } };
   const sheet = { querySelector: (sel) => (sel === '.lk' ? {} : fields[sel.slice(6, -1)] || null) };
   const p = { _hass: hass, _eSheetEl: sheet, _eToast: (t) => log.toasts.push(t), _eLook: () => { log.looks++; } };
+  const HGAreas = {
+    model: (h) => ({
+      list: [{ id: 'salon', name: 'Salon', ents: Object.keys(h.states || {}).filter((e) => (h.entities[e] || {}).area_id === 'salon') }],
+    }),
+  };
   const globals = {
     window: { open: openFn, ...(o.window || {}) }, document: fd.document, location: { origin: o.proto === 'http:' ? 'http://ha.local:8123' : 'https://ha.example.com', protocol: o.proto || 'https:' }, HG_LOC: () => 'en',
     fetch: fetchFn,
     setTimeout: (fn, ms) => { log.timers.push({ fn, ms, cleared: false }); return log.timers.length - 1; },
     clearTimeout: (i) => { if (log.timers[i]) log.timers[i].cleared = true; },
-    H: { esc, icon: (i) => `<ha-icon icon="${i}"></ha-icon>` },
+    H: { esc, icon: (i) => `<ha-icon icon="${i}"></ha-icon>`, name: (h, e, fb) => (h.states[e] && h.states[e].attributes.friendly_name) || fb || e },
+    HGAreas,
     hgT: (k, a) => { log.hgt.push([k, a]); return k + (a ? JSON.stringify(a) : ''); },
     hgOverlay: { alert: async (...a) => { log.alerts.push(a); return st.confirm; } },
     HTMLElement: class {}, customElements: { get: () => null, define() {} },
@@ -836,4 +863,67 @@ test('https: zablokowana karta (drugie kliknięcie, _blank) nie ma uchwytu, wię
   await open(); fill('10.0.8.117:8798', '482913');
   await HGTv.act(p, {}, 'tv-pair'); await HGTv.act(p, {}, 'tv-send');
   assert.equal(HGTv.status, 'done'); assert.equal(tab.closeCalls, 0);
+});
+
+/* ===== layout treści TV (nuvio_tv_layout) ===== */
+test('layout: brak klucza zaznacza wszystko z katalogu; zapis idzie do set_user_data z LAYOUT_KEY', async () => {
+  const { HGTv, p, open, st, log } = env();
+  await open();
+  assert.equal(HGTv.draft !== null, true);
+  assert.deepEqual(HGTv.draft.cameras.sort(), ['camera.brama', 'camera.ogrod']);
+  assert.ok(HGTv.draft.scenes.includes('scene.film') && HGTv.draft.scenes.includes('script.noc'));
+  assert.deepEqual(HGTv.draft.alarms, ['alarm_control_panel.dom']);
+  assert.ok(HGTv.draft.rooms.some((r) => r.id === 'salon'));
+  const h = HGTv.html(p);
+  assert.match(h, /tv\.layout_title/);
+  assert.match(h, /data-hge="tv-lsave"/);
+  assert.doesNotMatch(h, /SYNTHETIC|eyJhbGci/);
+  await HGTv.act(p, {}, 'tv-lsave');
+  const set = log.ws.find((m) => m.type === 'frontend/set_user_data');
+  assert.equal(set.key, 'nuvio_tv_layout');
+  assert.equal(set.value.v, 1);
+  assert.deepEqual(st.layout.cameras.sort(), ['camera.brama', 'camera.ogrod']);
+  assert.ok(log.toasts.some((t) => t.startsWith('tv.layout_saved')));
+});
+
+test('layout: zapisany dokument ładuje checklistę; odznaczenie kamery i zapis filtruje listę', async () => {
+  const { HGTv, p, open, st, log } = env({
+    layout: { v: 1, cameras: ['camera.brama'], rooms: [{ id: 'salon' }], scenes: ['scene.film'], alarms: [] },
+  });
+  await open();
+  assert.deepEqual(HGTv.draft.cameras, ['camera.brama']);
+  assert.deepEqual(HGTv.draft.alarms, []);
+  await HGTv.act(p, { dataset: { id: 'camera.brama' } }, 'tv-cam');
+  assert.deepEqual(HGTv.draft.cameras, []);
+  await HGTv.act(p, { dataset: { id: 'camera.ogrod' } }, 'tv-cam');
+  await HGTv.act(p, {}, 'tv-lsave');
+  assert.deepEqual(st.layout.cameras, ['camera.ogrod']);
+  assert.equal(log.ws.filter((m) => m.type === 'frontend/set_user_data').every((m) => m.key === 'nuvio_tv_layout'), true);
+});
+
+test('layout: kolejność kamer góra/dół; błąd odczytu daje ponowienie; tryb próbny nie woła set_user_data', async () => {
+  const a = env({ layout: { v: 1, cameras: ['camera.brama', 'camera.ogrod'], rooms: [], scenes: [], alarms: [] } });
+  await a.open();
+  await a.HGTv.act(a.p, { dataset: { id: 'camera.brama' } }, 'tv-cdn');
+  assert.deepEqual(a.HGTv.draft.cameras, ['camera.ogrod', 'camera.brama']);
+  const b = env({ layoutFails: true });
+  b.HGTv.html(b.p); await tick(); await tick();
+  assert.match(b.HGTv.html(b.p), /data-hge="tv-lreload"/);
+  const d = env({ window: { __hgDryRun: true } });
+  await d.open();
+  d.log.ws.length = 0;
+  await d.HGTv.act(d.p, {}, 'tv-lsave');
+  assert.equal(d.log.ws.some((m) => m.type === 'frontend/set_user_data'), false);
+  assert.ok(d.log.toasts.some((t) => t.startsWith('tv.layout_saved')));
+});
+
+test('layout: walidacja — zapis odrzuca nieznane pola przez normLayout; token nie wycieka w HTML layoutu', async () => {
+  const { HGTv, p, open, st } = env();
+  await open();
+  HGTv.draft.cameras = ['camera.brama', 'camera.brama', 'zly', 'light.x'];
+  HGTv.draft.extra = 'no';
+  await HGTv.act(p, {}, 'tv-lsave');
+  assert.deepEqual(st.layout.cameras, ['camera.brama', 'light.x']);
+  assert.equal('extra' in st.layout, false);
+  assert.equal(HGTv.html(p).includes(SECRET), false);
 });
