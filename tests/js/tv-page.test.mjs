@@ -947,13 +947,33 @@ test('layout: dashboardRoomEntities pomija ukryty blok sekcji (np. Czujniki)', (
   assert.equal(ids.includes('sensor.biuro_temp'), false);
 });
 
-test('layout: stary zapis bez __other__ dostaje pokój bez obszaru przy wczytaniu', async () => {
+test('layout: wczytanie nadpisuje set pokoi siatką dashboardu (salon + _none→__other__)', async () => {
   const { HGTv, open } = env({
-    layout: { v: 1, cameras: ['camera.brama'], rooms: [{ id: 'salon' }], scenes: [], alarms: [] },
+    layout: { v: 1, cameras: ['camera.brama'], rooms: [{ id: 'salon' }, { id: 'ghost-ha-only' }], scenes: [], alarms: [] },
   });
   await open();
   assert.ok(HGTv.draft.rooms.some((r) => r.id === 'salon'));
-  assert.ok(HGTv.draft.rooms.some((r) => r.id === '__other__'));
+  assert.equal(HGTv.draft.rooms.some((r) => r.id === 'ghost-ha-only'), false, 'pokój spoza dashboardu znika');
+  assert.ok(HGTv.draft.rooms.some((r) => r.id === '__other__'), '_none z modelu → __other__');
+});
+
+test('layout: dashboardRooms używa kolejności i ukryć z HGL rooms', () => {
+  const { HGTv, p } = env({
+    hgl: {
+      rooms: {
+        order: ['_none', 'salon'],
+        hidden: [],
+        added: [],
+        conf: { salon: { n: 'Salon TV' } },
+        size: {},
+        names: {},
+      },
+    },
+  });
+  /* model mock ma list; dashboardRooms czyta HGL.get('rooms') */
+  const rooms = HGTv.dashboardRooms(p._hass);
+  assert.deepEqual(rooms.map((r) => r.id), ['__other__', 'salon']);
+  assert.equal(rooms.find((r) => r.id === 'salon')?.name, 'Salon TV');
 });
 
 test('layout: zapisany dokument ładuje checklistę; odznaczenie kamery i zapis filtruje listę', async () => {

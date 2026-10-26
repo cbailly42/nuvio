@@ -4,6 +4,9 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.3
+- Corrigé : la liste et l’ordre des pièces du **contenu TV** suivent la grille Nuvio (Apparence → Pièces + disposition masquée/ordre/ajoutées), et non toutes les zones Home Assistant. La synchronisation et l’enregistrement de la disposition réécrivent l’ensemble des pièces ; « Autre » à la TV seulement si le tableau de bord montre *Sans pièce*.
+
 ### 2.26.0-beta.2
 - Amélioré : le **contenu TV** part de la pièce du tableau de bord Nuvio (mêmes entités que la carte de pièce, sections masquées et tuiles ajoutées comprises). **Synchroniser depuis le tableau de bord** rafraîchit les listes ; l’enregistrement de la disposition du tableau de bord met aussi à jour les listes d’entités des pièces dans `nuvio_tv_layout` lorsqu’une disposition TV existe déjà.
 
