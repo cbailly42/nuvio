@@ -327,7 +327,7 @@ class HGPage extends HTMLElement {
     /* skala tabletu ograniczona też wysokością, żeby niskie okno nie rozciągało paneli */
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620, Hh / 640)); }
     const z = this._zoom();
-    if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
+    if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); if (this._headEl && this._config && !this._config.room_head && this._hass) this._headVis(this._headConf()); }
     this.style.setProperty('--hg-u0', u.toFixed(4) + 'px');
     this.style.setProperty('--hg-zoom', z);
     if (this._panel) this._panelGrid(mode);
@@ -645,7 +645,8 @@ class HGPage extends HTMLElement {
       if (!this._editing && this._editEnter) this._editEnter(); if (this._editing && this._eLook) this._eLook(); }, 400); }
   _headTick() { clearTimeout(this._headT); this._headT = null; if (!this._headClk || !this.isConnected) return;
     this._headT = setTimeout(() => { this._headT = null; if (this.isConnected && !document.hidden) this._paintHead(); else this._headTick(); }, 60500 - (Date.now() % 60000)); }
-  _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgT('page.header_hidden'); else delete this._headEl.dataset.off; }
+  _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgT('page.header_hidden'); else delete this._headEl.dataset.off;
+    const md = this.getAttribute('mode'), sz = (hd.sz || {})[md] || ''; if (sz && sz !== 'm') this._headEl.dataset.sz = sz; else delete this._headEl.dataset.sz; }
   _paintHead() {
     const c = this._config; if (!this._hass) return; this._headClk = false; queueMicrotask(() => this._headTick());
     if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._bdgEl = null; this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
@@ -661,6 +662,7 @@ class HGPage extends HTMLElement {
   /* pogoda na zewnątrz: szeroki układ -> bez tła na zdjęciu pod powitaniem (.wxh); tablet/telefon -> chip obok cen paliw (.wxs) */
   _placeWx() {
     const c = this._config; if (!c || !c.weather || !this._headEl) return;
+    const wiz = typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz; if (wiz && wiz.weather && wiz.weather.hide) { if (this._wxEl && this._wxEl.parentNode) this._wxEl.parentNode.removeChild(this._wxEl); return; }
     if (!this._wxEl) { this._wxEl = document.createElement('hg-weather-card'); this._wxEl.setAttribute('variant', 'hero'); }
     const w = c.weather, prev = this._wxEl._config; if (!prev || prev.entity !== w.entity || prev.size !== w.size || prev.forecast_sensor !== w.forecast_sensor) this._wxEl.setConfig(w);
     const wide = this.getAttribute('mode') === 'wide', t = this._headEl.querySelector(wide ? '.wxh' : '.wxs'); if (!t) return;
@@ -1127,6 +1129,10 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .head .bdg ha-icon{ width:15px; height:15px; } .head .bdg b{ font-weight:600; }
 :host([mode=wide]) .head:has(.bdgs:not([hidden])) .wxh{ top:152u; }
 .head h1{ margin:0; font-size:24u; font-weight:600; letter-spacing:-.015em; line-height:1.18; text-shadow: 0 1px 12px rgba(0,0,0,.18); }
+/* --- title size: s / m (default) / l / xl per device --- */
+:host([mode=tablet]) .head[data-sz=s] h1, :host([mode=wide]) .head[data-sz=s] h1{ font-size:18u; }
+:host([mode=tablet]) .head[data-sz=l] h1, :host([mode=wide]) .head[data-sz=l] h1{ font-size:36u; }
+:host([mode=tablet]) .head[data-sz=xl] h1, :host([mode=wide]) .head[data-sz=xl] h1{ font-size:clamp(72px, calc(var(--hg-u0, 1.3px) * 73), calc(140px * var(--hg-zoom, 1))); font-weight:100; letter-spacing:-.04em; }
 .fuel{ display:flex; gap:5u; margin-top:9u; flex-wrap:wrap; } .fuel[hidden]{ display:none; }
 .hrow{ display:flex; align-items:stretch; gap:5u; min-width:0; } .hrow .fuel{ margin-top:0; min-width:0; } .hrow{ margin-top:9u; }
 .wxs:empty, .wxh:empty{ display:none; } .wxs{ flex:none; display:flex; }
@@ -1286,6 +1292,9 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([mode=phone]) .chev{ width:30px; height:44px; }
 :host([mode=phone]) .head{ grid-area:head; padding:2px 4px 0; }
 :host([mode=phone]) .head h1{ font-size:clamp(20px, 6.6vw, 26px); } :host([mode=phone]) .head p{ font-size:clamp(15px, 4.9vw, 19px); }
+:host([mode=phone]) .head[data-sz=s] h1{ font-size:clamp(15px, 4.9vw, 20px); }
+:host([mode=phone]) .head[data-sz=l] h1{ font-size:clamp(28px, 9vw, 36px); }
+:host([mode=phone]) .head[data-sz=xl] h1{ font-size:clamp(52px, 16vw, 72px); font-weight:100; letter-spacing:-.04em; }
 .head h1, .head p{ overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; text-overflow:ellipsis; } .head p{ -webkit-line-clamp:2; }
 .head h1 .hdi{ width:1em; height:1em; --mdc-icon-size:1em; margin-right:.32em; vertical-align:-.12em; color:var(--hg-accent); }
 .head.hd-off > h1, .head.hd-off > p{ display:none; } :host([editing]) .head.hd-off > h1, :host([editing]) .head.hd-off > p{ display:-webkit-box; opacity:.38; } :host([editing]) .head.hd-off > h1.rh, :host([editing]) .head.hd-off > p.renv{ display:flex; }

@@ -2364,7 +2364,8 @@
     "panel_backdrop_as_all": "Comme partout",
     "head_clock_hint": "{time} affiche l’heure actuelle et {date} la date du jour, mises à jour chaque minute.",
     "head_clock_add": "Ajouter une horloge",
-    "head_clock_add_desc": "Ajoute {time} au sous-titre"
+    "head_clock_add_desc": "Ajoute {time} au sous-titre",
+    "head_title_size": "Taille du titre"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",
@@ -2461,7 +2462,9 @@
     "badge_motion": "Mouvement",
     "badge_custom": "Entités choisies…",
     "rail_hide": "Masquer la barre latérale",
-    "rail_hide_desc": "Masque la barre latérale et son bouton Paramètres sur ordinateur et tablette ; les interrupteurs Barre latérale des vues sont alors sans effet. Les vues absentes des onglets du haut passent dans le menu du profil. Les paramètres restent dans le menu du profil, derrière le crayon et à l’adresse {param}."
+    "rail_hide_desc": "Masque la barre latérale et son bouton Paramètres sur ordinateur et tablette ; les interrupteurs Barre latérale des vues sont alors sans effet. Les vues absentes des onglets du haut passent dans le menu du profil. Les paramètres restent dans le menu du profil, derrière le crayon et à l’adresse {param}.",
+    "show_wx_in_header": "Afficher la météo dans l'en-tête",
+    "show_wx_in_header_desc": "Désactivez pour masquer la météo intégrée dans l'en-tête si une carte Météo l'affiche déjà."
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",
