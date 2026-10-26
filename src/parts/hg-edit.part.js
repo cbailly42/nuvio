@@ -158,6 +158,23 @@ const HGApp = window.__hgApp || (window.__hgApp = {
     const X = window.HGLooks && a.look ? HGLooks.vars(a.look) : null;
     if (X) { if (Object.keys(X.r).length) css += `:root:root, hg-page:not([x]){ ${this.css(X.r)} }\n`;
       css += `:root:root:not([data-hg-blur=off]), :root:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(X.light)} }\n:root:root[data-hg-scheme=dark]:not([data-hg-blur=off]), :root[data-hg-scheme=dark]:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(X.dark)} }\n`; }
+    /* przezroczystość szkła (glassAlpha): skaluje kanał alfa tokenów szkła ze wszystkich stylów */
+    if (typeof hgScaleGlassAlpha === 'function' && a.glassAlpha != null && a.glassAlpha !== 100) {
+      const ratio = Math.max(30, Math.min(100, Math.round(a.glassAlpha))) / 100;
+      const blurOff = (typeof HGPerf !== 'undefined') ? HGPerf.blur() === 'off' : false;
+      /* dla stylu domyślnego (nuvio) lub gdy HGLooks nie zwrócił tokenów szkła: użyj wartości domyślnych */
+      const defLook = window.HGLooks && HGLooks.get('nuvio');
+      const base = X || (defLook ? (() => { const gl = ([c, t, p]) => ({ '--hg-glass-bg': c, '--hg-tile-bg': t, '--hg-panel-bg': p }); return { r: {}, light: gl(defLook.g[0]), dark: gl(defLook.g[1]) }; })() : null);
+      if (base) {
+        const sl = hgScaleGlassAlpha(base.light, ratio, blurOff), sd = hgScaleGlassAlpha(base.dark, ratio, blurOff);
+        /* nie nadpisuj glass-blur z X, emituj tylko tokeny koloru szkła */
+        const glKeys = ['--hg-glass-bg', '--hg-tile-bg', '--hg-panel-bg'];
+        const pick = (o) => Object.fromEntries(glKeys.filter((k) => k in o).map((k) => [k, o[k]]));
+        const SL = pick(sl), SD = pick(sd);
+        if (Object.keys(SL).length) css += `:root:root:not([data-hg-blur=off]), :root:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(SL)} }\n`;
+        if (Object.keys(SD).length) css += `:root:root[data-hg-scheme=dark]:not([data-hg-blur=off]), :root[data-hg-scheme=dark]:not([data-hg-blur=off]) hg-page:not([x]){ ${this.css(SD)} }\n`;
+      }
+    }
     if (st.textContent !== css) st.textContent = css;
   },
 });
@@ -1747,9 +1764,13 @@ const HG_EDIT = {
     const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
     const BN = { full: hgT('edit.full'), light: hgT('edit.blur_light'), off: hgT('common.off_neut') };
     const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    const ga = HGApp.get().glassAlpha != null ? Math.max(30, Math.min(100, Math.round(HGApp.get().glassAlpha))) : 100;
     return `<section class="lk-g" data-tab="look" data-pg="general"><h4>${H.icon('mdi:speedometer')}${hgT('edit.performance')}</h4><small class="lk-hn">${hgT('edit.saved_on_this_device')}</small>
       <small class="lk-hn">${hgT('edit.glass_blur')} · ${H.lv(hgT('common.now'), H.esc(BN[b]))}</small>
       ${seg('perfblur', bs, [['', hgT('edit.auto')], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgT('edit.glass_blur'))}
+      <small class="lk-hn">${hgT('edit.glass_opacity')} · <span class="ga-v">${H.pct(ga)}</span></small>
+      <small class="lk-hn lk-dim">${hgT('edit.glass_opacity_hint')}</small>
+      <input type="range" name="glassAlpha" min="30" max="100" step="1" value="${ga}" style="--v:${ga}%" aria-label="${H.esc(hgT('edit.glass_opacity'))}">
       <small class="lk-hn">${hgT('edit.power_saving_stops_looping')} · ${H.lv(hgT('common.now'), e ? hgT('edit.state_on_lower') : hgT('edit.state_off_lower'))}</small>
       ${seg('perfeco', es, [['', hgT('edit.auto')], ['1', hgT('common.on_neut')], ['0', hgT('common.off_neut')]], hgT('edit.power_saving'))}</section>`;
   },
@@ -1836,6 +1857,7 @@ const HG_EDIT = {
     S.querySelectorAll('[name=bgc1],[name=bgc2]').forEach((x) => x.addEventListener('input', gu));
     S.querySelector('[name=acc]').addEventListener('change', (e) => { this._eApp((A2) => { A2.accent = e.target.value.toUpperCase(); }); this._eLook(); });
     const rg = S.querySelector('[name=dim]'); rg.addEventListener('input', () => { rg.style.setProperty('--v', rg.value + '%'); S.querySelector('.dv').textContent = H.pct(rg.value); this._eApp((A2) => { A2.dim = rg.value / 100; }); });
+    const gaRg = S.querySelector('[name=glassAlpha]'); if (gaRg) gaRg.addEventListener('input', () => { const v = parseInt(gaRg.value, 10); gaRg.style.setProperty('--v', v + '%'); const lbl = gaRg.closest('section'); if (lbl) { const sp = lbl.querySelector('.ga-v'); if (sp) sp.textContent = H.pct(v); } this._eApp((A2) => { if (v === 100) delete A2.glassAlpha; else A2.glassAlpha = v; }); });
     S.querySelector('input[type=file]').addEventListener('change', (e) => this._eUpload(e.target.files && e.target.files[0]));
     if (window.HGWall) HGWall.wire(this, S);
     if (window.HGRoomsX) HGRoomsX.wire(this, S);

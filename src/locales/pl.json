@@ -1941,6 +1941,8 @@
     "gauge": "Wskaźnik",
     "general_controls_for_any": "Uniwersalne elementy dla dowolnych encji",
     "glance": "Rzut oka",
+    "glass_opacity": "Przezroczystość szkła",
+    "glass_opacity_hint": "Niższe wartości sprawiają, że karty są bardziej przezroczyste. Minimum 30% zapewnia czytelność tekstu przy wyłączonym rozmyciu.",
     "glass_blur": "Rozmycie szkła",
     "good": "Dobra",
     "good_night": "Dobranoc",

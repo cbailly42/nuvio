@@ -152,3 +152,11 @@ test('lookr: show_wx_in_header toggle is rendered in the UI', () => {
   assert.match(src, /data-hge="rx-wxh"/);
   assert.match(src, /lookr\.show_wx_in_header/);
 });
+
+test('mode change re-applies data-sz via _headVis call on layout', () => {
+  // Verify the mode-change code path calls _headVis to refresh data-sz
+  const src = rd('hg-page.part.js');
+  assert.match(src,
+    /this\.getAttribute\('mode'\) !== mode.*this\._placeWx\(\).*_headVis\(this\._headConf\(\)\)/,
+    'mode change must refresh data-sz via _headVis');
+});

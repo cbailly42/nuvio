@@ -1872,6 +1872,8 @@
     "general_controls_for_any": "General controls for any entity",
     "glance": "Glance",
     "glass_blur": "Glass blur",
+    "glass_opacity": "Glass opacity",
+    "glass_opacity_hint": "Lower values make the glass cards more transparent. Minimum 30% keeps text readable when blur is off.",
     "good": "Good",
     "good_night": "Good night",
     "gradient": "Gradient",

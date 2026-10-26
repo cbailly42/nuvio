@@ -67,3 +67,22 @@ const HGLooks = window.HGLooks = {
     page._eApp((A) => { if (L.def) delete A.look; else A.look = L.k; A.accent = HG_LK_X(L.acc); if (L.bg) A.bg = Object.assign({}, L.bg); else delete A.bg; A.dim = L.dim; });
     page._eToast(hgT('looks.style_toast', { name: L.n })); return page._eLook(); },
 };
+/* Scale the alpha channel of all rgba(r,g,b,a) values in a glass token map.
+   ratio: 0..1 multiplier. blurOff: when true, clamp effective alpha >= 0.3 so text stays readable. */
+const hgScaleGlassAlpha = window.__hgScaleGlassAlpha = function(tokens, ratio, blurOff) {
+  if (ratio === 1) return tokens;
+  const minA = blurOff ? 0.3 : 0;
+  const re = /rgba\((\d+),(\d+),(\d+),([\d.]+)\)/g;
+  const out = {};
+  for (const [k, v] of Object.entries(tokens)) {
+    if (typeof v === 'string' && k !== '--hg-glass-blur') {
+      out[k] = v.replace(re, (_, r, g, b, a) => {
+        const scaled = Math.max(minA, parseFloat(a) * ratio);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + scaled.toFixed(4) + ')';
+      });
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+};

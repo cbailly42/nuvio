@@ -1871,6 +1871,8 @@
     "gauge": "Meter",
     "general_controls_for_any": "Algemene bedieningselementen voor elke entiteit",
     "glance": "Overzicht",
+    "glass_opacity": "Glasdoorzichtigheid",
+    "glass_opacity_hint": "Lagere waarden maken de glaskaarten transparanter. Minimaal 30% zorgt voor leesbare tekst als vervaging is uitgeschakeld.",
     "glass_blur": "Glasvervaging",
     "good": "Goed",
     "good_night": "Welterusten",
