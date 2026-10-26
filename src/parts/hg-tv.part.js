@@ -203,10 +203,12 @@ const HGTv = window.__hgTv || (window.__hgTv = {
     }
     return out;
   },
-  /* wiersz pokoju: whitelist z dashboardu (gdy brak ręcznej listy) */
+  /* wiersz pokoju: nazwa + whitelist z dashboardu (gdy brak ręcznej listy) */
   roomDraftRow(h, id, entities) {
+    const dash = this.dashboardRooms(h).find((r) => r.id === id);
     const ents = entities && entities.length ? entities.slice() : this.dashboardRoomEntities(h, id);
     const row = { id };
+    if (dash && dash.name) row.name = dash.name;
     if (ents.length) row.entities = ents;
     return row;
   },

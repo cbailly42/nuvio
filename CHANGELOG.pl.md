@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.26.0-beta.4
+- Naprawiono: **treść TV** — kafelki pokoi biorą whitelistę encji z dashboardu nawet gdy te encje nie są w odpowiadającym obszarze Home Assistant (pokoje wirtualne i przeniesione urządzenia). Wiersze pokoi w `nuvio_tv_layout` zapisują też nazwę z dashboardu.
+
 ### 2.26.0-beta.3
 - Poprawka: **treść telewizora** — lista i kolejność pokoi jak na siatce Nuvio (Wygląd → Pokoje + układ ukryte/kolejność/dodane), a nie wszystkie obszary Home Assistant. Synchronizacja z dashboardem i zapis układu przepisują cały zestaw pokoi; „Inne” na TV tylko gdy dashboard pokazuje *Bez pokoju*.
 

@@ -35,6 +35,10 @@ const HGTvLogic = {
         if (!r || typeof r !== 'object' || Array.isArray(r) || !HGTvLogic.isRoomId(r.id) || seenR.has(r.id)) continue;
         seenR.add(r.id);
         const row = { id: r.id };
+        if (typeof r.name === 'string') {
+          const name = r.name.trim();
+          if (name && name.length <= 128) row.name = name;
+        }
         if (Array.isArray(r.entities)) {
           const ents = HGTvLogic.uniqIds(r.entities, HGTvLogic.isEntityId);
           if (ents.length) row.entities = ents;

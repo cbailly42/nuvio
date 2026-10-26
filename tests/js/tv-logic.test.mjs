@@ -198,10 +198,10 @@ test('parseLayout: brak lub zły dokument → null; v:1 → znormalizowany ukła
     scenes: ['scene.film', 'script.noc'],
     alarms: ['alarm_control_panel.dom'],
     rooms: [
-      { id: 'salon', entities: ['light.lampa', 'light.lampa', 'nie'] },
+      { id: 'salon', name: ' Salon ', entities: ['light.lampa', 'light.lampa', 'nie'] },
       { id: 'salon' },
       { id: L.OTHER_ROOM },
-      { id: 'kuchnia' },
+      { id: 'kuchnia', name: '' },
       null,
       { id: '../evil' },
     ],
@@ -210,7 +210,7 @@ test('parseLayout: brak lub zły dokument → null; v:1 → znormalizowany ukła
     v: 1,
     cameras: ['camera.salon', 'light.x'],
     rooms: [
-      { id: 'salon', entities: ['light.lampa'] },
+      { id: 'salon', name: 'Salon', entities: ['light.lampa'] },
       { id: L.OTHER_ROOM },
       { id: 'kuchnia' },
     ],

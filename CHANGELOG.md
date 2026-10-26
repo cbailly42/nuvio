@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.26.0-beta.4
+- Fixed: **TV content** room tiles use the dashboard entity whitelist even when those entities are not assigned to the matching Home Assistant area (virtual rooms and reassigned devices). Room rows in `nuvio_tv_layout` also store the dashboard display name.
+
 ### 2.26.0-beta.3
 - Fixed: **TV content** room list and order now match the Nuvio rooms grid (Wygląd → Pokoje + layout hidden/order/added), not every Home Assistant area. Sync from dashboard and layout save rewrite the full room set; “Other” on TV only when the dashboard shows *No room*.
 
