@@ -98,3 +98,23 @@ test('_placeWx: no hide flag does not take the early-return path', () => {
   p._placeWx();
   assert.equal(reached, true, 'without hide, placement continues to find the target');
 });
+
+/* CSS cascade: each phone base rule must come before the phone size rules that override it */
+test('phone base h1 rule comes before the phone data-sz rules', () => {
+  const base = src.indexOf(':host([mode=phone]) .head h1{');
+  const sz = src.indexOf(':host([mode=phone]) .head[data-sz=s] h1');
+  assert.ok(base > 0 && sz > 0, 'both rules exist');
+  assert.ok(base < sz, 'the phone base rule must come first so the size rules win');
+});
+
+test('the base .head h1 rule comes before the tablet and wide data-sz rules', () => {
+  const base = src.indexOf('.head h1{ margin:0; font-size:24u');
+  const sz = src.indexOf(':host([mode=tablet]) .head[data-sz=s] h1');
+  assert.ok(base > 0 && sz > 0, 'both rules exist');
+  assert.ok(base < sz, 'the base rule must come first so the size rules win');
+});
+
+test('XL size uses the zoom and unit variables so it scales with the device', () => {
+  assert.match(src, /\[data-sz=xl\] h1[^}]*var\(--hg-zoom, 1\)/);
+  assert.match(src, /\[data-sz=xl\] h1[^}]*var\(--hg-u0/);
+});
