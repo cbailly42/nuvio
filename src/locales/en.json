@@ -2329,7 +2329,8 @@
     "panel_backdrop_as_all": "As everywhere",
     "head_clock_hint": "{time} shows the current time and {date} today's date, both updated every minute.",
     "head_clock_add": "Add a clock",
-    "head_clock_add_desc": "Adds {time} to the subtitle"
+    "head_clock_add_desc": "Adds {time} to the subtitle",
+    "head_title_size": "Title size"
   },
   "lookr": {
     "add_fuel": "Add fuel",
@@ -2425,7 +2426,9 @@
     "badge_motion": "Motion",
     "badge_custom": "Selected entities…",
     "rail_hide": "Hide the sidebar",
-    "rail_hide_desc": "Hides the sidebar with its Settings button on computers and tablets; the per-view Sidebar switches then have no effect. Views that are not in the top tabs move to the profile menu. Settings stay in the profile menu, behind the pencil and at the {param} address."
+    "rail_hide_desc": "Hides the sidebar with its Settings button on computers and tablets; the per-view Sidebar switches then have no effect. Views that are not in the top tabs move to the profile menu. Settings stay in the profile menu, behind the pencil and at the {param} address.",
+    "show_wx_in_header": "Show weather in the header",
+    "show_wx_in_header_desc": "Turn off to hide the built-in header weather when a Weather card already shows it."
   },
   "looks": {
     "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",

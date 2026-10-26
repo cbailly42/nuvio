@@ -2329,7 +2329,8 @@
     "panel_backdrop_as_all": "Zoals overal",
     "head_clock_hint": "{time} toont de huidige tijd en {date} de datum van vandaag, allebei elke minuut bijgewerkt.",
     "head_clock_add": "Klok toevoegen",
-    "head_clock_add_desc": "Voegt {time} toe aan de ondertitel"
+    "head_clock_add_desc": "Voegt {time} toe aan de ondertitel",
+    "head_title_size": "Titelgrootte"
   },
   "lookr": {
     "add_fuel": "Brandstof toevoegen",
@@ -2425,7 +2426,9 @@
     "badge_motion": "Beweging",
     "badge_custom": "Gekozen entiteiten…",
     "rail_hide": "Zijbalk verbergen",
-    "rail_hide_desc": "Verbergt de zijbalk met de knop Instellingen op computers en tablets; de schakelaars Zijbalk per weergave hebben dan geen effect. Weergaven die niet in de bovenste tabbladen staan, gaan naar het profielmenu. Instellingen blijven bereikbaar via het profielmenu, het potlood en het adres {param}."
+    "rail_hide_desc": "Verbergt de zijbalk met de knop Instellingen op computers en tablets; de schakelaars Zijbalk per weergave hebben dan geen effect. Weergaven die niet in de bovenste tabbladen staan, gaan naar het profielmenu. Instellingen blijven bereikbaar via het profielmenu, het potlood en het adres {param}.",
+    "show_wx_in_header": "Weer weergeven in de header",
+    "show_wx_in_header_desc": "Uitschakelen om het ingebouwde headerweerbericht te verbergen als een Weerkaart het al toont."
   },
   "looks": {
     "a_ready_made_set": "Een kant-en-klare set: accent, achtergrond en glas. Accent en achtergrond kun je hieronder daarna nog wijzigen.",

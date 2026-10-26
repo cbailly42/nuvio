@@ -770,7 +770,10 @@ const HG_COMP_EDIT = {
       .hd-vis{ display:flex; flex-direction:column; gap:6px; margin:2px 0 8px; } .hd-vr{ display:flex; align-items:center; gap:12px; min-height:48px; padding:6px 10px 6px 14px; border-radius:16px; background:var(--hg-tile-bg); }
       .hd-vr .lx-t{ flex:1; min-width:0; display:flex; flex-direction:column; } .hd-vr .lx-t b{ font-weight:600; font-size:14px; } .hd-vr .lx-t small{ opacity:.66; font-size:12px; }
       .hd-vr .lx-sw{ all:unset; cursor:pointer; flex:none; width:46px; height:28px; border-radius:999px; position:relative; transition:background .18s; } .hd-vr .lx-sw i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .18s; }
-      .hd-vr .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .hd-vr .lx-sw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }</style>
+      .hd-vr .lx-sw[aria-checked=true] i{ transform:translateX(18px); } .hd-vr .lx-sw:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
+      .hd-szg{ display:flex; flex-direction:column; gap:6px; width:100%; } .hd-szr{ display:flex; align-items:center; gap:8px; } .hd-szr small{ flex:none; width:52px; font-size:11px; opacity:.6; text-align:right; }
+      .hd-szseg{ display:flex; gap:3px; } .hd-szb{ all:unset; box-sizing:border-box; cursor:pointer; min-width:36px; height:30px; padding:0 8px; border-radius:8px; font:600 12px/1 inherit; text-align:center; background:var(--hg-tile-bg); opacity:.7; transition:background .15s, opacity .15s; }
+      .hd-szb[aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); opacity:1; } .hd-szb:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }</style>
       <div class="hs-h"><b>${hgT('edit.view_header')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div><div class="hs-sc">
       <div class="hs-pv"><small>${hgT('edit.preview_on_devices')}</small><div class="hd-pv"></div></div>
       <div class="hd-vis">${[['hide', hgT('edit.show_header'), hgT('edit.title_subtitle_and_icon')], ['nos', hgT('edit.show_subtitle'), hgT('edit.second_line_under_the')]].map(([k, l, d]) => `<div class="hd-vr"><span class="lx-t"><b>${l}</b><small>${d}</small></span><button class="lx-sw" role="switch" data-hge="hdvis" data-k="${k}" aria-checked="${!H0[k]}" aria-label="${H.esc(l)}"><i></i></button></div>`).join('')}</div>
@@ -779,13 +782,16 @@ const HG_COMP_EDIT = {
       <p class="hd-hint">${hgT('edit.head_name_hint', { placeholder: '{name}', name: H.esc(ui.first || hgT('edit.head_name_none')) })}${c.room ? ' ' + hgT('edit.head_room_hint', { room: '{room}' }) : ''} ${hgT('edit.head_clock_hint', { time: '{time}', date: '{date}' })}</p>
       <button class="hs-r hs-add" data-hge="hdclock"><span class="hs-i">${H.icon('mdi:clock-outline')}</span><span class="hs-t"><b>${hgT('edit.head_clock_add')}</b><small>${hgT('edit.head_clock_add_desc')}</small></span></button>
       <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>${hgT('edit.shorter_versions_for_phone')}</b><small>${hgT('edit.optional_empty_fields_use')}</small></span></button>
+      <div class="hs-fl"><span>${hgT('edit.head_title_size')}</span><div class="hd-szg">${[['wide', hgT('edit.desktop')], ['tablet', hgT('edit.tablet')], ['phone', hgT('edit.phone')]].map(([md, lb]) => { const cur = ((H0.sz || {})[md]) || 'm'; return `<div class="hd-szr"><small>${lb}</small><div class="hd-szseg" role="group">${[['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL']].map(([v, lv]) => `<button type="button" class="hd-szb" data-hge="hdtsz" data-mode="${md}" data-z="${v}" aria-pressed="${cur === v || (v === 'm' && !cur)}">${lv}</button>`).join('')}</div></div>`; }).join('')}</div></div>
       <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', hgT('edit.title_tablet'), hgT('edit.same_as_main'), HG_HEAD_LIM.t)}${fld('st', hgT('edit.subtitle_tablet'), hgT('edit.same_as_main'), HG_HEAD_LIM.s)}${fld('tm', hgT('edit.title_phone'), hgT('edit.same_as_main'), 22)}${fld('sm', hgT('edit.subtitle_phone'), hgT('edit.same_as_main'), 36)}</div>
       ${this._panel ? `<div class="hs-fl"><span>${hgT('edit.panel_width')}</span>${hgPwPick(this._pwCur(), 'pw')}</div>` : ''}</div><style>${HG_PW_CSS}</style>
       <div class="hs-ac"><button class="hs-b2" data-hge="hdreset">${hgT('edit.restore_defaults')}</button><button class="hs-b" data-hge="hdok">${hgT('common.save')}</button></div></div>`;
     for (const i of S.querySelectorAll('input.hs-in')) i.addEventListener('input', () => this._eHeadPv());
     hgIcWire(S); this._eHeadPv(); },
   _eHeadVals() { const S = this._eSheetEl, o = {}; for (const i of S.querySelectorAll('input.hs-in')) { const v = i.value.trim(); if (v) o[i.name] = v; }
-    if (o.i && !/^mdi:[a-z0-9-]+$/.test(o.i)) delete o.i; for (const b of S.querySelectorAll('[data-hge=hdvis]')) if (b.getAttribute('aria-checked') === 'false') o[b.dataset.k] = 1; return o; },
+    if (o.i && !/^mdi:[a-z0-9-]+$/.test(o.i)) delete o.i; for (const b of S.querySelectorAll('[data-hge=hdvis]')) if (b.getAttribute('aria-checked') === 'false') o[b.dataset.k] = 1;
+    const sz = {}; for (const md of ['wide', 'tablet', 'phone']) { const bt = S.querySelector(`.hd-szb[data-mode="${md}"][aria-pressed=true]`); if (bt && bt.dataset.z && bt.dataset.z !== 'm') sz[md] = bt.dataset.z; }
+    if (Object.keys(sz).length) o.sz = sz; return o; },
   _eHeadPv() { const S = this._eSheetEl, c = this._eHeadDef(), V = this._eHeadVals(), nm = this._userInfo().first || '';
     for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
     const ic = V.i || c.icon ? H.icon(V.i || c.icon) : '', off = hgT('edit.hidden'), r = (s) => H.esc(hgClockFill(String(s || '').replace(/\{name\}/g, nm).replace(/\{room\}/g, c.room), this._hass)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
@@ -797,6 +803,7 @@ const HG_COMP_EDIT = {
     if (a === 'hdclock') { const S = this._eSheetEl, nos = S.querySelector('[data-hge=hdvis][data-k=nos]'), f = S.querySelector(`input.hs-in[name="${nos && nos.getAttribute('aria-checked') === 'false' ? 't' : 's'}"]`); if (!f) return;
       if (!/\{time\}/.test(f.value)) { const v = f.value.trim(); f.value = (v ? v + ' · ' : '') + '{time}'; f.dispatchEvent(new Event('input')); } f.focus(); return; }
     if (a === 'hdvis') { const b = arguments[1]; if (b) { b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') === 'false')); this._eHeadPv(); } return; }
+    if (a === 'hdtsz') { const b = arguments[1]; if (b) { const S = this._eSheetEl, md = b.dataset.mode; for (const bt of S.querySelectorAll(`.hd-szb[data-mode="${md}"]`)) bt.setAttribute('aria-pressed', String(bt === b)); } return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
     if (sc === 'rooms:head' && HGL.data.s.null) this._eSet('null', (L) => { delete L.conf._head; });   /* stary klucz sprzed 2.10.0 */
@@ -1380,7 +1387,7 @@ const HG_EDIT = {
         return Promise.resolve(this._eRefresh(true)).then(() => { if (this._editing) { this._eBar(); this._eLook(); } }); }); }
     if (a === 'headedit') return this._eHead();
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
-    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis' || a === 'hdclock') return this._eHeadAct(a, b);
+    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis' || a === 'hdclock' || a === 'hdtsz') return this._eHeadAct(a, b);
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);

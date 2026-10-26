@@ -2399,7 +2399,8 @@
     "panel_backdrop_as_all": "Jak wszędzie",
     "head_clock_hint": "{time} pokazuje bieżącą godzinę, a {date} dzisiejszą datę; obie odświeżają się co minutę.",
     "head_clock_add": "Dodaj zegar",
-    "head_clock_add_desc": "Dopisuje {time} do podtytułu"
+    "head_clock_add_desc": "Dopisuje {time} do podtytułu",
+    "head_title_size": "Rozmiar tytułu"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",
@@ -2497,7 +2498,9 @@
     "badge_motion": "Ruch",
     "badge_custom": "Wybrane encje…",
     "rail_hide": "Ukryj pasek boczny",
-    "rail_hide_desc": "Ukrywa pasek boczny razem z przyciskiem Ustawienia na komputerze i tablecie; przełączniki „Pasek boczny” przy widokach przestają wtedy działać. Widoki spoza zakładek u góry trafiają do menu profilu. Ustawienia zostają w menu profilu, pod ołówkiem i pod adresem {param}."
+    "rail_hide_desc": "Ukrywa pasek boczny razem z przyciskiem Ustawienia na komputerze i tablecie; przełączniki „Pasek boczny” przy widokach przestają wtedy działać. Widoki spoza zakładek u góry trafiają do menu profilu. Ustawienia zostają w menu profilu, pod ołówkiem i pod adresem {param}.",
+    "show_wx_in_header": "Pokaż pogodę w nagłówku",
+    "show_wx_in_header_desc": "Wyłącz, by ukryć wbudowaną pogodę w nagłówku, gdy karta Pogoda już ją pokazuje."
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",
