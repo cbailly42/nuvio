@@ -9,7 +9,7 @@ OLD=$(python3 -c "import json;print(json.load(open('package.json'))['version'])"
 python3 - "$V" <<'PY'
 import json,sys; p=json.load(open('package.json')); p['version']=sys.argv[1]; json.dump(p,open('package.json','w'))
 PY
-python3 - "$OLD" "$V" README.md README.pl.md <<'PY'
+python3 - "$OLD" "$V" README.md README.pl.md README.fr.md <<'PY'
 import sys; o, n = sys.argv[1], sys.argv[2]
 for f in sys.argv[3:]: t = open(f).read(); open(f, 'w').write(t.replace('v' + o, 'v' + n))
 PY

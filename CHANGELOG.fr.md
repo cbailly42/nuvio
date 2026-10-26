@@ -4,6 +4,10 @@
 
 Toutes les modifications notables de Nuvio sont listées ici, des plus récentes aux plus anciennes. Les versions suivent le [versionnage sémantique](https://semver.org). Le journal des modifications en anglais se trouve dans [CHANGELOG.md](CHANGELOG.md), celui en polonais dans [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.25.1
+- Corrigé : le **jumelage TV** crée un jeton d’accès plus court (365 jours au lieu de 10 ans), demande confirmation avant d’envoyer le jeton au téléviseur en `http://` en clair, et construit l’adresse du téléviseur uniquement à partir d’un `hôte:port` validé (schéma et chemin refusés) ([#81](https://github.com/kczepiec/nuvio/pull/81)).
+- Corrigé : un composant ajouté sur une page de **pièce** (pile, grille, carte HA, …) rouvre son propre formulaire en mode édition, au lieu des paramètres de section ([#80](https://github.com/kczepiec/nuvio/pull/80)).
+
 ### Unreleased
 - Ajouté : **Mode tablette murale → Vue affichée au réveil** : Dernière vue utilisée (par défaut), Accueil ou n’importe quelle vue activée. Quand l’écran de veille s’active, le tableau de bord revient sur cette vue derrière lui : c’est elle que vous voyez en réveillant l’écran. Ignoré en mode édition, pendant l’aperçu et si la vue est déjà ouverte. Une vue verrouillée par PIN demande toujours le code au réveil.
 - Nouveau : la carte **Flux d’énergie** se remplit à partir des réglages du **tableau de bord Énergie** de Home Assistant quand ils indiquent des capteurs de puissance (HA récent : puissance du réseau, du solaire et des batteries, niveau et nom des batteries). Les compteurs inversés et les capteurs séparés de soutirage / injection sont pris en compte comme dans HA. Ce qui manque y est détecté comme avant, et vos choix dans les paramètres de la carte restent toujours prioritaires.
